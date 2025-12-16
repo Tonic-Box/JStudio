@@ -94,6 +94,20 @@ public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListe
 
         // No close button - this tab cannot be closed
 
+        // Click on panel/icon/title should select tab
+        MouseAdapter tabSelector = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                int index = tabbedPane.indexOfTabComponent(panel);
+                if (index != -1) {
+                    tabbedPane.setSelectedIndex(index);
+                }
+            }
+        };
+        panel.addMouseListener(tabSelector);
+        iconLabel.addMouseListener(tabSelector);
+        titleLabel.addMouseListener(tabSelector);
+
         return panel;
     }
 
@@ -165,12 +179,17 @@ public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListe
         closeButton.addActionListener(e -> closeTab(tab));
         panel.add(closeButton);
 
-        // Right-click context menu on tab component
-        MouseAdapter contextMenuListener = new MouseAdapter() {
+        // Click on panel/icon/title should select tab and handle context menu
+        MouseAdapter tabClickListener = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     showTabContextMenu(tab, e);
+                } else {
+                    int index = tabbedPane.indexOfTabComponent(panel);
+                    if (index != -1) {
+                        tabbedPane.setSelectedIndex(index);
+                    }
                 }
             }
 
@@ -181,9 +200,9 @@ public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListe
                 }
             }
         };
-        panel.addMouseListener(contextMenuListener);
-        iconLabel.addMouseListener(contextMenuListener);
-        titleLabel.addMouseListener(contextMenuListener);
+        panel.addMouseListener(tabClickListener);
+        iconLabel.addMouseListener(tabClickListener);
+        titleLabel.addMouseListener(tabClickListener);
 
         return panel;
     }

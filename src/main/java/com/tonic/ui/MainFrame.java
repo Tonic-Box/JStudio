@@ -44,6 +44,12 @@ import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetAdapter;
+import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -151,6 +157,14 @@ public class MainFrame extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 exitApplication();
+            }
+        });
+
+        // Setup drag-and-drop support
+        new DropTarget(this, DnDConstants.ACTION_COPY_OR_MOVE, new DropTargetAdapter() {
+            @Override
+            public void drop(DropTargetDropEvent dtde) {
+                handleFileDrop(dtde);
             }
         });
     }
@@ -283,6 +297,120 @@ public class MainFrame extends JFrame {
                 } catch (Exception e) {
                     showError("Failed to load file: " + e.getMessage());
                     consolePanel.logError("Load failed: " + e.getMessage());
+                }
+            }
+        };
+
+        worker.execute();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void handleFileDrop(DropTargetDropEvent dtde) {
+        try {
+            dtde.acceptDrop(DnDConstants.ACTION_COPY);
+            Transferable transferable = dtde.getTransferable();
+
+            if (transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                List<File> droppedFiles = (List<File>) transferable.getTransferData(DataFlavor.javaFileListFlavor);
+
+                // Filter for supported file types
+                List<File> validFiles = new ArrayList<>();
+                for (File file : droppedFiles) {
+                    if (file.isDirectory() ||
+                        file.getName().endsWith(".jar") ||
+                        file.getName().endsWith(".class")) {
+                        validFiles.add(file);
+                    }
+                }
+
+                if (validFiles.isEmpty()) {
+                    showWarning("No valid files dropped. Only JAR files, class files, and directories are supported.");
+                    dtde.dropComplete(false);
+                    return;
+                }
+
+                // Check if project is already open
+                if (ProjectService.getInstance().hasProject()) {
+                    int choice = showAppendOrReplaceDialog(validFiles.size());
+                    if (choice == 0) {
+                        // Append
+                        appendFiles(validFiles);
+                    } else if (choice == 1) {
+                        // Replace
+                        for (File file : validFiles) {
+                            openFile(file.getAbsolutePath());
+                        }
+                    }
+                    // choice == 2 is Cancel - do nothing
+                } else {
+                    // No project open, just open files
+                    for (File file : validFiles) {
+                        openFile(file.getAbsolutePath());
+                    }
+                }
+
+                dtde.dropComplete(true);
+            } else {
+                dtde.dropComplete(false);
+            }
+        } catch (Exception e) {
+            showError("Failed to process dropped files: " + e.getMessage());
+            dtde.dropComplete(false);
+        }
+    }
+
+    private int showAppendOrReplaceDialog(int fileCount) {
+        String message = fileCount == 1
+                ? "A project is already open. What would you like to do?"
+                : fileCount + " files dropped. A project is already open. What would you like to do?";
+
+        String[] options = {"Append to Current", "Replace Current", "Cancel"};
+        return JOptionPane.showOptionDialog(
+                this,
+                message,
+                "Project Already Open",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+    }
+
+    private void appendFiles(List<File> files) {
+        statusBar.showProgress("Appending files...");
+
+        SwingWorker<Integer, Void> worker = new SwingWorker<Integer, Void>() {
+            @Override
+            protected Integer doInBackground() throws Exception {
+                int totalAdded = 0;
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        totalAdded += ProjectService.getInstance().appendDirectory(file, (current, total, msg) -> {
+                            SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg));
+                        });
+                    } else if (file.getName().endsWith(".jar")) {
+                        totalAdded += ProjectService.getInstance().appendJar(file, (current, total, msg) -> {
+                            SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg));
+                        });
+                    } else if (file.getName().endsWith(".class")) {
+                        totalAdded += ProjectService.getInstance().appendClassFile(file);
+                    }
+                }
+                return totalAdded;
+            }
+
+            @Override
+            protected void done() {
+                statusBar.hideProgress();
+                try {
+                    int added = get();
+                    consolePanel.log("Appended " + added + " classes");
+                    // Refresh navigator
+                    navigatorPanel.loadProject(ProjectService.getInstance().getCurrentProject());
+                } catch (Exception e) {
+                    showError("Failed to append files: " + e.getMessage());
+                    consolePanel.logError("Append failed: " + e.getMessage());
                 }
             }
         };

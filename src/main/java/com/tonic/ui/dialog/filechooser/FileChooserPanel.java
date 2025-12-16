@@ -427,6 +427,48 @@ public class FileChooserPanel extends JPanel {
             return;
         }
 
+        // Check if text is an absolute path
+        File asAbsolute = new File(text);
+        if (asAbsolute.isAbsolute()) {
+            if (asAbsolute.exists()) {
+                if (asAbsolute.isDirectory()) {
+                    if (mode == FileChooserMode.SELECT_DIRECTORY) {
+                        // Select this directory
+                        if (listener != null) {
+                            List<File> selected = new ArrayList<>();
+                            selected.add(asAbsolute);
+                            listener.onFilesSelected(selected);
+                        }
+                    } else {
+                        // Navigate to this directory
+                        navigateTo(asAbsolute);
+                        fileNameField.setText("");
+                    }
+                    return;
+                } else {
+                    // It's a file - select it directly
+                    if (listener != null) {
+                        List<File> selected = new ArrayList<>();
+                        selected.add(asAbsolute);
+                        listener.onFilesSelected(selected);
+                    }
+                    return;
+                }
+            } else {
+                // Absolute path doesn't exist
+                if (mode == FileChooserMode.SAVE_FILE) {
+                    // For save mode, allow non-existent path
+                    if (listener != null) {
+                        List<File> selected = new ArrayList<>();
+                        selected.add(asAbsolute);
+                        listener.onFilesSelected(selected);
+                    }
+                    return;
+                }
+                // For open mode, path doesn't exist - fall through to normal handling
+            }
+        }
+
         List<File> selectedFiles = new ArrayList<>();
 
         if (mode == FileChooserMode.SAVE_FILE) {

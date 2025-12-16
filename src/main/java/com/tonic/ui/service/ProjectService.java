@@ -4,6 +4,7 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ProjectLoadedEvent;
+import com.tonic.ui.event.events.ProjectUpdatedEvent;
 import com.tonic.ui.event.events.StatusMessageEvent;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
@@ -206,6 +207,137 @@ public class ProjectService {
 
         ClassFile cf = new ClassFile(new ByteArrayInputStream(classData));
         return currentProject.addClass(cf);
+    }
+
+    /**
+     * Append a JAR file to the current project.
+     */
+    public int appendJar(File jarFile, ProgressCallback progress) throws IOException {
+        if (!jarFile.exists()) {
+            throw new IOException("File not found: " + jarFile.getAbsolutePath());
+        }
+
+        if (currentProject == null) {
+            loadJar(jarFile, progress);
+            return currentProject.getClassCount();
+        }
+
+        EventBus.getInstance().post(new StatusMessageEvent(this, "Appending " + jarFile.getName() + "..."));
+
+        int addedCount = 0;
+        ClassPool pool = currentProject.getClassPool();
+
+        try (JarFile jar = new JarFile(jarFile)) {
+            Enumeration<JarEntry> entries = jar.entries();
+            List<JarEntry> classEntries = new ArrayList<>();
+
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
+                    classEntries.add(entry);
+                }
+            }
+
+            int total = classEntries.size();
+            int current = 0;
+
+            for (JarEntry entry : classEntries) {
+                try (InputStream is = jar.getInputStream(entry)) {
+                    ClassFile cf = new ClassFile(is);
+                    pool.put(cf);
+                    currentProject.addClass(cf);
+                    addedCount++;
+                } catch (Exception e) {
+                    System.err.println("Failed to load class: " + entry.getName() + " - " + e.getMessage());
+                }
+
+                current++;
+                if (progress != null) {
+                    progress.onProgress(current, total, "Appending " + entry.getName());
+                }
+            }
+        }
+
+        EventBus.getInstance().post(new StatusMessageEvent(this,
+                "Appended " + addedCount + " classes from " + jarFile.getName()));
+        EventBus.getInstance().post(new ProjectUpdatedEvent(this, currentProject, addedCount));
+
+        return addedCount;
+    }
+
+    /**
+     * Append a single class file to the current project.
+     */
+    public int appendClassFile(File classFile) throws IOException {
+        if (!classFile.exists()) {
+            throw new IOException("File not found: " + classFile.getAbsolutePath());
+        }
+
+        if (currentProject == null) {
+            loadClassFile(classFile);
+            return 1;
+        }
+
+        byte[] data = Files.readAllBytes(classFile.toPath());
+        ClassFile cf = new ClassFile(new ByteArrayInputStream(data));
+
+        currentProject.getClassPool().put(cf);
+        currentProject.addClass(cf);
+
+        EventBus.getInstance().post(new StatusMessageEvent(this, "Appended " + cf.getClassName()));
+        EventBus.getInstance().post(new ProjectUpdatedEvent(this, currentProject, 1));
+
+        return 1;
+    }
+
+    /**
+     * Append a directory of class files to the current project.
+     */
+    public int appendDirectory(File directory, ProgressCallback progress) throws IOException {
+        if (!directory.exists() || !directory.isDirectory()) {
+            throw new IOException("Not a valid directory: " + directory.getAbsolutePath());
+        }
+
+        if (currentProject == null) {
+            loadDirectory(directory, progress);
+            return currentProject.getClassCount();
+        }
+
+        EventBus.getInstance().post(new StatusMessageEvent(this, "Appending " + directory.getName() + "..."));
+
+        List<Path> classPaths = new ArrayList<>();
+        try (Stream<Path> paths = Files.walk(directory.toPath())) {
+            paths.filter(p -> p.toString().endsWith(".class"))
+                    .forEach(classPaths::add);
+        }
+
+        int addedCount = 0;
+        ClassPool pool = currentProject.getClassPool();
+        int total = classPaths.size();
+        int current = 0;
+
+        for (Path path : classPaths) {
+            try {
+                byte[] data = Files.readAllBytes(path);
+                ClassFile cf = new ClassFile(new ByteArrayInputStream(data));
+                pool.put(cf);
+                currentProject.addClass(cf);
+                addedCount++;
+            } catch (Exception e) {
+                System.err.println("Failed to load class: " + path + " - " + e.getMessage());
+            }
+
+            current++;
+            if (progress != null) {
+                progress.onProgress(current, total, "Appending " + path.getFileName());
+            }
+        }
+
+        EventBus.getInstance().post(new StatusMessageEvent(this,
+                "Appended " + addedCount + " classes from " + directory.getName()));
+        EventBus.getInstance().post(new ProjectUpdatedEvent(this, currentProject, addedCount));
+
+        return addedCount;
     }
 
     /**
