@@ -60,6 +60,11 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         textArea.setEditable(false);
         textArea.setFont(JStudioTheme.getCodeFont(13));
 
+        // Enable bracket matching to highlight both brackets in a pair
+        textArea.setBracketMatchingEnabled(true);
+        textArea.setAnimateBracketMatching(true);
+        textArea.setPaintMatchedBracketPair(true);
+
         // Scroll pane with line numbers
         scrollPane = new RTextScrollPane(textArea);
         scrollPane.setLineNumbersEnabled(true);

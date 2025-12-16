@@ -5,6 +5,7 @@ import com.tonic.ui.editor.hex.HexView;
 import com.tonic.ui.editor.ir.IRView;
 import com.tonic.ui.editor.source.SourceCodeView;
 import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
@@ -273,6 +274,14 @@ public class EditorTab extends JPanel {
                 hexView.scrollToText(methodName);
                 break;
         }
+    }
+
+    /**
+     * Scroll to show a specific field (source view only).
+     */
+    public void scrollToField(FieldEntryModel field) {
+        setViewMode(ViewMode.SOURCE);
+        sourceView.scrollToText(field.getName());
     }
 
     /**

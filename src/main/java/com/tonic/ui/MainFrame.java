@@ -10,7 +10,9 @@ import com.tonic.ui.editor.EditorPanel;
 import com.tonic.ui.editor.ViewMode;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
+import com.tonic.ui.event.events.MethodSelectedEvent;
 import com.tonic.ui.event.events.ProjectLoadedEvent;
+import com.tonic.ui.event.events.ProjectUpdatedEvent;
 import com.tonic.ui.event.events.StatusMessageEvent;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
@@ -235,11 +237,29 @@ public class MainFrame extends JFrame {
             }
         });
 
+        // Handle method selection from navigator - scroll to method after class is opened
+        EventBus.getInstance().register(MethodSelectedEvent.class, event -> {
+            MethodEntryModel method = event.getMethodEntry();
+            if (method != null) {
+                SwingUtilities.invokeLater(() -> editorPanel.scrollToMethod(method));
+            }
+        });
+
         // Handle project loaded
         EventBus.getInstance().register(ProjectLoadedEvent.class, event -> {
             ProjectModel project = event.getProject();
             setTitle(JStudio.APP_NAME + " - " + project.getProjectName());
             editorPanel.setProjectModel(project);
+        });
+
+        // Handle project updated (classes appended)
+        EventBus.getInstance().register(ProjectUpdatedEvent.class, event -> {
+            ProjectModel project = event.getProject();
+            if (project != null) {
+                navigatorPanel.loadProject(project);
+                editorPanel.setProjectModel(project);
+                editorPanel.refreshWelcomeTab();
+            }
         });
     }
 
@@ -1054,26 +1074,36 @@ public class MainFrame extends JFrame {
     // === Help Operations ===
 
     public void showKeyboardShortcuts() {
+        String mod = System.getProperty("os.name").toLowerCase().contains("mac") ? "Cmd" : "Ctrl";
         StringBuilder sb = new StringBuilder();
         sb.append("Keyboard Shortcuts:\n\n");
         sb.append("File:\n");
-        sb.append("  Ctrl+O       Open JAR/Class\n");
-        sb.append("  Ctrl+Shift+W Close Project\n");
-        sb.append("  Ctrl+Q       Exit\n\n");
+        sb.append("  ").append(mod).append("+O       Open JAR/Class\n");
+        sb.append("  ").append(mod).append("+W       Close Tab\n");
+        sb.append("  ").append(mod).append("+Shift+W Close Project\n");
+        sb.append("  ").append(mod).append("+Q       Exit\n\n");
         sb.append("Navigation:\n");
-        sb.append("  Ctrl+G       Go to Class\n");
-        sb.append("  Ctrl+L       Go to Line\n");
+        sb.append("  ").append(mod).append("+G       Go to Class\n");
+        sb.append("  ").append(mod).append("+L       Go to Line\n");
         sb.append("  Alt+Left     Navigate Back\n");
         sb.append("  Alt+Right    Navigate Forward\n\n");
+        sb.append("Edit:\n");
+        sb.append("  ").append(mod).append("+C       Copy\n");
+        sb.append("  ").append(mod).append("+F       Find\n");
+        sb.append("  ").append(mod).append("+Shift+F Find in Project\n\n");
         sb.append("Views:\n");
         sb.append("  F5           Source View\n");
         sb.append("  F6           Bytecode View\n");
         sb.append("  F7           IR View\n");
-        sb.append("  Ctrl+F5      Refresh\n\n");
+        sb.append("  ").append(mod).append("+F5      Refresh\n\n");
+        sb.append("Panels:\n");
+        sb.append("  ").append(mod).append("+1       Toggle Navigator\n");
+        sb.append("  ").append(mod).append("+2       Toggle Properties\n");
+        sb.append("  ").append(mod).append("+3       Toggle Console\n\n");
         sb.append("Analysis:\n");
         sb.append("  F9           Run Analysis\n");
-        sb.append("  Ctrl+Shift+G Call Graph\n");
-        sb.append("  Ctrl+Shift+T Transforms\n");
+        sb.append("  ").append(mod).append("+Shift+G Call Graph\n");
+        sb.append("  ").append(mod).append("+Shift+T Transforms\n");
 
         JOptionPane.showMessageDialog(this, sb.toString(), "Keyboard Shortcuts",
                 JOptionPane.INFORMATION_MESSAGE);

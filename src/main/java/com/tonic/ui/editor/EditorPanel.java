@@ -2,6 +2,7 @@ package com.tonic.ui.editor;
 
 import com.tonic.ui.MainFrame;
 import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.Icons;
@@ -444,6 +445,16 @@ public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListe
         EditorTab tab = getCurrentTab();
         if (tab != null) {
             tab.scrollToMethod(method);
+        }
+    }
+
+    /**
+     * Scroll to the specified field in the current tab.
+     */
+    public void scrollToField(FieldEntryModel field) {
+        EditorTab tab = getCurrentTab();
+        if (tab != null) {
+            tab.scrollToField(field);
         }
     }
 

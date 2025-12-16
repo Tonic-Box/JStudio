@@ -1,10 +1,12 @@
 package com.tonic.ui.navigator;
 
 import com.tonic.ui.MainFrame;
+import com.tonic.ui.editor.ViewMode;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.event.events.MethodSelectedEvent;
 import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.Icons;
@@ -237,6 +239,13 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
             MethodEntryModel methodEntry = ((NavigatorNode.MethodNode) node).getMethodEntry();
             EventBus.getInstance().post(new MethodSelectedEvent(this, methodEntry));
             EventBus.getInstance().post(new ClassSelectedEvent(this, methodEntry.getOwner()));
+        } else if (node instanceof NavigatorNode.FieldNode) {
+            FieldEntryModel fieldEntry = ((NavigatorNode.FieldNode) node).getFieldEntry();
+            EventBus.getInstance().post(new ClassSelectedEvent(this, fieldEntry.getOwner()));
+            SwingUtilities.invokeLater(() -> {
+                mainFrame.getEditorPanel().setViewMode(ViewMode.SOURCE);
+                mainFrame.getEditorPanel().scrollToField(fieldEntry);
+            });
         }
     }
 

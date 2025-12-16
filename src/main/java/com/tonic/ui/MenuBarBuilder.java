@@ -9,6 +9,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
+import java.awt.Toolkit;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -19,6 +20,8 @@ import java.util.List;
  * Builds the main menu bar for JStudio.
  */
 public class MenuBarBuilder {
+
+    private static final int MENU_SHORTCUT_MASK = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
 
     private final MainFrame mainFrame;
     private JMenu recentFilesMenu;
@@ -49,7 +52,7 @@ public class MenuBarBuilder {
         JMenu menu = new JMenu("File");
         menu.setMnemonic(KeyEvent.VK_F);
 
-        menu.add(createMenuItem("Open JAR/Class...", KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Open JAR/Class...", KeyEvent.VK_O, MENU_SHORTCUT_MASK,
                 Icons.getIcon("open"), e -> mainFrame.showOpenDialog()));
 
         // Recent Files submenu
@@ -60,7 +63,7 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Export Class...", KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK,
+        menu.add(createMenuItem("Export Class...", KeyEvent.VK_E, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
                 Icons.getIcon("save"), e -> mainFrame.exportCurrentClass()));
 
         menu.add(createMenuItem("Export All Classes...", 0, 0,
@@ -68,12 +71,12 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Close Project", KeyEvent.VK_W, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK,
+        menu.add(createMenuItem("Close Project", KeyEvent.VK_W, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
                 Icons.getIcon("close"), e -> mainFrame.closeProject()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Exit", KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Exit", KeyEvent.VK_Q, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.exitApplication()));
 
         return menu;
@@ -98,7 +101,7 @@ public class MenuBarBuilder {
                 // Add accelerator for first item (Ctrl+Shift+O)
                 if (index == 1) {
                     item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
-                            InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
+                            MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK));
                 }
 
                 final File fileToOpen = file;
@@ -119,28 +122,28 @@ public class MenuBarBuilder {
         JMenu menu = new JMenu("Edit");
         menu.setMnemonic(KeyEvent.VK_E);
 
-        menu.add(createMenuItem("Copy", KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Copy", KeyEvent.VK_C, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.copySelection()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Find...", KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Find...", KeyEvent.VK_F, MENU_SHORTCUT_MASK,
                 Icons.getIcon("search"), e -> mainFrame.showFindDialog()));
 
-        menu.add(createMenuItem("Find in Project...", KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK,
+        menu.add(createMenuItem("Find in Project...", KeyEvent.VK_F, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
                 null, e -> mainFrame.showFindInProjectDialog()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Go to Class...", KeyEvent.VK_G, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Go to Class...", KeyEvent.VK_G, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.showGoToClassDialog()));
 
-        menu.add(createMenuItem("Go to Line...", KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Go to Line...", KeyEvent.VK_L, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.showGoToLineDialog()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Preferences...", KeyEvent.VK_COMMA, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Preferences...", KeyEvent.VK_COMMA, MENU_SHORTCUT_MASK,
                 Icons.getIcon("settings"), e -> mainFrame.showPreferencesDialog()));
 
         return menu;
@@ -169,28 +172,28 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Navigator Panel", KeyEvent.VK_1, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Navigator Panel", KeyEvent.VK_1, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.toggleNavigatorPanel()));
 
-        menu.add(createMenuItem("Properties Panel", KeyEvent.VK_2, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Properties Panel", KeyEvent.VK_2, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.togglePropertiesPanel()));
 
-        menu.add(createMenuItem("Console Panel", KeyEvent.VK_3, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Console Panel", KeyEvent.VK_3, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.toggleConsolePanel()));
 
         menu.addSeparator();
 
         // Font size controls
-        menu.add(createMenuItem("Increase Font Size", KeyEvent.VK_EQUALS, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Increase Font Size", KeyEvent.VK_EQUALS, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.increaseFontSize()));
-        menu.add(createMenuItem("Decrease Font Size", KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Decrease Font Size", KeyEvent.VK_MINUS, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.decreaseFontSize()));
-        menu.add(createMenuItem("Reset Font Size", KeyEvent.VK_0, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Reset Font Size", KeyEvent.VK_0, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.resetFontSize()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Refresh", KeyEvent.VK_F5, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Refresh", KeyEvent.VK_F5, MENU_SHORTCUT_MASK,
                 Icons.getIcon("refresh"), e -> mainFrame.refreshCurrentView()));
 
         return menu;
@@ -205,7 +208,7 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Show Call Graph", KeyEvent.VK_G, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK,
+        menu.add(createMenuItem("Show Call Graph", KeyEvent.VK_G, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
                 Icons.getIcon("callgraph"), e -> mainFrame.showCallGraph()));
 
         menu.add(createMenuItem("Show Dependencies", 0, 0,
@@ -213,10 +216,10 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Find Usages", KeyEvent.VK_U, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Find Usages", KeyEvent.VK_U, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.findUsages()));
 
-        menu.add(createMenuItem("Go to Definition", KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK,
+        menu.add(createMenuItem("Go to Definition", KeyEvent.VK_B, MENU_SHORTCUT_MASK,
                 null, e -> mainFrame.goToDefinition()));
 
         return menu;
@@ -226,10 +229,10 @@ public class MenuBarBuilder {
         JMenu menu = new JMenu("Transform");
         menu.setMnemonic(KeyEvent.VK_T);
 
-        menu.add(createMenuItem("Apply Transforms...", KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK,
+        menu.add(createMenuItem("Apply Transforms...", KeyEvent.VK_T, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
                 Icons.getIcon("transform"), e -> mainFrame.showTransformDialog()));
 
-        menu.add(createMenuItem("Script Editor...", KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.ALT_DOWN_MASK,
+        menu.add(createMenuItem("Script Editor...", KeyEvent.VK_S, MENU_SHORTCUT_MASK | InputEvent.ALT_DOWN_MASK,
                 Icons.getIcon("source"), e -> mainFrame.showScriptEditor()));
 
         menu.addSeparator();
