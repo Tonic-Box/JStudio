@@ -8,7 +8,7 @@ group = "com.tonic.ui"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainClass.set("com.tonic.ui.YABRStudio")
+    mainClass.set("com.tonic.ui.JStudio")
 }
 
 repositories {
@@ -46,7 +46,7 @@ tasks.test {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "com.tonic.ui.YABRStudio"
+        attributes["Main-Class"] = "com.tonic.ui.JStudio"
     }
 }
 
@@ -55,7 +55,7 @@ tasks.shadowJar {
     archiveClassifier.set("")
     archiveVersion.set("")
     manifest {
-        attributes["Main-Class"] = "com.tonic.ui.YABRStudio"
+        attributes["Main-Class"] = "com.tonic.ui.JStudio"
     }
 }
 
