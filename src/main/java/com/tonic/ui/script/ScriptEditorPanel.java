@@ -10,6 +10,7 @@ import com.tonic.ui.MainFrame;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
+import com.tonic.ui.script.bridge.AnnotationBridge;
 import com.tonic.ui.script.bridge.ASTBridge;
 import com.tonic.ui.script.bridge.CommonAPI;
 import com.tonic.ui.script.bridge.IRBridge;
@@ -299,6 +300,9 @@ public class ScriptEditorPanel extends JPanel {
                             return 0;
                         }
                         for (ClassEntryModel classEntry : projectModel.getAllClasses()) {
+                            // Run annotation handlers (once per class)
+                            count += runAnnotationsOnClass(code, classEntry);
+                            // Run method-level handlers
                             for (MethodEntryModel methodModel : classEntry.getMethods()) {
                                 count += runOnMethod(code, mode, classEntry, methodModel);
                             }
@@ -311,6 +315,9 @@ public class ScriptEditorPanel extends JPanel {
                             publish("ERROR: No class selected");
                             return 0;
                         }
+                        // Run annotation handlers (once per class)
+                        count += runAnnotationsOnClass(code, classEntry);
+                        // Run method-level handlers
                         for (MethodEntryModel methodModel : classEntry.getMethods()) {
                             count += runOnMethod(code, mode, classEntry, methodModel);
                         }
@@ -322,7 +329,9 @@ public class ScriptEditorPanel extends JPanel {
                             publish("ERROR: No method selected");
                             return 0;
                         }
-                        count = runOnMethod(code, mode, classEntry, methodModel);
+                        // Run annotation handlers (once per class)
+                        count += runAnnotationsOnClass(code, classEntry);
+                        count += runOnMethod(code, mode, classEntry, methodModel);
                         classEntry.setDecompilationCache(null);
                     }
 
@@ -481,6 +490,56 @@ public class ScriptEditorPanel extends JPanel {
         }
     }
 
+    private int runAnnotationsOnClass(String code, ClassEntryModel classEntry) {
+        try {
+            // Create interpreter
+            ScriptInterpreter interpreter = new ScriptInterpreter();
+
+            // Setup common API with class context
+            CommonAPI commonAPI = new CommonAPI();
+            commonAPI.setContext(classEntry.getClassName(), "", "");
+            commonAPI.setCallbacks(
+                msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")),
+                msg -> SwingUtilities.invokeLater(() -> appendToConsole("WARN: " + msg + "\n")),
+                msg -> SwingUtilities.invokeLater(() -> appendToConsole("ERROR: " + msg + "\n"))
+            );
+            commonAPI.registerIn(interpreter);
+
+            // Create annotation bridge
+            AnnotationBridge annotationBridge = new AnnotationBridge(interpreter);
+            annotationBridge.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
+
+            // Register annotations object
+            interpreter.getGlobalContext().defineConstant("annotations", annotationBridge.createAnnotationObject());
+
+            // Parse and execute script to register handlers
+            ScriptLexer lexer = new ScriptLexer(code);
+            List<ScriptToken> tokens = lexer.tokenize();
+            if (!lexer.getErrors().isEmpty()) {
+                return 0;
+            }
+
+            ScriptParser parser = new ScriptParser(tokens);
+            List<ScriptAST> statements = parser.parse();
+            if (!parser.getErrors().isEmpty()) {
+                return 0;
+            }
+
+            interpreter.execute(statements);
+
+            // Apply annotation handlers if any were registered
+            if (annotationBridge.hasHandlers()) {
+                return annotationBridge.applyToClass(classEntry);
+            }
+
+            return 0;
+
+        } catch (Exception e) {
+            appendToConsole("Annotation processing error: " + e.getMessage() + "\n");
+            return 0;
+        }
+    }
+
     // ==================== Script Management ====================
 
     private void loadBuiltInScripts() {
@@ -520,9 +579,38 @@ public class ScriptEditorPanel extends JPanel {
             "});\n");
         example3.setBuiltIn(true);
 
+        Script example4 = new Script("Strip @Named Annotations", Script.Mode.AST,
+            "// @name: Strip @Named Annotations\n\n" +
+            "// Remove @Named from classes\n" +
+            "annotations.onClassAnnotation((anno) => {\n" +
+            "    if (anno.simpleName == \"Named\") {\n" +
+            "        log(\"Removing @Named from class\");\n" +
+            "        return null;\n" +
+            "    }\n" +
+            "    return anno;\n" +
+            "});\n\n" +
+            "// Remove @Named from methods\n" +
+            "annotations.onMethodAnnotation((anno) => {\n" +
+            "    if (anno.simpleName == \"Named\") {\n" +
+            "        log(\"Removing @Named from \" + anno.target);\n" +
+            "        return null;\n" +
+            "    }\n" +
+            "    return anno;\n" +
+            "});\n\n" +
+            "// Remove @Named from fields\n" +
+            "annotations.onFieldAnnotation((anno) => {\n" +
+            "    if (anno.simpleName == \"Named\") {\n" +
+            "        log(\"Removing @Named from \" + anno.target);\n" +
+            "        return null;\n" +
+            "    }\n" +
+            "    return anno;\n" +
+            "});\n");
+        example4.setBuiltIn(true);
+
         scriptListModel.addElement(example1);
         scriptListModel.addElement(example2);
         scriptListModel.addElement(example3);
+        scriptListModel.addElement(example4);
 
         // Load user scripts
         ScriptStore.loadUserScripts().forEach(scriptListModel::addElement);

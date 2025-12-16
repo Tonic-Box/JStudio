@@ -53,10 +53,11 @@ public class ScriptDocumentation {
         return getStylesheet() +
                 "<h1>JStudio Script Language</h1>\n" +
                 "<p>JStudio includes a lightweight scripting language for analyzing and transforming Java bytecode. " +
-                "Scripts can operate on two levels:</p>\n" +
+                "Scripts can operate on multiple levels:</p>\n" +
                 "<ul>\n" +
                 "<li><b>AST Mode</b> - Work with high-level Abstract Syntax Tree nodes (method calls, field access, expressions)</li>\n" +
                 "<li><b>IR Mode</b> - Work with low-level Intermediate Representation (individual instructions, basic blocks)</li>\n" +
+                "<li><b>Annotation API</b> - Analyze and remove Java annotations at the bytecode level (works with both modes)</li>\n" +
                 "</ul>\n" +
                 "<p>The language uses JavaScript-like syntax with some differences. Select a topic from the navigation " +
                 "panel to learn more.</p>\n" +
@@ -331,6 +332,130 @@ public class ScriptDocumentation {
                 "<span class='kw'>if</span> (context.methodName == <span class='str'>\"&lt;init&gt;\"</span>) {\n" +
                 "    <span class='fn'>log</span>(<span class='str'>\"Skipping constructor\"</span>);\n" +
                 "}</pre>\n";
+    }
+
+    public static String getAnnotationApiOverview() {
+        return getStylesheet() +
+                "<h1>Annotation API</h1>\n" +
+                "<p>The Annotation API lets you analyze and remove Java annotations at the bytecode level. " +
+                "This works independently of AST/IR modes and operates on RuntimeVisibleAnnotations.</p>\n" +
+                "<h2>How It Works</h2>\n" +
+                "<ol>\n" +
+                "<li>Register handlers for class, method, or field annotations</li>\n" +
+                "<li>Each handler receives an annotation object with type and values</li>\n" +
+                "<li>Return <code>null</code> to remove the annotation, or the annotation to keep it</li>\n" +
+                "</ol>\n" +
+                "<h2>Available Handlers</h2>\n" +
+                "<table>\n" +
+                "<tr><th>Handler</th><th>Triggered By</th></tr>\n" +
+                "<tr><td><code>annotations.onClassAnnotation(fn)</code></td><td>Annotations on the class itself</td></tr>\n" +
+                "<tr><td><code>annotations.onMethodAnnotation(fn)</code></td><td>Annotations on methods</td></tr>\n" +
+                "<tr><td><code>annotations.onFieldAnnotation(fn)</code></td><td>Annotations on fields</td></tr>\n" +
+                "</table>\n" +
+                "<div class='note'>\n" +
+                "<b>Note:</b> Annotation handlers work with both AST and IR modes. The <code>annotations</code> object is always available.\n" +
+                "</div>\n";
+    }
+
+    public static String getAnnotationProperties() {
+        return getStylesheet() +
+                "<h1>Annotation Properties</h1>\n" +
+                "<p>Each annotation object passed to handlers has these properties:</p>\n" +
+                "<table>\n" +
+                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
+                "<tr><td><code>anno.type</code></td><td>string</td><td>Full type descriptor (e.g., \"Ljavax/inject/Named;\")</td></tr>\n" +
+                "<tr><td><code>anno.simpleName</code></td><td>string</td><td>Simple annotation name (e.g., \"Named\")</td></tr>\n" +
+                "<tr><td><code>anno.target</code></td><td>string</td><td>Name of the annotated element (class, method, or field name)</td></tr>\n" +
+                "<tr><td><code>anno.values</code></td><td>object</td><td>Element-value pairs from the annotation</td></tr>\n" +
+                "</table>\n" +
+                "<h2>Annotation Values</h2>\n" +
+                "<p>The <code>values</code> object contains annotation element values:</p>\n" +
+                "<pre><span class='cmt'>// For @Named(\"myBean\")</span>\n" +
+                "anno.values.value  <span class='cmt'>// \"myBean\"</span>\n" +
+                "\n" +
+                "<span class='cmt'>// For @RequestMapping(path=\"/api\", method=\"GET\")</span>\n" +
+                "anno.values.path   <span class='cmt'>// \"/api\"</span>\n" +
+                "anno.values.method <span class='cmt'>// \"GET\"</span></pre>\n" +
+                "<h2>Type Descriptor Format</h2>\n" +
+                "<p>The <code>type</code> property uses JVM internal format:</p>\n" +
+                "<table>\n" +
+                "<tr><th>Annotation</th><th>Type Descriptor</th><th>Simple Name</th></tr>\n" +
+                "<tr><td><code>@Named</code></td><td><code>Ljavax/inject/Named;</code></td><td>Named</td></tr>\n" +
+                "<tr><td><code>@Inject</code></td><td><code>Ljavax/inject/Inject;</code></td><td>Inject</td></tr>\n" +
+                "<tr><td><code>@Override</code></td><td><code>Ljava/lang/Override;</code></td><td>Override</td></tr>\n" +
+                "<tr><td><code>@Deprecated</code></td><td><code>Ljava/lang/Deprecated;</code></td><td>Deprecated</td></tr>\n" +
+                "</table>\n";
+    }
+
+    public static String getAnnotationExamples() {
+        return getStylesheet() +
+                "<h1>Annotation Examples</h1>\n" +
+                "<h2>Strip @Named Annotations</h2>\n" +
+                "<pre><span class='cmt'>// Remove all @Named annotations from classes, methods, and fields</span>\n" +
+                "\n" +
+                "annotations.<span class='fn'>onClassAnnotation</span>((anno) => {\n" +
+                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Named\"</span>) {\n" +
+                "        <span class='fn'>log</span>(<span class='str'>\"Removing @Named from class\"</span>);\n" +
+                "        <span class='kw'>return</span> <span class='kw'>null</span>;\n" +
+                "    }\n" +
+                "    <span class='kw'>return</span> anno;\n" +
+                "});\n" +
+                "\n" +
+                "annotations.<span class='fn'>onMethodAnnotation</span>((anno) => {\n" +
+                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Named\"</span>) {\n" +
+                "        <span class='fn'>log</span>(<span class='str'>\"Removing @Named from \"</span> + anno.target);\n" +
+                "        <span class='kw'>return</span> <span class='kw'>null</span>;\n" +
+                "    }\n" +
+                "    <span class='kw'>return</span> anno;\n" +
+                "});\n" +
+                "\n" +
+                "annotations.<span class='fn'>onFieldAnnotation</span>((anno) => {\n" +
+                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Named\"</span>) {\n" +
+                "        <span class='fn'>log</span>(<span class='str'>\"Removing @Named from \"</span> + anno.target);\n" +
+                "        <span class='kw'>return</span> <span class='kw'>null</span>;\n" +
+                "    }\n" +
+                "    <span class='kw'>return</span> anno;\n" +
+                "});</pre>\n" +
+                "<h2>Find All Deprecated Elements</h2>\n" +
+                "<pre><span class='cmt'>// List all @Deprecated annotations</span>\n" +
+                "\n" +
+                "annotations.<span class='fn'>onClassAnnotation</span>((anno) => {\n" +
+                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Deprecated\"</span>) {\n" +
+                "        <span class='fn'>warn</span>(<span class='str'>\"Deprecated class: \"</span> + anno.target);\n" +
+                "    }\n" +
+                "    <span class='kw'>return</span> anno;\n" +
+                "});\n" +
+                "\n" +
+                "annotations.<span class='fn'>onMethodAnnotation</span>((anno) => {\n" +
+                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Deprecated\"</span>) {\n" +
+                "        <span class='fn'>warn</span>(<span class='str'>\"Deprecated method: \"</span> + anno.target);\n" +
+                "    }\n" +
+                "    <span class='kw'>return</span> anno;\n" +
+                "});</pre>\n" +
+                "<h2>Strip All Injection Annotations</h2>\n" +
+                "<pre><span class='cmt'>// Remove @Inject, @Named, @Qualifier from fields</span>\n" +
+                "\n" +
+                "<span class='kw'>let</span> injectionAnnotations = [<span class='str'>\"Inject\"</span>, <span class='str'>\"Named\"</span>, <span class='str'>\"Qualifier\"</span>, <span class='str'>\"Autowired\"</span>];\n" +
+                "\n" +
+                "annotations.<span class='fn'>onFieldAnnotation</span>((anno) => {\n" +
+                "    <span class='kw'>if</span> (injectionAnnotations.<span class='fn'>includes</span>(anno.simpleName)) {\n" +
+                "        <span class='fn'>log</span>(<span class='str'>\"Stripping @\"</span> + anno.simpleName + <span class='str'>\" from \"</span> + anno.target);\n" +
+                "        <span class='kw'>return</span> <span class='kw'>null</span>;\n" +
+                "    }\n" +
+                "    <span class='kw'>return</span> anno;\n" +
+                "});</pre>\n" +
+                "<h2>Log Annotation Values</h2>\n" +
+                "<pre><span class='cmt'>// Log @Named annotation values</span>\n" +
+                "\n" +
+                "annotations.<span class='fn'>onFieldAnnotation</span>((anno) => {\n" +
+                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Named\"</span>) {\n" +
+                "        <span class='kw'>let</span> name = anno.values.value;\n" +
+                "        <span class='kw'>if</span> (name != <span class='kw'>null</span>) {\n" +
+                "            <span class='fn'>log</span>(<span class='str'>\"Field \"</span> + anno.target + <span class='str'>\" named: \"</span> + name);\n" +
+                "        }\n" +
+                "    }\n" +
+                "    <span class='kw'>return</span> anno;\n" +
+                "});</pre>\n";
     }
 
     public static String getAstApiOverview() {
@@ -732,14 +857,18 @@ public class ScriptDocumentation {
                 "  Logging & Types",
                 "  String Methods",
                 "Context Object",
+                "Annotation API",
+                "  Annotation Overview",
+                "  Annotation Properties",
+                "  Annotation Examples",
                 "AST API",
-                "  Overview",
+                "  AST Overview",
                 "  Method Calls",
                 "  Field Access",
                 "  Expressions",
-                "  Control Flow",
+                "  AST Control Flow",
                 "IR API",
-                "  Overview",
+                "  IR Overview",
                 "  Instructions",
                 "  Operations",
                 "  Iteration",
@@ -770,18 +899,26 @@ public class ScriptDocumentation {
                 return getStringMethods();
             case "Context Object":
                 return getContextObject();
+            case "Annotation API":
+            case "  Annotation Overview":
+                return getAnnotationApiOverview();
+            case "  Annotation Properties":
+                return getAnnotationProperties();
+            case "  Annotation Examples":
+                return getAnnotationExamples();
             case "AST API":
-            case "  Overview":
-                return section.equals("AST API") ? getAstApiOverview() : getIrApiOverview();
+            case "  AST Overview":
+                return getAstApiOverview();
             case "  Method Calls":
                 return getAstMethodCall();
             case "  Field Access":
                 return getAstFieldAccess();
             case "  Expressions":
                 return getAstExpressions();
-            case "  Control Flow":
+            case "  AST Control Flow":
                 return getAstControlFlow();
             case "IR API":
+            case "  IR Overview":
                 return getIrApiOverview();
             case "  Instructions":
                 return getIrInstructions();
