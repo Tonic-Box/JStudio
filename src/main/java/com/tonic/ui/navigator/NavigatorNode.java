@@ -59,7 +59,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
      */
     public static class PackageNode extends NavigatorNode {
         private final String packageName;
-        private final String displayName;
+        private String displayName;
 
         public PackageNode(String packageName) {
             super(packageName);
@@ -73,9 +73,13 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
             return packageName;
         }
 
+        public void setDisplayName(String displayName) {
+            this.displayName = displayName;
+        }
+
         @Override
         public String getDisplayText() {
-            return displayName;
+            return escapeHtml(displayName);
         }
 
         @Override
@@ -86,6 +90,21 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
         @Override
         public String getTooltip() {
             return packageName;
+        }
+
+        private String escapeHtml(String text) {
+            if (text == null) return "";
+            StringBuilder sb = new StringBuilder();
+            for (char c : text.toCharArray()) {
+                switch (c) {
+                    case '<': sb.append("&lt;"); break;
+                    case '>': sb.append("&gt;"); break;
+                    case '&': sb.append("&amp;"); break;
+                    case '"': sb.append("&quot;"); break;
+                    default: sb.append(c);
+                }
+            }
+            return sb.toString();
         }
     }
 
@@ -106,7 +125,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
 
         @Override
         public String getDisplayText() {
-            return classEntry.getSimpleName();
+            return escapeHtml(classEntry.getSimpleName());
         }
 
         @Override
@@ -117,6 +136,21 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
         @Override
         public String getTooltip() {
             return classEntry.getClassName();
+        }
+
+        private String escapeHtml(String text) {
+            if (text == null) return "";
+            StringBuilder sb = new StringBuilder();
+            for (char c : text.toCharArray()) {
+                switch (c) {
+                    case '<': sb.append("&lt;"); break;
+                    case '>': sb.append("&gt;"); break;
+                    case '&': sb.append("&amp;"); break;
+                    case '"': sb.append("&quot;"); break;
+                    default: sb.append(c);
+                }
+            }
+            return sb.toString();
         }
     }
 

@@ -821,6 +821,25 @@ public class MainFrame extends JFrame {
         }
     }
 
+    public void showCallGraphForMethod(MethodEntry method) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        showAnalysisDialog();
+        analysisPanel.showCallGraph();
+
+        if (analysisPanel.getCallGraphPanel().getCallGraph() == null) {
+            analysisPanel.getCallGraphPanel().buildCallGraph();
+        }
+
+        if (method != null) {
+            analysisPanel.getCallGraphPanel().focusOnMethod(method);
+        }
+    }
+
     public void showDependencies() {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project == null) {
@@ -839,6 +858,88 @@ public class MainFrame extends JFrame {
         if (currentClass != null) {
             analysisPanel.getDependencyPanel().focusOnClass(currentClass.getClassName());
         }
+    }
+
+    public void showDependenciesForClass(String className) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        showAnalysisDialog();
+        analysisPanel.showDependencies();
+        analysisPanel.getDependencyPanel().buildDependencyGraph();
+
+        if (className != null) {
+            analysisPanel.getDependencyPanel().focusOnClass(className);
+        }
+    }
+
+    public void showXrefsForMethod(String className, String methodName, String methodDesc) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        showAnalysisDialog();
+        analysisPanel.showXrefsForMethod(className, methodName, methodDesc);
+    }
+
+    public void showXrefsForField(String className, String fieldName, String fieldDesc) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        showAnalysisDialog();
+        analysisPanel.showXrefsForField(className, fieldName, fieldDesc);
+    }
+
+    public void showXrefsForClass(String className) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        showAnalysisDialog();
+        analysisPanel.showXrefsForClass(className);
+    }
+
+    public void showUsagesForMethod(String methodName) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        showAnalysisDialog();
+        analysisPanel.findUsages(methodName, "Method");
+    }
+
+    public void showUsagesForField(String fieldName) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        showAnalysisDialog();
+        analysisPanel.findUsages(fieldName, "Field");
+    }
+
+    public void showUsagesForClass(String className) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        showAnalysisDialog();
+        analysisPanel.findUsages(className.replace('/', '.'), "Class");
     }
 
     public void findUsages() {
@@ -1177,5 +1278,9 @@ public class MainFrame extends JFrame {
 
     public StatusBar getStatusBar() {
         return statusBar;
+    }
+
+    public AnalysisPanel getAnalysisPanel() {
+        return analysisPanel;
     }
 }

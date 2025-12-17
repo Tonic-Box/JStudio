@@ -98,8 +98,56 @@ public class ClassTreeModel extends DefaultTreeModel {
             packageNode.add(classNode);
         }
 
+        // Collapse single-child package chains
+        collapseEmptyPackages(root);
+
         setRoot(root);
         reload();
+    }
+
+    private void collapseEmptyPackages(NavigatorNode node) {
+        // Process children first (bottom-up)
+        for (int i = 0; i < node.getChildCount(); i++) {
+            Object child = node.getChildAt(i);
+            if (child instanceof NavigatorNode) {
+                collapseEmptyPackages((NavigatorNode) child);
+            }
+        }
+
+        // Check if this node should collapse its single package child
+        if (node instanceof NavigatorNode.PackageNode || node instanceof NavigatorNode.ProjectNode) {
+            collapseSinglePackageChild(node);
+        }
+    }
+
+    private void collapseSinglePackageChild(NavigatorNode parent) {
+        while (parent.getChildCount() == 1) {
+            Object onlyChild = parent.getChildAt(0);
+            if (!(onlyChild instanceof NavigatorNode.PackageNode)) {
+                break;
+            }
+
+            NavigatorNode.PackageNode childPkg = (NavigatorNode.PackageNode) onlyChild;
+
+            // Build combined display name
+            String parentDisplay;
+            if (parent instanceof NavigatorNode.PackageNode) {
+                parentDisplay = ((NavigatorNode.PackageNode) parent).getDisplayText();
+            } else {
+                break; // Don't collapse into project node
+            }
+
+            String combinedDisplay = parentDisplay + "." + childPkg.getDisplayText();
+            ((NavigatorNode.PackageNode) parent).setDisplayName(combinedDisplay);
+
+            // Move grandchildren to parent and remove child
+            parent.remove(childPkg);
+            while (childPkg.getChildCount() > 0) {
+                NavigatorNode grandchild = (NavigatorNode) childPkg.getChildAt(0);
+                childPkg.remove(grandchild);
+                parent.add(grandchild);
+            }
+        }
     }
 
     private List<ClassEntryModel> getFilteredClasses() {

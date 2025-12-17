@@ -10,7 +10,7 @@ import com.mxgraph.view.mxStylesheet;
 import com.tonic.analysis.callgraph.CallGraph;
 import com.tonic.analysis.callgraph.CallGraphNode;
 import com.tonic.analysis.callgraph.CallSite;
-import com.tonic.analysis.callgraph.MethodReference;
+import com.tonic.analysis.common.MethodReference;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
@@ -119,6 +119,7 @@ public class CallGraphPanel extends JPanel {
 
         // Graph component
         graph = new mxGraph();
+        graph.setHtmlLabels(true);
         setupGraphStyles();
         graph.setAutoSizeCells(true);
         graph.setCellsEditable(false);
@@ -343,41 +344,94 @@ public class CallGraphPanel extends JPanel {
 
     private void setupGraphStyles() {
         mxStylesheet stylesheet = graph.getStylesheet();
-        Map<String, Object> style = new HashMap<>();
 
-        // Node style
-        style.put(mxConstants.STYLE_SHAPE, mxConstants.SHAPE_RECTANGLE);
-        style.put(mxConstants.STYLE_ROUNDED, true);
-        style.put(mxConstants.STYLE_FILLCOLOR, "#252535");
-        style.put(mxConstants.STYLE_STROKECOLOR, "#7AA2F7");
-        style.put(mxConstants.STYLE_FONTCOLOR, "#E4E4EF");
-        style.put(mxConstants.STYLE_FONTSIZE, 10);
-        style.put(mxConstants.STYLE_SPACING, 4);
-        stylesheet.putCellStyle("METHOD", style);
+        Map<String, Object> baseStyle = new HashMap<>();
+        baseStyle.put(mxConstants.STYLE_SHAPE, mxConstants.SHAPE_RECTANGLE);
+        baseStyle.put(mxConstants.STYLE_ROUNDED, true);
+        baseStyle.put(mxConstants.STYLE_ARCSIZE, 12);
+        baseStyle.put(mxConstants.STYLE_VERTICAL_ALIGN, mxConstants.ALIGN_MIDDLE);
+        baseStyle.put(mxConstants.STYLE_ALIGN, mxConstants.ALIGN_CENTER);
+        baseStyle.put(mxConstants.STYLE_SPACING, 6);
+        baseStyle.put(mxConstants.STYLE_FONTSIZE, 11);
 
-        // Focus node style
-        Map<String, Object> focusStyle = new HashMap<>(style);
+        Map<String, Object> methodStyle = new HashMap<>(baseStyle);
+        methodStyle.put(mxConstants.STYLE_FILLCOLOR, "#252535");
+        methodStyle.put(mxConstants.STYLE_STROKECOLOR, "#7AA2F7");
+        methodStyle.put(mxConstants.STYLE_FONTCOLOR, "#E4E4EF");
+        methodStyle.put(mxConstants.STYLE_STROKEWIDTH, 1.5);
+        stylesheet.putCellStyle("METHOD", methodStyle);
+
+        Map<String, Object> focusStyle = new HashMap<>(baseStyle);
         focusStyle.put(mxConstants.STYLE_FILLCOLOR, "#3D4070");
         focusStyle.put(mxConstants.STYLE_STROKECOLOR, "#E0AF68");
-        focusStyle.put(mxConstants.STYLE_STROKEWIDTH, 2);
+        focusStyle.put(mxConstants.STYLE_FONTCOLOR, "#E4E4EF");
+        focusStyle.put(mxConstants.STYLE_STROKEWIDTH, 3);
         stylesheet.putCellStyle("FOCUS", focusStyle);
 
-        // External node style
-        Map<String, Object> externalStyle = new HashMap<>(style);
+        Map<String, Object> constructorStyle = new HashMap<>(baseStyle);
+        constructorStyle.put(mxConstants.STYLE_FILLCOLOR, "#1E3A2F");
+        constructorStyle.put(mxConstants.STYLE_STROKECOLOR, "#9ECE6A");
+        constructorStyle.put(mxConstants.STYLE_FONTCOLOR, "#E4E4EF");
+        constructorStyle.put(mxConstants.STYLE_STROKEWIDTH, 1.5);
+        stylesheet.putCellStyle("CONSTRUCTOR", constructorStyle);
+
+        Map<String, Object> staticInitStyle = new HashMap<>(baseStyle);
+        staticInitStyle.put(mxConstants.STYLE_FILLCOLOR, "#2D2640");
+        staticInitStyle.put(mxConstants.STYLE_STROKECOLOR, "#BB9AF7");
+        staticInitStyle.put(mxConstants.STYLE_FONTCOLOR, "#E4E4EF");
+        staticInitStyle.put(mxConstants.STYLE_STROKEWIDTH, 1.5);
+        stylesheet.putCellStyle("STATIC_INIT", staticInitStyle);
+
+        Map<String, Object> externalStyle = new HashMap<>(baseStyle);
         externalStyle.put(mxConstants.STYLE_FILLCOLOR, "#1E1E2E");
         externalStyle.put(mxConstants.STYLE_STROKECOLOR, "#565F89");
         externalStyle.put(mxConstants.STYLE_FONTCOLOR, "#9090A8");
+        externalStyle.put(mxConstants.STYLE_STROKEWIDTH, 1);
         stylesheet.putCellStyle("EXTERNAL", externalStyle);
 
-        // Edge style
-        Map<String, Object> edgeStyle = new HashMap<>();
-        edgeStyle.put(mxConstants.STYLE_STROKECOLOR, "#565F89");
-        edgeStyle.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
-        edgeStyle.put(mxConstants.STYLE_FONTCOLOR, "#9090A8");
-        edgeStyle.put(mxConstants.STYLE_FONTSIZE, 9);
-        stylesheet.putCellStyle("EDGE", edgeStyle);
+        Map<String, Object> focusConstructorStyle = new HashMap<>(constructorStyle);
+        focusConstructorStyle.put(mxConstants.STYLE_STROKEWIDTH, 3);
+        focusConstructorStyle.put(mxConstants.STYLE_STROKECOLOR, "#E0AF68");
+        stylesheet.putCellStyle("FOCUS_CONSTRUCTOR", focusConstructorStyle);
 
-        graph.getStylesheet().setDefaultEdgeStyle(edgeStyle);
+        Map<String, Object> focusStaticInitStyle = new HashMap<>(staticInitStyle);
+        focusStaticInitStyle.put(mxConstants.STYLE_STROKEWIDTH, 3);
+        focusStaticInitStyle.put(mxConstants.STYLE_STROKECOLOR, "#E0AF68");
+        stylesheet.putCellStyle("FOCUS_STATIC_INIT", focusStaticInitStyle);
+
+        Map<String, Object> baseEdgeStyle = new HashMap<>();
+        baseEdgeStyle.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
+        baseEdgeStyle.put(mxConstants.STYLE_STROKEWIDTH, 1.5);
+        baseEdgeStyle.put(mxConstants.STYLE_FONTSIZE, 9);
+
+        Map<String, Object> virtualEdge = new HashMap<>(baseEdgeStyle);
+        virtualEdge.put(mxConstants.STYLE_STROKECOLOR, "#7AA2F7");
+        stylesheet.putCellStyle("EDGE_VIRTUAL", virtualEdge);
+
+        Map<String, Object> staticEdge = new HashMap<>(baseEdgeStyle);
+        staticEdge.put(mxConstants.STYLE_STROKECOLOR, "#BB9AF7");
+        stylesheet.putCellStyle("EDGE_STATIC", staticEdge);
+
+        Map<String, Object> specialEdge = new HashMap<>(baseEdgeStyle);
+        specialEdge.put(mxConstants.STYLE_STROKECOLOR, "#9ECE6A");
+        stylesheet.putCellStyle("EDGE_SPECIAL", specialEdge);
+
+        Map<String, Object> interfaceEdge = new HashMap<>(baseEdgeStyle);
+        interfaceEdge.put(mxConstants.STYLE_STROKECOLOR, "#E0AF68");
+        interfaceEdge.put(mxConstants.STYLE_DASHED, true);
+        stylesheet.putCellStyle("EDGE_INTERFACE", interfaceEdge);
+
+        Map<String, Object> dynamicEdge = new HashMap<>(baseEdgeStyle);
+        dynamicEdge.put(mxConstants.STYLE_STROKECOLOR, "#F7768E");
+        dynamicEdge.put(mxConstants.STYLE_DASHED, true);
+        dynamicEdge.put(mxConstants.STYLE_DASH_PATTERN, "3 3");
+        stylesheet.putCellStyle("EDGE_DYNAMIC", dynamicEdge);
+
+        Map<String, Object> defaultEdge = new HashMap<>(baseEdgeStyle);
+        defaultEdge.put(mxConstants.STYLE_STROKECOLOR, "#565F89");
+        stylesheet.putCellStyle("EDGE", defaultEdge);
+
+        graph.getStylesheet().setDefaultEdgeStyle(defaultEdge);
     }
 
     /**
@@ -456,81 +510,75 @@ public class CallGraphPanel extends JPanel {
     private void visualizeFocused() {
         if (callGraph == null || focusMethod == null) return;
 
-        // Clear the cell-to-method mapping
         cellToMethodMap.clear();
+
+        Set<MethodReference> callers = collectCallers(focusMethod, maxDepth);
+        Set<MethodReference> callees = collectCallees(focusMethod, maxDepth);
 
         graph.getModel().beginUpdate();
         try {
-            // Clear existing cells
             graph.removeCells(graph.getChildCells(graph.getDefaultParent(), true, true));
 
             Object parent = graph.getDefaultParent();
             Map<MethodReference, Object> nodeMap = new HashMap<>();
 
-            // Get callers and callees up to max depth
-            Set<MethodReference> callers = collectCallers(focusMethod, maxDepth);
-            Set<MethodReference> callees = collectCallees(focusMethod, maxDepth);
-
-            // Create focus node
             String focusLabel = formatMethodLabel(focusMethod);
+            int focusWidth = calculateNodeWidth(focusMethod);
+            String focusStyle = getNodeStyle(focusMethod, true);
             Object focusNode = graph.insertVertex(parent, null, focusLabel,
-                    0, 0, 150, 30, "FOCUS");
+                    0, 0, focusWidth, 45, focusStyle);
             nodeMap.put(focusMethod, focusNode);
             cellToMethodMap.put(focusNode, focusMethod);
 
-            // Create caller nodes
             for (MethodReference caller : callers) {
                 if (!nodeMap.containsKey(caller)) {
                     String label = formatMethodLabel(caller);
-                    CallGraphNode cgNode = callGraph.getNode(caller);
-                    String style = (cgNode != null && cgNode.isInPool()) ? "METHOD" : "EXTERNAL";
+                    int width = calculateNodeWidth(caller);
+                    String style = getNodeStyle(caller, false);
                     Object node = graph.insertVertex(parent, null, label,
-                            0, 0, 150, 30, style);
+                            0, 0, width, 45, style);
                     nodeMap.put(caller, node);
                     cellToMethodMap.put(node, caller);
                 }
             }
 
-            // Create callee nodes
             for (MethodReference callee : callees) {
                 if (!nodeMap.containsKey(callee)) {
                     String label = formatMethodLabel(callee);
-                    CallGraphNode cgNode = callGraph.getNode(callee);
-                    String style = (cgNode != null && cgNode.isInPool()) ? "METHOD" : "EXTERNAL";
+                    int width = calculateNodeWidth(callee);
+                    String style = getNodeStyle(callee, false);
                     Object node = graph.insertVertex(parent, null, label,
-                            0, 0, 150, 30, style);
+                            0, 0, width, 45, style);
                     nodeMap.put(callee, node);
                     cellToMethodMap.put(node, callee);
                 }
             }
 
-            // Create edges for callers -> focus with tooltips
             for (MethodReference caller : callers) {
                 if (callGraph.calls(caller, focusMethod)) {
                     String edgeLabel = getEdgeTooltip(caller, focusMethod);
-                    Object edge = graph.insertEdge(parent, null, "", nodeMap.get(caller), nodeMap.get(focusMethod), "EDGE");
-                    // Store tooltip as user object
+                    String edgeStyle = getEdgeStyleForInvoke(caller, focusMethod);
+                    Object edge = graph.insertEdge(parent, null, "", nodeMap.get(caller), nodeMap.get(focusMethod), edgeStyle);
                     if (edge instanceof mxCell) {
                         ((mxCell) edge).setValue(edgeLabel);
                     }
                 }
             }
 
-            // Create edges for focus -> callees with tooltips
             for (MethodReference callee : callees) {
                 if (callGraph.calls(focusMethod, callee)) {
                     String edgeLabel = getEdgeTooltip(focusMethod, callee);
-                    Object edge = graph.insertEdge(parent, null, "", nodeMap.get(focusMethod), nodeMap.get(callee), "EDGE");
+                    String edgeStyle = getEdgeStyleForInvoke(focusMethod, callee);
+                    Object edge = graph.insertEdge(parent, null, "", nodeMap.get(focusMethod), nodeMap.get(callee), edgeStyle);
                     if (edge instanceof mxCell) {
                         ((mxCell) edge).setValue(edgeLabel);
                     }
                 }
             }
 
-            // Layout
             mxHierarchicalLayout layout = new mxHierarchicalLayout(graph);
-            layout.setInterRankCellSpacing(50);
-            layout.setIntraCellSpacing(30);
+            layout.setInterRankCellSpacing(70);
+            layout.setIntraCellSpacing(40);
             layout.execute(parent);
 
         } finally {
@@ -538,8 +586,7 @@ public class CallGraphPanel extends JPanel {
         }
 
         updateStatus("Showing call graph for: " + focusMethod.getOwner() + "." + focusMethod.getName() +
-                " (" + collectCallers(focusMethod, maxDepth).size() + " callers, " +
-                collectCallees(focusMethod, maxDepth).size() + " callees)");
+                " (" + callers.size() + " callers, " + callees.size() + " callees)");
     }
 
     /**
@@ -591,13 +638,97 @@ public class CallGraphPanel extends JPanel {
         }
     }
 
+    private String getSimpleClassName(String internalName) {
+        int lastSlash = internalName.lastIndexOf('/');
+        return lastSlash >= 0 ? internalName.substring(lastSlash + 1) : internalName;
+    }
+
+    private String truncate(String text, int maxLength) {
+        if (text.length() <= maxLength) return text;
+        return text.substring(0, maxLength - 3) + "...";
+    }
+
     private String formatMethodLabel(MethodReference ref) {
-        String owner = ref.getOwner();
-        int lastSlash = owner.lastIndexOf('/');
-        if (lastSlash >= 0) {
-            owner = owner.substring(lastSlash + 1);
+        String className = getSimpleClassName(ref.getOwner());
+        String methodName = ref.getName();
+        String topLine;
+        String bottomLine;
+
+        if ("<init>".equals(methodName)) {
+            topLine = "constructor";
+            bottomLine = "new " + truncate(className, 20) + "()";
+        } else if ("<clinit>".equals(methodName)) {
+            topLine = "initializer";
+            bottomLine = "static { }";
+        } else {
+            topLine = truncate(className, 22);
+            bottomLine = truncate(methodName, 20) + "()";
         }
-        return owner + "." + ref.getName();
+
+        return "<html><center>" +
+                "<span style=\"font-size:10px; color:#9090A8;\">" + topLine + "</span><br>" +
+                "<span style=\"font-size:12px; color:#E4E4EF;\">" + bottomLine + "</span>" +
+                "</center></html>";
+    }
+
+    private int calculateNodeWidth(MethodReference ref) {
+        String className = getSimpleClassName(ref.getOwner());
+        String methodName = ref.getName();
+
+        String displayName;
+        if ("<init>".equals(methodName)) {
+            displayName = "new " + className + "()";
+        } else if ("<clinit>".equals(methodName)) {
+            displayName = "static { }";
+        } else {
+            displayName = className.length() > methodName.length() ? className : methodName + "()";
+        }
+
+        int width = Math.max(100, Math.min(220, displayName.length() * 8 + 30));
+        return width;
+    }
+
+    private String getNodeStyle(MethodReference ref, boolean isFocus) {
+        String methodName = ref.getName();
+        CallGraphNode node = callGraph.getNode(ref);
+        boolean inPool = node != null && node.isInPool();
+
+        if (!inPool) {
+            return "EXTERNAL";
+        }
+
+        if ("<init>".equals(methodName)) {
+            return isFocus ? "FOCUS_CONSTRUCTOR" : "CONSTRUCTOR";
+        } else if ("<clinit>".equals(methodName)) {
+            return isFocus ? "FOCUS_STATIC_INIT" : "STATIC_INIT";
+        } else {
+            return isFocus ? "FOCUS" : "METHOD";
+        }
+    }
+
+    private String getEdgeStyleForInvoke(MethodReference caller, MethodReference callee) {
+        CallGraphNode callerNode = callGraph.getNode(caller);
+        if (callerNode == null) return "EDGE";
+
+        for (CallSite site : callerNode.getOutgoingCalls()) {
+            if (site.getTarget().equals(callee)) {
+                switch (site.getInvokeType()) {
+                    case VIRTUAL:
+                        return "EDGE_VIRTUAL";
+                    case STATIC:
+                        return "EDGE_STATIC";
+                    case SPECIAL:
+                        return "EDGE_SPECIAL";
+                    case INTERFACE:
+                        return "EDGE_INTERFACE";
+                    case DYNAMIC:
+                        return "EDGE_DYNAMIC";
+                    default:
+                        return "EDGE";
+                }
+            }
+        }
+        return "EDGE";
     }
 
     private void updateStatus(String message) {

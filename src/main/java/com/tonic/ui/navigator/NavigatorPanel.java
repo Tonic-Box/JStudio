@@ -16,7 +16,9 @@ import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
@@ -31,6 +33,8 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -61,6 +65,7 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
         tree = new JTree(treeModel);
         tree.setRootVisible(true);
         tree.setShowsRootHandles(true);
+        tree.setToggleClickCount(0);
         tree.setCellRenderer(new ClassTreeCellRenderer());
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
@@ -78,6 +83,20 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
                     handleDoubleClick();
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showContextMenu(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showContextMenu(e);
                 }
             }
         });
@@ -316,5 +335,257 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
                 expandToLevel((NavigatorNode) child, currentLevel + 1, targetLevel);
             }
         }
+    }
+
+    private void showContextMenu(MouseEvent e) {
+        TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());
+        if (path == null) return;
+
+        tree.setSelectionPath(path);
+        Object node = path.getLastPathComponent();
+
+        JPopupMenu menu = new JPopupMenu();
+        styleMenu(menu);
+
+        if (node instanceof NavigatorNode.MethodNode) {
+            buildMethodMenu(menu, (NavigatorNode.MethodNode) node);
+        } else if (node instanceof NavigatorNode.FieldNode) {
+            buildFieldMenu(menu, (NavigatorNode.FieldNode) node);
+        } else if (node instanceof NavigatorNode.ClassNode) {
+            buildClassMenu(menu, (NavigatorNode.ClassNode) node);
+        }
+
+        if (menu.getComponentCount() > 0) {
+            menu.show(tree, e.getX(), e.getY());
+        }
+    }
+
+    private void buildMethodMenu(JPopupMenu menu, NavigatorNode.MethodNode node) {
+        MethodEntryModel method = node.getMethodEntry();
+
+        addMenuItem(menu, "View in Call Graph", () -> {
+            mainFrame.showCallGraphForMethod(method.getMethodEntry());
+        });
+
+        addMenuItem(menu, "Find Cross-References", () -> {
+            mainFrame.showXrefsForMethod(
+                method.getOwner().getClassName(),
+                method.getName(),
+                method.getDescriptor()
+            );
+        });
+
+        addMenuItem(menu, "Find Usages", () -> {
+            mainFrame.showUsagesForMethod(method.getName());
+        });
+
+        menu.addSeparator();
+
+        addMenuItem(menu, "Copy Signature", () -> {
+            String ownerSimple = getSimpleClassName(method.getOwner().getClassName());
+            String sig = ownerSimple + "." + method.getName() + formatDescriptorParams(method.getDescriptor());
+            copyToClipboard(sig);
+        });
+
+        addMenuItem(menu, "Copy Descriptor", () -> {
+            copyToClipboard(method.getDescriptor());
+        });
+
+        addMenuItem(menu, "Copy Full Reference", () -> {
+            String fullRef = method.getOwner().getClassName() + "." + method.getName() + method.getDescriptor();
+            copyToClipboard(fullRef);
+        });
+    }
+
+    private void buildFieldMenu(JPopupMenu menu, NavigatorNode.FieldNode node) {
+        FieldEntryModel field = node.getFieldEntry();
+
+        addMenuItem(menu, "Go to Field", () -> {
+            EventBus.getInstance().post(new ClassSelectedEvent(this, field.getOwner()));
+            SwingUtilities.invokeLater(() -> {
+                mainFrame.getEditorPanel().setViewMode(ViewMode.SOURCE);
+                mainFrame.getEditorPanel().scrollToField(field);
+            });
+        });
+
+        addMenuItem(menu, "Find Cross-References", () -> {
+            mainFrame.showXrefsForField(
+                field.getOwner().getClassName(),
+                field.getName(),
+                field.getDescriptor()
+            );
+        });
+
+        addMenuItem(menu, "Find Usages", () -> {
+            mainFrame.showUsagesForField(field.getName());
+        });
+
+        menu.addSeparator();
+
+        addMenuItem(menu, "Copy Name", () -> {
+            copyToClipboard(field.getName());
+        });
+
+        addMenuItem(menu, "Copy Full Name", () -> {
+            String ownerSimple = getSimpleClassName(field.getOwner().getClassName());
+            copyToClipboard(ownerSimple + "." + field.getName());
+        });
+
+        addMenuItem(menu, "Copy Descriptor", () -> {
+            copyToClipboard(field.getDescriptor());
+        });
+    }
+
+    private void buildClassMenu(JPopupMenu menu, NavigatorNode.ClassNode node) {
+        ClassEntryModel classEntry = node.getClassEntry();
+
+        addMenuItem(menu, "Open in Editor", () -> {
+            EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
+        });
+
+        addMenuItem(menu, "View Dependencies", () -> {
+            mainFrame.showDependenciesForClass(classEntry.getClassName());
+        });
+
+        addMenuItem(menu, "Find Cross-References", () -> {
+            mainFrame.showXrefsForClass(classEntry.getClassName());
+        });
+
+        addMenuItem(menu, "Find Usages", () -> {
+            mainFrame.showUsagesForClass(classEntry.getClassName());
+        });
+
+        menu.addSeparator();
+
+        addMenuItem(menu, "Copy Class Name", () -> {
+            copyToClipboard(classEntry.getClassName().replace('/', '.'));
+        });
+
+        addMenuItem(menu, "Copy Internal Name", () -> {
+            copyToClipboard(classEntry.getClassName());
+        });
+
+        addMenuItem(menu, "Copy Simple Name", () -> {
+            copyToClipboard(classEntry.getSimpleName());
+        });
+    }
+
+    private void styleMenu(JPopupMenu menu) {
+        menu.setBackground(JStudioTheme.getBgSecondary());
+        menu.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
+    }
+
+    private void addMenuItem(JPopupMenu menu, String text, Runnable action) {
+        JMenuItem item = new JMenuItem(text);
+        item.setBackground(JStudioTheme.getBgSecondary());
+        item.setForeground(JStudioTheme.getTextPrimary());
+        item.addActionListener(e -> action.run());
+        menu.add(item);
+    }
+
+    private void copyToClipboard(String text) {
+        StringSelection selection = new StringSelection(text);
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
+    }
+
+    private String getSimpleClassName(String internalName) {
+        int lastSlash = internalName.lastIndexOf('/');
+        return lastSlash >= 0 ? internalName.substring(lastSlash + 1) : internalName;
+    }
+
+    private String formatDescriptorParams(String descriptor) {
+        if (descriptor == null || !descriptor.startsWith("(")) {
+            return "()";
+        }
+        int endParen = descriptor.indexOf(')');
+        if (endParen < 0) {
+            return "()";
+        }
+        String params = descriptor.substring(1, endParen);
+        if (params.isEmpty()) {
+            return "()";
+        }
+        StringBuilder result = new StringBuilder("(");
+        int i = 0;
+        boolean first = true;
+        while (i < params.length()) {
+            if (!first) {
+                result.append(", ");
+            }
+            first = false;
+            char c = params.charAt(i);
+            switch (c) {
+                case 'B': result.append("byte"); i++; break;
+                case 'C': result.append("char"); i++; break;
+                case 'D': result.append("double"); i++; break;
+                case 'F': result.append("float"); i++; break;
+                case 'I': result.append("int"); i++; break;
+                case 'J': result.append("long"); i++; break;
+                case 'S': result.append("short"); i++; break;
+                case 'Z': result.append("boolean"); i++; break;
+                case 'V': result.append("void"); i++; break;
+                case '[':
+                    int arrayDims = 0;
+                    while (i < params.length() && params.charAt(i) == '[') {
+                        arrayDims++;
+                        i++;
+                    }
+                    String elementType = parseOneType(params, i);
+                    i += rawTypeLength(params, i);
+                    result.append(elementType);
+                    for (int d = 0; d < arrayDims; d++) {
+                        result.append("[]");
+                    }
+                    break;
+                case 'L':
+                    int semi = params.indexOf(';', i);
+                    if (semi > i) {
+                        String className = params.substring(i + 1, semi);
+                        result.append(getSimpleClassName(className));
+                        i = semi + 1;
+                    } else {
+                        i++;
+                    }
+                    break;
+                default:
+                    i++;
+            }
+        }
+        result.append(")");
+        return result.toString();
+    }
+
+    private String parseOneType(String params, int i) {
+        if (i >= params.length()) return "?";
+        char c = params.charAt(i);
+        switch (c) {
+            case 'B': return "byte";
+            case 'C': return "char";
+            case 'D': return "double";
+            case 'F': return "float";
+            case 'I': return "int";
+            case 'J': return "long";
+            case 'S': return "short";
+            case 'Z': return "boolean";
+            case 'V': return "void";
+            case 'L':
+                int semi = params.indexOf(';', i);
+                if (semi > i) {
+                    return getSimpleClassName(params.substring(i + 1, semi));
+                }
+                return "Object";
+            default:
+                return "?";
+        }
+    }
+
+    private int rawTypeLength(String params, int i) {
+        if (i >= params.length()) return 0;
+        char c = params.charAt(i);
+        if (c == 'L') {
+            int semi = params.indexOf(';', i);
+            return semi > i ? (semi - i + 1) : 1;
+        }
+        return 1;
     }
 }
