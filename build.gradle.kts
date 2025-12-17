@@ -32,6 +32,14 @@ dependencies {
     implementation("com.github.javaparser:javaparser-core:3.25.5")
 
     implementation("com.github.Tonic-Box:YABR:main-SNAPSHOT")
+
+    // CLI dependencies
+    implementation("info.picocli:picocli:4.7.5")
+    annotationProcessor("info.picocli:picocli-codegen:4.7.5")
+    implementation("org.jline:jline:3.25.0")
+
+    // Groovy for DSL support
+    implementation("org.apache.groovy:groovy:4.0.15")
 }
 
 java {
@@ -61,6 +69,14 @@ tasks.shadowJar {
 
 tasks.build {
     dependsOn(tasks.shadowJar)
+}
+
+tasks.register<JavaExec>("runCli") {
+    description = "Run JStudio CLI"
+    group = "application"
+    mainClass.set("com.tonic.cli.HeadlessRunner")
+    classpath = sourceSets["main"].runtimeClasspath
+    standardInput = System.`in`
 }
 
 configurations.all {

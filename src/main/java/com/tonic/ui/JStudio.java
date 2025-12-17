@@ -1,6 +1,7 @@
 package com.tonic.ui;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.tonic.cli.HeadlessRunner;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.ThemeManager;
 import com.tonic.ui.util.KeyboardShortcuts;
@@ -9,6 +10,7 @@ import com.tonic.ui.util.Settings;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import java.awt.EventQueue;
+import java.util.Arrays;
 
 /**
  * JStudio - Java Reverse Engineering Suite
@@ -23,6 +25,11 @@ public class JStudio {
     public static final String APP_VERSION = "1.0.0";
 
     public static void main(String[] args) {
+        if (hasCliFlag(args)) {
+            HeadlessRunner.main(stripCliFlag(args));
+            return;
+        }
+
         System.setProperty("awt.useSystemAAFontSettings", "on");
         System.setProperty("swing.aatext", "true");
 
@@ -52,5 +59,20 @@ public class JStudio {
                 }
             }
         });
+    }
+
+    private static boolean hasCliFlag(String[] args) {
+        for (String arg : args) {
+            if ("--cli".equals(arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String[] stripCliFlag(String[] args) {
+        return Arrays.stream(args)
+            .filter(arg -> !"--cli".equals(arg))
+            .toArray(String[]::new);
     }
 }
