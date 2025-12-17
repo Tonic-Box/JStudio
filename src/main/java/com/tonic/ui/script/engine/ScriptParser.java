@@ -53,6 +53,27 @@ public class ScriptParser {
         if (check(ScriptToken.Type.LBRACE)) {
             return parseBlock();
         }
+        if (check(ScriptToken.Type.WHILE)) {
+            return parseWhile();
+        }
+        if (check(ScriptToken.Type.FOR)) {
+            return parseFor();
+        }
+        if (check(ScriptToken.Type.DO)) {
+            return parseDoWhile();
+        }
+        if (check(ScriptToken.Type.BREAK)) {
+            return parseBreak();
+        }
+        if (check(ScriptToken.Type.CONTINUE)) {
+            return parseContinue();
+        }
+        if (check(ScriptToken.Type.TRY)) {
+            return parseTry();
+        }
+        if (check(ScriptToken.Type.THROW)) {
+            return parseThrow();
+        }
 
         return parseExpressionStatement();
     }
@@ -115,6 +136,132 @@ public class ScriptParser {
         return new ScriptAST.BlockStmt(statements);
     }
 
+    private ScriptAST parseWhile() {
+        advance(); // consume 'while'
+        consume(ScriptToken.Type.LPAREN, "Expected '(' after 'while'");
+        ScriptAST condition = parseExpression();
+        consume(ScriptToken.Type.RPAREN, "Expected ')' after while condition");
+        ScriptAST body = parseStatement();
+        return new ScriptAST.WhileStmt(condition, body);
+    }
+
+    private ScriptAST parseDoWhile() {
+        advance(); // consume 'do'
+        ScriptAST body = parseStatement();
+        consume(ScriptToken.Type.WHILE, "Expected 'while' after do body");
+        consume(ScriptToken.Type.LPAREN, "Expected '(' after 'while'");
+        ScriptAST condition = parseExpression();
+        consume(ScriptToken.Type.RPAREN, "Expected ')' after condition");
+        consumeSemicolon();
+        return new ScriptAST.WhileStmt(condition, body);
+    }
+
+    private ScriptAST parseFor() {
+        advance(); // consume 'for'
+        consume(ScriptToken.Type.LPAREN, "Expected '(' after 'for'");
+
+        if (check(ScriptToken.Type.LET) || check(ScriptToken.Type.CONST)) {
+            boolean isConst = check(ScriptToken.Type.CONST);
+            advance();
+            ScriptToken varName = consume(ScriptToken.Type.IDENTIFIER, "Expected variable name");
+
+            if (check(ScriptToken.Type.OF) || check(ScriptToken.Type.IN)) {
+                boolean forIn = check(ScriptToken.Type.IN);
+                advance();
+                ScriptAST iterable = parseExpression();
+                consume(ScriptToken.Type.RPAREN, "Expected ')' after for-each");
+                ScriptAST body = parseStatement();
+                return new ScriptAST.ForEachStmt(varName.getValue(), isConst, iterable, body, forIn);
+            }
+
+            ScriptAST initializer = null;
+            if (match(ScriptToken.Type.EQUALS)) {
+                initializer = parseExpression();
+            }
+            ScriptAST init = new ScriptAST.VarDeclStmt(varName.getValue(), initializer, isConst);
+
+            consume(ScriptToken.Type.SEMICOLON, "Expected ';' after for initializer");
+            ScriptAST condition = null;
+            if (!check(ScriptToken.Type.SEMICOLON)) {
+                condition = parseExpression();
+            }
+            consume(ScriptToken.Type.SEMICOLON, "Expected ';' after for condition");
+            ScriptAST update = null;
+            if (!check(ScriptToken.Type.RPAREN)) {
+                update = parseExpression();
+            }
+            consume(ScriptToken.Type.RPAREN, "Expected ')' after for clauses");
+            ScriptAST body = parseStatement();
+            return new ScriptAST.ForStmt(init, condition, update, body);
+        }
+
+        ScriptAST init = null;
+        if (!check(ScriptToken.Type.SEMICOLON)) {
+            init = new ScriptAST.ExpressionStmt(parseExpression());
+        }
+        consume(ScriptToken.Type.SEMICOLON, "Expected ';' after for initializer");
+
+        ScriptAST condition = null;
+        if (!check(ScriptToken.Type.SEMICOLON)) {
+            condition = parseExpression();
+        }
+        consume(ScriptToken.Type.SEMICOLON, "Expected ';' after for condition");
+
+        ScriptAST update = null;
+        if (!check(ScriptToken.Type.RPAREN)) {
+            update = parseExpression();
+        }
+        consume(ScriptToken.Type.RPAREN, "Expected ')' after for clauses");
+
+        ScriptAST body = parseStatement();
+        return new ScriptAST.ForStmt(init, condition, update, body);
+    }
+
+    private ScriptAST parseBreak() {
+        advance(); // consume 'break'
+        consumeSemicolon();
+        return new ScriptAST.BreakStmt();
+    }
+
+    private ScriptAST parseContinue() {
+        advance(); // consume 'continue'
+        consumeSemicolon();
+        return new ScriptAST.ContinueStmt();
+    }
+
+    private ScriptAST parseTry() {
+        advance(); // consume 'try'
+        ScriptAST tryBlock = parseBlock();
+
+        String catchParam = null;
+        ScriptAST catchBlock = null;
+        if (match(ScriptToken.Type.CATCH)) {
+            consume(ScriptToken.Type.LPAREN, "Expected '(' after 'catch'");
+            ScriptToken param = consume(ScriptToken.Type.IDENTIFIER, "Expected catch parameter");
+            catchParam = param.getValue();
+            consume(ScriptToken.Type.RPAREN, "Expected ')' after catch parameter");
+            catchBlock = parseBlock();
+        }
+
+        ScriptAST finallyBlock = null;
+        if (match(ScriptToken.Type.FINALLY)) {
+            finallyBlock = parseBlock();
+        }
+
+        if (catchBlock == null && finallyBlock == null) {
+            throw new ParseException("Expected 'catch' or 'finally' after 'try'");
+        }
+
+        return new ScriptAST.TryStmt(tryBlock, catchParam, catchBlock, finallyBlock);
+    }
+
+    private ScriptAST parseThrow() {
+        advance(); // consume 'throw'
+        ScriptAST expression = parseExpression();
+        consumeSemicolon();
+        return new ScriptAST.ThrowStmt(expression);
+    }
+
     private ScriptAST parseExpressionStatement() {
         ScriptAST expr = parseExpression();
         consumeSemicolon();
@@ -134,13 +281,26 @@ public class ScriptParser {
             ScriptAST value = parseAssignment();
 
             if (expr instanceof ScriptAST.IdentifierExpr) {
-                String name = ((ScriptAST.IdentifierExpr) expr).getName();
                 return new ScriptAST.BinaryExpr(expr, "=", value);
-            } else if (expr instanceof ScriptAST.MemberAccessExpr) {
+            } else if (expr instanceof ScriptAST.MemberAccessExpr || expr instanceof ScriptAST.ArrayAccessExpr) {
                 return new ScriptAST.BinaryExpr(expr, "=", value);
             }
 
             throw new ParseException("Invalid assignment target");
+        }
+
+        if (match(ScriptToken.Type.PLUS_EQUALS, ScriptToken.Type.MINUS_EQUALS,
+                  ScriptToken.Type.STAR_EQUALS, ScriptToken.Type.SLASH_EQUALS)) {
+            String operator = previous().getValue();
+            ScriptAST value = parseAssignment();
+
+            if (expr instanceof ScriptAST.IdentifierExpr ||
+                expr instanceof ScriptAST.MemberAccessExpr ||
+                expr instanceof ScriptAST.ArrayAccessExpr) {
+                return new ScriptAST.AssignmentExpr(expr, operator, value);
+            }
+
+            throw new ParseException("Invalid compound assignment target");
         }
 
         return expr;
@@ -237,6 +397,12 @@ public class ScriptParser {
             return new ScriptAST.UnaryExpr(operator, operand);
         }
 
+        if (match(ScriptToken.Type.PLUS_PLUS, ScriptToken.Type.MINUS_MINUS)) {
+            String operator = previous().getValue();
+            ScriptAST operand = parseUnary();
+            return new ScriptAST.UpdateExpr(operand, operator, true);
+        }
+
         return parsePostfix();
     }
 
@@ -258,6 +424,9 @@ public class ScriptParser {
                 ScriptAST index = parseExpression();
                 consume(ScriptToken.Type.RBRACKET, "Expected ']' after index");
                 expr = new ScriptAST.ArrayAccessExpr(expr, index);
+            } else if (match(ScriptToken.Type.PLUS_PLUS, ScriptToken.Type.MINUS_MINUS)) {
+                String operator = previous().getValue();
+                expr = new ScriptAST.UpdateExpr(expr, operator, false);
             } else {
                 break;
             }
@@ -435,6 +604,13 @@ public class ScriptParser {
                 case IF:
                 case RETURN:
                 case FUNCTION:
+                case FOR:
+                case WHILE:
+                case DO:
+                case BREAK:
+                case CONTINUE:
+                case TRY:
+                case THROW:
                     return;
             }
 

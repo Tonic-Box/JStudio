@@ -30,6 +30,23 @@ public abstract class ScriptAST {
         T visitIf(IfStmt stmt);
         T visitReturn(ReturnStmt stmt);
         T visitBlock(BlockStmt stmt);
+
+        // Loop statements
+        T visitWhile(WhileStmt stmt);
+        T visitFor(ForStmt stmt);
+        T visitForEach(ForEachStmt stmt);
+        T visitBreak(BreakStmt stmt);
+        T visitContinue(ContinueStmt stmt);
+
+        // Exception statements
+        T visitTry(TryStmt stmt);
+        T visitThrow(ThrowStmt stmt);
+
+        // Update expression (++ and --)
+        T visitUpdate(UpdateExpr expr);
+
+        // Compound assignment (+=, -=, etc.)
+        T visitAssignment(AssignmentExpr expr);
     }
 
     public abstract <T> T accept(Visitor<T> visitor);
@@ -259,6 +276,156 @@ public abstract class ScriptAST {
         @Override
         public <T> T accept(Visitor<T> visitor) {
             return visitor.visitBlock(this);
+        }
+    }
+
+    // ==================== Loop Statements ====================
+
+    @Getter
+    public static class WhileStmt extends ScriptAST {
+        private final ScriptAST condition;
+        private final ScriptAST body;
+
+        public WhileStmt(ScriptAST condition, ScriptAST body) {
+            this.condition = condition;
+            this.body = body;
+        }
+
+        @Override
+        public <T> T accept(Visitor<T> visitor) {
+            return visitor.visitWhile(this);
+        }
+    }
+
+    @Getter
+    public static class ForStmt extends ScriptAST {
+        private final ScriptAST init;       // nullable (VarDeclStmt or ExpressionStmt)
+        private final ScriptAST condition;  // nullable
+        private final ScriptAST update;     // nullable
+        private final ScriptAST body;
+
+        public ForStmt(ScriptAST init, ScriptAST condition, ScriptAST update, ScriptAST body) {
+            this.init = init;
+            this.condition = condition;
+            this.update = update;
+            this.body = body;
+        }
+
+        @Override
+        public <T> T accept(Visitor<T> visitor) {
+            return visitor.visitFor(this);
+        }
+    }
+
+    @Getter
+    public static class ForEachStmt extends ScriptAST {
+        private final String varName;
+        private final boolean constant;    // const vs let
+        private final ScriptAST iterable;
+        private final ScriptAST body;
+        private final boolean forIn;       // for-in (keys) vs for-of (values)
+
+        public ForEachStmt(String varName, boolean constant, ScriptAST iterable, ScriptAST body, boolean forIn) {
+            this.varName = varName;
+            this.constant = constant;
+            this.iterable = iterable;
+            this.body = body;
+            this.forIn = forIn;
+        }
+
+        @Override
+        public <T> T accept(Visitor<T> visitor) {
+            return visitor.visitForEach(this);
+        }
+    }
+
+    @Getter
+    public static class BreakStmt extends ScriptAST {
+        @Override
+        public <T> T accept(Visitor<T> visitor) {
+            return visitor.visitBreak(this);
+        }
+    }
+
+    @Getter
+    public static class ContinueStmt extends ScriptAST {
+        @Override
+        public <T> T accept(Visitor<T> visitor) {
+            return visitor.visitContinue(this);
+        }
+    }
+
+    // ==================== Exception Statements ====================
+
+    @Getter
+    public static class TryStmt extends ScriptAST {
+        private final ScriptAST tryBlock;
+        private final String catchParam;     // nullable if no catch
+        private final ScriptAST catchBlock;  // nullable
+        private final ScriptAST finallyBlock; // nullable
+
+        public TryStmt(ScriptAST tryBlock, String catchParam, ScriptAST catchBlock, ScriptAST finallyBlock) {
+            this.tryBlock = tryBlock;
+            this.catchParam = catchParam;
+            this.catchBlock = catchBlock;
+            this.finallyBlock = finallyBlock;
+        }
+
+        @Override
+        public <T> T accept(Visitor<T> visitor) {
+            return visitor.visitTry(this);
+        }
+    }
+
+    @Getter
+    public static class ThrowStmt extends ScriptAST {
+        private final ScriptAST expression;
+
+        public ThrowStmt(ScriptAST expression) {
+            this.expression = expression;
+        }
+
+        @Override
+        public <T> T accept(Visitor<T> visitor) {
+            return visitor.visitThrow(this);
+        }
+    }
+
+    // ==================== Additional Expressions ====================
+
+    @Getter
+    public static class UpdateExpr extends ScriptAST {
+        private final ScriptAST operand;
+        private final String operator;  // ++ or --
+        private final boolean prefix;   // ++x vs x++
+
+        public UpdateExpr(ScriptAST operand, String operator, boolean prefix) {
+            this.operand = operand;
+            this.operator = operator;
+            this.prefix = prefix;
+        }
+
+        @Override
+        public <T> T accept(Visitor<T> visitor) {
+            return visitor.visitUpdate(this);
+        }
+    }
+
+    @Getter
+    public static class AssignmentExpr extends ScriptAST {
+        private final ScriptAST target;
+        private final String operator;  // +=, -=, *=, /=
+        private final ScriptAST value;
+
+        public AssignmentExpr(ScriptAST target, String operator, ScriptAST value) {
+            this.target = target;
+            this.operator = operator;
+            this.value = value;
+        }
+
+        @Override
+        public <T> T accept(Visitor<T> visitor) {
+            return visitor.visitAssignment(this);
         }
     }
 }

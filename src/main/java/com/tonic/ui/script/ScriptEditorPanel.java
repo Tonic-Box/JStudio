@@ -18,9 +18,14 @@ import com.tonic.ui.script.engine.*;
 import com.tonic.ui.script.store.ScriptStore;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.theme.Theme;
+import com.tonic.ui.theme.ThemeManager;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.Style;
+import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
@@ -33,7 +38,7 @@ import java.util.List;
 /**
  * Main panel for editing and running JStudio transform scripts.
  */
-public class ScriptEditorPanel extends JPanel {
+public class ScriptEditorPanel extends JPanel implements ThemeManager.ThemeChangeListener {
 
     private final MainFrame mainFrame;
 
@@ -84,65 +89,129 @@ public class ScriptEditorPanel extends JPanel {
         add(createStatusBar(), BorderLayout.SOUTH);
 
         loadBuiltInScripts();
+        applySyntaxColors();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+    }
+
+    @Override
+    public void onThemeChanged(Theme newTheme) {
+        applySyntaxColors();
+        updateEditorColors();
+    }
+
+    private void applySyntaxColors() {
+        if (codeEditor == null) return;
+
+        Theme theme = ThemeManager.getInstance().getCurrentTheme();
+        SyntaxScheme scheme = codeEditor.getSyntaxScheme();
+
+        scheme.getStyle(Token.RESERVED_WORD).foreground = theme.getJavaKeyword();
+        scheme.getStyle(Token.RESERVED_WORD_2).foreground = theme.getJavaKeyword();
+        scheme.getStyle(Token.DATA_TYPE).foreground = theme.getJavaType();
+        scheme.getStyle(Token.LITERAL_STRING_DOUBLE_QUOTE).foreground = theme.getJavaString();
+        scheme.getStyle(Token.LITERAL_CHAR).foreground = theme.getJavaString();
+        scheme.getStyle(Token.LITERAL_BACKQUOTE).foreground = theme.getJavaString();
+        scheme.getStyle(Token.LITERAL_NUMBER_DECIMAL_INT).foreground = theme.getJavaNumber();
+        scheme.getStyle(Token.LITERAL_NUMBER_FLOAT).foreground = theme.getJavaNumber();
+        scheme.getStyle(Token.LITERAL_NUMBER_HEXADECIMAL).foreground = theme.getJavaNumber();
+        scheme.getStyle(Token.LITERAL_BOOLEAN).foreground = theme.getJavaConstant();
+        scheme.getStyle(Token.COMMENT_EOL).foreground = theme.getJavaComment();
+        scheme.getStyle(Token.COMMENT_MULTILINE).foreground = theme.getJavaComment();
+        scheme.getStyle(Token.COMMENT_DOCUMENTATION).foreground = theme.getJavaComment();
+        scheme.getStyle(Token.FUNCTION).foreground = theme.getJavaMethod();
+        scheme.getStyle(Token.VARIABLE).foreground = theme.getJavaLocalVar();
+        scheme.getStyle(Token.OPERATOR).foreground = theme.getJavaOperator();
+        scheme.getStyle(Token.SEPARATOR).foreground = theme.getTextPrimary();
+        scheme.getStyle(Token.IDENTIFIER).foreground = theme.getTextPrimary();
+        scheme.getStyle(Token.ANNOTATION).foreground = theme.getJavaAnnotation();
+
+        codeEditor.revalidate();
+        codeEditor.repaint();
+    }
+
+    private void updateEditorColors() {
+        if (codeEditor == null) return;
+
+        Theme theme = ThemeManager.getInstance().getCurrentTheme();
+        codeEditor.setBackground(theme.getBgPrimary());
+        codeEditor.setForeground(theme.getTextPrimary());
+        codeEditor.setCaretColor(theme.getTextPrimary());
+        codeEditor.setCurrentLineHighlightColor(theme.getBgSecondary());
+        codeEditor.setSelectionColor(theme.getSelection());
+
+        if (editorScrollPane != null) {
+            editorScrollPane.getGutter().setBackground(theme.getBgSecondary());
+            editorScrollPane.getGutter().setLineNumberColor(theme.getTextSecondary());
+            editorScrollPane.getGutter().setBorderColor(theme.getBorder());
+        }
+
+        codeEditor.revalidate();
+        codeEditor.repaint();
     }
 
     private JPanel createToolbar() {
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JPanel toolbar = new JPanel(new BorderLayout());
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
 
-        // Mode selector
-        toolbar.add(new JLabel("Mode:"));
+        // Top row: selectors
+        JPanel selectorsRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        selectorsRow.setBackground(JStudioTheme.getBgSecondary());
+
+        selectorsRow.add(new JLabel("Mode:"));
         modeComboBox = new JComboBox<>(Script.Mode.values());
         modeComboBox.setSelectedItem(Script.Mode.AST);
         modeComboBox.addActionListener(e -> currentScript.setMode((Script.Mode) modeComboBox.getSelectedItem()));
         styleComboBox(modeComboBox);
-        toolbar.add(modeComboBox);
+        selectorsRow.add(modeComboBox);
 
-        toolbar.add(Box.createHorizontalStrut(16));
+        selectorsRow.add(Box.createHorizontalStrut(16));
 
-        // Target selector
-        toolbar.add(new JLabel("Target:"));
+        selectorsRow.add(new JLabel("Target:"));
         targetComboBox = new JComboBox<>(new String[]{"Current Method", "Current Class", "All Classes"});
         styleComboBox(targetComboBox);
-        toolbar.add(targetComboBox);
+        selectorsRow.add(targetComboBox);
 
-        toolbar.add(Box.createHorizontalStrut(16));
+        selectorsRow.add(Box.createHorizontalStrut(16));
 
-        // Class selector
-        toolbar.add(new JLabel("Class:"));
+        selectorsRow.add(new JLabel("Class:"));
         classComboBox = new JComboBox<>();
         classComboBox.setRenderer(new ClassComboRenderer());
         classComboBox.addActionListener(e -> updateMethodComboBox());
         styleComboBox(classComboBox);
-        toolbar.add(classComboBox);
+        selectorsRow.add(classComboBox);
 
-        // Method selector
-        toolbar.add(new JLabel("Method:"));
+        selectorsRow.add(new JLabel("Method:"));
         methodComboBox = new JComboBox<>();
         methodComboBox.setRenderer(new MethodComboRenderer());
         styleComboBox(methodComboBox);
-        toolbar.add(methodComboBox);
+        selectorsRow.add(methodComboBox);
 
-        toolbar.add(Box.createHorizontalGlue());
+        // Bottom row: action buttons
+        JPanel buttonsRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        buttonsRow.setBackground(JStudioTheme.getBgSecondary());
 
-        // Run button
         JButton runButton = createToolbarButton("Run", Icons.getIcon("play"), e -> runScript());
-        toolbar.add(runButton);
+        buttonsRow.add(runButton);
 
-        // Save button
         JButton saveButton = createToolbarButton("Save", Icons.getIcon("save"), e -> saveScript());
-        toolbar.add(saveButton);
+        buttonsRow.add(saveButton);
 
-        // Load button
         JButton loadButton = createToolbarButton("Load", Icons.getIcon("folder"), e -> loadScript());
-        toolbar.add(loadButton);
+        buttonsRow.add(loadButton);
 
-        toolbar.add(Box.createHorizontalStrut(8));
+        buttonsRow.add(Box.createHorizontalStrut(16));
 
-        // Help button
         JButton helpButton = createToolbarButton("Help", Icons.getIcon("info"), e -> showDocumentation());
-        toolbar.add(helpButton);
+        buttonsRow.add(helpButton);
+
+        // Combine rows
+        JPanel rows = new JPanel(new GridLayout(2, 1));
+        rows.setBackground(JStudioTheme.getBgSecondary());
+        rows.add(selectorsRow);
+        rows.add(buttonsRow);
+
+        toolbar.add(rows, BorderLayout.CENTER);
 
         return toolbar;
     }

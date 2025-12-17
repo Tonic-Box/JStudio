@@ -52,828 +52,546 @@ public class ScriptDocumentation {
     public static String getOverview() {
         return getStylesheet() +
                 "<h1>JStudio Script Language</h1>\n" +
-                "<p>JStudio includes a lightweight scripting language for analyzing and transforming Java bytecode. " +
-                "Scripts can operate on multiple levels:</p>\n" +
-                "<ul>\n" +
-                "<li><b>AST Mode</b> - Work with high-level Abstract Syntax Tree nodes (method calls, field access, expressions)</li>\n" +
-                "<li><b>IR Mode</b> - Work with low-level Intermediate Representation (individual instructions, basic blocks)</li>\n" +
-                "<li><b>Annotation API</b> - Analyze and remove Java annotations at the bytecode level (works with both modes)</li>\n" +
-                "</ul>\n" +
-                "<p>The language uses JavaScript-like syntax with some differences. Select a topic from the navigation " +
-                "panel to learn more.</p>\n" +
+                "<p>JStudio includes a powerful scripting language for analyzing and transforming Java bytecode. " +
+                "The language provides multiple analysis APIs:</p>\n" +
+                "<table>\n" +
+                "<tr><th>Global Object</th><th>Purpose</th></tr>\n" +
+                "<tr><td><code>context</code></td><td>Current class/method info</td></tr>\n" +
+                "<tr><td><code>ast</code></td><td>AST node handlers</td></tr>\n" +
+                "<tr><td><code>ir</code></td><td>IR instruction handlers</td></tr>\n" +
+                "<tr><td><code>annotations</code></td><td>Annotation handlers</td></tr>\n" +
+                "<tr><td><code>results</code></td><td>Findings collection and export</td></tr>\n" +
+                "<tr><td><code>project</code></td><td>Project-wide queries</td></tr>\n" +
+                "<tr><td><code>callgraph</code></td><td>Call graph analysis</td></tr>\n" +
+                "<tr><td><code>dataflow</code></td><td>Data flow and taint analysis</td></tr>\n" +
+                "<tr><td><code>dependencies</code></td><td>Class dependency analysis</td></tr>\n" +
+                "<tr><td><code>patterns</code></td><td>Pattern matching</td></tr>\n" +
+                "<tr><td><code>simulation</code></td><td>Abstract interpretation</td></tr>\n" +
+                "<tr><td><code>instrument</code></td><td>Bytecode modification</td></tr>\n" +
+                "<tr><td><code>types</code></td><td>Type inference</td></tr>\n" +
+                "<tr><td><code>strings</code></td><td>String analysis</td></tr>\n" +
+                "<tr><td><code>pipeline</code></td><td>Multi-stage workflows</td></tr>\n" +
+                "</table>\n" +
                 "<div class='note'>\n" +
                 "<b>Quick Start:</b> Try the example scripts in the Script Library panel to see the language in action.\n" +
                 "</div>\n";
     }
 
-    public static String getVariables() {
+    public static String getLoops() {
         return getStylesheet() +
-                "<h1>Variables</h1>\n" +
-                "<p>Declare variables using <code>let</code> for mutable values or <code>const</code> for constants.</p>\n" +
-                "<h2>Mutable Variables (let)</h2>\n" +
-                "<pre><span class='kw'>let</span> x = <span class='num'>10</span>;\n" +
-                "x = <span class='num'>20</span>;  <span class='cmt'>// OK - can reassign</span>\n" +
-                "\n" +
-                "<span class='kw'>let</span> name = <span class='str'>\"Hello\"</span>;\n" +
-                "name = <span class='str'>\"World\"</span>;  <span class='cmt'>// OK</span></pre>\n" +
-                "<h2>Constants (const)</h2>\n" +
-                "<pre><span class='kw'>const</span> PI = <span class='num'>3.14159</span>;\n" +
-                "PI = <span class='num'>3</span>;  <span class='cmt'>// ERROR! Cannot reassign const</span>\n" +
-                "\n" +
-                "<span class='kw'>const</span> CONFIG = { debug: <span class='kw'>true</span> };\n" +
-                "CONFIG.debug = <span class='kw'>false</span>;  <span class='cmt'>// OK - object properties can change</span></pre>\n" +
-                "<div class='note'>\n" +
-                "<b>Note:</b> <code>const</code> prevents reassignment of the variable itself, but object/array contents can still be modified.\n" +
-                "</div>\n" +
-                "<h2>Scope</h2>\n" +
-                "<p>Variables are block-scoped. A variable declared inside a block <code>{ }</code> is not accessible outside it.</p>\n" +
-                "<pre><span class='kw'>let</span> x = <span class='num'>1</span>;\n" +
-                "<span class='kw'>if</span> (<span class='kw'>true</span>) {\n" +
-                "    <span class='kw'>let</span> y = <span class='num'>2</span>;\n" +
-                "    <span class='fn'>log</span>(x);  <span class='cmt'>// OK - x is accessible</span>\n" +
-                "}\n" +
-                "<span class='fn'>log</span>(y);  <span class='cmt'>// ERROR - y is not defined here</span></pre>\n";
-    }
-
-    public static String getDataTypes() {
-        return getStylesheet() +
-                "<h1>Data Types</h1>\n" +
-                "<p>The scripting language supports these data types:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Type</th><th>Example</th><th>Description</th></tr>\n" +
-                "<tr><td><code>null</code></td><td><code>null</code></td><td>Represents no value</td></tr>\n" +
-                "<tr><td><code>boolean</code></td><td><code>true</code>, <code>false</code></td><td>Logical values</td></tr>\n" +
-                "<tr><td><code>number</code></td><td><code>42</code>, <code>3.14</code></td><td>Integer or floating-point</td></tr>\n" +
-                "<tr><td><code>string</code></td><td><code>\"hello\"</code></td><td>Text values</td></tr>\n" +
-                "<tr><td><code>function</code></td><td><code>(x) => x * 2</code></td><td>Callable functions</td></tr>\n" +
-                "<tr><td><code>object</code></td><td><code>{ key: value }</code></td><td>Key-value pairs</td></tr>\n" +
-                "<tr><td><code>array</code></td><td><code>[1, 2, 3]</code></td><td>Ordered collections</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Type Checking</h2>\n" +
-                "<pre><span class='fn'>typeof</span>(<span class='num'>42</span>)        <span class='cmt'>// \"number\"</span>\n" +
-                "<span class='fn'>typeof</span>(<span class='str'>\"hello\"</span>)   <span class='cmt'>// \"string\"</span>\n" +
-                "<span class='fn'>typeof</span>(<span class='kw'>true</span>)      <span class='cmt'>// \"boolean\"</span>\n" +
-                "<span class='fn'>typeof</span>(<span class='kw'>null</span>)      <span class='cmt'>// \"null\"</span>\n" +
-                "<span class='fn'>typeof</span>([<span class='num'>1</span>,<span class='num'>2</span>])     <span class='cmt'>// \"array\"</span>\n" +
-                "<span class='fn'>typeof</span>({a:<span class='num'>1</span>})     <span class='cmt'>// \"object\"</span></pre>\n" +
-                "<h2>Truthiness</h2>\n" +
-                "<p>These values are considered <b>falsy</b>:</p>\n" +
-                "<ul>\n" +
-                "<li><code>false</code></li>\n" +
-                "<li><code>null</code></li>\n" +
-                "<li><code>0</code></li>\n" +
-                "<li><code>\"\"</code> (empty string)</li>\n" +
-                "</ul>\n" +
-                "<p>Everything else is <b>truthy</b>.</p>\n";
-    }
-
-    public static String getOperators() {
-        return getStylesheet() +
-                "<h1>Operators</h1>\n" +
-                "<h2>Arithmetic</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Operator</th><th>Description</th><th>Example</th></tr>\n" +
-                "<tr><td><code>+</code></td><td>Addition / Concatenation</td><td><code>5 + 3</code> = 8</td></tr>\n" +
-                "<tr><td><code>-</code></td><td>Subtraction</td><td><code>5 - 3</code> = 2</td></tr>\n" +
-                "<tr><td><code>*</code></td><td>Multiplication</td><td><code>5 * 3</code> = 15</td></tr>\n" +
-                "<tr><td><code>/</code></td><td>Division</td><td><code>6 / 2</code> = 3</td></tr>\n" +
-                "<tr><td><code>%</code></td><td>Modulo (remainder)</td><td><code>7 % 3</code> = 1</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Comparison</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Operator</th><th>Description</th><th>Example</th></tr>\n" +
-                "<tr><td><code>==</code></td><td>Equal</td><td><code>5 == 5</code> = true</td></tr>\n" +
-                "<tr><td><code>!=</code></td><td>Not equal</td><td><code>5 != 3</code> = true</td></tr>\n" +
-                "<tr><td><code>&lt;</code></td><td>Less than</td><td><code>3 &lt; 5</code> = true</td></tr>\n" +
-                "<tr><td><code>&gt;</code></td><td>Greater than</td><td><code>5 &gt; 3</code> = true</td></tr>\n" +
-                "<tr><td><code>&lt;=</code></td><td>Less or equal</td><td><code>3 &lt;= 3</code> = true</td></tr>\n" +
-                "<tr><td><code>&gt;=</code></td><td>Greater or equal</td><td><code>5 &gt;= 5</code> = true</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Logical</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Operator</th><th>Description</th><th>Example</th></tr>\n" +
-                "<tr><td><code>&&</code></td><td>Logical AND</td><td><code>true && false</code> = false</td></tr>\n" +
-                "<tr><td><code>||</code></td><td>Logical OR</td><td><code>true || false</code> = true</td></tr>\n" +
-                "<tr><td><code>!</code></td><td>Logical NOT</td><td><code>!true</code> = false</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Ternary Operator</h2>\n" +
-                "<pre><span class='kw'>let</span> result = condition ? valueIfTrue : valueIfFalse;\n" +
-                "\n" +
-                "<span class='kw'>let</span> status = count > <span class='num'>0</span> ? <span class='str'>\"has items\"</span> : <span class='str'>\"empty\"</span>;</pre>\n" +
-                "<h2>Optional Chaining</h2>\n" +
-                "<p>Use <code>?.</code> to safely access properties that might not exist:</p>\n" +
-                "<pre><span class='kw'>let</span> name = node?.target?.name;  <span class='cmt'>// Returns null if any part is null</span></pre>\n";
-    }
-
-    public static String getComments() {
-        return getStylesheet() +
-                "<h1>Comments</h1>\n" +
-                "<h2>Single-Line Comments</h2>\n" +
-                "<pre><span class='cmt'>// This is a single-line comment</span>\n" +
-                "<span class='kw'>let</span> x = <span class='num'>10</span>;  <span class='cmt'>// Comment at end of line</span></pre>\n" +
-                "<h2>Multi-Line Comments</h2>\n" +
-                "<pre><span class='cmt'>/*\n" +
-                "  This is a multi-line comment.\n" +
-                "  It can span multiple lines.\n" +
-                "*/</span>\n" +
-                "<span class='kw'>let</span> y = <span class='num'>20</span>;</pre>\n";
-    }
-
-    public static String getControlFlow() {
-        return getStylesheet() +
-                "<h1>Control Flow</h1>\n" +
-                "<h2>If / Else</h2>\n" +
-                "<pre><span class='kw'>if</span> (condition) {\n" +
-                "    <span class='cmt'>// executed if condition is true</span>\n" +
-                "}\n" +
-                "\n" +
-                "<span class='kw'>if</span> (x > <span class='num'>10</span>) {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"big\"</span>);\n" +
-                "} <span class='kw'>else if</span> (x > <span class='num'>5</span>) {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"medium\"</span>);\n" +
-                "} <span class='kw'>else</span> {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"small\"</span>);\n" +
+                "<h1>Loops</h1>\n" +
+                "<h2>While Loop</h2>\n" +
+                "<pre><span class='kw'>let</span> i = <span class='num'>0</span>;\n" +
+                "<span class='kw'>while</span> (i &lt; <span class='num'>10</span>) {\n" +
+                "    <span class='fn'>log</span>(i);\n" +
+                "    i = i + <span class='num'>1</span>;\n" +
                 "}</pre>\n" +
-                "<h2>Blocks</h2>\n" +
-                "<p>Use curly braces to group multiple statements:</p>\n" +
-                "<pre><span class='kw'>if</span> (condition) {\n" +
-                "    <span class='kw'>let</span> temp = calculate();\n" +
-                "    process(temp);\n" +
-                "    <span class='fn'>log</span>(temp);\n" +
+                "<h2>For Loop</h2>\n" +
+                "<pre><span class='kw'>for</span> (<span class='kw'>let</span> i = <span class='num'>0</span>; i &lt; <span class='num'>10</span>; i = i + <span class='num'>1</span>) {\n" +
+                "    <span class='fn'>log</span>(i);\n" +
+                "}</pre>\n" +
+                "<h2>For-Of Loop (Arrays)</h2>\n" +
+                "<pre><span class='kw'>let</span> items = [<span class='str'>\"a\"</span>, <span class='str'>\"b\"</span>, <span class='str'>\"c\"</span>];\n" +
+                "<span class='kw'>for</span> (<span class='kw'>let</span> item <span class='kw'>of</span> items) {\n" +
+                "    <span class='fn'>log</span>(item);\n" +
+                "}</pre>\n" +
+                "<h2>For-In Loop (Objects)</h2>\n" +
+                "<pre><span class='kw'>let</span> obj = { name: <span class='str'>\"test\"</span>, count: <span class='num'>42</span> };\n" +
+                "<span class='kw'>for</span> (<span class='kw'>let</span> key <span class='kw'>in</span> obj) {\n" +
+                "    <span class='fn'>log</span>(key + <span class='str'>\": \"</span> + obj[key]);\n" +
+                "}</pre>\n" +
+                "<h2>Break and Continue</h2>\n" +
+                "<pre><span class='kw'>for</span> (<span class='kw'>let</span> i = <span class='num'>0</span>; i &lt; <span class='num'>10</span>; i = i + <span class='num'>1</span>) {\n" +
+                "    <span class='kw'>if</span> (i == <span class='num'>5</span>) <span class='kw'>break</span>;     <span class='cmt'>// Exit loop</span>\n" +
+                "    <span class='kw'>if</span> (i % <span class='num'>2</span> == <span class='num'>0</span>) <span class='kw'>continue</span>; <span class='cmt'>// Skip even numbers</span>\n" +
+                "    <span class='fn'>log</span>(i);\n" +
                 "}</pre>\n";
     }
 
-    public static String getFunctions() {
+    public static String getArrayMethods() {
         return getStylesheet() +
-                "<h1>Functions</h1>\n" +
-                "<p>Functions are defined using arrow syntax:</p>\n" +
-                "<h2>Basic Syntax</h2>\n" +
-                "<pre><span class='cmt'>// No parameters</span>\n" +
-                "<span class='kw'>let</span> greet = () => {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"Hello!\"</span>);\n" +
-                "};\n" +
+                "<h1>Array Methods</h1>\n" +
+                "<h2>Iteration</h2>\n" +
+                "<pre><span class='kw'>let</span> arr = [<span class='num'>1</span>, <span class='num'>2</span>, <span class='num'>3</span>];\n" +
                 "\n" +
-                "<span class='cmt'>// Single parameter (parentheses optional)</span>\n" +
-                "<span class='kw'>let</span> double = x => x * <span class='num'>2</span>;\n" +
-                "<span class='kw'>let</span> double2 = (x) => x * <span class='num'>2</span>;\n" +
+                "<span class='cmt'>// forEach - iterate over each element</span>\n" +
+                "arr.<span class='fn'>forEach</span>((item) => <span class='fn'>log</span>(item));\n" +
                 "\n" +
-                "<span class='cmt'>// Multiple parameters</span>\n" +
-                "<span class='kw'>let</span> add = (a, b) => a + b;\n" +
+                "<span class='cmt'>// map - transform each element</span>\n" +
+                "<span class='kw'>let</span> doubled = arr.<span class='fn'>map</span>((x) => x * <span class='num'>2</span>);  <span class='cmt'>// [2, 4, 6]</span>\n" +
                 "\n" +
-                "<span class='cmt'>// Multi-line function body</span>\n" +
-                "<span class='kw'>let</span> process = (x) => {\n" +
-                "    <span class='kw'>let</span> result = x * <span class='num'>2</span>;\n" +
+                "<span class='cmt'>// filter - keep matching elements</span>\n" +
+                "<span class='kw'>let</span> evens = arr.<span class='fn'>filter</span>((x) => x % <span class='num'>2</span> == <span class='num'>0</span>);  <span class='cmt'>// [2]</span></pre>\n" +
+                "<h2>Search</h2>\n" +
+                "<pre><span class='cmt'>// find - get first matching element</span>\n" +
+                "<span class='kw'>let</span> found = arr.<span class='fn'>find</span>((x) => x > <span class='num'>1</span>);  <span class='cmt'>// 2</span>\n" +
+                "\n" +
+                "<span class='cmt'>// some - check if any match</span>\n" +
+                "<span class='kw'>let</span> hasEven = arr.<span class='fn'>some</span>((x) => x % <span class='num'>2</span> == <span class='num'>0</span>);  <span class='cmt'>// true</span>\n" +
+                "\n" +
+                "<span class='cmt'>// every - check if all match</span>\n" +
+                "<span class='kw'>let</span> allPositive = arr.<span class='fn'>every</span>((x) => x > <span class='num'>0</span>);  <span class='cmt'>// true</span>\n" +
+                "\n" +
+                "<span class='cmt'>// includes - check if value exists</span>\n" +
+                "<span class='kw'>let</span> has2 = arr.<span class='fn'>includes</span>(<span class='num'>2</span>);  <span class='cmt'>// true</span>\n" +
+                "\n" +
+                "<span class='cmt'>// indexOf - find position</span>\n" +
+                "<span class='kw'>let</span> pos = arr.<span class='fn'>indexOf</span>(<span class='num'>2</span>);  <span class='cmt'>// 1</span></pre>\n" +
+                "<h2>Accumulation</h2>\n" +
+                "<pre><span class='cmt'>// reduce - accumulate to single value</span>\n" +
+                "<span class='kw'>let</span> sum = arr.<span class='fn'>reduce</span>((acc, x) => acc + x, <span class='num'>0</span>);  <span class='cmt'>// 6</span></pre>\n" +
+                "<h2>Modification</h2>\n" +
+                "<pre><span class='cmt'>// push/pop - add/remove at end</span>\n" +
+                "arr.<span class='fn'>push</span>(<span class='num'>4</span>);  <span class='cmt'>// [1, 2, 3, 4]</span>\n" +
+                "arr.<span class='fn'>pop</span>();     <span class='cmt'>// returns 4</span>\n" +
+                "\n" +
+                "<span class='cmt'>// shift/unshift - remove/add at start</span>\n" +
+                "arr.<span class='fn'>shift</span>();     <span class='cmt'>// returns 1</span>\n" +
+                "arr.<span class='fn'>unshift</span>(<span class='num'>0</span>);  <span class='cmt'>// adds 0 at start</span>\n" +
+                "\n" +
+                "<span class='cmt'>// slice - extract portion</span>\n" +
+                "<span class='kw'>let</span> part = arr.<span class='fn'>slice</span>(<span class='num'>1</span>, <span class='num'>3</span>);  <span class='cmt'>// elements 1-2</span>\n" +
+                "\n" +
+                "<span class='cmt'>// concat - combine arrays</span>\n" +
+                "<span class='kw'>let</span> combined = arr.<span class='fn'>concat</span>([<span class='num'>4</span>, <span class='num'>5</span>]);\n" +
+                "\n" +
+                "<span class='cmt'>// join - combine to string</span>\n" +
+                "<span class='kw'>let</span> str = arr.<span class='fn'>join</span>(<span class='str'>\", \"</span>);  <span class='cmt'>// \"1, 2, 3\"</span></pre>\n";
+    }
+
+    public static String getTryCatch() {
+        return getStylesheet() +
+                "<h1>Try/Catch</h1>\n" +
+                "<p>Handle errors gracefully with try/catch blocks:</p>\n" +
+                "<pre><span class='kw'>try</span> {\n" +
+                "    <span class='cmt'>// Code that might throw</span>\n" +
+                "    <span class='kw'>let</span> result = riskyOperation();\n" +
                 "    <span class='fn'>log</span>(result);\n" +
-                "    <span class='kw'>return</span> result;\n" +
-                "};</pre>\n" +
-                "<h2>Calling Functions</h2>\n" +
-                "<pre>greet();           <span class='cmt'>// \"Hello!\"</span>\n" +
-                "double(<span class='num'>5</span>);         <span class='cmt'>// 10</span>\n" +
-                "add(<span class='num'>3</span>, <span class='num'>4</span>);        <span class='cmt'>// 7</span>\n" +
-                "process(<span class='num'>10</span>);       <span class='cmt'>// logs 20, returns 20</span></pre>\n" +
-                "<h2>Closures</h2>\n" +
-                "<p>Functions can access variables from their enclosing scope:</p>\n" +
-                "<pre><span class='kw'>let</span> counter = <span class='num'>0</span>;\n" +
-                "<span class='kw'>let</span> increment = () => {\n" +
-                "    counter = counter + <span class='num'>1</span>;\n" +
-                "    <span class='kw'>return</span> counter;\n" +
-                "};\n" +
-                "increment();  <span class='cmt'>// 1</span>\n" +
-                "increment();  <span class='cmt'>// 2</span></pre>\n";
+                "} <span class='kw'>catch</span> (e) {\n" +
+                "    <span class='cmt'>// Handle error</span>\n" +
+                "    <span class='fn'>error</span>(<span class='str'>\"Failed: \"</span> + e);\n" +
+                "} <span class='kw'>finally</span> {\n" +
+                "    <span class='cmt'>// Always runs</span>\n" +
+                "    cleanup();\n" +
+                "}</pre>\n" +
+                "<h2>Without Finally</h2>\n" +
+                "<pre><span class='kw'>try</span> {\n" +
+                "    processMethod();\n" +
+                "} <span class='kw'>catch</span> (error) {\n" +
+                "    <span class='fn'>warn</span>(<span class='str'>\"Error processing: \"</span> + error);\n" +
+                "}</pre>\n";
     }
 
-    public static String getBuiltinFunctions() {
+    public static String getResultsApi() {
         return getStylesheet() +
-                "<h1>Built-in Functions</h1>\n" +
-                "<h2>Logging</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Function</th><th>Description</th></tr>\n" +
-                "<tr><td><code>log(value)</code></td><td>Print value to console</td></tr>\n" +
-                "<tr><td><code>warn(value)</code></td><td>Print warning (yellow)</td></tr>\n" +
-                "<tr><td><code>error(value)</code></td><td>Print error (red)</td></tr>\n" +
-                "</table>\n" +
-                "<pre><span class='fn'>log</span>(<span class='str'>\"Processing method: \"</span> + context.methodName);\n" +
-                "<span class='fn'>warn</span>(<span class='str'>\"Deprecated API usage detected\"</span>);\n" +
-                "<span class='fn'>error</span>(<span class='str'>\"Invalid bytecode sequence\"</span>);</pre>\n" +
-                "<h2>Type Functions</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Function</th><th>Description</th></tr>\n" +
-                "<tr><td><code>typeof(value)</code></td><td>Returns type as string</td></tr>\n" +
-                "<tr><td><code>parseInt(str)</code></td><td>Parse string to integer</td></tr>\n" +
-                "<tr><td><code>parseFloat(str)</code></td><td>Parse string to float</td></tr>\n" +
-                "</table>\n" +
-                "<pre><span class='kw'>let</span> type = <span class='fn'>typeof</span>(value);\n" +
-                "<span class='kw'>let</span> num = <span class='fn'>parseInt</span>(<span class='str'>\"42\"</span>);    <span class='cmt'>// 42</span>\n" +
-                "<span class='kw'>let</span> dec = <span class='fn'>parseFloat</span>(<span class='str'>\"3.14\"</span>); <span class='cmt'>// 3.14</span></pre>\n";
+                "<h1>Results API</h1>\n" +
+                "<p>The <code>results</code> object collects and exports analysis findings:</p>\n" +
+                "<h2>Adding Findings</h2>\n" +
+                "<pre>results.<span class='fn'>add</span>({ type: <span class='str'>\"issue\"</span>, method: context.methodName });\n" +
+                "results.<span class='fn'>add</span>({ type: <span class='str'>\"vuln\"</span>, severity: <span class='str'>\"high\"</span> });\n" +
+                "\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Total findings: \"</span> + results.<span class='fn'>count</span>());</pre>\n" +
+                "<h2>Querying Results</h2>\n" +
+                "<pre><span class='cmt'>// Get all findings</span>\n" +
+                "<span class='kw'>let</span> all = results.<span class='fn'>all</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Filter by criteria</span>\n" +
+                "<span class='kw'>let</span> vulns = results.<span class='fn'>filter</span>((f) => f.type == <span class='str'>\"vuln\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Group by field</span>\n" +
+                "<span class='kw'>let</span> byType = results.<span class='fn'>groupBy</span>((f) => f.type);\n" +
+                "\n" +
+                "<span class='cmt'>// Sort results</span>\n" +
+                "<span class='kw'>let</span> sorted = results.<span class='fn'>sortBy</span>((f) => f.severity);\n" +
+                "\n" +
+                "<span class='cmt'>// Get unique by key</span>\n" +
+                "<span class='kw'>let</span> unique = results.<span class='fn'>unique</span>((f) => f.method);</pre>\n" +
+                "<h2>Export</h2>\n" +
+                "<pre><span class='cmt'>// Export as JSON</span>\n" +
+                "results.<span class='fn'>exportJson</span>(<span class='str'>\"findings.json\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Export as CSV</span>\n" +
+                "results.<span class='fn'>exportCsv</span>(<span class='str'>\"findings.csv\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Format as table</span>\n" +
+                "<span class='fn'>log</span>(results.<span class='fn'>toTable</span>());\n" +
+                "\n" +
+                "<span class='cmt'>// Get summary stats</span>\n" +
+                "<span class='kw'>let</span> summary = results.<span class='fn'>summary</span>();</pre>\n";
     }
 
-    public static String getStringMethods() {
+    public static String getProjectApi() {
         return getStylesheet() +
-                "<h1>String Methods</h1>\n" +
-                "<p>Strings have these built-in methods and properties:</p>\n" +
+                "<h1>Project API</h1>\n" +
+                "<p>The <code>project</code> object provides project-wide queries:</p>\n" +
+                "<h2>Iterating Classes/Methods</h2>\n" +
+                "<pre><span class='cmt'>// Process all classes</span>\n" +
+                "project.<span class='fn'>forEachClass</span>((cls) => {\n" +
+                "    <span class='fn'>log</span>(cls.className);\n" +
+                "});\n" +
+                "\n" +
+                "<span class='cmt'>// Process all methods</span>\n" +
+                "project.<span class='fn'>forEachMethod</span>((method) => {\n" +
+                "    <span class='fn'>log</span>(method.className + <span class='str'>\".\"</span> + method.name);\n" +
+                "});</pre>\n" +
+                "<h2>Finding Methods</h2>\n" +
+                "<pre><span class='cmt'>// Find by access and name</span>\n" +
+                "<span class='kw'>let</span> handlers = project.<span class='fn'>findMethods</span>({ \n" +
+                "    access: <span class='str'>\"public\"</span>, \n" +
+                "    name: <span class='str'>\"*Handler\"</span> \n" +
+                "});\n" +
+                "\n" +
+                "<span class='cmt'>// Find annotated methods</span>\n" +
+                "<span class='kw'>let</span> injected = project.<span class='fn'>findAnnotated</span>(<span class='str'>\"javax/inject/Inject\"</span>);</pre>\n" +
                 "<h2>Properties</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Description</th><th>Example</th></tr>\n" +
-                "<tr><td><code>.length</code></td><td>Number of characters</td><td><code>\"hello\".length</code> = 5</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Case Methods</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Method</th><th>Description</th><th>Example</th></tr>\n" +
-                "<tr><td><code>.toLowerCase()</code></td><td>Convert to lowercase</td><td><code>\"HELLO\".toLowerCase()</code> = \"hello\"</td></tr>\n" +
-                "<tr><td><code>.toUpperCase()</code></td><td>Convert to uppercase</td><td><code>\"hello\".toUpperCase()</code> = \"HELLO\"</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Search Methods</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Method</th><th>Description</th><th>Example</th></tr>\n" +
-                "<tr><td><code>.startsWith(str)</code></td><td>Check if starts with string</td><td><code>\"hello\".startsWith(\"he\")</code> = true</td></tr>\n" +
-                "<tr><td><code>.endsWith(str)</code></td><td>Check if ends with string</td><td><code>\"hello\".endsWith(\"lo\")</code> = true</td></tr>\n" +
-                "<tr><td><code>.includes(str)</code></td><td>Check if contains string</td><td><code>\"hello\".includes(\"ll\")</code> = true</td></tr>\n" +
-                "<tr><td><code>.indexOf(str)</code></td><td>Find position of substring</td><td><code>\"hello\".indexOf(\"l\")</code> = 2</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Manipulation Methods</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Method</th><th>Description</th><th>Example</th></tr>\n" +
-                "<tr><td><code>.trim()</code></td><td>Remove whitespace from ends</td><td><code>\" hi \".trim()</code> = \"hi\"</td></tr>\n" +
-                "<tr><td><code>.substring(start, end)</code></td><td>Extract portion of string</td><td><code>\"hello\".substring(1,4)</code> = \"ell\"</td></tr>\n" +
-                "<tr><td><code>.replace(old, new)</code></td><td>Replace first occurrence</td><td><code>\"hello\".replace(\"l\",\"L\")</code> = \"heLlo\"</td></tr>\n" +
-                "<tr><td><code>.split(sep)</code></td><td>Split into array</td><td><code>\"a,b,c\".split(\",\")</code> = [\"a\",\"b\",\"c\"]</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Example Usage</h2>\n" +
-                "<pre><span class='kw'>let</span> name = context.methodName;\n" +
+                "<pre><span class='fn'>log</span>(<span class='str'>\"Classes: \"</span> + project.<span class='fn'>classCount</span>());\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Methods: \"</span> + project.<span class='fn'>methodCount</span>());</pre>\n";
+    }
+
+    public static String getCallGraphApi() {
+        return getStylesheet() +
+                "<h1>Call Graph API</h1>\n" +
+                "<p>The <code>callgraph</code> object analyzes method call relationships:</p>\n" +
+                "<h2>Building</h2>\n" +
+                "<pre>callgraph.<span class='fn'>build</span>();\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Methods: \"</span> + callgraph.<span class='fn'>methodCount</span>());\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Edges: \"</span> + callgraph.<span class='fn'>edgeCount</span>());</pre>\n" +
+                "<h2>Querying</h2>\n" +
+                "<pre><span class='cmt'>// Get callers/callees</span>\n" +
+                "<span class='kw'>let</span> callers = callgraph.<span class='fn'>getCallers</span>(<span class='str'>\"com/example/Service.process\"</span>);\n" +
+                "<span class='kw'>let</span> callees = callgraph.<span class='fn'>getCallees</span>(<span class='str'>\"com/example/Service.process\"</span>);\n" +
                 "\n" +
-                "<span class='kw'>if</span> (name.<span class='fn'>startsWith</span>(<span class='str'>\"get\"</span>)) {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"Found getter: \"</span> + name);\n" +
+                "<span class='cmt'>// Transitive analysis</span>\n" +
+                "<span class='kw'>let</span> allCallees = callgraph.<span class='fn'>getTransitiveCallees</span>(method);\n" +
+                "<span class='kw'>let</span> allCallers = callgraph.<span class='fn'>getTransitiveCallers</span>(method);\n" +
+                "\n" +
+                "<span class='cmt'>// Check reachability</span>\n" +
+                "<span class='kw'>if</span> (callgraph.<span class='fn'>canReach</span>(entry, target)) {\n" +
+                "    <span class='fn'>log</span>(<span class='str'>\"Reachable!\"</span>);\n" +
+                "}</pre>\n" +
+                "<h2>Analysis</h2>\n" +
+                "<pre><span class='cmt'>// Find entry points</span>\n" +
+                "<span class='kw'>let</span> entries = callgraph.<span class='fn'>findEntryPoints</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Find dead code</span>\n" +
+                "<span class='kw'>let</span> dead = callgraph.<span class='fn'>findDeadMethods</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Get all reachable from entries</span>\n" +
+                "<span class='kw'>let</span> reachable = callgraph.<span class='fn'>getReachableFrom</span>(entries);</pre>\n";
+    }
+
+    public static String getDataFlowApi() {
+        return getStylesheet() +
+                "<h1>Data Flow API</h1>\n" +
+                "<p>The <code>dataflow</code> object performs data flow analysis:</p>\n" +
+                "<h2>Building</h2>\n" +
+                "<pre><span class='cmt'>// Build for a specific method</span>\n" +
+                "dataflow.<span class='fn'>build</span>(<span class='str'>\"com/example/Service.process\"</span>);\n" +
+                "\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Nodes: \"</span> + dataflow.<span class='fn'>nodeCount</span>());\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Edges: \"</span> + dataflow.<span class='fn'>edgeCount</span>());</pre>\n" +
+                "<h2>Querying</h2>\n" +
+                "<pre><span class='cmt'>// Get all nodes/edges</span>\n" +
+                "<span class='kw'>let</span> nodes = dataflow.<span class='fn'>getNodes</span>();\n" +
+                "<span class='kw'>let</span> edges = dataflow.<span class='fn'>getEdges</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Get sources and sinks</span>\n" +
+                "<span class='kw'>let</span> sources = dataflow.<span class='fn'>getSources</span>();\n" +
+                "<span class='kw'>let</span> sinks = dataflow.<span class='fn'>getSinks</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Get by type</span>\n" +
+                "<span class='kw'>let</span> params = dataflow.<span class='fn'>getParams</span>();\n" +
+                "<span class='kw'>let</span> invokes = dataflow.<span class='fn'>getInvokes</span>();</pre>\n" +
+                "<h2>Taint Analysis</h2>\n" +
+                "<pre><span class='cmt'>// Check if data flows between nodes</span>\n" +
+                "<span class='kw'>if</span> (dataflow.<span class='fn'>flowsTo</span>(source, sink)) {\n" +
+                "    <span class='fn'>warn</span>(<span class='str'>\"Potential vulnerability!\"</span>);\n" +
                 "}\n" +
                 "\n" +
-                "<span class='kw'>if</span> (name.<span class='fn'>includes</span>(<span class='str'>\"Debug\"</span>)) {\n" +
-                "    <span class='fn'>warn</span>(<span class='str'>\"Debug method found\"</span>);\n" +
+                "<span class='cmt'>// Run full taint analysis</span>\n" +
+                "<span class='kw'>let</span> flows = dataflow.<span class='fn'>taintAnalysis</span>(<span class='str'>\"params\"</span>, <span class='str'>\"invokes\"</span>);\n" +
+                "<span class='kw'>for</span> (<span class='kw'>let</span> flow <span class='kw'>of</span> flows) {\n" +
+                "    results.<span class='fn'>add</span>({ type: <span class='str'>\"taint\"</span>, source: flow.source, sink: flow.sink });\n" +
                 "}</pre>\n";
     }
 
-    public static String getContextObject() {
+    public static String getDependencyApi() {
         return getStylesheet() +
-                "<h1>Context Object</h1>\n" +
-                "<p>The <code>context</code> object provides information about the current method being processed:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>context.className</code></td><td>string</td><td>Full class name (e.g., \"com/example/MyClass\")</td></tr>\n" +
-                "<tr><td><code>context.simpleClassName</code></td><td>string</td><td>Class name without package (e.g., \"MyClass\")</td></tr>\n" +
-                "<tr><td><code>context.packageName</code></td><td>string</td><td>Package name (e.g., \"com/example\")</td></tr>\n" +
-                "<tr><td><code>context.methodName</code></td><td>string</td><td>Current method name (e.g., \"processData\")</td></tr>\n" +
-                "<tr><td><code>context.methodDescriptor</code></td><td>string</td><td>Method signature (e.g., \"(ILjava/lang/String;)V\")</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Example Usage</h2>\n" +
-                "<pre><span class='cmt'>// Log all methods in a specific package</span>\n" +
-                "<span class='kw'>if</span> (context.packageName.<span class='fn'>startsWith</span>(<span class='str'>\"com/myapp\"</span>)) {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"Processing: \"</span> + context.simpleClassName + <span class='str'>\".\"</span> + context.methodName);\n" +
-                "}\n" +
+                "<h1>Dependency API</h1>\n" +
+                "<p>The <code>dependencies</code> object analyzes class dependencies:</p>\n" +
+                "<h2>Building</h2>\n" +
+                "<pre>dependencies.<span class='fn'>build</span>();\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Classes: \"</span> + dependencies.<span class='fn'>classCount</span>());\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Edges: \"</span> + dependencies.<span class='fn'>edgeCount</span>());</pre>\n" +
+                "<h2>Querying</h2>\n" +
+                "<pre><span class='cmt'>// Direct dependencies</span>\n" +
+                "<span class='kw'>let</span> deps = dependencies.<span class='fn'>getDependencies</span>(<span class='str'>\"com/example/MyClass\"</span>);\n" +
+                "<span class='kw'>let</span> dependents = dependencies.<span class='fn'>getDependents</span>(<span class='str'>\"com/example/MyClass\"</span>);\n" +
                 "\n" +
-                "<span class='cmt'>// Skip constructors</span>\n" +
-                "<span class='kw'>if</span> (context.methodName == <span class='str'>\"&lt;init&gt;\"</span>) {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"Skipping constructor\"</span>);\n" +
-                "}</pre>\n";
-    }
-
-    public static String getAnnotationApiOverview() {
-        return getStylesheet() +
-                "<h1>Annotation API</h1>\n" +
-                "<p>The Annotation API lets you analyze and remove Java annotations at the bytecode level. " +
-                "This works independently of AST/IR modes and operates on RuntimeVisibleAnnotations.</p>\n" +
-                "<h2>How It Works</h2>\n" +
-                "<ol>\n" +
-                "<li>Register handlers for class, method, or field annotations</li>\n" +
-                "<li>Each handler receives an annotation object with type and values</li>\n" +
-                "<li>Return <code>null</code> to remove the annotation, or the annotation to keep it</li>\n" +
-                "</ol>\n" +
-                "<h2>Available Handlers</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Handler</th><th>Triggered By</th></tr>\n" +
-                "<tr><td><code>annotations.onClassAnnotation(fn)</code></td><td>Annotations on the class itself</td></tr>\n" +
-                "<tr><td><code>annotations.onMethodAnnotation(fn)</code></td><td>Annotations on methods</td></tr>\n" +
-                "<tr><td><code>annotations.onFieldAnnotation(fn)</code></td><td>Annotations on fields</td></tr>\n" +
-                "</table>\n" +
-                "<div class='note'>\n" +
-                "<b>Note:</b> Annotation handlers work with both AST and IR modes. The <code>annotations</code> object is always available.\n" +
-                "</div>\n";
-    }
-
-    public static String getAnnotationProperties() {
-        return getStylesheet() +
-                "<h1>Annotation Properties</h1>\n" +
-                "<p>Each annotation object passed to handlers has these properties:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>anno.type</code></td><td>string</td><td>Full type descriptor (e.g., \"Ljavax/inject/Named;\")</td></tr>\n" +
-                "<tr><td><code>anno.simpleName</code></td><td>string</td><td>Simple annotation name (e.g., \"Named\")</td></tr>\n" +
-                "<tr><td><code>anno.target</code></td><td>string</td><td>Name of the annotated element (class, method, or field name)</td></tr>\n" +
-                "<tr><td><code>anno.values</code></td><td>object</td><td>Element-value pairs from the annotation</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Annotation Values</h2>\n" +
-                "<p>The <code>values</code> object contains annotation element values:</p>\n" +
-                "<pre><span class='cmt'>// For @Named(\"myBean\")</span>\n" +
-                "anno.values.value  <span class='cmt'>// \"myBean\"</span>\n" +
+                "<span class='cmt'>// Transitive dependencies</span>\n" +
+                "<span class='kw'>let</span> allDeps = dependencies.<span class='fn'>getTransitiveDeps</span>(<span class='str'>\"com/example/MyClass\"</span>);\n" +
+                "<span class='kw'>let</span> allDependents = dependencies.<span class='fn'>getTransitiveDependents</span>(<span class='str'>\"com/example/MyClass\"</span>);\n" +
                 "\n" +
-                "<span class='cmt'>// For @RequestMapping(path=\"/api\", method=\"GET\")</span>\n" +
-                "anno.values.path   <span class='cmt'>// \"/api\"</span>\n" +
-                "anno.values.method <span class='cmt'>// \"GET\"</span></pre>\n" +
-                "<h2>Type Descriptor Format</h2>\n" +
-                "<p>The <code>type</code> property uses JVM internal format:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Annotation</th><th>Type Descriptor</th><th>Simple Name</th></tr>\n" +
-                "<tr><td><code>@Named</code></td><td><code>Ljavax/inject/Named;</code></td><td>Named</td></tr>\n" +
-                "<tr><td><code>@Inject</code></td><td><code>Ljavax/inject/Inject;</code></td><td>Inject</td></tr>\n" +
-                "<tr><td><code>@Override</code></td><td><code>Ljava/lang/Override;</code></td><td>Override</td></tr>\n" +
-                "<tr><td><code>@Deprecated</code></td><td><code>Ljava/lang/Deprecated;</code></td><td>Deprecated</td></tr>\n" +
-                "</table>\n";
-    }
-
-    public static String getAnnotationExamples() {
-        return getStylesheet() +
-                "<h1>Annotation Examples</h1>\n" +
-                "<h2>Strip @Named Annotations</h2>\n" +
-                "<pre><span class='cmt'>// Remove all @Named annotations from classes, methods, and fields</span>\n" +
-                "\n" +
-                "annotations.<span class='fn'>onClassAnnotation</span>((anno) => {\n" +
-                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Named\"</span>) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"Removing @Named from class\"</span>);\n" +
-                "        <span class='kw'>return</span> <span class='kw'>null</span>;\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> anno;\n" +
-                "});\n" +
-                "\n" +
-                "annotations.<span class='fn'>onMethodAnnotation</span>((anno) => {\n" +
-                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Named\"</span>) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"Removing @Named from \"</span> + anno.target);\n" +
-                "        <span class='kw'>return</span> <span class='kw'>null</span>;\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> anno;\n" +
-                "});\n" +
-                "\n" +
-                "annotations.<span class='fn'>onFieldAnnotation</span>((anno) => {\n" +
-                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Named\"</span>) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"Removing @Named from \"</span> + anno.target);\n" +
-                "        <span class='kw'>return</span> <span class='kw'>null</span>;\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> anno;\n" +
-                "});</pre>\n" +
-                "<h2>Find All Deprecated Elements</h2>\n" +
-                "<pre><span class='cmt'>// List all @Deprecated annotations</span>\n" +
-                "\n" +
-                "annotations.<span class='fn'>onClassAnnotation</span>((anno) => {\n" +
-                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Deprecated\"</span>) {\n" +
-                "        <span class='fn'>warn</span>(<span class='str'>\"Deprecated class: \"</span> + anno.target);\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> anno;\n" +
-                "});\n" +
-                "\n" +
-                "annotations.<span class='fn'>onMethodAnnotation</span>((anno) => {\n" +
-                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Deprecated\"</span>) {\n" +
-                "        <span class='fn'>warn</span>(<span class='str'>\"Deprecated method: \"</span> + anno.target);\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> anno;\n" +
-                "});</pre>\n" +
-                "<h2>Strip All Injection Annotations</h2>\n" +
-                "<pre><span class='cmt'>// Remove @Inject, @Named, @Qualifier from fields</span>\n" +
-                "\n" +
-                "<span class='kw'>let</span> injectionAnnotations = [<span class='str'>\"Inject\"</span>, <span class='str'>\"Named\"</span>, <span class='str'>\"Qualifier\"</span>, <span class='str'>\"Autowired\"</span>];\n" +
-                "\n" +
-                "annotations.<span class='fn'>onFieldAnnotation</span>((anno) => {\n" +
-                "    <span class='kw'>if</span> (injectionAnnotations.<span class='fn'>includes</span>(anno.simpleName)) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"Stripping @\"</span> + anno.simpleName + <span class='str'>\" from \"</span> + anno.target);\n" +
-                "        <span class='kw'>return</span> <span class='kw'>null</span>;\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> anno;\n" +
-                "});</pre>\n" +
-                "<h2>Log Annotation Values</h2>\n" +
-                "<pre><span class='cmt'>// Log @Named annotation values</span>\n" +
-                "\n" +
-                "annotations.<span class='fn'>onFieldAnnotation</span>((anno) => {\n" +
-                "    <span class='kw'>if</span> (anno.simpleName == <span class='str'>\"Named\"</span>) {\n" +
-                "        <span class='kw'>let</span> name = anno.values.value;\n" +
-                "        <span class='kw'>if</span> (name != <span class='kw'>null</span>) {\n" +
-                "            <span class='fn'>log</span>(<span class='str'>\"Field \"</span> + anno.target + <span class='str'>\" named: \"</span> + name);\n" +
-                "        }\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> anno;\n" +
-                "});</pre>\n";
-    }
-
-    public static String getAstApiOverview() {
-        return getStylesheet() +
-                "<h1>AST API Overview</h1>\n" +
-                "<p>The AST (Abstract Syntax Tree) API lets you work with high-level code constructs. " +
-                "Use this mode when you want to analyze or transform code at the statement/expression level.</p>\n" +
-                "<h2>How It Works</h2>\n" +
-                "<ol>\n" +
-                "<li>Register handlers for node types you're interested in</li>\n" +
-                "<li>The script engine walks the AST and calls your handlers</li>\n" +
-                "<li>Return <code>null</code> to remove a node, or a modified node to replace it</li>\n" +
-                "</ol>\n" +
-                "<h2>Available Handlers</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Handler</th><th>Triggered By</th></tr>\n" +
-                "<tr><td><code>ast.onMethodCall(fn)</code></td><td>Method invocations</td></tr>\n" +
-                "<tr><td><code>ast.onFieldAccess(fn)</code></td><td>Field reads/writes</td></tr>\n" +
-                "<tr><td><code>ast.onBinaryExpr(fn)</code></td><td>Binary operations (+, -, ==, etc.)</td></tr>\n" +
-                "<tr><td><code>ast.onUnaryExpr(fn)</code></td><td>Unary operations (!, -, ++, etc.)</td></tr>\n" +
-                "<tr><td><code>ast.onIf(fn)</code></td><td>If statements</td></tr>\n" +
-                "<tr><td><code>ast.onReturn(fn)</code></td><td>Return statements</td></tr>\n" +
-                "</table>\n" +
-                "<div class='note'>\n" +
-                "<b>Mode:</b> Set the script mode to <b>AST</b> in the dropdown to use these handlers.\n" +
-                "</div>\n";
-    }
-
-    public static String getAstMethodCall() {
-        return getStylesheet() +
-                "<h1>AST: Method Calls</h1>\n" +
-                "<p>Handle method invocation nodes with <code>ast.onMethodCall()</code>:</p>\n" +
-                "<h2>Node Properties</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>node.target</code></td><td>object</td><td>The object being called on (may be null for static)</td></tr>\n" +
-                "<tr><td><code>node.name</code></td><td>string</td><td>Method name being called</td></tr>\n" +
-                "<tr><td><code>node.owner</code></td><td>string</td><td>Class that owns the method</td></tr>\n" +
-                "<tr><td><code>node.descriptor</code></td><td>string</td><td>Method signature</td></tr>\n" +
-                "<tr><td><code>node.args</code></td><td>array</td><td>Array of argument nodes</td></tr>\n" +
-                "<tr><td><code>node.isStatic</code></td><td>boolean</td><td>True if static method call</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Example: Log All Method Calls</h2>\n" +
-                "<pre>ast.<span class='fn'>onMethodCall</span>((node) => {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"Call: \"</span> + node.owner + <span class='str'>\".\"</span> + node.name);\n" +
-                "    <span class='kw'>return</span> node;  <span class='cmt'>// Keep unchanged</span>\n" +
-                "});</pre>\n" +
-                "<h2>Example: Find System.out.println Calls</h2>\n" +
-                "<pre>ast.<span class='fn'>onMethodCall</span>((node) => {\n" +
-                "    <span class='kw'>if</span> (node.owner == <span class='str'>\"java/io/PrintStream\"</span> &&\n" +
-                "        node.name == <span class='str'>\"println\"</span>) {\n" +
-                "        <span class='fn'>warn</span>(<span class='str'>\"Found println at \"</span> + context.methodName);\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> node;\n" +
-                "});</pre>\n" +
-                "<h2>Example: Remove Debug Logging</h2>\n" +
-                "<pre>ast.<span class='fn'>onMethodCall</span>((node) => {\n" +
-                "    <span class='kw'>if</span> (node.name == <span class='str'>\"debug\"</span> || node.name == <span class='str'>\"trace\"</span>) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"Removing: \"</span> + node.name);\n" +
-                "        <span class='kw'>return</span> <span class='kw'>null</span>;  <span class='cmt'>// Remove the call</span>\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> node;\n" +
-                "});</pre>\n";
-    }
-
-    public static String getAstFieldAccess() {
-        return getStylesheet() +
-                "<h1>AST: Field Access</h1>\n" +
-                "<p>Handle field read/write nodes with <code>ast.onFieldAccess()</code>:</p>\n" +
-                "<h2>Node Properties</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>node.target</code></td><td>object</td><td>Object containing the field</td></tr>\n" +
-                "<tr><td><code>node.name</code></td><td>string</td><td>Field name</td></tr>\n" +
-                "<tr><td><code>node.owner</code></td><td>string</td><td>Class that owns the field</td></tr>\n" +
-                "<tr><td><code>node.descriptor</code></td><td>string</td><td>Field type descriptor</td></tr>\n" +
-                "<tr><td><code>node.isStatic</code></td><td>boolean</td><td>True if static field</td></tr>\n" +
-                "<tr><td><code>node.isRead</code></td><td>boolean</td><td>True if reading field</td></tr>\n" +
-                "<tr><td><code>node.isWrite</code></td><td>boolean</td><td>True if writing field</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Example: Find Field Usage</h2>\n" +
-                "<pre>ast.<span class='fn'>onFieldAccess</span>((node) => {\n" +
-                "    <span class='kw'>if</span> (node.name == <span class='str'>\"DEBUG_MODE\"</span>) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"DEBUG_MODE accessed in \"</span> + context.methodName);\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> node;\n" +
-                "});</pre>\n";
-    }
-
-    public static String getAstExpressions() {
-        return getStylesheet() +
-                "<h1>AST: Expressions</h1>\n" +
-                "<h2>Binary Expressions</h2>\n" +
-                "<p>Handle binary operations with <code>ast.onBinaryExpr()</code>:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>node.left</code></td><td>object</td><td>Left operand</td></tr>\n" +
-                "<tr><td><code>node.right</code></td><td>object</td><td>Right operand</td></tr>\n" +
-                "<tr><td><code>node.operator</code></td><td>string</td><td>Operator (+, -, *, /, ==, etc.)</td></tr>\n" +
-                "</table>\n" +
-                "<pre>ast.<span class='fn'>onBinaryExpr</span>((node) => {\n" +
-                "    <span class='kw'>if</span> (node.operator == <span class='str'>\"==\"</span>) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"Found equality check\"</span>);\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> node;\n" +
-                "});</pre>\n" +
-                "<h2>Unary Expressions</h2>\n" +
-                "<p>Handle unary operations with <code>ast.onUnaryExpr()</code>:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>node.operand</code></td><td>object</td><td>The operand</td></tr>\n" +
-                "<tr><td><code>node.operator</code></td><td>string</td><td>Operator (!, -, ~, ++, --)</td></tr>\n" +
-                "<tr><td><code>node.isPrefix</code></td><td>boolean</td><td>True if prefix operator</td></tr>\n" +
-                "</table>\n" +
-                "<pre>ast.<span class='fn'>onUnaryExpr</span>((node) => {\n" +
-                "    <span class='kw'>if</span> (node.operator == <span class='str'>\"!\"</span>) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"Found negation\"</span>);\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> node;\n" +
-                "});</pre>\n";
-    }
-
-    public static String getAstControlFlow() {
-        return getStylesheet() +
-                "<h1>AST: Control Flow</h1>\n" +
-                "<h2>If Statements</h2>\n" +
-                "<p>Handle if statements with <code>ast.onIf()</code>:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>node.condition</code></td><td>object</td><td>The condition expression</td></tr>\n" +
-                "<tr><td><code>node.thenBranch</code></td><td>object</td><td>Statements when true</td></tr>\n" +
-                "<tr><td><code>node.elseBranch</code></td><td>object</td><td>Statements when false (may be null)</td></tr>\n" +
-                "</table>\n" +
-                "<pre>ast.<span class='fn'>onIf</span>((node) => {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"Found if statement\"</span>);\n" +
-                "    <span class='kw'>return</span> node;\n" +
-                "});</pre>\n" +
-                "<h2>Return Statements</h2>\n" +
-                "<p>Handle return statements with <code>ast.onReturn()</code>:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>node.value</code></td><td>object</td><td>Return value expression (null for void)</td></tr>\n" +
-                "</table>\n" +
-                "<pre>ast.<span class='fn'>onReturn</span>((node) => {\n" +
-                "    <span class='kw'>if</span> (node.value != <span class='kw'>null</span>) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"Returns a value\"</span>);\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> node;\n" +
-                "});</pre>\n";
-    }
-
-    public static String getIrApiOverview() {
-        return getStylesheet() +
-                "<h1>IR API Overview</h1>\n" +
-                "<p>The IR (Intermediate Representation) API lets you work at the instruction level. " +
-                "Use this mode for low-level bytecode analysis and precise transformations.</p>\n" +
-                "<h2>How It Works</h2>\n" +
-                "<ol>\n" +
-                "<li>Register handlers for instruction types you're interested in</li>\n" +
-                "<li>Use iteration methods to walk through blocks and instructions</li>\n" +
-                "<li>Return <code>null</code> to remove an instruction, or a modified instruction to replace it</li>\n" +
-                "</ol>\n" +
-                "<h2>Available Handlers</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Handler</th><th>Triggered By</th></tr>\n" +
-                "<tr><td><code>ir.onBinaryOp(fn)</code></td><td>Binary operations (add, sub, mul, etc.)</td></tr>\n" +
-                "<tr><td><code>ir.onUnaryOp(fn)</code></td><td>Unary operations (neg, not)</td></tr>\n" +
-                "<tr><td><code>ir.onInvoke(fn)</code></td><td>Method invocations</td></tr>\n" +
-                "<tr><td><code>ir.onGetField(fn)</code></td><td>Field reads</td></tr>\n" +
-                "<tr><td><code>ir.onPutField(fn)</code></td><td>Field writes</td></tr>\n" +
-                "<tr><td><code>ir.onConstant(fn)</code></td><td>Constant values</td></tr>\n" +
-                "<tr><td><code>ir.onBranch(fn)</code></td><td>Branch instructions</td></tr>\n" +
-                "<tr><td><code>ir.onReturn(fn)</code></td><td>Return instructions</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Iteration Methods</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Method</th><th>Description</th></tr>\n" +
-                "<tr><td><code>ir.forEachBlock(fn)</code></td><td>Iterate over all basic blocks</td></tr>\n" +
-                "<tr><td><code>ir.forEachInstruction(fn)</code></td><td>Iterate over all instructions</td></tr>\n" +
-                "</table>\n" +
-                "<div class='note'>\n" +
-                "<b>Mode:</b> Set the script mode to <b>IR</b> in the dropdown to use these handlers.\n" +
-                "</div>\n";
-    }
-
-    public static String getIrInstructions() {
-        return getStylesheet() +
-                "<h1>IR: Instructions</h1>\n" +
-                "<h2>Invoke Instructions</h2>\n" +
-                "<p>Handle method calls with <code>ir.onInvoke()</code>:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>instr.owner</code></td><td>string</td><td>Class containing the method</td></tr>\n" +
-                "<tr><td><code>instr.name</code></td><td>string</td><td>Method name</td></tr>\n" +
-                "<tr><td><code>instr.descriptor</code></td><td>string</td><td>Method signature</td></tr>\n" +
-                "<tr><td><code>instr.opcode</code></td><td>string</td><td>INVOKEVIRTUAL, INVOKESTATIC, etc.</td></tr>\n" +
-                "<tr><td><code>instr.args</code></td><td>array</td><td>Argument values</td></tr>\n" +
-                "</table>\n" +
-                "<pre>ir.<span class='fn'>onInvoke</span>((instr) => {\n" +
-                "    <span class='fn'>log</span>(instr.opcode + <span class='str'>\" \"</span> + instr.owner + <span class='str'>\".\"</span> + instr.name);\n" +
-                "    <span class='kw'>return</span> instr;\n" +
-                "});</pre>\n" +
-                "<h2>Field Instructions</h2>\n" +
-                "<p>Handle field access with <code>ir.onGetField()</code> and <code>ir.onPutField()</code>:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>instr.owner</code></td><td>string</td><td>Class containing the field</td></tr>\n" +
-                "<tr><td><code>instr.name</code></td><td>string</td><td>Field name</td></tr>\n" +
-                "<tr><td><code>instr.descriptor</code></td><td>string</td><td>Field type</td></tr>\n" +
-                "<tr><td><code>instr.isStatic</code></td><td>boolean</td><td>True for static fields</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Constant Instructions</h2>\n" +
-                "<p>Handle constants with <code>ir.onConstant()</code>:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>instr.value</code></td><td>any</td><td>The constant value</td></tr>\n" +
-                "<tr><td><code>instr.type</code></td><td>string</td><td>Value type (int, long, string, etc.)</td></tr>\n" +
-                "</table>\n" +
-                "<pre>ir.<span class='fn'>onConstant</span>((instr) => {\n" +
-                "    <span class='kw'>if</span> (instr.type == <span class='str'>\"string\"</span>) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"String constant: \"</span> + instr.value);\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> instr;\n" +
-                "});</pre>\n";
-    }
-
-    public static String getIrOperations() {
-        return getStylesheet() +
-                "<h1>IR: Operations</h1>\n" +
-                "<h2>Binary Operations</h2>\n" +
-                "<p>Handle arithmetic/logic operations with <code>ir.onBinaryOp()</code>:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>instr.operator</code></td><td>string</td><td>ADD, SUB, MUL, DIV, AND, OR, etc.</td></tr>\n" +
-                "<tr><td><code>instr.left</code></td><td>object</td><td>Left operand value</td></tr>\n" +
-                "<tr><td><code>instr.right</code></td><td>object</td><td>Right operand value</td></tr>\n" +
-                "<tr><td><code>instr.type</code></td><td>string</td><td>Result type (int, long, etc.)</td></tr>\n" +
-                "</table>\n" +
-                "<pre>ir.<span class='fn'>onBinaryOp</span>((instr) => {\n" +
-                "    <span class='kw'>if</span> (instr.operator == <span class='str'>\"DIV\"</span>) {\n" +
-                "        <span class='fn'>log</span>(<span class='str'>\"Division found\"</span>);\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> instr;\n" +
-                "});</pre>\n" +
-                "<h2>Branch Operations</h2>\n" +
-                "<p>Handle branches with <code>ir.onBranch()</code>:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>instr.condition</code></td><td>object</td><td>Branch condition (null for unconditional)</td></tr>\n" +
-                "<tr><td><code>instr.trueTarget</code></td><td>object</td><td>Target block if true</td></tr>\n" +
-                "<tr><td><code>instr.falseTarget</code></td><td>object</td><td>Target block if false</td></tr>\n" +
-                "</table>\n" +
-                "<h2>Return Operations</h2>\n" +
-                "<p>Handle returns with <code>ir.onReturn()</code>:</p>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>instr.value</code></td><td>object</td><td>Return value (null for void)</td></tr>\n" +
-                "</table>\n";
-    }
-
-    public static String getIrIteration() {
-        return getStylesheet() +
-                "<h1>IR: Iteration</h1>\n" +
-                "<p>Use iteration methods to walk through the IR structure:</p>\n" +
-                "<h2>Iterate Over Blocks</h2>\n" +
-                "<pre>ir.<span class='fn'>forEachBlock</span>((block) => {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"Block: \"</span> + block.label);\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"  Instructions: \"</span> + block.instructions.length);\n" +
-                "});</pre>\n" +
-                "<h2>Iterate Over Instructions</h2>\n" +
-                "<pre>ir.<span class='fn'>forEachInstruction</span>((instr) => {\n" +
-                "    <span class='fn'>log</span>(instr.opcode + <span class='str'>\" - \"</span> + <span class='fn'>typeof</span>(instr));\n" +
-                "});</pre>\n" +
-                "<h2>Block Properties</h2>\n" +
-                "<table>\n" +
-                "<tr><th>Property</th><th>Type</th><th>Description</th></tr>\n" +
-                "<tr><td><code>block.label</code></td><td>string</td><td>Block identifier</td></tr>\n" +
-                "<tr><td><code>block.instructions</code></td><td>array</td><td>Instructions in this block</td></tr>\n" +
-                "<tr><td><code>block.predecessors</code></td><td>array</td><td>Blocks that jump to this one</td></tr>\n" +
-                "<tr><td><code>block.successors</code></td><td>array</td><td>Blocks this jumps to</td></tr>\n" +
-                "</table>\n";
-    }
-
-    public static String getExamples() {
-        return getStylesheet() +
-                "<h1>Example Scripts</h1>\n" +
-                "<h2>Find All String Constants</h2>\n" +
-                "<pre><span class='cmt'>// IR Mode - Find all string literals</span>\n" +
-                "ir.<span class='fn'>onConstant</span>((instr) => {\n" +
-                "    <span class='kw'>if</span> (instr.type == <span class='str'>\"string\"</span>) {\n" +
-                "        <span class='fn'>log</span>(context.simpleClassName + <span class='str'>\".\"</span> + context.methodName +\n" +
-                "            <span class='str'>\": \\\"\"</span> + instr.value + <span class='str'>\"\\\"\"</span>);\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> instr;\n" +
-                "});</pre>\n" +
-                "<h2>Log All Method Calls</h2>\n" +
-                "<pre><span class='cmt'>// AST Mode - Log every method invocation</span>\n" +
-                "ast.<span class='fn'>onMethodCall</span>((node) => {\n" +
-                "    <span class='fn'>log</span>(<span class='str'>\"[\"</span> + context.simpleClassName + <span class='str'>\"] \"</span> +\n" +
-                "        node.owner + <span class='str'>\".\"</span> + node.name + <span class='str'>\"()\"</span>);\n" +
-                "    <span class='kw'>return</span> node;\n" +
-                "});</pre>\n" +
-                "<h2>Find Debug Print Statements</h2>\n" +
-                "<pre><span class='cmt'>// AST Mode - Find System.out.println calls</span>\n" +
-                "<span class='kw'>let</span> count = <span class='num'>0</span>;\n" +
-                "\n" +
-                "ast.<span class='fn'>onMethodCall</span>((node) => {\n" +
-                "    <span class='kw'>if</span> (node.owner == <span class='str'>\"java/io/PrintStream\"</span>) {\n" +
-                "        <span class='kw'>if</span> (node.name == <span class='str'>\"println\"</span> || node.name == <span class='str'>\"print\"</span>) {\n" +
-                "            count = count + <span class='num'>1</span>;\n" +
-                "            <span class='fn'>warn</span>(<span class='str'>\"Print found in \"</span> + context.methodName);\n" +
-                "        }\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> node;\n" +
-                "});\n" +
-                "\n" +
-                "<span class='fn'>log</span>(<span class='str'>\"Total print statements: \"</span> + count);</pre>\n" +
-                "<h2>Analyze Method Complexity</h2>\n" +
-                "<pre><span class='cmt'>// IR Mode - Count branches per method</span>\n" +
-                "<span class='kw'>let</span> branches = <span class='num'>0</span>;\n" +
-                "\n" +
-                "ir.<span class='fn'>onBranch</span>((instr) => {\n" +
-                "    <span class='kw'>if</span> (instr.condition != <span class='kw'>null</span>) {\n" +
-                "        branches = branches + <span class='num'>1</span>;\n" +
-                "    }\n" +
-                "    <span class='kw'>return</span> instr;\n" +
-                "});\n" +
-                "\n" +
-                "<span class='kw'>if</span> (branches > <span class='num'>10</span>) {\n" +
-                "    <span class='fn'>warn</span>(context.methodName + <span class='str'>\" has high complexity: \"</span> + branches + <span class='str'>\" branches\"</span>);\n" +
+                "<span class='cmt'>// Check relationships</span>\n" +
+                "<span class='kw'>if</span> (dependencies.<span class='fn'>dependsOn</span>(classA, classB)) {\n" +
+                "    <span class='fn'>log</span>(<span class='str'>\"Direct dependency\"</span>);\n" +
                 "}</pre>\n" +
-                "<h2>Find Field Usage</h2>\n" +
-                "<pre><span class='cmt'>// AST Mode - Track field access patterns</span>\n" +
-                "ast.<span class='fn'>onFieldAccess</span>((node) => {\n" +
-                "    <span class='kw'>let</span> action = node.isRead ? <span class='str'>\"READ\"</span> : <span class='str'>\"WRITE\"</span>;\n" +
-                "    <span class='fn'>log</span>(action + <span class='str'>\": \"</span> + node.owner + <span class='str'>\".\"</span> + node.name);\n" +
-                "    <span class='kw'>return</span> node;\n" +
-                "});</pre>\n";
+                "<h2>Analysis</h2>\n" +
+                "<pre><span class='cmt'>// Find circular dependencies</span>\n" +
+                "<span class='kw'>let</span> cycles = dependencies.<span class='fn'>findCycles</span>();\n" +
+                "<span class='kw'>for</span> (<span class='kw'>let</span> cycle <span class='kw'>of</span> cycles) {\n" +
+                "    <span class='fn'>warn</span>(<span class='str'>\"Cycle: \"</span> + cycle.<span class='fn'>join</span>(<span class='str'>\" -> \"</span>));\n" +
+                "}\n" +
+                "\n" +
+                "<span class='cmt'>// Find leaf/root classes</span>\n" +
+                "<span class='kw'>let</span> leaves = dependencies.<span class='fn'>findLeafClasses</span>();\n" +
+                "<span class='kw'>let</span> roots = dependencies.<span class='fn'>findRootClasses</span>();</pre>\n";
     }
 
-    public static String getTips() {
+    public static String getPatternApi() {
         return getStylesheet() +
-                "<h1>Tips & Best Practices</h1>\n" +
-                "<h2>Choosing a Mode</h2>\n" +
-                "<ul>\n" +
-                "<li><b>Use AST mode</b> when working with high-level constructs (method calls, field access, expressions)</li>\n" +
-                "<li><b>Use IR mode</b> when you need precise control or are analyzing bytecode patterns</li>\n" +
-                "</ul>\n" +
-                "<h2>Performance Tips</h2>\n" +
-                "<ul>\n" +
-                "<li>Filter early - check conditions before doing expensive operations</li>\n" +
-                "<li>Use <code>context.packageName</code> to skip uninteresting classes</li>\n" +
-                "<li>Limit output - don't log every instruction in large classes</li>\n" +
-                "</ul>\n" +
-                "<h2>Debugging Scripts</h2>\n" +
-                "<ul>\n" +
-                "<li>Use <code>log()</code> liberally while developing</li>\n" +
-                "<li>Check <code>typeof()</code> when unsure about a value's type</li>\n" +
-                "<li>Use <code>warn()</code> for important findings that shouldn't get lost in output</li>\n" +
-                "<li>Check the console panel for error messages</li>\n" +
-                "</ul>\n" +
-                "<h2>Common Patterns</h2>\n" +
-                "<pre><span class='cmt'>// Skip library code</span>\n" +
-                "<span class='kw'>if</span> (context.packageName.<span class='fn'>startsWith</span>(<span class='str'>\"java/\"</span>) ||\n" +
-                "    context.packageName.<span class='fn'>startsWith</span>(<span class='str'>\"javax/\"</span>)) {\n" +
-                "    <span class='kw'>return</span> node;\n" +
+                "<h1>Pattern API</h1>\n" +
+                "<p>The <code>patterns</code> object searches for bytecode patterns:</p>\n" +
+                "<pre><span class='cmt'>// Find method calls</span>\n" +
+                "<span class='kw'>let</span> calls = patterns.<span class='fn'>findMethodCalls</span>(<span class='str'>\"java/sql/Statement.execute*\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Find field accesses</span>\n" +
+                "<span class='kw'>let</span> fields = patterns.<span class='fn'>findFieldAccesses</span>(<span class='str'>\"*password*\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Find allocations</span>\n" +
+                "<span class='kw'>let</span> allocs = patterns.<span class='fn'>findAllocations</span>(<span class='str'>\"java/io/File\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Find casts</span>\n" +
+                "<span class='kw'>let</span> casts = patterns.<span class='fn'>findCasts</span>(<span class='str'>\"java/lang/String\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Find instanceof checks</span>\n" +
+                "<span class='kw'>let</span> checks = patterns.<span class='fn'>findInstanceOf</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Find null checks and throws</span>\n" +
+                "<span class='kw'>let</span> nulls = patterns.<span class='fn'>findNullChecks</span>();\n" +
+                "<span class='kw'>let</span> throws = patterns.<span class='fn'>findThrows</span>();</pre>\n";
+    }
+
+    public static String getSimulationApi() {
+        return getStylesheet() +
+                "<h1>Simulation API</h1>\n" +
+                "<p>The <code>simulation</code> object provides abstract interpretation:</p>\n" +
+                "<h2>Setup</h2>\n" +
+                "<pre><span class='cmt'>// Load a method</span>\n" +
+                "simulation.<span class='fn'>load</span>(<span class='str'>\"com/example/Service.process\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Register callbacks</span>\n" +
+                "simulation.<span class='fn'>onInstruction</span>((instr) => {\n" +
+                "    <span class='fn'>log</span>(instr.type);\n" +
+                "});\n" +
+                "\n" +
+                "simulation.<span class='fn'>onInvoke</span>((call) => {\n" +
+                "    <span class='fn'>log</span>(<span class='str'>\"Call: \"</span> + call.owner + <span class='str'>\".\"</span> + call.name);\n" +
+                "});</pre>\n" +
+                "<h2>Execution</h2>\n" +
+                "<pre><span class='cmt'>// Run entire simulation</span>\n" +
+                "simulation.<span class='fn'>run</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Or step through</span>\n" +
+                "<span class='kw'>while</span> (simulation.<span class='fn'>step</span>()) {\n" +
+                "    <span class='kw'>let</span> state = simulation.<span class='fn'>getState</span>();\n" +
                 "}\n" +
                 "\n" +
-                "<span class='cmt'>// Skip constructors</span>\n" +
-                "<span class='kw'>if</span> (context.methodName == <span class='str'>\"&lt;init&gt;\"</span> ||\n" +
-                "    context.methodName == <span class='str'>\"&lt;clinit&gt;\"</span>) {\n" +
-                "    <span class='kw'>return</span> node;\n" +
+                "<span class='cmt'>// Collect execution trace</span>\n" +
+                "<span class='kw'>let</span> trace = simulation.<span class='fn'>trace</span>();</pre>\n";
+    }
+
+    public static String getInstrumentApi() {
+        return getStylesheet() +
+                "<h1>Instrumentation API</h1>\n" +
+                "<p>The <code>instrument</code> object modifies bytecode:</p>\n" +
+                "<pre><span class='cmt'>// Add hooks before/after calls</span>\n" +
+                "instrument.<span class='fn'>beforeCall</span>({\n" +
+                "    target: <span class='str'>\"java/sql/Statement.execute*\"</span>,\n" +
+                "    inject: (call) => <span class='fn'>log</span>(<span class='str'>\"SQL: \"</span> + call.name)\n" +
+                "});\n" +
+                "\n" +
+                "<span class='cmt'>// Replace calls</span>\n" +
+                "instrument.<span class='fn'>replaceCall</span>({\n" +
+                "    target: <span class='str'>\"System.out.println\"</span>,\n" +
+                "    with: (call) => <span class='fn'>log</span>(<span class='str'>\"Replaced println\"</span>)\n" +
+                "});\n" +
+                "\n" +
+                "<span class='cmt'>// Remove instructions</span>\n" +
+                "instrument.<span class='fn'>removeInstruction</span>({\n" +
+                "    filter: (instr) => instr.type == <span class='str'>\"InvokeInstruction\"</span>\n" +
+                "});\n" +
+                "\n" +
+                "<span class='cmt'>// Apply to method</span>\n" +
+                "<span class='kw'>let</span> mods = instrument.<span class='fn'>apply</span>(<span class='str'>\"com/example/Service.process\"</span>);\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Made \"</span> + mods + <span class='str'>\" modifications\"</span>);</pre>\n";
+    }
+
+    public static String getTypesApi() {
+        return getStylesheet() +
+                "<h1>Types API</h1>\n" +
+                "<p>The <code>types</code> object provides type analysis:</p>\n" +
+                "<pre><span class='cmt'>// Analyze a method</span>\n" +
+                "types.<span class='fn'>analyze</span>(<span class='str'>\"com/example/Service.process\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Get all variables</span>\n" +
+                "<span class='kw'>let</span> vars = types.<span class='fn'>getVariables</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Get type of specific variable</span>\n" +
+                "<span class='kw'>let</span> type = types.<span class='fn'>getType</span>(<span class='str'>\"v0\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Find all casts and allocations</span>\n" +
+                "<span class='kw'>let</span> casts = types.<span class='fn'>findCasts</span>();\n" +
+                "<span class='kw'>let</span> allocs = types.<span class='fn'>findAllocations</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Get return and parameter types</span>\n" +
+                "<span class='kw'>let</span> retType = types.<span class='fn'>getReturnType</span>();\n" +
+                "<span class='kw'>let</span> params = types.<span class='fn'>getParameterTypes</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Find variables by type</span>\n" +
+                "<span class='kw'>let</span> strings = types.<span class='fn'>findByType</span>(<span class='str'>\"String\"</span>);</pre>\n";
+    }
+
+    public static String getStringsApi() {
+        return getStylesheet() +
+                "<h1>Strings API</h1>\n" +
+                "<p>The <code>strings</code> object analyzes string constants:</p>\n" +
+                "<pre><span class='cmt'>// Extract all strings</span>\n" +
+                "strings.<span class='fn'>extract</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Get all/unique strings</span>\n" +
+                "<span class='kw'>let</span> all = strings.<span class='fn'>getAll</span>();\n" +
+                "<span class='kw'>let</span> unique = strings.<span class='fn'>unique</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Search strings</span>\n" +
+                "<span class='kw'>let</span> matches = strings.<span class='fn'>find</span>(<span class='str'>\"password\"</span>);\n" +
+                "<span class='kw'>let</span> regex = strings.<span class='fn'>findRegex</span>(<span class='str'>\"api[_-]?key\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Find specific patterns</span>\n" +
+                "<span class='kw'>let</span> urls = strings.<span class='fn'>findUrls</span>();\n" +
+                "<span class='kw'>let</span> paths = strings.<span class='fn'>findPaths</span>();\n" +
+                "<span class='kw'>let</span> sql = strings.<span class='fn'>findSql</span>();\n" +
+                "<span class='kw'>let</span> secrets = strings.<span class='fn'>findSecrets</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Group by class</span>\n" +
+                "<span class='kw'>let</span> byClass = strings.<span class='fn'>groupByClass</span>();</pre>\n";
+    }
+
+    public static String getPipelineApi() {
+        return getStylesheet() +
+                "<h1>Pipeline API</h1>\n" +
+                "<p>The <code>pipeline</code> object creates multi-stage workflows:</p>\n" +
+                "<pre><span class='cmt'>// Create pipeline with stages</span>\n" +
+                "pipeline\n" +
+                "    .<span class='fn'>stage</span>(<span class='str'>\"Build\"</span>, () => {\n" +
+                "        callgraph.<span class='fn'>build</span>();\n" +
+                "        dependencies.<span class='fn'>build</span>();\n" +
+                "        <span class='kw'>return</span> <span class='str'>\"built\"</span>;\n" +
+                "    })\n" +
+                "    .<span class='fn'>stage</span>(<span class='str'>\"Analyze\"</span>, (prev) => {\n" +
+                "        <span class='kw'>let</span> dead = callgraph.<span class='fn'>findDeadMethods</span>();\n" +
+                "        <span class='kw'>let</span> cycles = dependencies.<span class='fn'>findCycles</span>();\n" +
+                "        <span class='kw'>return</span> { dead: dead, cycles: cycles };\n" +
+                "    })\n" +
+                "    .<span class='fn'>stage</span>(<span class='str'>\"Report\"</span>, (prev) => {\n" +
+                "        <span class='fn'>log</span>(<span class='str'>\"Dead methods: \"</span> + prev.dead.length);\n" +
+                "        results.<span class='fn'>exportJson</span>(<span class='str'>\"report.json\"</span>);\n" +
+                "    })\n" +
+                "    .<span class='fn'>run</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Check status</span>\n" +
+                "<span class='kw'>let</span> status = pipeline.<span class='fn'>getStatus</span>();\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Total time: \"</span> + pipeline.<span class='fn'>getTotalTime</span>() + <span class='str'>\"ms\"</span>);</pre>\n";
+    }
+
+    public static String getSecurityExample() {
+        return getStylesheet() +
+                "<h1>Example: Security Scanner</h1>\n" +
+                "<pre><span class='cmt'>// Build analysis graphs</span>\n" +
+                "callgraph.<span class='fn'>build</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Find SQL injection vulnerabilities</span>\n" +
+                "<span class='kw'>let</span> sqlCalls = patterns.<span class='fn'>findMethodCalls</span>(<span class='str'>\"java/sql/Statement.execute*\"</span>);\n" +
+                "\n" +
+                "<span class='kw'>for</span> (<span class='kw'>let</span> call <span class='kw'>of</span> sqlCalls) {\n" +
+                "    dataflow.<span class='fn'>build</span>({ className: call.className, name: call.methodName });\n" +
+                "    \n" +
+                "    <span class='kw'>let</span> flows = dataflow.<span class='fn'>taintAnalysis</span>(<span class='str'>\"params\"</span>, <span class='str'>\"invokes\"</span>);\n" +
+                "    <span class='kw'>if</span> (flows.length > <span class='num'>0</span>) {\n" +
+                "        results.<span class='fn'>add</span>({\n" +
+                "            type: <span class='str'>\"SQL_INJECTION\"</span>,\n" +
+                "            severity: <span class='str'>\"HIGH\"</span>,\n" +
+                "            location: call.className + <span class='str'>\".\"</span> + call.methodName\n" +
+                "        });\n" +
+                "    }\n" +
                 "}\n" +
                 "\n" +
-                "<span class='cmt'>// Focus on specific package</span>\n" +
-                "<span class='kw'>if</span> (context.packageName.<span class='fn'>includes</span>(<span class='str'>\"myapp/core\"</span>)) {\n" +
-                "    <span class='cmt'>// Process this class</span>\n" +
-                "}</pre>\n" +
-                "<h2>Return Values</h2>\n" +
-                "<ul>\n" +
-                "<li><code>return node;</code> - Keep the node unchanged</li>\n" +
-                "<li><code>return null;</code> - Remove the node</li>\n" +
-                "<li><code>return modifiedNode;</code> - Replace with modified version</li>\n" +
-                "</ul>\n";
+                "<span class='cmt'>// Find hardcoded secrets</span>\n" +
+                "strings.<span class='fn'>extract</span>();\n" +
+                "<span class='kw'>let</span> secrets = strings.<span class='fn'>findSecrets</span>();\n" +
+                "<span class='kw'>for</span> (<span class='kw'>let</span> s <span class='kw'>of</span> secrets) {\n" +
+                "    results.<span class='fn'>add</span>({\n" +
+                "        type: <span class='str'>\"HARDCODED_SECRET\"</span>,\n" +
+                "        severity: <span class='str'>\"MEDIUM\"</span>,\n" +
+                "        location: s.className,\n" +
+                "        value: s.value.<span class='fn'>substring</span>(<span class='num'>0</span>, <span class='num'>20</span>)\n" +
+                "    });\n" +
+                "}\n" +
+                "\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Found \"</span> + results.<span class='fn'>count</span>() + <span class='str'>\" issues\"</span>);\n" +
+                "results.<span class='fn'>exportJson</span>(<span class='str'>\"security-report.json\"</span>);</pre>\n";
+    }
+
+    public static String getDeadCodeExample() {
+        return getStylesheet() +
+                "<h1>Example: Dead Code Finder</h1>\n" +
+                "<pre><span class='cmt'>// Build call graph</span>\n" +
+                "callgraph.<span class='fn'>build</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Get entry points and find reachable code</span>\n" +
+                "<span class='kw'>let</span> entries = callgraph.<span class='fn'>findEntryPoints</span>();\n" +
+                "<span class='kw'>let</span> reachable = callgraph.<span class='fn'>getReachableFrom</span>(entries);\n" +
+                "\n" +
+                "<span class='cmt'>// Find unreachable methods</span>\n" +
+                "<span class='kw'>let</span> allMethods = callgraph.<span class='fn'>getAllMethods</span>();\n" +
+                "<span class='kw'>let</span> reachableNames = reachable.<span class='fn'>map</span>((m) => m.fullName);\n" +
+                "\n" +
+                "<span class='kw'>for</span> (<span class='kw'>let</span> method <span class='kw'>of</span> allMethods) {\n" +
+                "    <span class='kw'>if</span> (!reachableNames.<span class='fn'>includes</span>(method.fullName)) {\n" +
+                "        results.<span class='fn'>add</span>({\n" +
+                "            type: <span class='str'>\"DEAD_CODE\"</span>,\n" +
+                "            method: method.fullName\n" +
+                "        });\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "<span class='fn'>log</span>(<span class='str'>\"Found \"</span> + results.<span class='fn'>count</span>() + <span class='str'>\" dead methods\"</span>);\n" +
+                "<span class='fn'>log</span>(results.<span class='fn'>toTable</span>());</pre>\n";
     }
 
     public static String[] getSectionTitles() {
         return new String[] {
                 "Overview",
-                "Basics",
-                "  Variables",
-                "  Data Types",
-                "  Operators",
-                "  Comments",
-                "Control Flow",
-                "  If/Else & Blocks",
-                "  Functions",
-                "Built-in Functions",
-                "  Logging & Types",
-                "  String Methods",
-                "Context Object",
-                "Annotation API",
-                "  Annotation Overview",
-                "  Annotation Properties",
-                "  Annotation Examples",
-                "AST API",
-                "  AST Overview",
-                "  Method Calls",
-                "  Field Access",
-                "  Expressions",
-                "  AST Control Flow",
-                "IR API",
-                "  IR Overview",
-                "  Instructions",
-                "  Operations",
-                "  Iteration",
+                "Language",
+                "  Loops",
+                "  Array Methods",
+                "  Try/Catch",
+                "Analysis APIs",
+                "  Results",
+                "  Project",
+                "  Call Graph",
+                "  Data Flow",
+                "  Dependencies",
+                "  Patterns",
+                "Advanced APIs",
+                "  Simulation",
+                "  Instrumentation",
+                "  Types",
+                "  Strings",
+                "  Pipeline",
                 "Examples",
-                "Tips & Best Practices"
+                "  Security Scanner",
+                "  Dead Code Finder"
         };
     }
 
@@ -881,59 +599,46 @@ public class ScriptDocumentation {
         switch (section) {
             case "Overview":
                 return getOverview();
-            case "  Variables":
-                return getVariables();
-            case "  Data Types":
-                return getDataTypes();
-            case "  Operators":
-                return getOperators();
-            case "  Comments":
-                return getComments();
-            case "  If/Else & Blocks":
-                return getControlFlow();
-            case "  Functions":
-                return getFunctions();
-            case "  Logging & Types":
-                return getBuiltinFunctions();
-            case "  String Methods":
-                return getStringMethods();
-            case "Context Object":
-                return getContextObject();
-            case "Annotation API":
-            case "  Annotation Overview":
-                return getAnnotationApiOverview();
-            case "  Annotation Properties":
-                return getAnnotationProperties();
-            case "  Annotation Examples":
-                return getAnnotationExamples();
-            case "AST API":
-            case "  AST Overview":
-                return getAstApiOverview();
-            case "  Method Calls":
-                return getAstMethodCall();
-            case "  Field Access":
-                return getAstFieldAccess();
-            case "  Expressions":
-                return getAstExpressions();
-            case "  AST Control Flow":
-                return getAstControlFlow();
-            case "IR API":
-            case "  IR Overview":
-                return getIrApiOverview();
-            case "  Instructions":
-                return getIrInstructions();
-            case "  Operations":
-                return getIrOperations();
-            case "  Iteration":
-                return getIrIteration();
+            case "  Loops":
+                return getLoops();
+            case "  Array Methods":
+                return getArrayMethods();
+            case "  Try/Catch":
+                return getTryCatch();
+            case "  Results":
+                return getResultsApi();
+            case "  Project":
+                return getProjectApi();
+            case "  Call Graph":
+                return getCallGraphApi();
+            case "  Data Flow":
+                return getDataFlowApi();
+            case "  Dependencies":
+                return getDependencyApi();
+            case "  Patterns":
+                return getPatternApi();
+            case "  Simulation":
+                return getSimulationApi();
+            case "  Instrumentation":
+                return getInstrumentApi();
+            case "  Types":
+                return getTypesApi();
+            case "  Strings":
+                return getStringsApi();
+            case "  Pipeline":
+                return getPipelineApi();
+            case "  Security Scanner":
+                return getSecurityExample();
+            case "  Dead Code Finder":
+                return getDeadCodeExample();
+            case "Language":
+                return getLoops();
+            case "Analysis APIs":
+                return getResultsApi();
+            case "Advanced APIs":
+                return getSimulationApi();
             case "Examples":
-                return getExamples();
-            case "Tips & Best Practices":
-                return getTips();
-            case "Basics":
-                return getVariables();
-            case "Built-in Functions":
-                return getBuiltinFunctions();
+                return getSecurityExample();
             default:
                 return getOverview();
         }

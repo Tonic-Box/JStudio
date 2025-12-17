@@ -25,9 +25,12 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
     private Consumer<String> warnCallback;
     private Consumer<String> errorCallback;
 
-    // Used for return statements
+    // Used for control flow
     private ScriptValue returnValue = null;
     private boolean returning = false;
+    private boolean breaking = false;
+    private boolean continuing = false;
+    private int loopDepth = 0;
 
     public ScriptInterpreter() {
         this.globalContext = new ScriptContext();
@@ -139,7 +142,7 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
     }
 
     private ScriptValue evaluate(ScriptAST node) {
-        if (returning) return ScriptValue.NULL;
+        if (returning || breaking || continuing) return ScriptValue.NULL;
         return node.accept(this);
     }
 
@@ -251,6 +254,11 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
             return getStringMethod(obj, expr.getMember());
         }
 
+        // Check for method calls on arrays
+        if (obj.isArray()) {
+            return getArrayMethod(obj, expr.getMember());
+        }
+
         return obj.getProperty(expr.getMember());
     }
 
@@ -309,6 +317,302 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
             default:
                 return ScriptValue.NULL;
         }
+    }
+
+    private ScriptValue getArrayMethod(ScriptValue arrVal, String method) {
+        List<ScriptValue> arr = arrVal.asArray();
+        ScriptInterpreter interp = this;
+
+        switch (method) {
+            case "length":
+                return ScriptValue.number(arr.size());
+
+            case "push":
+                return ScriptValue.function(ScriptFunction.nativeN("push", args -> {
+                    for (ScriptValue arg : args) {
+                        arr.add(arg);
+                    }
+                    return ScriptValue.number(arr.size());
+                }));
+
+            case "pop":
+                return ScriptValue.function(ScriptFunction.native0("pop", () -> {
+                    if (arr.isEmpty()) return ScriptValue.NULL;
+                    return arr.remove(arr.size() - 1);
+                }));
+
+            case "shift":
+                return ScriptValue.function(ScriptFunction.native0("shift", () -> {
+                    if (arr.isEmpty()) return ScriptValue.NULL;
+                    return arr.remove(0);
+                }));
+
+            case "unshift":
+                return ScriptValue.function(ScriptFunction.nativeN("unshift", args -> {
+                    for (int i = args.size() - 1; i >= 0; i--) {
+                        arr.add(0, args.get(i));
+                    }
+                    return ScriptValue.number(arr.size());
+                }));
+
+            case "indexOf":
+                return ScriptValue.function(ScriptFunction.native1("indexOf", target -> {
+                    for (int i = 0; i < arr.size(); i++) {
+                        if (ScriptValue.equals(arr.get(i), target)) {
+                            return ScriptValue.number(i);
+                        }
+                    }
+                    return ScriptValue.number(-1);
+                }));
+
+            case "includes":
+                return ScriptValue.function(ScriptFunction.native1("includes", target -> {
+                    for (ScriptValue item : arr) {
+                        if (ScriptValue.equals(item, target)) {
+                            return ScriptValue.TRUE;
+                        }
+                    }
+                    return ScriptValue.FALSE;
+                }));
+
+            case "join":
+                return ScriptValue.function(ScriptFunction.native1("join", separator -> {
+                    StringBuilder sb = new StringBuilder();
+                    String sep = separator.isNull() ? "," : separator.asString();
+                    for (int i = 0; i < arr.size(); i++) {
+                        if (i > 0) sb.append(sep);
+                        sb.append(arr.get(i).asString());
+                    }
+                    return ScriptValue.string(sb.toString());
+                }));
+
+            case "slice":
+                return ScriptValue.function(ScriptFunction.native2("slice", (startVal, endVal) -> {
+                    int start = (int) startVal.asNumber();
+                    int end = endVal.isNull() ? arr.size() : (int) endVal.asNumber();
+                    if (start < 0) start = Math.max(0, arr.size() + start);
+                    if (end < 0) end = Math.max(0, arr.size() + end);
+                    start = Math.min(start, arr.size());
+                    end = Math.min(end, arr.size());
+                    List<ScriptValue> result = new ArrayList<>(arr.subList(start, end));
+                    return ScriptValue.array(result);
+                }));
+
+            case "concat":
+                return ScriptValue.function(ScriptFunction.nativeN("concat", args -> {
+                    List<ScriptValue> result = new ArrayList<>(arr);
+                    for (ScriptValue arg : args) {
+                        if (arg.isArray()) {
+                            result.addAll(arg.asArray());
+                        } else {
+                            result.add(arg);
+                        }
+                    }
+                    return ScriptValue.array(result);
+                }));
+
+            case "reverse":
+                return ScriptValue.function(ScriptFunction.native0("reverse", () -> {
+                    java.util.Collections.reverse(arr);
+                    return arrVal;
+                }));
+
+            case "forEach":
+                return ScriptValue.function(ScriptFunction.native1("forEach", callback -> {
+                    if (!callback.isFunction()) {
+                        throw new RuntimeException("forEach requires a function argument");
+                    }
+                    ScriptFunction fn = callback.asFunction();
+                    for (int i = 0; i < arr.size(); i++) {
+                        List<ScriptValue> args = new ArrayList<>();
+                        args.add(arr.get(i));
+                        args.add(ScriptValue.number(i));
+                        args.add(arrVal);
+                        fn.call(interp, args);
+                    }
+                    return ScriptValue.NULL;
+                }));
+
+            case "map":
+                return ScriptValue.function(ScriptFunction.native1("map", callback -> {
+                    if (!callback.isFunction()) {
+                        throw new RuntimeException("map requires a function argument");
+                    }
+                    ScriptFunction fn = callback.asFunction();
+                    List<ScriptValue> result = new ArrayList<>();
+                    for (int i = 0; i < arr.size(); i++) {
+                        List<ScriptValue> args = new ArrayList<>();
+                        args.add(arr.get(i));
+                        args.add(ScriptValue.number(i));
+                        args.add(arrVal);
+                        result.add(fn.call(interp, args));
+                    }
+                    return ScriptValue.array(result);
+                }));
+
+            case "filter":
+                return ScriptValue.function(ScriptFunction.native1("filter", callback -> {
+                    if (!callback.isFunction()) {
+                        throw new RuntimeException("filter requires a function argument");
+                    }
+                    ScriptFunction fn = callback.asFunction();
+                    List<ScriptValue> result = new ArrayList<>();
+                    for (int i = 0; i < arr.size(); i++) {
+                        List<ScriptValue> args = new ArrayList<>();
+                        args.add(arr.get(i));
+                        args.add(ScriptValue.number(i));
+                        args.add(arrVal);
+                        if (fn.call(interp, args).asBoolean()) {
+                            result.add(arr.get(i));
+                        }
+                    }
+                    return ScriptValue.array(result);
+                }));
+
+            case "find":
+                return ScriptValue.function(ScriptFunction.native1("find", callback -> {
+                    if (!callback.isFunction()) {
+                        throw new RuntimeException("find requires a function argument");
+                    }
+                    ScriptFunction fn = callback.asFunction();
+                    for (int i = 0; i < arr.size(); i++) {
+                        List<ScriptValue> args = new ArrayList<>();
+                        args.add(arr.get(i));
+                        args.add(ScriptValue.number(i));
+                        args.add(arrVal);
+                        if (fn.call(interp, args).asBoolean()) {
+                            return arr.get(i);
+                        }
+                    }
+                    return ScriptValue.NULL;
+                }));
+
+            case "findIndex":
+                return ScriptValue.function(ScriptFunction.native1("findIndex", callback -> {
+                    if (!callback.isFunction()) {
+                        throw new RuntimeException("findIndex requires a function argument");
+                    }
+                    ScriptFunction fn = callback.asFunction();
+                    for (int i = 0; i < arr.size(); i++) {
+                        List<ScriptValue> args = new ArrayList<>();
+                        args.add(arr.get(i));
+                        args.add(ScriptValue.number(i));
+                        args.add(arrVal);
+                        if (fn.call(interp, args).asBoolean()) {
+                            return ScriptValue.number(i);
+                        }
+                    }
+                    return ScriptValue.number(-1);
+                }));
+
+            case "some":
+                return ScriptValue.function(ScriptFunction.native1("some", callback -> {
+                    if (!callback.isFunction()) {
+                        throw new RuntimeException("some requires a function argument");
+                    }
+                    ScriptFunction fn = callback.asFunction();
+                    for (int i = 0; i < arr.size(); i++) {
+                        List<ScriptValue> args = new ArrayList<>();
+                        args.add(arr.get(i));
+                        args.add(ScriptValue.number(i));
+                        args.add(arrVal);
+                        if (fn.call(interp, args).asBoolean()) {
+                            return ScriptValue.TRUE;
+                        }
+                    }
+                    return ScriptValue.FALSE;
+                }));
+
+            case "every":
+                return ScriptValue.function(ScriptFunction.native1("every", callback -> {
+                    if (!callback.isFunction()) {
+                        throw new RuntimeException("every requires a function argument");
+                    }
+                    ScriptFunction fn = callback.asFunction();
+                    for (int i = 0; i < arr.size(); i++) {
+                        List<ScriptValue> args = new ArrayList<>();
+                        args.add(arr.get(i));
+                        args.add(ScriptValue.number(i));
+                        args.add(arrVal);
+                        if (!fn.call(interp, args).asBoolean()) {
+                            return ScriptValue.FALSE;
+                        }
+                    }
+                    return ScriptValue.TRUE;
+                }));
+
+            case "reduce":
+                return ScriptValue.function(ScriptFunction.native2("reduce", (callback, initial) -> {
+                    if (!callback.isFunction()) {
+                        throw new RuntimeException("reduce requires a function argument");
+                    }
+                    ScriptFunction fn = callback.asFunction();
+                    ScriptValue accumulator;
+                    int startIdx;
+                    if (initial.isNull() && arr.isEmpty()) {
+                        throw new RuntimeException("reduce of empty array with no initial value");
+                    } else if (initial.isNull()) {
+                        accumulator = arr.get(0);
+                        startIdx = 1;
+                    } else {
+                        accumulator = initial;
+                        startIdx = 0;
+                    }
+                    for (int i = startIdx; i < arr.size(); i++) {
+                        List<ScriptValue> args = new ArrayList<>();
+                        args.add(accumulator);
+                        args.add(arr.get(i));
+                        args.add(ScriptValue.number(i));
+                        args.add(arrVal);
+                        accumulator = fn.call(interp, args);
+                    }
+                    return accumulator;
+                }));
+
+            case "flat":
+                return ScriptValue.function(ScriptFunction.native1("flat", depthVal -> {
+                    int depth = depthVal.isNull() ? 1 : (int) depthVal.asNumber();
+                    List<ScriptValue> result = flattenArray(arr, depth);
+                    return ScriptValue.array(result);
+                }));
+
+            case "flatMap":
+                return ScriptValue.function(ScriptFunction.native1("flatMap", callback -> {
+                    if (!callback.isFunction()) {
+                        throw new RuntimeException("flatMap requires a function argument");
+                    }
+                    ScriptFunction fn = callback.asFunction();
+                    List<ScriptValue> result = new ArrayList<>();
+                    for (int i = 0; i < arr.size(); i++) {
+                        List<ScriptValue> args = new ArrayList<>();
+                        args.add(arr.get(i));
+                        args.add(ScriptValue.number(i));
+                        args.add(arrVal);
+                        ScriptValue mapped = fn.call(interp, args);
+                        if (mapped.isArray()) {
+                            result.addAll(mapped.asArray());
+                        } else {
+                            result.add(mapped);
+                        }
+                    }
+                    return ScriptValue.array(result);
+                }));
+
+            default:
+                return ScriptValue.NULL;
+        }
+    }
+
+    private List<ScriptValue> flattenArray(List<ScriptValue> arr, int depth) {
+        List<ScriptValue> result = new ArrayList<>();
+        for (ScriptValue item : arr) {
+            if (depth > 0 && item.isArray()) {
+                result.addAll(flattenArray(item.asArray(), depth - 1));
+            } else {
+                result.add(item);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -410,6 +714,322 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
             return execute(stmt.getStatements());
         } finally {
             currentContext = previous;
+        }
+    }
+
+    // ==================== Loop Visitors ====================
+
+    @Override
+    public ScriptValue visitWhile(ScriptAST.WhileStmt stmt) {
+        loopDepth++;
+        try {
+            while (evaluate(stmt.getCondition()).asBoolean()) {
+                evaluate(stmt.getBody());
+                if (returning || breaking) {
+                    breaking = false;
+                    break;
+                }
+                if (continuing) {
+                    continuing = false;
+                }
+            }
+        } finally {
+            loopDepth--;
+        }
+        return ScriptValue.NULL;
+    }
+
+    @Override
+    public ScriptValue visitFor(ScriptAST.ForStmt stmt) {
+        ScriptContext previous = currentContext;
+        currentContext = currentContext.child();
+        loopDepth++;
+        try {
+            if (stmt.getInit() != null) {
+                evaluate(stmt.getInit());
+            }
+
+            while (stmt.getCondition() == null || evaluate(stmt.getCondition()).asBoolean()) {
+                evaluate(stmt.getBody());
+                if (returning || breaking) {
+                    breaking = false;
+                    break;
+                }
+                if (continuing) {
+                    continuing = false;
+                }
+                if (stmt.getUpdate() != null) {
+                    evaluate(stmt.getUpdate());
+                }
+            }
+        } finally {
+            loopDepth--;
+            currentContext = previous;
+        }
+        return ScriptValue.NULL;
+    }
+
+    @Override
+    public ScriptValue visitForEach(ScriptAST.ForEachStmt stmt) {
+        ScriptValue iterable = evaluate(stmt.getIterable());
+        ScriptContext previous = currentContext;
+        loopDepth++;
+
+        try {
+            if (iterable.isArray()) {
+                List<ScriptValue> list = iterable.asArray();
+                if (stmt.isForIn()) {
+                    for (int i = 0; i < list.size(); i++) {
+                        currentContext = previous.child();
+                        if (stmt.isConstant()) {
+                            currentContext.defineConstant(stmt.getVarName(), ScriptValue.number(i));
+                        } else {
+                            currentContext.define(stmt.getVarName(), ScriptValue.number(i));
+                        }
+                        evaluate(stmt.getBody());
+                        if (returning || breaking) {
+                            breaking = false;
+                            break;
+                        }
+                        if (continuing) {
+                            continuing = false;
+                        }
+                    }
+                } else {
+                    for (ScriptValue item : list) {
+                        currentContext = previous.child();
+                        if (stmt.isConstant()) {
+                            currentContext.defineConstant(stmt.getVarName(), item);
+                        } else {
+                            currentContext.define(stmt.getVarName(), item);
+                        }
+                        evaluate(stmt.getBody());
+                        if (returning || breaking) {
+                            breaking = false;
+                            break;
+                        }
+                        if (continuing) {
+                            continuing = false;
+                        }
+                    }
+                }
+            } else if (iterable.isObject()) {
+                java.util.Map<String, ScriptValue> obj = iterable.asObject();
+                if (stmt.isForIn()) {
+                    for (String key : obj.keySet()) {
+                        currentContext = previous.child();
+                        if (stmt.isConstant()) {
+                            currentContext.defineConstant(stmt.getVarName(), ScriptValue.string(key));
+                        } else {
+                            currentContext.define(stmt.getVarName(), ScriptValue.string(key));
+                        }
+                        evaluate(stmt.getBody());
+                        if (returning || breaking) {
+                            breaking = false;
+                            break;
+                        }
+                        if (continuing) {
+                            continuing = false;
+                        }
+                    }
+                } else {
+                    for (ScriptValue value : obj.values()) {
+                        currentContext = previous.child();
+                        if (stmt.isConstant()) {
+                            currentContext.defineConstant(stmt.getVarName(), value);
+                        } else {
+                            currentContext.define(stmt.getVarName(), value);
+                        }
+                        evaluate(stmt.getBody());
+                        if (returning || breaking) {
+                            breaking = false;
+                            break;
+                        }
+                        if (continuing) {
+                            continuing = false;
+                        }
+                    }
+                }
+            } else if (iterable.isString()) {
+                String s = iterable.asString();
+                for (int i = 0; i < s.length(); i++) {
+                    currentContext = previous.child();
+                    ScriptValue value = stmt.isForIn()
+                        ? ScriptValue.number(i)
+                        : ScriptValue.string(String.valueOf(s.charAt(i)));
+                    if (stmt.isConstant()) {
+                        currentContext.defineConstant(stmt.getVarName(), value);
+                    } else {
+                        currentContext.define(stmt.getVarName(), value);
+                    }
+                    evaluate(stmt.getBody());
+                    if (returning || breaking) {
+                        breaking = false;
+                        break;
+                    }
+                    if (continuing) {
+                        continuing = false;
+                    }
+                }
+            }
+        } finally {
+            loopDepth--;
+            currentContext = previous;
+        }
+        return ScriptValue.NULL;
+    }
+
+    @Override
+    public ScriptValue visitBreak(ScriptAST.BreakStmt stmt) {
+        if (loopDepth == 0) {
+            throw new RuntimeException("'break' outside of loop");
+        }
+        breaking = true;
+        return ScriptValue.NULL;
+    }
+
+    @Override
+    public ScriptValue visitContinue(ScriptAST.ContinueStmt stmt) {
+        if (loopDepth == 0) {
+            throw new RuntimeException("'continue' outside of loop");
+        }
+        continuing = true;
+        return ScriptValue.NULL;
+    }
+
+    // ==================== Exception Visitors ====================
+
+    @Override
+    public ScriptValue visitTry(ScriptAST.TryStmt stmt) {
+        ScriptValue result = ScriptValue.NULL;
+        Throwable caught = null;
+
+        try {
+            result = evaluate(stmt.getTryBlock());
+        } catch (Throwable e) {
+            caught = e;
+        }
+
+        if (caught != null && stmt.getCatchBlock() != null) {
+            ScriptContext previous = currentContext;
+            currentContext = currentContext.child();
+            try {
+                String message = caught.getMessage() != null ? caught.getMessage() : caught.toString();
+                currentContext.define(stmt.getCatchParam(), ScriptValue.string(message));
+                result = evaluate(stmt.getCatchBlock());
+            } finally {
+                currentContext = previous;
+            }
+        }
+
+        if (stmt.getFinallyBlock() != null) {
+            evaluate(stmt.getFinallyBlock());
+        }
+
+        return result;
+    }
+
+    @Override
+    public ScriptValue visitThrow(ScriptAST.ThrowStmt stmt) {
+        ScriptValue value = evaluate(stmt.getExpression());
+        throw new ScriptException(value.asString());
+    }
+
+    // ==================== Update Expression Visitor ====================
+
+    @Override
+    public ScriptValue visitUpdate(ScriptAST.UpdateExpr expr) {
+        ScriptAST operand = expr.getOperand();
+        String op = expr.getOperator();
+        boolean prefix = expr.isPrefix();
+
+        if (operand instanceof ScriptAST.IdentifierExpr) {
+            String name = ((ScriptAST.IdentifierExpr) operand).getName();
+            ScriptValue current = currentContext.get(name);
+            double value = current.asNumber();
+            double newValue = "++".equals(op) ? value + 1 : value - 1;
+            currentContext.set(name, ScriptValue.number(newValue));
+            return ScriptValue.number(prefix ? newValue : value);
+        } else if (operand instanceof ScriptAST.MemberAccessExpr) {
+            ScriptAST.MemberAccessExpr member = (ScriptAST.MemberAccessExpr) operand;
+            ScriptValue obj = evaluate(member.getObject());
+            ScriptValue current = obj.getProperty(member.getMember());
+            double value = current.asNumber();
+            double newValue = "++".equals(op) ? value + 1 : value - 1;
+            obj.setProperty(member.getMember(), ScriptValue.number(newValue));
+            return ScriptValue.number(prefix ? newValue : value);
+        } else if (operand instanceof ScriptAST.ArrayAccessExpr) {
+            ScriptAST.ArrayAccessExpr arr = (ScriptAST.ArrayAccessExpr) operand;
+            ScriptValue array = evaluate(arr.getArray());
+            ScriptValue idx = evaluate(arr.getIndex());
+            int index = (int) idx.asNumber();
+            if (array.isArray()) {
+                List<ScriptValue> list = array.asArray();
+                double value = list.get(index).asNumber();
+                double newValue = "++".equals(op) ? value + 1 : value - 1;
+                list.set(index, ScriptValue.number(newValue));
+                return ScriptValue.number(prefix ? newValue : value);
+            }
+        }
+
+        throw new RuntimeException("Invalid operand for " + op);
+    }
+
+    // ==================== Compound Assignment Visitor ====================
+
+    @Override
+    public ScriptValue visitAssignment(ScriptAST.AssignmentExpr expr) {
+        ScriptAST target = expr.getTarget();
+        String op = expr.getOperator();
+        ScriptValue right = evaluate(expr.getValue());
+
+        ScriptValue current;
+        if (target instanceof ScriptAST.IdentifierExpr) {
+            String name = ((ScriptAST.IdentifierExpr) target).getName();
+            current = currentContext.get(name);
+            ScriptValue result = applyCompoundOp(current, op, right);
+            currentContext.set(name, result);
+            return result;
+        } else if (target instanceof ScriptAST.MemberAccessExpr) {
+            ScriptAST.MemberAccessExpr member = (ScriptAST.MemberAccessExpr) target;
+            ScriptValue obj = evaluate(member.getObject());
+            current = obj.getProperty(member.getMember());
+            ScriptValue result = applyCompoundOp(current, op, right);
+            obj.setProperty(member.getMember(), result);
+            return result;
+        } else if (target instanceof ScriptAST.ArrayAccessExpr) {
+            ScriptAST.ArrayAccessExpr arr = (ScriptAST.ArrayAccessExpr) target;
+            ScriptValue array = evaluate(arr.getArray());
+            ScriptValue idx = evaluate(arr.getIndex());
+            int index = (int) idx.asNumber();
+            if (array.isArray()) {
+                List<ScriptValue> list = array.asArray();
+                current = list.get(index);
+                ScriptValue result = applyCompoundOp(current, op, right);
+                list.set(index, result);
+                return result;
+            }
+        }
+
+        throw new RuntimeException("Invalid compound assignment target");
+    }
+
+    private ScriptValue applyCompoundOp(ScriptValue left, String op, ScriptValue right) {
+        switch (op) {
+            case "+=": return ScriptValue.add(left, right);
+            case "-=": return ScriptValue.subtract(left, right);
+            case "*=": return ScriptValue.multiply(left, right);
+            case "/=": return ScriptValue.divide(left, right);
+            default:
+                throw new RuntimeException("Unknown compound operator: " + op);
+        }
+    }
+
+    // ==================== Script Exception ====================
+
+    public static class ScriptException extends RuntimeException {
+        public ScriptException(String message) {
+            super(message);
         }
     }
 

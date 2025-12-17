@@ -22,6 +22,19 @@ public class ScriptLexer {
         KEYWORDS.put("true", ScriptToken.Type.TRUE);
         KEYWORDS.put("false", ScriptToken.Type.FALSE);
         KEYWORDS.put("null", ScriptToken.Type.NULL);
+
+        KEYWORDS.put("for", ScriptToken.Type.FOR);
+        KEYWORDS.put("while", ScriptToken.Type.WHILE);
+        KEYWORDS.put("do", ScriptToken.Type.DO);
+        KEYWORDS.put("break", ScriptToken.Type.BREAK);
+        KEYWORDS.put("continue", ScriptToken.Type.CONTINUE);
+        KEYWORDS.put("in", ScriptToken.Type.IN);
+        KEYWORDS.put("of", ScriptToken.Type.OF);
+
+        KEYWORDS.put("try", ScriptToken.Type.TRY);
+        KEYWORDS.put("catch", ScriptToken.Type.CATCH);
+        KEYWORDS.put("finally", ScriptToken.Type.FINALLY);
+        KEYWORDS.put("throw", ScriptToken.Type.THROW);
     }
 
     private final String source;
@@ -63,9 +76,27 @@ public class ScriptLexer {
             case ',': addToken(ScriptToken.Type.COMMA); break;
             case ';': addToken(ScriptToken.Type.SEMICOLON); break;
             case '.': addToken(ScriptToken.Type.DOT); break;
-            case '+': addToken(ScriptToken.Type.PLUS); break;
-            case '-': addToken(ScriptToken.Type.MINUS); break;
-            case '*': addToken(ScriptToken.Type.STAR); break;
+            case '+':
+                if (match('+')) {
+                    addToken(ScriptToken.Type.PLUS_PLUS);
+                } else if (match('=')) {
+                    addToken(ScriptToken.Type.PLUS_EQUALS);
+                } else {
+                    addToken(ScriptToken.Type.PLUS);
+                }
+                break;
+            case '-':
+                if (match('-')) {
+                    addToken(ScriptToken.Type.MINUS_MINUS);
+                } else if (match('=')) {
+                    addToken(ScriptToken.Type.MINUS_EQUALS);
+                } else {
+                    addToken(ScriptToken.Type.MINUS);
+                }
+                break;
+            case '*':
+                addToken(match('=') ? ScriptToken.Type.STAR_EQUALS : ScriptToken.Type.STAR);
+                break;
             case '%': addToken(ScriptToken.Type.PERCENT); break;
             case ':': addToken(ScriptToken.Type.COLON); break;
             case '?': addToken(ScriptToken.Type.QUESTION); break;
@@ -77,6 +108,8 @@ public class ScriptLexer {
                 } else if (match('*')) {
                     // Multi-line comment
                     blockComment();
+                } else if (match('=')) {
+                    addToken(ScriptToken.Type.SLASH_EQUALS);
                 } else {
                     addToken(ScriptToken.Type.SLASH);
                 }

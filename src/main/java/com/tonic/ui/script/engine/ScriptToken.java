@@ -26,6 +26,21 @@ public class ScriptToken {
         TRUE,
         FALSE,
 
+        // Loop keywords
+        FOR,
+        WHILE,
+        DO,
+        BREAK,
+        CONTINUE,
+        IN,
+        OF,
+
+        // Exception keywords
+        TRY,
+        CATCH,
+        FINALLY,
+        THROW,
+
         // Operators
         PLUS,           // +
         MINUS,          // -
@@ -45,6 +60,12 @@ public class ScriptToken {
         DOT,            // .
         QUESTION,       // ?
         COLON,          // :
+        PLUS_PLUS,      // ++
+        MINUS_MINUS,    // --
+        PLUS_EQUALS,    // +=
+        MINUS_EQUALS,   // -=
+        STAR_EQUALS,    // *=
+        SLASH_EQUALS,   // /=
 
         // Punctuation
         LPAREN,         // (

@@ -74,46 +74,33 @@ public class ScriptDocumentationDialog extends JDialog {
         DefaultMutableTreeNode overview = new DefaultMutableTreeNode("Overview");
         root.add(overview);
 
-        DefaultMutableTreeNode basics = new DefaultMutableTreeNode("Basics");
-        basics.add(new DefaultMutableTreeNode("  Variables"));
-        basics.add(new DefaultMutableTreeNode("  Data Types"));
-        basics.add(new DefaultMutableTreeNode("  Operators"));
-        basics.add(new DefaultMutableTreeNode("  Comments"));
-        root.add(basics);
+        DefaultMutableTreeNode language = new DefaultMutableTreeNode("Language");
+        language.add(new DefaultMutableTreeNode("  Loops"));
+        language.add(new DefaultMutableTreeNode("  Array Methods"));
+        language.add(new DefaultMutableTreeNode("  Try/Catch"));
+        root.add(language);
 
-        DefaultMutableTreeNode controlFlow = new DefaultMutableTreeNode("Control Flow");
-        controlFlow.add(new DefaultMutableTreeNode("  If/Else & Blocks"));
-        controlFlow.add(new DefaultMutableTreeNode("  Functions"));
-        root.add(controlFlow);
+        DefaultMutableTreeNode analysisApis = new DefaultMutableTreeNode("Analysis APIs");
+        analysisApis.add(new DefaultMutableTreeNode("  Results"));
+        analysisApis.add(new DefaultMutableTreeNode("  Project"));
+        analysisApis.add(new DefaultMutableTreeNode("  Call Graph"));
+        analysisApis.add(new DefaultMutableTreeNode("  Data Flow"));
+        analysisApis.add(new DefaultMutableTreeNode("  Dependencies"));
+        analysisApis.add(new DefaultMutableTreeNode("  Patterns"));
+        root.add(analysisApis);
 
-        DefaultMutableTreeNode builtins = new DefaultMutableTreeNode("Built-in Functions");
-        builtins.add(new DefaultMutableTreeNode("  Logging & Types"));
-        builtins.add(new DefaultMutableTreeNode("  String Methods"));
-        root.add(builtins);
-
-        DefaultMutableTreeNode context = new DefaultMutableTreeNode("Context Object");
-        root.add(context);
-
-        DefaultMutableTreeNode astApi = new DefaultMutableTreeNode("AST API");
-        astApi.add(new DefaultMutableTreeNode("  Overview"));
-        astApi.add(new DefaultMutableTreeNode("  Method Calls"));
-        astApi.add(new DefaultMutableTreeNode("  Field Access"));
-        astApi.add(new DefaultMutableTreeNode("  Expressions"));
-        astApi.add(new DefaultMutableTreeNode("  Control Flow"));
-        root.add(astApi);
-
-        DefaultMutableTreeNode irApi = new DefaultMutableTreeNode("IR API");
-        irApi.add(new DefaultMutableTreeNode("  Overview"));
-        irApi.add(new DefaultMutableTreeNode("  Instructions"));
-        irApi.add(new DefaultMutableTreeNode("  Operations"));
-        irApi.add(new DefaultMutableTreeNode("  Iteration"));
-        root.add(irApi);
+        DefaultMutableTreeNode advancedApis = new DefaultMutableTreeNode("Advanced APIs");
+        advancedApis.add(new DefaultMutableTreeNode("  Simulation"));
+        advancedApis.add(new DefaultMutableTreeNode("  Instrumentation"));
+        advancedApis.add(new DefaultMutableTreeNode("  Types"));
+        advancedApis.add(new DefaultMutableTreeNode("  Strings"));
+        advancedApis.add(new DefaultMutableTreeNode("  Pipeline"));
+        root.add(advancedApis);
 
         DefaultMutableTreeNode examples = new DefaultMutableTreeNode("Examples");
+        examples.add(new DefaultMutableTreeNode("  Security Scanner"));
+        examples.add(new DefaultMutableTreeNode("  Dead Code Finder"));
         root.add(examples);
-
-        DefaultMutableTreeNode tips = new DefaultMutableTreeNode("Tips & Best Practices");
-        root.add(tips);
 
         JTree tree = new JTree(new DefaultTreeModel(root));
         tree.setRootVisible(false);
@@ -143,14 +130,10 @@ public class ScriptDocumentationDialog extends JDialog {
 
     private boolean isTopLevelSection(String section) {
         return section.equals("Overview") ||
-               section.equals("Basics") ||
-               section.equals("Control Flow") ||
-               section.equals("Built-in Functions") ||
-               section.equals("Context Object") ||
-               section.equals("AST API") ||
-               section.equals("IR API") ||
-               section.equals("Examples") ||
-               section.equals("Tips & Best Practices");
+               section.equals("Language") ||
+               section.equals("Analysis APIs") ||
+               section.equals("Advanced APIs") ||
+               section.equals("Examples");
     }
 
     private void showSection(String section) {
