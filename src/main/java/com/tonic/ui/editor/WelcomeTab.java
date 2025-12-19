@@ -31,7 +31,12 @@ import java.awt.Insets;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import javax.swing.SwingUtilities;
 
 /**
@@ -44,9 +49,14 @@ public class WelcomeTab extends JPanel implements ThemeManager.ThemeChangeListen
 
     private JPanel contentPanel;
     private JPanel mainMethodsPanel;
+    private JPanel statsPanel;
+    private JPanel versionStatsPanel;
     private JLabel projectNameLabel;
     private JLabel classCountLabel;
     private JLabel methodCountLabel;
+    private JLabel fieldCountLabel;
+    private JLabel packageCountLabel;
+    private JLabel interfaceCountLabel;
     private JScrollPane scrollPane;
 
     public WelcomeTab(MainFrame mainFrame) {
@@ -128,54 +138,137 @@ public class WelcomeTab extends JPanel implements ThemeManager.ThemeChangeListen
     }
 
     private JPanel createStatsSection() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(JStudioTheme.getBgSecondary());
-        panel.setBorder(BorderFactory.createCompoundBorder(
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setBackground(JStudioTheme.getBgTertiary());
+        container.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel headerLabel = new JLabel("Project Statistics");
+        headerLabel.setFont(JStudioTheme.getUIFont(14).deriveFont(Font.BOLD));
+        headerLabel.setForeground(JStudioTheme.getTextPrimary());
+        headerLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        container.add(headerLabel);
+        container.add(Box.createVerticalStrut(12));
+
+        statsPanel = new JPanel(new GridBagLayout());
+        statsPanel.setBackground(JStudioTheme.getBgSecondary());
+        statsPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(JStudioTheme.getBorder(), 1),
                 BorderFactory.createEmptyBorder(16, 20, 16, 20)
         ));
-        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        panel.setMaximumSize(new Dimension(600, 120));
+        statsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        statsPanel.setMaximumSize(new Dimension(700, 200));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 8, 4, 8);
+        gbc.insets = new Insets(3, 8, 3, 24);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Project name
-        gbc.gridx = 0; gbc.gridy = 0;
-        JLabel projectLabel = new JLabel("Project:");
-        projectLabel.setForeground(JStudioTheme.getTextSecondary());
-        panel.add(projectLabel, gbc);
+        int row = 0;
 
+        gbc.gridx = 0; gbc.gridy = row;
+        statsPanel.add(createStatLabel("Project:"), gbc);
         gbc.gridx = 1;
         projectNameLabel = new JLabel("No project loaded");
         projectNameLabel.setForeground(JStudioTheme.getTextPrimary());
         projectNameLabel.setFont(JStudioTheme.getUIFont(12).deriveFont(Font.BOLD));
-        panel.add(projectNameLabel, gbc);
+        statsPanel.add(projectNameLabel, gbc);
 
-        // Class count
-        gbc.gridx = 0; gbc.gridy = 1;
-        JLabel classesLabel = new JLabel("Classes:");
-        classesLabel.setForeground(JStudioTheme.getTextSecondary());
-        panel.add(classesLabel, gbc);
+        gbc.gridx = 2;
+        statsPanel.add(createStatLabel("Packages:"), gbc);
+        gbc.gridx = 3;
+        packageCountLabel = new JLabel("0");
+        packageCountLabel.setForeground(JStudioTheme.getTextPrimary());
+        statsPanel.add(packageCountLabel, gbc);
 
+        row++;
+        gbc.gridx = 0; gbc.gridy = row;
+        statsPanel.add(createStatLabel("Classes:"), gbc);
         gbc.gridx = 1;
         classCountLabel = new JLabel("0");
         classCountLabel.setForeground(JStudioTheme.getTextPrimary());
-        panel.add(classCountLabel, gbc);
+        statsPanel.add(classCountLabel, gbc);
 
-        // Method count
-        gbc.gridx = 0; gbc.gridy = 2;
-        JLabel methodsLabel = new JLabel("Methods:");
-        methodsLabel.setForeground(JStudioTheme.getTextSecondary());
-        panel.add(methodsLabel, gbc);
+        gbc.gridx = 2;
+        statsPanel.add(createStatLabel("Interfaces:"), gbc);
+        gbc.gridx = 3;
+        interfaceCountLabel = new JLabel("0");
+        interfaceCountLabel.setForeground(JStudioTheme.getTextPrimary());
+        statsPanel.add(interfaceCountLabel, gbc);
 
+        row++;
+        gbc.gridx = 0; gbc.gridy = row;
+        statsPanel.add(createStatLabel("Methods:"), gbc);
         gbc.gridx = 1;
         methodCountLabel = new JLabel("0");
         methodCountLabel.setForeground(JStudioTheme.getTextPrimary());
-        panel.add(methodCountLabel, gbc);
+        statsPanel.add(methodCountLabel, gbc);
 
-        return panel;
+        gbc.gridx = 2;
+        statsPanel.add(createStatLabel("Fields:"), gbc);
+        gbc.gridx = 3;
+        fieldCountLabel = new JLabel("0");
+        fieldCountLabel.setForeground(JStudioTheme.getTextPrimary());
+        statsPanel.add(fieldCountLabel, gbc);
+
+        container.add(statsPanel);
+        container.add(Box.createVerticalStrut(16));
+
+        JLabel versionHeader = new JLabel("Class File Versions");
+        versionHeader.setFont(JStudioTheme.getUIFont(12).deriveFont(Font.BOLD));
+        versionHeader.setForeground(JStudioTheme.getTextSecondary());
+        versionHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+        container.add(versionHeader);
+        container.add(Box.createVerticalStrut(8));
+
+        versionStatsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        versionStatsPanel.setBackground(JStudioTheme.getBgTertiary());
+        versionStatsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel noVersionLabel = new JLabel("No classes loaded");
+        noVersionLabel.setForeground(JStudioTheme.getTextSecondary());
+        versionStatsPanel.add(noVersionLabel);
+        container.add(versionStatsPanel);
+
+        return container;
+    }
+
+    private JLabel createStatLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setForeground(JStudioTheme.getTextSecondary());
+        return label;
+    }
+
+    private String majorVersionToJavaVersion(int majorVersion) {
+        switch (majorVersion) {
+            case 45: return "Java 1.1";
+            case 46: return "Java 1.2";
+            case 47: return "Java 1.3";
+            case 48: return "Java 1.4";
+            case 49: return "Java 5";
+            case 50: return "Java 6";
+            case 51: return "Java 7";
+            case 52: return "Java 8";
+            case 53: return "Java 9";
+            case 54: return "Java 10";
+            case 55: return "Java 11";
+            case 56: return "Java 12";
+            case 57: return "Java 13";
+            case 58: return "Java 14";
+            case 59: return "Java 15";
+            case 60: return "Java 16";
+            case 61: return "Java 17";
+            case 62: return "Java 18";
+            case 63: return "Java 19";
+            case 64: return "Java 20";
+            case 65: return "Java 21";
+            case 66: return "Java 22";
+            case 67: return "Java 23";
+            case 68: return "Java 24";
+            default:
+                if (majorVersion > 68) {
+                    return "Java " + (majorVersion - 44);
+                }
+                return "v" + majorVersion;
+        }
     }
 
     private JPanel createMainMethodsSection() {
@@ -281,28 +374,101 @@ public class WelcomeTab extends JPanel implements ThemeManager.ThemeChangeListen
             projectNameLabel.setText("No project loaded");
             classCountLabel.setText("0");
             methodCountLabel.setText("0");
+            fieldCountLabel.setText("0");
+            packageCountLabel.setText("0");
+            interfaceCountLabel.setText("0");
+            updateVersionStatsPanel(new TreeMap<>());
             updateMainMethodsPanel(new ArrayList<>());
             return;
         }
 
-        // Update stats
         String projectName = projectModel.getSourceFile() != null
                 ? projectModel.getSourceFile().getName()
                 : "Unknown";
         projectNameLabel.setText(projectName);
 
         List<ClassEntryModel> allClasses = projectModel.getAllClasses();
-        classCountLabel.setText(String.valueOf(allClasses.size()));
 
         int methodCount = 0;
+        int fieldCount = 0;
+        int interfaceCount = 0;
+        int classCount = 0;
+        Set<String> packages = new TreeSet<>();
+        Map<Integer, Integer> versionCounts = new TreeMap<>();
+
         for (ClassEntryModel cls : allClasses) {
             methodCount += cls.getMethods().size();
-        }
-        methodCountLabel.setText(String.valueOf(methodCount));
+            fieldCount += cls.getFields().size();
 
-        // Find main methods
+            int access = cls.getClassFile().getAccess();
+            if ((access & 0x0200) != 0) {
+                interfaceCount++;
+            } else {
+                classCount++;
+            }
+
+            String className = cls.getClassName();
+            int lastSlash = className.lastIndexOf('/');
+            String pkg = lastSlash > 0 ? className.substring(0, lastSlash) : "(default)";
+            packages.add(pkg);
+
+            int majorVersion = cls.getClassFile().getMajorVersion();
+            versionCounts.merge(majorVersion, 1, Integer::sum);
+        }
+
+        classCountLabel.setText(String.valueOf(classCount));
+        interfaceCountLabel.setText(String.valueOf(interfaceCount));
+        methodCountLabel.setText(String.valueOf(methodCount));
+        fieldCountLabel.setText(String.valueOf(fieldCount));
+        packageCountLabel.setText(String.valueOf(packages.size()));
+
+        updateVersionStatsPanel(versionCounts);
+
         List<MainMethodInfo> mainMethods = findMainMethods();
         updateMainMethodsPanel(mainMethods);
+    }
+
+    private void updateVersionStatsPanel(Map<Integer, Integer> versionCounts) {
+        versionStatsPanel.removeAll();
+
+        if (versionCounts.isEmpty()) {
+            JLabel noVersionLabel = new JLabel("No classes loaded");
+            noVersionLabel.setForeground(JStudioTheme.getTextSecondary());
+            versionStatsPanel.add(noVersionLabel);
+        } else {
+            for (Map.Entry<Integer, Integer> entry : versionCounts.entrySet()) {
+                int majorVersion = entry.getKey();
+                int count = entry.getValue();
+                String javaVersion = majorVersionToJavaVersion(majorVersion);
+
+                JPanel chip = createVersionChip(javaVersion, count);
+                versionStatsPanel.add(chip);
+            }
+        }
+
+        versionStatsPanel.revalidate();
+        versionStatsPanel.repaint();
+    }
+
+    private JPanel createVersionChip(String version, int count) {
+        JPanel chip = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        chip.setBackground(JStudioTheme.getBgSecondary());
+        chip.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+                BorderFactory.createEmptyBorder(2, 8, 2, 8)
+        ));
+
+        JLabel versionLabel = new JLabel(version);
+        versionLabel.setForeground(JStudioTheme.getAccent());
+        versionLabel.setFont(JStudioTheme.getUIFont(11).deriveFont(Font.BOLD));
+        chip.add(versionLabel);
+
+        JLabel countLabel = new JLabel("(" + count + ")");
+        countLabel.setForeground(JStudioTheme.getTextSecondary());
+        countLabel.setFont(JStudioTheme.getUIFont(11));
+        chip.add(countLabel);
+
+        return chip;
     }
 
     private List<MainMethodInfo> findMainMethods() {
