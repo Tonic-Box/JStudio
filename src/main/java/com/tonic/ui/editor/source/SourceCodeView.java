@@ -851,12 +851,22 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         }
     }
 
+    private String lastSearch;
+
     /**
      * Show find dialog.
      */
     public void showFindDialog() {
-        String input = JOptionPane.showInputDialog(this, "Find:", "Find",
-                JOptionPane.PLAIN_MESSAGE);
+        String input = (String) JOptionPane.showInputDialog(
+            this,
+            "Find:",
+            "Find",
+            JOptionPane.PLAIN_MESSAGE,
+            null,
+            null,
+            lastSearch
+        );
+        lastSearch = input;
         if (input != null && !input.isEmpty()) {
             SearchContext context = new SearchContext(input);
             context.setMatchCase(false);

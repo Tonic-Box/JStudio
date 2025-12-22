@@ -413,12 +413,22 @@ public class IRView extends JPanel implements ThemeManager.ThemeChangeListener {
         }
     }
 
+    private String lastSearch;
+
     /**
      * Show find dialog.
      */
     public void showFindDialog() {
-        String input = JOptionPane.showInputDialog(this, "Find:", "Find",
-                JOptionPane.PLAIN_MESSAGE);
+        String input = (String) JOptionPane.showInputDialog(
+            this,
+            "Find:",
+            "Find",
+            JOptionPane.PLAIN_MESSAGE,
+            null,
+            null,
+            lastSearch
+        );
+        lastSearch = input;
         if (input != null && !input.isEmpty()) {
             scrollToText(input);
         }
