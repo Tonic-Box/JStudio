@@ -254,6 +254,20 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
         if (path == null) return;
 
         Object node = path.getLastPathComponent();
+        
+        // Handle folder nodes (expand/collapse on double-click)
+        if (node instanceof NavigatorNode.ProjectNode || 
+            node instanceof NavigatorNode.PackageNode || 
+            node instanceof NavigatorNode.CategoryNode) {
+            if (tree.isExpanded(path)) {
+                tree.collapsePath(path);
+            } else {
+                tree.expandPath(path);
+            }
+            return;
+        }
+        
+        // Handle class, method, and field nodes (existing behavior)
         if (node instanceof NavigatorNode.ClassNode) {
             ClassEntryModel classEntry = ((NavigatorNode.ClassNode) node).getClassEntry();
             EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
