@@ -108,6 +108,16 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
                     handleDoubleClick();
                 }
             }
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                if (!Character.isISOControl(c)) {
+                    searchField.requestFocus();
+                    searchField.setText(searchField.getText() + c);
+                    searchField.setCaretPosition(searchField.getText().length());
+                }
+            }
         });
 
         scrollPane = new JScrollPane(tree);

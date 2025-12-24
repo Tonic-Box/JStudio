@@ -8,6 +8,7 @@ import com.tonic.parser.attribute.Attribute;
 import com.tonic.parser.attribute.RuntimeVisibleAnnotationsAttribute;
 import com.tonic.parser.attribute.anotation.Annotation;
 import com.tonic.parser.constpool.Utf8Item;
+import com.tonic.ui.editor.SearchPanel;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.MainFrame;
@@ -66,6 +67,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
     private final ClassEntryModel classEntry;
     private final RSyntaxTextArea textArea;
     private final RTextScrollPane scrollPane;
+    private final SearchPanel searchPanel;
     private ProjectModel projectModel;
 
     private boolean loaded = false;
@@ -98,6 +100,10 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         scrollPane.setBorder(null);
 
         add(scrollPane, BorderLayout.CENTER);
+
+        // Inline search panel (initially hidden)
+        searchPanel = new SearchPanel(textArea);
+        add(searchPanel, BorderLayout.SOUTH);
 
         // Apply theme (must be after scrollPane is created)
         applyTheme();
@@ -195,9 +201,15 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
 
         // Go to Definition
         JMenuItem gotoItem = createMenuItem("Go to Definition", null);
-        gotoItem.addActionListener(ev -> navigateToDefinition(e));
         String selectedText = textArea.getSelectedText();
-        gotoItem.setEnabled(selectedText != null && !selectedText.isEmpty());
+        String wordAtCaret = getWordAtCaret();
+        String targetIdentifier = (selectedText != null && !selectedText.isEmpty()) ? selectedText : wordAtCaret;
+        gotoItem.addActionListener(ev -> {
+            if (targetIdentifier != null && !targetIdentifier.isEmpty()) {
+                navigateToIdentifier(targetIdentifier);
+            }
+        });
+        gotoItem.setEnabled(targetIdentifier != null && !targetIdentifier.isEmpty());
         menu.add(gotoItem);
 
         menu.addSeparator();
@@ -396,30 +408,98 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         if (projectModel == null) return;
 
         try {
-            // Get the position in the text
             int offset = textArea.viewToModel2D(e.getPoint());
             if (offset < 0) return;
 
-            // Extract the identifier at this position
             String text = textArea.getText();
             String identifier = extractIdentifierAt(text, offset);
 
-            if (identifier == null || identifier.isEmpty()) return;
+            if (identifier != null && !identifier.isEmpty()) {
+                navigateToIdentifier(identifier);
+            }
+        } catch (Exception ex) {
+        }
+    }
 
-            // Try to find a class matching this identifier
+    /**
+     * Navigate to the definition of a given identifier.
+     * Searches: current class methods → current class fields → project classes → project methods.
+     */
+    private void navigateToIdentifier(String identifier) {
+        if (projectModel == null || identifier == null || identifier.isEmpty()) return;
+
+        try {
+            // 1. Check current class methods
+            ClassFile currentClassFile = classEntry.getClassFile();
+            for (MethodEntry method : currentClassFile.getMethods()) {
+                if (method.getName().equals(identifier)) {
+                    scrollToMethodDefinition(method.getName());
+                    return;
+                }
+            }
+
+            // 2. Check current class fields
+            for (FieldEntry field : currentClassFile.getFields()) {
+                if (field.getName().equals(identifier)) {
+                    scrollToFieldDefinition(field.getName());
+                    return;
+                }
+            }
+
+            // 3. Search project classes by simple name
             ClassEntryModel targetClass = findClassBySimpleName(identifier);
             if (targetClass != null) {
                 EventBus.getInstance().post(new ClassSelectedEvent(this, targetClass));
                 return;
             }
 
-            // Could also try to find by fully qualified name
+            // 4. Search project classes by fully qualified name
             targetClass = projectModel.getClass(identifier.replace('.', '/'));
             if (targetClass != null) {
                 EventBus.getInstance().post(new ClassSelectedEvent(this, targetClass));
+                return;
+            }
+
+            // 5. Search all project classes for a method with this name
+            for (ClassEntryModel cls : projectModel.getAllClasses()) {
+                for (MethodEntry method : cls.getClassFile().getMethods()) {
+                    if (method.getName().equals(identifier)) {
+                        EventBus.getInstance().post(new ClassSelectedEvent(this, cls));
+                        return;
+                    }
+                }
             }
         } catch (Exception ex) {
-            // Ignore navigation errors
+        }
+    }
+
+    /**
+     * Scroll to a method definition in the source view.
+     */
+    private void scrollToMethodDefinition(String methodName) {
+        String text = textArea.getText();
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+            "\\b" + java.util.regex.Pattern.quote(methodName) + "\\s*\\("
+        );
+        java.util.regex.Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            textArea.setCaretPosition(matcher.start());
+            textArea.requestFocusInWindow();
+        }
+    }
+
+    /**
+     * Scroll to a field definition in the source view.
+     */
+    private void scrollToFieldDefinition(String fieldName) {
+        String text = textArea.getText();
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+            "\\b" + java.util.regex.Pattern.quote(fieldName) + "\\s*[;=]"
+        );
+        java.util.regex.Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            textArea.setCaretPosition(matcher.start());
+            textArea.requestFocusInWindow();
         }
     }
 
@@ -450,6 +530,33 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
      */
     private boolean isIdentifierChar(char c) {
         return Character.isJavaIdentifierPart(c) || c == '.';
+    }
+
+    /**
+     * Get the word at the current caret position.
+     */
+    private String getWordAtCaret() {
+        try {
+            int caretPos = textArea.getCaretPosition();
+            String text = textArea.getText();
+            if (caretPos < 0 || caretPos > text.length()) return null;
+
+            int start = caretPos;
+            int end = caretPos;
+
+            while (start > 0 && Character.isJavaIdentifierPart(text.charAt(start - 1))) {
+                start--;
+            }
+            while (end < text.length() && Character.isJavaIdentifierPart(text.charAt(end))) {
+                end++;
+            }
+
+            if (start < end) {
+                return text.substring(start, end);
+            }
+        } catch (Exception e) {
+        }
+        return null;
     }
 
     /**
@@ -851,28 +958,18 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         }
     }
 
-    private String lastSearch;
-
     /**
-     * Show find dialog.
+     * Show inline search panel.
      */
     public void showFindDialog() {
-        String input = (String) JOptionPane.showInputDialog(
-            this,
-            "Find:",
-            "Find",
-            JOptionPane.PLAIN_MESSAGE,
-            null,
-            null,
-            lastSearch
-        );
-        lastSearch = input;
-        if (input != null && !input.isEmpty()) {
-            SearchContext context = new SearchContext(input);
-            context.setMatchCase(false);
-            context.setWholeWord(false);
-            SearchEngine.find(textArea, context);
-        }
+        searchPanel.showPanel();
+    }
+
+    /**
+     * Hide the search panel.
+     */
+    public void hideSearchPanel() {
+        searchPanel.hide();
     }
 
     /**
