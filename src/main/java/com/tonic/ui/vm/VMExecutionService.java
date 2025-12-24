@@ -3,13 +3,16 @@ package com.tonic.ui.vm;
 import com.tonic.analysis.execution.core.BytecodeContext;
 import com.tonic.analysis.execution.core.BytecodeEngine;
 import com.tonic.analysis.execution.core.BytecodeResult;
+import com.tonic.analysis.execution.core.ExecutionMode;
 import com.tonic.analysis.execution.debug.DebugSession;
+import com.tonic.analysis.execution.frame.StackFrame;
 import com.tonic.analysis.execution.heap.SimpleHeapManager;
 import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
+import com.tonic.analysis.instruction.Instruction;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.StatusMessageEvent;
 import com.tonic.ui.model.ProjectModel;
@@ -17,7 +20,9 @@ import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.vm.model.ExecutionResult;
 import com.tonic.ui.vm.model.MethodCall;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -242,16 +247,93 @@ public class VMExecutionService {
 
             ConcreteValue[] vmArgs = convertToConcreteValues(args);
 
-            BytecodeEngine engine = new BytecodeEngine(context);
+            BytecodeContext traceContext = new BytecodeContext.Builder()
+                .heapManager(heapManager)
+                .classResolver(classResolver)
+                .mode(ExecutionMode.RECURSIVE)
+                .maxCallDepth(maxCallDepth)
+                .maxInstructions(maxInstructions)
+                .build();
+
+            BytecodeEngine engine = new BytecodeEngine(traceContext);
             currentEngine = engine;
 
+            Deque<MethodCall> callStack = new ArrayDeque<>();
+
+            engine.addListener(new BytecodeEngine.BytecodeListener() {
+                private int lastStackDepth = 0;
+
+                @Override
+                public void beforeInstruction(StackFrame frame, Instruction instruction) {
+                    try {
+                        int currentDepth = engine.getCallStack().depth();
+
+                        if (currentDepth > lastStackDepth) {
+                            StackFrame topFrame = engine.getCallStack().peek();
+                            if (topFrame != null) {
+                                MethodEntry methodEntry = topFrame.getMethod();
+                                String owner = methodEntry.getOwnerName();
+                                String name = methodEntry.getName();
+                                String desc = methodEntry.getDesc();
+                                boolean isStatic = (methodEntry.getAccess() & 0x0008) != 0;
+
+                                MethodCall call = new MethodCall(owner, name, desc, new Object[0], isStatic, currentDepth - 1);
+                                callStack.push(call);
+                                methodCalls.add(call);
+                            }
+                            lastStackDepth = currentDepth;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("[VMExecutionService] Listener error in beforeInstruction: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void afterInstruction(StackFrame frame, Instruction instruction) {
+                    try {
+                        int currentDepth = engine.getCallStack().depth();
+
+                        if (currentDepth < lastStackDepth && !callStack.isEmpty()) {
+                            MethodCall call = callStack.pop();
+                            call.setEndTimeNanos(System.nanoTime());
+
+                            if (frame.isCompleted() && frame.getReturnValue() != null) {
+                                call.setReturnValue(convertFromConcreteValue(frame.getReturnValue()));
+                            }
+                            if (frame.getException() != null) {
+                                call.setExceptional(true);
+                            }
+                            lastStackDepth = currentDepth;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("[VMExecutionService] Listener error in afterInstruction: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            MethodCall entryCall = new MethodCall(className, methodName, descriptor, args, true, 0);
+            methodCalls.add(entryCall);
+            callStack.push(entryCall);
+
             BytecodeResult result = engine.execute(method, vmArgs);
+
+            if (!callStack.isEmpty()) {
+                MethodCall call = callStack.pop();
+                call.setEndTimeNanos(System.nanoTime());
+                if (result.getReturnValue() != null) {
+                    call.setReturnValue(convertFromConcreteValue(result.getReturnValue()));
+                }
+            }
 
             long endTime = System.currentTimeMillis();
 
             return buildExecutionResult(result, endTime - startTime, methodCalls);
 
         } catch (Exception e) {
+            System.out.println("[VMExecutionService] traceStaticMethod error: " + e.getMessage());
+            e.printStackTrace();
             long endTime = System.currentTimeMillis();
             return ExecutionResult.builder()
                 .success(false)

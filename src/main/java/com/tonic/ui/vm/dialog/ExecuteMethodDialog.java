@@ -20,7 +20,7 @@ public class ExecuteMethodDialog extends JDialog {
     private MethodEntryModel methodModel;
     private MethodEntry method;
     private final List<JTextField> parameterFields;
-    private final JCheckBox traceCheckbox;
+    private final JCheckBox stubInvokesCheckbox;
     private final ExecutionResultPanel resultPanel;
     private final JButton executeButton;
     private final JButton clearButton;
@@ -28,10 +28,11 @@ public class ExecuteMethodDialog extends JDialog {
     private final CommandParser parser;
 
     private final MethodSelectorPanel methodSelector;
+    private final JPanel configPanel;
     private final JPanel signaturePanel;
     private final JPanel parametersPanel;
     private final JLabel signatureLabel;
-    private JPanel parametersContent;
+    private final JLabel statusLabel;
 
     public ExecuteMethodDialog(Frame parent) {
         this(parent, null);
@@ -44,16 +45,19 @@ public class ExecuteMethodDialog extends JDialog {
         this.parameterFields = new ArrayList<>();
         this.parser = new CommandParser();
 
-        this.traceCheckbox = new JCheckBox("Trace method calls");
+        this.stubInvokesCheckbox = new JCheckBox("Stub invokes");
+        this.stubInvokesCheckbox.setSelected(false);
         this.resultPanel = new ExecutionResultPanel();
         this.executeButton = new JButton("Execute");
         this.clearButton = new JButton("Clear");
         this.closeButton = new JButton("Close");
 
-        this.methodSelector = new MethodSelectorPanel("Select Method");
+        this.methodSelector = new MethodSelectorPanel("Method Browser");
+        this.configPanel = new JPanel(new BorderLayout());
         this.signaturePanel = new JPanel(new BorderLayout());
         this.parametersPanel = new JPanel(new BorderLayout());
         this.signatureLabel = new JLabel("No method selected");
+        this.statusLabel = new JLabel("Select a method to execute");
 
         initializeComponents();
 
@@ -61,44 +65,118 @@ public class ExecuteMethodDialog extends JDialog {
             onMethodSelected(methodModel);
         }
 
-        setSize(900, 800);
-        setMinimumSize(new Dimension(700, 600));
+        setSize(1100, 700);
+        setMinimumSize(new Dimension(900, 600));
         setLocationRelativeTo(parent);
     }
 
     private void initializeComponents() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(5, 5));
         getContentPane().setBackground(JStudioTheme.getBgPrimary());
-        ((JPanel) getContentPane()).setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        ((JPanel) getContentPane()).setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
-        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
-        topPanel.setBackground(JStudioTheme.getBgPrimary());
+        add(createToolbar(), BorderLayout.NORTH);
 
-        methodSelector.setPreferredSize(new Dimension(0, 200));
-        methodSelector.setOnMethodSelected(this::onMethodSelected);
-        topPanel.add(methodSelector, BorderLayout.CENTER);
+        JSplitPane mainSplit = createMainSplitPane();
+        add(mainSplit, BorderLayout.CENTER);
 
-        add(topPanel, BorderLayout.NORTH);
-
-        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
-        centerPanel.setBackground(JStudioTheme.getBgPrimary());
-
-        setupSignaturePanel();
-        centerPanel.add(signaturePanel, BorderLayout.NORTH);
-
-        setupParametersPanel();
-        centerPanel.add(parametersPanel, BorderLayout.CENTER);
-
-        add(centerPanel, BorderLayout.CENTER);
-
-        JPanel bottomPanel = new JPanel(new BorderLayout(10, 10));
-        bottomPanel.setBackground(JStudioTheme.getBgPrimary());
-        bottomPanel.add(createOptionsPanel(), BorderLayout.NORTH);
-        bottomPanel.add(createResultPanel(), BorderLayout.CENTER);
-        bottomPanel.add(createButtonPanel(), BorderLayout.SOUTH);
-        add(bottomPanel, BorderLayout.SOUTH);
+        add(createStatusBar(), BorderLayout.SOUTH);
 
         updateUIState();
+    }
+
+    private JPanel createToolbar() {
+        JPanel toolbar = new JPanel(new BorderLayout());
+        toolbar.setBackground(JStudioTheme.getBgSecondary());
+        toolbar.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()),
+            BorderFactory.createEmptyBorder(6, 8, 6, 8)
+        ));
+
+        JPanel leftButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        leftButtons.setOpaque(false);
+
+        executeButton.setBackground(JStudioTheme.getAccent());
+        executeButton.setForeground(Color.WHITE);
+        executeButton.setFocusPainted(false);
+        executeButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getAccent().darker()),
+            BorderFactory.createEmptyBorder(5, 15, 5, 15)
+        ));
+        executeButton.addActionListener(e -> executeMethod());
+        executeButton.setEnabled(false);
+
+        clearButton.setBackground(JStudioTheme.getBgTertiary());
+        clearButton.setForeground(JStudioTheme.getTextPrimary());
+        clearButton.setFocusPainted(false);
+        clearButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+            BorderFactory.createEmptyBorder(5, 12, 5, 12)
+        ));
+        clearButton.addActionListener(e -> resultPanel.clear());
+
+        closeButton.setBackground(JStudioTheme.getBgTertiary());
+        closeButton.setForeground(JStudioTheme.getTextPrimary());
+        closeButton.setFocusPainted(false);
+        closeButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+            BorderFactory.createEmptyBorder(5, 12, 5, 12)
+        ));
+        closeButton.addActionListener(e -> dispose());
+
+        leftButtons.add(executeButton);
+        leftButtons.add(clearButton);
+        leftButtons.add(closeButton);
+
+        JPanel rightOptions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        rightOptions.setOpaque(false);
+
+        stubInvokesCheckbox.setOpaque(false);
+        stubInvokesCheckbox.setForeground(JStudioTheme.getTextPrimary());
+        stubInvokesCheckbox.setToolTipText("When checked, stub method invocations with defaults. When unchecked, execute recursively.");
+        rightOptions.add(stubInvokesCheckbox);
+
+        toolbar.add(leftButtons, BorderLayout.WEST);
+        toolbar.add(rightOptions, BorderLayout.EAST);
+
+        return toolbar;
+    }
+
+    private JSplitPane createMainSplitPane() {
+        JSplitPane leftSplit = createLeftSplitPane();
+        JPanel rightPanel = createRightPanel();
+
+        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, rightPanel);
+        mainSplit.setDividerLocation(400);
+        mainSplit.setResizeWeight(0.35);
+        mainSplit.setBackground(JStudioTheme.getBgPrimary());
+        mainSplit.setBorder(null);
+
+        return mainSplit;
+    }
+
+    private JSplitPane createLeftSplitPane() {
+        methodSelector.setOnMethodSelected(this::onMethodSelected);
+
+        setupConfigPanel();
+
+        JSplitPane leftSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, methodSelector, configPanel);
+        leftSplit.setDividerLocation(250);
+        leftSplit.setResizeWeight(0.4);
+        leftSplit.setBackground(JStudioTheme.getBgPrimary());
+        leftSplit.setBorder(null);
+
+        return leftSplit;
+    }
+
+    private void setupConfigPanel() {
+        configPanel.setBackground(JStudioTheme.getBgPrimary());
+
+        setupSignaturePanel();
+        setupParametersPanel();
+
+        configPanel.add(signaturePanel, BorderLayout.NORTH);
+        configPanel.add(parametersPanel, BorderLayout.CENTER);
     }
 
     private void setupSignaturePanel() {
@@ -136,6 +214,36 @@ public class ExecuteMethodDialog extends JDialog {
         parametersPanel.add(noMethodLabel, BorderLayout.CENTER);
     }
 
+    private JPanel createRightPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(JStudioTheme.getBgPrimary());
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+            "Execution Result",
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
+            null,
+            JStudioTheme.getTextPrimary()
+        ));
+        panel.add(resultPanel, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel createStatusBar() {
+        JPanel statusBar = new JPanel(new BorderLayout());
+        statusBar.setBackground(JStudioTheme.getBgSecondary());
+        statusBar.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()),
+            BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        ));
+
+        statusLabel.setForeground(JStudioTheme.getTextSecondary());
+        statusLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        statusBar.add(statusLabel, BorderLayout.WEST);
+
+        return statusBar;
+    }
+
     private void onMethodSelected(MethodEntryModel selectedMethod) {
         this.methodModel = selectedMethod;
         this.method = selectedMethod != null ? selectedMethod.getMethodEntry() : null;
@@ -144,10 +252,12 @@ public class ExecuteMethodDialog extends JDialog {
             signatureLabel.setText("<html>" + formatMethodSignature() + "</html>");
             signatureLabel.setForeground(JStudioTheme.getTextPrimary());
             rebuildParametersPanel();
+            statusLabel.setText("Ready to execute: " + method.getOwnerName() + "." + method.getName());
         } else {
             signatureLabel.setText("No method selected");
             signatureLabel.setForeground(JStudioTheme.getTextSecondary());
             clearParametersPanel();
+            statusLabel.setText("Select a method to execute");
         }
 
         updateUIState();
@@ -197,6 +307,10 @@ public class ExecuteMethodDialog extends JDialog {
                 fieldsPanel.add(field, gbc);
             }
 
+            gbc.gridy = paramTypes.size();
+            gbc.weighty = 1;
+            fieldsPanel.add(Box.createVerticalGlue(), gbc);
+
             JScrollPane scrollPane = new JScrollPane(fieldsPanel);
             scrollPane.setBorder(null);
             scrollPane.getViewport().setBackground(JStudioTheme.getBgPrimary());
@@ -225,57 +339,6 @@ public class ExecuteMethodDialog extends JDialog {
         executeButton.setEnabled(hasMethod);
     }
 
-    private JPanel createOptionsPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.setBackground(JStudioTheme.getBgPrimary());
-
-        traceCheckbox.setBackground(JStudioTheme.getBgPrimary());
-        traceCheckbox.setForeground(JStudioTheme.getTextPrimary());
-        panel.add(traceCheckbox);
-
-        return panel;
-    }
-
-    private JPanel createResultPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(JStudioTheme.getBgPrimary());
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Result",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            null,
-            JStudioTheme.getTextPrimary()
-        ));
-        panel.setPreferredSize(new Dimension(0, 350));
-        panel.add(resultPanel, BorderLayout.CENTER);
-        return panel;
-    }
-
-    private JPanel createButtonPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panel.setBackground(JStudioTheme.getBgPrimary());
-
-        executeButton.setBackground(JStudioTheme.getBgSecondary());
-        executeButton.setForeground(JStudioTheme.getTextPrimary());
-        executeButton.addActionListener(e -> executeMethod());
-        executeButton.setEnabled(false);
-
-        clearButton.setBackground(JStudioTheme.getBgSecondary());
-        clearButton.setForeground(JStudioTheme.getTextPrimary());
-        clearButton.addActionListener(e -> resultPanel.clear());
-
-        closeButton.setBackground(JStudioTheme.getBgSecondary());
-        closeButton.setForeground(JStudioTheme.getTextPrimary());
-        closeButton.addActionListener(e -> dispose());
-
-        panel.add(executeButton);
-        panel.add(clearButton);
-        panel.add(closeButton);
-
-        return panel;
-    }
-
     private void executeMethod() {
         if (method == null) {
             return;
@@ -284,6 +347,7 @@ public class ExecuteMethodDialog extends JDialog {
         String className = method.getOwnerName();
         String methodName = method.getName();
         String descriptor = method.getDesc();
+        boolean useRecursive = !stubInvokesCheckbox.isSelected();
 
         try {
             Object[] args = collectArguments();
@@ -295,11 +359,12 @@ public class ExecuteMethodDialog extends JDialog {
             executeButton.setEnabled(false);
             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             resultPanel.showExecuting();
+            statusLabel.setText("Executing " + methodName + "...");
 
             SwingWorker<ExecutionResult, Void> worker = new SwingWorker<>() {
                 @Override
                 protected ExecutionResult doInBackground() {
-                    if (traceCheckbox.isSelected()) {
+                    if (useRecursive) {
                         return VMExecutionService.getInstance().traceStaticMethod(
                             className, methodName, descriptor, args);
                     } else {
@@ -315,8 +380,20 @@ public class ExecuteMethodDialog extends JDialog {
                     try {
                         ExecutionResult result = get();
                         displayResult(result);
+                        if (result.isSuccess()) {
+                            statusLabel.setText("Execution complete: " + result.getFormattedReturnValue());
+                        } else {
+                            statusLabel.setText("Execution failed: " + (result.getException() != null ? result.getException().getMessage() : "Unknown error"));
+                            if (result.getException() != null) {
+                                System.out.println("[ExecuteMethodDialog] Execution failed:");
+                                result.getException().printStackTrace();
+                            }
+                        }
                     } catch (Exception e) {
+                        System.out.println("[ExecuteMethodDialog] Error in done():");
+                        e.printStackTrace();
                         displayError(e.getMessage());
+                        statusLabel.setText("Execution failed: " + e.getMessage());
                     }
                 }
             };
@@ -324,7 +401,10 @@ public class ExecuteMethodDialog extends JDialog {
             worker.execute();
 
         } catch (Exception e) {
+            System.out.println("[ExecuteMethodDialog] Failed to parse arguments:");
+            e.printStackTrace();
             displayError("Failed to parse arguments: " + e.getMessage());
+            statusLabel.setText("Error: " + e.getMessage());
         }
     }
 
