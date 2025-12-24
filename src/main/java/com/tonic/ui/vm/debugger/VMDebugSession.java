@@ -24,7 +24,7 @@ public class VMDebugSession {
         void onError(String message);
     }
 
-    private static final int STEP_DELAY_MS = 300;
+    private int stepDelayMs = 300;
 
     private final List<DebugListener> listeners = new CopyOnWriteArrayList<>();
     private DebugSession yabrSession;
@@ -183,7 +183,7 @@ public class VMDebugSession {
 
         stopAnimation();
 
-        animationTimer = new Timer(STEP_DELAY_MS, e -> {
+        animationTimer = new Timer(stepDelayMs, e -> {
             if (yabrSession == null || yabrSession.isStopped()) {
                 stopAnimation();
                 started = false;
@@ -229,6 +229,17 @@ public class VMDebugSession {
 
     public boolean isAnimating() {
         return animationTimer != null && animationTimer.isRunning();
+    }
+
+    public void setAnimationDelay(int delayMs) {
+        this.stepDelayMs = delayMs;
+        if (animationTimer != null && animationTimer.isRunning()) {
+            animationTimer.setDelay(delayMs);
+        }
+    }
+
+    public int getAnimationDelay() {
+        return stepDelayMs;
     }
 
     private void handleExecutionError() {

@@ -3,6 +3,7 @@ package com.tonic.ui.service;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.event.EventBus;
+import com.tonic.ui.util.Settings;
 import com.tonic.ui.event.events.ProjectLoadedEvent;
 import com.tonic.ui.event.events.ProjectUpdatedEvent;
 import com.tonic.ui.event.events.StatusMessageEvent;
@@ -99,12 +100,14 @@ public class ProjectService {
         project.setProjectName(name);
         project.setSourceFile(jarFile);
 
-        // Create a custom class pool without loading JRT
+        // Create class pool with JDK for recursive execution
         ClassPool pool = createClassPoolWithJdk();
-        for (ClassFile cf : classes) {
-            pool.put(cf);
-        }
         project.setClassPool(pool);
+
+        // Add user classes (tracked separately from JDK)
+        for (ClassFile cf : classes) {
+            project.addClass(cf);
+        }
 
         this.currentProject = project;
 
@@ -131,8 +134,8 @@ public class ProjectService {
         project.setSourceFile(classFile);
 
         ClassPool pool = createClassPoolWithJdk();
-        pool.put(cf);
         project.setClassPool(pool);
+        project.addClass(cf);
 
         this.currentProject = project;
 
@@ -183,10 +186,11 @@ public class ProjectService {
         project.setSourceFile(directory);
 
         ClassPool pool = createClassPoolWithJdk();
-        for (ClassFile cf : classes) {
-            pool.put(cf);
-        }
         project.setClassPool(pool);
+
+        for (ClassFile cf : classes) {
+            project.addClass(cf);
+        }
 
         this.currentProject = project;
 
@@ -225,7 +229,6 @@ public class ProjectService {
         EventBus.getInstance().post(new StatusMessageEvent(this, "Appending " + jarFile.getName() + "..."));
 
         int addedCount = 0;
-        ClassPool pool = currentProject.getClassPool();
 
         try (JarFile jar = new JarFile(jarFile)) {
             Enumeration<JarEntry> entries = jar.entries();
@@ -244,7 +247,6 @@ public class ProjectService {
             for (JarEntry entry : classEntries) {
                 try (InputStream is = jar.getInputStream(entry)) {
                     ClassFile cf = new ClassFile(is);
-                    pool.put(cf);
                     currentProject.addClass(cf);
                     addedCount++;
                 } catch (Exception e) {
@@ -281,7 +283,6 @@ public class ProjectService {
         byte[] data = Files.readAllBytes(classFile.toPath());
         ClassFile cf = new ClassFile(new ByteArrayInputStream(data));
 
-        currentProject.getClassPool().put(cf);
         currentProject.addClass(cf);
 
         EventBus.getInstance().post(new StatusMessageEvent(this, "Appended " + cf.getClassName()));
@@ -312,7 +313,6 @@ public class ProjectService {
         }
 
         int addedCount = 0;
-        ClassPool pool = currentProject.getClassPool();
         int total = classPaths.size();
         int current = 0;
 
@@ -320,7 +320,6 @@ public class ProjectService {
             try {
                 byte[] data = Files.readAllBytes(path);
                 ClassFile cf = new ClassFile(new ByteArrayInputStream(data));
-                pool.put(cf);
                 currentProject.addClass(cf);
                 addedCount++;
             } catch (Exception e) {
@@ -365,10 +364,13 @@ public class ProjectService {
     }
 
     /**
-     * Create a class pool with JDK classes loaded.
-     * This enables recursive execution to step into JDK methods.
+     * Create a class pool, optionally with JDK classes loaded.
+     * When JDK classes are loaded, recursive execution can step into JDK methods.
      */
     private ClassPool createClassPoolWithJdk() {
+        if (!Settings.getInstance().isLoadJdkClassesEnabled()) {
+            return new ClassPool(true);
+        }
         try {
             return new ClassPool();
         } catch (IOException e) {

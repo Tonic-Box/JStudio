@@ -554,7 +554,7 @@ public class TransformPanel extends JPanel {
             protected int[] doInBackground() throws Exception {
                 int totalMethods = 0;
                 int totalClasses = 0;
-                for (ClassEntryModel classEntry : project.getAllClasses()) {
+                for (ClassEntryModel classEntry : project.getUserClasses()) {
                     boolean classModified = false;
                     for (MethodEntryModel methodModel : classEntry.getMethods()) {
                         MethodEntry method = methodModel.getMethodEntry();

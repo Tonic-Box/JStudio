@@ -8,8 +8,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Represents an open project containing classes to analyze.
@@ -22,6 +25,7 @@ public class ProjectModel {
     private ClassPool classPool;
     private XrefDatabase xrefDatabase;
     private final Map<String, ClassEntryModel> classEntries = new HashMap<>();
+    private final Set<String> userClassNames = new HashSet<>();
     private boolean dirty;
 
     public ProjectModel() {
@@ -30,42 +34,24 @@ public class ProjectModel {
         this.classPool = null;
     }
 
-    public ProjectModel(String name, ClassPool classPool) {
-        this.projectName = name;
-        this.classPool = classPool;
-        buildClassEntries();
-    }
-
     /**
-     * Set the class pool and rebuild class entries.
+     * Set the class pool (does not auto-populate class entries).
      */
     public void setClassPool(ClassPool classPool) {
         this.classPool = classPool;
-        buildClassEntries();
     }
 
     /**
-     * Build ClassEntryModel wrappers for all classes in the pool.
-     */
-    private void buildClassEntries() {
-        classEntries.clear();
-        if (classPool != null) {
-            for (ClassFile cf : classPool.getClasses()) {
-                ClassEntryModel entry = new ClassEntryModel(cf);
-                classEntries.put(cf.getClassName(), entry);
-            }
-        }
-    }
-
-    /**
-     * Add a class to the project.
+     * Add a user class to the project.
      */
     public ClassEntryModel addClass(ClassFile classFile) {
+        String className = classFile.getClassName();
         if (classPool != null) {
             classPool.put(classFile);
         }
         ClassEntryModel entry = new ClassEntryModel(classFile);
-        classEntries.put(classFile.getClassName(), entry);
+        classEntries.put(className, entry);
+        userClassNames.add(className);
         dirty = true;
         return entry;
     }
@@ -82,6 +68,22 @@ public class ProjectModel {
      */
     public List<ClassEntryModel> getAllClasses() {
         return new ArrayList<>(classEntries.values());
+    }
+
+    /**
+     * Get user classes only (classes explicitly loaded by user).
+     */
+    public List<ClassEntryModel> getUserClasses() {
+        return classEntries.values().stream()
+                .filter(c -> userClassNames.contains(c.getClassName()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Check if a class name is a user class (not JDK/library).
+     */
+    public boolean isUserClass(String className) {
+        return userClassNames.contains(className);
     }
 
     /**
@@ -124,6 +126,7 @@ public class ProjectModel {
      */
     public void clear() {
         classEntries.clear();
+        userClassNames.clear();
         if (classPool != null) {
             classPool.getClasses().clear();
         }

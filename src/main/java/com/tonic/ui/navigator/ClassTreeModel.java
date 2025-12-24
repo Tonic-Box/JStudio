@@ -5,6 +5,7 @@ import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.Icons;
+import com.tonic.ui.util.JdkClassFilter;
 
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
@@ -171,7 +172,12 @@ public class ClassTreeModel extends DefaultTreeModel {
     }
 
     private List<ClassEntryModel> getFilteredClasses() {
-        List<ClassEntryModel> classes = new ArrayList<>(project.getAllClasses());
+        List<ClassEntryModel> classes = new ArrayList<>();
+        for (ClassEntryModel entry : project.getAllClasses()) {
+            if (!JdkClassFilter.isJdkClass(entry.getClassName())) {
+                classes.add(entry);
+            }
+        }
 
         if (filterText != null && !filterText.isEmpty()) {
             String lowerFilter = filterText.toLowerCase();

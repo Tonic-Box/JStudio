@@ -1,6 +1,7 @@
 package com.tonic.ui.vm.debugger;
 
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.util.JdkClassFilter;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -87,14 +88,18 @@ public class CallStackPanel extends JPanel {
                 FrameEntry frame = (FrameEntry) value;
                 setText(frame.toString());
 
+                boolean isJdkFrame = JdkClassFilter.isJdkClass(frame.getClassName());
+
                 if (isSelected) {
                     setBackground(JStudioTheme.getAccent());
+                    setForeground(JStudioTheme.getTextPrimary());
                 } else if (frame.isCurrent()) {
                     setBackground(JStudioTheme.getAccentSecondary().darker());
+                    setForeground(JStudioTheme.getTextPrimary());
                 } else {
                     setBackground(JStudioTheme.getBgSecondary());
+                    setForeground(isJdkFrame ? JStudioTheme.getTextDisabled() : JStudioTheme.getTextPrimary());
                 }
-                setForeground(JStudioTheme.getTextPrimary());
             }
 
             return this;

@@ -19,6 +19,7 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.util.JdkClassFilter;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -310,7 +311,7 @@ public class CallGraphPanel extends JPanel {
      */
     private void navigateToMethod(MethodReference method) {
         // Find the class and method in the project
-        for (ClassEntryModel classEntry : project.getAllClasses()) {
+        for (ClassEntryModel classEntry : project.getUserClasses()) {
             if (classEntry.getClassName().equals(method.getOwner())) {
                 // Find the method
                 for (MethodEntryModel methodModel : classEntry.getMethods()) {
@@ -481,6 +482,9 @@ public class CallGraphPanel extends JPanel {
 
         for (CallGraphNode node : callGraph.getPoolNodes()) {
             MethodReference ref = node.getReference();
+            if (JdkClassFilter.isJdkClass(ref.getOwner())) {
+                continue;
+            }
             String label = ref.getOwner() + "." + ref.getName();
             focusCombo.addItem(label);
         }

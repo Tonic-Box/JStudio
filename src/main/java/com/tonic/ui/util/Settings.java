@@ -25,6 +25,7 @@ public class Settings {
     private static final String PREF_RESTORE_SESSION = "session.restore";
     private static final String PREF_LAST_PROJECT = "session.lastProject";
     private static final String PREF_THEME = "appearance.theme";
+    private static final String PREF_LOAD_JDK_CLASSES = "classpool.loadJdk";
 
     private static Settings instance;
     private final Preferences prefs;
@@ -110,4 +111,8 @@ public class Settings {
         setPropertiesWidth(propsWidth);
         setConsoleHeight(consoleHeight);
     }
+
+    // Execution settings
+    public boolean isLoadJdkClassesEnabled() { return prefs.getBoolean(PREF_LOAD_JDK_CLASSES, true); }
+    public void setLoadJdkClassesEnabled(boolean enabled) { prefs.putBoolean(PREF_LOAD_JDK_CLASSES, enabled); }
 }

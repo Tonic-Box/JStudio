@@ -10,6 +10,7 @@ import com.tonic.analysis.dependency.DependencyAnalyzer;
 import com.tonic.analysis.dependency.DependencyNode;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.util.JdkClassFilter;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -212,6 +213,9 @@ public class DependencyPanel extends JPanel {
         if (analyzer == null) return;
 
         for (DependencyNode node : analyzer.getPoolNodes()) {
+            if (JdkClassFilter.isJdkClass(node.getClassName())) {
+                continue;
+            }
             focusCombo.addItem(node.getClassName());
         }
     }

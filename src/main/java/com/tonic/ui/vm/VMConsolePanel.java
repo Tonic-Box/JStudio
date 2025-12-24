@@ -4,6 +4,7 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.util.JdkClassFilter;
 import java.awt.Color;
 import com.tonic.ui.vm.model.ExecutionResult;
 
@@ -268,7 +269,7 @@ public class VMConsolePanel extends JPanel {
         }
 
         var project = ProjectService.getInstance().getCurrentProject();
-        var classes = project.getAllClasses();
+        var classes = project.getUserClasses();
 
         int count = 0;
         int max = 50;
@@ -285,7 +286,7 @@ public class VMConsolePanel extends JPanel {
                 }
             }
         }
-        appendText("Total: " + classes.size() + " classes\n\n", infoStyle);
+        appendText("Total: " + classes.size() + " user classes\n\n", infoStyle);
     }
 
     private void listMethods(String className) {
@@ -300,6 +301,12 @@ public class VMConsolePanel extends JPanel {
         }
 
         String internalName = className.replace('.', '/');
+
+        if (JdkClassFilter.isJdkClass(internalName)) {
+            appendText("Cannot list JDK class methods: " + className + "\n", errorStyle);
+            return;
+        }
+
         ClassFile classFile = ProjectService.getInstance().getCurrentProject().getClassPool().get(internalName);
 
         if (classFile == null) {

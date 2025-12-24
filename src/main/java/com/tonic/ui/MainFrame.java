@@ -534,7 +534,7 @@ public class MainFrame extends JFrame {
             int count = 0;
             int errors = 0;
 
-            for (ClassEntryModel classEntry : project.getAllClasses()) {
+            for (ClassEntryModel classEntry : project.getUserClasses()) {
                 try {
                     ClassFile cf = classEntry.getClassFile();
                     byte[] data = cf.write();

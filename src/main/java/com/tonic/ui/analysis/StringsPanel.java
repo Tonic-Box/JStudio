@@ -150,7 +150,7 @@ public class StringsPanel extends JPanel {
             protected List<StringEntry> doInBackground() {
                 List<StringEntry> strings = new ArrayList<>();
 
-                for (ClassEntryModel classEntry : project.getAllClasses()) {
+                for (ClassEntryModel classEntry : project.getUserClasses()) {
                     ClassFile cf = classEntry.getClassFile();
                     ConstPool constPool = cf.getConstPool();
                     java.util.List<Item<?>> items = constPool.getItems();

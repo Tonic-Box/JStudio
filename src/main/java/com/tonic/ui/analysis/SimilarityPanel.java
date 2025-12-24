@@ -9,6 +9,7 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.ui.editor.bytecode.BytecodeFormatter;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.util.JdkClassFilter;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -507,6 +508,9 @@ public class SimilarityPanel extends JPanel {
         }
 
         for (ClassFile cf : project.getClassPool().getClasses()) {
+            if (JdkClassFilter.isJdkClass(cf.getClassName())) {
+                continue;
+            }
             if (cf.getClassName().equals(sig.getClassName())) {
                 for (MethodEntry method : cf.getMethods()) {
                     if (method.getName().equals(sig.getMethodName()) &&

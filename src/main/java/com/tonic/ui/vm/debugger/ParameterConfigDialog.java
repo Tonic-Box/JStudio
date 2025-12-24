@@ -19,7 +19,10 @@ import java.util.Map;
 
 public class ParameterConfigDialog extends JDialog {
 
+    private static final Map<String, Object[]> parameterCache = new HashMap<>();
+
     private final MethodEntry method;
+    private final String methodKey;
     private final List<ParameterField> parameterFields;
     private Object[] result;
     private boolean confirmed;
@@ -28,14 +31,31 @@ public class ParameterConfigDialog extends JDialog {
     public ParameterConfigDialog(Component parent, MethodEntry method) {
         super(SwingUtilities.getWindowAncestor(parent), "Configure Parameters", ModalityType.APPLICATION_MODAL);
         this.method = method;
+        this.methodKey = method.getOwnerName() + "." + method.getName() + method.getDesc();
         this.parameterFields = new ArrayList<>();
         this.confirmed = false;
         this.isStatic = (method.getAccess() & 0x0008) != 0;
 
         initUI();
+        restoreCachedValues();
         pack();
         setMinimumSize(new Dimension(400, 200));
         setLocationRelativeTo(parent);
+    }
+
+    private void restoreCachedValues() {
+        Object[] cached = parameterCache.get(methodKey);
+        if (cached != null && cached.length == parameterFields.size()) {
+            for (int i = 0; i < cached.length; i++) {
+                parameterFields.get(i).setValue(cached[i]);
+            }
+        }
+    }
+
+    private void cacheValues() {
+        if (result != null) {
+            parameterCache.put(methodKey, result.clone());
+        }
     }
 
     private void initUI() {
@@ -157,6 +177,7 @@ public class ParameterConfigDialog extends JDialog {
         okBtn.setForeground(JStudioTheme.getTextPrimary());
         okBtn.addActionListener(e -> {
             if (collectValues()) {
+                cacheValues();
                 confirmed = true;
                 dispose();
             }
@@ -311,6 +332,7 @@ public class ParameterConfigDialog extends JDialog {
         abstract JComponent getComponent();
         abstract Object getValue() throws Exception;
         abstract void resetToDefault();
+        abstract void setValue(Object value);
     }
 
     private static class PrimitiveParameterField extends ParameterField {
@@ -352,6 +374,13 @@ public class ParameterConfigDialog extends JDialog {
                 case 'D': textField.setText("0.0"); break;
             }
         }
+
+        @Override
+        void setValue(Object value) {
+            if (value != null) {
+                textField.setText(String.valueOf(value));
+            }
+        }
     }
 
     private static class BooleanParameterField extends ParameterField {
@@ -372,6 +401,13 @@ public class ParameterConfigDialog extends JDialog {
 
         @Override
         void resetToDefault() { checkBox.setSelected(false); }
+
+        @Override
+        void setValue(Object value) {
+            if (value instanceof Boolean) {
+                checkBox.setSelected((Boolean) value);
+            }
+        }
     }
 
     private static class StringParameterField extends ParameterField {
@@ -413,6 +449,19 @@ public class ParameterConfigDialog extends JDialog {
             textField.setText("");
             textField.setEnabled(true);
             nullCheckBox.setSelected(false);
+        }
+
+        @Override
+        void setValue(Object value) {
+            if (value == null) {
+                nullCheckBox.setSelected(true);
+                textField.setEnabled(false);
+                textField.setText("");
+            } else {
+                nullCheckBox.setSelected(false);
+                textField.setEnabled(true);
+                textField.setText(String.valueOf(value));
+            }
         }
     }
 
@@ -475,6 +524,19 @@ public class ParameterConfigDialog extends JDialog {
                     textField.setText("0.0"); break;
                 case "Ljava/lang/Boolean;": textField.setText("false"); break;
                 default: textField.setText("0");
+            }
+        }
+
+        @Override
+        void setValue(Object value) {
+            if (value == null) {
+                nullCheckBox.setSelected(true);
+                textField.setEnabled(false);
+                textField.setText("");
+            } else {
+                nullCheckBox.setSelected(false);
+                textField.setEnabled(true);
+                textField.setText(String.valueOf(value));
             }
         }
     }
@@ -599,6 +661,71 @@ public class ParameterConfigDialog extends JDialog {
         void resetToDefault() {
             textField.setText("");
         }
+
+        @Override
+        void setValue(Object value) {
+            if (value == null) {
+                textField.setText("");
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            if (value instanceof int[]) {
+                int[] arr = (int[]) value;
+                for (int i = 0; i < arr.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(arr[i]);
+                }
+            } else if (value instanceof long[]) {
+                long[] arr = (long[]) value;
+                for (int i = 0; i < arr.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(arr[i]);
+                }
+            } else if (value instanceof float[]) {
+                float[] arr = (float[]) value;
+                for (int i = 0; i < arr.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(arr[i]);
+                }
+            } else if (value instanceof double[]) {
+                double[] arr = (double[]) value;
+                for (int i = 0; i < arr.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(arr[i]);
+                }
+            } else if (value instanceof boolean[]) {
+                boolean[] arr = (boolean[]) value;
+                for (int i = 0; i < arr.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(arr[i]);
+                }
+            } else if (value instanceof byte[]) {
+                byte[] arr = (byte[]) value;
+                for (int i = 0; i < arr.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(arr[i]);
+                }
+            } else if (value instanceof short[]) {
+                short[] arr = (short[]) value;
+                for (int i = 0; i < arr.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(arr[i]);
+                }
+            } else if (value instanceof char[]) {
+                char[] arr = (char[]) value;
+                for (int i = 0; i < arr.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(arr[i]);
+                }
+            } else if (value instanceof Object[]) {
+                Object[] arr = (Object[]) value;
+                for (int i = 0; i < arr.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(arr[i]);
+                }
+            }
+            textField.setText(sb.toString());
+        }
     }
 
     private static class ObjectParameterField extends ParameterField {
@@ -641,5 +768,10 @@ public class ParameterConfigDialog extends JDialog {
 
         @Override
         void resetToDefault() { nullCheckBox.setSelected(true); }
+
+        @Override
+        void setValue(Object value) {
+            // Object fields only support null, so nothing to restore
+        }
     }
 }

@@ -45,6 +45,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     private JButton stepOutBtn;
     private JButton resumeBtn;
     private JButton stopBtn;
+    private JComboBox<String> speedSelector;
     private JCheckBox recursiveCheckbox;
 
     private MethodEntry currentMethod;
@@ -183,7 +184,6 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
             int opcodeByte = bytecode[pc] & 0xFF;
             Opcode opcode = Opcode.fromCode(opcodeByte);
             String mnemonic = opcode != null ? opcode.getMnemonic() : String.format("0x%02X", opcodeByte);
-            int operandCount = opcode != null ? opcode.getOperandCount() : 0;
 
             String operandStr = formatOperandsEnhanced(bytecode, pc, opcode, constPool);
             InstructionCategory category = categorizeOpcode(opcode);
@@ -193,7 +193,8 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
             instructions.add(new InstructionEntry(index, pc, mnemonic, operandStr, lineNum, category, false));
             pcToRowMap.put(pc, index);
 
-            pc += 1 + operandCount;
+            int instrLength = calculateInstructionLength(bytecode, pc, opcode);
+            pc += instrLength;
             index++;
         }
 
@@ -532,6 +533,17 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         });
         stopBtn = createToolButton("Stop", null, e -> stopDebugging());
 
+        speedSelector = new JComboBox<>(new String[]{"20ms", "50ms", "100ms", "300ms"});
+        speedSelector.setSelectedIndex(3);
+        speedSelector.setBackground(JStudioTheme.getBgTertiary());
+        speedSelector.setForeground(JStudioTheme.getTextPrimary());
+        speedSelector.setMaximumSize(new Dimension(80, 28));
+        speedSelector.setToolTipText("Animation speed for Run mode");
+        speedSelector.addActionListener(e -> {
+            int[] delays = {20, 50, 100, 300};
+            session.setAnimationDelay(delays[speedSelector.getSelectedIndex()]);
+        });
+
         recursiveCheckbox = new JCheckBox("Recursive Calls");
         recursiveCheckbox.setSelected(false);
         recursiveCheckbox.setBackground(JStudioTheme.getBgPrimary());
@@ -550,7 +562,9 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         panel.add(Box.createHorizontalStrut(10));
         panel.add(resumeBtn);
         panel.add(stopBtn);
-        panel.add(Box.createHorizontalStrut(20));
+        panel.add(Box.createHorizontalStrut(10));
+        panel.add(speedSelector);
+        panel.add(Box.createHorizontalStrut(10));
         panel.add(recursiveCheckbox);
 
         return panel;

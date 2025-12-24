@@ -105,7 +105,7 @@ public class ExecutionEngine {
 
     private int countMethods(ProjectModel project) {
         int count = 0;
-        for (ClassEntryModel entry : project.getAllClasses()) {
+        for (ClassEntryModel entry : project.getUserClasses()) {
             count += entry.getMethods().size();
         }
         return count;
@@ -130,7 +130,7 @@ public class ExecutionEngine {
             exportDir.mkdirs();
         }
 
-        for (ClassEntryModel classEntry : project.getAllClasses()) {
+        for (ClassEntryModel classEntry : project.getUserClasses()) {
             String className = classEntry.getClassName();
             int lastSlash = className.lastIndexOf('/');
 

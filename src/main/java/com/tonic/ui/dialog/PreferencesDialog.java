@@ -44,13 +44,14 @@ public class PreferencesDialog extends JDialog {
     private JTextPane previewPane;
     private JScrollPane previewScrollPane;
     private JComboBox<Theme> themeComboBox;
+    private javax.swing.JCheckBox loadJdkClassesBox;
 
     private Runnable onApply;
 
     public PreferencesDialog(Frame owner) {
         super(owner, "Preferences", true);
 
-        setSize(500, 450);
+        setSize(500, 580);
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
 
@@ -62,6 +63,8 @@ public class PreferencesDialog extends JDialog {
         mainPanel.add(createEditorSection());
         mainPanel.add(Box.createVerticalStrut(16));
         mainPanel.add(createAppearanceSection());
+        mainPanel.add(Box.createVerticalStrut(16));
+        mainPanel.add(createExecutionSection());
         mainPanel.add(Box.createVerticalStrut(16));
         mainPanel.add(createPreviewSection());
         mainPanel.add(Box.createVerticalGlue());
@@ -191,6 +194,39 @@ public class PreferencesDialog extends JDialog {
         return panel;
     }
 
+    private JPanel createExecutionSection() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(JStudioTheme.getBgSecondary());
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+            "Execution",
+            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+            javax.swing.border.TitledBorder.DEFAULT_POSITION,
+            JStudioTheme.getUIFont(12),
+            JStudioTheme.getTextPrimary()
+        ));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+
+        loadJdkClassesBox = new javax.swing.JCheckBox("Load JDK classes (enables stepping into standard library)");
+        loadJdkClassesBox.setBackground(JStudioTheme.getBgSecondary());
+        loadJdkClassesBox.setForeground(JStudioTheme.getTextPrimary());
+        panel.add(loadJdkClassesBox, gbc);
+
+        gbc.gridy = 1;
+        JLabel noteLabel = new JLabel("Changes take effect on next project load");
+        noteLabel.setForeground(JStudioTheme.getTextSecondary());
+        noteLabel.setFont(noteLabel.getFont().deriveFont(Font.ITALIC, 11f));
+        panel.add(noteLabel, gbc);
+
+        return panel;
+    }
+
     private JPanel createPreviewSection() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(JStudioTheme.getBgSecondary());
@@ -252,6 +288,8 @@ public class PreferencesDialog extends JDialog {
 
         Theme currentTheme = ThemeManager.getInstance().getCurrentTheme();
         themeComboBox.setSelectedItem(currentTheme);
+
+        loadJdkClassesBox.setSelected(settings.isLoadJdkClassesEnabled());
     }
 
     private void updatePreview() {
@@ -355,6 +393,8 @@ public class PreferencesDialog extends JDialog {
         if (selectedTheme != null) {
             ThemeManager.getInstance().setTheme(selectedTheme.getName());
         }
+
+        settings.setLoadJdkClassesEnabled(loadJdkClassesBox.isSelected());
 
         if (onApply != null) {
             SwingUtilities.invokeLater(onApply);

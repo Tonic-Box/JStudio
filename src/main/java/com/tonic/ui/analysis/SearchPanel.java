@@ -291,7 +291,7 @@ public class SearchPanel extends JPanel {
 
         // Find the class entry in the project
         String className = classFile.getClassName();
-        for (ClassEntryModel classEntry : project.getAllClasses()) {
+        for (ClassEntryModel classEntry : project.getUserClasses()) {
             if (classEntry.getClassName().equals(className)) {
                 // Fire event to navigate to class
                 EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));

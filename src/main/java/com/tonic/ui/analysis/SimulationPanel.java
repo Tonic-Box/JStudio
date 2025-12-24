@@ -275,7 +275,7 @@ public class SimulationPanel extends JPanel {
         clearFindings();
         statusLabel.setText("Analyzing project...");
 
-        List<ClassEntryModel> classes = project.getAllClasses();
+        List<ClassEntryModel> classes = project.getUserClasses();
         int totalMethods = classes.stream().mapToInt(c -> c.getMethods().size()).sum();
         progressBar.setMaximum(totalMethods);
         progressBar.setValue(0);

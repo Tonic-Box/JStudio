@@ -131,7 +131,7 @@ public class UsagesPanel extends JPanel {
             protected Map<ClassEntryModel, List<UsageInfo>> doInBackground() {
                 Map<ClassEntryModel, List<UsageInfo>> results = new LinkedHashMap<>();
 
-                for (ClassEntryModel classEntry : project.getAllClasses()) {
+                for (ClassEntryModel classEntry : project.getUserClasses()) {
                     List<UsageInfo> usages = findUsagesInClass(classEntry, searchTerm, searchType);
                     if (!usages.isEmpty()) {
                         results.put(classEntry, usages);

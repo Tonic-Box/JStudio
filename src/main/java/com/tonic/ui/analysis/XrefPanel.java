@@ -7,6 +7,7 @@ import com.tonic.ui.event.events.ShowXrefsEvent;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.util.JdkClassFilter;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -350,9 +351,13 @@ public class XrefPanel extends JPanel {
     }
 
     private void buildGroupedTree(DefaultMutableTreeNode root, List<Xref> refs, boolean incoming) {
-        // Group by XrefType
+        // Group by XrefType, filtering out JDK references
         Map<XrefType, List<Xref>> grouped = new LinkedHashMap<>();
         for (Xref ref : refs) {
+            String className = incoming ? ref.getSourceClass() : ref.getTargetClass();
+            if (JdkClassFilter.isJdkClass(className)) {
+                continue;
+            }
             grouped.computeIfAbsent(ref.getType(), k -> new ArrayList<>()).add(ref);
         }
 

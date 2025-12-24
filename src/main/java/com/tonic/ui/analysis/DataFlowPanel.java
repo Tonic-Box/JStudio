@@ -338,7 +338,7 @@ public class DataFlowPanel extends JPanel {
         if (selected == null || selected.startsWith("(")) return;
 
         // Find the method in the project
-        for (ClassEntryModel classEntry : project.getAllClasses()) {
+        for (ClassEntryModel classEntry : project.getUserClasses()) {
             for (MethodEntryModel methodModel : classEntry.getMethods()) {
                 if (methodModel.getDisplaySignature().equals(selected)) {
                     currentClass = classEntry.getClassFile();
@@ -650,7 +650,7 @@ public class DataFlowPanel extends JPanel {
         methodCombo.removeAllItems();
         methodCombo.addItem("(Select method)");
 
-        for (ClassEntryModel classEntry : project.getAllClasses()) {
+        for (ClassEntryModel classEntry : project.getUserClasses()) {
             for (MethodEntryModel methodModel : classEntry.getMethods()) {
                 methodCombo.addItem(methodModel.getDisplaySignature());
             }

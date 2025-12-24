@@ -4,12 +4,30 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- readme">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Debugger bug fixes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/cli/engine/ExecutionEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/cli/engine/ExecutionEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/CallGraphPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/CallGraphPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DataFlowPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DataFlowPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DependencyPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DependencyPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SearchPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SearchPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SimilarityPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SimilarityPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SimulationPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SimulationPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/StringsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/StringsPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/UsagesPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/UsagesPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/XrefPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/XrefPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/PreferencesDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/PreferencesDialog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/ProjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/ProjectModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/ClassTreeModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/ClassTreeModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/service/ProjectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/service/ProjectService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/DescriptorParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/DescriptorParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/transform/TransformPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/transform/TransformPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/JdkClassFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/JdkClassFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/Settings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/Settings.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMConsolePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMConsolePanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/CallStackPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/CallStackPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/ParameterConfigDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/ParameterConfigDialog.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/VMDebugSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/VMDebugSession.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -36,6 +54,13 @@
         </projects_view>
       </state>
     </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Merge.Settings">
     <option name="BRANCH" value="origin/main" />
@@ -287,7 +312,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766553088606</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="- Debugger">
+      <option name="closed" value="true" />
+      <created>1766592266924</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1766592266924</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -311,6 +344,8 @@
     <MESSAGE value="- Hide annotations toggle" />
     <MESSAGE value="- Replace SSVM with YABR execution API&#10;- Bytecode Step Debugger&#10;- Method execution simulator" />
     <MESSAGE value="- readme" />
-    <option name="LAST_COMMIT_MESSAGE" value="- readme" />
+    <MESSAGE value="- Debugger" />
+    <MESSAGE value="- Debugger bug fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Debugger bug fixes" />
   </component>
 </project>
