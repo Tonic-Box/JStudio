@@ -313,10 +313,6 @@ public class VMExecutionService {
                 }
             });
 
-            MethodCall entryCall = new MethodCall(className, methodName, descriptor, args, true, 0);
-            methodCalls.add(entryCall);
-            callStack.push(entryCall);
-
             BytecodeResult result = engine.execute(method, vmArgs);
 
             if (!callStack.isEmpty()) {

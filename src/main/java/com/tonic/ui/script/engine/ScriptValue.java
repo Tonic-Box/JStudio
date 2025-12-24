@@ -4,7 +4,6 @@ import lombok.Getter;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Runtime values for the script interpreter.
@@ -37,6 +36,7 @@ public class ScriptValue {
     public static final ScriptValue TRUE = new ScriptValue(Type.BOOLEAN, true);
     public static final ScriptValue FALSE = new ScriptValue(Type.BOOLEAN, false);
 
+    @SuppressWarnings("unchecked")
     public static ScriptValue of(Object value) {
         if (value == null) return NULL;
         if (value instanceof ScriptValue) return (ScriptValue) value;
