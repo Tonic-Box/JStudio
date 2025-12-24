@@ -90,8 +90,16 @@ public class VMDebugSession {
             if (yabrSession.isStopped()) {
                 started = false;
                 String reason = "Execution completed";
-                if (yabrSession.getResult() != null && yabrSession.getResult().hasException()) {
-                    reason = "Exception: " + yabrSession.getResult().getException();
+                BytecodeResult result = yabrSession.getResult();
+                if (result != null) {
+                    if (result.hasException()) {
+                        reason = "Exception: " + result.getException();
+                    } else {
+                        String returnVal = formatReturnValue(result);
+                        if (returnVal != null) {
+                            reason = "Execution completed - Return: " + returnVal;
+                        }
+                    }
                 }
                 notifySessionStopped(reason);
             } else {
@@ -114,8 +122,16 @@ public class VMDebugSession {
             if (yabrSession.isStopped()) {
                 started = false;
                 String reason = "Execution completed";
-                if (yabrSession.getResult() != null && yabrSession.getResult().hasException()) {
-                    reason = "Exception: " + yabrSession.getResult().getException();
+                BytecodeResult result = yabrSession.getResult();
+                if (result != null) {
+                    if (result.hasException()) {
+                        reason = "Exception: " + result.getException();
+                    } else {
+                        String returnVal = formatReturnValue(result);
+                        if (returnVal != null) {
+                            reason = "Execution completed - Return: " + returnVal;
+                        }
+                    }
                 }
                 notifySessionStopped(reason);
             } else {
@@ -138,8 +154,16 @@ public class VMDebugSession {
             if (yabrSession.isStopped()) {
                 started = false;
                 String reason = "Execution completed";
-                if (yabrSession.getResult() != null && yabrSession.getResult().hasException()) {
-                    reason = "Exception: " + yabrSession.getResult().getException();
+                BytecodeResult result = yabrSession.getResult();
+                if (result != null) {
+                    if (result.hasException()) {
+                        reason = "Exception: " + result.getException();
+                    } else {
+                        String returnVal = formatReturnValue(result);
+                        if (returnVal != null) {
+                            reason = "Execution completed - Return: " + returnVal;
+                        }
+                    }
                 }
                 notifySessionStopped(reason);
             } else {
@@ -163,8 +187,16 @@ public class VMDebugSession {
             if (yabrSession.isStopped()) {
                 started = false;
                 String reason = "Execution completed";
-                if (yabrSession.getResult() != null && yabrSession.getResult().hasException()) {
-                    reason = "Exception: " + yabrSession.getResult().getException();
+                BytecodeResult result = yabrSession.getResult();
+                if (result != null) {
+                    if (result.hasException()) {
+                        reason = "Exception: " + result.getException();
+                    } else {
+                        String returnVal = formatReturnValue(result);
+                        if (returnVal != null) {
+                            reason = "Execution completed - Return: " + returnVal;
+                        }
+                    }
                 }
                 notifySessionStopped(reason);
             } else {
@@ -187,7 +219,21 @@ public class VMDebugSession {
             if (yabrSession == null || yabrSession.isStopped()) {
                 stopAnimation();
                 started = false;
-                notifySessionStopped("Execution completed");
+                String reason = "Execution completed";
+                if (yabrSession != null) {
+                    BytecodeResult result = yabrSession.getResult();
+                    if (result != null) {
+                        if (result.hasException()) {
+                            reason = "Exception: " + result.getException();
+                        } else {
+                            String returnVal = formatReturnValue(result);
+                            if (returnVal != null) {
+                                reason = "Execution completed - Return: " + returnVal;
+                            }
+                        }
+                    }
+                }
+                notifySessionStopped(reason);
                 return;
             }
 
@@ -203,8 +249,16 @@ public class VMDebugSession {
                     stopAnimation();
                     started = false;
                     String reason = "Execution completed";
-                    if (yabrSession.getResult() != null && yabrSession.getResult().hasException()) {
-                        reason = "Exception: " + yabrSession.getResult().getException();
+                    BytecodeResult result = yabrSession.getResult();
+                    if (result != null) {
+                        if (result.hasException()) {
+                            reason = "Exception: " + result.getException();
+                        } else {
+                            String returnVal = formatReturnValue(result);
+                            if (returnVal != null) {
+                                reason = "Execution completed - Return: " + returnVal;
+                            }
+                        }
                     }
                     notifySessionStopped(reason);
                 }
@@ -471,6 +525,54 @@ public class VMDebugSession {
         return new String[]{className, methodName, descriptor};
     }
 
+    private String formatReturnValue(BytecodeResult result) {
+        if (result == null || !result.isSuccess()) return null;
+
+        ConcreteValue returnValue = result.getReturnValue();
+        if (returnValue == null) return null;
+
+        String formatted;
+        String typeLabel;
+
+        switch (returnValue.getTag()) {
+            case INT:
+                formatted = String.valueOf(returnValue.asInt());
+                typeLabel = "int";
+                break;
+            case LONG:
+                formatted = returnValue.asLong() + "L";
+                typeLabel = "long";
+                break;
+            case FLOAT:
+                formatted = returnValue.asFloat() + "f";
+                typeLabel = "float";
+                break;
+            case DOUBLE:
+                formatted = String.valueOf(returnValue.asDouble());
+                typeLabel = "double";
+                break;
+            case NULL:
+                formatted = "null";
+                typeLabel = "reference";
+                break;
+            case REFERENCE:
+                var ref = returnValue.asReference();
+                if (ref != null) {
+                    String className = ref.getClassName();
+                    formatted = ref.toString();
+                    typeLabel = className.replace('/', '.');
+                } else {
+                    formatted = "null";
+                    typeLabel = "reference";
+                }
+                break;
+            default:
+                return null;
+        }
+
+        return formatted + " (" + typeLabel + ")";
+    }
+
     private void notifyStateChanged(DebugStateModel state) {
         for (DebugListener listener : listeners) {
             try {
@@ -529,7 +631,15 @@ public class VMDebugSession {
         @Override
         public void onSessionStop(DebugSession session, BytecodeResult result) {
             started = false;
-            String reason = result.isSuccess() ? "Completed successfully" : "Execution failed";
+            String reason;
+            if (result.isSuccess()) {
+                String returnVal = formatReturnValue(result);
+                reason = returnVal != null
+                    ? "Completed - Return: " + returnVal
+                    : "Completed successfully";
+            } else {
+                reason = "Execution failed";
+            }
             notifySessionStopped(reason);
         }
 

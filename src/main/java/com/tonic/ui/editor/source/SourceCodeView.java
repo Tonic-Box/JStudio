@@ -55,8 +55,6 @@ import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.swing.SwingUtilities;
 
 /**
@@ -969,7 +967,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
      * Hide the search panel.
      */
     public void hideSearchPanel() {
-        searchPanel.hide();
+        searchPanel.setHidden();
     }
 
     /**

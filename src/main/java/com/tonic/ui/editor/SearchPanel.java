@@ -18,8 +18,6 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
@@ -77,7 +75,7 @@ public class SearchPanel extends JPanel {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                    hide();
+                    setHidden();
                 } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     if (e.isShiftDown()) {
                         findPrevious();
@@ -131,7 +129,7 @@ public class SearchPanel extends JPanel {
         add(Box.createHorizontalGlue());
 
         JButton closeBtn = createToolButton(Icons.getIcon("close", 12), "Close (Esc)");
-        closeBtn.addActionListener(e -> hide());
+        closeBtn.addActionListener(e -> setHidden());
         add(closeBtn);
     }
 
@@ -168,7 +166,7 @@ public class SearchPanel extends JPanel {
         }
     }
 
-    public void hide() {
+    public void setHidden() {
         setVisible(false);
         textArea.requestFocusInWindow();
         SearchEngine.markAll(textArea, new SearchContext());

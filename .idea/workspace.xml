@@ -4,10 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Debugger bug fixes">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Class View Typing → Filter Field&#10;- Right-Click Go to Definition Without Selection&#10;- Inline Search Bar &#10;- Go to Definition for All Symbols">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/SearchPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/SearchPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/VMDebugSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/VMDebugSession.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -307,7 +308,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766603764016</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="- Class View Typing → Filter Field&#10;- Right-Click Go to Definition Without Selection&#10;- Inline Search Bar &#10;- Go to Definition for All Symbols">
+      <option name="closed" value="true" />
+      <created>1766605633539</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1766605633539</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -333,6 +342,7 @@
     <MESSAGE value="- readme" />
     <MESSAGE value="- Debugger" />
     <MESSAGE value="- Debugger bug fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Debugger bug fixes" />
+    <MESSAGE value="- Class View Typing → Filter Field&#10;- Right-Click Go to Definition Without Selection&#10;- Inline Search Bar &#10;- Go to Definition for All Symbols" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Class View Typing → Filter Field&#10;- Right-Click Go to Definition Without Selection&#10;- Inline Search Bar &#10;- Go to Definition for All Symbols" />
   </component>
 </project>
