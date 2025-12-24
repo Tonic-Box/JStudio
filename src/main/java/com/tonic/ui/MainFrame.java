@@ -29,6 +29,10 @@ import com.tonic.ui.transform.TransformPanel;
 import com.tonic.ui.script.ScriptEditorDialog;
 import com.tonic.ui.util.RecentFilesManager;
 import com.tonic.ui.util.Settings;
+import com.tonic.ui.vm.VMConsolePanel;
+import com.tonic.ui.vm.VMExecutionService;
+import com.tonic.ui.vm.debugger.DebuggerPanel;
+import com.tonic.ui.vm.dialog.ExecuteMethodDialog;
 
 import com.tonic.ui.dialog.FindInFilesDialog;
 import com.tonic.ui.dialog.PreferencesDialog;
@@ -92,6 +96,10 @@ public class MainFrame extends JFrame {
     private PreferencesDialog preferencesDialog;
     private JDialog classBrowserDialog;
     private ConstPoolBrowserTab classBrowserTab;
+    private JDialog vmConsoleDialog;
+    private VMConsolePanel vmConsolePanel;
+    private JDialog debuggerDialog;
+    private DebuggerPanel debuggerPanel;
 
     // Split panes for layout
     private JSplitPane mainHorizontalSplit;
@@ -256,7 +264,9 @@ public class MainFrame extends JFrame {
         // Handle project loaded
         EventBus.getInstance().register(ProjectLoadedEvent.class, event -> {
             ProjectModel project = event.getProject();
+            navigatorPanel.loadProject(project);
             editorPanel.setProjectModel(project);
+            editorPanel.refreshWelcomeTab();
             ProjectDatabaseService.getInstance().initializeForProject(project);
             updateTitleBar();
         });
@@ -1596,5 +1606,114 @@ public class MainFrame extends JFrame {
 
         classBrowserDialog.setVisible(true);
         classBrowserDialog.toFront();
+    }
+
+    // === VM Operations ===
+
+    public void showVMConsole() {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded. Load a project before using the VM Console.");
+            return;
+        }
+
+        if (vmConsoleDialog == null || vmConsolePanel == null) {
+            vmConsolePanel = new VMConsolePanel();
+            vmConsoleDialog = new JDialog(this, "VM Console", false);
+            vmConsoleDialog.setSize(800, 500);
+            vmConsoleDialog.setLocationRelativeTo(this);
+            vmConsoleDialog.add(vmConsolePanel);
+        }
+
+        vmConsoleDialog.setVisible(true);
+        vmConsoleDialog.toFront();
+        vmConsolePanel.focusInput();
+    }
+
+    public void showBytecodeDebugger() {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded. Load a project before using the Bytecode Debugger.");
+            return;
+        }
+
+        if (debuggerDialog == null || debuggerPanel == null) {
+            debuggerPanel = new DebuggerPanel();
+            debuggerDialog = new JDialog(this, "Bytecode Debugger", false);
+            debuggerDialog.setSize(1100, 700);
+            debuggerDialog.setLocationRelativeTo(this);
+            debuggerDialog.add(debuggerPanel);
+        }
+
+        MethodEntryModel currentMethod = editorPanel.getCurrentMethod();
+        if (currentMethod != null) {
+            debuggerPanel.setMethod(currentMethod.getMethodEntry());
+            consolePanel.log("Bytecode Debugger: Opened for " + currentMethod.getMethodEntry().getName());
+        } else {
+            consolePanel.log("Bytecode Debugger: Opened - select a method to debug");
+        }
+
+        debuggerDialog.setVisible(true);
+        debuggerDialog.toFront();
+        statusBar.setMessage("Bytecode Debugger opened");
+    }
+
+    public void showExecuteMethodDialog() {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded. Load a project before executing methods.");
+            return;
+        }
+
+        MethodEntryModel currentMethod = editorPanel.getCurrentMethod();
+        ExecuteMethodDialog dialog;
+        if (currentMethod != null) {
+            dialog = new ExecuteMethodDialog(this, currentMethod);
+            consolePanel.log("Execute Method: Opened for " + currentMethod.getMethodEntry().getName());
+        } else {
+            dialog = new ExecuteMethodDialog(this);
+            consolePanel.log("Execute Method: Opened - select a method to execute");
+        }
+        dialog.setVisible(true);
+        statusBar.setMessage("Execute Method dialog opened");
+    }
+
+    public void initializeVM() {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded. Load a project before initializing the VM.");
+            return;
+        }
+
+        try {
+            VMExecutionService.getInstance().initialize();
+            consolePanel.log("VM initialized successfully with " + project.getClassCount() + " classes");
+            statusBar.setMessage("VM initialized");
+        } catch (Exception e) {
+            showError("Failed to initialize VM: " + e.getMessage());
+            consolePanel.logError("VM initialization failed: " + e.getMessage());
+        }
+    }
+
+    public void resetVM() {
+        if (!VMExecutionService.getInstance().isInitialized()) {
+            showInfo("VM is not initialized.");
+            return;
+        }
+
+        try {
+            VMExecutionService.getInstance().reset();
+            consolePanel.log("VM reset successfully");
+            statusBar.setMessage("VM reset");
+        } catch (Exception e) {
+            showError("Failed to reset VM: " + e.getMessage());
+            consolePanel.logError("VM reset failed: " + e.getMessage());
+        }
+    }
+
+    public void showVMStatus() {
+        VMExecutionService vmService = VMExecutionService.getInstance();
+        String status = vmService.getVMStatus();
+        JOptionPane.showMessageDialog(this, status, "VM Status", JOptionPane.INFORMATION_MESSAGE);
     }
 }

@@ -40,6 +40,7 @@ public class MenuBarBuilder {
         menuBar.add(buildViewMenu());
         menuBar.add(buildAnalysisMenu());
         menuBar.add(buildTransformMenu());
+        menuBar.add(buildVMMenu());
         menuBar.add(buildHelpMenu());
 
         // Listen for recent files changes
@@ -283,6 +284,35 @@ public class MenuBarBuilder {
 
         menu.add(createMenuItem("Recompute Stack Frames", 0, 0,
                 null, e -> mainFrame.recomputeStackFrames()));
+
+        return menu;
+    }
+
+    private JMenu buildVMMenu() {
+        JMenu menu = new JMenu("VM");
+        menu.setMnemonic(KeyEvent.VK_M);
+
+        menu.add(createMenuItem("VM Console...", KeyEvent.VK_C, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
+                Icons.getIcon("console"), e -> mainFrame.showVMConsole()));
+
+        menu.add(createMenuItem("Bytecode Debugger...", KeyEvent.VK_F11, 0,
+                Icons.getIcon("debug"), e -> mainFrame.showBytecodeDebugger()));
+
+        menu.add(createMenuItem("Execute Method...", KeyEvent.VK_E, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
+                Icons.getIcon("run"), e -> mainFrame.showExecuteMethodDialog()));
+
+        menu.addSeparator();
+
+        menu.add(createMenuItem("Initialize VM", 0, 0,
+                null, e -> mainFrame.initializeVM()));
+
+        menu.add(createMenuItem("Reset VM", 0, 0,
+                null, e -> mainFrame.resetVM()));
+
+        menu.addSeparator();
+
+        menu.add(createMenuItem("VM Status", 0, 0,
+                Icons.getIcon("info"), e -> mainFrame.showVMStatus()));
 
         return menu;
     }

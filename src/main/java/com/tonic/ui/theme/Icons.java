@@ -81,7 +81,12 @@ public class Icons {
             case "analyze":
                 return new PlayIcon(size);
             case "play":
+            case "run":
                 return new PlayIcon(size);
+            case "console":
+                return new ConsoleIcon(size);
+            case "debug":
+                return new DebugIcon(size);
             case "callgraph":
                 return new GraphIcon(size);
             case "dependency":
@@ -754,6 +759,45 @@ public class Icons {
             g2.setColor(JStudioTheme.getAccent());
             g2.drawLine(6, 6, 6, 10);
             g2.drawLine(10, 6, 10, 10);
+        }
+    }
+
+    private static class ConsoleIcon extends BaseIcon {
+        ConsoleIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.setStroke(getStroke());
+            g2.drawRoundRect(2, 3, 12, 10, 2, 2);
+            g2.setColor(JStudioTheme.getSuccess());
+            g2.drawLine(4, 7, 6, 9);
+            g2.drawLine(6, 9, 4, 11);
+            g2.setColor(JStudioTheme.getTextSecondary());
+            g2.drawLine(8, 11, 12, 11);
+        }
+    }
+
+    private static class DebugIcon extends BaseIcon {
+        DebugIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getError());
+            g2.fillOval(5, 5, 6, 6);
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.setStroke(getStroke());
+            g2.drawOval(3, 3, 10, 10);
+            g2.drawLine(8, 1, 8, 3);
+            g2.drawLine(8, 13, 8, 15);
+            g2.drawLine(1, 8, 3, 8);
+            g2.drawLine(13, 8, 15, 8);
+            g2.drawLine(3, 3, 5, 5);
+            g2.drawLine(11, 11, 13, 13);
         }
     }
 }

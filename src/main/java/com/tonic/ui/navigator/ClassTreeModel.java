@@ -173,23 +173,41 @@ public class ClassTreeModel extends DefaultTreeModel {
     private List<ClassEntryModel> getFilteredClasses() {
         List<ClassEntryModel> classes = new ArrayList<>(project.getAllClasses());
 
-        // Apply filter
         if (filterText != null && !filterText.isEmpty()) {
             String lowerFilter = filterText.toLowerCase();
             List<ClassEntryModel> filtered = new ArrayList<>();
             for (ClassEntryModel entry : classes) {
-                if (entry.getSimpleName().toLowerCase().contains(lowerFilter) ||
-                        entry.getClassName().toLowerCase().contains(lowerFilter)) {
+                if (matchesFilter(entry, lowerFilter)) {
                     filtered.add(entry);
                 }
             }
             classes = filtered;
         }
 
-        // Sort by name
         Collections.sort(classes, (a, b) -> a.getClassName().compareTo(b.getClassName()));
 
         return classes;
+    }
+
+    private boolean matchesFilter(ClassEntryModel entry, String lowerFilter) {
+        if (entry.getSimpleName().toLowerCase().contains(lowerFilter) ||
+                entry.getClassName().toLowerCase().contains(lowerFilter)) {
+            return true;
+        }
+
+        for (MethodEntryModel method : entry.getMethods()) {
+            if (method.getName().toLowerCase().contains(lowerFilter)) {
+                return true;
+            }
+        }
+
+        for (MethodEntryModel ctor : entry.getConstructors()) {
+            if (ctor.getName().toLowerCase().contains(lowerFilter)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private NavigatorNode.PackageNode getOrCreatePackageNode(
@@ -259,37 +277,51 @@ public class ClassTreeModel extends DefaultTreeModel {
     }
 
     private void addMembersToClass(NavigatorNode.ClassNode classNode, ClassEntryModel classEntry) {
-        // Add fields
-        List<FieldEntryModel> fields = classEntry.getFields();
-        if (!fields.isEmpty()) {
-            NavigatorNode.CategoryNode fieldsCategory = new NavigatorNode.CategoryNode("Fields", Icons.getIcon("field"));
-            for (FieldEntryModel field : fields) {
-                fieldsCategory.add(new NavigatorNode.FieldNode(field));
+        String lowerFilter = (filterText != null && !filterText.isEmpty()) ? filterText.toLowerCase() : null;
+        boolean classNameMatches = lowerFilter == null ||
+                classEntry.getSimpleName().toLowerCase().contains(lowerFilter) ||
+                classEntry.getClassName().toLowerCase().contains(lowerFilter);
+
+        if (lowerFilter == null || classNameMatches) {
+            List<FieldEntryModel> fields = classEntry.getFields();
+            if (!fields.isEmpty()) {
+                NavigatorNode.CategoryNode fieldsCategory = new NavigatorNode.CategoryNode("Fields", Icons.getIcon("field"));
+                for (FieldEntryModel field : fields) {
+                    fieldsCategory.add(new NavigatorNode.FieldNode(field));
+                }
+                classNode.add(fieldsCategory);
             }
-            classNode.add(fieldsCategory);
         }
 
-        // Add constructors
         List<MethodEntryModel> constructors = classEntry.getConstructors();
-        if (!constructors.isEmpty()) {
+        List<MethodEntryModel> filteredCtors = new ArrayList<>();
+        for (MethodEntryModel ctor : constructors) {
+            if (lowerFilter == null || classNameMatches ||
+                    ctor.getName().toLowerCase().contains(lowerFilter)) {
+                filteredCtors.add(ctor);
+            }
+        }
+        if (!filteredCtors.isEmpty()) {
             NavigatorNode.CategoryNode ctorCategory = new NavigatorNode.CategoryNode("Constructors", Icons.getIcon("constructor"));
-            for (MethodEntryModel ctor : constructors) {
+            for (MethodEntryModel ctor : filteredCtors) {
                 ctorCategory.add(new NavigatorNode.MethodNode(ctor));
             }
             classNode.add(ctorCategory);
         }
 
-        // Add methods (excluding constructors and static initializer)
-        List<MethodEntryModel> methods = new ArrayList<>();
+        List<MethodEntryModel> filteredMethods = new ArrayList<>();
         for (MethodEntryModel method : classEntry.getMethods()) {
             if (!method.isConstructor() && !method.isStaticInitializer()) {
-                methods.add(method);
+                if (lowerFilter == null || classNameMatches ||
+                        method.getName().toLowerCase().contains(lowerFilter)) {
+                    filteredMethods.add(method);
+                }
             }
         }
 
-        if (!methods.isEmpty()) {
+        if (!filteredMethods.isEmpty()) {
             NavigatorNode.CategoryNode methodsCategory = new NavigatorNode.CategoryNode("Methods", Icons.getIcon("method_public"));
-            for (MethodEntryModel method : methods) {
+            for (MethodEntryModel method : filteredMethods) {
                 methodsCategory.add(new NavigatorNode.MethodNode(method));
             }
             classNode.add(methodsCategory);
