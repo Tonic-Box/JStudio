@@ -4,8 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Replace SSVM with YABR execution API&#10;- Bytecode Step Debugger&#10;- Method execution simulator">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- readme">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/service/ProjectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/service/ProjectService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/DescriptorParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/DescriptorParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/VMDebugSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/VMDebugSession.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -274,7 +279,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766549312252</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="- readme">
+      <option name="closed" value="true" />
+      <created>1766553088606</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1766553088606</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -297,6 +310,7 @@
     <MESSAGE value="- Updated gradle tasks and readme section for building/running" />
     <MESSAGE value="- Hide annotations toggle" />
     <MESSAGE value="- Replace SSVM with YABR execution API&#10;- Bytecode Step Debugger&#10;- Method execution simulator" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Replace SSVM with YABR execution API&#10;- Bytecode Step Debugger&#10;- Method execution simulator" />
+    <MESSAGE value="- readme" />
+    <option name="LAST_COMMIT_MESSAGE" value="- readme" />
   </component>
 </project>

@@ -39,13 +39,17 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     private final MethodSelectorPanel methodSelector;
 
     private JButton startBtn;
+    private JButton configParamsBtn;
     private JButton stepIntoBtn;
     private JButton stepOverBtn;
     private JButton stepOutBtn;
     private JButton resumeBtn;
     private JButton stopBtn;
+    private JCheckBox recursiveCheckbox;
 
     private MethodEntry currentMethod;
+    private Object[] configuredParams;
+    private boolean recursiveExecution = false;
     private List<InstructionEntry> instructions;
     private Map<Integer, Integer> pcToRowMap;
     private Consumer<String> onStatusMessage;
@@ -504,6 +508,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         panel.setBackground(JStudioTheme.getBgPrimary());
 
         startBtn = createToolButton("Start", null, e -> startDebugging());
+        configParamsBtn = createToolButton("Params...", null, e -> showParameterDialog());
         stepIntoBtn = createToolButton("Step Into (F7)", "F7", e -> {
             ensureSessionStarted();
             session.stepInto();
@@ -527,7 +532,17 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         });
         stopBtn = createToolButton("Stop", null, e -> stopDebugging());
 
+        recursiveCheckbox = new JCheckBox("Recursive Calls");
+        recursiveCheckbox.setSelected(false);
+        recursiveCheckbox.setBackground(JStudioTheme.getBgPrimary());
+        recursiveCheckbox.setForeground(JStudioTheme.getTextPrimary());
+        recursiveCheckbox.setToolTipText("Execute called methods recursively (vs stub with defaults)");
+        recursiveCheckbox.addActionListener(e -> {
+            recursiveExecution = recursiveCheckbox.isSelected();
+        });
+
         panel.add(startBtn);
+        panel.add(configParamsBtn);
         panel.add(Box.createHorizontalStrut(10));
         panel.add(stepIntoBtn);
         panel.add(stepOverBtn);
@@ -535,6 +550,8 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         panel.add(Box.createHorizontalStrut(10));
         panel.add(resumeBtn);
         panel.add(stopBtn);
+        panel.add(Box.createHorizontalStrut(20));
+        panel.add(recursiveCheckbox);
 
         return panel;
     }
@@ -592,6 +609,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         if (methodModel == null) return;
 
         this.currentMethod = methodModel.getMethodEntry();
+        this.configuredParams = null;
         loadBytecode(currentMethod);
 
         statusLabel.setText("Method loaded: " + currentMethod.getOwnerName() + "." + currentMethod.getName());
@@ -849,9 +867,11 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         }
 
         try {
-            session.start(currentMethod, args);
+            Object[] params = args.length > 0 ? args : getEffectiveParams();
+            session.start(currentMethod, recursiveExecution, params);
             updateButtonStates();
-            appendOutput("Started debugging: " + currentMethod.getName());
+            String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
+            appendOutput("Started debugging: " + currentMethod.getName() + modeStr);
         } catch (Exception e) {
             appendOutput("Failed to start: " + e.getMessage());
             JOptionPane.showMessageDialog(this,
@@ -861,12 +881,134 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         }
     }
 
+    private void showParameterDialog() {
+        if (currentMethod == null) {
+            JOptionPane.showMessageDialog(this,
+                "No method loaded. Select a method first.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        ParameterConfigDialog dialog = new ParameterConfigDialog(this, currentMethod);
+        dialog.setVisible(true);
+
+        if (dialog.isConfirmed()) {
+            configuredParams = dialog.getResult();
+            appendOutput("Parameters configured: " + configuredParams.length + " argument(s)");
+        }
+    }
+
+    private Object[] getEffectiveParams() {
+        if (configuredParams != null) {
+            return configuredParams;
+        }
+        return generateDefaultParams();
+    }
+
+    private Object[] generateDefaultParams() {
+        String desc = currentMethod.getDesc();
+        List<String> types = parseParameterTypes(desc);
+        Object[] defaults = new Object[types.size()];
+
+        for (int i = 0; i < types.size(); i++) {
+            defaults[i] = getDefaultForType(types.get(i));
+        }
+        return defaults;
+    }
+
+    private List<String> parseParameterTypes(String descriptor) {
+        List<String> types = new ArrayList<>();
+        int i = 1;
+        while (i < descriptor.length() && descriptor.charAt(i) != ')') {
+            int start = i;
+            while (descriptor.charAt(i) == '[') i++;
+
+            if (descriptor.charAt(i) == 'L') {
+                int end = descriptor.indexOf(';', i);
+                i = end + 1;
+            } else {
+                i++;
+            }
+            types.add(descriptor.substring(start, i));
+        }
+        return types;
+    }
+
+    private Object getDefaultForType(String typeDesc) {
+        char first = typeDesc.charAt(0);
+        switch (first) {
+            case 'B': case 'C': case 'S': case 'I': return 0;
+            case 'J': return 0L;
+            case 'F': return 0.0f;
+            case 'D': return 0.0d;
+            case 'Z': return false;
+            case '[': return createEmptyArray(typeDesc);
+            case 'L':
+                if (typeDesc.equals("Ljava/lang/String;")) {
+                    return "";
+                } else if (isBoxedPrimitive(typeDesc)) {
+                    return getBoxedDefault(typeDesc);
+                }
+                return null;
+            default: return null;
+        }
+    }
+
+    private boolean isBoxedPrimitive(String typeDesc) {
+        return typeDesc.equals("Ljava/lang/Integer;") ||
+               typeDesc.equals("Ljava/lang/Long;") ||
+               typeDesc.equals("Ljava/lang/Float;") ||
+               typeDesc.equals("Ljava/lang/Double;") ||
+               typeDesc.equals("Ljava/lang/Boolean;") ||
+               typeDesc.equals("Ljava/lang/Byte;") ||
+               typeDesc.equals("Ljava/lang/Short;") ||
+               typeDesc.equals("Ljava/lang/Character;");
+    }
+
+    private Object getBoxedDefault(String typeDesc) {
+        switch (typeDesc) {
+            case "Ljava/lang/Integer;": return 0;
+            case "Ljava/lang/Long;": return 0L;
+            case "Ljava/lang/Float;": return 0.0f;
+            case "Ljava/lang/Double;": return 0.0d;
+            case "Ljava/lang/Boolean;": return false;
+            case "Ljava/lang/Byte;": return (byte) 0;
+            case "Ljava/lang/Short;": return (short) 0;
+            case "Ljava/lang/Character;": return '\0';
+            default: return null;
+        }
+    }
+
+    private Object createEmptyArray(String typeDesc) {
+        int dims = 0;
+        int i = 0;
+        while (typeDesc.charAt(i) == '[') { dims++; i++; }
+        String elemType = typeDesc.substring(i);
+
+        if (dims == 1) {
+            switch (elemType.charAt(0)) {
+                case 'I': return new int[0];
+                case 'J': return new long[0];
+                case 'F': return new float[0];
+                case 'D': return new double[0];
+                case 'Z': return new boolean[0];
+                case 'B': return new byte[0];
+                case 'S': return new short[0];
+                case 'C': return new char[0];
+                default: return new Object[0];
+            }
+        }
+        return new Object[0];
+    }
+
     private void ensureSessionStarted() {
         if (!session.isStarted() && currentMethod != null) {
             try {
-                session.start(currentMethod);
+                session.start(currentMethod, recursiveExecution, getEffectiveParams());
                 updateButtonStates();
-                appendOutput("Started debugging: " + currentMethod.getName());
+                String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
+                appendOutput("Started debugging: " + currentMethod.getName() + modeStr);
             } catch (Exception e) {
                 appendOutput("Failed to start: " + e.getMessage());
             }
@@ -892,6 +1034,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         boolean canStartStepping = hasMethod && (!session.isStarted() || canStep) && !isAnimating;
 
         startBtn.setEnabled(hasMethod && !isRunning);
+        configParamsBtn.setEnabled(hasMethod && !isRunning);
         stepIntoBtn.setEnabled(canStartStepping);
         stepOverBtn.setEnabled(canStartStepping);
         stepOutBtn.setEnabled(canStartStepping);

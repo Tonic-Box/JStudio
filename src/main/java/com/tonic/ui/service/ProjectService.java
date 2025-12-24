@@ -100,7 +100,7 @@ public class ProjectService {
         project.setSourceFile(jarFile);
 
         // Create a custom class pool without loading JRT
-        ClassPool pool = createEmptyClassPool();
+        ClassPool pool = createClassPoolWithJdk();
         for (ClassFile cf : classes) {
             pool.put(cf);
         }
@@ -130,7 +130,7 @@ public class ProjectService {
         project.setProjectName(classFile.getName());
         project.setSourceFile(classFile);
 
-        ClassPool pool = createEmptyClassPool();
+        ClassPool pool = createClassPoolWithJdk();
         pool.put(cf);
         project.setClassPool(pool);
 
@@ -182,7 +182,7 @@ public class ProjectService {
         project.setProjectName(directory.getName());
         project.setSourceFile(directory);
 
-        ClassPool pool = createEmptyClassPool();
+        ClassPool pool = createClassPoolWithJdk();
         for (ClassFile cf : classes) {
             pool.put(cf);
         }
@@ -365,11 +365,16 @@ public class ProjectService {
     }
 
     /**
-     * Create an empty class pool without loading JRT classes.
-     * This avoids the slow startup of loading all java.base classes.
+     * Create a class pool with JDK classes loaded.
+     * This enables recursive execution to step into JDK methods.
      */
-    private ClassPool createEmptyClassPool() {
-        return new ClassPool(true);
+    private ClassPool createClassPoolWithJdk() {
+        try {
+            return new ClassPool();
+        } catch (IOException e) {
+            System.err.println("Failed to load JDK classes, falling back to empty pool: " + e.getMessage());
+            return new ClassPool(true);
+        }
     }
 
     /**

@@ -274,7 +274,8 @@ public class VMExecutionService {
         }
     }
 
-    public DebugSession createDebugSession(String className, String methodName, String descriptor, Object... args) {
+    public DebugSession createDebugSession(String className, String methodName, String descriptor,
+                                            boolean recursive, Object... args) {
         ensureInitialized();
 
         ClassFile classFile = classPool.get(className);
@@ -291,7 +292,17 @@ public class VMExecutionService {
             currentDebugSession.stop();
         }
 
-        currentDebugSession = new DebugSession(context);
+        BytecodeContext sessionContext = new BytecodeContext.Builder()
+            .heapManager(heapManager)
+            .classResolver(classResolver)
+            .mode(recursive ?
+                com.tonic.analysis.execution.core.ExecutionMode.RECURSIVE :
+                com.tonic.analysis.execution.core.ExecutionMode.DELEGATED)
+            .maxCallDepth(maxCallDepth)
+            .maxInstructions(maxInstructions)
+            .build();
+
+        currentDebugSession = new DebugSession(sessionContext);
         ConcreteValue[] vmArgs = convertToConcreteValues(args);
         currentDebugSession.start(method, vmArgs);
 

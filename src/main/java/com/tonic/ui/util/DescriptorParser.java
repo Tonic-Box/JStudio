@@ -51,6 +51,17 @@ public class DescriptorParser {
         return result.toString();
     }
 
+    public static String formatReturnType(String methodDescriptor) {
+        if (methodDescriptor == null || methodDescriptor.isEmpty()) {
+            return "void";
+        }
+        int parenEnd = methodDescriptor.indexOf(')');
+        if (parenEnd < 0 || parenEnd + 1 >= methodDescriptor.length()) {
+            return "void";
+        }
+        return formatFieldDescriptor(methodDescriptor.substring(parenEnd + 1));
+    }
+
     public static String formatMethodParams(String methodDescriptor) {
         if (methodDescriptor == null || methodDescriptor.isEmpty()) {
             return "";

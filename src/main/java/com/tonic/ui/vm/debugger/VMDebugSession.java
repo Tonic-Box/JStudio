@@ -37,7 +37,7 @@ public class VMDebugSession {
         this.started = false;
     }
 
-    public void start(MethodEntry method, Object... args) {
+    public void start(MethodEntry method, boolean recursive, Object... args) {
         if (started) {
             throw new IllegalStateException("Session already started");
         }
@@ -53,6 +53,7 @@ public class VMDebugSession {
             method.getOwnerName(),
             method.getName(),
             method.getDesc(),
+            recursive,
             args
         );
 
