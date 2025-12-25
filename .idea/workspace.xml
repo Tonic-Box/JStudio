@@ -4,10 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- bug fixes">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- string analysis">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/ExecuteMethodDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/ExecuteMethodDialog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/CallTracePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/CallTracePanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/ExecutionResultPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/ExecutionResultPanel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -77,7 +79,7 @@
       <recent name="C:\Users\zacke\IdeaProjects\JStudio\src\main\resources" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.JStudio [run]">
+  <component name="RunManager" selected="Application.JStudio">
     <configuration name="JStudio" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.tonic.ui.JStudio" />
       <module name="JStudio.main" />
@@ -194,8 +196,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.JStudio [run]" />
         <item itemvalue="Gradle.JStudio [clean]" />
+        <item itemvalue="Gradle.JStudio [run]" />
         <item itemvalue="Gradle.JStudio [build]" />
         <item itemvalue="Gradle.JStudio [refreshDependencies]" />
         <item itemvalue="Application.JStudio" />
@@ -339,7 +341,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766619562519</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="- string analysis">
+      <option name="closed" value="true" />
+      <created>1766630642013</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1766630642013</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -367,6 +377,7 @@
     <MESSAGE value="- Debugger bug fixes" />
     <MESSAGE value="- Class View Typing → Filter Field&#10;- Right-Click Go to Definition Without Selection&#10;- Inline Search Bar &#10;- Go to Definition for All Symbols" />
     <MESSAGE value="- bug fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="- bug fixes" />
+    <MESSAGE value="- string analysis" />
+    <option name="LAST_COMMIT_MESSAGE" value="- string analysis" />
   </component>
 </project>

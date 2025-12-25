@@ -379,6 +379,7 @@ public class ExecuteMethodDialog extends JDialog {
                     setCursor(Cursor.getDefaultCursor());
                     try {
                         ExecutionResult result = get();
+                        resultPanel.setExecutionContext(className, methodName, descriptor, args);
                         displayResult(result);
                         if (result.isSuccess()) {
                             statusLabel.setText("Execution complete: " + result.getFormattedReturnValue());

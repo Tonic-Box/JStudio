@@ -8,6 +8,7 @@ import com.tonic.analysis.execution.debug.DebugSession;
 import com.tonic.analysis.execution.frame.StackFrame;
 import com.tonic.analysis.execution.heap.SimpleHeapManager;
 import com.tonic.analysis.execution.resolve.ClassResolver;
+import com.tonic.analysis.execution.state.ConcreteLocals;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
@@ -277,7 +278,8 @@ public class VMExecutionService {
                                 String desc = methodEntry.getDesc();
                                 boolean isStatic = (methodEntry.getAccess() & 0x0008) != 0;
 
-                                MethodCall call = new MethodCall(owner, name, desc, new Object[0], isStatic, currentDepth - 1);
+                                Object[] args = extractArgumentsFromFrame(topFrame);
+                                MethodCall call = new MethodCall(owner, name, desc, args, isStatic, currentDepth - 1);
                                 callStack.push(call);
                                 methodCalls.add(call);
                             }
@@ -577,5 +579,77 @@ public class VMExecutionService {
         }
 
         return builder.build();
+    }
+
+    private Object[] extractArgumentsFromFrame(StackFrame frame) {
+        try {
+            MethodEntry method = frame.getMethod();
+            String desc = method.getDesc();
+            boolean isStatic = (method.getAccess() & 0x0008) != 0;
+
+            List<String> argTypes = parseArgumentTypes(desc);
+            if (argTypes.isEmpty()) {
+                return new Object[0];
+            }
+
+            ConcreteLocals locals = frame.getLocals();
+            Object[] args = new Object[argTypes.size()];
+            int slot = isStatic ? 0 : 1;
+
+            for (int i = 0; i < argTypes.size(); i++) {
+                String type = argTypes.get(i);
+                ConcreteValue value = locals.get(slot);
+                args[i] = convertFromConcreteValue(value);
+                slot += getSlotSize(type);
+            }
+
+            return args;
+        } catch (Exception e) {
+            return new Object[0];
+        }
+    }
+
+    private List<String> parseArgumentTypes(String descriptor) {
+        List<String> types = new ArrayList<>();
+        int i = descriptor.indexOf('(');
+        if (i < 0) return types;
+        i++;
+
+        while (i < descriptor.length() && descriptor.charAt(i) != ')') {
+            char c = descriptor.charAt(i);
+            if (c == 'L') {
+                int end = descriptor.indexOf(';', i);
+                if (end < 0) break;
+                types.add(descriptor.substring(i, end + 1));
+                i = end + 1;
+            } else if (c == '[') {
+                int start = i;
+                i++;
+                while (i < descriptor.length() && descriptor.charAt(i) == '[') i++;
+                if (i < descriptor.length()) {
+                    char elem = descriptor.charAt(i);
+                    if (elem == 'L') {
+                        int end = descriptor.indexOf(';', i);
+                        if (end < 0) break;
+                        types.add(descriptor.substring(start, end + 1));
+                        i = end + 1;
+                    } else {
+                        types.add(descriptor.substring(start, i + 1));
+                        i++;
+                    }
+                }
+            } else {
+                types.add(String.valueOf(c));
+                i++;
+            }
+        }
+        return types;
+    }
+
+    private int getSlotSize(String typeDesc) {
+        if (typeDesc.equals("J") || typeDesc.equals("D")) {
+            return 2;
+        }
+        return 1;
     }
 }

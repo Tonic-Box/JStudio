@@ -2,11 +2,14 @@ package com.tonic.ui.vm.dialog.result;
 
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.model.MethodCall;
+import com.tonic.ui.vm.testgen.TestGeneratorDialog;
 
 import javax.swing.*;
 import javax.swing.text.*;
 import javax.swing.tree.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
@@ -91,6 +94,17 @@ public class CallTracePanel extends JPanel {
         callTree.setCellRenderer(new CallTreeCellRenderer());
         callTree.setRootVisible(false);
         callTree.setShowsRootHandles(true);
+        callTree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                handleTreePopup(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                handleTreePopup(e);
+            }
+        });
 
         JScrollPane treeScroll = new JScrollPane(callTree);
         treeScroll.setBorder(BorderFactory.createEmptyBorder());
@@ -279,6 +293,41 @@ public class CallTracePanel extends JPanel {
         buildTreeView();
         buildListView();
         currentCalls = original;
+    }
+
+    private void handleTreePopup(MouseEvent e) {
+        if (!e.isPopupTrigger()) {
+            return;
+        }
+
+        TreePath path = callTree.getClosestPathForLocation(e.getX(), e.getY());
+        if (path == null) {
+            return;
+        }
+
+        callTree.setSelectionPath(path);
+
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+        Object userObj = node.getUserObject();
+        if (!(userObj instanceof MethodCall)) {
+            return;
+        }
+
+        MethodCall call = (MethodCall) userObj;
+
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem generateTestItem = new JMenuItem("Generate JUnit Test...");
+        generateTestItem.addActionListener(ev -> openTestDialogForCall(call));
+        popup.add(generateTestItem);
+
+        popup.show(callTree, e.getX(), e.getY());
+    }
+
+    private void openTestDialogForCall(MethodCall call) {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        TestGeneratorDialog dialog = new TestGeneratorDialog(owner);
+        dialog.setMethodCall(call);
+        dialog.setVisible(true);
     }
 
     private class CallTreeCellRenderer extends DefaultTreeCellRenderer {
