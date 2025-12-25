@@ -13,6 +13,7 @@ import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeManager;
+import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -412,6 +413,16 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
 
         menu.addSeparator();
 
+        addMenuItem(menu, "Execute Method...", () -> {
+            mainFrame.openExecuteMethodDialog(method);
+        });
+
+        addMenuItem(menu, "Fuzz & Generate Tests...", () -> {
+            openFuzzTestDialog(method);
+        });
+
+        menu.addSeparator();
+
         addMenuItem(menu, "Copy Signature", () -> {
             String ownerSimple = getSimpleClassName(method.getOwner().getClassName());
             String sig = ownerSimple + "." + method.getName() + formatDescriptorParams(method.getDescriptor());
@@ -525,6 +536,16 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
     private void copyToClipboard(String text) {
         StringSelection selection = new StringSelection(text);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
+    }
+
+    private void openFuzzTestDialog(MethodEntryModel method) {
+        FuzzTestGeneratorDialog dialog = new FuzzTestGeneratorDialog(
+            SwingUtilities.getWindowAncestor(this));
+        dialog.setMethod(
+            method.getOwner().getClassName(),
+            method.getName(),
+            method.getDescriptor());
+        dialog.setVisible(true);
     }
 
     private String getSimpleClassName(String internalName) {

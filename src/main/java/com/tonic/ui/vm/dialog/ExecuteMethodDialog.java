@@ -253,11 +253,13 @@ public class ExecuteMethodDialog extends JDialog {
             signatureLabel.setForeground(JStudioTheme.getTextPrimary());
             rebuildParametersPanel();
             statusLabel.setText("Ready to execute: " + method.getOwnerName() + "." + method.getName());
+            resultPanel.setMethodContext(method.getOwnerName(), method.getName(), method.getDesc());
         } else {
             signatureLabel.setText("No method selected");
             signatureLabel.setForeground(JStudioTheme.getTextSecondary());
             clearParametersPanel();
             statusLabel.setText("Select a method to execute");
+            resultPanel.clearAll();
         }
 
         updateUIState();

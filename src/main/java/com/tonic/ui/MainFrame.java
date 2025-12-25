@@ -1704,6 +1704,19 @@ public class MainFrame extends JFrame {
         statusBar.setMessage("Execute Method dialog opened");
     }
 
+    public void openExecuteMethodDialog(MethodEntryModel method) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded. Load a project before executing methods.");
+            return;
+        }
+
+        ExecuteMethodDialog dialog = new ExecuteMethodDialog(this, method);
+        consolePanel.log("Execute Method: Opened for " + method.getMethodEntry().getName());
+        dialog.setVisible(true);
+        statusBar.setMessage("Execute Method dialog opened");
+    }
+
     public void initializeVM() {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project == null) {

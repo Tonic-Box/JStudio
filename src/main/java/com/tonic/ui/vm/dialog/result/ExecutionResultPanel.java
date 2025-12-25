@@ -2,6 +2,7 @@ package com.tonic.ui.vm.dialog.result;
 
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.model.ExecutionResult;
+import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
 import com.tonic.ui.vm.testgen.TestGeneratorDialog;
 
 import javax.swing.*;
@@ -15,6 +16,7 @@ public class ExecutionResultPanel extends JPanel {
     private final ConsoleOutputPanel consolePanel;
     private final StatisticsPanel statsPanel;
     private final JButton saveAsTestButton;
+    private final JButton fuzzTestButton;
 
     private ExecutionResult currentResult;
     private String executionClassName;
@@ -26,20 +28,34 @@ public class ExecutionResultPanel extends JPanel {
         setLayout(new BorderLayout(0, 8));
         setBackground(JStudioTheme.getBgPrimary());
 
-        JPanel topPanel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
         topPanel.setBackground(JStudioTheme.getBgPrimary());
 
         summaryBar = new SummaryBar();
-        topPanel.add(summaryBar, BorderLayout.CENTER);
+        summaryBar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        topPanel.add(summaryBar);
 
-        JPanel toolbarPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
+        JPanel toolbarPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         toolbarPanel.setBackground(JStudioTheme.getBgPrimary());
-        saveAsTestButton = new JButton("Save as Test...");
+        toolbarPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        toolbarPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+
+        fuzzTestButton = new JButton("Fuzz & Generate Tests...");
+        fuzzTestButton.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        fuzzTestButton.setEnabled(false);
+        fuzzTestButton.setToolTipText("Run method with varied inputs and generate comprehensive tests");
+        fuzzTestButton.addActionListener(e -> openFuzzTestDialog());
+        toolbarPanel.add(fuzzTestButton);
+
+        saveAsTestButton = new JButton("Save Execution as Test...");
         saveAsTestButton.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
         saveAsTestButton.setEnabled(false);
+        saveAsTestButton.setToolTipText("Generate a test from the current execution result");
         saveAsTestButton.addActionListener(e -> openTestGeneratorDialog());
         toolbarPanel.add(saveAsTestButton);
-        topPanel.add(toolbarPanel, BorderLayout.EAST);
+
+        topPanel.add(toolbarPanel);
 
         add(topPanel, BorderLayout.NORTH);
 
@@ -74,7 +90,7 @@ public class ExecutionResultPanel extends JPanel {
         consolePanel.update(result.getConsoleOutput());
         statsPanel.update(result);
 
-        saveAsTestButton.setEnabled(executionClassName != null);
+        saveAsTestButton.setEnabled(executionClassName != null && currentResult != null);
 
         if (!result.getMethodCalls().isEmpty()) {
             detailsTabs.setSelectedComponent(callTracePanel);
@@ -85,12 +101,20 @@ public class ExecutionResultPanel extends JPanel {
         }
     }
 
+    public void setMethodContext(String className, String methodName, String descriptor) {
+        this.executionClassName = className;
+        this.executionMethodName = methodName;
+        this.executionDescriptor = descriptor;
+        fuzzTestButton.setEnabled(className != null);
+    }
+
     public void setExecutionContext(String className, String methodName,
                                      String descriptor, Object[] args) {
         this.executionClassName = className;
         this.executionMethodName = methodName;
         this.executionDescriptor = descriptor;
         this.executionArgs = args != null ? args.clone() : new Object[0];
+        fuzzTestButton.setEnabled(className != null);
     }
 
     private void openTestGeneratorDialog() {
@@ -102,6 +126,17 @@ public class ExecutionResultPanel extends JPanel {
         TestGeneratorDialog dialog = new TestGeneratorDialog(owner);
         dialog.setExecutionResult(currentResult, executionClassName,
                                    executionMethodName, executionDescriptor, executionArgs);
+        dialog.setVisible(true);
+    }
+
+    private void openFuzzTestDialog() {
+        if (executionClassName == null) {
+            return;
+        }
+
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        FuzzTestGeneratorDialog dialog = new FuzzTestGeneratorDialog(owner);
+        dialog.setMethod(executionClassName, executionMethodName, executionDescriptor);
         dialog.setVisible(true);
     }
 
@@ -119,5 +154,14 @@ public class ExecutionResultPanel extends JPanel {
         consolePanel.clear();
         statsPanel.showEmpty();
         saveAsTestButton.setEnabled(false);
+    }
+
+    public void clearAll() {
+        clear();
+        executionClassName = null;
+        executionMethodName = null;
+        executionDescriptor = null;
+        executionArgs = null;
+        fuzzTestButton.setEnabled(false);
     }
 }
