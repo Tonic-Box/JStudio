@@ -26,6 +26,7 @@ import com.tonic.ui.service.ProjectDatabaseService;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.transform.TransformPanel;
+import com.tonic.ui.deobfuscation.DeobfuscationPanel;
 import com.tonic.ui.script.ScriptEditorDialog;
 import com.tonic.ui.util.RecentFilesManager;
 import com.tonic.ui.util.Settings;
@@ -100,6 +101,8 @@ public class MainFrame extends JFrame {
     private VMConsolePanel vmConsolePanel;
     private JDialog debuggerDialog;
     private DebuggerPanel debuggerPanel;
+    private JDialog deobfuscationDialog;
+    private DeobfuscationPanel deobfuscationPanel;
 
     // Split panes for layout
     private JSplitPane mainHorizontalSplit;
@@ -1365,6 +1368,29 @@ public class MainFrame extends JFrame {
 
         scriptEditorDialog.setVisible(true);
         scriptEditorDialog.toFront();
+    }
+
+    public void showDeobfuscationPanel() {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded. Load a project before using deobfuscation tools.");
+            return;
+        }
+
+        if (deobfuscationDialog == null || deobfuscationPanel == null) {
+            deobfuscationPanel = new DeobfuscationPanel(project);
+            deobfuscationDialog = new JDialog(this, "String Deobfuscation", false);
+            deobfuscationDialog.setSize(1000, 700);
+            deobfuscationDialog.setLocationRelativeTo(this);
+            deobfuscationDialog.add(deobfuscationPanel);
+        } else {
+            deobfuscationPanel.setProject(project);
+        }
+
+        deobfuscationDialog.setVisible(true);
+        deobfuscationDialog.toFront();
+        consolePanel.log("String Deobfuscation panel opened");
+        statusBar.setMessage("String Deobfuscation");
     }
 
     public void applyTransform(String transformName) {

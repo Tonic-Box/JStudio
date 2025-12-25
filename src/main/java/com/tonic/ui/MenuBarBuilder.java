@@ -273,6 +273,11 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
+        menu.add(createMenuItem("String Deobfuscation...", KeyEvent.VK_D, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
+                null, e -> mainFrame.showDeobfuscationPanel()));
+
+        menu.addSeparator();
+
         JMenu optimizeMenu = new JMenu("Optimize");
         optimizeMenu.add(createMenuItem("Constant Folding", 0, 0, null, e -> mainFrame.applyTransform("ConstantFolding")));
         optimizeMenu.add(createMenuItem("Copy Propagation", 0, 0, null, e -> mainFrame.applyTransform("CopyPropagation")));
