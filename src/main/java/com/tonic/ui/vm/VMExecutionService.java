@@ -221,6 +221,68 @@ public class VMExecutionService {
         }
     }
 
+    public ExecutionResult executeStaticMethodWithListener(String className, String methodName,
+                                                           String descriptor, Object[] args,
+                                                           BytecodeEngine.BytecodeListener listener) {
+        ensureInitialized();
+
+        if (executing.get()) {
+            return ExecutionResult.builder()
+                .success(false)
+                .exception(new IllegalStateException("Another execution is in progress"))
+                .build();
+        }
+
+        executing.set(true);
+        long startTime = System.currentTimeMillis();
+
+        try {
+            ClassFile classFile = classPool.get(className);
+            if (classFile == null) {
+                throw new IllegalArgumentException("Class not found: " + className);
+            }
+
+            MethodEntry method = findMethod(classFile, methodName, descriptor);
+            if (method == null) {
+                throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
+            }
+
+            ConcreteValue[] vmArgs = convertToConcreteValues(args);
+
+            BytecodeContext execContext = new BytecodeContext.Builder()
+                .heapManager(heapManager)
+                .classResolver(classResolver)
+                .mode(ExecutionMode.RECURSIVE)
+                .maxCallDepth(maxCallDepth)
+                .maxInstructions(maxInstructions)
+                .build();
+
+            BytecodeEngine engine = new BytecodeEngine(execContext);
+            currentEngine = engine;
+
+            if (listener != null) {
+                engine.addListener(listener);
+            }
+
+            BytecodeResult result = engine.execute(method, vmArgs);
+
+            long endTime = System.currentTimeMillis();
+
+            return buildExecutionResult(result, endTime - startTime);
+
+        } catch (Exception e) {
+            long endTime = System.currentTimeMillis();
+            return ExecutionResult.builder()
+                .success(false)
+                .exception(e)
+                .executionTimeMs(endTime - startTime)
+                .build();
+        } finally {
+            currentEngine = null;
+            executing.set(false);
+        }
+    }
+
     public ExecutionResult traceStaticMethod(String className, String methodName, String descriptor, Object... args) {
         ensureInitialized();
 

@@ -12,38 +12,53 @@ public class MethodFuzzer {
         private final Object[] inputs;
         private final ExecutionResult result;
         private final String outcomeKey;
+        private final String branchPathSignature;
+        private final String branchSummary;
+        private final int uniqueBranchPoints;
 
         public FuzzResult(Object[] inputs, ExecutionResult result) {
-            this.inputs = inputs.clone();
-            this.result = result;
-            this.outcomeKey = computeOutcomeKey(result);
+            this(inputs, result, "NO_BRANCHES", "No branches tracked", 0);
         }
 
-        private String computeOutcomeKey(ExecutionResult result) {
+        public FuzzResult(Object[] inputs, ExecutionResult result,
+                          String branchPathSignature, String branchSummary, int uniqueBranchPoints) {
+            this.inputs = inputs.clone();
+            this.result = result;
+            this.branchPathSignature = branchPathSignature;
+            this.branchSummary = branchSummary;
+            this.uniqueBranchPoints = uniqueBranchPoints;
+            this.outcomeKey = computeGroupKey();
+        }
+
+        private String computeGroupKey() {
+            return branchPathSignature + "|" + computeReturnKey(result);
+        }
+
+        private String computeReturnKey(ExecutionResult result) {
             if (result.getException() != null) {
                 String excMsg = result.getException().getMessage();
                 if (excMsg != null && excMsg.contains(":")) {
-                    return "EXCEPTION:" + excMsg.substring(0, Math.min(excMsg.indexOf(':') + 20, excMsg.length()));
+                    return "EX:" + excMsg.substring(0, Math.min(excMsg.indexOf(':') + 20, excMsg.length()));
                 }
-                return "EXCEPTION:" + result.getException().getClass().getSimpleName();
+                return "EX:" + result.getException().getClass().getSimpleName();
             }
             if (result.getReturnValue() == null) {
                 return "NULL";
             }
             Object rv = result.getReturnValue();
             if (rv instanceof Number) {
-                return "RETURN:" + categorizeNumber((Number) rv);
+                return "RV:" + categorizeNumber((Number) rv);
             }
             if (rv instanceof Boolean) {
-                return "RETURN:" + rv;
+                return "RV:" + rv;
             }
             if (rv instanceof String) {
                 String s = (String) rv;
-                if (s.isEmpty()) return "RETURN:EMPTY_STRING";
-                if (s.length() < 10) return "RETURN:SHORT_STRING";
-                return "RETURN:STRING_LEN_" + (s.length() / 10) * 10;
+                if (s.isEmpty()) return "RV:EMPTY_STR";
+                if (s.length() < 10) return "RV:SHORT_STR";
+                return "RV:STR_" + (s.length() / 10) * 10;
             }
-            return "RETURN:" + rv.getClass().getSimpleName();
+            return "RV:" + rv.getClass().getSimpleName();
         }
 
         private String categorizeNumber(Number n) {
@@ -66,6 +81,18 @@ public class MethodFuzzer {
 
         public String getOutcomeKey() {
             return outcomeKey;
+        }
+
+        public String getBranchPathSignature() {
+            return branchPathSignature;
+        }
+
+        public String getBranchSummary() {
+            return branchSummary;
+        }
+
+        public int getUniqueBranchPoints() {
+            return uniqueBranchPoints;
         }
 
         public String getOutcomeDescription() {
@@ -342,8 +369,15 @@ public class MethodFuzzer {
             }
 
             try {
-                ExecutionResult result = service.executeStaticMethod(className, methodName, descriptor, inputs);
-                results.add(new FuzzResult(inputs, result));
+                BranchTrackingListener branchListener = new BranchTrackingListener();
+                ExecutionResult result = service.executeStaticMethodWithListener(
+                        className, methodName, descriptor, inputs, branchListener);
+
+                String pathSig = branchListener.getPathSignature();
+                String summary = branchListener.getSummary();
+                int uniquePoints = branchListener.getUniqueBranchPoints();
+
+                results.add(new FuzzResult(inputs, result, pathSig, summary, uniquePoints));
             } catch (Exception e) {
                 ExecutionResult errorResult = ExecutionResult.builder()
                         .success(false)
@@ -370,18 +404,68 @@ public class MethodFuzzer {
         return grouped;
     }
 
+    public Map<String, List<FuzzResult>> groupByBranchPath(List<FuzzResult> results) {
+        Map<String, List<FuzzResult>> grouped = new LinkedHashMap<>();
+        for (FuzzResult r : results) {
+            grouped.computeIfAbsent(r.getBranchPathSignature(), k -> new ArrayList<>()).add(r);
+        }
+        return grouped;
+    }
+
+    public int countUniqueBranchPaths(List<FuzzResult> results) {
+        Set<String> paths = new HashSet<>();
+        for (FuzzResult r : results) {
+            paths.add(r.getBranchPathSignature());
+        }
+        return paths.size();
+    }
+
     public List<FuzzResult> selectDiverseResults(List<FuzzResult> results, int maxPerCategory) {
-        Map<String, List<FuzzResult>> grouped = groupByOutcome(results);
+        Map<String, List<FuzzResult>> groupedByPath = groupByBranchPath(results);
         List<FuzzResult> diverse = new ArrayList<>();
 
-        for (List<FuzzResult> group : grouped.values()) {
-            int count = Math.min(maxPerCategory, group.size());
-            for (int i = 0; i < count; i++) {
-                diverse.add(group.get(i));
+        for (Map.Entry<String, List<FuzzResult>> pathEntry : groupedByPath.entrySet()) {
+            List<FuzzResult> pathResults = pathEntry.getValue();
+
+            Map<String, FuzzResult> returnGroups = new LinkedHashMap<>();
+            for (FuzzResult r : pathResults) {
+                String returnKey = getReturnKey(r);
+                if (!returnGroups.containsKey(returnKey)) {
+                    returnGroups.put(returnKey, r);
+                }
+            }
+
+            int count = 0;
+            for (FuzzResult r : returnGroups.values()) {
+                if (count >= maxPerCategory) break;
+                diverse.add(r);
+                count++;
             }
         }
 
         return diverse;
+    }
+
+    private String getReturnKey(FuzzResult r) {
+        ExecutionResult result = r.getResult();
+        if (result.getException() != null) {
+            return "EX:" + result.getException().getClass().getSimpleName();
+        }
+        if (result.getReturnValue() == null) {
+            return "NULL";
+        }
+        Object rv = result.getReturnValue();
+        if (rv instanceof Number) {
+            long v = ((Number) rv).longValue();
+            if (v == 0) return "RV:ZERO";
+            if (v == 1) return "RV:ONE";
+            if (v < 0) return "RV:NEGATIVE";
+            return "RV:POSITIVE";
+        }
+        if (rv instanceof Boolean) {
+            return "RV:" + rv;
+        }
+        return "RV:OTHER";
     }
 
     private List<String> parseParameterTypes(String descriptor) {

@@ -92,8 +92,9 @@ public class FuzzTestGeneratorDialog extends JDialog {
         resultsTable = new JTable(tableModel);
         resultsTable.setRowHeight(22);
         resultsTable.getColumnModel().getColumn(0).setMaxWidth(40);
-        resultsTable.getColumnModel().getColumn(1).setPreferredWidth(200);
-        resultsTable.getColumnModel().getColumn(2).setPreferredWidth(200);
+        resultsTable.getColumnModel().getColumn(1).setPreferredWidth(180);
+        resultsTable.getColumnModel().getColumn(2).setPreferredWidth(160);
+        resultsTable.getColumnModel().getColumn(3).setPreferredWidth(180);
         resultsTable.getSelectionModel().addListSelectionListener(e -> updatePreview());
 
         resultsTable.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
@@ -111,6 +112,16 @@ public class FuzzTestGeneratorDialog extends JDialog {
             }
         });
 
+        resultsTable.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setForeground(isSelected ? Color.WHITE : new Color(156, 220, 254));
+                return this;
+            }
+        });
+
         JScrollPane tableScroll = new JScrollPane(resultsTable);
         tableScroll.setPreferredSize(new Dimension(750, 150));
         resultsPanel.add(tableScroll, BorderLayout.CENTER);
@@ -124,7 +135,7 @@ public class FuzzTestGeneratorDialog extends JDialog {
         selectNoneBtn.addActionListener(e -> tableModel.setAllSelected(false));
         tableButtons.add(selectNoneBtn);
 
-        JButton selectDiverseBtn = new JButton("Select Diverse (1 per outcome)");
+        JButton selectDiverseBtn = new JButton("Select Diverse (1 per path)");
         selectDiverseBtn.addActionListener(e -> selectDiverse());
         tableButtons.add(selectDiverseBtn);
 
@@ -259,9 +270,11 @@ public class FuzzTestGeneratorDialog extends JDialog {
                     fuzzResults = get();
                     tableModel.setResults(fuzzResults);
 
+                    int uniquePaths = fuzzer.countUniqueBranchPaths(fuzzResults);
                     Map<String, List<FuzzResult>> grouped = fuzzer.groupByOutcome(fuzzResults);
-                    statusLabel.setText("Found " + fuzzResults.size() + " results in " +
-                                         grouped.size() + " unique outcomes");
+                    statusLabel.setText(fuzzResults.size() + " executions, " +
+                                        uniquePaths + " unique paths, " +
+                                        grouped.size() + " outcomes");
 
                     selectDiverse();
                     updatePreview();
@@ -538,7 +551,7 @@ public class FuzzTestGeneratorDialog extends JDialog {
 
         @Override
         public int getColumnCount() {
-            return 3;
+            return 4;
         }
 
         @Override
@@ -547,6 +560,7 @@ public class FuzzTestGeneratorDialog extends JDialog {
                 case 0: return "";
                 case 1: return "Inputs";
                 case 2: return "Outcome";
+                case 3: return "Branch Path";
                 default: return "";
             }
         }
@@ -569,6 +583,7 @@ public class FuzzTestGeneratorDialog extends JDialog {
                 case 0: return selected.get(row);
                 case 1: return formatInputs(r.getInputs());
                 case 2: return r.getOutcomeDescription();
+                case 3: return r.getBranchSummary();
                 default: return "";
             }
         }
