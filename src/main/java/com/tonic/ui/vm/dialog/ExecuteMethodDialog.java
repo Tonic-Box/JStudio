@@ -8,18 +8,27 @@ import com.tonic.ui.vm.MethodSelectorPanel;
 import com.tonic.ui.vm.VMExecutionService;
 import com.tonic.ui.vm.dialog.result.ExecutionResultPanel;
 import com.tonic.ui.vm.model.ExecutionResult;
+import com.tonic.ui.vm.testgen.objectspec.ObjectBuilderDialog;
+import com.tonic.ui.vm.testgen.objectspec.ObjectFactory;
+import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
+import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
+import com.tonic.ui.vm.testgen.objectspec.ValueMode;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ExecuteMethodDialog extends JDialog {
 
     private MethodEntryModel methodModel;
     private MethodEntry method;
     private final List<JTextField> parameterFields;
+    private final List<JButton> configureButtons;
+    private final Map<Integer, ObjectSpec> configuredObjects;
     private final JCheckBox stubInvokesCheckbox;
     private final ExecutionResultPanel resultPanel;
     private final JButton executeButton;
@@ -43,6 +52,8 @@ public class ExecuteMethodDialog extends JDialog {
         this.methodModel = methodModel;
         this.method = methodModel != null ? methodModel.getMethodEntry() : null;
         this.parameterFields = new ArrayList<>();
+        this.configureButtons = new ArrayList<>();
+        this.configuredObjects = new HashMap<>();
         this.parser = new CommandParser();
 
         this.stubInvokesCheckbox = new JCheckBox("Stub invokes");
@@ -268,6 +279,8 @@ public class ExecuteMethodDialog extends JDialog {
     private void rebuildParametersPanel() {
         parametersPanel.removeAll();
         parameterFields.clear();
+        configureButtons.clear();
+        configuredObjects.clear();
 
         String desc = method.getDesc();
         List<String> paramTypes = parseParameterTypes(desc);
@@ -286,6 +299,7 @@ public class ExecuteMethodDialog extends JDialog {
 
             for (int i = 0; i < paramTypes.size(); i++) {
                 String paramType = paramTypes.get(i);
+                boolean isObjectType = isObjectType(paramType);
 
                 gbc.gridx = 0;
                 gbc.gridy = i;
@@ -296,7 +310,7 @@ public class ExecuteMethodDialog extends JDialog {
 
                 gbc.gridx = 1;
                 gbc.weightx = 1;
-                JTextField field = new JTextField(20);
+                JTextField field = new JTextField(15);
                 field.setBackground(JStudioTheme.getBgSecondary());
                 field.setForeground(JStudioTheme.getTextPrimary());
                 field.setCaretColor(JStudioTheme.getTextPrimary());
@@ -307,10 +321,28 @@ public class ExecuteMethodDialog extends JDialog {
                 field.setToolTipText(getInputHint(paramType));
                 parameterFields.add(field);
                 fieldsPanel.add(field, gbc);
+
+                gbc.gridx = 2;
+                gbc.weightx = 0;
+                if (isObjectType && !paramType.equals("Ljava/lang/String;")) {
+                    final int paramIndex = i;
+                    final String objType = paramType;
+                    JButton configBtn = new JButton("Configure...");
+                    configBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+                    configBtn.setToolTipText("Configure object construction");
+                    configBtn.addActionListener(e -> openObjectConfig(paramIndex, objType));
+                    configureButtons.add(configBtn);
+                    fieldsPanel.add(configBtn, gbc);
+                } else {
+                    configureButtons.add(null);
+                    fieldsPanel.add(Box.createHorizontalStrut(1), gbc);
+                }
             }
 
+            gbc.gridx = 0;
             gbc.gridy = paramTypes.size();
             gbc.weighty = 1;
+            gbc.gridwidth = 3;
             fieldsPanel.add(Box.createVerticalGlue(), gbc);
 
             JScrollPane scrollPane = new JScrollPane(fieldsPanel);
@@ -323,9 +355,38 @@ public class ExecuteMethodDialog extends JDialog {
         parametersPanel.repaint();
     }
 
+    private boolean isObjectType(String typeDesc) {
+        return typeDesc != null &&
+               (typeDesc.startsWith("L") || typeDesc.startsWith("["));
+    }
+
+    private void openObjectConfig(int paramIndex, String typeDesc) {
+        String typeName = typeDesc;
+        if (typeName.startsWith("L") && typeName.endsWith(";")) {
+            typeName = typeName.substring(1, typeName.length() - 1);
+        }
+
+        ObjectSpec existing = configuredObjects.get(paramIndex);
+        ObjectSpec result = ObjectBuilderDialog.showDialog(this, typeName, existing);
+
+        if (result != null) {
+            configuredObjects.put(paramIndex, result);
+            JButton btn = configureButtons.get(paramIndex);
+            if (btn != null) {
+                btn.setText("✓ Configured");
+                btn.setForeground(new Color(78, 201, 176));
+            }
+            JTextField field = parameterFields.get(paramIndex);
+            field.setText("[" + result.getSummary() + "]");
+            field.setEditable(false);
+        }
+    }
+
     private void clearParametersPanel() {
         parametersPanel.removeAll();
         parameterFields.clear();
+        configureButtons.clear();
+        configuredObjects.clear();
 
         JLabel noMethodLabel = new JLabel("Select a method to configure parameters");
         noMethodLabel.setForeground(JStudioTheme.getTextSecondary());
@@ -417,9 +478,15 @@ public class ExecuteMethodDialog extends JDialog {
         List<String> paramTypes = parseParameterTypes(desc);
 
         for (int i = 0; i < parameterFields.size(); i++) {
-            String value = parameterFields.get(i).getText().trim();
-            String type = paramTypes.get(i);
-            args[i] = parseArgumentValue(value, type);
+            if (configuredObjects.containsKey(i)) {
+                ObjectSpec objSpec = configuredObjects.get(i);
+                List<Object> values = ObjectFactory.getInstance().generateObjectValues(objSpec, 1);
+                args[i] = values.isEmpty() ? null : values.get(0);
+            } else {
+                String value = parameterFields.get(i).getText().trim();
+                String type = paramTypes.get(i);
+                args[i] = parseArgumentValue(value, type);
+            }
         }
 
         return args;

@@ -8,6 +8,8 @@ import com.tonic.parser.attribute.table.LocalVariableTableEntry;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.DescriptorParser;
+import com.tonic.ui.vm.testgen.objectspec.ObjectBuilderDialog;
+import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -728,14 +730,16 @@ public class ParameterConfigDialog extends JDialog {
         }
     }
 
-    private static class ObjectParameterField extends ParameterField {
+    private class ObjectParameterField extends ParameterField {
         private final JPanel panel;
-        private final JLabel typeLabel;
+        private final JButton configureButton;
         private final JCheckBox nullCheckBox;
+        private final JLabel statusLabel;
+        private ObjectSpec objectSpec;
 
         ObjectParameterField(int index, String name, String typeDesc) {
             super(index, name, typeDesc);
-            panel = new JPanel(new BorderLayout(5, 0));
+            panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
             panel.setOpaque(false);
 
             String simpleName = typeDesc;
@@ -747,31 +751,85 @@ public class ParameterConfigDialog extends JDialog {
                 }
             }
 
-            typeLabel = new JLabel("(" + simpleName + ")");
-            typeLabel.setForeground(JStudioTheme.getTextSecondary());
+            configureButton = new JButton("Configure...");
+            configureButton.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+            configureButton.setToolTipText("Configure how to construct " + simpleName);
+            configureButton.addActionListener(e -> openObjectConfig());
+
+            statusLabel = new JLabel("");
+            statusLabel.setForeground(new Color(156, 220, 254));
+            statusLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
 
             nullCheckBox = new JCheckBox("null");
             nullCheckBox.setBackground(JStudioTheme.getBgSecondary());
             nullCheckBox.setForeground(JStudioTheme.getTextSecondary());
             nullCheckBox.setSelected(true);
-            nullCheckBox.setEnabled(false);
+            nullCheckBox.addActionListener(e -> {
+                configureButton.setEnabled(!nullCheckBox.isSelected());
+                if (nullCheckBox.isSelected()) {
+                    objectSpec = null;
+                    statusLabel.setText("");
+                }
+            });
 
-            panel.add(typeLabel, BorderLayout.CENTER);
-            panel.add(nullCheckBox, BorderLayout.EAST);
+            panel.add(configureButton);
+            panel.add(nullCheckBox);
+            panel.add(statusLabel);
+
+            configureButton.setEnabled(false);
+        }
+
+        private void openObjectConfig() {
+            String typeName = typeDesc;
+            if (typeName.startsWith("L") && typeName.endsWith(";")) {
+                typeName = typeName.substring(1, typeName.length() - 1);
+            }
+
+            ObjectSpec result = ObjectBuilderDialog.showDialog(
+                ParameterConfigDialog.this, typeName, objectSpec);
+
+            if (result != null) {
+                objectSpec = result;
+                configureButton.setText("✓ Configured");
+                statusLabel.setText(result.getSummary());
+            }
         }
 
         @Override
         JComponent getComponent() { return panel; }
 
         @Override
-        Object getValue() { return null; }
+        Object getValue() {
+            if (nullCheckBox.isSelected() || objectSpec == null) {
+                return null;
+            }
+            return objectSpec;
+        }
 
         @Override
-        void resetToDefault() { nullCheckBox.setSelected(true); }
+        void resetToDefault() {
+            nullCheckBox.setSelected(true);
+            configureButton.setEnabled(false);
+            configureButton.setText("Configure...");
+            objectSpec = null;
+            statusLabel.setText("");
+        }
 
         @Override
         void setValue(Object value) {
-            // Object fields only support null, so nothing to restore
+            if (value == null) {
+                nullCheckBox.setSelected(true);
+                configureButton.setEnabled(false);
+                configureButton.setText("Configure...");
+                objectSpec = null;
+                statusLabel.setText("");
+            } else if (value instanceof ObjectSpec) {
+                objectSpec = (ObjectSpec) value;
+                nullCheckBox.setSelected(false);
+                configureButton.setEnabled(true);
+                configureButton.setText("✓ Configured");
+                statusLabel.setText(objectSpec.getSummary());
+            }
         }
     }
 }

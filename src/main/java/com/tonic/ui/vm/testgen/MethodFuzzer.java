@@ -2,6 +2,10 @@ package com.tonic.ui.vm.testgen;
 
 import com.tonic.ui.vm.VMExecutionService;
 import com.tonic.ui.vm.model.ExecutionResult;
+import com.tonic.ui.vm.testgen.objectspec.ObjectFactory;
+import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
+import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
+import com.tonic.ui.vm.testgen.objectspec.ValueMode;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -151,6 +155,8 @@ public class MethodFuzzer {
     private final String descriptor;
     private final List<String> paramTypes;
     private final FuzzConfig config;
+    private List<ParamSpec> paramSpecs;
+    private ObjectSpec thisSpec;
 
     public MethodFuzzer(String className, String methodName, String descriptor, FuzzConfig config) {
         this.className = className;
@@ -158,6 +164,29 @@ public class MethodFuzzer {
         this.descriptor = descriptor;
         this.paramTypes = parseParameterTypes(descriptor);
         this.config = config != null ? config : new FuzzConfig();
+    }
+
+    public void setParameterSpecs(List<ParamSpec> specs) {
+        this.paramSpecs = specs;
+    }
+
+    public void setThisSpec(ObjectSpec thisSpec) {
+        this.thisSpec = thisSpec;
+    }
+
+    public List<String> getParamTypes() {
+        return new ArrayList<>(paramTypes);
+    }
+
+    public List<ParamSpec> getDefaultParamSpecs() {
+        List<ParamSpec> specs = new ArrayList<>();
+        for (int i = 0; i < paramTypes.size(); i++) {
+            String type = paramTypes.get(i);
+            ParamSpec spec = new ParamSpec("arg" + i, type);
+            spec.setMode(ValueMode.FUZZ);
+            specs.add(spec);
+        }
+        return specs;
     }
 
     public List<Object[]> generateInputSets() {
@@ -169,8 +198,16 @@ public class MethodFuzzer {
         }
 
         List<List<Object>> valuesPerParam = new ArrayList<>();
-        for (String type : paramTypes) {
-            valuesPerParam.add(generateValuesForType(type));
+
+        if (paramSpecs != null && paramSpecs.size() == paramTypes.size()) {
+            ObjectFactory factory = ObjectFactory.getInstance();
+            for (ParamSpec spec : paramSpecs) {
+                valuesPerParam.add(factory.generateValues(spec, config.iterationsPerType));
+            }
+        } else {
+            for (String type : paramTypes) {
+                valuesPerParam.add(generateValuesForType(type));
+            }
         }
 
         if (paramTypes.size() == 1) {

@@ -533,14 +533,14 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         });
         stopBtn = createToolButton("Stop", null, e -> stopDebugging());
 
-        speedSelector = new JComboBox<>(new String[]{"20ms", "50ms", "100ms", "300ms"});
+        speedSelector = new JComboBox<>(new String[]{"5ms", "10ms", "20ms", "50ms", "100ms", "300ms"});
         speedSelector.setSelectedIndex(3);
         speedSelector.setBackground(JStudioTheme.getBgTertiary());
         speedSelector.setForeground(JStudioTheme.getTextPrimary());
         speedSelector.setMaximumSize(new Dimension(80, 28));
         speedSelector.setToolTipText("Animation speed for Run mode");
         speedSelector.addActionListener(e -> {
-            int[] delays = {20, 50, 100, 300};
+            int[] delays = {5,10,20, 50, 100, 300};
             session.setAnimationDelay(delays[speedSelector.getSelectedIndex()]);
         });
 

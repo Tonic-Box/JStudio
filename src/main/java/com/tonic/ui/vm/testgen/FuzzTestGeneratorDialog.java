@@ -1,7 +1,12 @@
 package com.tonic.ui.vm.testgen;
 
+import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.testgen.MethodFuzzer.FuzzConfig;
 import com.tonic.ui.vm.testgen.MethodFuzzer.FuzzResult;
+import com.tonic.ui.vm.testgen.objectspec.ObjectBuilderDialog;
+import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
+import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
+import com.tonic.ui.vm.testgen.objectspec.ValueMode;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -23,8 +28,10 @@ public class FuzzTestGeneratorDialog extends JDialog {
     private JCheckBox nullsCheckbox;
     private JCheckBox randomCheckbox;
     private JButton runFuzzButton;
+    private JButton configParamsButton;
     private JProgressBar progressBar;
     private JLabel statusLabel;
+    private JLabel paramsConfigLabel;
 
     private JTable resultsTable;
     private FuzzResultTableModel tableModel;
@@ -41,6 +48,8 @@ public class FuzzTestGeneratorDialog extends JDialog {
     private String descriptor;
 
     private List<FuzzResult> fuzzResults = new ArrayList<>();
+    private List<ParamSpec> paramSpecs = new ArrayList<>();
+    private ObjectSpec thisSpec = null;
 
     public FuzzTestGeneratorDialog(Window owner) {
         super(owner, "Fuzz & Generate Tests", ModalityType.APPLICATION_MODAL);
@@ -69,6 +78,20 @@ public class FuzzTestGeneratorDialog extends JDialog {
 
         randomCheckbox = new JCheckBox("Random", true);
         configPanel.add(randomCheckbox);
+
+        configPanel.add(Box.createHorizontalStrut(10));
+
+        configParamsButton = new JButton("Configure Parameters...");
+        configParamsButton.setToolTipText("Configure how each parameter should be generated");
+        configParamsButton.addActionListener(e -> openParamsConfig());
+        configPanel.add(configParamsButton);
+
+        paramsConfigLabel = new JLabel("");
+        paramsConfigLabel.setForeground(new Color(156, 220, 254));
+        paramsConfigLabel.setFont(paramsConfigLabel.getFont().deriveFont(Font.ITALIC, 11f));
+        configPanel.add(paramsConfigLabel);
+
+        configPanel.add(Box.createHorizontalStrut(10));
 
         runFuzzButton = new JButton("Run Fuzz");
         runFuzzButton.addActionListener(e -> runFuzz());
@@ -219,6 +242,44 @@ public class FuzzTestGeneratorDialog extends JDialog {
         classNameField.setText(simpleName + "Test");
 
         setTitle("Fuzz & Generate Tests - " + simpleName + "." + methodName);
+
+        MethodFuzzer tempFuzzer = new MethodFuzzer(className, methodName, descriptor, null);
+        paramSpecs = tempFuzzer.getDefaultParamSpecs();
+        updateParamsConfigLabel();
+    }
+
+    private void updateParamsConfigLabel() {
+        if (paramSpecs.isEmpty()) {
+            paramsConfigLabel.setText("(no parameters)");
+            configParamsButton.setEnabled(false);
+        } else {
+            int configuredCount = 0;
+            for (ParamSpec spec : paramSpecs) {
+                if (spec.getMode() == ValueMode.OBJECT_SPEC ||
+                    spec.getMode() == ValueMode.FIXED) {
+                    configuredCount++;
+                }
+            }
+            if (configuredCount > 0) {
+                paramsConfigLabel.setText(configuredCount + "/" + paramSpecs.size() + " configured");
+            } else {
+                paramsConfigLabel.setText(paramSpecs.size() + " params (auto)");
+            }
+            configParamsButton.setEnabled(true);
+        }
+    }
+
+    private void openParamsConfig() {
+        if (paramSpecs.isEmpty()) return;
+
+        ParameterConfigDialog dialog = new ParameterConfigDialog(this, paramSpecs);
+        dialog.setVisible(true);
+
+        List<ParamSpec> result = dialog.getResult();
+        if (result != null) {
+            paramSpecs = result;
+            updateParamsConfigLabel();
+        }
     }
 
     private void runFuzz() {
@@ -234,6 +295,12 @@ public class FuzzTestGeneratorDialog extends JDialog {
         config.setIncludeRandom(randomCheckbox.isSelected());
 
         MethodFuzzer fuzzer = new MethodFuzzer(className, methodName, descriptor, config);
+        if (!paramSpecs.isEmpty()) {
+            fuzzer.setParameterSpecs(paramSpecs);
+        }
+        if (thisSpec != null) {
+            fuzzer.setThisSpec(thisSpec);
+        }
 
         runFuzzButton.setEnabled(false);
         progressBar.setVisible(true);
