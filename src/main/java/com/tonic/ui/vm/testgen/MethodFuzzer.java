@@ -362,7 +362,9 @@ public class MethodFuzzer {
                 break;
 
             default:
-                if (type.startsWith("L") || type.startsWith("[")) {
+                if (type.startsWith("[")) {
+                    values.addAll(generateArrayValues(type));
+                } else if (type.startsWith("L")) {
                     if (config.includeNulls) {
                         values.add(null);
                     }
@@ -386,6 +388,98 @@ public class MethodFuzzer {
             sb.append(chars.charAt(rand.nextInt(chars.length())));
         }
         return sb.toString();
+    }
+
+    private List<Object> generateArrayValues(String arrayType) {
+        List<Object> values = new ArrayList<>();
+        String componentType = arrayType.substring(1);
+
+        if (config.includeNulls) {
+            values.add(null);
+        }
+
+        if (config.includeEdgeCases) {
+            values.add(new Object[0]);
+
+            Object singleElem = getSingleEdgeCaseElement(componentType);
+            if (singleElem != null) {
+                values.add(new Object[]{singleElem});
+            }
+
+            Object[] edgeCases = getEdgeCaseElements(componentType);
+            if (edgeCases.length > 0) {
+                values.add(edgeCases);
+            }
+        }
+
+        if (config.includeRandom) {
+            for (int i = 0; i < config.iterationsPerType; i++) {
+                int len = ThreadLocalRandom.current().nextInt(1, 6);
+                Object[] arr = new Object[len];
+                for (int j = 0; j < len; j++) {
+                    arr[j] = getRandomElement(componentType);
+                }
+                values.add(arr);
+            }
+        }
+
+        return values;
+    }
+
+    private Object getSingleEdgeCaseElement(String componentType) {
+        switch (componentType) {
+            case "I": return 0;
+            case "J": return 0L;
+            case "F": return 0.0f;
+            case "D": return 0.0;
+            case "B": return (byte) 0;
+            case "S": return (short) 0;
+            case "Z": return false;
+            case "C": return 'a';
+            case "Ljava/lang/String;": return "";
+            default: return null;
+        }
+    }
+
+    private Object[] getEdgeCaseElements(String componentType) {
+        switch (componentType) {
+            case "I":
+                return new Object[]{0, 1, -1, Integer.MAX_VALUE, Integer.MIN_VALUE};
+            case "J":
+                return new Object[]{0L, 1L, -1L, Long.MAX_VALUE, Long.MIN_VALUE};
+            case "F":
+                return new Object[]{0.0f, 1.0f, -1.0f, Float.MAX_VALUE, Float.NaN};
+            case "D":
+                return new Object[]{0.0, 1.0, -1.0, Double.MAX_VALUE, Double.NaN};
+            case "B":
+                return new Object[]{(byte) 0, Byte.MAX_VALUE, Byte.MIN_VALUE};
+            case "S":
+                return new Object[]{(short) 0, Short.MAX_VALUE, Short.MIN_VALUE};
+            case "Z":
+                return new Object[]{true, false};
+            case "C":
+                return new Object[]{'a', 'Z', '0', ' '};
+            case "Ljava/lang/String;":
+                return new Object[]{"", "test", "Hello World"};
+            default:
+                return new Object[0];
+        }
+    }
+
+    private Object getRandomElement(String componentType) {
+        ThreadLocalRandom rand = ThreadLocalRandom.current();
+        switch (componentType) {
+            case "I": return rand.nextInt();
+            case "J": return rand.nextLong();
+            case "F": return (float) (rand.nextDouble() * 100 - 50);
+            case "D": return rand.nextDouble() * 1000 - 500;
+            case "B": return (byte) rand.nextInt(-128, 128);
+            case "S": return (short) rand.nextInt(-32768, 32768);
+            case "Z": return rand.nextBoolean();
+            case "C": return (char) rand.nextInt(32, 127);
+            case "Ljava/lang/String;": return generateRandomString(rand.nextInt(1, 10));
+            default: return null;
+        }
     }
 
     public List<FuzzResult> runFuzz(ProgressCallback callback) {

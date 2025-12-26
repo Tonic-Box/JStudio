@@ -1,0 +1,170 @@
+package com.tonic.ui.vm.heap.model;
+
+public class FieldValue {
+    private final String owner;
+    private final String name;
+    private final String descriptor;
+    private final Object value;
+    private final boolean isReference;
+    private final int referenceId;
+
+    public FieldValue(String owner, String name, String descriptor, Object value) {
+        this.owner = owner;
+        this.name = name;
+        this.descriptor = descriptor;
+        this.value = value;
+        this.isReference = isReferenceDescriptor(descriptor);
+        this.referenceId = extractReferenceId(value);
+    }
+
+    private boolean isReferenceDescriptor(String desc) {
+        return desc != null && (desc.startsWith("L") || desc.startsWith("["));
+    }
+
+    private int extractReferenceId(Object val) {
+        if (val == null) {
+            return -1;
+        }
+        if (val instanceof com.tonic.analysis.execution.heap.ObjectInstance) {
+            return ((com.tonic.analysis.execution.heap.ObjectInstance) val).getId();
+        }
+        return -1;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescriptor() {
+        return descriptor;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public boolean isReference() {
+        return isReference;
+    }
+
+    public boolean isNull() {
+        return value == null;
+    }
+
+    public int getReferenceId() {
+        return referenceId;
+    }
+
+    public boolean hasReferenceId() {
+        return referenceId >= 0;
+    }
+
+    public String getTypeName() {
+        return descriptorToTypeName(descriptor);
+    }
+
+    public String getDisplayValue() {
+        if (value == null) {
+            return "null";
+        }
+        if (value instanceof com.tonic.analysis.execution.heap.ObjectInstance) {
+            com.tonic.analysis.execution.heap.ObjectInstance obj =
+                (com.tonic.analysis.execution.heap.ObjectInstance) value;
+            return obj.getClassName() + " #" + obj.getId();
+        }
+        if (value instanceof com.tonic.analysis.execution.heap.ArrayInstance) {
+            com.tonic.analysis.execution.heap.ArrayInstance arr =
+                (com.tonic.analysis.execution.heap.ArrayInstance) value;
+            return arr.getComponentType() + "[" + arr.getLength() + "] #" + arr.getId();
+        }
+        return String.valueOf(value);
+    }
+
+    private String descriptorToTypeName(String desc) {
+        if (desc == null || desc.isEmpty()) {
+            return "unknown";
+        }
+        switch (desc.charAt(0)) {
+            case 'B': return "byte";
+            case 'C': return "char";
+            case 'D': return "double";
+            case 'F': return "float";
+            case 'I': return "int";
+            case 'J': return "long";
+            case 'S': return "short";
+            case 'Z': return "boolean";
+            case 'V': return "void";
+            case '[':
+                return descriptorToTypeName(desc.substring(1)) + "[]";
+            case 'L':
+                int end = desc.indexOf(';');
+                if (end > 0) {
+                    return desc.substring(1, end).replace('/', '.');
+                }
+                return desc;
+            default:
+                return desc;
+        }
+    }
+
+    public String getKey() {
+        return owner + "." + name + ":" + descriptor;
+    }
+
+    @Override
+    public String toString() {
+        return name + ": " + getDisplayValue();
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String key;
+        private String owner = "";
+        private String name = "";
+        private String descriptor = "";
+        private Object value;
+        private int referenceId = -1;
+
+        public Builder key(String key) {
+            this.key = key;
+            return this;
+        }
+
+        public Builder owner(String owner) {
+            this.owner = owner;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder descriptor(String descriptor) {
+            this.descriptor = descriptor;
+            return this;
+        }
+
+        public Builder value(Object value) {
+            this.value = value;
+            return this;
+        }
+
+        public Builder referenceId(int referenceId) {
+            this.referenceId = referenceId;
+            return this;
+        }
+
+        public FieldValue build() {
+            FieldValue fv = new FieldValue(owner, name, descriptor, value);
+            return fv;
+        }
+    }
+}

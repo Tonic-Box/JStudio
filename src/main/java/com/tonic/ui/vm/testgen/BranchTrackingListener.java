@@ -1,7 +1,7 @@
 package com.tonic.ui.vm.testgen;
 
-import com.tonic.analysis.execution.core.BytecodeEngine;
 import com.tonic.analysis.execution.frame.StackFrame;
+import com.tonic.analysis.execution.listener.BytecodeListener;
 import com.tonic.analysis.instruction.ConditionalBranchInstruction;
 import com.tonic.analysis.instruction.GotoInstruction;
 import com.tonic.analysis.instruction.Instruction;
@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BranchTrackingListener implements BytecodeEngine.BytecodeListener {
+public class BranchTrackingListener implements BytecodeListener {
 
     private static final int MAX_LOOP_ITERATIONS = 100;
 

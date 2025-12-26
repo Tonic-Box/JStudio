@@ -4,12 +4,36 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- fuzzer for comprehensive test generation coverage">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- debugger improvements&#10;- Heap analysis">
+      <change afterPath="$PROJECT_DIR$/bytecode.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/output.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/source.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ArgumentConfigPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ArrayEditorDialog.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ClassSummaryPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/HeapForensicsListener.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/HeapForensicsPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/HeapForensicsTracker.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ObjectDetailPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ObjectListPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/model/AllocationEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/model/FieldValue.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/model/HeapArray.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/model/HeapDiff.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/model/HeapObject.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/model/HeapSnapshot.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/model/MutationEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/model/ProvenanceInfo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/model/TimelineEvent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/ParameterConfigDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/ParameterConfigDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/ExecuteMethodDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/ExecuteMethodDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/FuzzTestGeneratorDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/FuzzTestGeneratorDialog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/ClassTreeModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/ClassTreeModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/MethodSelectorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/MethodSelectorPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/BranchTrackingListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/BranchTrackingListener.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/MethodFuzzer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/MethodFuzzer.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -80,7 +104,7 @@
       <recent name="C:\Users\zacke\IdeaProjects\JStudio\src\main\resources" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.JStudio">
+  <component name="RunManager" selected="Gradle.JStudio [run]">
     <configuration name="JStudio" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.tonic.ui.JStudio" />
       <module name="JStudio.main" />
@@ -197,10 +221,10 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.JStudio [clean]" />
         <item itemvalue="Gradle.JStudio [run]" />
-        <item itemvalue="Gradle.JStudio [build]" />
         <item itemvalue="Gradle.JStudio [refreshDependencies]" />
+        <item itemvalue="Gradle.JStudio [clean]" />
+        <item itemvalue="Gradle.JStudio [build]" />
         <item itemvalue="Application.JStudio" />
       </list>
     </recent_temporary>
@@ -405,6 +429,7 @@
     <MESSAGE value="- string analysis" />
     <MESSAGE value="- test generation" />
     <MESSAGE value="- fuzzer for comprehensive test generation coverage" />
-    <option name="LAST_COMMIT_MESSAGE" value="- fuzzer for comprehensive test generation coverage" />
+    <MESSAGE value="- debugger improvements&#10;- Heap analysis" />
+    <option name="LAST_COMMIT_MESSAGE" value="- debugger improvements&#10;- Heap analysis" />
   </component>
 </project>

@@ -7,6 +7,7 @@ import com.tonic.analysis.execution.core.ExecutionMode;
 import com.tonic.analysis.execution.debug.DebugSession;
 import com.tonic.analysis.execution.frame.StackFrame;
 import com.tonic.analysis.execution.heap.SimpleHeapManager;
+import com.tonic.analysis.execution.listener.BytecodeListener;
 import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ConcreteLocals;
 import com.tonic.analysis.execution.state.ConcreteValue;
@@ -223,7 +224,7 @@ public class VMExecutionService {
 
     public ExecutionResult executeStaticMethodWithListener(String className, String methodName,
                                                            String descriptor, Object[] args,
-                                                           BytecodeEngine.BytecodeListener listener) {
+                                                           BytecodeListener listener) {
         ensureInitialized();
 
         if (executing.get()) {
@@ -283,6 +284,42 @@ public class VMExecutionService {
         }
     }
 
+    public BytecodeResult executeMethodWithListener(MethodEntry method, Object[] args,
+                                                      BytecodeListener listener) {
+        ensureInitialized();
+
+        if (executing.get()) {
+            throw new IllegalStateException("Another execution is in progress");
+        }
+
+        executing.set(true);
+
+        try {
+            ConcreteValue[] vmArgs = convertToConcreteValues(args);
+
+            BytecodeContext execContext = new BytecodeContext.Builder()
+                .heapManager(heapManager)
+                .classResolver(classResolver)
+                .mode(ExecutionMode.RECURSIVE)
+                .maxCallDepth(maxCallDepth)
+                .maxInstructions(maxInstructions)
+                .build();
+
+            BytecodeEngine engine = new BytecodeEngine(execContext);
+            currentEngine = engine;
+
+            if (listener != null) {
+                engine.addListener(listener);
+            }
+
+            return engine.execute(method, vmArgs);
+
+        } finally {
+            currentEngine = null;
+            executing.set(false);
+        }
+    }
+
     public ExecutionResult traceStaticMethod(String className, String methodName, String descriptor, Object... args) {
         ensureInitialized();
 
@@ -323,7 +360,7 @@ public class VMExecutionService {
 
             Deque<MethodCall> callStack = new ArrayDeque<>();
 
-            engine.addListener(new BytecodeEngine.BytecodeListener() {
+            engine.addListener(new BytecodeListener() {
                 private int lastStackDepth = 0;
 
                 @Override
@@ -471,6 +508,10 @@ public class VMExecutionService {
 
     public ClassResolver getClassResolver() {
         return classResolver;
+    }
+
+    public SimpleHeapManager getHeapManager() {
+        return heapManager;
     }
 
     public void setMaxCallDepth(int maxCallDepth) {

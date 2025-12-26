@@ -1,5 +1,8 @@
 package com.tonic.ui.vm;
 
+import com.tonic.ui.event.EventBus;
+import com.tonic.ui.event.events.ProjectLoadedEvent;
+import com.tonic.ui.event.events.ProjectUpdatedEvent;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.navigator.ClassTreeCellRenderer;
@@ -99,6 +102,17 @@ public class MethodSelectorPanel extends JPanel {
 
         setupListeners();
         loadCurrentProject();
+
+        EventBus.getInstance().register(ProjectLoadedEvent.class, this::onProjectLoaded);
+        EventBus.getInstance().register(ProjectUpdatedEvent.class, this::onProjectUpdated);
+    }
+
+    private void onProjectLoaded(ProjectLoadedEvent event) {
+        refresh();
+    }
+
+    private void onProjectUpdated(ProjectUpdatedEvent event) {
+        refresh();
     }
 
     private void setupListeners() {

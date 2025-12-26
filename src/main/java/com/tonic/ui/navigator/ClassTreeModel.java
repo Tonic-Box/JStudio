@@ -315,6 +315,24 @@ public class ClassTreeModel extends DefaultTreeModel {
             classNode.add(ctorCategory);
         }
 
+        List<MethodEntryModel> staticInits = new ArrayList<>();
+        for (MethodEntryModel method : classEntry.getMethods()) {
+            if (method.isStaticInitializer()) {
+                if (lowerFilter == null || classNameMatches ||
+                        method.getName().toLowerCase().contains(lowerFilter) ||
+                        "clinit".contains(lowerFilter) || "static".contains(lowerFilter)) {
+                    staticInits.add(method);
+                }
+            }
+        }
+        if (!staticInits.isEmpty()) {
+            NavigatorNode.CategoryNode clinitCategory = new NavigatorNode.CategoryNode("Static Initializers", Icons.getIcon("constructor"));
+            for (MethodEntryModel clinit : staticInits) {
+                clinitCategory.add(new NavigatorNode.MethodNode(clinit));
+            }
+            classNode.add(clinitCategory);
+        }
+
         List<MethodEntryModel> filteredMethods = new ArrayList<>();
         for (MethodEntryModel method : classEntry.getMethods()) {
             if (!method.isConstructor() && !method.isStaticInitializer()) {

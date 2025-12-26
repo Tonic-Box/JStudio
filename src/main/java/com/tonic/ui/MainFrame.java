@@ -101,6 +101,8 @@ public class MainFrame extends JFrame {
     private VMConsolePanel vmConsolePanel;
     private JDialog debuggerDialog;
     private DebuggerPanel debuggerPanel;
+    private JDialog heapForensicsDialog;
+    private com.tonic.ui.vm.heap.HeapForensicsPanel heapForensicsPanel;
     private JDialog deobfuscationDialog;
     private DeobfuscationPanel deobfuscationPanel;
 
@@ -1754,5 +1756,16 @@ public class MainFrame extends JFrame {
         VMExecutionService vmService = VMExecutionService.getInstance();
         String status = vmService.getVMStatus();
         JOptionPane.showMessageDialog(this, status, "VM Status", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void showHeapForensics() {
+        if (heapForensicsDialog == null || heapForensicsPanel == null) {
+            heapForensicsPanel = new com.tonic.ui.vm.heap.HeapForensicsPanel();
+            heapForensicsDialog = new JDialog(this, "Heap Forensics", false);
+            heapForensicsDialog.setSize(1200, 800);
+            heapForensicsDialog.setLocationRelativeTo(this);
+            heapForensicsDialog.add(heapForensicsPanel);
+        }
+        heapForensicsDialog.setVisible(true);
     }
 }

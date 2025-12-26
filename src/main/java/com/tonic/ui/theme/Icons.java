@@ -121,6 +121,8 @@ public class Icons {
                 return new BrowserIcon(size);
             case "constpool":
                 return new ConstPoolIcon(size);
+            case "heap":
+                return new HeapIcon(size);
             default:
                 return new PlaceholderIcon(size);
         }
@@ -798,6 +800,27 @@ public class Icons {
             g2.drawLine(13, 8, 15, 8);
             g2.drawLine(3, 3, 5, 5);
             g2.drawLine(11, 11, 13, 13);
+        }
+    }
+
+    private static class HeapIcon extends BaseIcon {
+        HeapIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getAccentSecondary());
+            g2.setStroke(getStroke());
+            g2.drawRect(2, 2, 5, 4);
+            g2.drawRect(9, 2, 5, 4);
+            g2.drawRect(2, 8, 5, 4);
+            g2.drawRect(9, 8, 5, 4);
+            g2.setColor(JStudioTheme.getAccent());
+            g2.drawLine(4, 6, 4, 8);
+            g2.drawLine(12, 6, 12, 8);
+            g2.drawLine(7, 4, 9, 4);
+            g2.drawLine(7, 10, 9, 10);
         }
     }
 }
