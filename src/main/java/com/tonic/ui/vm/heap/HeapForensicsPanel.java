@@ -356,6 +356,7 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
     public void refresh() {
         classSummaryPanel.update(tracker.getClassCounts(), lastSnapshot);
         classSummaryPanel.setOnClassSelected(this::onClassSelected);
+        classSummaryPanel.selectFirstRow();
         updateStatus();
     }
 

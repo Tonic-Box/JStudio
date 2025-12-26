@@ -78,6 +78,12 @@ public class ClassSummaryPanel extends JPanel {
         this.onClassSelected = callback;
     }
 
+    public void selectFirstRow() {
+        if (table.getRowCount() > 0) {
+            table.setRowSelectionInterval(0, 0);
+        }
+    }
+
     public void update(Map<String, Integer> counts, HeapSnapshot snapshot) {
         this.currentCounts = new HashMap<>(counts);
         this.snapshotCounts = snapshot != null ? new HashMap<>(snapshot.getClassCounts()) : new HashMap<>();

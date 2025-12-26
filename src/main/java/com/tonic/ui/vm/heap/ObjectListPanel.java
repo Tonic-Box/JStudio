@@ -74,6 +74,9 @@ public class ObjectListPanel extends JPanel {
     public void setObjects(List<HeapObject> objects) {
         this.allObjects = new ArrayList<>(objects);
         sortAndRefresh();
+        if (!allObjects.isEmpty()) {
+            table.setRowSelectionInterval(0, 0);
+        }
     }
 
     private void sortAndRefresh() {
