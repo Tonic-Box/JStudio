@@ -94,14 +94,14 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
         JSplitPane rightSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
             wrapWithTitle(classSummaryPanel, "Class Summary"),
             detailSplit);
-        rightSplit.setDividerLocation(200);
+        rightSplit.setDividerLocation(470); //TODO
         rightSplit.setResizeWeight(0.25);
         rightSplit.setBackground(JStudioTheme.getBgPrimary());
 
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
             methodSelector,
             rightSplit);
-        mainSplit.setDividerLocation(280);
+        mainSplit.setDividerLocation(255); //todo
         mainSplit.setResizeWeight(0.25);
         mainSplit.setBackground(JStudioTheme.getBgPrimary());
 

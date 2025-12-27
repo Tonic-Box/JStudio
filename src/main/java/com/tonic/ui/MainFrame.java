@@ -40,6 +40,7 @@ import com.tonic.ui.dialog.PreferencesDialog;
 import com.tonic.ui.dialog.filechooser.ExtensionFileFilter;
 import com.tonic.ui.dialog.filechooser.FileChooserDialog;
 import com.tonic.ui.dialog.filechooser.FileChooserResult;
+import com.tonic.ui.vm.heap.HeapForensicsPanel;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
@@ -1760,7 +1761,7 @@ public class MainFrame extends JFrame {
 
     public void showHeapForensics() {
         if (heapForensicsDialog == null || heapForensicsPanel == null) {
-            heapForensicsPanel = new com.tonic.ui.vm.heap.HeapForensicsPanel();
+            heapForensicsPanel = new HeapForensicsPanel();
             heapForensicsDialog = new JDialog(this, "Heap Forensics", false);
             heapForensicsDialog.setSize(1200, 800);
             heapForensicsDialog.setLocationRelativeTo(this);
