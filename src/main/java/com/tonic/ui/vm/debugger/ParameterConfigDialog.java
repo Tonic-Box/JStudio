@@ -1,5 +1,7 @@
 package com.tonic.ui.vm.debugger;
 
+import com.tonic.analysis.execution.resolve.ClassResolver;
+import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.Attribute;
 import com.tonic.parser.attribute.CodeAttribute;
@@ -30,13 +32,25 @@ public class ParameterConfigDialog extends JDialog {
     private boolean confirmed;
     private final boolean isStatic;
 
+    private ClassResolver classResolver;
+    private JPanel receiverSection;
+    private JComboBox<MethodEntry> constructorCombo;
+    private List<ParameterField> ctorParamFields = new ArrayList<>();
+    private boolean receiverExpanded = false;
+    private MethodEntry selectedConstructor;
+
     public ParameterConfigDialog(Component parent, MethodEntry method) {
+        this(parent, method, null);
+    }
+
+    public ParameterConfigDialog(Component parent, MethodEntry method, ClassResolver classResolver) {
         super(SwingUtilities.getWindowAncestor(parent), "Configure Parameters", ModalityType.APPLICATION_MODAL);
         this.method = method;
         this.methodKey = method.getOwnerName() + "." + method.getName() + method.getDesc();
         this.parameterFields = new ArrayList<>();
         this.confirmed = false;
         this.isStatic = (method.getAccess() & 0x0008) != 0;
+        this.classResolver = classResolver;
 
         initUI();
         restoreCachedValues();
@@ -65,7 +79,18 @@ public class ParameterConfigDialog extends JDialog {
         getContentPane().setBackground(JStudioTheme.getBgPrimary());
 
         add(createHeaderPanel(), BorderLayout.NORTH);
-        add(createParametersPanel(), BorderLayout.CENTER);
+
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.setBackground(JStudioTheme.getBgPrimary());
+
+        if (!isStatic) {
+            centerPanel.add(createReceiverSection());
+            centerPanel.add(Box.createVerticalStrut(5));
+        }
+        centerPanel.add(createParametersPanel());
+
+        add(centerPanel, BorderLayout.CENTER);
         add(createButtonPanel(), BorderLayout.SOUTH);
     }
 
@@ -93,6 +118,206 @@ public class ParameterConfigDialog extends JDialog {
         panel.add(sigLabel, BorderLayout.CENTER);
 
         return panel;
+    }
+
+    private JPanel createReceiverSection() {
+        receiverSection = new JPanel();
+        receiverSection.setLayout(new BoxLayout(receiverSection, BoxLayout.Y_AXIS));
+        receiverSection.setBackground(JStudioTheme.getBgSecondary());
+        receiverSection.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        receiverSection.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
+        header.setBackground(JStudioTheme.getBgTertiary());
+        header.setAlignmentX(Component.LEFT_ALIGNMENT);
+        header.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        header.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JLabel toggleLabel = new JLabel(receiverExpanded ? "\u25BC" : "\u25B6");
+        toggleLabel.setForeground(JStudioTheme.getTextPrimary());
+        JLabel titleLabel = new JLabel("Receiver (this)");
+        titleLabel.setForeground(JStudioTheme.getTextPrimary());
+
+        header.add(toggleLabel);
+        header.add(titleLabel);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(JStudioTheme.getBgSecondary());
+        content.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 5));
+        content.setVisible(receiverExpanded);
+
+        header.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                receiverExpanded = !receiverExpanded;
+                toggleLabel.setText(receiverExpanded ? "\u25BC" : "\u25B6");
+                content.setVisible(receiverExpanded);
+                receiverSection.revalidate();
+                receiverSection.repaint();
+                pack();
+            }
+        });
+
+        buildReceiverContent(content);
+
+        receiverSection.add(header);
+        receiverSection.add(content);
+        return receiverSection;
+    }
+
+    private void buildReceiverContent(JPanel content) {
+        JPanel dropdownRow = new JPanel(new BorderLayout(5, 0));
+        dropdownRow.setBackground(JStudioTheme.getBgSecondary());
+        dropdownRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        dropdownRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+
+        JLabel label = new JLabel("Constructor:");
+        label.setForeground(JStudioTheme.getTextPrimary());
+        label.setPreferredSize(new Dimension(80, 24));
+
+        constructorCombo = new JComboBox<>();
+        constructorCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof MethodEntry) {
+                    MethodEntry m = (MethodEntry) value;
+                    setText(formatConstructorDesc(m.getDesc()));
+                }
+                return this;
+            }
+        });
+
+        populateConstructors();
+
+        constructorCombo.addActionListener(e -> {
+            selectedConstructor = (MethodEntry) constructorCombo.getSelectedItem();
+            rebuildCtorParams(content);
+        });
+
+        dropdownRow.add(label, BorderLayout.WEST);
+        dropdownRow.add(constructorCombo, BorderLayout.CENTER);
+        dropdownRow.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+        content.add(dropdownRow);
+
+        if (constructorCombo.getItemCount() > 0) {
+            selectedConstructor = constructorCombo.getItemAt(0);
+            rebuildCtorParams(content);
+        } else {
+            JLabel noCtors = new JLabel("(no constructors available)");
+            noCtors.setForeground(JStudioTheme.getTextSecondary());
+            noCtors.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.add(noCtors);
+        }
+    }
+
+    private void populateConstructors() {
+        if (constructorCombo == null || classResolver == null) return;
+
+        constructorCombo.removeAllItems();
+        String ownerClass = method.getOwnerName();
+
+        try {
+            ClassFile classFile = classResolver.resolveClass(ownerClass);
+            if (classFile != null && classFile.getMethods() != null) {
+                for (MethodEntry m : classFile.getMethods()) {
+                    if ("<init>".equals(m.getName())) {
+                        constructorCombo.addItem(m);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("[Debugger] Failed to load constructors: " + e.getMessage());
+        }
+    }
+
+    private String formatConstructorDesc(String desc) {
+        List<String> types = parseParameterTypes(desc);
+        if (types.isEmpty()) {
+            return "<init>()";
+        }
+        StringBuilder sb = new StringBuilder("<init>(");
+        for (int i = 0; i < types.size(); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(formatType(types.get(i)));
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
+    private void rebuildCtorParams(JPanel content) {
+        while (content.getComponentCount() > 1) {
+            content.remove(content.getComponentCount() - 1);
+        }
+
+        ctorParamFields.clear();
+
+        if (selectedConstructor == null) {
+            JLabel noParams = new JLabel("(no constructor selected)");
+            noParams.setForeground(JStudioTheme.getTextSecondary());
+            noParams.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.add(noParams);
+            content.revalidate();
+            content.repaint();
+            return;
+        }
+
+        List<String> ctorParamTypes = parseParameterTypes(selectedConstructor.getDesc());
+
+        if (ctorParamTypes.isEmpty()) {
+            JLabel noParams = new JLabel("(no parameters)");
+            noParams.setForeground(JStudioTheme.getTextSecondary());
+            noParams.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.add(noParams);
+        } else {
+            for (int i = 0; i < ctorParamTypes.size(); i++) {
+                String typeDesc = ctorParamTypes.get(i);
+                String formattedType = formatType(typeDesc);
+                String name = "arg" + i;
+
+                ParameterField field = createParameterField(i, name, typeDesc, formattedType);
+                ctorParamFields.add(field);
+
+                JPanel row = new JPanel(new BorderLayout(5, 0));
+                row.setBackground(JStudioTheme.getBgSecondary());
+                row.setAlignmentX(Component.LEFT_ALIGNMENT);
+                row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+
+                JLabel lbl = new JLabel(name + " (" + formattedType + "):");
+                lbl.setForeground(JStudioTheme.getTextPrimary());
+                lbl.setPreferredSize(new Dimension(120, 24));
+
+                row.add(lbl, BorderLayout.WEST);
+                row.add(field.getComponent(), BorderLayout.CENTER);
+                row.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+                content.add(row);
+            }
+        }
+
+        content.revalidate();
+        content.repaint();
+        pack();
+    }
+
+    public MethodEntry getSelectedConstructor() {
+        return selectedConstructor;
+    }
+
+    public Object[] getConstructorArgs() {
+        if (ctorParamFields.isEmpty()) {
+            return new Object[0];
+        }
+        Object[] args = new Object[ctorParamFields.size()];
+        for (int i = 0; i < ctorParamFields.size(); i++) {
+            try {
+                args[i] = ctorParamFields.get(i).getValue();
+            } catch (Exception e) {
+                args[i] = null;
+            }
+        }
+        return args;
     }
 
     private JScrollPane createParametersPanel() {

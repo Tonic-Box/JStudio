@@ -6,6 +6,7 @@ import com.tonic.analysis.execution.core.BytecodeResult;
 import com.tonic.analysis.execution.core.ExecutionMode;
 import com.tonic.analysis.execution.debug.DebugSession;
 import com.tonic.analysis.execution.frame.StackFrame;
+import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.heap.SimpleHeapManager;
 import com.tonic.analysis.execution.listener.BytecodeListener;
 import com.tonic.analysis.execution.resolve.ClassResolver;
@@ -621,6 +622,8 @@ public class VMExecutionService {
             return ConcreteValue.intValue((Character) value);
         } else if (value instanceof String) {
             return ConcreteValue.reference(heapManager.internString((String) value));
+        } else if (value instanceof ObjectInstance) {
+            return ConcreteValue.reference((ObjectInstance) value);
         } else {
             return ConcreteValue.nullRef();
         }

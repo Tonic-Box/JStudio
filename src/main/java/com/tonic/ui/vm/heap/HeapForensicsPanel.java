@@ -344,8 +344,10 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
                     heapManager = (SimpleHeapManager) tracker.getHeapManager();
                     heapManager.setClassResolver(classResolver);
 
+                    final ClassResolver finalResolver = classResolver;
                     SwingUtilities.invokeAndWait(() -> {
                         argumentConfigPanel.setHeapManager(heapManager);
+                        argumentConfigPanel.setClassResolver(finalResolver);
                     });
 
                     args = argumentConfigPanel.getArguments();

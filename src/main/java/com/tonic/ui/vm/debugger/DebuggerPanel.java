@@ -12,6 +12,13 @@ import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.MethodSelectorPanel;
+import com.tonic.ui.vm.VMExecutionService;
+import com.tonic.analysis.execution.core.BytecodeContext;
+import com.tonic.analysis.execution.core.BytecodeEngine;
+import com.tonic.analysis.execution.heap.ObjectInstance;
+import com.tonic.analysis.execution.heap.SimpleHeapManager;
+import com.tonic.analysis.execution.resolve.ClassResolver;
+import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.utill.Opcode;
 
 import javax.swing.*;
@@ -50,6 +57,8 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
 
     private MethodEntry currentMethod;
     private Object[] configuredParams;
+    private MethodEntry configuredConstructor;
+    private Object[] configuredConstructorArgs;
     private boolean recursiveExecution = false;
     private List<InstructionEntry> instructions;
     private Map<Integer, Integer> pcToRowMap;
@@ -881,7 +890,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         }
 
         try {
-            Object[] params = args.length > 0 ? args : getEffectiveParams();
+            Object[] params = args.length > 0 ? args : buildExecutionArgs();
             session.start(currentMethod, recursiveExecution, params);
             updateButtonStates();
             String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
@@ -904,11 +913,19 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
             return;
         }
 
-        ParameterConfigDialog dialog = new ParameterConfigDialog(this, currentMethod);
+        VMExecutionService vmService = VMExecutionService.getInstance();
+        if (!vmService.isInitialized()) {
+            vmService.initialize();
+        }
+        ClassResolver classResolver = vmService.getClassResolver();
+
+        ParameterConfigDialog dialog = new ParameterConfigDialog(this, currentMethod, classResolver);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
             configuredParams = dialog.getResult();
+            configuredConstructor = dialog.getSelectedConstructor();
+            configuredConstructorArgs = dialog.getConstructorArgs();
             appendOutput("Parameters configured: " + configuredParams.length + " argument(s)");
         }
     }
@@ -918,6 +935,113 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
             return configuredParams;
         }
         return generateDefaultParams();
+    }
+
+    private Object[] buildExecutionArgs() {
+        Object[] methodParams = getEffectiveParams();
+
+        if (currentMethod == null) {
+            return methodParams;
+        }
+
+        boolean isStatic = (currentMethod.getAccess() & 0x0008) != 0;
+        if (isStatic) {
+            return methodParams;
+        }
+
+        VMExecutionService vmService = VMExecutionService.getInstance();
+        if (!vmService.isInitialized()) {
+            vmService.initialize();
+        }
+
+        SimpleHeapManager heapManager = vmService.getHeapManager();
+        ClassResolver classResolver = vmService.getClassResolver();
+
+        ObjectInstance receiver = heapManager.newObject(currentMethod.getOwnerName());
+
+        if (configuredConstructor != null && classResolver != null) {
+            executeConstructor(receiver, configuredConstructor, configuredConstructorArgs,
+                              heapManager, classResolver);
+        }
+
+        Object[] result = new Object[methodParams.length + 1];
+        result[0] = receiver;
+        System.arraycopy(methodParams, 0, result, 1, methodParams.length);
+        return result;
+    }
+
+    private void executeConstructor(ObjectInstance receiver, MethodEntry ctor,
+                                     Object[] ctorArgs, SimpleHeapManager heapManager,
+                                     ClassResolver classResolver) {
+        try {
+            ConcreteValue[] ctorArgValues = convertArgsToConcreteValues(ctorArgs);
+            ConcreteValue[] frameArgs = new ConcreteValue[ctorArgValues.length + 1];
+            frameArgs[0] = ConcreteValue.reference(receiver);
+            System.arraycopy(ctorArgValues, 0, frameArgs, 1, ctorArgValues.length);
+
+            BytecodeContext ctx = new BytecodeContext.Builder()
+                .heapManager(heapManager)
+                .classResolver(classResolver)
+                .build();
+            BytecodeEngine engine = new BytecodeEngine(ctx);
+            engine.execute(ctor, frameArgs);
+            appendOutput("Constructor executed: " + ctor.getName() + ctor.getDesc());
+        } catch (Exception e) {
+            appendOutput("Constructor execution failed: " + e.getMessage());
+        }
+    }
+
+    private ConcreteValue[] convertArgsToConcreteValues(Object[] args) {
+        if (args == null || args.length == 0) {
+            return new ConcreteValue[0];
+        }
+
+        VMExecutionService vmService = VMExecutionService.getInstance();
+        SimpleHeapManager heapManager = vmService.getHeapManager();
+
+        ConcreteValue[] result = new ConcreteValue[args.length];
+        for (int i = 0; i < args.length; i++) {
+            result[i] = convertToConcreteValue(args[i], heapManager);
+        }
+        return result;
+    }
+
+    private ConcreteValue convertToConcreteValue(Object value, SimpleHeapManager heapManager) {
+        if (value == null) {
+            return ConcreteValue.nullRef();
+        }
+        if (value instanceof Integer) {
+            return ConcreteValue.intValue((Integer) value);
+        }
+        if (value instanceof Long) {
+            return ConcreteValue.longValue((Long) value);
+        }
+        if (value instanceof Float) {
+            return ConcreteValue.floatValue((Float) value);
+        }
+        if (value instanceof Double) {
+            return ConcreteValue.doubleValue((Double) value);
+        }
+        if (value instanceof Boolean) {
+            return ConcreteValue.intValue((Boolean) value ? 1 : 0);
+        }
+        if (value instanceof Byte) {
+            return ConcreteValue.intValue((Byte) value);
+        }
+        if (value instanceof Short) {
+            return ConcreteValue.intValue((Short) value);
+        }
+        if (value instanceof Character) {
+            return ConcreteValue.intValue((Character) value);
+        }
+        if (value instanceof String) {
+            ObjectInstance strObj = heapManager.internString((String) value);
+            return ConcreteValue.reference(strObj);
+        }
+        if (value instanceof ObjectInstance) {
+            return ConcreteValue.reference((ObjectInstance) value);
+        }
+        return ConcreteValue.nullRef();
     }
 
     private Object[] generateDefaultParams() {
@@ -1019,7 +1143,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     private void ensureSessionStarted() {
         if (!session.isStarted() && currentMethod != null) {
             try {
-                session.start(currentMethod, recursiveExecution, getEffectiveParams());
+                session.start(currentMethod, recursiveExecution, buildExecutionArgs());
                 updateButtonStates();
                 String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
                 appendOutput("Started debugging: " + currentMethod.getName() + modeStr);
