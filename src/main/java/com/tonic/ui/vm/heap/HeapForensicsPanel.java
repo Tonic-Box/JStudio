@@ -21,6 +21,8 @@ import com.tonic.ui.vm.heap.model.*;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.ForensicsEventListener {
@@ -47,6 +49,12 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
     private HeapSnapshot lastSnapshot;
     private MethodEntryModel selectedMethod;
     private boolean isRunning = false;
+
+    private JProgressBar progressBar;
+    private JLabel loadingLabel;
+    private Timer spinnerTimer;
+    private int spinnerFrame = 0;
+    private static final String[] SPINNER_FRAMES = {"|", "/", "-", "\\"};
 
     public HeapForensicsPanel() {
         SimpleHeapManager heapManager = new SimpleHeapManager();
@@ -104,12 +112,106 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
 
         add(centerPanel, BorderLayout.CENTER);
 
-        statusLabel = new JLabel("Select a method and click 'Run Analysis' to begin");
-        statusLabel.setForeground(JStudioTheme.getTextSecondary());
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        add(statusLabel, BorderLayout.SOUTH);
+        JPanel statusPanel = createStatusPanel();
+        add(statusPanel, BorderLayout.SOUTH);
 
         updateButtonStates();
+    }
+
+    private JPanel createStatusPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 0));
+        panel.setBackground(JStudioTheme.getBgSecondary());
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
+
+        statusLabel = new JLabel("Select a method and click 'Run Analysis' to begin");
+        statusLabel.setForeground(JStudioTheme.getTextSecondary());
+        panel.add(statusLabel, BorderLayout.CENTER);
+
+        progressBar = new JProgressBar();
+        progressBar.setIndeterminate(true);
+        progressBar.setPreferredSize(new Dimension(150, 16));
+        progressBar.setVisible(false);
+        panel.add(progressBar, BorderLayout.EAST);
+
+        return panel;
+    }
+
+    private void showLoading(String message) {
+        progressBar.setVisible(true);
+
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof RootPaneContainer) {
+            RootPaneContainer rpc = (RootPaneContainer) window;
+            Component existingGlass = rpc.getGlassPane();
+            JPanel glass;
+            if (existingGlass instanceof JPanel && ((JPanel) existingGlass).getLayout() instanceof GridBagLayout) {
+                glass = (JPanel) existingGlass;
+            } else {
+                glass = new JPanel(new GridBagLayout()) {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        Graphics2D g2 = (Graphics2D) g.create();
+                        g2.setColor(new Color(0, 0, 0, 100));
+                        g2.fillRect(0, 0, getWidth(), getHeight());
+                        g2.dispose();
+                    }
+                };
+                glass.setOpaque(false);
+                glass.add(createLoadingCard());
+                rpc.setGlassPane(glass);
+            }
+            if (loadingLabel != null) {
+                loadingLabel.setText(message);
+            }
+            glass.setVisible(true);
+        }
+
+        final String baseMessage = message;
+        spinnerTimer = new Timer(100, e -> {
+            spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES.length;
+            if (loadingLabel != null) {
+                loadingLabel.setText(SPINNER_FRAMES[spinnerFrame] + " " + baseMessage);
+            }
+        });
+        spinnerTimer.start();
+    }
+
+    private JPanel createLoadingCard() {
+        JPanel card = new JPanel(new BorderLayout(10, 15));
+        card.setBackground(JStudioTheme.getBgSecondary());
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getAccent(), 2),
+            BorderFactory.createEmptyBorder(25, 40, 25, 40)
+        ));
+
+        loadingLabel = new JLabel("Analyzing...", SwingConstants.CENTER);
+        loadingLabel.setFont(loadingLabel.getFont().deriveFont(Font.BOLD, 14f));
+        loadingLabel.setForeground(JStudioTheme.getTextPrimary());
+        card.add(loadingLabel, BorderLayout.CENTER);
+
+        JProgressBar cardProgress = new JProgressBar();
+        cardProgress.setIndeterminate(true);
+        cardProgress.setPreferredSize(new Dimension(250, 10));
+        card.add(cardProgress, BorderLayout.SOUTH);
+
+        return card;
+    }
+
+    private void hideLoading() {
+        if (spinnerTimer != null) {
+            spinnerTimer.stop();
+            spinnerTimer = null;
+        }
+        progressBar.setVisible(false);
+
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof RootPaneContainer) {
+            RootPaneContainer rpc = (RootPaneContainer) window;
+            rpc.getGlassPane().setVisible(false);
+        }
     }
 
     private JPanel createToolbar() {
@@ -219,25 +321,37 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
             return;
         }
 
-        reset();
-
         isRunning = true;
         updateButtonStates();
+        statusLabel.setText("Initializing...");
+        showLoading("Initializing VM...");
 
         ClassPool classPool = project.getClassPool();
-        ClassResolver classResolver = new ClassResolver(classPool);
-        SimpleHeapManager heapManager = (SimpleHeapManager) tracker.getHeapManager();
-        heapManager.setClassResolver(classResolver);
-        argumentConfigPanel.setHeapManager(heapManager);
 
-        ConcreteValue[] args = argumentConfigPanel.getArguments();
-        String argsDesc = argumentConfigPanel.getCurrentArgsDescription();
-        statusLabel.setText("Running: " + selectedMethod.getName() + argsDesc + "...");
+        SwingWorker<ExecutionResultWrapper, String> worker = new SwingWorker<>() {
+            private SimpleHeapManager heapManager;
+            private ClassResolver classResolver;
+            private ConcreteValue[] args;
 
-        SwingWorker<ExecutionResultWrapper, Void> worker = new SwingWorker<>() {
             @Override
             protected ExecutionResultWrapper doInBackground() {
                 try {
+                    publish("Initializing VM...");
+                    SwingUtilities.invokeAndWait(() -> reset());
+
+                    publish("Building class resolver...");
+                    classResolver = new ClassResolver(classPool);
+                    heapManager = (SimpleHeapManager) tracker.getHeapManager();
+                    heapManager.setClassResolver(classResolver);
+
+                    SwingUtilities.invokeAndWait(() -> {
+                        argumentConfigPanel.setHeapManager(heapManager);
+                    });
+
+                    args = argumentConfigPanel.getArguments();
+
+                    publish("Analyzing " + selectedMethod.getName() + "...");
+
                     BytecodeContext ctx = new BytecodeContext.Builder()
                         .heapManager(heapManager)
                         .classResolver(classResolver)
@@ -258,8 +372,20 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
             }
 
             @Override
+            protected void process(java.util.List<String> chunks) {
+                if (!chunks.isEmpty()) {
+                    String msg = chunks.get(chunks.size() - 1);
+                    statusLabel.setText(msg);
+                    if (loadingLabel != null) {
+                        loadingLabel.setText(msg);
+                    }
+                }
+            }
+
+            @Override
             protected void done() {
                 isRunning = false;
+                hideLoading();
                 updateButtonStates();
                 try {
                     ExecutionResultWrapper wrapper = get();

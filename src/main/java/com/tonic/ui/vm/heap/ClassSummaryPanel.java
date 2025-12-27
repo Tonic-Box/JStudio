@@ -194,15 +194,7 @@ public class ClassSummaryPanel extends JPanel {
             if (column == 0 && value instanceof String) {
                 String className = (String) value;
                 String simple = getSimpleClassName(className);
-                String icon = "";
-                if (className.contains("$Lambda$") || className.contains("$$Lambda$")) {
-                    icon = "λ ";
-                } else if (className.endsWith("[]")) {
-                    icon = "[] ";
-                } else if (className.contains("$")) {
-                    icon = "$ ";
-                }
-                setText(icon + simple);
+                setText(simple);
                 setToolTipText(className);
             } else if (column == 2 && value instanceof Integer) {
                 int delta = (Integer) value;
