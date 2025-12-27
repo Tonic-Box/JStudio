@@ -379,33 +379,33 @@ public class ArgumentConfigPanel extends JPanel {
     }
 
     private Object parseArgumentValue(String value, String type) {
-        if (value.isEmpty() || value.equalsIgnoreCase("null")) {
-            return null;
-        }
+        boolean isEmpty = value == null || value.isEmpty() || value.equalsIgnoreCase("null");
 
         try {
             switch (type) {
                 case "I":
-                    return Integer.parseInt(value);
+                    return isEmpty ? 0 : Integer.parseInt(value);
                 case "B":
-                    return (byte) Integer.parseInt(value);
+                    return isEmpty ? (byte) 0 : (byte) Integer.parseInt(value);
                 case "S":
-                    return (short) Integer.parseInt(value);
+                    return isEmpty ? (short) 0 : (short) Integer.parseInt(value);
                 case "C":
+                    if (isEmpty) return 'a';
                     if (value.length() == 1) return value.charAt(0);
                     if (value.startsWith("'") && value.endsWith("'") && value.length() == 3) {
                         return value.charAt(1);
                     }
                     return (char) Integer.parseInt(value);
                 case "J":
-                    return Long.parseLong(value.replace("L", "").replace("l", ""));
+                    return isEmpty ? 0L : Long.parseLong(value.replace("L", "").replace("l", ""));
                 case "F":
-                    return Float.parseFloat(value.replace("f", "").replace("F", ""));
+                    return isEmpty ? 0.0f : Float.parseFloat(value.replace("f", "").replace("F", ""));
                 case "D":
-                    return Double.parseDouble(value.replace("d", "").replace("D", ""));
+                    return isEmpty ? 0.0 : Double.parseDouble(value.replace("d", "").replace("D", ""));
                 case "Z":
-                    return Boolean.parseBoolean(value);
+                    return isEmpty ? false : Boolean.parseBoolean(value);
                 default:
+                    if (isEmpty) return null;
                     if (type.equals("Ljava/lang/String;")) {
                         if (value.startsWith("\"") && value.endsWith("\"") && value.length() >= 2) {
                             return value.substring(1, value.length() - 1);
@@ -415,7 +415,21 @@ public class ArgumentConfigPanel extends JPanel {
                     return null;
             }
         } catch (NumberFormatException e) {
-            return null;
+            return getDefaultForType(type);
+        }
+    }
+
+    private Object getDefaultForType(String type) {
+        switch (type) {
+            case "I": return 0;
+            case "B": return (byte) 0;
+            case "S": return (short) 0;
+            case "C": return 'a';
+            case "J": return 0L;
+            case "F": return 0.0f;
+            case "D": return 0.0;
+            case "Z": return false;
+            default: return null;
         }
     }
 
@@ -433,7 +447,11 @@ public class ArgumentConfigPanel extends JPanel {
 
     private ConcreteValue convertToConcreteValue(Object value, String type) {
         if (value == null) {
-            return ConcreteValue.nullRef();
+            if (isPrimitiveType(type)) {
+                value = getDefaultForType(type);
+            } else {
+                return ConcreteValue.nullRef();
+            }
         }
 
         if (type.startsWith("[") && value instanceof Object[]) {
