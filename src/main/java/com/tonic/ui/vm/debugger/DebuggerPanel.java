@@ -27,11 +27,15 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListener {
 
@@ -65,6 +69,12 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     private List<InstructionEntry> instructions;
     private Map<Integer, Integer> pcToRowMap;
     private Consumer<String> onStatusMessage;
+
+    private JToggleButton recordBtn;
+    private JButton exportTraceBtn;
+    private boolean recording = false;
+    private ExecutionTrace currentTrace;
+    private List<String> lastStackState = new ArrayList<>();
 
     public DebuggerPanel() {
         this.session = new VMDebugSession();
@@ -593,6 +603,25 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         panel.add(speedSelector);
         panel.add(Box.createHorizontalStrut(10));
         panel.add(recursiveCheckbox);
+        panel.add(Box.createHorizontalStrut(20));
+
+        recordBtn = new JToggleButton("Record");
+        recordBtn.setBackground(JStudioTheme.getBgSecondary());
+        recordBtn.setForeground(JStudioTheme.getTextPrimary());
+        recordBtn.setFocusPainted(false);
+        recordBtn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
+        recordBtn.setToolTipText("Record execution trace");
+        recordBtn.addActionListener(e -> toggleRecording());
+
+        exportTraceBtn = createToolButton("Export Trace", null, e -> exportTrace());
+        exportTraceBtn.setEnabled(false);
+        exportTraceBtn.setToolTipText("Export recorded execution trace");
+
+        panel.add(recordBtn);
+        panel.add(exportTraceBtn);
 
         return panel;
     }
@@ -1179,6 +1208,135 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         updateButtonStates();
         clearHighlight();
         appendOutput("Debugging stopped");
+
+        if (recording && currentTrace != null) {
+            currentTrace.complete("Session stopped by user", false);
+            exportTraceBtn.setEnabled(true);
+        }
+    }
+
+    private void toggleRecording() {
+        recording = recordBtn.isSelected();
+        if (recording) {
+            if (currentMethod != null) {
+                currentTrace = new ExecutionTrace(
+                    currentMethod.getOwnerName(),
+                    currentMethod.getName(),
+                    currentMethod.getDesc()
+                );
+                lastStackState.clear();
+                appendOutput("Recording started - execution trace will be captured");
+            } else {
+                appendOutput("Recording enabled - will start capturing when debugging begins");
+                currentTrace = null;
+            }
+            recordBtn.setBackground(new Color(180, 80, 80));
+            recordBtn.setForeground(Color.WHITE);
+            exportTraceBtn.setEnabled(false);
+        } else {
+            if (currentTrace != null && !currentTrace.getSteps().isEmpty()) {
+                appendOutput("Recording stopped - " + currentTrace.getSteps().size() + " steps captured");
+                exportTraceBtn.setEnabled(true);
+            } else {
+                appendOutput("Recording stopped - no steps captured");
+            }
+            recordBtn.setBackground(JStudioTheme.getBgSecondary());
+            recordBtn.setForeground(JStudioTheme.getTextPrimary());
+        }
+    }
+
+    private void captureStep(DebugStateModel state) {
+        if (!recording || currentTrace == null) return;
+
+        ExecutionStep step = new ExecutionStep(
+            state.getClassName(),
+            state.getMethodName(),
+            state.getDescriptor(),
+            state.getInstructionIndex(),
+            state.getLineNumber(),
+            getInstructionAtPC(state.getInstructionIndex()),
+            state.getCallStack().size()
+        );
+
+        step.setStackBefore(new ArrayList<>(lastStackState));
+
+        List<String> currentStack = new ArrayList<>();
+        for (StackEntry entry : state.getOperandStack()) {
+            currentStack.add(entry.toString());
+        }
+        step.setStackAfter(currentStack);
+        lastStackState = new ArrayList<>(currentStack);
+
+        List<String> locals = new ArrayList<>();
+        for (LocalEntry entry : state.getLocalVariables()) {
+            locals.add("local" + entry.getSlot() + ": " + entry.toString());
+        }
+        step.setLocals(locals);
+
+        currentTrace.addStep(step);
+    }
+
+    private String getInstructionAtPC(int pc) {
+        Integer row = pcToRowMap.get(pc);
+        if (row != null && row < instructions.size()) {
+            InstructionEntry entry = instructions.get(row);
+            if (entry.operands != null && !entry.operands.isEmpty()) {
+                return entry.mnemonic + " " + entry.operands;
+            }
+            return entry.mnemonic;
+        }
+        return "PC=" + pc;
+    }
+
+    private void exportTrace() {
+        if (currentTrace == null || currentTrace.getSteps().isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "No execution trace to export",
+                "Export Trace",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Export Execution Trace");
+        chooser.setFileFilter(new FileNameExtensionFilter("Markdown files (*.md)", "md"));
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("Text files (*.txt)", "txt"));
+
+        String defaultName = currentTrace.getMethodName() + "_trace";
+        chooser.setSelectedFile(new File(defaultName + ".md"));
+
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            String path = file.getAbsolutePath();
+
+            boolean isMarkdown = path.endsWith(".md") ||
+                (chooser.getFileFilter() instanceof FileNameExtensionFilter &&
+                 ((FileNameExtensionFilter)chooser.getFileFilter()).getExtensions()[0].equals("md"));
+
+            if (!path.endsWith(".md") && !path.endsWith(".txt")) {
+                path += isMarkdown ? ".md" : ".txt";
+                file = new File(path);
+            }
+
+            try (FileWriter writer = new FileWriter(file)) {
+                if (path.endsWith(".md")) {
+                    writer.write(currentTrace.toMarkdown());
+                } else {
+                    writer.write(currentTrace.toCompactText());
+                }
+                appendOutput("Trace exported to: " + file.getName());
+                JOptionPane.showMessageDialog(this,
+                    "Trace exported successfully!\n" + currentTrace.getSteps().size() + " steps saved.",
+                    "Export Complete",
+                    JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException e) {
+                appendOutput("Failed to export trace: " + e.getMessage());
+                JOptionPane.showMessageDialog(this,
+                    "Failed to export trace: " + e.getMessage(),
+                    "Export Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     public boolean isDebugging() {
@@ -1293,6 +1451,10 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
                 }
             }
 
+            if (recording) {
+                captureStep(state);
+            }
+
             highlightInstruction(state.getInstructionIndex());
             stackPanel.updateStack(state.getOperandStack());
             localsPanel.updateLocals(state.getLocalVariables());
@@ -1313,6 +1475,16 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         SwingUtilities.invokeLater(() -> {
             appendOutput("Debug session started");
             updateButtonStates();
+
+            if (recording && currentTrace == null && currentMethod != null) {
+                currentTrace = new ExecutionTrace(
+                    currentMethod.getOwnerName(),
+                    currentMethod.getName(),
+                    currentMethod.getDesc()
+                );
+                lastStackState.clear();
+                appendOutput("Recording execution trace...");
+            }
         });
     }
 
@@ -1326,6 +1498,14 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
             localsPanel.clear();
             callStackPanel.clear();
             updateButtonStates();
+
+            if (recording && currentTrace != null) {
+                boolean normal = reason.toLowerCase().contains("complete") ||
+                                 reason.toLowerCase().contains("return");
+                currentTrace.complete(reason, normal);
+                appendOutput("Trace recording complete - " + currentTrace.getSteps().size() + " steps captured");
+                exportTraceBtn.setEnabled(true);
+            }
         });
     }
 
