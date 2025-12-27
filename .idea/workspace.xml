@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Heap analysis: ui improvements">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Heap analysis: cleanup">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/HeapForensicsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/HeapForensicsPanel.java" afterDir="false" />
     </list>
@@ -410,7 +410,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766821994887</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="- Heap analysis: argument fix">
+      <option name="closed" value="true" />
+      <created>1766851284504</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1766851284504</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -445,6 +453,8 @@
     <MESSAGE value="- Heap analysis" />
     <MESSAGE value="- Heap analysis: default args" />
     <MESSAGE value="- Heap analysis: ui improvements" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Heap analysis: ui improvements" />
+    <MESSAGE value="- Heap analysis: argument fix" />
+    <MESSAGE value="- Heap analysis: cleanup" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Heap analysis: cleanup" />
   </component>
 </project>
