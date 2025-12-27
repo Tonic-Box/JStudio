@@ -335,6 +335,10 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
 
             @Override
             protected ExecutionResultWrapper doInBackground() {
+                java.io.PrintStream originalOut = System.out;
+                try (java.io.PrintStream fileOut = new java.io.PrintStream(
+                        new java.io.FileOutputStream("output.txt", false))) {
+                    System.setOut(fileOut);
                 try {
                     publish("Initializing VM...");
                     SwingUtilities.invokeAndWait(() -> reset());
@@ -368,6 +372,11 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
                     return new ExecutionResultWrapper(result, null);
                 } catch (Exception e) {
                     return new ExecutionResultWrapper(null, e);
+                } finally {
+                    System.setOut(originalOut);
+                }
+                } catch (java.io.FileNotFoundException fnf) {
+                    return new ExecutionResultWrapper(null, fnf);
                 }
             }
 

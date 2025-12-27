@@ -1,5 +1,6 @@
 package com.tonic.ui.vm.heap;
 
+import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.heap.SimpleHeapManager;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.parser.MethodEntry;
@@ -296,18 +297,33 @@ public class ArgumentConfigPanel extends JPanel {
     }
 
     public ConcreteValue[] getArguments() {
-        if (method == null || paramTypes.isEmpty()) {
+        if (method == null) {
             return new ConcreteValue[0];
         }
 
+        boolean isStatic = (method.getAccess() & 0x0008) != 0;
+
         Object[] rawArgs;
-        if (currentMode == Mode.MANUAL) {
+        if (paramTypes.isEmpty()) {
+            rawArgs = new Object[0];
+        } else if (currentMode == Mode.MANUAL) {
             rawArgs = collectManualArguments();
         } else {
             rawArgs = getCurrentFuzzArguments();
         }
 
-        return convertToConcreteValues(rawArgs);
+        ConcreteValue[] paramValues = convertToConcreteValues(rawArgs);
+
+        if (isStatic) {
+            return paramValues;
+        }
+
+        ConcreteValue[] result = new ConcreteValue[paramValues.length + 1];
+        String ownerClass = method.getOwnerName();
+        ObjectInstance receiver = heapManager.newObject(ownerClass);
+        result[0] = ConcreteValue.reference(receiver);
+        System.arraycopy(paramValues, 0, result, 1, paramValues.length);
+        return result;
     }
 
     private Object[] collectManualArguments() {
