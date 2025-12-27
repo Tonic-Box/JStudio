@@ -56,6 +56,8 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     private JCheckBox recursiveCheckbox;
 
     private MethodEntry currentMethod;
+    private MethodEntry displayedMethod;
+    private JScrollPane bytecodeScroll;
     private Object[] configuredParams;
     private MethodEntry configuredConstructor;
     private Object[] configuredConstructorArgs;
@@ -85,15 +87,8 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         bytecodeTable = new JTable(bytecodeModel);
         setupBytecodeTable();
 
-        JScrollPane bytecodeScroll = new JScrollPane(bytecodeTable);
-        bytecodeScroll.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Bytecode",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            null,
-            JStudioTheme.getTextPrimary()
-        ));
+        bytecodeScroll = new JScrollPane(bytecodeTable);
+        updateBytecodeTitle(null);
         bytecodeScroll.getViewport().setBackground(JStudioTheme.getBgSecondary());
 
         stackPanel = new StackPanel();
@@ -173,7 +168,30 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         updateButtonStates();
     }
 
+    private void updateBytecodeTitle(MethodEntry method) {
+        String title;
+        if (method == null) {
+            title = "Bytecode";
+        } else {
+            String className = method.getOwnerName();
+            int lastSlash = className.lastIndexOf('/');
+            String simpleName = lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
+            title = String.format("Bytecode - %s.%s%s", simpleName, method.getName(), method.getDesc());
+        }
+        bytecodeScroll.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+            title,
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
+            null,
+            JStudioTheme.getTextPrimary()
+        ));
+    }
+
     private void loadMethod(MethodEntry method) {
+        this.displayedMethod = method;
+        updateBytecodeTitle(method);
+
         instructions.clear();
         pcToRowMap.clear();
 
@@ -641,6 +659,9 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     }
 
     private void loadBytecode(MethodEntry method) {
+        this.displayedMethod = method;
+        updateBytecodeTitle(method);
+
         instructions.clear();
         pcToRowMap.clear();
 
@@ -1253,6 +1274,25 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     @Override
     public void onStateChanged(DebugStateModel state) {
         SwingUtilities.invokeLater(() -> {
+            boolean methodChanged = displayedMethod == null ||
+                !state.getClassName().equals(displayedMethod.getOwnerName()) ||
+                !state.getMethodName().equals(displayedMethod.getName()) ||
+                !state.getDescriptor().equals(displayedMethod.getDesc());
+
+            if (methodChanged) {
+                ClassFile classFile = ProjectService.getInstance().getCurrentProject()
+                    .getClassPool().get(state.getClassName());
+                if (classFile != null) {
+                    for (MethodEntry m : classFile.getMethods()) {
+                        if (m.getName().equals(state.getMethodName()) &&
+                            m.getDesc().equals(state.getDescriptor())) {
+                            loadBytecode(m);
+                            break;
+                        }
+                    }
+                }
+            }
+
             highlightInstruction(state.getInstructionIndex());
             stackPanel.updateStack(state.getOperandStack());
             localsPanel.updateLocals(state.getLocalVariables());

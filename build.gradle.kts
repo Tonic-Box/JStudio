@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.tonic.ui"
-version = "2.0-SNAPSHOT"
+version = "3.0-SNAPSHOT"
 
 application {
     mainClass.set("com.tonic.ui.JStudio")
