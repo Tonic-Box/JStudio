@@ -6,7 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="-Debugger">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/ParameterConfigDialog.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,13 +78,13 @@
       <recent name="C:\Users\zacke\IdeaProjects\JStudio\src\main\resources" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.JStudio [run]">
-    <configuration name="JStudio" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.tonic.ui.JStudio" />
+  <component name="RunManager" selected="Application.NativeMethodScanner">
+    <configuration name="NativeMethodScanner" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.tonic.util.NativeMethodScanner" />
       <module name="JStudio.main" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.tonic.ui.*" />
+          <option name="PATTERN" value="com.tonic.util.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -194,10 +196,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.JStudio [run]" />
+        <item itemvalue="Application.NativeMethodScanner" />
         <item itemvalue="Gradle.JStudio [clean]" />
         <item itemvalue="Gradle.JStudio [refreshDependencies]" />
         <item itemvalue="Gradle.JStudio [build]" />
-        <item itemvalue="Application.JStudio" />
       </list>
     </recent_temporary>
   </component>
@@ -442,7 +444,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766858539957</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="-Debugger">
+      <option name="closed" value="true" />
+      <created>1766863099529</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1766863099529</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

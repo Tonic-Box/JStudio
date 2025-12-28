@@ -13,11 +13,7 @@ import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.MethodSelectorPanel;
 import com.tonic.ui.vm.VMExecutionService;
-import com.tonic.analysis.execution.core.BytecodeContext;
-import com.tonic.analysis.execution.core.BytecodeEngine;
-import com.tonic.analysis.execution.heap.ObjectInstance;
-import com.tonic.analysis.execution.heap.SimpleHeapManager;
-import com.tonic.analysis.execution.resolve.ClassResolver;
+import com.tonic.ui.vm.heap.ArgumentConfigPanel;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.utill.Opcode;
 
@@ -50,7 +46,6 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     private final MethodSelectorPanel methodSelector;
 
     private JButton startBtn;
-    private JButton configParamsBtn;
     private JButton stepIntoBtn;
     private JButton stepOverBtn;
     private JButton stepOutBtn;
@@ -62,9 +57,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     private MethodEntry currentMethod;
     private MethodEntry displayedMethod;
     private JScrollPane bytecodeScroll;
-    private Object[] configuredParams;
-    private MethodEntry configuredConstructor;
-    private Object[] configuredConstructorArgs;
+    private ArgumentConfigPanel argumentConfigPanel;
     private boolean recursiveExecution = false;
     private List<InstructionEntry> instructions;
     private Map<Integer, Integer> pcToRowMap;
@@ -72,9 +65,14 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
 
     private JToggleButton recordBtn;
     private JButton exportTraceBtn;
+    private JButton clearTraceBtn;
     private boolean recording = false;
     private ExecutionTrace currentTrace;
     private List<String> lastStackState = new ArrayList<>();
+
+    private JTabbedPane bottomTabbedPane;
+    private static final int TAB_ARGUMENTS = 0;
+    private static final int TAB_OUTPUT = 1;
 
     public DebuggerPanel() {
         this.session = new VMDebugSession();
@@ -132,34 +130,35 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         mainSplit.setResizeWeight(0.0);
         mainSplit.setBackground(JStudioTheme.getBgPrimary());
 
-        add(mainSplit, BorderLayout.CENTER);
-
-        JPanel bottomPanel = new JPanel(new BorderLayout(5, 5));
-        bottomPanel.setBackground(JStudioTheme.getBgPrimary());
-
-        statusLabel = new JLabel("Select a method to debug");
-        statusLabel.setForeground(JStudioTheme.getTextSecondary());
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        argumentConfigPanel = new ArgumentConfigPanel();
+        argumentConfigPanel.setPreferredSize(new Dimension(0, 140));
+        argumentConfigPanel.setMinimumSize(new Dimension(200, 100));
 
         outputArea = new JTextArea(4, 50);
         outputArea.setEditable(false);
         outputArea.setBackground(JStudioTheme.getBgSecondary());
         outputArea.setForeground(JStudioTheme.getTextPrimary());
         outputArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
-
         JScrollPane outputScroll = new JScrollPane(outputArea);
-        outputScroll.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Output",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            null,
-            JStudioTheme.getTextPrimary()
-        ));
 
+        bottomTabbedPane = new JTabbedPane();
+        bottomTabbedPane.setBackground(JStudioTheme.getBgPrimary());
+        bottomTabbedPane.setForeground(JStudioTheme.getTextPrimary());
+        bottomTabbedPane.addTab("Arguments", argumentConfigPanel);
+        bottomTabbedPane.addTab("Output", outputScroll);
+        bottomTabbedPane.setSelectedIndex(TAB_ARGUMENTS);
+        bottomTabbedPane.setPreferredSize(new Dimension(0, 160));
+
+        statusLabel = new JLabel("Select a method to debug");
+        statusLabel.setForeground(JStudioTheme.getTextSecondary());
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        JPanel bottomPanel = new JPanel(new BorderLayout(5, 5));
+        bottomPanel.setBackground(JStudioTheme.getBgPrimary());
         bottomPanel.add(statusLabel, BorderLayout.NORTH);
-        bottomPanel.add(outputScroll, BorderLayout.CENTER);
+        bottomPanel.add(bottomTabbedPane, BorderLayout.CENTER);
 
+        add(mainSplit, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
 
         updateButtonStates();
@@ -174,6 +173,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     public void setMethod(MethodEntry method) {
         this.currentMethod = method;
         loadMethod(method);
+        argumentConfigPanel.setMethod(method);
         statusLabel.setText("Loaded: " + method.getOwnerName() + "." + method.getName() + method.getDesc());
         updateButtonStates();
     }
@@ -546,7 +546,6 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         panel.setBackground(JStudioTheme.getBgPrimary());
 
         startBtn = createToolButton("Start", null, e -> startDebugging());
-        configParamsBtn = createToolButton("Params...", null, e -> showParameterDialog());
         stepIntoBtn = createToolButton("Step Into (F7)", "F7", e -> {
             ensureSessionStarted();
             session.stepInto();
@@ -591,7 +590,6 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         });
 
         panel.add(startBtn);
-        panel.add(configParamsBtn);
         panel.add(Box.createHorizontalStrut(10));
         panel.add(stepIntoBtn);
         panel.add(stepOverBtn);
@@ -620,8 +618,13 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         exportTraceBtn.setEnabled(false);
         exportTraceBtn.setToolTipText("Export recorded execution trace");
 
+        clearTraceBtn = createToolButton("Clear Trace", null, e -> clearTrace());
+        clearTraceBtn.setEnabled(false);
+        clearTraceBtn.setToolTipText("Clear recorded execution trace");
+
         panel.add(recordBtn);
         panel.add(exportTraceBtn);
+        panel.add(clearTraceBtn);
 
         return panel;
     }
@@ -679,8 +682,8 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         if (methodModel == null) return;
 
         this.currentMethod = methodModel.getMethodEntry();
-        this.configuredParams = null;
         loadBytecode(currentMethod);
+        argumentConfigPanel.setMethod(currentMethod);
 
         statusLabel.setText("Method loaded: " + currentMethod.getOwnerName() + "." + currentMethod.getName());
         appendOutput("Loaded method: " + currentMethod.getName() + currentMethod.getDesc());
@@ -940,8 +943,17 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         }
 
         try {
-            Object[] params = args.length > 0 ? args : buildExecutionArgs();
-            session.start(currentMethod, recursiveExecution, params);
+            VMExecutionService vmService = VMExecutionService.getInstance();
+            if (!vmService.isInitialized()) {
+                vmService.initialize();
+            }
+
+            argumentConfigPanel.setHeapManager(vmService.getHeapManager());
+            argumentConfigPanel.setClassResolver(vmService.getClassResolver());
+
+            ConcreteValue[] vmArgs = argumentConfigPanel.getArguments();
+            session.start(currentMethod, recursiveExecution, (Object[]) vmArgs);
+
             updateButtonStates();
             String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
             appendOutput("Started debugging: " + currentMethod.getName() + modeStr);
@@ -954,246 +966,20 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         }
     }
 
-    private void showParameterDialog() {
-        if (currentMethod == null) {
-            JOptionPane.showMessageDialog(this,
-                "No method loaded. Select a method first.",
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        VMExecutionService vmService = VMExecutionService.getInstance();
-        if (!vmService.isInitialized()) {
-            vmService.initialize();
-        }
-        ClassResolver classResolver = vmService.getClassResolver();
-
-        ParameterConfigDialog dialog = new ParameterConfigDialog(this, currentMethod, classResolver);
-        dialog.setVisible(true);
-
-        if (dialog.isConfirmed()) {
-            configuredParams = dialog.getResult();
-            configuredConstructor = dialog.getSelectedConstructor();
-            configuredConstructorArgs = dialog.getConstructorArgs();
-            appendOutput("Parameters configured: " + configuredParams.length + " argument(s)");
-        }
-    }
-
-    private Object[] getEffectiveParams() {
-        if (configuredParams != null) {
-            return configuredParams;
-        }
-        return generateDefaultParams();
-    }
-
-    private Object[] buildExecutionArgs() {
-        Object[] methodParams = getEffectiveParams();
-
-        if (currentMethod == null) {
-            return methodParams;
-        }
-
-        boolean isStatic = (currentMethod.getAccess() & 0x0008) != 0;
-        if (isStatic) {
-            return methodParams;
-        }
-
-        VMExecutionService vmService = VMExecutionService.getInstance();
-        if (!vmService.isInitialized()) {
-            vmService.initialize();
-        }
-
-        SimpleHeapManager heapManager = vmService.getHeapManager();
-        ClassResolver classResolver = vmService.getClassResolver();
-
-        ObjectInstance receiver = heapManager.newObject(currentMethod.getOwnerName());
-
-        if (configuredConstructor != null && classResolver != null) {
-            executeConstructor(receiver, configuredConstructor, configuredConstructorArgs,
-                              heapManager, classResolver);
-        }
-
-        Object[] result = new Object[methodParams.length + 1];
-        result[0] = receiver;
-        System.arraycopy(methodParams, 0, result, 1, methodParams.length);
-        return result;
-    }
-
-    private void executeConstructor(ObjectInstance receiver, MethodEntry ctor,
-                                     Object[] ctorArgs, SimpleHeapManager heapManager,
-                                     ClassResolver classResolver) {
-        try {
-            ConcreteValue[] ctorArgValues = convertArgsToConcreteValues(ctorArgs);
-            ConcreteValue[] frameArgs = new ConcreteValue[ctorArgValues.length + 1];
-            frameArgs[0] = ConcreteValue.reference(receiver);
-            System.arraycopy(ctorArgValues, 0, frameArgs, 1, ctorArgValues.length);
-
-            BytecodeContext ctx = new BytecodeContext.Builder()
-                .heapManager(heapManager)
-                .classResolver(classResolver)
-                .build();
-            BytecodeEngine engine = new BytecodeEngine(ctx);
-            engine.execute(ctor, frameArgs);
-            appendOutput("Constructor executed: " + ctor.getName() + ctor.getDesc());
-        } catch (Exception e) {
-            appendOutput("Constructor execution failed: " + e.getMessage());
-        }
-    }
-
-    private ConcreteValue[] convertArgsToConcreteValues(Object[] args) {
-        if (args == null || args.length == 0) {
-            return new ConcreteValue[0];
-        }
-
-        VMExecutionService vmService = VMExecutionService.getInstance();
-        SimpleHeapManager heapManager = vmService.getHeapManager();
-
-        ConcreteValue[] result = new ConcreteValue[args.length];
-        for (int i = 0; i < args.length; i++) {
-            result[i] = convertToConcreteValue(args[i], heapManager);
-        }
-        return result;
-    }
-
-    private ConcreteValue convertToConcreteValue(Object value, SimpleHeapManager heapManager) {
-        if (value == null) {
-            return ConcreteValue.nullRef();
-        }
-        if (value instanceof Integer) {
-            return ConcreteValue.intValue((Integer) value);
-        }
-        if (value instanceof Long) {
-            return ConcreteValue.longValue((Long) value);
-        }
-        if (value instanceof Float) {
-            return ConcreteValue.floatValue((Float) value);
-        }
-        if (value instanceof Double) {
-            return ConcreteValue.doubleValue((Double) value);
-        }
-        if (value instanceof Boolean) {
-            return ConcreteValue.intValue((Boolean) value ? 1 : 0);
-        }
-        if (value instanceof Byte) {
-            return ConcreteValue.intValue((Byte) value);
-        }
-        if (value instanceof Short) {
-            return ConcreteValue.intValue((Short) value);
-        }
-        if (value instanceof Character) {
-            return ConcreteValue.intValue((Character) value);
-        }
-        if (value instanceof String) {
-            ObjectInstance strObj = heapManager.internString((String) value);
-            return ConcreteValue.reference(strObj);
-        }
-        if (value instanceof ObjectInstance) {
-            return ConcreteValue.reference((ObjectInstance) value);
-        }
-        return ConcreteValue.nullRef();
-    }
-
-    private Object[] generateDefaultParams() {
-        String desc = currentMethod.getDesc();
-        List<String> types = parseParameterTypes(desc);
-        Object[] defaults = new Object[types.size()];
-
-        for (int i = 0; i < types.size(); i++) {
-            defaults[i] = getDefaultForType(types.get(i));
-        }
-        return defaults;
-    }
-
-    private List<String> parseParameterTypes(String descriptor) {
-        List<String> types = new ArrayList<>();
-        int i = 1;
-        while (i < descriptor.length() && descriptor.charAt(i) != ')') {
-            int start = i;
-            while (descriptor.charAt(i) == '[') i++;
-
-            if (descriptor.charAt(i) == 'L') {
-                int end = descriptor.indexOf(';', i);
-                i = end + 1;
-            } else {
-                i++;
-            }
-            types.add(descriptor.substring(start, i));
-        }
-        return types;
-    }
-
-    private Object getDefaultForType(String typeDesc) {
-        char first = typeDesc.charAt(0);
-        switch (first) {
-            case 'B': case 'C': case 'S': case 'I': return 0;
-            case 'J': return 0L;
-            case 'F': return 0.0f;
-            case 'D': return 0.0d;
-            case 'Z': return false;
-            case '[': return createEmptyArray(typeDesc);
-            case 'L':
-                if (typeDesc.equals("Ljava/lang/String;")) {
-                    return "";
-                } else if (isBoxedPrimitive(typeDesc)) {
-                    return getBoxedDefault(typeDesc);
-                }
-                return null;
-            default: return null;
-        }
-    }
-
-    private boolean isBoxedPrimitive(String typeDesc) {
-        return typeDesc.equals("Ljava/lang/Integer;") ||
-               typeDesc.equals("Ljava/lang/Long;") ||
-               typeDesc.equals("Ljava/lang/Float;") ||
-               typeDesc.equals("Ljava/lang/Double;") ||
-               typeDesc.equals("Ljava/lang/Boolean;") ||
-               typeDesc.equals("Ljava/lang/Byte;") ||
-               typeDesc.equals("Ljava/lang/Short;") ||
-               typeDesc.equals("Ljava/lang/Character;");
-    }
-
-    private Object getBoxedDefault(String typeDesc) {
-        switch (typeDesc) {
-            case "Ljava/lang/Integer;": return 0;
-            case "Ljava/lang/Long;": return 0L;
-            case "Ljava/lang/Float;": return 0.0f;
-            case "Ljava/lang/Double;": return 0.0d;
-            case "Ljava/lang/Boolean;": return false;
-            case "Ljava/lang/Byte;": return (byte) 0;
-            case "Ljava/lang/Short;": return (short) 0;
-            case "Ljava/lang/Character;": return '\0';
-            default: return null;
-        }
-    }
-
-    private Object createEmptyArray(String typeDesc) {
-        int dims = 0;
-        int i = 0;
-        while (typeDesc.charAt(i) == '[') { dims++; i++; }
-        String elemType = typeDesc.substring(i);
-
-        if (dims == 1) {
-            switch (elemType.charAt(0)) {
-                case 'I': return new int[0];
-                case 'J': return new long[0];
-                case 'F': return new float[0];
-                case 'D': return new double[0];
-                case 'Z': return new boolean[0];
-                case 'B': return new byte[0];
-                case 'S': return new short[0];
-                case 'C': return new char[0];
-                default: return new Object[0];
-            }
-        }
-        return new Object[0];
-    }
-
     private void ensureSessionStarted() {
         if (!session.isStarted() && currentMethod != null) {
             try {
-                session.start(currentMethod, recursiveExecution, buildExecutionArgs());
+                VMExecutionService vmService = VMExecutionService.getInstance();
+                if (!vmService.isInitialized()) {
+                    vmService.initialize();
+                }
+
+                argumentConfigPanel.setHeapManager(vmService.getHeapManager());
+                argumentConfigPanel.setClassResolver(vmService.getClassResolver());
+
+                ConcreteValue[] vmArgs = argumentConfigPanel.getArguments();
+                session.start(currentMethod, recursiveExecution, (Object[]) vmArgs);
+
                 updateButtonStates();
                 String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
                 appendOutput("Started debugging: " + currentMethod.getName() + modeStr);
@@ -1212,6 +998,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         if (recording && currentTrace != null) {
             currentTrace.complete("Session stopped by user", false);
             exportTraceBtn.setEnabled(true);
+            clearTraceBtn.setEnabled(true);
         }
     }
 
@@ -1233,10 +1020,12 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
             recordBtn.setBackground(new Color(180, 80, 80));
             recordBtn.setForeground(Color.WHITE);
             exportTraceBtn.setEnabled(false);
+            clearTraceBtn.setEnabled(false);
         } else {
             if (currentTrace != null && !currentTrace.getSteps().isEmpty()) {
                 appendOutput("Recording stopped - " + currentTrace.getSteps().size() + " steps captured");
                 exportTraceBtn.setEnabled(true);
+                clearTraceBtn.setEnabled(true);
             } else {
                 appendOutput("Recording stopped - no steps captured");
             }
@@ -1339,6 +1128,20 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         }
     }
 
+    private void clearTrace() {
+        if (currentTrace == null || currentTrace.getSteps().isEmpty()) {
+            appendOutput("No trace to clear");
+            return;
+        }
+
+        int stepCount = currentTrace.getSteps().size();
+        currentTrace = null;
+        lastStackState.clear();
+        exportTraceBtn.setEnabled(false);
+        clearTraceBtn.setEnabled(false);
+        appendOutput("Trace cleared (" + stepCount + " steps removed)");
+    }
+
     public boolean isDebugging() {
         return session.isStarted();
     }
@@ -1351,7 +1154,6 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         boolean canStartStepping = hasMethod && (!session.isStarted() || canStep) && !isAnimating;
 
         startBtn.setEnabled(hasMethod && !isRunning);
-        configParamsBtn.setEnabled(hasMethod && !isRunning);
         stepIntoBtn.setEnabled(canStartStepping);
         stepOverBtn.setEnabled(canStartStepping);
         stepOutBtn.setEnabled(canStartStepping);
@@ -1475,6 +1277,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         SwingUtilities.invokeLater(() -> {
             appendOutput("Debug session started");
             updateButtonStates();
+            bottomTabbedPane.setSelectedIndex(TAB_OUTPUT);
 
             if (recording && currentTrace == null && currentMethod != null) {
                 currentTrace = new ExecutionTrace(
@@ -1498,6 +1301,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
             localsPanel.clear();
             callStackPanel.clear();
             updateButtonStates();
+            bottomTabbedPane.setSelectedIndex(TAB_ARGUMENTS);
 
             if (recording && currentTrace != null) {
                 boolean normal = reason.toLowerCase().contains("complete") ||
@@ -1505,6 +1309,7 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
                 currentTrace.complete(reason, normal);
                 appendOutput("Trace recording complete - " + currentTrace.getSteps().size() + " steps captured");
                 exportTraceBtn.setEnabled(true);
+                clearTraceBtn.setEnabled(true);
             }
         });
     }

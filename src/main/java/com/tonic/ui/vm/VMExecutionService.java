@@ -622,6 +622,8 @@ public class VMExecutionService {
             return ConcreteValue.intValue((Character) value);
         } else if (value instanceof String) {
             return ConcreteValue.reference(heapManager.internString((String) value));
+        } else if (value instanceof ConcreteValue) {
+            return (ConcreteValue) value;
         } else if (value instanceof ObjectInstance) {
             return ConcreteValue.reference((ObjectInstance) value);
         } else {
