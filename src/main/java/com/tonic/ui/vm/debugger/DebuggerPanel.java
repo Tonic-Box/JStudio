@@ -103,6 +103,30 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
         localsPanel = new LocalsPanel();
         callStackPanel = new CallStackPanel();
 
+        localsPanel.setOnValueEdit((slot, value) -> {
+            if (session.setLocalValue(slot, value)) {
+                appendOutput("Local at slot " + slot + " updated to: " + formatValue(value));
+            }
+        });
+
+        stackPanel.setOnValueEdit((index, value) -> {
+            if (session.setStackValue(index, value)) {
+                appendOutput("Stack at index " + index + " updated to: " + formatValue(value));
+            }
+        });
+
+        localsPanel.setOnObjectFieldEdit((obj, owner, name, desc, value) -> {
+            if (session.setObjectFieldValue(obj, owner, name, desc, value)) {
+                appendOutput("Field " + name + " updated on object @" + Integer.toHexString(obj.getId()));
+            }
+        });
+
+        stackPanel.setOnObjectFieldEdit((obj, owner, name, desc, value) -> {
+            if (session.setObjectFieldValue(obj, owner, name, desc, value)) {
+                appendOutput("Field " + name + " updated on object @" + Integer.toHexString(obj.getId()));
+            }
+        });
+
         callStackPanel.setOnFrameSelected(frame -> {
             if (frame != null) {
                 navigateToFrame(frame);
@@ -950,6 +974,8 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
 
             argumentConfigPanel.setHeapManager(vmService.getHeapManager());
             argumentConfigPanel.setClassResolver(vmService.getClassResolver());
+            localsPanel.setClassResolver(vmService.getClassResolver());
+            stackPanel.setClassResolver(vmService.getClassResolver());
 
             ConcreteValue[] vmArgs = argumentConfigPanel.getArguments();
             session.start(currentMethod, recursiveExecution, (Object[]) vmArgs);
@@ -976,6 +1002,8 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
 
                 argumentConfigPanel.setHeapManager(vmService.getHeapManager());
                 argumentConfigPanel.setClassResolver(vmService.getClassResolver());
+                localsPanel.setClassResolver(vmService.getClassResolver());
+                stackPanel.setClassResolver(vmService.getClassResolver());
 
                 ConcreteValue[] vmArgs = argumentConfigPanel.getArguments();
                 session.start(currentMethod, recursiveExecution, (Object[]) vmArgs);
@@ -1225,6 +1253,29 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
             outputArea.append(text + "\n");
             outputArea.setCaretPosition(outputArea.getDocument().getLength());
         });
+    }
+
+    private String formatValue(ConcreteValue value) {
+        if (value == null) {
+            return "null";
+        }
+        switch (value.getTag()) {
+            case INT:
+                return String.valueOf(value.asInt());
+            case LONG:
+                return value.asLong() + "L";
+            case FLOAT:
+                return value.asFloat() + "f";
+            case DOUBLE:
+                return String.valueOf(value.asDouble());
+            case NULL:
+                return "null";
+            case REFERENCE:
+                var ref = value.asReference();
+                return ref != null ? ref.toString() : "null";
+            default:
+                return value.toString();
+        }
     }
 
     public void setOnStatusMessage(Consumer<String> handler) {

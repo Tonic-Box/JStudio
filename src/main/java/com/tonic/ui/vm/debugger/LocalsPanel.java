@@ -1,19 +1,33 @@
 package com.tonic.ui.vm.debugger;
 
+import com.tonic.analysis.execution.heap.ObjectInstance;
+import com.tonic.analysis.execution.resolve.ClassResolver;
+import com.tonic.analysis.execution.state.ConcreteValue;
+import com.tonic.analysis.execution.state.ValueTag;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.vm.debugger.edit.ValueEditDialog;
+import com.tonic.ui.vm.debugger.inspector.ObjectInspectorDialog;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public class LocalsPanel extends JPanel {
 
+    private static final int VALUE_COLUMN = 3;
+
     private final JTable localsTable;
     private final LocalsTableModel tableModel;
+    private BiConsumer<Integer, ConcreteValue> onValueEdit;
+    private ObjectInspectorDialog.FieldEditCallback onObjectFieldEdit;
+    private ClassResolver classResolver;
 
     public LocalsPanel() {
         setLayout(new BorderLayout());
@@ -46,11 +60,82 @@ public class LocalsPanel extends JPanel {
         localsTable.getColumnModel().getColumn(2).setPreferredWidth(80);
         localsTable.getColumnModel().getColumn(3).setPreferredWidth(150);
 
+        localsTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    handleDoubleClick(e.getPoint());
+                }
+            }
+        });
+
         JScrollPane scrollPane = new JScrollPane(localsTable);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(JStudioTheme.getBgSecondary());
 
         add(scrollPane, BorderLayout.CENTER);
+    }
+
+    public void setOnValueEdit(BiConsumer<Integer, ConcreteValue> callback) {
+        this.onValueEdit = callback;
+    }
+
+    public void setOnObjectFieldEdit(ObjectInspectorDialog.FieldEditCallback callback) {
+        this.onObjectFieldEdit = callback;
+    }
+
+    public void setClassResolver(ClassResolver classResolver) {
+        this.classResolver = classResolver;
+    }
+
+    private void handleDoubleClick(Point point) {
+        int row = localsTable.rowAtPoint(point);
+        int column = localsTable.columnAtPoint(point);
+
+        if (row < 0 || column != VALUE_COLUMN) {
+            return;
+        }
+
+        LocalEntry entry = tableModel.getEntryAt(row);
+        if (entry == null) {
+            return;
+        }
+
+        if (!(entry instanceof EditableLocalEntry)) {
+            return;
+        }
+
+        EditableLocalEntry editable = (EditableLocalEntry) entry;
+        ValueTag tag = editable.getValueTag();
+
+        if ((tag == ValueTag.REFERENCE || tag == ValueTag.NULL) && editable.getRawValue() != null) {
+            Object raw = editable.getRawValue();
+            if (raw instanceof ObjectInstance && classResolver != null) {
+                ObjectInspectorDialog.showDialog(
+                    this,
+                    (ObjectInstance) raw,
+                    classResolver,
+                    onObjectFieldEdit
+                );
+                return;
+            }
+        }
+
+        if (!editable.isEditable()) {
+            return;
+        }
+
+        ConcreteValue newValue = ValueEditDialog.showDialog(
+            this,
+            "Edit Local Variable: " + entry.getName(),
+            entry.getValue(),
+            tag
+        );
+
+        if (newValue != null && onValueEdit != null) {
+            editable.setUserModified(true);
+            onValueEdit.accept(entry.getSlot(), newValue);
+        }
     }
 
     public void updateLocals(List<LocalEntry> entries) {
@@ -71,12 +156,28 @@ public class LocalsPanel extends JPanel {
 
             if (isSelected) {
                 setBackground(JStudioTheme.getAccent());
+            } else if (entry instanceof EditableLocalEntry &&
+                       ((EditableLocalEntry) entry).isUserModified()) {
+                setBackground(new Color(40, 80, 40));
             } else if (entry != null && entry.isChanged()) {
                 setBackground(JStudioTheme.getWarning().darker().darker());
             } else {
                 setBackground(JStudioTheme.getBgSecondary());
             }
             setForeground(JStudioTheme.getTextPrimary());
+
+            if (column == VALUE_COLUMN && entry instanceof EditableLocalEntry) {
+                EditableLocalEntry editable = (EditableLocalEntry) entry;
+                ValueTag tag = editable.getValueTag();
+
+                if ((tag == ValueTag.REFERENCE || tag == ValueTag.NULL) &&
+                    editable.getRawValue() instanceof ObjectInstance) {
+                    setForeground(JStudioTheme.getAccent());
+                    setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                } else if (editable.isEditable()) {
+                    setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                }
+            }
 
             return this;
         }

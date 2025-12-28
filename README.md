@@ -20,6 +20,35 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 - **Similarity** - Method duplicate detection
 - **String Extraction** - Constant pool string search
 - **Usages** - Find method calls, field accesses, allocations
+- **Constant Pool Browser** - Inspect constant pool entries with tree/table views
+
+### Bytecode Debugger
+- **Breakpoints** - Set breakpoints at any bytecode instruction
+- **Stepping** - Step into, step over, step out, run to cursor
+- **Variable Inspection** - View and edit local variables while paused
+- **Stack Inspection** - View and edit operand stack values
+- **Object Inspector** - Drill down into object fields with nested inspection
+- **Call Stack** - Full call stack visualization with frame selection
+- **Execution Trace** - Record and replay execution history
+
+### Heap Analysis
+- **Object Browser** - Explore all allocated objects by class
+- **Field Inspection** - View object fields and array contents
+- **Heap Snapshots** - Capture and compare heap state at different points
+- **Allocation Tracking** - Track object creation and mutation events
+- **Forensics** - Provenance tracking for object origins
+
+### Test Generation
+- **Method Execution** - Execute methods with custom arguments
+- **Fuzz Testing** - Automated input generation for branch coverage
+- **Parameter Configuration** - Configure primitive, object, and array parameters
+- **Object Templates** - Reusable object construction specifications
+
+### Deobfuscation
+- **Encrypted String Detection** - Find obfuscated strings in bytecode
+- **Decryptor Identification** - Locate string decryption methods
+- **Auto-Decryption** - Execute decryptors to reveal original strings
+- **Constant Pool Patching** - Replace encrypted strings with decrypted values
 
 ### Code Transformation
 - **SSA Transforms** - Apply static single assignment optimizations with before/after preview
@@ -59,7 +88,10 @@ java -jar build/libs/JStudio.jar --cli     # Launch CLI mode
 2. **Navigate**: Use the class tree on the left to browse packages and classes
 3. **View code**: Double-click a class to open it, use View menu to switch between Source/Bytecode/IR/Hex
 4. **Analyze**: Use Analysis menu for call graphs, dependencies, cross-references, etc.
-5. **Transform**: Use Scripting menu to open the script editor for custom transformations
+5. **Debug**: Right-click a method → Debug Method to launch the bytecode debugger
+6. **Execute**: Right-click a method → Execute Method to run with custom arguments
+7. **Deobfuscate**: Use Tools → Deobfuscation to detect and decrypt obfuscated strings
+8. **Transform**: Use Scripting menu to open the script editor for custom transformations
 
 ## Keyboard Shortcuts
 
@@ -73,6 +105,15 @@ java -jar build/libs/JStudio.jar --cli     # Launch CLI mode
 | Go to Class | Ctrl+Shift+N |
 | Increase Font | Ctrl++ |
 | Decrease Font | Ctrl+- |
+
+**Debugger Shortcuts** (when debugger is open):
+
+| Action | Shortcut |
+|--------|----------|
+| Step Into | F7 |
+| Step Over | F8 |
+| Step Out | Shift+F8 |
+| Resume/Pause | F9 |
 
 ## CLI Mode
 

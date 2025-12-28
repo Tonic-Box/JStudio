@@ -4,6 +4,7 @@ import com.tonic.analysis.execution.core.BytecodeContext;
 import com.tonic.analysis.execution.core.BytecodeResult;
 import com.tonic.analysis.execution.debug.*;
 import com.tonic.analysis.execution.state.ConcreteValue;
+import com.tonic.analysis.execution.state.ValueTag;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.vm.VMExecutionService;
 
@@ -387,6 +388,68 @@ public class VMDebugSession {
         return yabrSession != null && yabrSession.isStopped();
     }
 
+    public boolean setLocalValue(int slot, ConcreteValue value) {
+        if (!isPaused()) {
+            notifyError("Cannot edit values: debugger not paused");
+            return false;
+        }
+        if (isAnimating()) {
+            notifyError("Cannot edit values: animation in progress");
+            return false;
+        }
+        try {
+            yabrSession.setLocalValue(slot, value);
+            updateState();
+            return true;
+        } catch (Exception e) {
+            notifyError("Failed to set local value: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean setStackValue(int index, ConcreteValue value) {
+        if (!isPaused()) {
+            notifyError("Cannot edit values: debugger not paused");
+            return false;
+        }
+        if (isAnimating()) {
+            notifyError("Cannot edit values: animation in progress");
+            return false;
+        }
+        try {
+            yabrSession.setStackValue(index, value);
+            updateState();
+            return true;
+        } catch (Exception e) {
+            notifyError("Failed to set stack value: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean setObjectFieldValue(com.tonic.analysis.execution.heap.ObjectInstance obj,
+                                        String owner, String name, String desc, Object value) {
+        if (!isPaused()) {
+            notifyError("Cannot edit field: debugger not paused");
+            return false;
+        }
+        if (isAnimating()) {
+            notifyError("Cannot edit field: animation in progress");
+            return false;
+        }
+        if (obj == null) {
+            notifyError("Cannot edit field: object is null");
+            return false;
+        }
+        try {
+            obj.setField(owner, name, desc, value);
+            updateState();
+            return true;
+        } catch (Exception e) {
+            notifyError("Failed to set field value: " + e.getMessage());
+            return false;
+        }
+    }
+
     public DebugStateModel getLastState() {
         return lastState;
     }
@@ -457,12 +520,16 @@ public class VMDebugSession {
             List<ValueInfo> values = stackSnapshot.getValues();
             for (int i = 0; i < values.size(); i++) {
                 ValueInfo info = values.get(i);
-                stackEntries.add(new StackEntry(
+                ValueTag tag = parseValueTag(info.getType());
+                boolean wide = "LONG".equals(info.getType()) || "DOUBLE".equals(info.getType());
+                stackEntries.add(new EditableStackEntry(
                     i,
                     info.getValueString(),
                     info.getType(),
                     "",
-                    "LONG".equals(info.getType()) || "DOUBLE".equals(info.getType())
+                    wide,
+                    tag,
+                    info.getRawValue()
                 ));
             }
         }
@@ -474,12 +541,15 @@ public class VMDebugSession {
             Map<Integer, ValueInfo> values = localsSnapshot.getValues();
             for (Map.Entry<Integer, ValueInfo> entry : values.entrySet()) {
                 ValueInfo info = entry.getValue();
-                localEntries.add(new LocalEntry(
+                ValueTag tag = parseValueTag(info.getType());
+                localEntries.add(new EditableLocalEntry(
                     entry.getKey(),
                     "local" + entry.getKey(),
                     info.getType(),
                     info.getValueString(),
-                    false
+                    false,
+                    tag,
+                    info.getRawValue()
                 ));
             }
         }
@@ -523,6 +593,17 @@ public class VMDebugSession {
         String descriptor = signature.substring(parenIndex);
 
         return new String[]{className, methodName, descriptor};
+    }
+
+    private ValueTag parseValueTag(String type) {
+        if (type == null) {
+            return null;
+        }
+        try {
+            return ValueTag.valueOf(type);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private String formatReturnValue(BytecodeResult result) {

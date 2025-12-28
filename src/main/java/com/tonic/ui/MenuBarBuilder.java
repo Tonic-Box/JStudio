@@ -308,6 +308,11 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
+        menu.add(createMenuItem("Heap Forensics...", KeyEvent.VK_H, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
+                Icons.getIcon("heap"), e -> mainFrame.showHeapForensics()));
+
+        menu.addSeparator();
+
         menu.add(createMenuItem("Initialize VM", 0, 0,
                 null, e -> mainFrame.initializeVM()));
 
@@ -318,11 +323,6 @@ public class MenuBarBuilder {
 
         menu.add(createMenuItem("VM Status", 0, 0,
                 Icons.getIcon("info"), e -> mainFrame.showVMStatus()));
-
-        menu.addSeparator();
-
-        menu.add(createMenuItem("Heap Forensics...", KeyEvent.VK_H, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                Icons.getIcon("heap"), e -> mainFrame.showHeapForensics()));
 
         return menu;
     }
