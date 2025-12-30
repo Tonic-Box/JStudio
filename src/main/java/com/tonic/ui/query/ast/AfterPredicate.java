@@ -23,6 +23,11 @@ public final class AfterPredicate implements Predicate {
     }
 
     @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitAfter(this);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof AfterPredicate)) return false;

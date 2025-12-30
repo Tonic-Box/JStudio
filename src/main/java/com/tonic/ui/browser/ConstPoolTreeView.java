@@ -2,9 +2,10 @@ package com.tonic.ui.browser;
 
 import com.tonic.parser.ConstPool;
 import com.tonic.parser.constpool.*;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 
-import javax.swing.JPanel;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-public class ConstPoolTreeView extends JPanel {
+public class ConstPoolTreeView extends ThemedJPanel {
 
     private final JTree tree;
     private final DefaultMutableTreeNode root;
@@ -29,8 +30,7 @@ public class ConstPoolTreeView extends JPanel {
     private ConstPool constPool;
 
     public ConstPoolTreeView() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
+        super(BackgroundStyle.TERTIARY, new BorderLayout());
 
         root = new DefaultMutableTreeNode("Constant Pool");
         treeModel = new DefaultTreeModel(root);
@@ -38,8 +38,8 @@ public class ConstPoolTreeView extends JPanel {
 
         tree.setBackground(JStudioTheme.getBgTertiary());
         tree.setForeground(JStudioTheme.getTextPrimary());
-        tree.setFont(JStudioTheme.getCodeFont(11));
-        tree.setRowHeight(20);
+        tree.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
+        tree.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
         tree.setCellRenderer(new ConstPoolTreeCellRenderer());

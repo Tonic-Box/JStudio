@@ -133,7 +133,7 @@ public class BatchCommand implements Callable<Integer> {
             System.out.println("Processing: " + target.getName());
         }
 
-        ExecutionConfig config = new ExecutionConfig.Builder()
+        ExecutionConfig config = ExecutionConfig.builder()
             .target(target)
             .plugin(plugin)
             .outputFormat(format)

@@ -2,6 +2,8 @@ package com.tonic.ui.vm;
 
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
@@ -15,7 +17,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VMConsolePanel extends JPanel {
+public class VMConsolePanel extends ThemedJPanel {
 
     private JTextPane outputPane;
     private JTextField inputField;
@@ -35,13 +37,11 @@ public class VMConsolePanel extends JPanel {
     private Style promptStyle;
 
     public VMConsolePanel() {
+        super(BackgroundStyle.PRIMARY, new BorderLayout());
         this.parser = new CommandParser();
         this.commandHistory = new ArrayList<>();
         this.historyIndex = -1;
         this.isExecuting = false;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgPrimary());
 
         initializeComponents();
         initializeStyles();
@@ -53,29 +53,29 @@ public class VMConsolePanel extends JPanel {
         outputPane.setEditable(false);
         outputPane.setBackground(JStudioTheme.getBgSecondary());
         outputPane.setForeground(JStudioTheme.getTextPrimary());
-        outputPane.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        outputPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        outputPane.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
+        outputPane.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         JScrollPane scrollPane = new JScrollPane(outputPane);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-        JPanel inputPanel = new JPanel(new BorderLayout(5, 0));
+        JPanel inputPanel = new JPanel(new BorderLayout(UIConstants.SPACING_SMALL, 0));
         inputPanel.setBackground(JStudioTheme.getBgPrimary());
-        inputPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        inputPanel.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         JLabel promptLabel = new JLabel(">>> ");
         promptLabel.setForeground(JStudioTheme.getAccent());
-        promptLabel.setFont(new Font(Font.MONOSPACED, Font.BOLD, 12));
+        promptLabel.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL).deriveFont(Font.BOLD));
 
         inputField = new JTextField();
         inputField.setBackground(JStudioTheme.getBgSecondary());
         inputField.setForeground(JStudioTheme.getTextPrimary());
         inputField.setCaretColor(JStudioTheme.getTextPrimary());
-        inputField.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        inputField.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
         inputField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(3, 5, 3, 5)
+            BorderFactory.createEmptyBorder(UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL)
         ));
 
         inputField.addActionListener(e -> executeCommand());

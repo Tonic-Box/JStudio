@@ -1,5 +1,7 @@
 package com.tonic.ui.vm.heap;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.heap.model.*;
 
@@ -11,7 +13,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.Map;
 
-public class ObjectDetailPanel extends JPanel {
+public class ObjectDetailPanel extends ThemedJPanel {
 
     private final JLabel headerLabel;
     private final JTextArea provenanceArea;
@@ -25,13 +27,12 @@ public class ObjectDetailPanel extends JPanel {
     private HeapObject currentObject;
 
     public ObjectDetailPanel() {
-        setLayout(new BorderLayout(5, 5));
-        setBackground(JStudioTheme.getBgSecondary());
+        super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         headerLabel = new JLabel("No object selected");
-        headerLabel.setFont(headerLabel.getFont().deriveFont(Font.BOLD, 14f));
+        headerLabel.setFont(headerLabel.getFont().deriveFont(Font.BOLD, UIConstants.FONT_SIZE_LARGE));
         headerLabel.setForeground(JStudioTheme.getTextPrimary());
-        headerLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        headerLabel.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
         add(headerLabel, BorderLayout.NORTH);
 
         tabbedPane = new JTabbedPane();
@@ -44,7 +45,7 @@ public class ObjectDetailPanel extends JPanel {
         provenanceArea.setEditable(false);
         provenanceArea.setBackground(JStudioTheme.getBgPrimary());
         provenanceArea.setForeground(JStudioTheme.getTextPrimary());
-        provenanceArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        provenanceArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
         provenanceArea.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Provenance",
@@ -81,7 +82,7 @@ public class ObjectDetailPanel extends JPanel {
         mutationArea.setEditable(false);
         mutationArea.setBackground(JStudioTheme.getBgPrimary());
         mutationArea.setForeground(JStudioTheme.getTextPrimary());
-        mutationArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        mutationArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
 
         JScrollPane mutationScroll = new JScrollPane(mutationArea);
         mutationScroll.getViewport().setBackground(JStudioTheme.getBgPrimary());

@@ -3,7 +3,9 @@ package com.tonic.ui.script.engine;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -98,7 +100,7 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
     }
 
     private ScriptValue createStringObject() {
-        java.util.Map<String, ScriptValue> props = new java.util.HashMap<>();
+        Map<String, ScriptValue> props = new HashMap<>();
 
         props.put("fromCharCode", ScriptValue.function(
             ScriptFunction.native1("fromCharCode", arg -> {
@@ -814,7 +816,7 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
                     }
                 }
             } else if (iterable.isObject()) {
-                java.util.Map<String, ScriptValue> obj = iterable.asObject();
+                Map<String, ScriptValue> obj = iterable.asObject();
                 if (stmt.isForIn()) {
                     for (String key : obj.keySet()) {
                         currentContext = previous.child();

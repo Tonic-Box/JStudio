@@ -1,5 +1,7 @@
 package com.tonic.ui.query;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.*;
@@ -9,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class QueryBuilderPanel extends JPanel {
+public class QueryBuilderPanel extends ThemedJPanel {
 
     private JComboBox<String> targetCombo;
     private JComboBox<String> scopeTypeCombo;
@@ -22,8 +24,8 @@ public class QueryBuilderPanel extends JPanel {
     private Consumer<String> queryChangeListener;
 
     public QueryBuilderPanel() {
-        setLayout(new BorderLayout(5, 10));
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM));
+        setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM));
 
         add(createTopSection(), BorderLayout.NORTH);
         add(createPredicatesSection(), BorderLayout.CENTER);

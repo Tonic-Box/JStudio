@@ -1,5 +1,6 @@
 package com.tonic.ui.query.ast;
 
+import com.tonic.ui.core.util.ComparisonOperator;
 import java.util.Objects;
 
 /**
@@ -9,20 +10,25 @@ import java.util.Objects;
 public final class CoveragePredicate implements Predicate {
 
     private final String blockId;
-    private final AllocCountPredicate.ComparisonOp operator;
+    private final ComparisonOperator operator;
     private final double threshold;
 
-    public CoveragePredicate(String blockId, AllocCountPredicate.ComparisonOp operator, double threshold) {
+    public CoveragePredicate(String blockId, ComparisonOperator operator, double threshold) {
         this.blockId = blockId;
         this.operator = operator;
         this.threshold = threshold;
+    }
+
+    @Deprecated
+    public CoveragePredicate(String blockId, AllocCountPredicate.ComparisonOp operator, double threshold) {
+        this(blockId, operator.toOperator(), threshold);
     }
 
     public String blockId() {
         return blockId;
     }
 
-    public AllocCountPredicate.ComparisonOp operator() {
+    public ComparisonOperator operator() {
         return operator;
     }
 
@@ -31,23 +37,20 @@ public final class CoveragePredicate implements Predicate {
     }
 
     public static CoveragePredicate blockCovered(String blockId) {
-        return new CoveragePredicate(blockId, AllocCountPredicate.ComparisonOp.GT, 0);
+        return new CoveragePredicate(blockId, ComparisonOperator.GT, 0);
     }
 
     public static CoveragePredicate overallGreaterThan(double ratio) {
-        return new CoveragePredicate(null, AllocCountPredicate.ComparisonOp.GT, ratio);
+        return new CoveragePredicate(null, ComparisonOperator.GT, ratio);
     }
 
     public boolean test(double actualCoverage) {
-        switch (operator) {
-            case GT: return actualCoverage > threshold;
-            case GTE: return actualCoverage >= threshold;
-            case LT: return actualCoverage < threshold;
-            case LTE: return actualCoverage <= threshold;
-            case EQ: return Math.abs(actualCoverage - threshold) < 0.001;
-            case NEQ: return Math.abs(actualCoverage - threshold) >= 0.001;
-            default: return false;
-        }
+        return operator.test(actualCoverage, threshold);
+    }
+
+    @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitCoverage(this);
     }
 
     @Override

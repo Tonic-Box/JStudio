@@ -44,6 +44,11 @@ public final class ThrowsPredicate implements Predicate {
     }
 
     @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitThrows(this);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ThrowsPredicate)) return false;

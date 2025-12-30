@@ -25,6 +25,11 @@ public final class BetweenScope implements Scope {
     }
 
     @Override
+    public <T> T accept(ScopeVisitor<T> visitor) {
+        return visitor.visitBetween(this);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof BetweenScope)) return false;

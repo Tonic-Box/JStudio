@@ -1,5 +1,7 @@
 package com.tonic.ui.vm.dialog.result;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.model.MethodCall;
 import com.tonic.ui.vm.testgen.TestGeneratorDialog;
@@ -13,7 +15,7 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
-public class CallTracePanel extends JPanel {
+public class CallTracePanel extends ThemedJPanel {
 
     private final JToggleButton treeViewBtn;
     private final JToggleButton listViewBtn;
@@ -38,36 +40,35 @@ public class CallTracePanel extends JPanel {
     private static final Color EXCEPTION_COLOR = new Color(244, 135, 113);
 
     public CallTracePanel() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgPrimary());
+        super(BackgroundStyle.PRIMARY, new BorderLayout());
 
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 3));
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL + 1, 3));
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
 
         ButtonGroup viewGroup = new ButtonGroup();
         treeViewBtn = new JToggleButton("Tree", true);
-        treeViewBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        treeViewBtn.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         treeViewBtn.addActionListener(e -> showTreeView());
 
         listViewBtn = new JToggleButton("List");
-        listViewBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        listViewBtn.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         listViewBtn.addActionListener(e -> showListView());
 
         viewGroup.add(treeViewBtn);
         viewGroup.add(listViewBtn);
 
         filterField = new JTextField(15);
-        filterField.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        filterField.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         filterField.setToolTipText("Filter by method name");
         filterField.addActionListener(e -> applyFilter());
 
         expandAllBtn = new JButton("Expand All");
-        expandAllBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        expandAllBtn.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         expandAllBtn.addActionListener(e -> expandAll());
 
         collapseAllBtn = new JButton("Collapse");
-        collapseAllBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        collapseAllBtn.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         collapseAllBtn.addActionListener(e -> collapseAll());
 
         toolbar.add(treeViewBtn);
@@ -90,7 +91,7 @@ public class CallTracePanel extends JPanel {
         callTree = new JTree(treeModel);
         callTree.setBackground(JStudioTheme.getBgPrimary());
         callTree.setForeground(JStudioTheme.getTextPrimary());
-        callTree.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        callTree.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
         callTree.setCellRenderer(new CallTreeCellRenderer());
         callTree.setRootVisible(false);
         callTree.setShowsRootHandles(true);
@@ -114,7 +115,7 @@ public class CallTracePanel extends JPanel {
         listPane = new JTextPane();
         listPane.setEditable(false);
         listPane.setBackground(JStudioTheme.getBgPrimary());
-        listPane.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        listPane.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
         listDoc = listPane.getStyledDocument();
         initListStyles();
 

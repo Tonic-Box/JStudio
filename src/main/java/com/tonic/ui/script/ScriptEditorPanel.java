@@ -7,6 +7,8 @@ import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.MainFrame;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
@@ -35,10 +37,7 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.List;
 
-/**
- * Main panel for editing and running JStudio transform scripts.
- */
-public class ScriptEditorPanel extends JPanel implements ThemeManager.ThemeChangeListener {
+public class ScriptEditorPanel extends ThemedJPanel implements ThemeManager.ThemeChangeListener {
 
     private final MainFrame mainFrame;
 
@@ -60,11 +59,9 @@ public class ScriptEditorPanel extends JPanel implements ThemeManager.ThemeChang
     private Runnable onTransformComplete;
 
     public ScriptEditorPanel(MainFrame mainFrame) {
+        super(BackgroundStyle.TERTIARY, new BorderLayout());
         this.mainFrame = mainFrame;
         this.currentScript = new Script("Untitled", Script.Mode.AST, "");
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
 
         // Create main content
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -222,7 +219,7 @@ public class ScriptEditorPanel extends JPanel implements ThemeManager.ThemeChang
         panel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, JStudioTheme.getBorder()));
 
         JLabel header = new JLabel("Scripts");
-        header.setFont(JStudioTheme.getUIFont(12).deriveFont(Font.BOLD));
+        header.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL).deriveFont(Font.BOLD));
         header.setForeground(JStudioTheme.getTextPrimary());
         header.setBorder(new EmptyBorder(8, 8, 8, 8));
         panel.add(header, BorderLayout.NORTH);
@@ -265,7 +262,7 @@ public class ScriptEditorPanel extends JPanel implements ThemeManager.ThemeChang
         codeEditor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);
         codeEditor.setCodeFoldingEnabled(true);
         codeEditor.setAntiAliasingEnabled(true);
-        codeEditor.setFont(JStudioTheme.getCodeFont(13));
+        codeEditor.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL + 1));
         codeEditor.setBackground(JStudioTheme.getBgPrimary());
         codeEditor.setForeground(JStudioTheme.getTextPrimary());
         codeEditor.setCaretColor(JStudioTheme.getTextPrimary());
@@ -291,7 +288,7 @@ public class ScriptEditorPanel extends JPanel implements ThemeManager.ThemeChang
         panel.setBackground(JStudioTheme.getBgTertiary());
 
         JLabel header = new JLabel("Console Output");
-        header.setFont(JStudioTheme.getUIFont(11).deriveFont(Font.BOLD));
+        header.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE).deriveFont(Font.BOLD));
         header.setForeground(JStudioTheme.getTextSecondary());
         header.setBorder(new EmptyBorder(4, 8, 4, 8));
         header.setBackground(JStudioTheme.getBgSecondary());
@@ -300,7 +297,7 @@ public class ScriptEditorPanel extends JPanel implements ThemeManager.ThemeChang
 
         consoleOutput = new JTextArea();
         consoleOutput.setEditable(false);
-        consoleOutput.setFont(JStudioTheme.getCodeFont(12));
+        consoleOutput.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
         consoleOutput.setBackground(JStudioTheme.getBgPrimary());
         consoleOutput.setForeground(JStudioTheme.getTextPrimary());
         consoleOutput.setCaretColor(JStudioTheme.getTextPrimary());

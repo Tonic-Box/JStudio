@@ -5,6 +5,9 @@ import com.tonic.parser.ConstPool;
 import com.tonic.parser.constpool.Item;
 import com.tonic.parser.constpool.StringRefItem;
 import com.tonic.parser.constpool.Utf8Item;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.ColumnWidths;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.model.ClassEntryModel;
@@ -12,12 +15,11 @@ import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.BorderFactory;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
@@ -26,7 +28,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
-import javax.swing.JTable;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
@@ -37,7 +38,7 @@ import java.util.List;
 /**
  * Panel showing all strings from constant pools across all loaded classes.
  */
-public class StringsPanel extends JPanel {
+public class StringsPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private final JTextField filterField;
@@ -46,17 +47,17 @@ public class StringsPanel extends JPanel {
     private final TableRowSorter<StringsTableModel> sorter;
     private final JLabel statusLabel;
     private final JButton refreshButton;
+    private final JPanel toolbar;
+    private final JScrollPane scrollPane;
+    private final JPanel statusPanel;
 
     private List<StringEntry> allStrings = new ArrayList<>();
 
     public StringsPanel(ProjectModel project) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
 
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
-
-        // Top toolbar
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL));
         toolbar.setBackground(JStudioTheme.getBgSecondary());
 
         JLabel filterLabel = new JLabel("Filter:");
@@ -85,7 +86,6 @@ public class StringsPanel extends JPanel {
 
         add(toolbar, BorderLayout.NORTH);
 
-        // Table
         tableModel = new StringsTableModel();
         stringsTable = new JTable(tableModel);
         sorter = new TableRowSorter<>(tableModel);
@@ -96,20 +96,17 @@ public class StringsPanel extends JPanel {
         stringsTable.setSelectionBackground(JStudioTheme.getSelection());
         stringsTable.setSelectionForeground(JStudioTheme.getTextPrimary());
         stringsTable.setGridColor(JStudioTheme.getBorder());
-        stringsTable.setFont(JStudioTheme.getCodeFont(11));
-        stringsTable.setRowHeight(20);
+        stringsTable.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
+        stringsTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         stringsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Column widths
-        stringsTable.getColumnModel().getColumn(0).setPreferredWidth(400); // String
-        stringsTable.getColumnModel().getColumn(1).setPreferredWidth(250); // Class
+        stringsTable.getColumnModel().getColumn(0).setPreferredWidth(ColumnWidths.STRING_VALUE);
+        stringsTable.getColumnModel().getColumn(1).setPreferredWidth(ColumnWidths.CLASS_NAME);
 
-        // Header styling
         stringsTable.getTableHeader().setBackground(JStudioTheme.getBgSecondary());
         stringsTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
-        stringsTable.getTableHeader().setFont(JStudioTheme.getUIFont(11));
+        stringsTable.getTableHeader().setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
 
-        // Double-click to navigate
         stringsTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -119,18 +116,35 @@ public class StringsPanel extends JPanel {
             }
         });
 
-        JScrollPane scrollPane = new JScrollPane(stringsTable);
+        scrollPane = new JScrollPane(stringsTable);
         scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, JStudioTheme.getBorder()));
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
         add(scrollPane, BorderLayout.CENTER);
 
-        // Status bar
-        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         statusPanel.setBackground(JStudioTheme.getBgSecondary());
         statusLabel = new JLabel("Click Refresh to extract strings from all classes.");
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
         statusPanel.add(statusLabel);
         add(statusPanel, BorderLayout.SOUTH);
+    }
+
+    @Override
+    protected void applyChildThemes() {
+        toolbar.setBackground(JStudioTheme.getBgSecondary());
+        filterField.setBackground(JStudioTheme.getBgTertiary());
+        filterField.setForeground(JStudioTheme.getTextPrimary());
+        refreshButton.setBackground(JStudioTheme.getBgTertiary());
+        refreshButton.setForeground(JStudioTheme.getTextPrimary());
+        stringsTable.setBackground(JStudioTheme.getBgTertiary());
+        stringsTable.setForeground(JStudioTheme.getTextPrimary());
+        stringsTable.setSelectionBackground(JStudioTheme.getSelection());
+        stringsTable.setGridColor(JStudioTheme.getBorder());
+        stringsTable.getTableHeader().setBackground(JStudioTheme.getBgSecondary());
+        stringsTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
+        scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
+        statusPanel.setBackground(JStudioTheme.getBgSecondary());
+        statusLabel.setForeground(JStudioTheme.getTextSecondary());
     }
 
     /**
@@ -153,7 +167,7 @@ public class StringsPanel extends JPanel {
                 for (ClassEntryModel classEntry : project.getUserClasses()) {
                     ClassFile cf = classEntry.getClassFile();
                     ConstPool constPool = cf.getConstPool();
-                    java.util.List<Item<?>> items = constPool.getItems();
+                    List<Item<?>> items = constPool.getItems();
 
                     for (int i = 1; i < items.size(); i++) {
                         try {

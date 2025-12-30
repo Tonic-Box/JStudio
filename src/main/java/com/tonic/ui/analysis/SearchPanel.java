@@ -7,6 +7,8 @@ import com.tonic.parser.ClassFile;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 
@@ -29,10 +31,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-/**
- * Pattern search panel for finding code patterns.
- */
-public class SearchPanel extends JPanel {
+public class SearchPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private final JTextField searchField;
@@ -44,15 +43,12 @@ public class SearchPanel extends JPanel {
     private List<SearchResult> lastResults;
 
     public SearchPanel(ProjectModel project) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
 
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
-
-        // Search controls
         JPanel controlPanel = new JPanel(new GridBagLayout());
         controlPanel.setBackground(JStudioTheme.getBgSecondary());
-        controlPanel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        controlPanel.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(2, 4, 2, 4);
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -113,7 +109,7 @@ public class SearchPanel extends JPanel {
         resultsList.setBackground(JStudioTheme.getBgTertiary());
         resultsList.setForeground(JStudioTheme.getTextPrimary());
         resultsList.setSelectionBackground(JStudioTheme.getSelection());
-        resultsList.setFont(JStudioTheme.getCodeFont(11));
+        resultsList.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
 
         // Double-click to navigate to result
         resultsList.addMouseListener(new MouseAdapter() {

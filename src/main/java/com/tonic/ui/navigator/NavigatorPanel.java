@@ -1,6 +1,9 @@
 package com.tonic.ui.navigator;
 
 import com.tonic.ui.MainFrame;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.ColumnWidths;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.editor.ViewMode;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
@@ -11,8 +14,6 @@ import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
 import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
 
 import javax.swing.BorderFactory;
@@ -41,7 +42,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeListener {
+public class NavigatorPanel extends ThemedJPanel {
 
     private final MainFrame mainFrame;
     private final JTree tree;
@@ -51,10 +52,10 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
     private final JScrollPane scrollPane;
 
     public NavigatorPanel(MainFrame mainFrame) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.mainFrame = mainFrame;
 
-        setLayout(new BorderLayout());
-        setPreferredSize(new Dimension(250, 0));
+        setPreferredSize(new Dimension(ColumnWidths.CLASS_NAME, 0));
 
         toolbar = createToolbar();
         searchField = createSearchField();
@@ -125,21 +126,11 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
         scrollPane.setBorder(null);
 
         add(scrollPane, BorderLayout.CENTER);
-
-        applyTheme();
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgSecondary());
+    protected void applyChildThemes() {
         setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, JStudioTheme.getBorder()));
-
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
 
@@ -151,14 +142,12 @@ public class NavigatorPanel extends JPanel implements ThemeManager.ThemeChangeLi
         searchField.setForeground(JStudioTheme.getTextPrimary());
         searchField.setCaretColor(JStudioTheme.getTextPrimary());
         searchField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(4, 4, 4, 4),
+                BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL),
                 BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                        BorderFactory.createEmptyBorder(2, 4, 2, 4)
+                        BorderFactory.createEmptyBorder(UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL)
                 )
         ));
-
-        repaint();
     }
 
     private JToolBar createToolbar() {

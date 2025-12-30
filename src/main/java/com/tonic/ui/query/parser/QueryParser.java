@@ -75,10 +75,11 @@ public class QueryParser {
         if (match(Token.TokenType.ORDER)) {
             expect(Token.TokenType.BY);
             String key = consume(Token.TokenType.IDENTIFIER, "Expected order key").value();
-            boolean asc = !match(Token.TokenType.DESC);
-            if (!asc || match(Token.TokenType.ASC)) {
+            boolean desc = match(Token.TokenType.DESC);
+            if (!desc) {
+                match(Token.TokenType.ASC);
             }
-            orderBy = asc ? OrderBy.asc(key) : OrderBy.desc(key);
+            orderBy = desc ? OrderBy.desc(key) : OrderBy.asc(key);
         }
 
         if (isFind) {

@@ -1,5 +1,10 @@
 package com.tonic.ui.vm.testgen.objectspec;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class FuzzStrategy {
 
     public enum Type {
@@ -67,42 +72,6 @@ public class FuzzStrategy {
         s.stringSet = values;
         return s;
     }
-
-    public Type getType() { return type; }
-    public void setType(Type type) { this.type = type; }
-
-    public long getMinInt() { return minInt; }
-    public void setMinInt(long minInt) { this.minInt = minInt; }
-
-    public long getMaxInt() { return maxInt; }
-    public void setMaxInt(long maxInt) { this.maxInt = maxInt; }
-
-    public double getMinDouble() { return minDouble; }
-    public void setMinDouble(double minDouble) { this.minDouble = minDouble; }
-
-    public double getMaxDouble() { return maxDouble; }
-    public void setMaxDouble(double maxDouble) { this.maxDouble = maxDouble; }
-
-    public String[] getStringSet() { return stringSet; }
-    public void setStringSet(String[] stringSet) { this.stringSet = stringSet; }
-
-    public String getStringPattern() { return stringPattern; }
-    public void setStringPattern(String stringPattern) { this.stringPattern = stringPattern; }
-
-    public int getMinCollectionSize() { return minCollectionSize; }
-    public void setMinCollectionSize(int minCollectionSize) { this.minCollectionSize = minCollectionSize; }
-
-    public int getMaxCollectionSize() { return maxCollectionSize; }
-    public void setMaxCollectionSize(int maxCollectionSize) { this.maxCollectionSize = maxCollectionSize; }
-
-    public boolean isIncludeEdgeCases() { return includeEdgeCases; }
-    public void setIncludeEdgeCases(boolean includeEdgeCases) { this.includeEdgeCases = includeEdgeCases; }
-
-    public boolean isIncludeNull() { return includeNull; }
-    public void setIncludeNull(boolean includeNull) { this.includeNull = includeNull; }
-
-    public int getSampleCount() { return sampleCount; }
-    public void setSampleCount(int sampleCount) { this.sampleCount = sampleCount; }
 
     public String getDescription() {
         switch (type) {

@@ -61,6 +61,11 @@ public final class FieldBecomesPredicate implements Predicate {
     }
 
     @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitFieldBecomes(this);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof FieldBecomesPredicate)) return false;

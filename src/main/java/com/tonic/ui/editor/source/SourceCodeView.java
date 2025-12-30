@@ -52,8 +52,11 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.swing.SwingUtilities;
 
@@ -70,7 +73,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
 
     private boolean loaded = false;
     private boolean omitAnnotations = false;
-    private java.util.List<GutterIconInfo> commentIcons = new java.util.ArrayList<>();
+    private List<GutterIconInfo> commentIcons = new ArrayList<>();
 
     public SourceCodeView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -276,7 +279,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         if (!ProjectDatabaseService.getInstance().hasDatabase()) {
             return 0;
         }
-        java.util.List<Comment> comments = ProjectDatabaseService.getInstance()
+        List<Comment> comments = ProjectDatabaseService.getInstance()
                 .getDatabase().getComments().getCommentsForClass(classEntry.getClassName());
         int count = 0;
         for (Comment c : comments) {
@@ -291,7 +294,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         if (!ProjectDatabaseService.getInstance().hasDatabase()) {
             return;
         }
-        java.util.List<Comment> comments = ProjectDatabaseService.getInstance()
+        List<Comment> comments = ProjectDatabaseService.getInstance()
                 .getDatabase().getComments().getCommentsForClass(classEntry.getClassName());
         StringBuilder sb = new StringBuilder();
         for (Comment c : comments) {
@@ -347,7 +350,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
             return;
         }
 
-        java.util.List<Comment> comments = ProjectDatabaseService.getInstance()
+        List<Comment> comments = ProjectDatabaseService.getInstance()
                 .getDatabase().getComments().getCommentsForClass(classEntry.getClassName());
 
         if (comments.isEmpty()) {
@@ -355,19 +358,19 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         }
 
         // Group comments by line number
-        java.util.Map<Integer, java.util.List<Comment>> commentsByLine = new java.util.HashMap<>();
+        Map<Integer, List<Comment>> commentsByLine = new HashMap<>();
         for (Comment c : comments) {
             int line = c.getLineNumber();
             if (line > 0) {
-                commentsByLine.computeIfAbsent(line, k -> new java.util.ArrayList<>()).add(c);
+                commentsByLine.computeIfAbsent(line, k -> new ArrayList<>()).add(c);
             }
         }
 
         // Add gutter icons for each line with comments
         javax.swing.Icon commentIcon = Icons.getIcon("comment");
-        for (java.util.Map.Entry<Integer, java.util.List<Comment>> entry : commentsByLine.entrySet()) {
+        for (Map.Entry<Integer, List<Comment>> entry : commentsByLine.entrySet()) {
             int lineNumber = entry.getKey();
-            java.util.List<Comment> lineComments = entry.getValue();
+            List<Comment> lineComments = entry.getValue();
 
             // Build tooltip
             StringBuilder tooltip = new StringBuilder("<html>");

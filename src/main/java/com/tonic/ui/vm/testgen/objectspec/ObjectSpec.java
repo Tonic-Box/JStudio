@@ -1,10 +1,15 @@
 package com.tonic.ui.vm.testgen.objectspec;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
+@Setter
 public class ObjectSpec {
 
     private String typeName;
@@ -118,46 +123,6 @@ public class ObjectSpec {
             if (field.getMode() == ValueMode.FUZZ) return true;
         }
         return false;
-    }
-
-    public String getTypeName() { return typeName; }
-    public void setTypeName(String typeName) { this.typeName = typeName; }
-
-    public ConstructionMode getMode() { return mode; }
-    public void setMode(ConstructionMode mode) { this.mode = mode; }
-
-    public String getConstructorDescriptor() { return constructorDescriptor; }
-    public void setConstructorDescriptor(String constructorDescriptor) {
-        this.constructorDescriptor = constructorDescriptor;
-    }
-
-    public List<ParamSpec> getConstructorArgs() { return constructorArgs; }
-    public void setConstructorArgs(List<ParamSpec> constructorArgs) {
-        this.constructorArgs = constructorArgs;
-    }
-
-    public String getFactoryMethodName() { return factoryMethodName; }
-    public void setFactoryMethodName(String factoryMethodName) {
-        this.factoryMethodName = factoryMethodName;
-    }
-
-    public String getFactoryMethodDescriptor() { return factoryMethodDescriptor; }
-    public void setFactoryMethodDescriptor(String factoryMethodDescriptor) {
-        this.factoryMethodDescriptor = factoryMethodDescriptor;
-    }
-
-    public List<ParamSpec> getFactoryArgs() { return factoryArgs; }
-    public void setFactoryArgs(List<ParamSpec> factoryArgs) { this.factoryArgs = factoryArgs; }
-
-    public String getExpression() { return expression; }
-    public void setExpression(String expression) { this.expression = expression; }
-
-    public String getTemplateName() { return templateName; }
-    public void setTemplateName(String templateName) { this.templateName = templateName; }
-
-    public Map<String, ParamSpec> getFieldOverrides() { return fieldOverrides; }
-    public void setFieldOverrides(Map<String, ParamSpec> fieldOverrides) {
-        this.fieldOverrides = fieldOverrides;
     }
 
     public ObjectSpec copy() {

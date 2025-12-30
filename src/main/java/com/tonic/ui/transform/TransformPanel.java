@@ -4,6 +4,8 @@ import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.analysis.ssa.IRPrinter;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
@@ -30,10 +32,7 @@ import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Panel for selecting and applying SSA transforms.
- */
-public class TransformPanel extends JPanel {
+public class TransformPanel extends ThemedJPanel {
 
     /**
      * Callback interface for transform completion.
@@ -60,11 +59,9 @@ public class TransformPanel extends JPanel {
     private TransformCallback transformCallback;
 
     public TransformPanel(ProjectModel project) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
         this.transformCheckBoxes = new ArrayList<>();
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
 
         // Top panel: target selection (class and method)
         JPanel targetPanel = createTargetPanel();
@@ -269,7 +266,7 @@ public class TransformPanel extends JPanel {
         beforeArea.setEditable(false);
         beforeArea.setBackground(JStudioTheme.getBgTertiary());
         beforeArea.setForeground(JStudioTheme.getTextPrimary());
-        beforeArea.setFont(JStudioTheme.getCodeFont(11));
+        beforeArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
         JScrollPane beforeScroll = new JScrollPane(beforeArea);
         beforeScroll.setBorder(null);
         beforePanel.add(beforeScroll, BorderLayout.CENTER);
@@ -287,7 +284,7 @@ public class TransformPanel extends JPanel {
         afterArea.setEditable(false);
         afterArea.setBackground(JStudioTheme.getBgTertiary());
         afterArea.setForeground(JStudioTheme.getTextPrimary());
-        afterArea.setFont(JStudioTheme.getCodeFont(11));
+        afterArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
         JScrollPane afterScroll = new JScrollPane(afterArea);
         afterScroll.setBorder(null);
         afterPanel.add(afterScroll, BorderLayout.CENTER);

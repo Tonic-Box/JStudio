@@ -1,5 +1,7 @@
 package com.tonic.ui.query.ast;
 
+import com.tonic.ui.core.util.MemberReference;
+
 import java.util.Objects;
 
 /**
@@ -9,9 +11,7 @@ import java.util.Objects;
  */
 public final class CallsPredicate implements Predicate {
 
-    private final String ownerClass;
-    private final String methodName;
-    private final String descriptor;
+    private final MemberReference methodRef;
     private final ArgumentType argumentType;
 
     public CallsPredicate(String ownerClass, String methodName, String descriptor) {
@@ -19,22 +19,25 @@ public final class CallsPredicate implements Predicate {
     }
 
     public CallsPredicate(String ownerClass, String methodName, String descriptor, ArgumentType argumentType) {
-        this.ownerClass = ownerClass;
-        this.methodName = methodName;
-        this.descriptor = descriptor;
+        this.methodRef = new MemberReference(ownerClass, methodName, descriptor);
+        this.argumentType = argumentType != null ? argumentType : ArgumentType.ANY;
+    }
+
+    private CallsPredicate(MemberReference ref, ArgumentType argumentType) {
+        this.methodRef = ref;
         this.argumentType = argumentType != null ? argumentType : ArgumentType.ANY;
     }
 
     public String ownerClass() {
-        return ownerClass;
+        return methodRef.getOwnerClass();
     }
 
     public String methodName() {
-        return methodName;
+        return methodRef.getMemberName();
     }
 
     public String descriptor() {
-        return descriptor;
+        return methodRef.getDescriptor();
     }
 
     public ArgumentType argumentType() {
@@ -45,35 +48,22 @@ public final class CallsPredicate implements Predicate {
         return argumentType != ArgumentType.ANY;
     }
 
-    public static CallsPredicate of(String methodRef) {
-        return of(methodRef, ArgumentType.ANY);
+    public static CallsPredicate of(String methodRefStr) {
+        return of(methodRefStr, ArgumentType.ANY);
     }
 
-    public static CallsPredicate of(String methodRef, ArgumentType argType) {
-        int dotIdx = methodRef.lastIndexOf('.');
-        if (dotIdx < 0) {
-            return new CallsPredicate(null, methodRef, null, argType);
-        }
-        String owner = methodRef.substring(0, dotIdx);
-        String rest = methodRef.substring(dotIdx + 1);
-        int descIdx = rest.indexOf('(');
-        if (descIdx < 0) {
-            return new CallsPredicate(owner, rest, null, argType);
-        }
-        return new CallsPredicate(owner, rest.substring(0, descIdx), rest.substring(descIdx), argType);
+    public static CallsPredicate of(String methodRefStr, ArgumentType argType) {
+        MemberReference ref = MemberReference.parseMethodRef(methodRefStr);
+        return new CallsPredicate(ref, argType);
     }
 
     public boolean matches(String owner, String name, String desc) {
-        if (ownerClass != null && !ownerClass.equals(owner) && !owner.endsWith("/" + ownerClass)) {
-            return false;
-        }
-        if (methodName != null && !methodName.equals(name)) {
-            return false;
-        }
-        if (descriptor != null && !descriptor.equals(desc)) {
-            return false;
-        }
-        return true;
+        return methodRef.matches(owner, name, desc);
+    }
+
+    @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitCalls(this);
     }
 
     @Override
@@ -86,20 +76,17 @@ public final class CallsPredicate implements Predicate {
         if (this == o) return true;
         if (!(o instanceof CallsPredicate)) return false;
         CallsPredicate that = (CallsPredicate) o;
-        return Objects.equals(ownerClass, that.ownerClass) &&
-               Objects.equals(methodName, that.methodName) &&
-               Objects.equals(descriptor, that.descriptor) &&
+        return Objects.equals(methodRef, that.methodRef) &&
                argumentType == that.argumentType;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ownerClass, methodName, descriptor, argumentType);
+        return Objects.hash(methodRef, argumentType);
     }
 
     @Override
     public String toString() {
-        return "CallsPredicate{ownerClass='" + ownerClass + "', methodName='" + methodName +
-               "', descriptor='" + descriptor + "', argType=" + argumentType + "}";
+        return "CallsPredicate{methodRef=" + methodRef + ", argType=" + argumentType + "}";
     }
 }

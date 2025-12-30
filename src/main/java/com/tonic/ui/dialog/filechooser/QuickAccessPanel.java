@@ -1,5 +1,7 @@
 package com.tonic.ui.dialog.filechooser;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.QuickAccessManager;
 
@@ -27,10 +29,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Quick access sidebar with pinned directories, special folders, recent directories, and drives.
- */
-public class QuickAccessPanel extends JPanel implements QuickAccessManager.QuickAccessListener {
+public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager.QuickAccessListener {
 
     public interface LocationListener {
         void onLocationSelected(File location);
@@ -53,11 +52,10 @@ public class QuickAccessPanel extends JPanel implements QuickAccessManager.Quick
     private JLabel recentHeader;
 
     public QuickAccessPanel(LocationListener listener) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.listener = listener;
         this.manager = QuickAccessManager.getInstance();
 
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
         setPreferredSize(new Dimension(170, 0));
         setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, JStudioTheme.getBorder()));
 
@@ -152,8 +150,8 @@ public class QuickAccessPanel extends JPanel implements QuickAccessManager.Quick
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list.setBackground(JStudioTheme.getBgSecondary());
         list.setForeground(JStudioTheme.getTextPrimary());
-        list.setFont(JStudioTheme.getUIFont(12));
-        list.setFixedCellHeight(26);
+        list.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL));
+        list.setFixedCellHeight(UIConstants.TABLE_ROW_HEIGHT + 6);
         list.setCellRenderer(new QuickAccessRenderer());
         list.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -346,7 +344,7 @@ public class QuickAccessPanel extends JPanel implements QuickAccessManager.Quick
 
             iconLabel = new JLabel();
             textLabel = new JLabel();
-            textLabel.setFont(JStudioTheme.getUIFont(12));
+            textLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL));
 
             pinIndicator = new JLabel();
             pinIndicator.setFont(JStudioTheme.getUIFont(10));

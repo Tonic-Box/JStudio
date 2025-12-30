@@ -9,6 +9,7 @@ import com.tonic.ui.query.exec.QueryBatchRunner;
 import com.tonic.ui.query.exec.QueryService;
 import com.tonic.ui.query.planner.ClickTarget;
 import com.tonic.ui.query.planner.ResultRow;
+import com.tonic.ui.query.planner.filter.XrefMethodFilter;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 
@@ -22,6 +23,7 @@ import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class QueryDialog extends JDialog {
 
@@ -48,7 +50,7 @@ public class QueryDialog extends JDialog {
         this(owner, classPool, () -> xrefDatabase);
     }
 
-    public QueryDialog(Window owner, ClassPool classPool, java.util.function.Supplier<XrefDatabase> xrefDatabaseSupplier) {
+    public QueryDialog(Window owner, ClassPool classPool, Supplier<XrefDatabase> xrefDatabaseSupplier) {
         super(owner, "Query Explorer", ModalityType.MODELESS);
         this.queryService = new QueryService(classPool, xrefDatabaseSupplier);
         if (owner instanceof MainFrame) {
@@ -389,7 +391,7 @@ public class QueryDialog extends JDialog {
             }
 
             @Override
-            protected void process(java.util.List<String> chunks) {
+            protected void process(List<String> chunks) {
                 if (!chunks.isEmpty()) {
                     statusLabel.setText("Building xrefs: " + chunks.get(chunks.size() - 1));
                 }
@@ -476,7 +478,7 @@ public class QueryDialog extends JDialog {
                     statusLabel.setText(statusText);
                     statusLabel.setForeground(JStudioTheme.getSuccess());
 
-                    String diag = com.tonic.ui.query.planner.filter.XrefMethodFilter.getLastDiagnostics();
+                    String diag = XrefMethodFilter.getLastDiagnostics();
                     if (!diag.isEmpty()) {
                         statusLabel.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
                         statusLabel.setToolTipText("Click to see filter diagnostics");
@@ -706,7 +708,7 @@ public class QueryDialog extends JDialog {
             return sb.toString();
         }
 
-        private String formatEvidence(java.util.List<?> evidence) {
+        private String formatEvidence(List<?> evidence) {
             if (evidence == null || evidence.isEmpty()) return "";
             if (evidence.size() == 1) {
                 return evidence.get(0).toString();

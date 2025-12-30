@@ -7,6 +7,8 @@ import com.tonic.analysis.similarity.SimilarityResult;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.editor.bytecode.BytecodeFormatter;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
@@ -24,16 +26,11 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Panel for method similarity analysis.
- * Shows duplicates, similar methods, and side-by-side comparison.
- */
-public class SimilarityPanel extends JPanel {
+public class SimilarityPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private MethodSimilarityAnalyzer analyzer;
 
-    // Controls
     private JComboBox<SimilarityMetric> metricCombo;
     private JSlider thresholdSlider;
     private JLabel thresholdLabel;
@@ -41,25 +38,20 @@ public class SimilarityPanel extends JPanel {
     private JButton findDuplicatesButton;
     private JButton exportButton;
 
-    // Results table
     private JTable resultsTable;
     private SimilarityTableModel tableModel;
 
-    // Comparison view
     private JTextArea leftCode;
     private JTextArea rightCode;
     private JLabel leftLabel;
     private JLabel rightLabel;
     private JTextArea detailsArea;
 
-    // Status
     private JLabel statusLabel;
 
     public SimilarityPanel(ProjectModel project) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
 
         // Build UI
         add(createControlPanel(), BorderLayout.NORTH);
@@ -70,9 +62,9 @@ public class SimilarityPanel extends JPanel {
     }
 
     private JPanel createControlPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL));
         panel.setBackground(JStudioTheme.getBgSecondary());
-        panel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        panel.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         // Build index button
         JButton buildButton = new JButton("Build Index");
@@ -162,7 +154,7 @@ public class SimilarityPanel extends JPanel {
         resultsTable.setSelectionBackground(JStudioTheme.getAccent());
         resultsTable.setSelectionForeground(JStudioTheme.getTextPrimary());
         resultsTable.setGridColor(JStudioTheme.getBorder());
-        resultsTable.setRowHeight(24);
+        resultsTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT + 4);
         resultsTable.getTableHeader().setBackground(JStudioTheme.getBgSecondary());
         resultsTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
 
@@ -259,7 +251,7 @@ public class SimilarityPanel extends JPanel {
         leftCode.setEditable(false);
         leftCode.setBackground(JStudioTheme.getBgTertiary());
         leftCode.setForeground(JStudioTheme.getTextPrimary());
-        leftCode.setFont(JStudioTheme.getCodeFont(11));
+        leftCode.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
         JScrollPane leftScroll = new JScrollPane(leftCode);
         leftScroll.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
         leftPanel.add(leftScroll, BorderLayout.CENTER);
@@ -277,7 +269,7 @@ public class SimilarityPanel extends JPanel {
         rightCode.setEditable(false);
         rightCode.setBackground(JStudioTheme.getBgTertiary());
         rightCode.setForeground(JStudioTheme.getTextPrimary());
-        rightCode.setFont(JStudioTheme.getCodeFont(11));
+        rightCode.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
         JScrollPane rightScroll = new JScrollPane(rightCode);
         rightScroll.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
         rightPanel.add(rightScroll, BorderLayout.CENTER);
@@ -291,7 +283,7 @@ public class SimilarityPanel extends JPanel {
         detailsArea.setBackground(JStudioTheme.getBgTertiary());
         detailsArea.setForeground(JStudioTheme.getTextSecondary());
         detailsArea.setFont(JStudioTheme.getCodeFont(10));
-        detailsArea.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        detailsArea.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         JScrollPane detailsScroll = new JScrollPane(detailsArea);
         detailsScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
@@ -308,7 +300,7 @@ public class SimilarityPanel extends JPanel {
 
         statusLabel = new JLabel(" ");
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(2, UIConstants.SPACING_MEDIUM, 2, UIConstants.SPACING_MEDIUM));
         panel.add(statusLabel, BorderLayout.WEST);
 
         return panel;

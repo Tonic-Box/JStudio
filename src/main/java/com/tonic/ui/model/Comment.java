@@ -1,7 +1,12 @@
 package com.tonic.ui.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.UUID;
 
+@Getter
+@Setter
 public class Comment {
 
     public enum Type {
@@ -43,61 +48,9 @@ public class Comment {
         this.type = type;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public void setClassName(String className) {
-        this.className = className;
-    }
-
-    public String getMemberName() {
-        return memberName;
-    }
-
-    public void setMemberName(String memberName) {
-        this.memberName = memberName;
-    }
-
-    public int getLineNumber() {
-        return lineNumber;
-    }
-
-    public void setLineNumber(int lineNumber) {
-        this.lineNumber = lineNumber;
-    }
-
-    public String getText() {
-        return text;
-    }
-
     public void setText(String text) {
         this.text = text;
         this.timestamp = System.currentTimeMillis();
-    }
-
-    public Type getType() {
-        return type;
-    }
-
-    public void setType(Type type) {
-        this.type = type;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
     }
 
     public String getLocationKey() {

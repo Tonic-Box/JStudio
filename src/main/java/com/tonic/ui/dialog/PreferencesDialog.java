@@ -11,6 +11,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -44,7 +45,7 @@ public class PreferencesDialog extends JDialog {
     private JTextPane previewPane;
     private JScrollPane previewScrollPane;
     private JComboBox<Theme> themeComboBox;
-    private javax.swing.JCheckBox loadJdkClassesBox;
+    private JCheckBox loadJdkClassesBox;
 
     private Runnable onApply;
 
@@ -213,7 +214,7 @@ public class PreferencesDialog extends JDialog {
         gbc.gridy = 0;
         gbc.gridwidth = 2;
 
-        loadJdkClassesBox = new javax.swing.JCheckBox("Load JDK classes (enables stepping into standard library)");
+        loadJdkClassesBox = new JCheckBox("Load JDK classes (enables stepping into standard library)");
         loadJdkClassesBox.setBackground(JStudioTheme.getBgSecondary());
         loadJdkClassesBox.setForeground(JStudioTheme.getTextPrimary());
         panel.add(loadJdkClassesBox, gbc);

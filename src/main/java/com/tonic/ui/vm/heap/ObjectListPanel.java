@@ -1,5 +1,7 @@
 package com.tonic.ui.vm.heap;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.heap.model.HeapObject;
 import com.tonic.ui.vm.heap.model.ProvenanceInfo;
@@ -13,7 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ObjectListPanel extends JPanel {
+public class ObjectListPanel extends ThemedJPanel {
 
     private final JTable table;
     private final ObjectTableModel tableModel;
@@ -23,10 +25,9 @@ public class ObjectListPanel extends JPanel {
     private List<HeapObject> allObjects = new ArrayList<>();
 
     public ObjectListPanel() {
-        setLayout(new BorderLayout(5, 5));
-        setBackground(JStudioTheme.getBgSecondary());
+        super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 2));
         topPanel.setBackground(JStudioTheme.getBgSecondary());
         topPanel.add(new JLabel("Sort:"));
         sortCombo = new JComboBox<>(new String[]{"ID", "Age (newest)", "Age (oldest)", "Class"});
@@ -41,7 +42,7 @@ public class ObjectListPanel extends JPanel {
         table.setGridColor(JStudioTheme.getBorder());
         table.setSelectionBackground(JStudioTheme.getAccent());
         table.setSelectionForeground(JStudioTheme.getTextPrimary());
-        table.setRowHeight(20);
+        table.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 1));
 

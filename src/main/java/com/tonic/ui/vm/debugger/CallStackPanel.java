@@ -1,5 +1,7 @@
 package com.tonic.ui.vm.debugger;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
 
@@ -10,15 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class CallStackPanel extends JPanel {
+public class CallStackPanel extends ThemedJPanel {
 
     private final JList<FrameEntry> frameList;
     private final DefaultListModel<FrameEntry> listModel;
     private Consumer<FrameEntry> onFrameSelected;
 
     public CallStackPanel() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgPrimary());
+        super(BackgroundStyle.PRIMARY, new BorderLayout());
         setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Call Stack",
@@ -34,8 +35,8 @@ public class CallStackPanel extends JPanel {
         frameList.setForeground(JStudioTheme.getTextPrimary());
         frameList.setSelectionBackground(JStudioTheme.getAccent());
         frameList.setSelectionForeground(JStudioTheme.getTextPrimary());
-        frameList.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        frameList.setFixedCellHeight(20);
+        frameList.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
+        frameList.setFixedCellHeight(UIConstants.TABLE_ROW_HEIGHT);
 
         frameList.setCellRenderer(new FrameCellRenderer());
 

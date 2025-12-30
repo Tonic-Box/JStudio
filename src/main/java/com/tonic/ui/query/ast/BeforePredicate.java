@@ -23,6 +23,11 @@ public final class BeforePredicate implements Predicate {
     }
 
     @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitBefore(this);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof BeforePredicate)) return false;

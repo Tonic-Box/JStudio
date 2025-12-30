@@ -58,6 +58,11 @@ public final class ContainsStringPredicate implements Predicate {
     }
 
     @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitContainsString(this);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ContainsStringPredicate)) return false;

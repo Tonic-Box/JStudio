@@ -1,5 +1,8 @@
 package com.tonic.ui.vm.testgen.objectspec;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -431,20 +434,12 @@ public class ObjectFactory {
         return result;
     }
 
+    @Getter
+    @AllArgsConstructor
     public static class ConstructorCall {
         private final String typeName;
         private final String descriptor;
         private final Object[] args;
-
-        public ConstructorCall(String typeName, String descriptor, Object[] args) {
-            this.typeName = typeName;
-            this.descriptor = descriptor;
-            this.args = args;
-        }
-
-        public String getTypeName() { return typeName; }
-        public String getDescriptor() { return descriptor; }
-        public Object[] getArgs() { return args; }
 
         @Override
         public String toString() {
@@ -471,17 +466,11 @@ public class ObjectFactory {
         }
     }
 
+    @Getter
+    @AllArgsConstructor
     public static class FieldInjection {
         private final String typeName;
         private final Map<String, Object> fieldValues;
-
-        public FieldInjection(String typeName, Map<String, Object> fieldValues) {
-            this.typeName = typeName;
-            this.fieldValues = fieldValues;
-        }
-
-        public String getTypeName() { return typeName; }
-        public Map<String, Object> getFieldValues() { return fieldValues; }
 
         @Override
         public String toString() {
@@ -502,17 +491,11 @@ public class ObjectFactory {
         }
     }
 
+    @Getter
+    @AllArgsConstructor
     public static class PlaceholderObject {
         private final String typeName;
         private final String description;
-
-        public PlaceholderObject(String typeName, String description) {
-            this.typeName = typeName;
-            this.description = description;
-        }
-
-        public String getTypeName() { return typeName; }
-        public String getDescription() { return description; }
 
         @Override
         public String toString() {

@@ -1,19 +1,11 @@
 package com.tonic.ui.event.events;
 
 import com.tonic.ui.event.Event;
+import lombok.Getter;
 
-/**
- * Fired when cross-references should be shown for a symbol.
- * Can be triggered by:
- * - Context menu "Show Cross-References"
- * - Double-clicking a reference count in the gutter
- * - Keyboard shortcut
- */
+@Getter
 public class ShowXrefsEvent extends Event {
 
-    /**
-     * Type of symbol to show xrefs for.
-     */
     public enum TargetType {
         CLASS,
         METHOD,
@@ -22,12 +14,9 @@ public class ShowXrefsEvent extends Event {
 
     private final TargetType targetType;
     private final String className;
-    private final String memberName;      // null for class-level xrefs
-    private final String memberDescriptor; // null for class-level xrefs
+    private final String memberName;
+    private final String memberDescriptor;
 
-    /**
-     * Create an event to show xrefs for a class.
-     */
     public ShowXrefsEvent(Object source, String className) {
         super(source);
         this.targetType = TargetType.CLASS;
@@ -36,17 +25,11 @@ public class ShowXrefsEvent extends Event {
         this.memberDescriptor = null;
     }
 
-    /**
-     * Create an event to show xrefs for a method.
-     */
     public static ShowXrefsEvent forMethod(Object source, String className,
                                             String methodName, String methodDesc) {
         return new ShowXrefsEvent(source, TargetType.METHOD, className, methodName, methodDesc);
     }
 
-    /**
-     * Create an event to show xrefs for a field.
-     */
     public static ShowXrefsEvent forField(Object source, String className,
                                            String fieldName, String fieldDesc) {
         return new ShowXrefsEvent(source, TargetType.FIELD, className, fieldName, fieldDesc);
@@ -61,25 +44,6 @@ public class ShowXrefsEvent extends Event {
         this.memberDescriptor = memberDescriptor;
     }
 
-    public TargetType getTargetType() {
-        return targetType;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public String getMemberName() {
-        return memberName;
-    }
-
-    public String getMemberDescriptor() {
-        return memberDescriptor;
-    }
-
-    /**
-     * Get a display string for the target.
-     */
     public String getTargetDisplay() {
         String displayClass = className != null ? className.replace('/', '.') : "unknown";
         switch (targetType) {

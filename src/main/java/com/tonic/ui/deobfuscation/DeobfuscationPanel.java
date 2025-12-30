@@ -8,6 +8,8 @@ import com.tonic.ui.deobfuscation.model.DecryptorCandidate;
 import com.tonic.ui.deobfuscation.model.DeobfuscationResult;
 import com.tonic.ui.deobfuscation.model.SuspiciousString;
 import com.tonic.ui.deobfuscation.patch.ConstantPoolPatcher;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 
@@ -20,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class DeobfuscationPanel extends JPanel {
+public class DeobfuscationPanel extends ThemedJPanel {
 
     private final EncryptedStringDetector stringDetector;
     private final DecryptorDetector decryptorDetector;
@@ -45,6 +47,7 @@ public class DeobfuscationPanel extends JPanel {
     private List<DeobfuscationResult> results = new ArrayList<>();
 
     public DeobfuscationPanel(ProjectModel project) {
+        super(BackgroundStyle.PRIMARY);
         this.projectModel = project;
         this.stringDetector = new EncryptedStringDetector();
         this.decryptorDetector = new DecryptorDetector();
@@ -61,9 +64,8 @@ public class DeobfuscationPanel extends JPanel {
     }
 
     private void initializeUI() {
-        setLayout(new BorderLayout(5, 5));
-        setBackground(JStudioTheme.getBgPrimary());
-        setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        setLayout(new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
+        setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM));
 
         add(createToolbar(), BorderLayout.NORTH);
         add(createMainContent(), BorderLayout.CENTER);
@@ -71,7 +73,7 @@ public class DeobfuscationPanel extends JPanel {
     }
 
     private JPanel createToolbar() {
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL));
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()),
@@ -185,8 +187,8 @@ public class DeobfuscationPanel extends JPanel {
         previewArea.setEditable(false);
         previewArea.setBackground(JStudioTheme.getBgSecondary());
         previewArea.setForeground(JStudioTheme.getTextPrimary());
-        previewArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        previewArea.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        previewArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
+        previewArea.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         JScrollPane previewScroll = new JScrollPane(previewArea);
         previewScroll.setBorder(BorderFactory.createTitledBorder(
@@ -216,7 +218,7 @@ public class DeobfuscationPanel extends JPanel {
         resultsTable.setGridColor(JStudioTheme.getBorder());
         resultsTable.setSelectionBackground(JStudioTheme.getAccent());
         resultsTable.setSelectionForeground(Color.WHITE);
-        resultsTable.setRowHeight(24);
+        resultsTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT + 4);
         resultsTable.getTableHeader().setBackground(JStudioTheme.getBgTertiary());
         resultsTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
 

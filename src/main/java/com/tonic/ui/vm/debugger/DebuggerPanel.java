@@ -8,6 +8,8 @@ import com.tonic.parser.attribute.LineNumberTableAttribute;
 import com.tonic.parser.attribute.Attribute;
 import com.tonic.parser.attribute.table.LineNumberTableEntry;
 import com.tonic.parser.constpool.*;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
@@ -33,7 +35,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListener {
+public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugListener {
 
     private final VMDebugSession session;
     private final JTable bytecodeTable;
@@ -75,14 +77,13 @@ public class DebuggerPanel extends JPanel implements VMDebugSession.DebugListene
     private static final int TAB_OUTPUT = 1;
 
     public DebuggerPanel() {
+        super(BackgroundStyle.PRIMARY, new BorderLayout(5, 5));
         this.session = new VMDebugSession();
         this.session.addListener(this);
         this.instructions = new ArrayList<>();
         this.pcToRowMap = new HashMap<>();
 
-        setLayout(new BorderLayout(5, 5));
-        setBackground(JStudioTheme.getBgPrimary());
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_LARGE, UIConstants.SPACING_LARGE, UIConstants.SPACING_LARGE, UIConstants.SPACING_LARGE));
 
         JPanel toolbarPanel = createToolbar();
         add(toolbarPanel, BorderLayout.NORTH);

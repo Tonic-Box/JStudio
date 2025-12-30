@@ -8,6 +8,8 @@ import com.mxgraph.view.mxGraph;
 import com.mxgraph.view.mxStylesheet;
 import com.tonic.analysis.dependency.DependencyAnalyzer;
 import com.tonic.analysis.dependency.DependencyNode;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
@@ -37,10 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Class dependency visualization panel using JGraphX.
- */
-public class DependencyPanel extends JPanel {
+public class DependencyPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private final mxGraph graph;
@@ -54,13 +53,10 @@ public class DependencyPanel extends JPanel {
     private int maxDepth = 2;
 
     public DependencyPanel(ProjectModel project) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
 
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
-
-        // Control panel
-        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL));
         controlPanel.setBackground(JStudioTheme.getBgSecondary());
 
         JButton analyzeButton = new JButton("Analyze");
@@ -115,13 +111,12 @@ public class DependencyPanel extends JPanel {
 
         add(graphComponent, BorderLayout.CENTER);
 
-        // Status area
         statusArea = new JTextArea(3, 40);
         statusArea.setEditable(false);
         statusArea.setBackground(JStudioTheme.getBgTertiary());
         statusArea.setForeground(JStudioTheme.getTextSecondary());
-        statusArea.setFont(JStudioTheme.getCodeFont(11));
-        statusArea.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        statusArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
+        statusArea.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM));
 
         JScrollPane statusScroll = new JScrollPane(statusArea);
         statusScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));

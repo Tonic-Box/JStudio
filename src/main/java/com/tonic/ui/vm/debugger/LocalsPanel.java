@@ -4,6 +4,8 @@ import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.analysis.execution.state.ValueTag;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.debugger.edit.ValueEditDialog;
 import com.tonic.ui.vm.debugger.inspector.ObjectInspectorDialog;
@@ -19,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class LocalsPanel extends JPanel {
+public class LocalsPanel extends ThemedJPanel {
 
     private static final int VALUE_COLUMN = 3;
 
@@ -30,8 +32,7 @@ public class LocalsPanel extends JPanel {
     private ClassResolver classResolver;
 
     public LocalsPanel() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgPrimary());
+        super(BackgroundStyle.PRIMARY, new BorderLayout());
         setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Local Variables",
@@ -48,10 +49,10 @@ public class LocalsPanel extends JPanel {
         localsTable.setGridColor(JStudioTheme.getBorder());
         localsTable.setSelectionBackground(JStudioTheme.getAccent());
         localsTable.setSelectionForeground(JStudioTheme.getTextPrimary());
-        localsTable.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        localsTable.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
         localsTable.getTableHeader().setBackground(JStudioTheme.getBgPrimary());
         localsTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
-        localsTable.setRowHeight(20);
+        localsTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
 
         localsTable.setDefaultRenderer(Object.class, new LocalsCellRenderer());
 

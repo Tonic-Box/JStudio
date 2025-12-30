@@ -1,5 +1,6 @@
 package com.tonic.ui.query.ast;
 
+import com.tonic.ui.core.util.ComparisonOperator;
 import java.util.Objects;
 
 /**
@@ -8,15 +9,20 @@ import java.util.Objects;
  */
 public final class InstructionCountPredicate implements Predicate {
 
-    private final AllocCountPredicate.ComparisonOp operator;
+    private final ComparisonOperator operator;
     private final long threshold;
 
-    public InstructionCountPredicate(AllocCountPredicate.ComparisonOp operator, long threshold) {
+    public InstructionCountPredicate(ComparisonOperator operator, long threshold) {
         this.operator = operator;
         this.threshold = threshold;
     }
 
-    public AllocCountPredicate.ComparisonOp operator() {
+    @Deprecated
+    public InstructionCountPredicate(AllocCountPredicate.ComparisonOp operator, long threshold) {
+        this(operator.toOperator(), threshold);
+    }
+
+    public ComparisonOperator operator() {
         return operator;
     }
 
@@ -25,23 +31,20 @@ public final class InstructionCountPredicate implements Predicate {
     }
 
     public static InstructionCountPredicate greaterThan(long count) {
-        return new InstructionCountPredicate(AllocCountPredicate.ComparisonOp.GT, count);
+        return new InstructionCountPredicate(ComparisonOperator.GT, count);
     }
 
     public static InstructionCountPredicate lessThan(long count) {
-        return new InstructionCountPredicate(AllocCountPredicate.ComparisonOp.LT, count);
+        return new InstructionCountPredicate(ComparisonOperator.LT, count);
     }
 
     public boolean test(long actualCount) {
-        switch (operator) {
-            case GT: return actualCount > threshold;
-            case GTE: return actualCount >= threshold;
-            case LT: return actualCount < threshold;
-            case LTE: return actualCount <= threshold;
-            case EQ: return actualCount == threshold;
-            case NEQ: return actualCount != threshold;
-            default: return false;
-        }
+        return operator.test(actualCount, threshold);
+    }
+
+    @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitInstructionCount(this);
     }
 
     @Override

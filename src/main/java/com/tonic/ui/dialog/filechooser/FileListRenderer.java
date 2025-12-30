@@ -2,6 +2,7 @@ package com.tonic.ui.dialog.filechooser;
 
 import com.tonic.ui.theme.JStudioTheme;
 
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -87,7 +88,7 @@ public class FileListRenderer extends DefaultTableCellRenderer {
         }
 
         // Add some padding
-        setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 4, 0, 4));
+        setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
 
         return this;
     }

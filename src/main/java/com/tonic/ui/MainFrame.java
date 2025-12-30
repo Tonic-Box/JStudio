@@ -50,6 +50,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -971,7 +972,7 @@ public class MainFrame extends JFrame {
             return;
         }
 
-        javax.swing.JTextArea textArea = new javax.swing.JTextArea(5, 30);
+        JTextArea textArea = new JTextArea(5, 30);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(textArea);

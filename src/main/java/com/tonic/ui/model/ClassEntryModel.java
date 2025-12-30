@@ -6,6 +6,8 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.parser.constpool.ClassRefItem;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.ui.theme.Icons;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.swing.Icon;
 import java.util.ArrayList;
@@ -13,9 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Wraps a ClassFile with UI-specific state and cached display data.
- */
+@Getter
 public class ClassEntryModel {
 
     private final ClassFile classFile;
@@ -23,9 +23,13 @@ public class ClassEntryModel {
     private final Map<String, FieldEntryModel> fields = new HashMap<>();
 
     // UI state
+    @Setter
     private boolean expanded;
+    @Setter
     private boolean selected;
+    @Setter
     private boolean dirty;
+    @Setter
     private boolean analyzed;
 
     // Cached display data
@@ -166,71 +170,9 @@ public class ClassEntryModel {
         return new ArrayList<>(fields.values());
     }
 
-    // Getters
-
-    public ClassFile getClassFile() {
-        return classFile;
-    }
-
-    public String getSimpleName() {
-        return simpleName;
-    }
-
-    public String getPackageName() {
-        return packageName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public Icon getIcon() {
-        return icon;
-    }
-
-    public boolean isExpanded() {
-        return expanded;
-    }
-
-    public void setExpanded(boolean expanded) {
-        this.expanded = expanded;
-    }
-
-    public boolean isSelected() {
-        return selected;
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
-    }
-
-    public boolean isAnalyzed() {
-        return analyzed;
-    }
-
-    public void setAnalyzed(boolean analyzed) {
-        this.analyzed = analyzed;
-    }
-
-    public String getDecompilationCache() {
-        return decompilationCache;
-    }
-
     public void setDecompilationCache(String decompilationCache) {
         this.decompilationCache = decompilationCache;
         this.decompilationTimestamp = System.currentTimeMillis();
-    }
-
-    public long getDecompilationTimestamp() {
-        return decompilationTimestamp;
     }
 
     public void invalidateDecompilationCache() {

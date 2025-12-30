@@ -1,5 +1,10 @@
 package com.tonic.ui.vm.testgen.objectspec;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class ParamSpec {
 
     private String name;
@@ -106,27 +111,6 @@ public class ParamSpec {
         }
         return sb.toString();
     }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getTypeDescriptor() { return typeDescriptor; }
-    public void setTypeDescriptor(String typeDescriptor) { this.typeDescriptor = typeDescriptor; }
-
-    public ValueMode getMode() { return mode; }
-    public void setMode(ValueMode mode) { this.mode = mode; }
-
-    public Object getFixedValue() { return fixedValue; }
-    public void setFixedValue(Object fixedValue) { this.fixedValue = fixedValue; }
-
-    public FuzzStrategy getFuzzStrategy() { return fuzzStrategy; }
-    public void setFuzzStrategy(FuzzStrategy fuzzStrategy) { this.fuzzStrategy = fuzzStrategy; }
-
-    public ObjectSpec getNestedObjectSpec() { return nestedObjectSpec; }
-    public void setNestedObjectSpec(ObjectSpec nestedObjectSpec) { this.nestedObjectSpec = nestedObjectSpec; }
-
-    public String getTemplateName() { return templateName; }
-    public void setTemplateName(String templateName) { this.templateName = templateName; }
 
     public String getSummary() {
         switch (mode) {

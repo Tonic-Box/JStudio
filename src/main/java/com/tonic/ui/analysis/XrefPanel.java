@@ -1,6 +1,8 @@
 package com.tonic.ui.analysis;
 
 import com.tonic.analysis.xref.*;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.event.events.ShowXrefsEvent;
@@ -24,19 +26,17 @@ import java.util.List;
  * Panel for displaying cross-references (xrefs) to and from a symbol.
  * Split view showing incoming (who references this?) and outgoing (what does this reference?).
  */
-public class XrefPanel extends JPanel {
+public class XrefPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private XrefDatabase xrefDatabase;
 
-    // UI Components
     private JTextField searchField;
     private JComboBox<XrefType> typeFilterCombo;
     private JButton buildButton;
     private JLabel statusLabel;
     private JLabel targetLabel;
 
-    // Split pane with incoming/outgoing trees
     private JTree incomingTree;
     private JTree outgoingTree;
     private DefaultMutableTreeNode incomingRoot;
@@ -44,17 +44,14 @@ public class XrefPanel extends JPanel {
     private DefaultTreeModel incomingModel;
     private DefaultTreeModel outgoingModel;
 
-    // Current target
     private String currentTargetClass;
     private String currentTargetMember;
     private String currentTargetDesc;
     private ShowXrefsEvent.TargetType currentTargetType;
 
     public XrefPanel(ProjectModel project) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
 
         // Top toolbar
         JPanel toolbar = createToolbar();

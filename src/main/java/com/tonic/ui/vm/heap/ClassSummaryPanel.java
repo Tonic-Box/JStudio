@@ -1,5 +1,7 @@
 package com.tonic.ui.vm.heap;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.heap.model.HeapSnapshot;
 
@@ -11,7 +13,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ClassSummaryPanel extends JPanel {
+public class ClassSummaryPanel extends ThemedJPanel {
 
     private final JTable table;
     private final ClassTableModel tableModel;
@@ -23,8 +25,7 @@ public class ClassSummaryPanel extends JPanel {
     private Map<String, Integer> snapshotCounts = new HashMap<>();
 
     public ClassSummaryPanel() {
-        setLayout(new BorderLayout(5, 5));
-        setBackground(JStudioTheme.getBgSecondary());
+        super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         filterField = new JTextField();
         filterField.putClientProperty("JTextField.placeholderText", "Filter classes...");
@@ -43,7 +44,7 @@ public class ClassSummaryPanel extends JPanel {
         table.setGridColor(JStudioTheme.getBorder());
         table.setSelectionBackground(JStudioTheme.getAccent());
         table.setSelectionForeground(JStudioTheme.getTextPrimary());
-        table.setRowHeight(22);
+        table.setRowHeight(UIConstants.TABLE_ROW_HEIGHT + 2);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 1));
 
@@ -70,7 +71,7 @@ public class ClassSummaryPanel extends JPanel {
 
         totalsLabel = new JLabel("0 classes, 0 objects");
         totalsLabel.setForeground(JStudioTheme.getTextSecondary());
-        totalsLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        totalsLabel.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
         add(totalsLabel, BorderLayout.SOUTH);
     }
 

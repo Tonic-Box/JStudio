@@ -4,6 +4,8 @@ import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.analysis.execution.state.ValueTag;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.debugger.edit.ValueEditDialog;
 import com.tonic.ui.vm.debugger.inspector.ObjectInspectorDialog;
@@ -19,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class StackPanel extends JPanel {
+public class StackPanel extends ThemedJPanel {
 
     private static final int VALUE_COLUMN = 2;
 
@@ -30,8 +32,7 @@ public class StackPanel extends JPanel {
     private ClassResolver classResolver;
 
     public StackPanel() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgPrimary());
+        super(BackgroundStyle.PRIMARY, new BorderLayout());
         setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Operand Stack",
@@ -48,10 +49,10 @@ public class StackPanel extends JPanel {
         stackTable.setGridColor(JStudioTheme.getBorder());
         stackTable.setSelectionBackground(JStudioTheme.getAccent());
         stackTable.setSelectionForeground(JStudioTheme.getTextPrimary());
-        stackTable.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        stackTable.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
         stackTable.getTableHeader().setBackground(JStudioTheme.getBgPrimary());
         stackTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
-        stackTable.setRowHeight(20);
+        stackTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
 
         stackTable.setDefaultRenderer(Object.class, new StackCellRenderer());
 

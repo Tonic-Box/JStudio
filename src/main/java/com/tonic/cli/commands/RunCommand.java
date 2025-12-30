@@ -64,7 +64,7 @@ public class RunCommand implements Callable<Integer> {
             return 1;
         }
 
-        ExecutionConfig config = new ExecutionConfig.Builder()
+        ExecutionConfig config = ExecutionConfig.builder()
             .target(target)
             .plugin(plugin)
             .pluginDir(pluginDir)

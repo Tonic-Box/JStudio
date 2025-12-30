@@ -23,6 +23,8 @@ import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.vm.model.ExecutionResult;
 import com.tonic.ui.vm.model.MethodCall;
 
+import lombok.Getter;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -33,17 +35,23 @@ public class VMExecutionService {
 
     private static final VMExecutionService INSTANCE = new VMExecutionService();
 
+    @Getter
     private ClassPool classPool;
+    @Getter
     private ClassResolver classResolver;
+    @Getter
     private SimpleHeapManager heapManager;
     private BytecodeContext context;
     private BytecodeEngine currentEngine;
+    @Getter
     private DebugSession currentDebugSession;
 
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final AtomicBoolean executing = new AtomicBoolean(false);
 
+    @Getter
     private int maxCallDepth = 1000;
+    @Getter
     private int maxInstructions = 10_000_000;
 
     private VMExecutionService() {
@@ -489,10 +497,6 @@ public class VMExecutionService {
         return currentDebugSession;
     }
 
-    public DebugSession getCurrentDebugSession() {
-        return currentDebugSession;
-    }
-
     public MethodEntry findMethod(String className, String methodName, String descriptor) {
         ensureInitialized();
 
@@ -501,18 +505,6 @@ public class VMExecutionService {
             return null;
         }
         return findMethod(classFile, methodName, descriptor);
-    }
-
-    public ClassPool getClassPool() {
-        return classPool;
-    }
-
-    public ClassResolver getClassResolver() {
-        return classResolver;
-    }
-
-    public SimpleHeapManager getHeapManager() {
-        return heapManager;
     }
 
     public void setMaxCallDepth(int maxCallDepth) {
@@ -527,14 +519,6 @@ public class VMExecutionService {
         if (initialized.get()) {
             rebuildContext();
         }
-    }
-
-    public int getMaxCallDepth() {
-        return maxCallDepth;
-    }
-
-    public int getMaxInstructions() {
-        return maxInstructions;
     }
 
     public String getVMStatus() {

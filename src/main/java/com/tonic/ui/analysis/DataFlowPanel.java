@@ -17,6 +17,8 @@ import com.tonic.ui.event.events.MethodSelectedEvent;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.imageio.ImageIO;
@@ -31,10 +33,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
-/**
- * Panel for visualizing data flow within a method using JGraphX.
- */
-public class DataFlowPanel extends JPanel {
+public class DataFlowPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private final mxGraph graph;
@@ -48,15 +47,12 @@ public class DataFlowPanel extends JPanel {
     private Map<Object, DataFlowNode> cellToNodeMap = new HashMap<>();
     private JPopupMenu contextMenu;
 
-    // Currently selected class and method
     private ClassFile currentClass;
     private MethodEntry currentMethod;
 
     public DataFlowPanel(ProjectModel project) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
 
         // Control panel
         JPanel controlPanel = createControlPanel();
@@ -81,13 +77,12 @@ public class DataFlowPanel extends JPanel {
 
         add(graphComponent, BorderLayout.CENTER);
 
-        // Status area
         statusArea = new JTextArea(4, 40);
         statusArea.setEditable(false);
         statusArea.setBackground(JStudioTheme.getBgTertiary());
         statusArea.setForeground(JStudioTheme.getTextSecondary());
-        statusArea.setFont(JStudioTheme.getCodeFont(11));
-        statusArea.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        statusArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
+        statusArea.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM));
 
         JScrollPane statusScroll = new JScrollPane(statusArea);
         statusScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
@@ -100,7 +95,7 @@ public class DataFlowPanel extends JPanel {
     }
 
     private JPanel createControlPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL));
         panel.setBackground(JStudioTheme.getBgSecondary());
 
         panel.add(createLabel("Method:"));

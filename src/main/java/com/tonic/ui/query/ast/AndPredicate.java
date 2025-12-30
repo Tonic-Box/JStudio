@@ -25,6 +25,11 @@ public final class AndPredicate implements Predicate {
     }
 
     @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitAnd(this);
+    }
+
+    @Override
     public boolean isStaticallyResolvable() {
         return left.isStaticallyResolvable() && right.isStaticallyResolvable();
     }

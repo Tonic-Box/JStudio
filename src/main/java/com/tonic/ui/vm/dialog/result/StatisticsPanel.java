@@ -1,5 +1,7 @@
 package com.tonic.ui.vm.dialog.result;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.model.ExecutionResult;
 import com.tonic.ui.vm.model.MethodCall;
@@ -10,7 +12,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-public class StatisticsPanel extends JPanel {
+public class StatisticsPanel extends ThemedJPanel {
 
     private final JLabel totalTimeLabel;
     private final JLabel instructionsLabel;
@@ -23,9 +25,8 @@ public class StatisticsPanel extends JPanel {
     private final DefaultTableModel hotMethodsModel;
 
     public StatisticsPanel() {
-        setLayout(new BorderLayout(10, 10));
-        setBackground(JStudioTheme.getBgPrimary());
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_MEDIUM + 2, UIConstants.SPACING_MEDIUM + 2));
+        setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_MEDIUM + 2, UIConstants.SPACING_MEDIUM + 2, UIConstants.SPACING_MEDIUM + 2, UIConstants.SPACING_MEDIUM + 2));
 
         JPanel metricsPanel = new JPanel();
         metricsPanel.setLayout(new BoxLayout(metricsPanel, BoxLayout.Y_AXIS));
@@ -68,10 +69,10 @@ public class StatisticsPanel extends JPanel {
         hotMethodsTable.setForeground(JStudioTheme.getTextPrimary());
         hotMethodsTable.setSelectionBackground(JStudioTheme.getSelection());
         hotMethodsTable.setGridColor(JStudioTheme.getBorder());
-        hotMethodsTable.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
+        hotMethodsTable.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
         hotMethodsTable.getTableHeader().setBackground(JStudioTheme.getBgSecondary());
         hotMethodsTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
-        hotMethodsTable.setRowHeight(20);
+        hotMethodsTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
 
         hotMethodsTable.getColumnModel().getColumn(0).setPreferredWidth(300);
         hotMethodsTable.getColumnModel().getColumn(1).setPreferredWidth(60);
@@ -89,16 +90,16 @@ public class StatisticsPanel extends JPanel {
 
     private JLabel createSection(String title) {
         JLabel label = new JLabel(title);
-        label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        label.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL).deriveFont(Font.BOLD));
         label.setForeground(JStudioTheme.getTextPrimary());
         label.setAlignmentX(LEFT_ALIGNMENT);
-        label.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+        label.setBorder(BorderFactory.createEmptyBorder(0, 0, UIConstants.SPACING_SMALL + 1, 0));
         return label;
     }
 
     private JLabel createMetricLabel(String name, String value) {
         JLabel label = new JLabel("  " + name + "  " + value);
-        label.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        label.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
         label.setForeground(JStudioTheme.getTextPrimary());
         label.setAlignmentX(LEFT_ALIGNMENT);
         return label;

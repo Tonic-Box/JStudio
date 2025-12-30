@@ -4,12 +4,12 @@ import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.MainFrame;
 import com.tonic.parser.attribute.CodeAttribute;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
@@ -21,12 +21,8 @@ import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import javax.swing.SwingUtilities;
 
-/**
- * Properties panel showing details of selected class/method/field.
- */
-public class PropertiesPanel extends JPanel implements ThemeManager.ThemeChangeListener {
+public class PropertiesPanel extends ThemedJPanel {
 
     private final JTabbedPane tabbedPane;
     private final JPanel classPanel;
@@ -39,8 +35,7 @@ public class PropertiesPanel extends JPanel implements ThemeManager.ThemeChangeL
     private FieldEntryModel currentField;
 
     public PropertiesPanel(MainFrame mainFrame) {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         tabbedPane.setBackground(JStudioTheme.getBgSecondary());
@@ -66,26 +61,18 @@ public class PropertiesPanel extends JPanel implements ThemeManager.ThemeChangeL
         detailsArea.setEditable(false);
         detailsArea.setBackground(JStudioTheme.getBgTertiary());
         detailsArea.setForeground(JStudioTheme.getTextPrimary());
-        detailsArea.setFont(JStudioTheme.getCodeFont(11));
-        detailsArea.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        detailsArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
+        detailsArea.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM));
 
         JScrollPane detailsScroll = new JScrollPane(detailsArea);
         detailsScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
         add(detailsScroll, BorderLayout.SOUTH);
 
         showEmptyState();
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgSecondary());
-
+    protected void applyChildThemes() {
         tabbedPane.setBackground(JStudioTheme.getBgSecondary());
         tabbedPane.setForeground(JStudioTheme.getTextPrimary());
 
@@ -95,9 +82,7 @@ public class PropertiesPanel extends JPanel implements ThemeManager.ThemeChangeL
 
         detailsArea.setBackground(JStudioTheme.getBgTertiary());
         detailsArea.setForeground(JStudioTheme.getTextPrimary());
-        detailsArea.setFont(JStudioTheme.getCodeFont(11));
-
-        repaint();
+        detailsArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
     }
 
     private JPanel createPropertiesGrid() {

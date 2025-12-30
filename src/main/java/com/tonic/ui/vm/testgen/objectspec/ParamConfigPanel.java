@@ -1,11 +1,13 @@
 package com.tonic.ui.vm.testgen.objectspec;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class ParamConfigPanel extends JPanel {
+public class ParamConfigPanel extends ThemedJPanel {
 
     private final Window ownerWindow;
     private ParamSpec spec;
@@ -18,6 +20,7 @@ public class ParamConfigPanel extends JPanel {
     private JLabel summaryLabel;
 
     public ParamConfigPanel(Window owner, ParamSpec spec) {
+        super(BackgroundStyle.PRIMARY);
         this.ownerWindow = owner;
         this.spec = spec;
         initComponents();
@@ -25,8 +28,7 @@ public class ParamConfigPanel extends JPanel {
     }
 
     private void initComponents() {
-        setLayout(new FlowLayout(FlowLayout.LEFT, 5, 2));
-        setBackground(JStudioTheme.getBgPrimary());
+        setLayout(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL + 1, UIConstants.SPACING_TINY));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
 
         nameLabel = createLabel(spec.getName() != null ? spec.getName() : "param");
@@ -49,7 +51,7 @@ public class ParamConfigPanel extends JPanel {
         add(valueField);
 
         configButton = new JButton("Configure...");
-        configButton.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+        configButton.setFont(JStudioTheme.getUIFont(10));
         configButton.setVisible(false);
         configButton.addActionListener(e -> openObjectBuilder());
         add(configButton);

@@ -1,5 +1,8 @@
 package com.tonic.plugin.result;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -172,6 +175,8 @@ public class ResultCollector {
         );
     }
 
+    @Getter
+    @AllArgsConstructor
     public static final class ResultSummary {
         private final int total;
         private final int critical;
@@ -179,22 +184,6 @@ public class ResultCollector {
         private final int medium;
         private final int low;
         private final int info;
-
-        public ResultSummary(int total, int critical, int high, int medium, int low, int info) {
-            this.total = total;
-            this.critical = critical;
-            this.high = high;
-            this.medium = medium;
-            this.low = low;
-            this.info = info;
-        }
-
-        public int getTotal() { return total; }
-        public int getCritical() { return critical; }
-        public int getHigh() { return high; }
-        public int getMedium() { return medium; }
-        public int getLow() { return low; }
-        public int getInfo() { return info; }
 
         @Override
         public String toString() {

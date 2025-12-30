@@ -1,7 +1,9 @@
 package com.tonic.ui.event.events;
 
 import com.tonic.ui.event.Event;
+import lombok.Getter;
 
+@Getter
 public class VMInitializedEvent extends Event {
 
     private final int classCount;
@@ -17,14 +19,6 @@ public class VMInitializedEvent extends Event {
         super(source);
         this.classCount = classCount;
         this.status = status;
-    }
-
-    public int getClassCount() {
-        return classCount;
-    }
-
-    public String getStatus() {
-        return status;
     }
 
     @Override

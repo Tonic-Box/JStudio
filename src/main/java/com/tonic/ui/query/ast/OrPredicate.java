@@ -25,6 +25,11 @@ public final class OrPredicate implements Predicate {
     }
 
     @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitOr(this);
+    }
+
+    @Override
     public boolean isStaticallyResolvable() {
         return left.isStaticallyResolvable() && right.isStaticallyResolvable();
     }

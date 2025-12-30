@@ -1,7 +1,12 @@
 package com.tonic.ui.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.UUID;
 
+@Getter
+@Setter
 public class Bookmark {
 
     public static final int NO_SLOT = -1;
@@ -36,72 +41,8 @@ public class Bookmark {
         this.name = name;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public void setClassName(String className) {
-        this.className = className;
-    }
-
-    public String getMemberName() {
-        return memberName;
-    }
-
-    public void setMemberName(String memberName) {
-        this.memberName = memberName;
-    }
-
-    public int getLineNumber() {
-        return lineNumber;
-    }
-
-    public void setLineNumber(int lineNumber) {
-        this.lineNumber = lineNumber;
-    }
-
-    public int getSlot() {
-        return slot;
-    }
-
-    public void setSlot(int slot) {
-        this.slot = slot;
-    }
-
     public boolean hasSlot() {
         return slot >= 0 && slot <= 9;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
     }
 
     public String getLocationKey() {

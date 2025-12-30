@@ -10,6 +10,8 @@ import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.service.ProjectService;
@@ -23,9 +25,10 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.List;
 
-public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.ForensicsEventListener {
+public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTracker.ForensicsEventListener {
 
     private HeapForensicsTracker tracker;
     private HeapForensicsListener listener;
@@ -57,14 +60,13 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
     private static final String[] SPINNER_FRAMES = {"|", "/", "-", "\\"};
 
     public HeapForensicsPanel() {
+        super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
         SimpleHeapManager heapManager = new SimpleHeapManager();
         this.tracker = new HeapForensicsTracker(heapManager);
         this.listener = new HeapForensicsListener(tracker);
         this.tracker.addListener(this);
 
-        setLayout(new BorderLayout(5, 5));
-        setBackground(JStudioTheme.getBgPrimary());
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM));
 
         JPanel toolbarPanel = createToolbar();
         add(toolbarPanel, BorderLayout.NORTH);
@@ -215,11 +217,11 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
     }
 
     private JPanel createToolbar() {
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+            BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL)
         ));
 
         runBtn = new JButton("Run Analysis", Icons.getIcon("run"));
@@ -374,7 +376,7 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
             }
 
             @Override
-            protected void process(java.util.List<String> chunks) {
+            protected void process(List<String> chunks) {
                 if (!chunks.isEmpty()) {
                     String msg = chunks.get(chunks.size() - 1);
                     statusLabel.setText(msg);
@@ -500,14 +502,14 @@ public class HeapForensicsPanel extends JPanel implements HeapForensicsTracker.F
         if (choice >= 0 && choice < 3) {
             JFileChooser chooser = new JFileChooser();
             String ext = choice == 0 ? ".json" : choice == 1 ? ".csv" : ".html";
-            chooser.setSelectedFile(new java.io.File("heap_export" + ext));
+            chooser.setSelectedFile(new File("heap_export" + ext));
             if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
                 exportData(chooser.getSelectedFile(), choice);
             }
         }
     }
 
-    private void exportData(java.io.File file, int format) {
+    private void exportData(File file, int format) {
         statusLabel.setText("Export not yet implemented");
     }
 

@@ -2,7 +2,9 @@ package com.tonic.ui.script.bridge;
 
 import com.tonic.ui.script.engine.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -171,8 +173,8 @@ public class CommonAPI {
 
         props.put("keys", ScriptValue.function(
             ScriptFunction.native1("keys", arg -> {
-                if (!arg.isObject()) return ScriptValue.array(new java.util.ArrayList<>());
-                java.util.List<ScriptValue> keys = new java.util.ArrayList<>();
+                if (!arg.isObject()) return ScriptValue.array(new ArrayList<>());
+                List<ScriptValue> keys = new ArrayList<>();
                 for (String key : arg.asObject().keySet()) {
                     keys.add(ScriptValue.string(key));
                 }
@@ -182,17 +184,17 @@ public class CommonAPI {
 
         props.put("values", ScriptValue.function(
             ScriptFunction.native1("values", arg -> {
-                if (!arg.isObject()) return ScriptValue.array(new java.util.ArrayList<>());
-                return ScriptValue.array(new java.util.ArrayList<>(arg.asObject().values()));
+                if (!arg.isObject()) return ScriptValue.array(new ArrayList<>());
+                return ScriptValue.array(new ArrayList<>(arg.asObject().values()));
             })
         ));
 
         props.put("entries", ScriptValue.function(
             ScriptFunction.native1("entries", arg -> {
-                if (!arg.isObject()) return ScriptValue.array(new java.util.ArrayList<>());
-                java.util.List<ScriptValue> entries = new java.util.ArrayList<>();
+                if (!arg.isObject()) return ScriptValue.array(new ArrayList<>());
+                List<ScriptValue> entries = new ArrayList<>();
                 for (Map.Entry<String, ScriptValue> entry : arg.asObject().entrySet()) {
-                    java.util.List<ScriptValue> pair = new java.util.ArrayList<>();
+                    List<ScriptValue> pair = new ArrayList<>();
                     pair.add(ScriptValue.string(entry.getKey()));
                     pair.add(entry.getValue());
                     entries.add(ScriptValue.array(pair));

@@ -1,5 +1,6 @@
 package com.tonic.ui.query;
 
+import com.tonic.ui.core.util.ComparisonOperator;
 import com.tonic.ui.query.ast.*;
 import com.tonic.ui.query.parser.ParseException;
 import com.tonic.ui.query.parser.QueryParser;
@@ -64,7 +65,7 @@ class QueryPlannerTest {
 
         AllocCountPredicate acp = (AllocCountPredicate) query.predicate();
         assertEquals("java/lang/StringBuilder", acp.typeName());
-        assertEquals(AllocCountPredicate.ComparisonOp.GT, acp.operator());
+        assertEquals(ComparisonOperator.GT, acp.operator());
         assertEquals(5, acp.threshold());
     }
 

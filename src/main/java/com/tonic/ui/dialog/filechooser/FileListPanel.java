@@ -1,5 +1,7 @@
 package com.tonic.ui.dialog.filechooser;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.QuickAccessManager;
 
@@ -27,10 +29,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.List;
 
-/**
- * Main file listing panel with table, sorting, and navigation.
- */
-public class FileListPanel extends JPanel {
+public class FileListPanel extends ThemedJPanel {
 
     /**
      * Listener for file list events.
@@ -57,8 +56,7 @@ public class FileListPanel extends JPanel {
     private static final long TYPE_AHEAD_TIMEOUT = 1000; // 1 second
 
     public FileListPanel() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
+        super(BackgroundStyle.TERTIARY, new BorderLayout());
 
         model = new FileListModel();
         table = new JTable(model);
@@ -78,12 +76,12 @@ public class FileListPanel extends JPanel {
         table.setRowSorter(sorter);
         table.setShowGrid(false);
         table.setIntercellSpacing(new java.awt.Dimension(0, 0));
-        table.setRowHeight(24);
+        table.setRowHeight(UIConstants.TABLE_ROW_HEIGHT + 4);
         table.setBackground(JStudioTheme.getBgTertiary());
         table.setForeground(JStudioTheme.getTextPrimary());
         table.setSelectionBackground(JStudioTheme.getSelection());
         table.setSelectionForeground(JStudioTheme.getTextPrimary());
-        table.setFont(JStudioTheme.getUIFont(12));
+        table.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL));
         table.setFillsViewportHeight(true);
 
         // Selection mode

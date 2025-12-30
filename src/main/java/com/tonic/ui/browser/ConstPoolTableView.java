@@ -2,8 +2,12 @@ package com.tonic.ui.browser;
 
 import com.tonic.parser.ConstPool;
 import com.tonic.parser.constpool.*;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.ColumnWidths;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -24,26 +28,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class ConstPoolTableView extends JPanel {
+public class ConstPoolTableView extends ThemedJPanel {
 
     private final JTable table;
     private final ConstPoolTableModel tableModel;
     private final TableRowSorter<ConstPoolTableModel> sorter;
     private final JTextField filterField;
+    private final JPanel filterPanel;
 
     private BiConsumer<Item<?>, Integer> selectionListener;
     private ConstPool constPool;
 
     public ConstPoolTableView() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
+        super(BackgroundStyle.TERTIARY, new BorderLayout());
 
-        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY));
         filterPanel.setBackground(JStudioTheme.getBgSecondary());
 
-        javax.swing.JLabel filterLabel = new javax.swing.JLabel("Filter:");
+        JLabel filterLabel = new JLabel("Filter:");
         filterLabel.setForeground(JStudioTheme.getTextSecondary());
-        filterLabel.setFont(JStudioTheme.getUIFont(10));
+        filterLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_SMALL));
         filterPanel.add(filterLabel);
 
         filterField = new JTextField(20);
@@ -72,21 +76,21 @@ public class ConstPoolTableView extends JPanel {
         table.setSelectionBackground(JStudioTheme.getSelection());
         table.setSelectionForeground(JStudioTheme.getTextPrimary());
         table.setGridColor(JStudioTheme.getBorder());
-        table.setFont(JStudioTheme.getCodeFont(11));
-        table.setRowHeight(20);
+        table.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
+        table.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(0).setMaxWidth(70);
-        table.getColumnModel().getColumn(1).setPreferredWidth(50);
-        table.getColumnModel().getColumn(1).setMaxWidth(70);
-        table.getColumnModel().getColumn(2).setPreferredWidth(100);
-        table.getColumnModel().getColumn(2).setMaxWidth(120);
-        table.getColumnModel().getColumn(3).setPreferredWidth(350);
+        table.getColumnModel().getColumn(0).setPreferredWidth(ColumnWidths.INDEX);
+        table.getColumnModel().getColumn(0).setMaxWidth(ColumnWidths.INDEX + 20);
+        table.getColumnModel().getColumn(1).setPreferredWidth(ColumnWidths.INDEX);
+        table.getColumnModel().getColumn(1).setMaxWidth(ColumnWidths.INDEX + 20);
+        table.getColumnModel().getColumn(2).setPreferredWidth(ColumnWidths.TYPE);
+        table.getColumnModel().getColumn(2).setMaxWidth(ColumnWidths.TYPE + 20);
+        table.getColumnModel().getColumn(3).setPreferredWidth(ColumnWidths.STRING_VALUE);
 
         table.getTableHeader().setBackground(JStudioTheme.getBgSecondary());
         table.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
-        table.getTableHeader().setFont(JStudioTheme.getUIFont(11));
+        table.getTableHeader().setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
 
         table.setDefaultRenderer(Object.class, new ConstPoolCellRenderer());
 

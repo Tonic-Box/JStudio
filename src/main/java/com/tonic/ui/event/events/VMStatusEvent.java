@@ -1,7 +1,9 @@
 package com.tonic.ui.event.events;
 
 import com.tonic.ui.event.Event;
+import lombok.Getter;
 
+@Getter
 public class VMStatusEvent extends Event {
 
     public enum VMState {
@@ -31,18 +33,6 @@ public class VMStatusEvent extends Event {
         this.state = state;
         this.message = message;
         this.instructionCount = instructionCount;
-    }
-
-    public VMState getState() {
-        return state;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public long getInstructionCount() {
-        return instructionCount;
     }
 
     public boolean isIdle() {

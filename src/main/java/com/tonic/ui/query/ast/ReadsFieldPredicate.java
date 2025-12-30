@@ -1,5 +1,7 @@
 package com.tonic.ui.query.ast;
 
+import com.tonic.ui.core.util.MemberReference;
+
 import java.util.Objects;
 
 /**
@@ -8,39 +10,31 @@ import java.util.Objects;
  */
 public final class ReadsFieldPredicate implements Predicate {
 
-    private final String ownerClass;
-    private final String fieldName;
-    private final String descriptor;
+    private final MemberReference fieldRef;
 
     public ReadsFieldPredicate(String ownerClass, String fieldName, String descriptor) {
-        this.ownerClass = ownerClass;
-        this.fieldName = fieldName;
-        this.descriptor = descriptor;
+        this.fieldRef = new MemberReference(ownerClass, fieldName, descriptor);
+    }
+
+    private ReadsFieldPredicate(MemberReference ref) {
+        this.fieldRef = ref;
     }
 
     public String ownerClass() {
-        return ownerClass;
+        return fieldRef.getOwnerClass();
     }
 
     public String fieldName() {
-        return fieldName;
+        return fieldRef.getMemberName();
     }
 
     public String descriptor() {
-        return descriptor;
+        return fieldRef.getDescriptor();
     }
 
-    public static ReadsFieldPredicate of(String fieldRef) {
-        if (fieldRef == null || fieldRef.equals("*")) {
-            return new ReadsFieldPredicate(null, null, null);
-        }
-        String[] parts = fieldRef.split("[.:]");
-        switch (parts.length) {
-            case 1: return new ReadsFieldPredicate(null, parts[0], null);
-            case 2: return new ReadsFieldPredicate(parts[0], parts[1], null);
-            case 3: return new ReadsFieldPredicate(parts[0], parts[1], parts[2]);
-            default: return new ReadsFieldPredicate(null, fieldRef, null);
-        }
+    public static ReadsFieldPredicate of(String fieldRefStr) {
+        MemberReference ref = MemberReference.parseFieldRef(fieldRefStr);
+        return new ReadsFieldPredicate(ref);
     }
 
     public static ReadsFieldPredicate all() {
@@ -48,20 +42,16 @@ public final class ReadsFieldPredicate implements Predicate {
     }
 
     public boolean isWildcard() {
-        return ownerClass == null && fieldName == null;
+        return fieldRef.isWildcard();
     }
 
     public boolean matches(String owner, String name, String desc) {
-        if (ownerClass != null && !ownerClass.equals(owner) && !owner.endsWith("/" + ownerClass)) {
-            return false;
-        }
-        if (fieldName != null && !fieldName.equals(name)) {
-            return false;
-        }
-        if (descriptor != null && !descriptor.equals(desc)) {
-            return false;
-        }
-        return true;
+        return fieldRef.matches(owner, name, desc);
+    }
+
+    @Override
+    public <T> T accept(PredicateVisitor<T> visitor) {
+        return visitor.visitReadsField(this);
     }
 
     @Override
@@ -74,19 +64,16 @@ public final class ReadsFieldPredicate implements Predicate {
         if (this == o) return true;
         if (!(o instanceof ReadsFieldPredicate)) return false;
         ReadsFieldPredicate that = (ReadsFieldPredicate) o;
-        return Objects.equals(ownerClass, that.ownerClass) &&
-               Objects.equals(fieldName, that.fieldName) &&
-               Objects.equals(descriptor, that.descriptor);
+        return Objects.equals(fieldRef, that.fieldRef);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ownerClass, fieldName, descriptor);
+        return Objects.hash(fieldRef);
     }
 
     @Override
     public String toString() {
-        return "ReadsFieldPredicate{ownerClass='" + ownerClass + "', fieldName='" + fieldName +
-               "', descriptor='" + descriptor + "'}";
+        return "ReadsFieldPredicate{fieldRef=" + fieldRef + "}";
     }
 }

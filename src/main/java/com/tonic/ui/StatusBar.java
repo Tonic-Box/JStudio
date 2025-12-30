@@ -1,10 +1,10 @@
 package com.tonic.ui;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.StatusMessageEvent;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
@@ -14,15 +14,13 @@ import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import javax.swing.SwingUtilities;
 
 /**
  * Status bar component showing messages, progress, and memory usage.
  */
-public class StatusBar extends JPanel implements ThemeManager.ThemeChangeListener {
+public class StatusBar extends ThemedJPanel {
 
     private final JLabel messageLabel;
     private final JLabel positionLabel;
@@ -34,13 +32,11 @@ public class StatusBar extends JPanel implements ThemeManager.ThemeChangeListene
     private Timer clearMessageTimer;
 
     public StatusBar() {
-        setLayout(new BorderLayout());
-        setPreferredSize(new Dimension(0, 24));
-        setBackground(JStudioTheme.getBgSecondary());
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
+        setPreferredSize(new Dimension(0, UIConstants.STATUSBAR_HEIGHT));
         setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
 
-        // Left panel - message and position
-        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_TINY));
         leftPanel.setOpaque(false);
 
         messageLabel = createLabel("");
@@ -51,7 +47,6 @@ public class StatusBar extends JPanel implements ThemeManager.ThemeChangeListene
         leftPanel.add(createSeparator());
         leftPanel.add(positionLabel);
 
-        // Center - progress bar (hidden by default)
         progressBar = new JProgressBar();
         progressBar.setPreferredSize(new Dimension(150, 12));
         progressBar.setVisible(false);
@@ -60,12 +55,11 @@ public class StatusBar extends JPanel implements ThemeManager.ThemeChangeListene
         progressBar.setBackground(JStudioTheme.getBgTertiary());
         progressBar.setBorderPainted(false);
 
-        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 4));
+        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, UIConstants.SPACING_SMALL));
         centerPanel.setOpaque(false);
         centerPanel.add(progressBar);
 
-        // Right panel - mode and memory
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 2));
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_TINY));
         rightPanel.setOpaque(false);
 
         memoryLabel = createLabel("");
@@ -77,60 +71,48 @@ public class StatusBar extends JPanel implements ThemeManager.ThemeChangeListene
         add(centerPanel, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
 
-        // Update memory usage periodically
         memoryTimer = new Timer(2000, e -> updateMemory());
         memoryTimer.start();
         updateMemory();
 
-        // Register for status message events
         EventBus.getInstance().register(StatusMessageEvent.class, this::handleStatusMessage);
 
-        // Timer to clear temporary messages
         clearMessageTimer = new Timer(5000, e -> {
             messageLabel.setText("");
             clearMessageTimer.stop();
         });
         clearMessageTimer.setRepeats(false);
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgSecondary());
+    protected void applyChildThemes() {
         setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
 
         messageLabel.setForeground(JStudioTheme.getTextSecondary());
-        messageLabel.setFont(JStudioTheme.getUIFont(11));
+        messageLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
 
         positionLabel.setForeground(JStudioTheme.getTextSecondary());
-        positionLabel.setFont(JStudioTheme.getUIFont(11));
+        positionLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
 
         modeLabel.setForeground(JStudioTheme.getTextSecondary());
-        modeLabel.setFont(JStudioTheme.getUIFont(11));
+        modeLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
 
-        memoryLabel.setFont(JStudioTheme.getUIFont(11));
+        memoryLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
 
         progressBar.setForeground(JStudioTheme.getAccent());
         progressBar.setBackground(JStudioTheme.getBgTertiary());
-
-        repaint();
     }
 
     private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
         label.setForeground(JStudioTheme.getTextSecondary());
-        label.setFont(JStudioTheme.getUIFont(11));
+        label.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         return label;
     }
 
     private JSeparator createSeparator() {
         JSeparator sep = new JSeparator(SwingConstants.VERTICAL);
-        sep.setPreferredSize(new Dimension(1, 16));
+        sep.setPreferredSize(new Dimension(1, UIConstants.ICON_SIZE_SMALL));
         sep.setForeground(JStudioTheme.getBorder());
         return sep;
     }

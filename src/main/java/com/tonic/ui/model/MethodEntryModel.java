@@ -3,23 +3,27 @@ package com.tonic.ui.model;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.theme.Icons;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.swing.Icon;
 
-/**
- * Wraps a MethodEntry with UI and analysis state.
- */
+@Getter
 public class MethodEntryModel {
 
     private final MethodEntry methodEntry;
     private final ClassEntryModel owner;
 
     // UI state
+    @Setter
     private boolean selected;
+    @Setter
     private boolean bookmarked;
+    @Setter
     private String userNotes;
 
     // Analysis state
+    @Setter
     private AnalysisState analysisState = AnalysisState.NOT_ANALYZED;
     private IRMethod cachedIR;
     private long irCacheTimestamp;
@@ -189,67 +193,9 @@ public class MethodEntryModel {
         return "<clinit>".equals(methodEntry.getName());
     }
 
-    // Getters
-
-    public MethodEntry getMethodEntry() {
-        return methodEntry;
-    }
-
-    public ClassEntryModel getOwner() {
-        return owner;
-    }
-
-    public String getDisplaySignature() {
-        return displaySignature;
-    }
-
-    public Icon getIcon() {
-        return icon;
-    }
-
-    public boolean isSelected() {
-        return selected;
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
-
-    public boolean isBookmarked() {
-        return bookmarked;
-    }
-
-    public void setBookmarked(boolean bookmarked) {
-        this.bookmarked = bookmarked;
-    }
-
-    public String getUserNotes() {
-        return userNotes;
-    }
-
-    public void setUserNotes(String userNotes) {
-        this.userNotes = userNotes;
-    }
-
-    public AnalysisState getAnalysisState() {
-        return analysisState;
-    }
-
-    public void setAnalysisState(AnalysisState analysisState) {
-        this.analysisState = analysisState;
-    }
-
-    public IRMethod getCachedIR() {
-        return cachedIR;
-    }
-
     public void setCachedIR(IRMethod cachedIR) {
         this.cachedIR = cachedIR;
         this.irCacheTimestamp = System.currentTimeMillis();
-    }
-
-    public long getIrCacheTimestamp() {
-        return irCacheTimestamp;
     }
 
     public void invalidateIRCache() {

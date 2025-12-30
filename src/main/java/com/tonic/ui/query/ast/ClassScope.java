@@ -41,6 +41,11 @@ public final class ClassScope implements Scope {
     }
 
     @Override
+    public <T> T accept(ScopeVisitor<T> visitor) {
+        return visitor.visitClass(this);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ClassScope)) return false;

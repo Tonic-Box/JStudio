@@ -1,5 +1,7 @@
 package com.tonic.ui.editor;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -13,7 +15,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -21,7 +22,7 @@ import java.awt.Dimension;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-public class SearchPanel extends JPanel {
+public class SearchPanel extends ThemedJPanel {
 
     private final RSyntaxTextArea textArea;
     private final JTextField searchField;
@@ -35,15 +36,15 @@ public class SearchPanel extends JPanel {
     private int totalMatches = 0;
 
     public SearchPanel(RSyntaxTextArea textArea) {
+        super(BackgroundStyle.SECONDARY);
         this.textArea = textArea;
         this.context = new SearchContext();
 
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(4, 8, 4, 8)
+            BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM)
         ));
-        setBackground(JStudioTheme.getBgSecondary());
         setVisible(false);
 
         JLabel findLabel = new JLabel("Find:");

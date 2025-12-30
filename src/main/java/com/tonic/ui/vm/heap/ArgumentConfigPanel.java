@@ -9,6 +9,8 @@ import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.testgen.MethodFuzzer;
 
@@ -24,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ArgumentConfigPanel extends JPanel {
+public class ArgumentConfigPanel extends ThemedJPanel {
 
     public enum Mode { MANUAL, FUZZ }
 
@@ -65,8 +67,7 @@ public class ArgumentConfigPanel extends JPanel {
     private boolean receiverExpanded = false;
 
     public ArgumentConfigPanel() {
-        setLayout(new BorderLayout(5, 5));
-        setBackground(JStudioTheme.getBgSecondary());
+        super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
         setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Arguments",
@@ -76,7 +77,7 @@ public class ArgumentConfigPanel extends JPanel {
             JStudioTheme.getTextPrimary()
         ));
 
-        modeButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
+        modeButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 2));
         modeButtonPanel.setBackground(JStudioTheme.getBgSecondary());
 
         ButtonGroup modeGroup = new ButtonGroup();

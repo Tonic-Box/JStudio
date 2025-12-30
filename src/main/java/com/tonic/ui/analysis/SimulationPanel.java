@@ -14,6 +14,8 @@ import com.tonic.ui.simulation.model.OpaquePredicate;
 import com.tonic.ui.simulation.model.SimulationFinding;
 import com.tonic.ui.simulation.model.TaintFlow;
 import com.tonic.ui.simulation.export.FindingsExporter;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 
@@ -23,15 +25,12 @@ import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Panel for simulation-based analysis results including opaque predicate detection,
- * dead code analysis, and other symbolic execution findings.
- */
-public class SimulationPanel extends JPanel {
+public class SimulationPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private final JTable findingsTable;
@@ -48,12 +47,10 @@ public class SimulationPanel extends JPanel {
     private String currentFilter = "All";
 
     public SimulationPanel(ProjectModel project) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
 
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
-
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL));
         toolbar.setBackground(JStudioTheme.getBgSecondary());
 
         analyzeCurrentButton = new JButton("Analyze Current");
@@ -116,8 +113,8 @@ public class SimulationPanel extends JPanel {
         findingsTable.setSelectionBackground(JStudioTheme.getSelection());
         findingsTable.setSelectionForeground(JStudioTheme.getTextPrimary());
         findingsTable.setGridColor(JStudioTheme.getBorder());
-        findingsTable.setFont(JStudioTheme.getCodeFont(11));
-        findingsTable.setRowHeight(20);
+        findingsTable.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
+        findingsTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         findingsTable.getTableHeader().setBackground(JStudioTheme.getBgSecondary());
         findingsTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
 
@@ -154,13 +151,13 @@ public class SimulationPanel extends JPanel {
 
         JLabel detailsLabel = new JLabel(" Finding Details");
         detailsLabel.setForeground(JStudioTheme.getTextSecondary());
-        detailsLabel.setFont(JStudioTheme.getUIFont(11).deriveFont(Font.BOLD));
+        detailsLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE).deriveFont(Font.BOLD));
         detailsPanel.add(detailsLabel, BorderLayout.NORTH);
 
         detailsArea = new JTextArea();
         detailsArea.setBackground(JStudioTheme.getBgTertiary());
         detailsArea.setForeground(JStudioTheme.getTextPrimary());
-        detailsArea.setFont(JStudioTheme.getCodeFont(11));
+        detailsArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
         detailsArea.setEditable(false);
         detailsArea.setLineWrap(true);
         detailsArea.setWrapStyleWord(true);
@@ -398,11 +395,11 @@ public class SimulationPanel extends JPanel {
                 "JSON or HTML files", "json", "html"));
 
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            java.io.File file = chooser.getSelectedFile();
+            File file = chooser.getSelectedFile();
             String path = file.getAbsolutePath();
 
             try {
-                List<SimulationFinding> findings = new java.util.ArrayList<>();
+                List<SimulationFinding> findings = new ArrayList<>();
                 for (FindingEntry entry : allFindings) {
                     findings.add(entry.finding);
                 }

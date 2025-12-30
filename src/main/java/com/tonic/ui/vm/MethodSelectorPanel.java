@@ -1,5 +1,7 @@
 package com.tonic.ui.vm;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ProjectLoadedEvent;
 import com.tonic.ui.event.events.ProjectUpdatedEvent;
@@ -23,7 +25,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
 
-public class MethodSelectorPanel extends JPanel {
+public class MethodSelectorPanel extends ThemedJPanel {
 
     private final JTree tree;
     private final ClassTreeModel treeModel;
@@ -37,8 +39,7 @@ public class MethodSelectorPanel extends JPanel {
     }
 
     public MethodSelectorPanel(String title) {
-        setLayout(new BorderLayout(5, 5));
-        setBackground(JStudioTheme.getBgPrimary());
+        super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         if (title != null) {
             setBorder(BorderFactory.createTitledBorder(
@@ -51,7 +52,7 @@ public class MethodSelectorPanel extends JPanel {
             ));
         }
 
-        JPanel topPanel = new JPanel(new BorderLayout(5, 5));
+        JPanel topPanel = new JPanel(new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
         topPanel.setBackground(JStudioTheme.getBgPrimary());
 
         searchField = new JTextField();
@@ -60,12 +61,12 @@ public class MethodSelectorPanel extends JPanel {
         searchField.setCaretColor(JStudioTheme.getTextPrimary());
         searchField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(3, 5, 3, 5)
+            BorderFactory.createEmptyBorder(UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL)
         ));
         searchField.setToolTipText("Filter by class or method name");
 
-        JLabel searchIcon = new JLabel(Icons.getIcon("search", 14));
-        searchIcon.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
+        JLabel searchIcon = new JLabel(Icons.getIcon("search", UIConstants.ICON_SIZE_SMALL));
+        searchIcon.setBorder(BorderFactory.createEmptyBorder(0, UIConstants.SPACING_SMALL, 0, 0));
 
         JPanel searchPanel = new JPanel(new BorderLayout());
         searchPanel.setBackground(JStudioTheme.getBgPrimary());
@@ -89,13 +90,13 @@ public class MethodSelectorPanel extends JPanel {
         scrollPane.getViewport().setBackground(JStudioTheme.getBgSecondary());
         add(scrollPane, BorderLayout.CENTER);
 
-        JPanel bottomPanel = new JPanel(new BorderLayout(5, 5));
+        JPanel bottomPanel = new JPanel(new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
         bottomPanel.setBackground(JStudioTheme.getBgPrimary());
-        bottomPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, 0, 0, 0));
 
         selectedLabel = new JLabel("No method selected");
         selectedLabel.setForeground(JStudioTheme.getTextSecondary());
-        selectedLabel.setFont(JStudioTheme.getUIFont(11));
+        selectedLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         bottomPanel.add(selectedLabel, BorderLayout.CENTER);
 
         add(bottomPanel, BorderLayout.SOUTH);

@@ -1,14 +1,19 @@
 package com.tonic.ui.dialog.filechooser;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.QuickAccessManager;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -25,11 +30,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Main container panel for the file chooser dialog.
- * Assembles all sub-components and coordinates navigation.
- */
-public class FileChooserPanel extends JPanel {
+public class FileChooserPanel extends ThemedJPanel {
 
     /**
      * Listener for file chooser completion events.
@@ -59,8 +60,7 @@ public class FileChooserPanel extends JPanel {
     private ExtensionFileFilter currentFilter;
 
     public FileChooserPanel() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgPrimary());
+        super(BackgroundStyle.PRIMARY, new BorderLayout());
         setPreferredSize(new Dimension(800, 500));
 
         // Create components
@@ -136,10 +136,10 @@ public class FileChooserPanel extends JPanel {
 
         JLabel nameLabel = new JLabel("File name:");
         nameLabel.setForeground(JStudioTheme.getTextPrimary());
-        nameLabel.setFont(JStudioTheme.getUIFont(12));
+        nameLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL));
         nameLabel.setPreferredSize(new Dimension(70, 24));
 
-        fileNameField.setFont(JStudioTheme.getUIFont(12));
+        fileNameField.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL));
         fileNameField.setBackground(JStudioTheme.getBgTertiary());
         fileNameField.setForeground(JStudioTheme.getTextPrimary());
         fileNameField.setCaretColor(JStudioTheme.getTextPrimary());
@@ -199,7 +199,7 @@ public class FileChooserPanel extends JPanel {
 
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
-        button.setFont(JStudioTheme.getUIFont(12));
+        button.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL));
         button.setPreferredSize(new Dimension(90, 28));
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -236,10 +236,10 @@ public class FileChooserPanel extends JPanel {
     private void setupKeyboardShortcuts() {
         // Ctrl+L to focus path bar
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
-                javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK),
                 "focusPathBar"
         );
-        getActionMap().put("focusPathBar", new javax.swing.AbstractAction() {
+        getActionMap().put("focusPathBar", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 pathBar.focusPathBar();
@@ -248,10 +248,10 @@ public class FileChooserPanel extends JPanel {
 
         // Escape to cancel
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
-                javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                 "cancel"
         );
-        getActionMap().put("cancel", new javax.swing.AbstractAction() {
+        getActionMap().put("cancel", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 handleCancelButton();
@@ -260,10 +260,10 @@ public class FileChooserPanel extends JPanel {
 
         // Ctrl+N for new folder (save mode)
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
-                javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK),
                 "newFolder"
         );
-        getActionMap().put("newFolder", new javax.swing.AbstractAction() {
+        getActionMap().put("newFolder", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (mode == FileChooserMode.SAVE_FILE) {
@@ -521,17 +521,17 @@ public class FileChooserPanel extends JPanel {
      * Create a new folder in the current directory.
      */
     private void createNewFolder() {
-        String name = javax.swing.JOptionPane.showInputDialog(this, "Folder name:",
-                "New Folder", javax.swing.JOptionPane.PLAIN_MESSAGE);
+        String name = JOptionPane.showInputDialog(this, "Folder name:",
+                "New Folder", JOptionPane.PLAIN_MESSAGE);
         if (name == null || name.trim().isEmpty()) {
             return;
         }
 
         File newFolder = new File(currentDirectory, name.trim());
         if (newFolder.exists()) {
-            javax.swing.JOptionPane.showMessageDialog(this,
+            JOptionPane.showMessageDialog(this,
                     "A folder with this name already exists.",
-                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                    "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -540,9 +540,9 @@ public class FileChooserPanel extends JPanel {
             // Select the new folder
             fileListPanel.selectFile(name.trim());
         } else {
-            javax.swing.JOptionPane.showMessageDialog(this,
+            JOptionPane.showMessageDialog(this,
                     "Failed to create folder.",
-                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

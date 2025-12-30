@@ -1,5 +1,7 @@
 package com.tonic.ui.analysis;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.model.Bookmark;
@@ -17,7 +19,6 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
@@ -31,7 +32,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-public class BookmarksPanel extends JPanel {
+public class BookmarksPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private final JList<Bookmark> bookmarkList;
@@ -39,10 +40,8 @@ public class BookmarksPanel extends JPanel {
     private final JLabel statusLabel;
 
     public BookmarksPanel(ProjectModel project) {
+        super(BackgroundStyle.PRIMARY, new BorderLayout());
         this.project = project;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgPrimary());
 
         JToolBar toolbar = createToolbar();
         add(toolbar, BorderLayout.NORTH);

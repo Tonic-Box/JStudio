@@ -1,5 +1,7 @@
 package com.tonic.ui.vm.dialog.result;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.model.ExecutionResult;
 import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
@@ -8,7 +10,7 @@ import com.tonic.ui.vm.testgen.TestGeneratorDialog;
 import javax.swing.*;
 import java.awt.*;
 
-public class ExecutionResultPanel extends JPanel {
+public class ExecutionResultPanel extends ThemedJPanel {
 
     private final SummaryBar summaryBar;
     private final JTabbedPane detailsTabs;
@@ -25,8 +27,7 @@ public class ExecutionResultPanel extends JPanel {
     private Object[] executionArgs;
 
     public ExecutionResultPanel() {
-        setLayout(new BorderLayout(0, 8));
-        setBackground(JStudioTheme.getBgPrimary());
+        super(BackgroundStyle.PRIMARY, new BorderLayout(0, UIConstants.SPACING_MEDIUM));
 
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
@@ -42,14 +43,14 @@ public class ExecutionResultPanel extends JPanel {
         toolbarPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
 
         fuzzTestButton = new JButton("Fuzz & Generate Tests...");
-        fuzzTestButton.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        fuzzTestButton.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         fuzzTestButton.setEnabled(false);
         fuzzTestButton.setToolTipText("Run method with varied inputs and generate comprehensive tests");
         fuzzTestButton.addActionListener(e -> openFuzzTestDialog());
         toolbarPanel.add(fuzzTestButton);
 
         saveAsTestButton = new JButton("Save Execution as Test...");
-        saveAsTestButton.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        saveAsTestButton.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         saveAsTestButton.setEnabled(false);
         saveAsTestButton.setToolTipText("Generate a test from the current execution result");
         saveAsTestButton.addActionListener(e -> openTestGeneratorDialog());
@@ -66,13 +67,13 @@ public class ExecutionResultPanel extends JPanel {
         detailsTabs = new JTabbedPane(JTabbedPane.TOP);
         detailsTabs.setBackground(JStudioTheme.getBgPrimary());
         detailsTabs.setForeground(JStudioTheme.getTextPrimary());
-        detailsTabs.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        detailsTabs.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         detailsTabs.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Details",
             javax.swing.border.TitledBorder.LEFT,
             javax.swing.border.TitledBorder.TOP,
-            new Font(Font.SANS_SERIF, Font.BOLD, 11),
+            JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE).deriveFont(Font.BOLD),
             JStudioTheme.getTextPrimary()
         ));
 

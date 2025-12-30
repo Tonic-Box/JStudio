@@ -4,9 +4,10 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.*;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 
-import javax.swing.JPanel;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -18,7 +19,7 @@ import java.awt.Color;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class AttributesBrowserPanel extends JPanel {
+public class AttributesBrowserPanel extends ThemedJPanel {
 
     private final JTree tree;
     private final DefaultMutableTreeNode root;
@@ -28,8 +29,7 @@ public class AttributesBrowserPanel extends JPanel {
     private ClassFile classFile;
 
     public AttributesBrowserPanel() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
+        super(BackgroundStyle.TERTIARY, new BorderLayout());
 
         root = new DefaultMutableTreeNode("Attributes");
         treeModel = new DefaultTreeModel(root);
@@ -37,8 +37,8 @@ public class AttributesBrowserPanel extends JPanel {
 
         tree.setBackground(JStudioTheme.getBgTertiary());
         tree.setForeground(JStudioTheme.getTextPrimary());
-        tree.setFont(JStudioTheme.getCodeFont(11));
-        tree.setRowHeight(20);
+        tree.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
+        tree.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
         tree.setCellRenderer(new AttributeTreeCellRenderer());

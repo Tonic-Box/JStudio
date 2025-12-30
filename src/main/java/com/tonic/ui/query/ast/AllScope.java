@@ -11,6 +11,16 @@ public final class AllScope implements Scope {
     }
 
     @Override
+    public <T> T accept(ScopeVisitor<T> visitor) {
+        return visitor.visitAll(this);
+    }
+
+    @Override
+    public boolean isAll() {
+        return true;
+    }
+
+    @Override
     public boolean equals(Object o) {
         return o instanceof AllScope;
     }

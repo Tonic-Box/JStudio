@@ -6,6 +6,8 @@ package com.tonic.ui.query.ast;
  */
 public interface Predicate {
 
+    <T> T accept(PredicateVisitor<T> visitor);
+
     default Predicate and(Predicate other) {
         return new AndPredicate(this, other);
     }
@@ -20,5 +22,9 @@ public interface Predicate {
 
     default boolean isStaticallyResolvable() {
         return false;
+    }
+
+    default boolean requiresExecution() {
+        return !isStaticallyResolvable();
     }
 }

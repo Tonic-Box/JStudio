@@ -1,13 +1,17 @@
 package com.tonic.ui.vm.dialog.result;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.List;
 
-public class ConsoleOutputPanel extends JPanel {
+public class ConsoleOutputPanel extends ThemedJPanel {
 
     private final JTextPane outputPane;
     private final StyledDocument doc;
@@ -19,23 +23,22 @@ public class ConsoleOutputPanel extends JPanel {
     private static final Color STDERR_COLOR = new Color(244, 135, 113);
 
     public ConsoleOutputPanel() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgPrimary());
+        super(BackgroundStyle.PRIMARY, new BorderLayout());
 
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 3));
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL + 1, 3));
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
 
         clearBtn = new JButton("Clear");
-        clearBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        clearBtn.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         clearBtn.addActionListener(e -> clear());
 
         exportBtn = new JButton("Export");
-        exportBtn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        exportBtn.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         exportBtn.addActionListener(e -> exportToFile());
 
         lineCountLabel = new JLabel("Lines: 0");
-        lineCountLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        lineCountLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         lineCountLabel.setForeground(JStudioTheme.getTextSecondary());
 
         toolbar.add(clearBtn);
@@ -48,7 +51,7 @@ public class ConsoleOutputPanel extends JPanel {
         outputPane = new JTextPane();
         outputPane.setEditable(false);
         outputPane.setBackground(JStudioTheme.getBgPrimary());
-        outputPane.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        outputPane.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
         doc = outputPane.getStyledDocument();
 
         initStyles();
@@ -139,13 +142,13 @@ public class ConsoleOutputPanel extends JPanel {
 
     private void exportToFile() {
         JFileChooser chooser = new JFileChooser();
-        chooser.setSelectedFile(new java.io.File("console_output.txt"));
+        chooser.setSelectedFile(new File("console_output.txt"));
         int result = chooser.showSaveDialog(this);
 
         if (result == JFileChooser.APPROVE_OPTION) {
             try {
-                java.io.File file = chooser.getSelectedFile();
-                java.io.FileWriter writer = new java.io.FileWriter(file);
+                File file = chooser.getSelectedFile();
+                FileWriter writer = new FileWriter(file);
                 writer.write(outputPane.getText());
                 writer.close();
                 JOptionPane.showMessageDialog(this, "Exported to " + file.getName(),

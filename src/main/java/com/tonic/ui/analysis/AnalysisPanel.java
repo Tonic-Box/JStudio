@@ -1,16 +1,13 @@
 package com.tonic.ui.analysis;
 
+import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 
-import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import java.awt.BorderLayout;
 
-/**
- * Main analysis panel containing call graph, dependency, and search views.
- */
-public class AnalysisPanel extends JPanel {
+public class AnalysisPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private final JTabbedPane tabbedPane;
@@ -28,10 +25,8 @@ public class AnalysisPanel extends JPanel {
     private SimulationPanel simulationPanel;
 
     public AnalysisPanel(ProjectModel project) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         tabbedPane.setBackground(JStudioTheme.getBgSecondary());

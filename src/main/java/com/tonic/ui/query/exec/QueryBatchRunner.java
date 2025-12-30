@@ -1,5 +1,6 @@
 package com.tonic.ui.query.exec;
 
+import com.tonic.analysis.xref.Xref;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
@@ -8,11 +9,15 @@ import com.tonic.ui.query.planner.ClickTarget;
 import com.tonic.ui.query.planner.ProbePlan;
 import com.tonic.ui.query.planner.ResultRow;
 import com.tonic.ui.query.planner.filter.StaticFilter;
+import com.tonic.ui.query.planner.filter.XrefMethodFilter;
 import com.tonic.ui.vm.testgen.MethodFuzzer;
 
-import com.tonic.analysis.xref.Xref;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -77,12 +82,12 @@ public class QueryBatchRunner {
         boolean hasXref = plan.hasXrefBackedFilter();
         boolean isStaticOnly = predicateStatic && hasXref;
 
-        com.tonic.ui.query.planner.filter.XrefMethodFilter.setStaticMode(isStaticOnly);
+        XrefMethodFilter.setStaticMode(isStaticOnly);
 
         if (isStaticOnly) {
             List<ResultRow> matchingRows = new ArrayList<>();
             Map<String, List<Xref>> xrefsByMethod =
-                com.tonic.ui.query.planner.filter.XrefMethodFilter.getLastXrefsByMethod();
+                XrefMethodFilter.getLastXrefsByMethod();
 
             int count = 0;
             int totalCallSites = 0;

@@ -2,19 +2,21 @@ package com.tonic.ui.model;
 
 import com.tonic.parser.FieldEntry;
 import com.tonic.ui.theme.Icons;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.swing.Icon;
 
-/**
- * Wraps a FieldEntry with UI state.
- */
+@Getter
 public class FieldEntryModel {
 
     private final FieldEntry fieldEntry;
     private final ClassEntryModel owner;
 
     // UI state
+    @Setter
     private boolean selected;
+    @Setter
     private String userNotes;
 
     // Display data
@@ -125,40 +127,6 @@ public class FieldEntryModel {
 
     public boolean isTransient() {
         return (fieldEntry.getAccess() & 0x0080) != 0;
-    }
-
-    // Getters
-
-    public FieldEntry getFieldEntry() {
-        return fieldEntry;
-    }
-
-    public ClassEntryModel getOwner() {
-        return owner;
-    }
-
-    public String getDisplayType() {
-        return displayType;
-    }
-
-    public Icon getIcon() {
-        return icon;
-    }
-
-    public boolean isSelected() {
-        return selected;
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
-
-    public String getUserNotes() {
-        return userNotes;
-    }
-
-    public void setUserNotes(String userNotes) {
-        this.userNotes = userNotes;
     }
 
     @Override

@@ -7,6 +7,8 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.service.ProjectDatabaseService;
 import com.tonic.ui.service.ProjectService;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 
@@ -35,7 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-public class CommentsPanel extends JPanel {
+public class CommentsPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private final JList<Comment> commentList;
@@ -44,10 +46,8 @@ public class CommentsPanel extends JPanel {
     private final JLabel statusLabel;
 
     public CommentsPanel(ProjectModel project) {
+        super(BackgroundStyle.PRIMARY, new BorderLayout());
         this.project = project;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgPrimary());
 
         JToolBar toolbar = createToolbar();
         add(toolbar, BorderLayout.NORTH);
@@ -95,8 +95,8 @@ public class CommentsPanel extends JPanel {
         previewArea.setWrapStyleWord(true);
         previewArea.setBackground(JStudioTheme.getBgSecondary());
         previewArea.setForeground(JStudioTheme.getTextPrimary());
-        previewArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        previewArea.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        previewArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
+        previewArea.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM));
 
         JScrollPane previewScroll = new JScrollPane(previewArea);
         previewScroll.setBorder(BorderFactory.createTitledBorder(
@@ -111,7 +111,7 @@ public class CommentsPanel extends JPanel {
 
         statusLabel = new JLabel("No comments");
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM));
         add(statusLabel, BorderLayout.SOUTH);
 
         ProjectDatabaseService.getInstance().addListener((db, dirty) -> {

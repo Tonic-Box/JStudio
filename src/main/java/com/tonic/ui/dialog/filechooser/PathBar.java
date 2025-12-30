@@ -6,6 +6,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -328,7 +329,7 @@ public class PathBar extends JPanel {
             // Invalid path - flash red briefly
             Color original = pathTextField.getBackground();
             pathTextField.setBackground(new Color(80, 40, 40));
-            javax.swing.Timer timer = new javax.swing.Timer(500, e -> {
+            Timer timer = new Timer(500, e -> {
                 pathTextField.setBackground(original);
             });
             timer.setRepeats(false);

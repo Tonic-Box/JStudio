@@ -1,14 +1,14 @@
 package com.tonic.ui.editor;
 
 import com.tonic.ui.MainFrame;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -25,13 +25,15 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Tabbed editor panel for viewing classes.
  */
-public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListener {
+public class EditorPanel extends ThemedJPanel {
 
     private static final String WELCOME_TAB_KEY = "__welcome__";
 
@@ -45,53 +47,37 @@ public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListe
     private boolean omitAnnotations = false;
 
     public EditorPanel(MainFrame mainFrame) {
+        super(BackgroundStyle.TERTIARY, new BorderLayout());
         this.mainFrame = mainFrame;
 
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
-
-        // Create tabbed pane
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         tabbedPane.setBackground(JStudioTheme.getBgSecondary());
         tabbedPane.setForeground(JStudioTheme.getTextPrimary());
         tabbedPane.setBorder(null);
 
-        // Create welcome tab (non-closable)
         welcomeTab = new WelcomeTab(mainFrame);
         tabbedPane.addTab("Welcome", Icons.getIcon("home"), welcomeTab);
         tabbedPane.setTabComponentAt(0, createWelcomeTabComponent());
 
         add(tabbedPane, BorderLayout.CENTER);
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgTertiary());
-
+    protected void applyChildThemes() {
         tabbedPane.setBackground(JStudioTheme.getBgSecondary());
         tabbedPane.setForeground(JStudioTheme.getTextPrimary());
-
-        repaint();
     }
 
     private JPanel createWelcomeTabComponent() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 0));
         panel.setOpaque(false);
 
-        // Home icon
         JLabel iconLabel = new JLabel(Icons.getIcon("home"));
         panel.add(iconLabel);
 
-        // Title
         JLabel titleLabel = new JLabel("Welcome");
         titleLabel.setForeground(JStudioTheme.getTextPrimary());
-        titleLabel.setFont(JStudioTheme.getUIFont(11));
+        titleLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         panel.add(titleLabel);
 
         // No close button - this tab cannot be closed
@@ -148,22 +134,19 @@ public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListe
     }
 
     private JPanel createTabComponent(EditorTab tab) {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 0));
         panel.setOpaque(false);
 
-        // Icon
         JLabel iconLabel = new JLabel(tab.getClassEntry().getIcon());
         panel.add(iconLabel);
 
-        // Title
         JLabel titleLabel = new JLabel(tab.getTitle());
         titleLabel.setForeground(JStudioTheme.getTextPrimary());
-        titleLabel.setFont(JStudioTheme.getUIFont(11));
+        titleLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         panel.add(titleLabel);
 
-        // Close button
         JButton closeButton = new JButton(Icons.getIcon("close"));
-        closeButton.setPreferredSize(new Dimension(16, 16));
+        closeButton.setPreferredSize(new Dimension(UIConstants.ICON_SIZE_SMALL, UIConstants.ICON_SIZE_SMALL));
         closeButton.setBorderPainted(false);
         closeButton.setContentAreaFilled(false);
         closeButton.setFocusable(false);
@@ -294,7 +277,7 @@ public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListe
      */
     public void closeOtherTabs(EditorTab keepTab) {
         // Collect tabs to close (avoid concurrent modification)
-        java.util.List<EditorTab> tabsToClose = new java.util.ArrayList<>();
+        List<EditorTab> tabsToClose = new ArrayList<>();
         for (EditorTab tab : openTabs.values()) {
             if (tab != keepTab) {
                 tabsToClose.add(tab);
@@ -313,7 +296,7 @@ public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListe
         if (refIndex <= 0) return;
 
         // Collect tabs to close
-        java.util.List<EditorTab> tabsToClose = new java.util.ArrayList<>();
+        List<EditorTab> tabsToClose = new ArrayList<>();
         for (int i = 0; i < refIndex; i++) {
             Component comp = tabbedPane.getComponentAt(i);
             if (comp instanceof EditorTab) {
@@ -333,7 +316,7 @@ public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListe
         if (refIndex < 0 || refIndex >= tabbedPane.getTabCount() - 1) return;
 
         // Collect tabs to close
-        java.util.List<EditorTab> tabsToClose = new java.util.ArrayList<>();
+        List<EditorTab> tabsToClose = new ArrayList<>();
         for (int i = refIndex + 1; i < tabbedPane.getTabCount(); i++) {
             Component comp = tabbedPane.getComponentAt(i);
             if (comp instanceof EditorTab) {

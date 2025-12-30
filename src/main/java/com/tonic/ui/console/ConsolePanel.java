@@ -1,8 +1,8 @@
 package com.tonic.ui.console;
 
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -20,7 +20,7 @@ import java.awt.FlowLayout;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class ConsolePanel extends JPanel implements ThemeManager.ThemeChangeListener {
+public class ConsolePanel extends ThemedJPanel {
 
     private final JTextPane textPane;
     private final StyledDocument doc;
@@ -38,9 +38,9 @@ public class ConsolePanel extends JPanel implements ThemeManager.ThemeChangeList
     private int maxLines = 1000;
 
     public ConsolePanel() {
-        setLayout(new BorderLayout());
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
 
-        toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY));
 
         clearButton = new JButton("Clear");
         clearButton.addActionListener(e -> clear());
@@ -56,21 +56,13 @@ public class ConsolePanel extends JPanel implements ThemeManager.ThemeChangeList
         scrollPane = new JScrollPane(textPane);
         add(scrollPane, BorderLayout.CENTER);
 
-        applyTheme();
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
+        applyChildThemes();
 
         log(LogLevel.INFO, "JStudio initialized.");
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgSecondary());
-
+    protected void applyChildThemes() {
         toolbar.setBackground(JStudioTheme.getBgSecondary());
 
         clearButton.setBackground(JStudioTheme.getBgTertiary());
@@ -78,7 +70,7 @@ public class ConsolePanel extends JPanel implements ThemeManager.ThemeChangeList
 
         textPane.setBackground(JStudioTheme.getBgTertiary());
         textPane.setForeground(JStudioTheme.getTextPrimary());
-        textPane.setFont(JStudioTheme.getCodeFont(11));
+        textPane.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
 
         scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
 
@@ -87,15 +79,13 @@ public class ConsolePanel extends JPanel implements ThemeManager.ThemeChangeList
         errorStyle = createStyle(JStudioTheme.getError());
         debugStyle = createStyle(JStudioTheme.getTextSecondary());
         timestampStyle = createStyle(JStudioTheme.getTextSecondary());
-
-        repaint();
     }
 
     private SimpleAttributeSet createStyle(Color color) {
         SimpleAttributeSet style = new SimpleAttributeSet();
         StyleConstants.setForeground(style, color);
-        StyleConstants.setFontFamily(style, JStudioTheme.getCodeFont(11).getFamily());
-        StyleConstants.setFontSize(style, 11);
+        StyleConstants.setFontFamily(style, JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE).getFamily());
+        StyleConstants.setFontSize(style, UIConstants.FONT_SIZE_CODE);
         return style;
     }
 

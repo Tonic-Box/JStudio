@@ -6,6 +6,8 @@ import com.tonic.parser.constpool.*;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 
@@ -20,10 +22,7 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
-/**
- * Panel for finding all usages/references to a class, method, or field.
- */
-public class UsagesPanel extends JPanel {
+public class UsagesPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private final JTextField searchField;
@@ -35,13 +34,10 @@ public class UsagesPanel extends JPanel {
     private final JComboBox<String> searchTypeCombo;
 
     public UsagesPanel(ProjectModel project) {
+        super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
 
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgSecondary());
-
-        // Top toolbar
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL));
         toolbar.setBackground(JStudioTheme.getBgSecondary());
 
         JLabel searchLabel = new JLabel("Search:");
@@ -74,7 +70,7 @@ public class UsagesPanel extends JPanel {
         resultsTree = new JTree(treeModel);
         resultsTree.setBackground(JStudioTheme.getBgTertiary());
         resultsTree.setForeground(JStudioTheme.getTextPrimary());
-        resultsTree.setFont(JStudioTheme.getCodeFont(11));
+        resultsTree.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
         resultsTree.setRootVisible(false);
         resultsTree.setShowsRootHandles(true);
 
