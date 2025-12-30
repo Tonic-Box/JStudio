@@ -5,143 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Cleanup pt 1">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphContextMenu.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphExporter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphModel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphRenderer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphStyleFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/details/AttributeDetailRegistry.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/details/AttributeFormatter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/details/DetailContext.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/details/ItemDetailRegistry.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/details/ItemFormatter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ThemedJDialog.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ThemedJPanel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ThemedJScrollPane.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ThemedJTable.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ThemedJTextArea.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/constants/ColumnWidths.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/constants/UIConstants.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/panel/AnalysisPanelBase.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/panel/GraphPanelBase.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/util/ComparisonOperator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/util/ErrorHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/util/LayoutHelper.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/util/MemberReference.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/PredicateVisitor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ScopeVisitor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/PostFilterBuildingVisitor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/ProbeCollectingVisitor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/ScopeFilterVisitor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/ScopeProbeVisitor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/StaticFilterBuildingVisitor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/service/ConsoleLogService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/service/StringExtractionService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/cli/commands/BatchCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/cli/commands/BatchCommand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/cli/commands/RunCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/cli/commands/RunCommand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/cli/engine/ExecutionConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/cli/engine/ExecutionConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/cli/engine/ExecutionResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/cli/engine/ExecutionResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/result/ResultCollector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/result/ResultCollector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/StatusBar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/StatusBar.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/AnalysisPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/AnalysisPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/BookmarksPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/BookmarksPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/CallGraphPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/CallGraphPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/CommentsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/CommentsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DataFlowPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DataFlowPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DependencyPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DependencyPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SearchPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SearchPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SimilarityPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SimilarityPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SimulationPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SimulationPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/StringsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/StringsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/UsagesPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/UsagesPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/XrefPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/XrefPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/AttributesBrowserPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/AttributesBrowserPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/ConstPoolTableView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/ConstPoolTableView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/ConstPoolTreeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/ConstPoolTreeView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/DetailsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/DetailsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/console/ConsolePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/console/ConsolePanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/deobfuscation/DeobfuscationPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/deobfuscation/DeobfuscationPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/PreferencesDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/PreferencesDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/FileChooserPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/FileChooserPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/FileListPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/FileListPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/FileListRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/FileListRenderer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/PathBar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/PathBar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/QuickAccessPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/QuickAccessPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/SearchPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/SearchPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/ClassSelectedEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/ClassSelectedEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/MethodSelectedEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/MethodSelectedEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/ProjectLoadedEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/ProjectLoadedEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/ProjectUpdatedEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/ProjectUpdatedEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/ShowXrefsEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/ShowXrefsEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/StatusMessageEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/StatusMessageEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/VMInitializedEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/VMInitializedEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/VMStatusEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/VMStatusEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/Bookmark.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/Bookmark.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/ClassEntryModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/ClassEntryModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/Comment.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/Comment.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/FieldEntryModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/FieldEntryModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/MethodEntryModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/MethodEntryModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/properties/PropertiesPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/properties/PropertiesPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryBuilderPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryBuilderPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AfterPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AfterPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AllScope.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AllScope.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AllocCountPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AllocCountPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AndPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AndPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/BeforePredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/BeforePredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/BetweenScope.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/BetweenScope.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/CallsPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/CallsPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ClassScope.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ClassScope.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ContainsStringPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ContainsStringPredicate.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/CoveragePredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/CoveragePredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/DuringScope.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/DuringScope.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/FieldBecomesPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/FieldBecomesPredicate.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/InstructionCountPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/InstructionCountPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/MethodScope.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/MethodScope.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/NotPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/NotPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/OrPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/OrPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Predicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Predicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ReadsFieldPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ReadsFieldPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Scope.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Scope.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ThrowsPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ThrowsPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/WritesFieldPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/WritesFieldPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/exec/QueryBatchRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/exec/QueryBatchRunner.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/QueryParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/QueryParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/QueryPlanner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/QueryPlanner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/filter/XrefMethodFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/filter/XrefMethodFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/CommonAPI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/CommonAPI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/engine/ScriptInterpreter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/engine/ScriptInterpreter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/transform/TransformPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/transform/TransformPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/MethodSelectorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/MethodSelectorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMConsolePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMConsolePanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/CallStackPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/CallStackPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/LocalsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/LocalsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/StackPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/StackPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/CallTracePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/CallTracePanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/ConsoleOutputPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/ConsoleOutputPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/ExecutionResultPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/ExecutionResultPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/StatisticsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/result/StatisticsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ArgumentConfigPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ArgumentConfigPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ClassSummaryPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ClassSummaryPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/HeapForensicsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/HeapForensicsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ObjectDetailPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ObjectDetailPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ObjectListPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ObjectListPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/FuzzStrategy.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/FuzzStrategy.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ObjectFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ObjectFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ObjectSpec.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ObjectSpec.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ObjectTemplate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ObjectTemplate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ParamConfigPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ParamConfigPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ParamSpec.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ParamSpec.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/QueryPlannerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/QueryPlannerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/BridgeRegistry.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/BridgeRegistry.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/CallGraphBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/CallGraphBridge.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/PatternBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/PatternBridge.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/ProjectBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/ProjectBridge.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/StringBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/StringBridge.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/TypeBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/TypeBridge.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/ThemeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/ThemeManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/DarculaTheme.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/DraculaTheme.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/GitHubLightTheme.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/JStudioDarkTheme.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/MonokaiTheme.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/NordTheme.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/SolarizedDarkTheme.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/VSCodeDarkTheme.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -609,7 +497,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767057722649</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="- Cleanup pt 1">
+      <option name="closed" value="true" />
+      <created>1767108484568</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1767108484568</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

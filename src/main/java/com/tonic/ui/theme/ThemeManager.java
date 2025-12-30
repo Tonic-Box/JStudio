@@ -1,6 +1,5 @@
 package com.tonic.ui.theme;
 
-import com.tonic.ui.theme.themes.*;
 import com.tonic.ui.util.Settings;
 
 import javax.swing.BorderFactory;
@@ -35,14 +34,9 @@ public class ThemeManager {
     }
 
     private void registerBuiltInThemes() {
-        registerTheme(new JStudioDarkTheme());
-        registerTheme(new DarculaTheme());
-        registerTheme(new VSCodeDarkTheme());
-        registerTheme(new MonokaiTheme());
-        registerTheme(new NordTheme());
-        registerTheme(new SolarizedDarkTheme());
-        registerTheme(new DraculaTheme());
-        registerTheme(new GitHubLightTheme());
+        for (Theme theme : ThemeLoader.loadAllThemes()) {
+            registerTheme(theme);
+        }
     }
 
     public void registerTheme(Theme theme) {

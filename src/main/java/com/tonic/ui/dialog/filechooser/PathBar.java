@@ -328,7 +328,8 @@ public class PathBar extends JPanel {
         } else {
             // Invalid path - flash red briefly
             Color original = pathTextField.getBackground();
-            pathTextField.setBackground(new Color(80, 40, 40));
+            Color errorBg = new Color(JStudioTheme.getError().getRed() / 3, JStudioTheme.getError().getGreen() / 6, JStudioTheme.getError().getBlue() / 6);
+            pathTextField.setBackground(errorBg);
             Timer timer = new Timer(500, e -> {
                 pathTextField.setBackground(original);
             });

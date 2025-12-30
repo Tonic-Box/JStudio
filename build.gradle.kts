@@ -40,6 +40,9 @@ dependencies {
 
     // Groovy for DSL support
     implementation("org.apache.groovy:groovy:4.0.15")
+
+    // JSON parsing for theme configuration
+    implementation("com.google.code.gson:gson:2.10.1")
 }
 
 java {

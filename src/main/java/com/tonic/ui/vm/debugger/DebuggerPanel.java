@@ -1046,8 +1046,8 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
                 appendOutput("Recording enabled - will start capturing when debugging begins");
                 currentTrace = null;
             }
-            recordBtn.setBackground(new Color(180, 80, 80));
-            recordBtn.setForeground(Color.WHITE);
+            recordBtn.setBackground(JStudioTheme.getError().darker());
+            recordBtn.setForeground(JStudioTheme.getTextPrimary());
             exportTraceBtn.setEnabled(false);
             clearTraceBtn.setEnabled(false);
         } else {
@@ -1462,17 +1462,17 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
     }
 
     private class BytecodeCellRenderer extends DefaultTableCellRenderer {
-        private final Color colorLoadStore = new Color(86, 156, 214);
-        private final Color colorArithmetic = new Color(181, 206, 168);
-        private final Color colorControlFlow = new Color(197, 134, 192);
-        private final Color colorInvoke = new Color(220, 220, 170);
-        private final Color colorFieldAccess = new Color(156, 220, 254);
-        private final Color colorObject = new Color(78, 201, 176);
-        private final Color colorStack = new Color(128, 128, 128);
-        private final Color colorConstant = new Color(206, 145, 120);
-        private final Color colorString = new Color(206, 145, 120);
-        private final Color colorOther = JStudioTheme.getTextPrimary();
-        private final Color highlightedTextColor = new Color(255, 255, 255);
+        private Color colorLoadStore() { return JStudioTheme.getBcLoad(); }
+        private Color colorArithmetic() { return JStudioTheme.getBcArithmetic(); }
+        private Color colorControlFlow() { return JStudioTheme.getBcBranch(); }
+        private Color colorInvoke() { return JStudioTheme.getBcInvoke(); }
+        private Color colorFieldAccess() { return JStudioTheme.getBcField(); }
+        private Color colorObject() { return JStudioTheme.getBcNew(); }
+        private Color colorStack() { return JStudioTheme.getBcStack(); }
+        private Color colorConstant() { return JStudioTheme.getBcConst(); }
+        private Color colorString() { return JStudioTheme.getBcConst(); }
+        private Color colorOther() { return JStudioTheme.getTextPrimary(); }
+        private Color highlightedTextColor() { return JStudioTheme.getTextPrimary(); }
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
@@ -1491,7 +1491,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             }
 
             if (isHighlighted) {
-                setForeground(highlightedTextColor);
+                setForeground(highlightedTextColor());
             } else if (entry != null) {
                 Color textColor = getCategoryColor(entry.category);
                 if (column == 2) {
@@ -1499,13 +1499,13 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
                 } else if (column == 3) {
                     String operands = entry.operands;
                     if (operands.startsWith("\"")) {
-                        setForeground(colorString);
+                        setForeground(colorString());
                     } else if (operands.contains(".") && !operands.matches(".*\\d+\\.\\d+.*")) {
-                        setForeground(colorInvoke);
+                        setForeground(colorInvoke());
                     } else if (operands.startsWith("-> ")) {
-                        setForeground(colorControlFlow);
+                        setForeground(colorControlFlow());
                     } else if (operands.startsWith("local[")) {
-                        setForeground(colorLoadStore);
+                        setForeground(colorLoadStore());
                     } else {
                         setForeground(JStudioTheme.getTextSecondary());
                     }
@@ -1520,17 +1520,17 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         }
 
         private Color getCategoryColor(InstructionCategory category) {
-            if (category == null) return colorOther;
+            if (category == null) return colorOther();
             switch (category) {
-                case LOAD_STORE: return colorLoadStore;
-                case ARITHMETIC: return colorArithmetic;
-                case CONTROL_FLOW: return colorControlFlow;
-                case INVOKE: return colorInvoke;
-                case FIELD_ACCESS: return colorFieldAccess;
-                case OBJECT: return colorObject;
-                case STACK: return colorStack;
-                case CONSTANT: return colorConstant;
-                default: return colorOther;
+                case LOAD_STORE: return colorLoadStore();
+                case ARITHMETIC: return colorArithmetic();
+                case CONTROL_FLOW: return colorControlFlow();
+                case INVOKE: return colorInvoke();
+                case FIELD_ACCESS: return colorFieldAccess();
+                case OBJECT: return colorObject();
+                case STACK: return colorStack();
+                case CONSTANT: return colorConstant();
+                default: return colorOther();
             }
         }
     }

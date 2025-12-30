@@ -17,25 +17,16 @@ import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.engine.ScriptValue;
 
 import java.util.*;
-import java.util.function.Consumer;
 
-/**
- * Bridge for project-wide queries and iteration.
- * Exposes a 'project' global object for accessing classes, methods, and fields.
- */
-public class ProjectBridge {
-
-    private final ScriptInterpreter interpreter;
-    private final ProjectModel projectModel;
-    private Consumer<String> logCallback;
+public class ProjectBridge extends AbstractBridge {
 
     public ProjectBridge(ScriptInterpreter interpreter, ProjectModel projectModel) {
-        this.interpreter = interpreter;
-        this.projectModel = projectModel;
+        super(interpreter, projectModel);
     }
 
-    public void setLogCallback(Consumer<String> callback) {
-        this.logCallback = callback;
+    @Override
+    public ScriptValue createBridgeObject() {
+        return createProjectObject();
     }
 
     public ScriptValue createProjectObject() {

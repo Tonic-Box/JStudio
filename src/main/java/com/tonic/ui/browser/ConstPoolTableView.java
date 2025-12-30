@@ -420,7 +420,7 @@ public class ConstPoolTableView extends ThemedJPanel {
                 case "Integer":
                 case "Long":
                 case "Float":
-                case "Double": return new Color(206, 145, 120);
+                case "Double": return JStudioTheme.getBcConst();
                 case "NameAndType": return JStudioTheme.getTextSecondary();
                 default: return JStudioTheme.getTextPrimary();
             }

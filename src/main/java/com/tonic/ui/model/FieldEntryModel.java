@@ -2,6 +2,8 @@ package com.tonic.ui.model;
 
 import com.tonic.parser.FieldEntry;
 import com.tonic.ui.theme.Icons;
+import com.tonic.ui.util.AccessFlags;
+import com.tonic.ui.util.DescriptorParser;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,61 +32,8 @@ public class FieldEntryModel {
     }
 
     private void buildDisplayData() {
-        this.displayType = formatDescriptor(fieldEntry.getDesc());
+        this.displayType = DescriptorParser.formatFieldDescriptor(fieldEntry.getDesc());
         this.icon = Icons.getIcon("field");
-    }
-
-    private String formatDescriptor(String desc) {
-        if (desc == null || desc.isEmpty()) {
-            return "?";
-        }
-
-        StringBuilder result = new StringBuilder();
-        int i = 0;
-
-        // Count array dimensions
-        int arrayDim = 0;
-        while (i < desc.length() && desc.charAt(i) == '[') {
-            arrayDim++;
-            i++;
-        }
-
-        if (i < desc.length()) {
-            char c = desc.charAt(i);
-            switch (c) {
-                case 'B': result.append("byte"); break;
-                case 'C': result.append("char"); break;
-                case 'D': result.append("double"); break;
-                case 'F': result.append("float"); break;
-                case 'I': result.append("int"); break;
-                case 'J': result.append("long"); break;
-                case 'S': result.append("short"); break;
-                case 'Z': result.append("boolean"); break;
-                case 'V': result.append("void"); break;
-                case 'L':
-                    int semicolon = desc.indexOf(';', i);
-                    if (semicolon > i) {
-                        String className = desc.substring(i + 1, semicolon);
-                        int lastSlash = className.lastIndexOf('/');
-                        if (lastSlash >= 0) {
-                            result.append(className.substring(lastSlash + 1));
-                        } else {
-                            result.append(className);
-                        }
-                    }
-                    break;
-                default:
-                    result.append(desc);
-                    break;
-            }
-        }
-
-        // Add array brackets
-        for (int d = 0; d < arrayDim; d++) {
-            result.append("[]");
-        }
-
-        return result.toString();
     }
 
     // FieldEntry delegated methods
@@ -102,31 +51,31 @@ public class FieldEntryModel {
     }
 
     public boolean isStatic() {
-        return (fieldEntry.getAccess() & 0x0008) != 0;
+        return AccessFlags.isStatic(fieldEntry.getAccess());
     }
 
     public boolean isFinal() {
-        return (fieldEntry.getAccess() & 0x0010) != 0;
+        return AccessFlags.isFinal(fieldEntry.getAccess());
     }
 
     public boolean isPublic() {
-        return (fieldEntry.getAccess() & 0x0001) != 0;
+        return AccessFlags.isPublic(fieldEntry.getAccess());
     }
 
     public boolean isPrivate() {
-        return (fieldEntry.getAccess() & 0x0002) != 0;
+        return AccessFlags.isPrivate(fieldEntry.getAccess());
     }
 
     public boolean isProtected() {
-        return (fieldEntry.getAccess() & 0x0004) != 0;
+        return AccessFlags.isProtected(fieldEntry.getAccess());
     }
 
     public boolean isVolatile() {
-        return (fieldEntry.getAccess() & 0x0040) != 0;
+        return AccessFlags.isVolatile(fieldEntry.getAccess());
     }
 
     public boolean isTransient() {
-        return (fieldEntry.getAccess() & 0x0080) != 0;
+        return AccessFlags.isTransient(fieldEntry.getAccess());
     }
 
     @Override

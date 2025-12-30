@@ -19,11 +19,6 @@ public final class CoveragePredicate implements Predicate {
         this.threshold = threshold;
     }
 
-    @Deprecated
-    public CoveragePredicate(String blockId, AllocCountPredicate.ComparisonOp operator, double threshold) {
-        this(blockId, operator.toOperator(), threshold);
-    }
-
     public String blockId() {
         return blockId;
     }

@@ -107,8 +107,7 @@ public class DeobfuscationPanel extends ThemedJPanel {
     private JButton createButton(String text, Color bgColor) {
         JButton button = new JButton(text);
         button.setBackground(bgColor);
-        button.setForeground(bgColor.equals(JStudioTheme.getAccent()) ||
-                            bgColor.equals(JStudioTheme.getSuccess()) ? Color.WHITE : JStudioTheme.getTextPrimary());
+        button.setForeground(JStudioTheme.getTextPrimary());
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(bgColor.darker()),
@@ -217,7 +216,7 @@ public class DeobfuscationPanel extends ThemedJPanel {
         resultsTable.setForeground(JStudioTheme.getTextPrimary());
         resultsTable.setGridColor(JStudioTheme.getBorder());
         resultsTable.setSelectionBackground(JStudioTheme.getAccent());
-        resultsTable.setSelectionForeground(Color.WHITE);
+        resultsTable.setSelectionForeground(JStudioTheme.getTextPrimary());
         resultsTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT + 4);
         resultsTable.getTableHeader().setBackground(JStudioTheme.getBgTertiary());
         resultsTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());

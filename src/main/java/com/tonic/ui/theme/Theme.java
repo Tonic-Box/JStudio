@@ -84,6 +84,17 @@ public interface Theme {
     Color getIrOperator();
     Color getIrControl();
 
+    Color getGraphNodeFill();
+    Color getGraphNodeStroke();
+    Color getGraphFocusFill();
+    Color getGraphFocusStroke();
+    Color getGraphConstructorFill();
+    Color getGraphConstructorStroke();
+    Color getGraphStaticFill();
+    Color getGraphStaticStroke();
+    Color getGraphExternalFill();
+    Color getGraphExternalStroke();
+
     Font getCodeFont(int size);
     Font getUIFont(int size);
 }

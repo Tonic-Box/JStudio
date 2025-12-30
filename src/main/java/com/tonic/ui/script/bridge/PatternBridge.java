@@ -6,36 +6,21 @@ import com.tonic.analysis.pattern.SearchResult;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.script.engine.ScriptFunction;
-import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.engine.ScriptValue;
 
 import java.util.*;
-import java.util.function.Consumer;
 
-/**
- * Bridge for bytecode pattern searching.
- * Exposes a 'patterns' global object for finding code patterns.
- */
-public class PatternBridge {
+public class PatternBridge extends AbstractBridge {
 
-    private final ScriptInterpreter interpreter;
-    private final ProjectModel projectModel;
-    private Consumer<String> logCallback;
     private int resultLimit = 100;
 
-    public PatternBridge(ScriptInterpreter interpreter, ProjectModel projectModel) {
-        this.interpreter = interpreter;
-        this.projectModel = projectModel;
+    public PatternBridge(ProjectModel projectModel) {
+        super(projectModel);
     }
 
-    public void setLogCallback(Consumer<String> callback) {
-        this.logCallback = callback;
-    }
-
-    private void log(String message) {
-        if (logCallback != null) {
-            logCallback.accept(message);
-        }
+    @Override
+    public ScriptValue createBridgeObject() {
+        return createPatternObject();
     }
 
     public ScriptValue createPatternObject() {

@@ -108,7 +108,7 @@ public class ExecuteMethodDialog extends JDialog {
         leftButtons.setOpaque(false);
 
         executeButton.setBackground(JStudioTheme.getAccent());
-        executeButton.setForeground(Color.WHITE);
+        executeButton.setForeground(JStudioTheme.getTextPrimary());
         executeButton.setFocusPainted(false);
         executeButton.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(JStudioTheme.getAccent().darker()),
@@ -374,7 +374,7 @@ public class ExecuteMethodDialog extends JDialog {
             JButton btn = configureButtons.get(paramIndex);
             if (btn != null) {
                 btn.setText("✓ Configured");
-                btn.setForeground(new Color(78, 201, 176));
+                btn.setForeground(JStudioTheme.getSuccess());
             }
             JTextField field = parameterFields.get(paramIndex);
             field.setText("[" + result.getSummary() + "]");

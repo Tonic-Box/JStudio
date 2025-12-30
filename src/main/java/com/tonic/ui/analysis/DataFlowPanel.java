@@ -148,6 +148,18 @@ public class DataFlowPanel extends ThemedJPanel {
         return button;
     }
 
+    private static String toHex(Color c) {
+        return String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue());
+    }
+
+    private static Color darker(Color c, float factor) {
+        return new Color(
+            Math.max(0, (int)(c.getRed() * factor)),
+            Math.max(0, (int)(c.getGreen() * factor)),
+            Math.max(0, (int)(c.getBlue() * factor))
+        );
+    }
+
     private void setupGraphStyles() {
         mxStylesheet stylesheet = graph.getStylesheet();
 
@@ -155,56 +167,56 @@ public class DataFlowPanel extends ThemedJPanel {
         Map<String, Object> baseStyle = new HashMap<>();
         baseStyle.put(mxConstants.STYLE_SHAPE, mxConstants.SHAPE_RECTANGLE);
         baseStyle.put(mxConstants.STYLE_ROUNDED, true);
-        baseStyle.put(mxConstants.STYLE_FILLCOLOR, "#252535");
-        baseStyle.put(mxConstants.STYLE_STROKECOLOR, "#7AA2F7");
-        baseStyle.put(mxConstants.STYLE_FONTCOLOR, "#E4E4EF");
+        baseStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(JStudioTheme.getGraphNodeFill()));
+        baseStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getGraphNodeStroke()));
+        baseStyle.put(mxConstants.STYLE_FONTCOLOR, toHex(JStudioTheme.getTextPrimary()));
         baseStyle.put(mxConstants.STYLE_FONTSIZE, 10);
         baseStyle.put(mxConstants.STYLE_SPACING, 4);
         stylesheet.putCellStyle("DEFAULT", baseStyle);
 
-        // Parameter node style (input)
+        // Parameter node style (input) - uses constructor colors (green)
         Map<String, Object> paramStyle = new HashMap<>(baseStyle);
-        paramStyle.put(mxConstants.STYLE_FILLCOLOR, "#1A4040");
-        paramStyle.put(mxConstants.STYLE_STROKECOLOR, "#9ECE6A");
+        paramStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(JStudioTheme.getGraphConstructorFill()));
+        paramStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getGraphConstructorStroke()));
         stylesheet.putCellStyle("PARAM", paramStyle);
 
-        // Return/sink node style (output)
+        // Return/sink node style (output) - uses error color
         Map<String, Object> sinkStyle = new HashMap<>(baseStyle);
-        sinkStyle.put(mxConstants.STYLE_FILLCOLOR, "#402020");
-        sinkStyle.put(mxConstants.STYLE_STROKECOLOR, "#F7768E");
+        sinkStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(darker(JStudioTheme.getError(), 0.3f)));
+        sinkStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getError()));
         stylesheet.putCellStyle("SINK", sinkStyle);
 
-        // Constant node style
+        // Constant node style - uses static colors (purple)
         Map<String, Object> constStyle = new HashMap<>(baseStyle);
-        constStyle.put(mxConstants.STYLE_FILLCOLOR, "#303050");
-        constStyle.put(mxConstants.STYLE_STROKECOLOR, "#BB9AF7");
+        constStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(JStudioTheme.getGraphStaticFill()));
+        constStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getGraphStaticStroke()));
         stylesheet.putCellStyle("CONSTANT", constStyle);
 
-        // Phi node style
+        // Phi node style - uses focus stroke color
         Map<String, Object> phiStyle = new HashMap<>(baseStyle);
         phiStyle.put(mxConstants.STYLE_SHAPE, mxConstants.SHAPE_ELLIPSE);
-        phiStyle.put(mxConstants.STYLE_FILLCOLOR, "#353545");
-        phiStyle.put(mxConstants.STYLE_STROKECOLOR, "#E0AF68");
+        phiStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(darker(JStudioTheme.getGraphFocusFill(), 0.9f)));
+        phiStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getGraphFocusStroke()));
         stylesheet.putCellStyle("PHI", phiStyle);
 
-        // Tainted node style
+        // Tainted node style - uses bright error color
         Map<String, Object> taintStyle = new HashMap<>(baseStyle);
-        taintStyle.put(mxConstants.STYLE_FILLCOLOR, "#501010");
-        taintStyle.put(mxConstants.STYLE_STROKECOLOR, "#FF6060");
+        taintStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(darker(JStudioTheme.getError(), 0.4f)));
+        taintStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getError()));
         taintStyle.put(mxConstants.STYLE_STROKEWIDTH, 2);
         stylesheet.putCellStyle("TAINTED", taintStyle);
 
         // Edge style
         Map<String, Object> edgeStyle = new HashMap<>();
-        edgeStyle.put(mxConstants.STYLE_STROKECOLOR, "#565F89");
+        edgeStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getGraphExternalStroke()));
         edgeStyle.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
-        edgeStyle.put(mxConstants.STYLE_FONTCOLOR, "#9090A8");
+        edgeStyle.put(mxConstants.STYLE_FONTCOLOR, toHex(JStudioTheme.getTextSecondary()));
         edgeStyle.put(mxConstants.STYLE_FONTSIZE, 9);
         stylesheet.putCellStyle("EDGE", edgeStyle);
 
         // Tainted edge style
         Map<String, Object> taintEdgeStyle = new HashMap<>(edgeStyle);
-        taintEdgeStyle.put(mxConstants.STYLE_STROKECOLOR, "#FF6060");
+        taintEdgeStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getError()));
         taintEdgeStyle.put(mxConstants.STYLE_STROKEWIDTH, 2);
         stylesheet.putCellStyle("TAINT_EDGE", taintEdgeStyle);
 
@@ -620,7 +632,7 @@ public class DataFlowPanel extends ThemedJPanel {
 
             try {
                 BufferedImage image = mxCellRenderer.createBufferedImage(
-                    graph, null, 2, Color.WHITE, true, null);
+                    graph, null, 2, JStudioTheme.getBgPrimary(), true, null);
 
                 if (image != null) {
                     ImageIO.write(image, "PNG", file);

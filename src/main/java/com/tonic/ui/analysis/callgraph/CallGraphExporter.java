@@ -4,10 +4,11 @@ import com.mxgraph.util.mxCellRenderer;
 import com.mxgraph.view.mxGraph;
 import com.tonic.analysis.common.MethodReference;
 
+import com.tonic.ui.theme.JStudioTheme;
+
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -17,7 +18,6 @@ import java.util.function.Consumer;
 public class CallGraphExporter {
 
     private static final int EXPORT_SCALE = 2;
-    private static final Color EXPORT_BACKGROUND = Color.WHITE;
 
     public void exportAsPng(Component parent, mxGraph graph, MethodReference focusMethod,
                            Consumer<String> statusCallback) {
@@ -42,7 +42,7 @@ public class CallGraphExporter {
 
             try {
                 BufferedImage image = mxCellRenderer.createBufferedImage(
-                        graph, null, EXPORT_SCALE, EXPORT_BACKGROUND, true, null);
+                        graph, null, EXPORT_SCALE, JStudioTheme.getBgPrimary(), true, null);
 
                 if (image != null) {
                     ImageIO.write(image, "PNG", file);

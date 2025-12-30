@@ -95,7 +95,7 @@ public class HexView extends JPanel implements ThemeManager.ThemeChangeListener 
 
         // Offset style (address column)
         Style offsetStyle = doc.addStyle(STYLE_OFFSET, null);
-        StyleConstants.setForeground(offsetStyle, new Color(0x9E, 0xCE, 0x6A)); // Green
+        StyleConstants.setForeground(offsetStyle, JStudioTheme.getSuccess());
 
         // Hex bytes style
         Style hexStyle = doc.addStyle(STYLE_HEX, null);
@@ -103,7 +103,7 @@ public class HexView extends JPanel implements ThemeManager.ThemeChangeListener 
 
         // ASCII style
         Style asciiStyle = doc.addStyle(STYLE_ASCII, null);
-        StyleConstants.setForeground(asciiStyle, new Color(0x7A, 0xA2, 0xF7)); // Blue
+        StyleConstants.setForeground(asciiStyle, JStudioTheme.getAccent());
 
         // Separator style
         Style separatorStyle = doc.addStyle(STYLE_SEPARATOR, null);
@@ -111,7 +111,7 @@ public class HexView extends JPanel implements ThemeManager.ThemeChangeListener 
 
         // Highlight style for special bytes (magic number, etc.)
         Style highlightStyle = doc.addStyle(STYLE_HIGHLIGHT, null);
-        StyleConstants.setForeground(highlightStyle, new Color(0xE0, 0xAF, 0x68)); // Orange
+        StyleConstants.setForeground(highlightStyle, JStudioTheme.getWarning());
     }
 
     /**

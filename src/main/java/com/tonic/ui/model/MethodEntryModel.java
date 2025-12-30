@@ -3,6 +3,8 @@ package com.tonic.ui.model;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.theme.Icons;
+import com.tonic.ui.util.AccessFlags;
+import com.tonic.ui.util.DescriptorParser;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -40,99 +42,19 @@ public class MethodEntryModel {
     }
 
     private void buildDisplayData() {
-        // Build a readable signature
-        StringBuilder sb = new StringBuilder();
-        sb.append(methodEntry.getName());
+        this.displaySignature = methodEntry.getName() + "(" +
+            DescriptorParser.formatMethodParams(methodEntry.getDesc()) + ")";
 
-        // Parse descriptor to show parameter types
-        String desc = methodEntry.getDesc();
-        sb.append("(");
-        int paramStart = desc.indexOf('(') + 1;
-        int paramEnd = desc.indexOf(')');
-        if (paramStart < paramEnd) {
-            String params = desc.substring(paramStart, paramEnd);
-            sb.append(formatParams(params));
-        }
-        sb.append(")");
-
-        this.displaySignature = sb.toString();
-
-        // Determine icon based on access
         int access = methodEntry.getAccess();
-        if ((access & 0x0001) != 0) {        // public
+        if (AccessFlags.isPublic(access)) {
             this.icon = Icons.getIcon("method_public");
-        } else if ((access & 0x0002) != 0) { // private
+        } else if (AccessFlags.isPrivate(access)) {
             this.icon = Icons.getIcon("method_private");
-        } else if ((access & 0x0004) != 0) { // protected
+        } else if (AccessFlags.isProtected(access)) {
             this.icon = Icons.getIcon("method_protected");
-        } else {                              // package-private
+        } else {
             this.icon = Icons.getIcon("method_package");
         }
-    }
-
-    private String formatParams(String params) {
-        StringBuilder result = new StringBuilder();
-        int i = 0;
-        boolean first = true;
-        while (i < params.length()) {
-            if (!first) result.append(", ");
-            first = false;
-
-            char c = params.charAt(i);
-            switch (c) {
-                case 'B': result.append("byte"); i++; break;
-                case 'C': result.append("char"); i++; break;
-                case 'D': result.append("double"); i++; break;
-                case 'F': result.append("float"); i++; break;
-                case 'I': result.append("int"); i++; break;
-                case 'J': result.append("long"); i++; break;
-                case 'S': result.append("short"); i++; break;
-                case 'Z': result.append("boolean"); i++; break;
-                case 'V': result.append("void"); i++; break;
-                case '[':
-                    int arrayDim = 0;
-                    while (i < params.length() && params.charAt(i) == '[') {
-                        arrayDim++;
-                        i++;
-                    }
-                    if (i < params.length()) {
-                        String elem = formatParams(params.substring(i, i + 1));
-                        if (params.charAt(i) == 'L') {
-                            int semi = params.indexOf(';', i);
-                            elem = formatClassName(params.substring(i + 1, semi));
-                            i = semi + 1;
-                        } else {
-                            i++;
-                        }
-                        result.append(elem);
-                        for (int d = 0; d < arrayDim; d++) {
-                            result.append("[]");
-                        }
-                    }
-                    break;
-                case 'L':
-                    int semicolon = params.indexOf(';', i);
-                    if (semicolon > i) {
-                        result.append(formatClassName(params.substring(i + 1, semicolon)));
-                        i = semicolon + 1;
-                    } else {
-                        i++;
-                    }
-                    break;
-                default:
-                    i++;
-                    break;
-            }
-        }
-        return result.toString();
-    }
-
-    private String formatClassName(String internalName) {
-        int lastSlash = internalName.lastIndexOf('/');
-        if (lastSlash >= 0) {
-            return internalName.substring(lastSlash + 1);
-        }
-        return internalName;
     }
 
     // MethodEntry delegated methods
@@ -150,35 +72,35 @@ public class MethodEntryModel {
     }
 
     public boolean isStatic() {
-        return (methodEntry.getAccess() & 0x0008) != 0;
+        return AccessFlags.isStatic(methodEntry.getAccess());
     }
 
     public boolean isAbstract() {
-        return (methodEntry.getAccess() & 0x0400) != 0;
+        return AccessFlags.isAbstract(methodEntry.getAccess());
     }
 
     public boolean isNative() {
-        return (methodEntry.getAccess() & 0x0100) != 0;
+        return AccessFlags.isNative(methodEntry.getAccess());
     }
 
     public boolean isSynchronized() {
-        return (methodEntry.getAccess() & 0x0020) != 0;
+        return AccessFlags.isSynchronized(methodEntry.getAccess());
     }
 
     public boolean isFinal() {
-        return (methodEntry.getAccess() & 0x0010) != 0;
+        return AccessFlags.isFinal(methodEntry.getAccess());
     }
 
     public boolean isPublic() {
-        return (methodEntry.getAccess() & 0x0001) != 0;
+        return AccessFlags.isPublic(methodEntry.getAccess());
     }
 
     public boolean isPrivate() {
-        return (methodEntry.getAccess() & 0x0002) != 0;
+        return AccessFlags.isPrivate(methodEntry.getAccess());
     }
 
     public boolean isProtected() {
-        return (methodEntry.getAccess() & 0x0004) != 0;
+        return AccessFlags.isProtected(methodEntry.getAccess());
     }
 
     public boolean hasCode() {

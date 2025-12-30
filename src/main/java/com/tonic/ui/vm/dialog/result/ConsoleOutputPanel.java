@@ -19,8 +19,13 @@ public class ConsoleOutputPanel extends ThemedJPanel {
     private final JButton clearBtn;
     private final JButton exportBtn;
 
-    private static final Color STDOUT_COLOR = JStudioTheme.getTextPrimary();
-    private static final Color STDERR_COLOR = new Color(244, 135, 113);
+    private static Color stdoutColor() {
+        return JStudioTheme.getTextPrimary();
+    }
+
+    private static Color stderrColor() {
+        return JStudioTheme.getError();
+    }
 
     public ConsoleOutputPanel() {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -67,13 +72,13 @@ public class ConsoleOutputPanel extends ThemedJPanel {
 
     private void initStyles() {
         Style defaultStyle = outputPane.addStyle("default", null);
-        StyleConstants.setForeground(defaultStyle, STDOUT_COLOR);
+        StyleConstants.setForeground(defaultStyle, stdoutColor());
 
         Style stdoutStyle = outputPane.addStyle("stdout", defaultStyle);
-        StyleConstants.setForeground(stdoutStyle, STDOUT_COLOR);
+        StyleConstants.setForeground(stdoutStyle, stdoutColor());
 
         Style stderrStyle = outputPane.addStyle("stderr", defaultStyle);
-        StyleConstants.setForeground(stderrStyle, STDERR_COLOR);
+        StyleConstants.setForeground(stderrStyle, stderrColor());
 
         Style prefixStyle = outputPane.addStyle("prefix", defaultStyle);
         StyleConstants.setForeground(prefixStyle, JStudioTheme.getTextSecondary());

@@ -201,10 +201,10 @@ public class ClassSummaryPanel extends ThemedJPanel {
                 int delta = (Integer) value;
                 if (delta > 0) {
                     setText("+" + delta);
-                    if (!isSelected) setForeground(new Color(100, 200, 100));
+                    if (!isSelected) setForeground(JStudioTheme.getSuccess());
                 } else if (delta < 0) {
                     setText(String.valueOf(delta));
-                    if (!isSelected) setForeground(new Color(200, 100, 100));
+                    if (!isSelected) setForeground(JStudioTheme.getError());
                 } else {
                     setText("0");
                 }

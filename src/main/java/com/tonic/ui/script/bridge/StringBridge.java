@@ -8,37 +8,22 @@ import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.script.engine.ScriptFunction;
-import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.engine.ScriptValue;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-/**
- * Bridge for string analysis.
- * Exposes a 'strings' global object for finding and analyzing string constants.
- */
-public class StringBridge {
+public class StringBridge extends AbstractBridge {
 
-    private final ScriptInterpreter interpreter;
-    private final ProjectModel projectModel;
-    private Consumer<String> logCallback;
     private List<StringEntry> cachedStrings;
 
-    public StringBridge(ScriptInterpreter interpreter, ProjectModel projectModel) {
-        this.interpreter = interpreter;
-        this.projectModel = projectModel;
+    public StringBridge(ProjectModel projectModel) {
+        super(projectModel);
     }
 
-    public void setLogCallback(Consumer<String> callback) {
-        this.logCallback = callback;
-    }
-
-    private void log(String message) {
-        if (logCallback != null) {
-            logCallback.accept(message);
-        }
+    @Override
+    public ScriptValue createBridgeObject() {
+        return createStringsObject();
     }
 
     public ScriptValue createStringsObject() {

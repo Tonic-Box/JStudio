@@ -7,7 +7,9 @@ import com.tonic.analysis.callgraph.CallGraph;
 import com.tonic.analysis.callgraph.CallGraphNode;
 import com.tonic.analysis.callgraph.CallSite;
 import com.tonic.analysis.common.MethodReference;
+import com.tonic.ui.theme.JStudioTheme;
 
+import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,18 +22,61 @@ public class CallGraphStyleFactory {
     private static final double STROKE_WIDTH_NORMAL = 1.5;
     private static final double STROKE_WIDTH_FOCUS = 3;
 
-    private static final String COLOR_METHOD_FILL = "#252535";
-    private static final String COLOR_METHOD_STROKE = "#7AA2F7";
-    private static final String COLOR_FOCUS_FILL = "#3D4070";
-    private static final String COLOR_FOCUS_STROKE = "#E0AF68";
-    private static final String COLOR_CONSTRUCTOR_FILL = "#1E3A2F";
-    private static final String COLOR_CONSTRUCTOR_STROKE = "#9ECE6A";
-    private static final String COLOR_STATIC_FILL = "#2D2640";
-    private static final String COLOR_STATIC_STROKE = "#BB9AF7";
-    private static final String COLOR_EXTERNAL_FILL = "#1E1E2E";
-    private static final String COLOR_EXTERNAL_STROKE = "#565F89";
-    private static final String COLOR_TEXT_PRIMARY = "#E4E4EF";
-    private static final String COLOR_TEXT_SECONDARY = "#9090A8";
+    private static String toHex(Color c) {
+        return String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue());
+    }
+
+    private String getMethodFill() {
+        return toHex(JStudioTheme.getGraphNodeFill());
+    }
+
+    private String getMethodStroke() {
+        return toHex(JStudioTheme.getGraphNodeStroke());
+    }
+
+    private String getFocusFill() {
+        return toHex(JStudioTheme.getGraphFocusFill());
+    }
+
+    private String getFocusStroke() {
+        return toHex(JStudioTheme.getGraphFocusStroke());
+    }
+
+    private String getConstructorFill() {
+        return toHex(JStudioTheme.getGraphConstructorFill());
+    }
+
+    private String getConstructorStroke() {
+        return toHex(JStudioTheme.getGraphConstructorStroke());
+    }
+
+    private String getStaticFill() {
+        return toHex(JStudioTheme.getGraphStaticFill());
+    }
+
+    private String getStaticStroke() {
+        return toHex(JStudioTheme.getGraphStaticStroke());
+    }
+
+    private String getExternalFill() {
+        return toHex(JStudioTheme.getGraphExternalFill());
+    }
+
+    private String getExternalStroke() {
+        return toHex(JStudioTheme.getGraphExternalStroke());
+    }
+
+    private String getTextPrimary() {
+        return toHex(JStudioTheme.getTextPrimary());
+    }
+
+    private String getTextSecondary() {
+        return toHex(JStudioTheme.getTextSecondary());
+    }
+
+    private String getErrorStroke() {
+        return toHex(JStudioTheme.getError());
+    }
 
     public void setupStyles(mxGraph graph) {
         mxStylesheet stylesheet = graph.getStylesheet();
@@ -72,45 +117,45 @@ public class CallGraphStyleFactory {
 
     private Map<String, Object> createMethodStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_FILLCOLOR, COLOR_METHOD_FILL);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_METHOD_STROKE);
-        style.put(mxConstants.STYLE_FONTCOLOR, COLOR_TEXT_PRIMARY);
+        style.put(mxConstants.STYLE_FILLCOLOR, getMethodFill());
+        style.put(mxConstants.STYLE_STROKECOLOR, getMethodStroke());
+        style.put(mxConstants.STYLE_FONTCOLOR, getTextPrimary());
         style.put(mxConstants.STYLE_STROKEWIDTH, STROKE_WIDTH_NORMAL);
         return style;
     }
 
     private Map<String, Object> createFocusStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_FILLCOLOR, COLOR_FOCUS_FILL);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_FOCUS_STROKE);
-        style.put(mxConstants.STYLE_FONTCOLOR, COLOR_TEXT_PRIMARY);
+        style.put(mxConstants.STYLE_FILLCOLOR, getFocusFill());
+        style.put(mxConstants.STYLE_STROKECOLOR, getFocusStroke());
+        style.put(mxConstants.STYLE_FONTCOLOR, getTextPrimary());
         style.put(mxConstants.STYLE_STROKEWIDTH, STROKE_WIDTH_FOCUS);
         return style;
     }
 
     private Map<String, Object> createConstructorStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_FILLCOLOR, COLOR_CONSTRUCTOR_FILL);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_CONSTRUCTOR_STROKE);
-        style.put(mxConstants.STYLE_FONTCOLOR, COLOR_TEXT_PRIMARY);
+        style.put(mxConstants.STYLE_FILLCOLOR, getConstructorFill());
+        style.put(mxConstants.STYLE_STROKECOLOR, getConstructorStroke());
+        style.put(mxConstants.STYLE_FONTCOLOR, getTextPrimary());
         style.put(mxConstants.STYLE_STROKEWIDTH, STROKE_WIDTH_NORMAL);
         return style;
     }
 
     private Map<String, Object> createStaticInitStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_FILLCOLOR, COLOR_STATIC_FILL);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_STATIC_STROKE);
-        style.put(mxConstants.STYLE_FONTCOLOR, COLOR_TEXT_PRIMARY);
+        style.put(mxConstants.STYLE_FILLCOLOR, getStaticFill());
+        style.put(mxConstants.STYLE_STROKECOLOR, getStaticStroke());
+        style.put(mxConstants.STYLE_FONTCOLOR, getTextPrimary());
         style.put(mxConstants.STYLE_STROKEWIDTH, STROKE_WIDTH_NORMAL);
         return style;
     }
 
     private Map<String, Object> createExternalStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_FILLCOLOR, COLOR_EXTERNAL_FILL);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_EXTERNAL_STROKE);
-        style.put(mxConstants.STYLE_FONTCOLOR, COLOR_TEXT_SECONDARY);
+        style.put(mxConstants.STYLE_FILLCOLOR, getExternalFill());
+        style.put(mxConstants.STYLE_STROKECOLOR, getExternalStroke());
+        style.put(mxConstants.STYLE_FONTCOLOR, getTextSecondary());
         style.put(mxConstants.STYLE_STROKEWIDTH, 1);
         return style;
     }
@@ -118,14 +163,14 @@ public class CallGraphStyleFactory {
     private Map<String, Object> createFocusConstructorStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = createConstructorStyle(baseStyle);
         style.put(mxConstants.STYLE_STROKEWIDTH, STROKE_WIDTH_FOCUS);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_FOCUS_STROKE);
+        style.put(mxConstants.STYLE_STROKECOLOR, getFocusStroke());
         return style;
     }
 
     private Map<String, Object> createFocusStaticInitStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = createStaticInitStyle(baseStyle);
         style.put(mxConstants.STYLE_STROKEWIDTH, STROKE_WIDTH_FOCUS);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_FOCUS_STROKE);
+        style.put(mxConstants.STYLE_STROKECOLOR, getFocusStroke());
         return style;
     }
 
@@ -139,32 +184,32 @@ public class CallGraphStyleFactory {
 
     private Map<String, Object> createVirtualEdgeStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_METHOD_STROKE);
+        style.put(mxConstants.STYLE_STROKECOLOR, getMethodStroke());
         return style;
     }
 
     private Map<String, Object> createStaticEdgeStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_STATIC_STROKE);
+        style.put(mxConstants.STYLE_STROKECOLOR, getStaticStroke());
         return style;
     }
 
     private Map<String, Object> createSpecialEdgeStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_CONSTRUCTOR_STROKE);
+        style.put(mxConstants.STYLE_STROKECOLOR, getConstructorStroke());
         return style;
     }
 
     private Map<String, Object> createInterfaceEdgeStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_FOCUS_STROKE);
+        style.put(mxConstants.STYLE_STROKECOLOR, getFocusStroke());
         style.put(mxConstants.STYLE_DASHED, true);
         return style;
     }
 
     private Map<String, Object> createDynamicEdgeStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_STROKECOLOR, "#F7768E");
+        style.put(mxConstants.STYLE_STROKECOLOR, getErrorStroke());
         style.put(mxConstants.STYLE_DASHED, true);
         style.put(mxConstants.STYLE_DASH_PATTERN, "3 3");
         return style;
@@ -172,7 +217,7 @@ public class CallGraphStyleFactory {
 
     private Map<String, Object> createDefaultEdgeStyle(Map<String, Object> baseStyle) {
         Map<String, Object> style = new HashMap<>(baseStyle);
-        style.put(mxConstants.STYLE_STROKECOLOR, COLOR_EXTERNAL_STROKE);
+        style.put(mxConstants.STYLE_STROKECOLOR, getExternalStroke());
         return style;
     }
 

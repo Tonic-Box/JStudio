@@ -11,32 +11,18 @@ import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.engine.ScriptValue;
 
 import java.util.*;
-import java.util.function.Consumer;
 
-/**
- * Bridge for call graph analysis.
- * Exposes a 'callgraph' global object for building and querying call relationships.
- */
-public class CallGraphBridge {
+public class CallGraphBridge extends AbstractBridge {
 
-    private final ScriptInterpreter interpreter;
-    private final ProjectModel projectModel;
     private CallGraph callGraph;
-    private Consumer<String> logCallback;
 
     public CallGraphBridge(ScriptInterpreter interpreter, ProjectModel projectModel) {
-        this.interpreter = interpreter;
-        this.projectModel = projectModel;
+        super(interpreter, projectModel);
     }
 
-    public void setLogCallback(Consumer<String> callback) {
-        this.logCallback = callback;
-    }
-
-    private void log(String message) {
-        if (logCallback != null) {
-            logCallback.accept(message);
-        }
+    @Override
+    public ScriptValue createBridgeObject() {
+        return createCallGraphObject();
     }
 
     public ScriptValue createCallGraphObject() {

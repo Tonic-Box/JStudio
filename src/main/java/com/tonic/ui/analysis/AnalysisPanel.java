@@ -62,9 +62,6 @@ public class AnalysisPanel extends ThemedJPanel {
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    /**
-     * Refresh all analysis views.
-     */
     public void refresh() {
         callGraphPanel.refresh();
         dependencyPanel.refresh();
@@ -79,189 +76,47 @@ public class AnalysisPanel extends ThemedJPanel {
         simulationPanel.refresh();
     }
 
-    /**
-     * Get the call graph panel.
-     */
-    public CallGraphPanel getCallGraphPanel() {
-        return callGraphPanel;
-    }
+    public CallGraphPanel getCallGraphPanel() { return callGraphPanel; }
+    public DependencyPanel getDependencyPanel() { return dependencyPanel; }
+    public SearchPanel getSearchPanel() { return searchPanel; }
+    public StringsPanel getStringsPanel() { return stringsPanel; }
+    public UsagesPanel getUsagesPanel() { return usagesPanel; }
+    public XrefPanel getXrefPanel() { return xrefPanel; }
+    public DataFlowPanel getDataFlowPanel() { return dataFlowPanel; }
+    public SimilarityPanel getSimilarityPanel() { return similarityPanel; }
+    public CommentsPanel getCommentsPanel() { return commentsPanel; }
+    public BookmarksPanel getBookmarksPanel() { return bookmarksPanel; }
+    public SimulationPanel getSimulationPanel() { return simulationPanel; }
 
-    /**
-     * Get the dependency panel.
-     */
-    public DependencyPanel getDependencyPanel() {
-        return dependencyPanel;
-    }
+    public void showCallGraph() { tabbedPane.setSelectedComponent(callGraphPanel); }
+    public void showDependencies() { tabbedPane.setSelectedComponent(dependencyPanel); }
+    public void showSearch() { tabbedPane.setSelectedComponent(searchPanel); }
+    public void showStrings() { tabbedPane.setSelectedComponent(stringsPanel); }
+    public void showUsages() { tabbedPane.setSelectedComponent(usagesPanel); }
+    public void showXrefs() { tabbedPane.setSelectedComponent(xrefPanel); }
+    public void showDataFlow() { tabbedPane.setSelectedComponent(dataFlowPanel); }
+    public void showSimilarity() { tabbedPane.setSelectedComponent(similarityPanel); }
+    public void showComments() { tabbedPane.setSelectedComponent(commentsPanel); }
+    public void showBookmarks() { tabbedPane.setSelectedComponent(bookmarksPanel); }
+    public void showSimulation() { tabbedPane.setSelectedComponent(simulationPanel); }
 
-    /**
-     * Get the search panel.
-     */
-    public SearchPanel getSearchPanel() {
-        return searchPanel;
-    }
-
-    /**
-     * Select the call graph tab.
-     */
-    public void showCallGraph() {
-        tabbedPane.setSelectedComponent(callGraphPanel);
-    }
-
-    /**
-     * Select the dependency tab.
-     */
-    public void showDependencies() {
-        tabbedPane.setSelectedComponent(dependencyPanel);
-    }
-
-    /**
-     * Select the search tab.
-     */
-    public void showSearch() {
-        tabbedPane.setSelectedComponent(searchPanel);
-    }
-
-    /**
-     * Get the strings panel.
-     */
-    public StringsPanel getStringsPanel() {
-        return stringsPanel;
-    }
-
-    /**
-     * Select the strings tab.
-     */
-    public void showStrings() {
-        tabbedPane.setSelectedComponent(stringsPanel);
-    }
-
-    /**
-     * Get the usages panel.
-     */
-    public UsagesPanel getUsagesPanel() {
-        return usagesPanel;
-    }
-
-    /**
-     * Select the find usages tab.
-     */
-    public void showUsages() {
-        tabbedPane.setSelectedComponent(usagesPanel);
-    }
-
-    /**
-     * Show the find usages tab and search for a term.
-     */
     public void findUsages(String term, String type) {
-        tabbedPane.setSelectedComponent(usagesPanel);
+        showUsages();
         usagesPanel.searchFor(term, type);
     }
 
-    /**
-     * Get the cross-references panel.
-     */
-    public XrefPanel getXrefPanel() {
-        return xrefPanel;
-    }
-
-    /**
-     * Select the cross-references tab.
-     */
-    public void showXrefs() {
-        tabbedPane.setSelectedComponent(xrefPanel);
-    }
-
-    /**
-     * Show cross-references for a specific class.
-     */
     public void showXrefsForClass(String className) {
-        tabbedPane.setSelectedComponent(xrefPanel);
+        showXrefs();
         xrefPanel.showXrefsForClass(className);
     }
 
-    /**
-     * Show cross-references for a specific method.
-     */
     public void showXrefsForMethod(String className, String methodName, String methodDesc) {
-        tabbedPane.setSelectedComponent(xrefPanel);
+        showXrefs();
         xrefPanel.showXrefsForMethod(className, methodName, methodDesc);
     }
 
-    /**
-     * Show cross-references for a specific field.
-     */
     public void showXrefsForField(String className, String fieldName, String fieldDesc) {
-        tabbedPane.setSelectedComponent(xrefPanel);
+        showXrefs();
         xrefPanel.showXrefsForField(className, fieldName, fieldDesc);
-    }
-
-    /**
-     * Get the data flow panel.
-     */
-    public DataFlowPanel getDataFlowPanel() {
-        return dataFlowPanel;
-    }
-
-    /**
-     * Select the data flow tab.
-     */
-    public void showDataFlow() {
-        tabbedPane.setSelectedComponent(dataFlowPanel);
-    }
-
-    /**
-     * Get the similarity panel.
-     */
-    public SimilarityPanel getSimilarityPanel() {
-        return similarityPanel;
-    }
-
-    /**
-     * Select the similarity tab.
-     */
-    public void showSimilarity() {
-        tabbedPane.setSelectedComponent(similarityPanel);
-    }
-
-    /**
-     * Get the comments panel.
-     */
-    public CommentsPanel getCommentsPanel() {
-        return commentsPanel;
-    }
-
-    /**
-     * Select the comments tab.
-     */
-    public void showComments() {
-        tabbedPane.setSelectedComponent(commentsPanel);
-    }
-
-    /**
-     * Get the bookmarks panel.
-     */
-    public BookmarksPanel getBookmarksPanel() {
-        return bookmarksPanel;
-    }
-
-    /**
-     * Select the bookmarks tab.
-     */
-    public void showBookmarks() {
-        tabbedPane.setSelectedComponent(bookmarksPanel);
-    }
-
-    /**
-     * Get the simulation panel.
-     */
-    public SimulationPanel getSimulationPanel() {
-        return simulationPanel;
-    }
-
-    /**
-     * Select the simulation tab.
-     */
-    public void showSimulation() {
-        tabbedPane.setSelectedComponent(simulationPanel);
     }
 }

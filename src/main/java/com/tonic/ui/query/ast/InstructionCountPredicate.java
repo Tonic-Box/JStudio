@@ -17,11 +17,6 @@ public final class InstructionCountPredicate implements Predicate {
         this.threshold = threshold;
     }
 
-    @Deprecated
-    public InstructionCountPredicate(AllocCountPredicate.ComparisonOp operator, long threshold) {
-        this(operator.toOperator(), threshold);
-    }
-
     public ComparisonOperator operator() {
         return operator;
     }

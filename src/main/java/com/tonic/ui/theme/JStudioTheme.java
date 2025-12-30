@@ -89,6 +89,94 @@ public class JStudioTheme {
         ThemeManager.getInstance().applyTheme();
     }
 
+    public static Color getGraphNodeFill() {
+        return ThemeManager.getInstance().getCurrentTheme().getGraphNodeFill();
+    }
+
+    public static Color getGraphNodeStroke() {
+        return ThemeManager.getInstance().getCurrentTheme().getGraphNodeStroke();
+    }
+
+    public static Color getGraphFocusFill() {
+        return ThemeManager.getInstance().getCurrentTheme().getGraphFocusFill();
+    }
+
+    public static Color getGraphFocusStroke() {
+        return ThemeManager.getInstance().getCurrentTheme().getGraphFocusStroke();
+    }
+
+    public static Color getGraphConstructorFill() {
+        return ThemeManager.getInstance().getCurrentTheme().getGraphConstructorFill();
+    }
+
+    public static Color getGraphConstructorStroke() {
+        return ThemeManager.getInstance().getCurrentTheme().getGraphConstructorStroke();
+    }
+
+    public static Color getGraphStaticFill() {
+        return ThemeManager.getInstance().getCurrentTheme().getGraphStaticFill();
+    }
+
+    public static Color getGraphStaticStroke() {
+        return ThemeManager.getInstance().getCurrentTheme().getGraphStaticStroke();
+    }
+
+    public static Color getGraphExternalFill() {
+        return ThemeManager.getInstance().getCurrentTheme().getGraphExternalFill();
+    }
+
+    public static Color getGraphExternalStroke() {
+        return ThemeManager.getInstance().getCurrentTheme().getGraphExternalStroke();
+    }
+
+    public static Color getBcLoad() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcLoad();
+    }
+
+    public static Color getBcStore() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcStore();
+    }
+
+    public static Color getBcInvoke() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcInvoke();
+    }
+
+    public static Color getBcField() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcField();
+    }
+
+    public static Color getBcBranch() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcBranch();
+    }
+
+    public static Color getBcStack() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcStack();
+    }
+
+    public static Color getBcConst() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcConst();
+    }
+
+    public static Color getBcReturn() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcReturn();
+    }
+
+    public static Color getBcNew() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcNew();
+    }
+
+    public static Color getBcArithmetic() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcArithmetic();
+    }
+
+    public static Color getBcType() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcType();
+    }
+
+    public static Color getBcOffset() {
+        return ThemeManager.getInstance().getCurrentTheme().getBcOffset();
+    }
+
     public static Font getCodeFont(int size) {
         return ThemeManager.getInstance().getCurrentTheme().getCodeFont(size);
     }

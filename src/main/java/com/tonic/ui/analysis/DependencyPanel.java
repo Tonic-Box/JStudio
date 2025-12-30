@@ -125,6 +125,10 @@ public class DependencyPanel extends ThemedJPanel {
         updateStatus("No dependency analysis. Click 'Analyze' to scan dependencies.");
     }
 
+    private static String toHex(Color c) {
+        return String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue());
+    }
+
     private void setupGraphStyles() {
         mxStylesheet stylesheet = graph.getStylesheet();
         Map<String, Object> style = new HashMap<>();
@@ -132,40 +136,48 @@ public class DependencyPanel extends ThemedJPanel {
         // Class node style
         style.put(mxConstants.STYLE_SHAPE, mxConstants.SHAPE_RECTANGLE);
         style.put(mxConstants.STYLE_ROUNDED, true);
-        style.put(mxConstants.STYLE_FILLCOLOR, "#252535");
-        style.put(mxConstants.STYLE_STROKECOLOR, "#9ECE6A");
-        style.put(mxConstants.STYLE_FONTCOLOR, "#E4E4EF");
+        style.put(mxConstants.STYLE_FILLCOLOR, toHex(JStudioTheme.getGraphNodeFill()));
+        style.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getGraphConstructorStroke()));
+        style.put(mxConstants.STYLE_FONTCOLOR, toHex(JStudioTheme.getTextPrimary()));
         style.put(mxConstants.STYLE_FONTSIZE, 10);
         style.put(mxConstants.STYLE_SPACING, 4);
         stylesheet.putCellStyle("CLASS", style);
 
         // Focus node style
         Map<String, Object> focusStyle = new HashMap<>(style);
-        focusStyle.put(mxConstants.STYLE_FILLCOLOR, "#3D4070");
-        focusStyle.put(mxConstants.STYLE_STROKECOLOR, "#E0AF68");
+        focusStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(JStudioTheme.getGraphFocusFill()));
+        focusStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getGraphFocusStroke()));
         focusStyle.put(mxConstants.STYLE_STROKEWIDTH, 2);
         stylesheet.putCellStyle("FOCUS", focusStyle);
 
         // External class style
         Map<String, Object> externalStyle = new HashMap<>(style);
-        externalStyle.put(mxConstants.STYLE_FILLCOLOR, "#1E1E2E");
-        externalStyle.put(mxConstants.STYLE_STROKECOLOR, "#565F89");
-        externalStyle.put(mxConstants.STYLE_FONTCOLOR, "#9090A8");
+        externalStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(JStudioTheme.getGraphExternalFill()));
+        externalStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getGraphExternalStroke()));
+        externalStyle.put(mxConstants.STYLE_FONTCOLOR, toHex(JStudioTheme.getTextSecondary()));
         stylesheet.putCellStyle("EXTERNAL", externalStyle);
 
-        // Cycle node style
+        // Cycle node style (uses error color)
         Map<String, Object> cycleStyle = new HashMap<>(style);
-        cycleStyle.put(mxConstants.STYLE_FILLCOLOR, "#3D2035");
-        cycleStyle.put(mxConstants.STYLE_STROKECOLOR, "#F7768E");
+        cycleStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(darker(JStudioTheme.getError(), 0.3f)));
+        cycleStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getError()));
         stylesheet.putCellStyle("CYCLE", cycleStyle);
 
         // Edge style
         Map<String, Object> edgeStyle = new HashMap<>();
-        edgeStyle.put(mxConstants.STYLE_STROKECOLOR, "#565F89");
+        edgeStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getGraphExternalStroke()));
         edgeStyle.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
         stylesheet.putCellStyle("EDGE", edgeStyle);
 
         graph.getStylesheet().setDefaultEdgeStyle(edgeStyle);
+    }
+
+    private static Color darker(Color c, float factor) {
+        return new Color(
+            Math.max(0, (int)(c.getRed() * factor)),
+            Math.max(0, (int)(c.getGreen() * factor)),
+            Math.max(0, (int)(c.getBlue() * factor))
+        );
     }
 
     /**
@@ -458,7 +470,7 @@ public class DependencyPanel extends ThemedJPanel {
 
             try {
                 BufferedImage image = mxCellRenderer.createBufferedImage(
-                        graph, null, 2, Color.WHITE, true, null);
+                        graph, null, 2, JStudioTheme.getBgPrimary(), true, null);
 
                 if (image != null) {
                     ImageIO.write(image, "PNG", file);

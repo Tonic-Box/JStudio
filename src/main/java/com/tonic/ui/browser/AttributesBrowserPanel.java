@@ -329,8 +329,8 @@ public class AttributesBrowserPanel extends ThemedJPanel {
             if (attr instanceof RuntimeVisibleAnnotationsAttribute) return JStudioTheme.getSuccess();
             if (attr instanceof RuntimeInvisibleAnnotationsAttribute) return JStudioTheme.getSuccess();
             if (attr instanceof ExceptionsAttribute) return JStudioTheme.getError();
-            if (attr instanceof DeprecatedAttribute) return new Color(128, 128, 128);
-            if (attr instanceof SyntheticAttribute) return new Color(128, 128, 128);
+            if (attr instanceof DeprecatedAttribute) return JStudioTheme.getTextDisabled();
+            if (attr instanceof SyntheticAttribute) return JStudioTheme.getTextDisabled();
             return JStudioTheme.getTextPrimary();
         }
     }

@@ -13,7 +13,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -84,7 +83,7 @@ public abstract class GraphPanelBase extends AnalysisPanelBase {
 
             try {
                 BufferedImage image = mxCellRenderer.createBufferedImage(
-                    graph, null, 1, Color.WHITE, true, null
+                    graph, null, 1, JStudioTheme.getBgPrimary(), true, null
                 );
                 if (image != null) {
                     ImageIO.write(image, "PNG", file);

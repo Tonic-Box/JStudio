@@ -147,9 +147,10 @@ public class BytecodeView extends JPanel implements ThemeManager.ThemeChangeList
         updateStyle(commentStyle, JStudioTheme.getTextSecondary());
         updateStyle(headerStyle, JStudioTheme.getAccent());
         StyleConstants.setBold(headerStyle, true);
-        updateStyle(dividerStyle, new Color(0x3D, 0x59, 0xA1));
+        updateStyle(dividerStyle, JStudioTheme.getAccentSecondary());
 
-        StyleConstants.setBackground(persistentHighlightStyle, new Color(0x3D, 0x59, 0xA1, 100));
+        Color highlightBase = JStudioTheme.getAccentSecondary();
+        StyleConstants.setBackground(persistentHighlightStyle, new Color(highlightBase.getRed(), highlightBase.getGreen(), highlightBase.getBlue(), 100));
     }
 
     private void updateStyle(SimpleAttributeSet style, Color color) {

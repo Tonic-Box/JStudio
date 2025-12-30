@@ -540,13 +540,13 @@ public class SimulationPanel extends ThemedJPanel {
                     switch (severity) {
                         case "CRITICAL":
                         case "HIGH":
-                            c.setForeground(new Color(255, 100, 100));
+                            c.setForeground(JStudioTheme.getError());
                             break;
                         case "MEDIUM":
-                            c.setForeground(new Color(255, 180, 100));
+                            c.setForeground(JStudioTheme.getWarning());
                             break;
                         case "LOW":
-                            c.setForeground(new Color(180, 180, 100));
+                            c.setForeground(JStudioTheme.getInfo());
                             break;
                         default:
                             c.setForeground(JStudioTheme.getTextSecondary());

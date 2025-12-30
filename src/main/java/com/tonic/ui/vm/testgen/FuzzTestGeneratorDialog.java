@@ -87,7 +87,7 @@ public class FuzzTestGeneratorDialog extends JDialog {
         configPanel.add(configParamsButton);
 
         paramsConfigLabel = new JLabel("");
-        paramsConfigLabel.setForeground(new Color(156, 220, 254));
+        paramsConfigLabel.setForeground(JStudioTheme.getInfo());
         paramsConfigLabel.setFont(paramsConfigLabel.getFont().deriveFont(Font.ITALIC, 11f));
         configPanel.add(paramsConfigLabel);
 
@@ -127,9 +127,9 @@ public class FuzzTestGeneratorDialog extends JDialog {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 FuzzResult result = tableModel.getResultAt(row);
                 if (result != null && result.getResult().getException() != null) {
-                    setForeground(new Color(244, 135, 113));
+                    setForeground(JStudioTheme.getError());
                 } else {
-                    setForeground(isSelected ? Color.WHITE : new Color(78, 201, 176));
+                    setForeground(isSelected ? JStudioTheme.getTextPrimary() : JStudioTheme.getSuccess());
                 }
                 return this;
             }
@@ -140,7 +140,7 @@ public class FuzzTestGeneratorDialog extends JDialog {
             public Component getTableCellRendererComponent(JTable table, Object value,
                     boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                setForeground(isSelected ? Color.WHITE : new Color(156, 220, 254));
+                setForeground(isSelected ? JStudioTheme.getTextPrimary() : JStudioTheme.getInfo());
                 return this;
             }
         });

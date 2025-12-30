@@ -158,7 +158,7 @@ public class StackPanel extends ThemedJPanel {
                 setBackground(JStudioTheme.getAccent());
             } else if (entry instanceof EditableStackEntry &&
                        ((EditableStackEntry) entry).isUserModified()) {
-                setBackground(new Color(40, 80, 40));
+                setBackground(JStudioTheme.getSuccess().darker().darker());
             } else {
                 setBackground(JStudioTheme.getBgSecondary());
             }

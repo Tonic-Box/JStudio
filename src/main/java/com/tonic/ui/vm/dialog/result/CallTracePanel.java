@@ -35,9 +35,17 @@ public class CallTracePanel extends ThemedJPanel {
 
     private List<MethodCall> currentCalls = new ArrayList<>();
 
-    private static final Color ENTRY_COLOR = new Color(86, 156, 214);
-    private static final Color EXIT_COLOR = new Color(78, 201, 176);
-    private static final Color EXCEPTION_COLOR = new Color(244, 135, 113);
+    private static Color entryColor() {
+        return JStudioTheme.getInfo();
+    }
+
+    private static Color exitColor() {
+        return JStudioTheme.getSuccess();
+    }
+
+    private static Color exceptionColor() {
+        return JStudioTheme.getError();
+    }
 
     public CallTracePanel() {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -134,13 +142,13 @@ public class CallTracePanel extends ThemedJPanel {
         StyleConstants.setForeground(defaultStyle, JStudioTheme.getTextPrimary());
 
         Style entryStyle = listPane.addStyle("entry", defaultStyle);
-        StyleConstants.setForeground(entryStyle, ENTRY_COLOR);
+        StyleConstants.setForeground(entryStyle, entryColor());
 
         Style exitStyle = listPane.addStyle("exit", defaultStyle);
-        StyleConstants.setForeground(exitStyle, EXIT_COLOR);
+        StyleConstants.setForeground(exitStyle, exitColor());
 
         Style exceptionStyle = listPane.addStyle("exception", defaultStyle);
-        StyleConstants.setForeground(exceptionStyle, EXCEPTION_COLOR);
+        StyleConstants.setForeground(exceptionStyle, exceptionColor());
         StyleConstants.setBold(exceptionStyle, true);
     }
 
@@ -336,7 +344,7 @@ public class CallTracePanel extends ThemedJPanel {
             setBackgroundNonSelectionColor(JStudioTheme.getBgPrimary());
             setBackgroundSelectionColor(JStudioTheme.getSelection());
             setTextNonSelectionColor(JStudioTheme.getTextPrimary());
-            setTextSelectionColor(Color.WHITE);
+            setTextSelectionColor(JStudioTheme.getTextPrimary());
         }
 
         @Override
@@ -367,9 +375,9 @@ public class CallTracePanel extends ThemedJPanel {
 
                     if (!sel) {
                         if (call.isExceptional()) {
-                            setForeground(EXCEPTION_COLOR);
+                            setForeground(exceptionColor());
                         } else {
-                            setForeground(ENTRY_COLOR);
+                            setForeground(entryColor());
                         }
                     }
                 }

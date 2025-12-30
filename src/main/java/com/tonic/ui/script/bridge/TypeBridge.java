@@ -11,37 +11,22 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.script.engine.ScriptFunction;
-import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.engine.ScriptValue;
 
 import java.util.*;
-import java.util.function.Consumer;
 
-/**
- * Bridge for type analysis.
- * Exposes a 'types' global object for type inference and analysis.
- */
-public class TypeBridge {
+public class TypeBridge extends AbstractBridge {
 
-    private final ScriptInterpreter interpreter;
-    private final ProjectModel projectModel;
-    private Consumer<String> logCallback;
     private IRMethod currentMethod;
     private final Map<String, IRMethod> methodCache = new HashMap<>();
 
-    public TypeBridge(ScriptInterpreter interpreter, ProjectModel projectModel) {
-        this.interpreter = interpreter;
-        this.projectModel = projectModel;
+    public TypeBridge(ProjectModel projectModel) {
+        super(projectModel);
     }
 
-    public void setLogCallback(Consumer<String> callback) {
-        this.logCallback = callback;
-    }
-
-    private void log(String message) {
-        if (logCallback != null) {
-            logCallback.accept(message);
-        }
+    @Override
+    public ScriptValue createBridgeObject() {
+        return createTypesObject();
     }
 
     public ScriptValue createTypesObject() {

@@ -159,7 +159,7 @@ public class LocalsPanel extends ThemedJPanel {
                 setBackground(JStudioTheme.getAccent());
             } else if (entry instanceof EditableLocalEntry &&
                        ((EditableLocalEntry) entry).isUserModified()) {
-                setBackground(new Color(40, 80, 40));
+                setBackground(JStudioTheme.getSuccess().darker().darker());
             } else if (entry != null && entry.isChanged()) {
                 setBackground(JStudioTheme.getWarning().darker().darker());
             } else {

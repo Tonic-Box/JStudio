@@ -159,7 +159,7 @@ public class BridgeRegistry {
 
     public void registerPatternBridge() {
         if (projectModel != null) {
-            patternBridge = new PatternBridge(interpreter, projectModel);
+            patternBridge = new PatternBridge(projectModel);
             if (logCallback != null) {
                 patternBridge.setLogCallback(logCallback);
             }
@@ -169,7 +169,7 @@ public class BridgeRegistry {
 
     public void registerTypeBridge() {
         if (projectModel != null) {
-            typeBridge = new TypeBridge(interpreter, projectModel);
+            typeBridge = new TypeBridge(projectModel);
             if (logCallback != null) {
                 typeBridge.setLogCallback(logCallback);
             }
@@ -179,7 +179,7 @@ public class BridgeRegistry {
 
     public void registerStringBridge() {
         if (projectModel != null) {
-            stringBridge = new StringBridge(interpreter, projectModel);
+            stringBridge = new StringBridge(projectModel);
             if (logCallback != null) {
                 stringBridge.setLogCallback(logCallback);
             }

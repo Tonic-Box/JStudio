@@ -1,5 +1,6 @@
 package com.tonic.ui.query.parser;
 
+import com.tonic.ui.core.util.ComparisonOperator;
 import com.tonic.ui.query.ast.*;
 
 import java.util.List;
@@ -224,7 +225,7 @@ public class QueryParser {
             expect(Token.TokenType.LPAREN);
             String typeName = parseString();
             expect(Token.TokenType.RPAREN);
-            AllocCountPredicate.ComparisonOp op = parseComparisonOp();
+            ComparisonOperator op = parseComparisonOp();
             int threshold = parseInteger();
             return new AllocCountPredicate(typeName, op, threshold);
         }
@@ -276,7 +277,7 @@ public class QueryParser {
         }
 
         if (match(Token.TokenType.INSTRUCTION_COUNT)) {
-            AllocCountPredicate.ComparisonOp op = parseComparisonOp();
+            ComparisonOperator op = parseComparisonOp();
             long threshold = parseLong();
             return new InstructionCountPredicate(op, threshold);
         }
@@ -285,11 +286,11 @@ public class QueryParser {
             if (match(Token.TokenType.LPAREN)) {
                 String blockId = parseString();
                 expect(Token.TokenType.RPAREN);
-                AllocCountPredicate.ComparisonOp op = parseComparisonOp();
+                ComparisonOperator op = parseComparisonOp();
                 double threshold = parseDouble();
                 return new CoveragePredicate(blockId, op, threshold);
             }
-            AllocCountPredicate.ComparisonOp op = parseComparisonOp();
+            ComparisonOperator op = parseComparisonOp();
             double threshold = parseDouble();
             return new CoveragePredicate(null, op, threshold);
         }
@@ -338,13 +339,13 @@ public class QueryParser {
         return builder.build();
     }
 
-    private AllocCountPredicate.ComparisonOp parseComparisonOp() throws ParseException {
-        if (match(Token.TokenType.GT)) return AllocCountPredicate.ComparisonOp.GT;
-        if (match(Token.TokenType.GTE)) return AllocCountPredicate.ComparisonOp.GTE;
-        if (match(Token.TokenType.LT)) return AllocCountPredicate.ComparisonOp.LT;
-        if (match(Token.TokenType.LTE)) return AllocCountPredicate.ComparisonOp.LTE;
-        if (match(Token.TokenType.EQ)) return AllocCountPredicate.ComparisonOp.EQ;
-        if (match(Token.TokenType.NEQ)) return AllocCountPredicate.ComparisonOp.NEQ;
+    private ComparisonOperator parseComparisonOp() throws ParseException {
+        if (match(Token.TokenType.GT)) return ComparisonOperator.GT;
+        if (match(Token.TokenType.GTE)) return ComparisonOperator.GTE;
+        if (match(Token.TokenType.LT)) return ComparisonOperator.LT;
+        if (match(Token.TokenType.LTE)) return ComparisonOperator.LTE;
+        if (match(Token.TokenType.EQ)) return ComparisonOperator.EQ;
+        if (match(Token.TokenType.NEQ)) return ComparisonOperator.NEQ;
         throw new ParseException("Expected comparison operator", peek().position());
     }
 

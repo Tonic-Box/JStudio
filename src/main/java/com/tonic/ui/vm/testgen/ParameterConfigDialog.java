@@ -159,7 +159,7 @@ public class ParameterConfigDialog extends JDialog {
             add(configButton);
 
             summaryLabel = createLabel("");
-            summaryLabel.setForeground(new Color(156, 220, 254));
+            summaryLabel.setForeground(JStudioTheme.getInfo());
             add(summaryLabel);
 
             modeCombo.setSelectedItem(spec.getMode());

@@ -157,11 +157,11 @@ public class ObjectListPanel extends ThemedJPanel {
             if (row < allObjects.size()) {
                 HeapObject obj = allObjects.get(row);
                 if (obj.isLambda()) {
-                    if (!isSelected) setForeground(new Color(180, 140, 200));
+                    if (!isSelected) setForeground(JStudioTheme.getAccentSecondary());
                 } else if (obj.isArray()) {
-                    if (!isSelected) setForeground(new Color(140, 180, 200));
+                    if (!isSelected) setForeground(JStudioTheme.getInfo());
                 } else if (obj.isString()) {
-                    if (!isSelected) setForeground(new Color(200, 180, 140));
+                    if (!isSelected) setForeground(JStudioTheme.getWarning());
                 }
             }
 

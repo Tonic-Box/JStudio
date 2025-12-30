@@ -20,10 +20,15 @@ public class SummaryBar extends JPanel {
 
     private boolean expanded = false;
 
-    private static final Color SUCCESS_BG = new Color(30, 60, 30);
-    private static final Color FAILURE_BG = new Color(60, 30, 30);
-    private static final Color SUCCESS_FG = new Color(100, 200, 100);
-    private static final Color FAILURE_FG = new Color(200, 100, 100);
+    private static Color successBg() {
+        Color success = JStudioTheme.getSuccess();
+        return new Color(success.getRed() / 8, success.getGreen() / 4, success.getBlue() / 8);
+    }
+
+    private static Color failureBg() {
+        Color error = JStudioTheme.getError();
+        return new Color(error.getRed() / 4, error.getGreen() / 8, error.getBlue() / 8);
+    }
 
     public SummaryBar() {
         setLayout(new BorderLayout());
@@ -76,7 +81,7 @@ public class SummaryBar extends JPanel {
         stackTraceArea.setEditable(false);
         stackTraceArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
         stackTraceArea.setBackground(JStudioTheme.getBgPrimary());
-        stackTraceArea.setForeground(FAILURE_FG);
+        stackTraceArea.setForeground(JStudioTheme.getError());
 
         JScrollPane scrollPane = new JScrollPane(stackTraceArea);
         scrollPane.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
@@ -133,10 +138,10 @@ public class SummaryBar extends JPanel {
     public void update(ExecutionResult result) {
         if (result.isSuccess()) {
             statusIcon.setText("\u2713");
-            statusIcon.setForeground(SUCCESS_FG);
+            statusIcon.setForeground(JStudioTheme.getSuccess());
             statusLabel.setText("SUCCESS");
-            statusLabel.setForeground(SUCCESS_FG);
-            setBackground(SUCCESS_BG);
+            statusLabel.setForeground(JStudioTheme.getSuccess());
+            setBackground(successBg());
 
             String returnValue = result.getFormattedReturnValue();
             String returnType = formatReturnType(result.getReturnType());
@@ -146,10 +151,10 @@ public class SummaryBar extends JPanel {
             stackTracePanel.setVisible(false);
         } else {
             statusIcon.setText("\u2717");
-            statusIcon.setForeground(FAILURE_FG);
+            statusIcon.setForeground(JStudioTheme.getError());
             statusLabel.setText("FAILED");
-            statusLabel.setForeground(FAILURE_FG);
-            setBackground(FAILURE_BG);
+            statusLabel.setForeground(JStudioTheme.getError());
+            setBackground(failureBg());
 
             Throwable ex = result.getException();
             if (ex != null) {

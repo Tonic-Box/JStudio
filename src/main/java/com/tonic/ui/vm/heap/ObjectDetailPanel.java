@@ -233,7 +233,7 @@ public class ObjectDetailPanel extends ThemedJPanel {
                     setText(display);
 
                     if (fv.isReference()) {
-                        setForeground(new Color(140, 180, 220));
+                        setForeground(JStudioTheme.getInfo());
                     }
                 }
             }

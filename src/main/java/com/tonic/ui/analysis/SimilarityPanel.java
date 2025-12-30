@@ -175,9 +175,9 @@ public class SimilarityPanel extends ThemedJPanel {
                     int score = (Integer) value;
                     if (!isSelected) {
                         if (score >= 95) {
-                            setBackground(new Color(45, 80, 45));
+                            setBackground(deriveMatchBg(JStudioTheme.getSuccess()));
                         } else if (score >= 80) {
-                            setBackground(new Color(80, 80, 45));
+                            setBackground(deriveMatchBg(JStudioTheme.getWarning()));
                         } else {
                             setBackground(JStudioTheme.getBgTertiary());
                         }
@@ -310,6 +310,10 @@ public class SimilarityPanel extends ThemedJPanel {
         JLabel label = new JLabel(text);
         label.setForeground(JStudioTheme.getTextSecondary());
         return label;
+    }
+
+    private static Color deriveMatchBg(Color base) {
+        return new Color(base.getRed() / 5, base.getGreen() / 3, base.getBlue() / 5);
     }
 
     // ==================== Actions ====================

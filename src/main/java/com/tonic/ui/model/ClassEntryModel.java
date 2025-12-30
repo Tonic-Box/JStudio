@@ -6,6 +6,7 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.parser.constpool.ClassRefItem;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.ui.theme.Icons;
+import com.tonic.ui.util.AccessFlags;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -60,13 +61,12 @@ public class ClassEntryModel {
         }
         this.displayName = simpleName;
 
-        // Determine icon based on class type (using access flags)
         int access = classFile.getAccess();
-        if ((access & 0x0200) != 0) { // ACC_INTERFACE
+        if (AccessFlags.isInterface(access)) {
             this.icon = Icons.getIcon("interface");
-        } else if ((access & 0x4000) != 0) { // ACC_ENUM
+        } else if (AccessFlags.isEnum(access)) {
             this.icon = Icons.getIcon("enum");
-        } else if ((access & 0x2000) != 0) { // ACC_ANNOTATION
+        } else if (AccessFlags.isAnnotation(access)) {
             this.icon = Icons.getIcon("annotation");
         } else {
             this.icon = Icons.getIcon("class");
@@ -119,27 +119,27 @@ public class ClassEntryModel {
     }
 
     public boolean isInterface() {
-        return (classFile.getAccess() & 0x0200) != 0;
+        return AccessFlags.isInterface(classFile.getAccess());
     }
 
     public boolean isEnum() {
-        return (classFile.getAccess() & 0x4000) != 0;
+        return AccessFlags.isEnum(classFile.getAccess());
     }
 
     public boolean isAnnotation() {
-        return (classFile.getAccess() & 0x2000) != 0;
+        return AccessFlags.isAnnotation(classFile.getAccess());
     }
 
     public boolean isAbstract() {
-        return (classFile.getAccess() & 0x0400) != 0;
+        return AccessFlags.isAbstract(classFile.getAccess());
     }
 
     public boolean isPublic() {
-        return (classFile.getAccess() & 0x0001) != 0;
+        return AccessFlags.isPublic(classFile.getAccess());
     }
 
     public boolean isFinal() {
-        return (classFile.getAccess() & 0x0010) != 0;
+        return AccessFlags.isFinal(classFile.getAccess());
     }
 
     // Member access
