@@ -229,6 +229,7 @@ public class XrefPanel extends JPanel {
             protected void done() {
                 try {
                     xrefDatabase = get();
+                    project.setXrefDatabase(xrefDatabase);
                     statusLabel.setText(xrefDatabase.getSummary());
                     refreshDisplay();
                 } catch (Exception e) {

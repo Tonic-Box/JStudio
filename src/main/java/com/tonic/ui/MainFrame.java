@@ -106,6 +106,7 @@ public class MainFrame extends JFrame {
     private com.tonic.ui.vm.heap.HeapForensicsPanel heapForensicsPanel;
     private JDialog deobfuscationDialog;
     private DeobfuscationPanel deobfuscationPanel;
+    private com.tonic.ui.query.QueryDialog queryDialog;
 
     // Split panes for layout
     private JSplitPane mainHorizontalSplit;
@@ -1768,5 +1769,117 @@ public class MainFrame extends JFrame {
             heapForensicsDialog.add(heapForensicsPanel);
         }
         heapForensicsDialog.setVisible(true);
+    }
+
+    public void showQueryExplorer() {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded. Load a JAR or class file first.");
+            return;
+        }
+
+        if (queryDialog == null) {
+            queryDialog = new com.tonic.ui.query.QueryDialog(
+                this,
+                project.getClassPool(),
+                () -> project.getXrefDatabase()
+            );
+        }
+        queryDialog.setVisible(true);
+    }
+
+    /**
+     * Navigate to a specific class.
+     * @param className the internal class name (e.g., "com/example/MyClass")
+     * @return true if navigation succeeded
+     */
+    public boolean navigateToClass(String className) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) return false;
+
+        String normalizedName = className.replace('.', '/');
+        ClassEntryModel classEntry = project.getClass(normalizedName);
+        if (classEntry == null) {
+            classEntry = project.findClassByName(className);
+        }
+        if (classEntry != null) {
+            openClassInEditor(classEntry);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Navigate to a specific method in a class.
+     * @param className the internal class name
+     * @param methodName the method name
+     * @param methodDesc the method descriptor (can be null)
+     * @return true if navigation succeeded
+     */
+    public boolean navigateToMethod(String className, String methodName, String methodDesc) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) return false;
+
+        String normalizedName = className.replace('.', '/');
+        ClassEntryModel classEntry = project.getClass(normalizedName);
+        if (classEntry == null) {
+            classEntry = project.findClassByName(className);
+        }
+        if (classEntry != null) {
+            return editorPanel.navigateToMethod(classEntry, methodName, methodDesc, currentViewMode);
+        }
+        return false;
+    }
+
+    /**
+     * Navigate to a specific bytecode offset within a method.
+     * Opens bytecode view and highlights the instruction at the given PC.
+     * @param className the internal class name
+     * @param methodName the method name
+     * @param methodDesc the method descriptor
+     * @param pc the bytecode offset
+     * @return true if navigation succeeded
+     */
+    public boolean navigateToPC(String className, String methodName, String methodDesc, int pc) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) return false;
+
+        String normalizedName = className.replace('.', '/');
+        ClassEntryModel classEntry = project.getClass(normalizedName);
+        if (classEntry == null) {
+            classEntry = project.findClassByName(className);
+        }
+        if (classEntry != null) {
+            boolean result = editorPanel.navigateToPC(classEntry, methodName, methodDesc, pc);
+            if (result) {
+                switchToBytecodeView();
+            }
+            return result;
+        }
+        return false;
+    }
+
+    /**
+     * Navigate using a ClickTarget from query results.
+     */
+    public boolean navigateToTarget(com.tonic.ui.query.planner.ClickTarget target) {
+        if (target instanceof com.tonic.ui.query.planner.ClickTarget.ClassTarget) {
+            com.tonic.ui.query.planner.ClickTarget.ClassTarget ct =
+                (com.tonic.ui.query.planner.ClickTarget.ClassTarget) target;
+            return navigateToClass(ct.className());
+        } else if (target instanceof com.tonic.ui.query.planner.ClickTarget.MethodTarget) {
+            com.tonic.ui.query.planner.ClickTarget.MethodTarget mt =
+                (com.tonic.ui.query.planner.ClickTarget.MethodTarget) target;
+            return navigateToMethod(mt.className(), mt.methodName(), mt.descriptor());
+        } else if (target instanceof com.tonic.ui.query.planner.ClickTarget.PCTarget) {
+            com.tonic.ui.query.planner.ClickTarget.PCTarget pt =
+                (com.tonic.ui.query.planner.ClickTarget.PCTarget) target;
+            return navigateToPC(pt.className(), pt.methodName(), pt.descriptor(), pt.pc());
+        } else if (target instanceof com.tonic.ui.query.planner.ClickTarget.FieldTarget) {
+            com.tonic.ui.query.planner.ClickTarget.FieldTarget ft =
+                (com.tonic.ui.query.planner.ClickTarget.FieldTarget) target;
+            return navigateToClass(ft.className());
+        }
+        return false;
     }
 }

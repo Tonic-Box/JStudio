@@ -239,6 +239,11 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
+        menu.add(createMenuItem("Query Explorer...", KeyEvent.VK_Q, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
+                Icons.getIcon("search"), e -> mainFrame.showQueryExplorer()));
+
+        menu.addSeparator();
+
         menu.add(createMenuItem("Show Call Graph", KeyEvent.VK_G, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
                 Icons.getIcon("callgraph"), e -> mainFrame.showCallGraph()));
 

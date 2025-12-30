@@ -325,4 +325,45 @@ public class EditorTab extends JPanel {
     public void setProjectModel(ProjectModel projectModel) {
         sourceView.setProjectModel(projectModel);
     }
+
+    /**
+     * Navigate to a specific bytecode offset within a method.
+     * Automatically switches to bytecode view.
+     * @param methodName the method name
+     * @param methodDesc the method descriptor
+     * @param pc the bytecode offset
+     * @return true if navigation succeeded
+     */
+    public boolean navigateToPC(String methodName, String methodDesc, int pc) {
+        setViewMode(ViewMode.BYTECODE);
+        return bytecodeView.highlightPC(methodName, methodDesc, pc);
+    }
+
+    /**
+     * Navigate to a specific method.
+     * @param methodName the method name
+     * @param methodDesc the method descriptor (can be null)
+     * @return true if navigation succeeded
+     */
+    public boolean navigateToMethod(String methodName, String methodDesc) {
+        switch (currentMode) {
+            case BYTECODE:
+                return bytecodeView.scrollToMethod(methodName, methodDesc);
+            case SOURCE:
+                sourceView.scrollToText(methodName);
+                return true;
+            case IR:
+                irView.scrollToText(methodName);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Get the BytecodeView for direct access.
+     */
+    public BytecodeView getBytecodeView() {
+        return bytecodeView;
+    }
 }

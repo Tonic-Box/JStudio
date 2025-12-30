@@ -517,4 +517,49 @@ public class EditorPanel extends JPanel implements ThemeManager.ThemeChangeListe
     public void showWelcomeTab() {
         tabbedPane.setSelectedIndex(0);
     }
+
+    /**
+     * Navigate to a specific PC within a method in a class.
+     * Opens the class if not already open, switches to bytecode view, and highlights the PC.
+     * @param classEntry the class containing the method
+     * @param methodName the method name
+     * @param methodDesc the method descriptor
+     * @param pc the bytecode offset
+     * @return true if navigation succeeded
+     */
+    public boolean navigateToPC(ClassEntryModel classEntry, String methodName, String methodDesc, int pc) {
+        openClass(classEntry, ViewMode.BYTECODE);
+
+        EditorTab tab = openTabs.get(classEntry.getClassName());
+        if (tab != null) {
+            return tab.navigateToPC(methodName, methodDesc, pc);
+        }
+        return false;
+    }
+
+    /**
+     * Navigate to a specific method in a class.
+     * Opens the class if not already open and scrolls to the method.
+     * @param classEntry the class containing the method
+     * @param methodName the method name
+     * @param methodDesc the method descriptor (can be null)
+     * @param viewMode the view mode to use
+     * @return true if navigation succeeded
+     */
+    public boolean navigateToMethod(ClassEntryModel classEntry, String methodName, String methodDesc, ViewMode viewMode) {
+        openClass(classEntry, viewMode);
+
+        EditorTab tab = openTabs.get(classEntry.getClassName());
+        if (tab != null) {
+            return tab.navigateToMethod(methodName, methodDesc);
+        }
+        return false;
+    }
+
+    /**
+     * Get an open tab by class name.
+     */
+    public EditorTab getTab(String className) {
+        return openTabs.get(className);
+    }
 }

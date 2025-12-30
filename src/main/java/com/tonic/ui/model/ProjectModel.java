@@ -87,6 +87,13 @@ public class ProjectModel {
     }
 
     /**
+     * Get the set of user class names (classes explicitly loaded by user).
+     */
+    public Set<String> getUserClassNames() {
+        return Collections.unmodifiableSet(userClassNames);
+    }
+
+    /**
      * Get classes in a specific package.
      */
     public List<ClassEntryModel> getClassesInPackage(String packagePrefix) {
