@@ -2,6 +2,8 @@ package com.tonic.ui;
 
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.theme.Theme;
+import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -10,6 +12,7 @@ import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -18,9 +21,11 @@ import java.awt.event.KeyEvent;
 /**
  * Builds the main toolbar for JStudio.
  */
-public class ToolbarBuilder {
+public class ToolbarBuilder implements ThemeManager.ThemeChangeListener {
 
     private final MainFrame mainFrame;
+    private JToolBar toolbar;
+    private JTextField searchField;
     private JToggleButton sourceButton;
     private JToggleButton bytecodeButton;
     private JToggleButton irButton;
@@ -28,10 +33,32 @@ public class ToolbarBuilder {
 
     public ToolbarBuilder(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
+        ThemeManager.getInstance().addThemeChangeListener(this);
+    }
+
+    @Override
+    public void onThemeChanged(Theme newTheme) {
+        SwingUtilities.invokeLater(this::applyTheme);
+    }
+
+    private void applyTheme() {
+        if (toolbar != null) {
+            toolbar.setBackground(JStudioTheme.getBgPrimary());
+            toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
+        }
+        if (searchField != null) {
+            searchField.setBackground(JStudioTheme.getBgTertiary());
+            searchField.setForeground(JStudioTheme.getTextPrimary());
+            searchField.setCaretColor(JStudioTheme.getTextPrimary());
+            searchField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+                    BorderFactory.createEmptyBorder(2, 6, 2, 6)
+            ));
+        }
     }
 
     public JToolBar build() {
-        JToolBar toolbar = new JToolBar();
+        toolbar = new JToolBar();
         toolbar.setFloatable(false);
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
         toolbar.setBackground(JStudioTheme.getBgPrimary());
@@ -93,7 +120,7 @@ public class ToolbarBuilder {
         toolbar.add(Box.createHorizontalGlue());
 
         // Search field
-        JTextField searchField = new JTextField(20);
+        searchField = new JTextField(20);
         searchField.setMaximumSize(new Dimension(200, 28));
         searchField.setPreferredSize(new Dimension(200, 28));
         searchField.putClientProperty("JTextField.placeholderText", "Search classes...");

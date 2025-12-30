@@ -17,7 +17,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -31,7 +30,6 @@ import java.awt.Insets;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +45,7 @@ public class WelcomeTab extends JPanel implements ThemeManager.ThemeChangeListen
     private final MainFrame mainFrame;
     private ProjectModel projectModel;
 
-    private JPanel contentPanel;
+    private final JPanel contentPanel;
     private JPanel mainMethodsPanel;
     private JPanel statsPanel;
     private JPanel versionStatsPanel;
@@ -57,7 +55,7 @@ public class WelcomeTab extends JPanel implements ThemeManager.ThemeChangeListen
     private JLabel fieldCountLabel;
     private JLabel packageCountLabel;
     private JLabel interfaceCountLabel;
-    private JScrollPane scrollPane;
+    private final JScrollPane scrollPane;
 
     public WelcomeTab(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
@@ -109,7 +107,77 @@ public class WelcomeTab extends JPanel implements ThemeManager.ThemeChangeListen
         contentPanel.setBackground(JStudioTheme.getBgTertiary());
         mainMethodsPanel.setBackground(JStudioTheme.getBgTertiary());
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
+
+        if (statsPanel != null) {
+            statsPanel.setBackground(JStudioTheme.getBgSecondary());
+            statsPanel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(JStudioTheme.getBorder(), 1),
+                    BorderFactory.createEmptyBorder(16, 20, 16, 20)
+            ));
+        }
+
+        if (versionStatsPanel != null) {
+            versionStatsPanel.setBackground(JStudioTheme.getBgTertiary());
+        }
+
+        applyThemeRecursively(contentPanel);
+        revalidate();
         repaint();
+    }
+
+    private void applyThemeRecursively(Component component) {
+        if (component instanceof JPanel) {
+            JPanel panel = (JPanel) component;
+            Color bg = panel.getBackground();
+            if (bg != null) {
+                if (panel == statsPanel) {
+                    panel.setBackground(JStudioTheme.getBgSecondary());
+                } else if (isVersionChip(panel)) {
+                    panel.setBackground(JStudioTheme.getBgSecondary());
+                    panel.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+                            BorderFactory.createEmptyBorder(2, 8, 2, 8)
+                    ));
+                } else {
+                    panel.setBackground(JStudioTheme.getBgTertiary());
+                }
+            }
+            for (Component child : panel.getComponents()) {
+                applyThemeRecursively(child);
+            }
+        } else if (component instanceof JLabel) {
+            JLabel label = (JLabel) component;
+            Color fg = label.getForeground();
+            if (fg != null && !fg.equals(JStudioTheme.getAccent())) {
+                if (isSecondaryText(label)) {
+                    label.setForeground(JStudioTheme.getTextSecondary());
+                } else {
+                    label.setForeground(JStudioTheme.getTextPrimary());
+                }
+            }
+        } else if (component instanceof JButton) {
+            JButton button = (JButton) component;
+            button.setBackground(JStudioTheme.getBgSecondary());
+            button.setForeground(JStudioTheme.getTextPrimary());
+            button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+                    BorderFactory.createEmptyBorder(8, 16, 8, 16)
+            ));
+        }
+    }
+
+    private boolean isVersionChip(JPanel panel) {
+        return panel.getComponentCount() == 2
+            && panel.getComponent(0) instanceof JLabel
+            && panel.getComponent(1) instanceof JLabel
+            && panel.getParent() == versionStatsPanel;
+    }
+
+    private boolean isSecondaryText(JLabel label) {
+        String text = label.getText();
+        return text != null && (text.endsWith(":") || text.startsWith("(") || text.equals("No project loaded")
+            || text.equals("No classes loaded") || text.equals("No main() methods found")
+            || text.startsWith(".main("));
     }
 
     private JPanel createHeaderSection() {
@@ -322,9 +390,9 @@ public class WelcomeTab extends JPanel implements ThemeManager.ThemeChangeListen
         buttonsPanel.setBackground(JStudioTheme.getBgTertiary());
         buttonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        buttonsPanel.add(createActionButton("Open File", Icons.getIcon("folder"), () -> mainFrame.showOpenDialog()));
-        buttonsPanel.add(createActionButton("Search", Icons.getIcon("search"), () -> mainFrame.showFindInProjectDialog()));
-        buttonsPanel.add(createActionButton("Transforms", Icons.getIcon("settings"), () -> mainFrame.showTransformDialog()));
+        buttonsPanel.add(createActionButton("Open File", Icons.getIcon("folder"), mainFrame::showOpenDialog));
+        buttonsPanel.add(createActionButton("Search", Icons.getIcon("search"), mainFrame::showFindInProjectDialog));
+        buttonsPanel.add(createActionButton("Transforms", Icons.getIcon("settings"), mainFrame::showTransformDialog));
 
         panel.add(buttonsPanel);
 

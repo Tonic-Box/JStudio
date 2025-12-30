@@ -4,32 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Cleanup pt 1">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Cleanup pt 2">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/AnalysisPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/AnalysisPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/ClassEntryModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/ClassEntryModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/FieldEntryModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/FieldEntryModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/MethodEntryModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/model/MethodEntryModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AllocCountPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AllocCountPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/CoveragePredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/CoveragePredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/InstructionCountPredicate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/InstructionCountPredicate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/QueryParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/QueryParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/BridgeRegistry.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/BridgeRegistry.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/CallGraphBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/CallGraphBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/PatternBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/PatternBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/ProjectBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/ProjectBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/StringBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/StringBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/TypeBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/TypeBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/ThemeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/ThemeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/DarculaTheme.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/DraculaTheme.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/GitHubLightTheme.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/JStudioDarkTheme.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/MonokaiTheme.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/NordTheme.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/SolarizedDarkTheme.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/themes/VSCodeDarkTheme.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/WelcomeTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/WelcomeTab.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/transform/TransformPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/transform/TransformPanel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -505,7 +484,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767108484568</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="- Cleanup pt 2">
+      <option name="closed" value="true" />
+      <created>1767123287627</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1767123287627</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -520,7 +507,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Annotation mutability support for transformer scripting" />
     <MESSAGE value="- Tab Click Fix&#10;- File Chooser Path Pasting support&#10;- Drag and Drop Support for Jars and Classes" />
     <MESSAGE value="- Fixed Bracket Matching&#10;- Fixed Field/Method navigation&#10;- Added explicit support for Mac Keyboard Shortcuts" />
     <MESSAGE value="- Fixed display issues on Mac (Hopefully)" />
@@ -545,6 +531,7 @@
     <MESSAGE value="-Debugger &amp; readme" />
     <MESSAGE value="- Query System" />
     <MESSAGE value="- Cleanup pt 1" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Cleanup pt 1" />
+    <MESSAGE value="- Cleanup pt 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Cleanup pt 2" />
   </component>
 </project>

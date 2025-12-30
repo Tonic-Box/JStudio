@@ -27,7 +27,6 @@ import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
@@ -408,9 +407,9 @@ public class TransformPanel extends ThemedJPanel {
 
         statusLabel.setText("Generating preview...");
 
-        SwingWorker<String[], Void> worker = new SwingWorker<String[], Void>() {
+        SwingWorker<String[], Void> worker = new SwingWorker<>() {
             @Override
-            protected String[] doInBackground() throws Exception {
+            protected String[] doInBackground() {
                 SSA ssa = createConfiguredSSA(method);
 
                 // Before: just lift
@@ -460,9 +459,9 @@ public class TransformPanel extends ThemedJPanel {
 
         statusLabel.setText("Applying transforms...");
 
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
-            protected Void doInBackground() throws Exception {
+            protected Void doInBackground() {
                 SSA ssa = createConfiguredSSA(method);
                 ssa.transform(method);
                 return null;
@@ -500,9 +499,9 @@ public class TransformPanel extends ThemedJPanel {
 
         statusLabel.setText("Applying transforms to class...");
 
-        SwingWorker<Integer, Void> worker = new SwingWorker<Integer, Void>() {
+        SwingWorker<Integer, Void> worker = new SwingWorker<>() {
             @Override
-            protected Integer doInBackground() throws Exception {
+            protected Integer doInBackground() {
                 int count = 0;
                 for (MethodEntryModel methodModel : selectedClass.getMethods()) {
                     MethodEntry method = methodModel.getMethodEntry();
@@ -546,9 +545,9 @@ public class TransformPanel extends ThemedJPanel {
     public void applyToAllClasses() {
         statusLabel.setText("Applying transforms to all classes...");
 
-        SwingWorker<int[], String> worker = new SwingWorker<int[], String>() {
+        SwingWorker<int[], String> worker = new SwingWorker<>() {
             @Override
-            protected int[] doInBackground() throws Exception {
+            protected int[] doInBackground() {
                 int totalMethods = 0;
                 int totalClasses = 0;
                 for (ClassEntryModel classEntry : project.getUserClasses()) {
@@ -591,10 +590,8 @@ public class TransformPanel extends ThemedJPanel {
                 try {
                     int[] result = get();
                     statusLabel.setText("Transforms applied to " + result[0] + " methods across " + result[1] + " classes");
-                    // Notify callback to refresh the view
                     notifyTransformComplete();
                 } catch (Exception e) {
-                    // Print full stack trace for debugging
                     e.printStackTrace();
                     Throwable cause = e.getCause();
                     String msg = cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : e.getMessage();

@@ -38,7 +38,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.List;
 
-public class PreferencesDialog extends JDialog {
+public class PreferencesDialog extends JDialog implements ThemeManager.ThemeChangeListener {
 
     private JComboBox<String> fontComboBox;
     private JSpinner fontSizeSpinner;
@@ -46,6 +46,13 @@ public class PreferencesDialog extends JDialog {
     private JScrollPane previewScrollPane;
     private JComboBox<Theme> themeComboBox;
     private JCheckBox loadJdkClassesBox;
+
+    private final JPanel mainPanel;
+    private final JPanel editorPanel;
+    private final JPanel appearancePanel;
+    private final JPanel executionPanel;
+    private final JPanel previewPanel;
+    private final JPanel buttonPanel;
 
     private Runnable onApply;
 
@@ -56,25 +63,112 @@ public class PreferencesDialog extends JDialog {
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
 
-        JPanel mainPanel = new JPanel();
+        mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
         mainPanel.setBackground(JStudioTheme.getBgSecondary());
 
-        mainPanel.add(createEditorSection());
+        editorPanel = createEditorSection();
+        appearancePanel = createAppearanceSection();
+        executionPanel = createExecutionSection();
+        previewPanel = createPreviewSection();
+        buttonPanel = createButtonPanel();
+
+        mainPanel.add(editorPanel);
         mainPanel.add(Box.createVerticalStrut(16));
-        mainPanel.add(createAppearanceSection());
+        mainPanel.add(appearancePanel);
         mainPanel.add(Box.createVerticalStrut(16));
-        mainPanel.add(createExecutionSection());
+        mainPanel.add(executionPanel);
         mainPanel.add(Box.createVerticalStrut(16));
-        mainPanel.add(createPreviewSection());
+        mainPanel.add(previewPanel);
         mainPanel.add(Box.createVerticalGlue());
 
         add(mainPanel, BorderLayout.CENTER);
-        add(createButtonPanel(), BorderLayout.SOUTH);
+        add(buttonPanel, BorderLayout.SOUTH);
+
+        ThemeManager.getInstance().addThemeChangeListener(this);
 
         loadSettings();
         updatePreview();
+    }
+
+    @Override
+    public void onThemeChanged(Theme newTheme) {
+        SwingUtilities.invokeLater(this::applyTheme);
+    }
+
+    private void applyTheme() {
+        mainPanel.setBackground(JStudioTheme.getBgSecondary());
+
+        updatePanelTheme(editorPanel, "Editor Font");
+        updatePanelTheme(appearancePanel, "Appearance");
+        updatePanelTheme(executionPanel, "Execution");
+        updatePanelTheme(previewPanel, "Preview");
+
+        buttonPanel.setBackground(JStudioTheme.getBgSecondary());
+        buttonPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
+
+        if (loadJdkClassesBox != null) {
+            loadJdkClassesBox.setBackground(JStudioTheme.getBgSecondary());
+            loadJdkClassesBox.setForeground(JStudioTheme.getTextPrimary());
+        }
+
+        if (fontComboBox != null) {
+            fontComboBox.setBackground(JStudioTheme.getBgTertiary());
+            fontComboBox.setForeground(JStudioTheme.getTextPrimary());
+        }
+
+        if (themeComboBox != null) {
+            themeComboBox.setBackground(JStudioTheme.getBgTertiary());
+            themeComboBox.setForeground(JStudioTheme.getTextPrimary());
+        }
+
+        applyThemeToLabels(mainPanel);
+        revalidate();
+        repaint();
+    }
+
+    private void updatePanelTheme(JPanel panel, String title) {
+        if (panel != null) {
+            panel.setBackground(JStudioTheme.getBgSecondary());
+            panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+                title,
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+                javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                JStudioTheme.getUIFont(12),
+                JStudioTheme.getTextPrimary()
+            ));
+        }
+    }
+
+    private void applyThemeToLabels(Component component) {
+        if (component instanceof JLabel) {
+            JLabel label = (JLabel) component;
+            Color fg = label.getForeground();
+            if (fg != null && !fg.equals(JStudioTheme.getAccent())) {
+                if (isSecondaryLabel(label)) {
+                    label.setForeground(JStudioTheme.getTextSecondary());
+                } else {
+                    label.setForeground(JStudioTheme.getTextPrimary());
+                }
+            }
+        } else if (component instanceof java.awt.Container) {
+            for (Component child : ((java.awt.Container) component).getComponents()) {
+                applyThemeToLabels(child);
+            }
+        }
+    }
+
+    private boolean isSecondaryLabel(JLabel label) {
+        String text = label.getText();
+        return text != null && (text.contains("take effect") || text.startsWith("Changes"));
+    }
+
+    @Override
+    public void dispose() {
+        ThemeManager.getInstance().removeThemeChangeListener(this);
+        super.dispose();
     }
 
     private JPanel createEditorSection() {
