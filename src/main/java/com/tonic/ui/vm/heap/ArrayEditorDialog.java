@@ -1,6 +1,7 @@
 package com.tonic.ui.vm.heap;
 
 import com.tonic.ui.theme.JStudioTheme;
+import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -13,8 +14,10 @@ import java.util.List;
 
 public class ArrayEditorDialog extends JDialog {
 
+    @Getter
     private final String componentType;
     private final List<Object> elements = new ArrayList<>();
+    @Getter
     private boolean confirmed = false;
 
     private JTable elementsTable;
@@ -343,16 +346,8 @@ public class ArrayEditorDialog extends JDialog {
         moveDownBtn.setEnabled(selected >= 0 && selected < elements.size() - 1);
     }
 
-    public boolean isConfirmed() {
-        return confirmed;
-    }
-
     public Object[] getElements() {
         return elements.toArray();
-    }
-
-    public String getComponentType() {
-        return componentType;
     }
 
     private static String formatComponentType(String type) {

@@ -273,11 +273,10 @@ public class SimulationBridge {
     }
 
     private void updateAbstractState(IRInstruction instr) {
-        Value result = instr.getResult();
-        if (result instanceof SSAValue) {
-            SSAValue ssa = (SSAValue) result;
+        SSAValue result = instr.getResult();
+        if (result != null) {
             ScriptValue abstractValue = computeAbstractValue(instr);
-            abstractState.put(ssa.getId(), abstractValue);
+            abstractState.put(result.getId(), abstractValue);
         }
     }
 

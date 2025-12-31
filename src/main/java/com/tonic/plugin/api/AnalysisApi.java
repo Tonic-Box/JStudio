@@ -1,5 +1,7 @@
 package com.tonic.plugin.api;
 
+import lombok.Getter;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -92,6 +94,7 @@ public interface AnalysisApi {
         List<StringInfo> getSqlQueries();
     }
 
+    @Getter
     final class CallSite {
         private final String callerClass;
         private final String callerMethod;
@@ -107,13 +110,9 @@ public interface AnalysisApi {
             this.lineNumber = lineNumber;
         }
 
-        public String getCallerClass() { return callerClass; }
-        public String getCallerMethod() { return callerMethod; }
-        public String getCalleeClass() { return calleeClass; }
-        public String getCalleeMethod() { return calleeMethod; }
-        public int getLineNumber() { return lineNumber; }
     }
 
+    @Getter
     final class DataFlowResult {
         private final String className;
         private final String methodName;
@@ -127,12 +126,9 @@ public interface AnalysisApi {
             this.edges = edges;
         }
 
-        public String getClassName() { return className; }
-        public String getMethodName() { return methodName; }
-        public List<DataFlowNode> getNodes() { return nodes; }
-        public List<DataFlowEdge> getEdges() { return edges; }
     }
 
+    @Getter
     final class DataFlowNode {
         private final int id;
         private final String type;
@@ -146,12 +142,9 @@ public interface AnalysisApi {
             this.instructionIndex = instructionIndex;
         }
 
-        public int getId() { return id; }
-        public String getType() { return type; }
-        public String getValue() { return value; }
-        public int getInstructionIndex() { return instructionIndex; }
     }
 
+    @Getter
     final class DataFlowEdge {
         private final int fromNode;
         private final int toNode;
@@ -163,11 +156,9 @@ public interface AnalysisApi {
             this.edgeType = edgeType;
         }
 
-        public int getFromNode() { return fromNode; }
-        public int getToNode() { return toNode; }
-        public String getEdgeType() { return edgeType; }
     }
 
+    @Getter
     final class TaintFlow {
         private final String source;
         private final String sink;
@@ -179,11 +170,9 @@ public interface AnalysisApi {
             this.path = path;
         }
 
-        public String getSource() { return source; }
-        public String getSink() { return sink; }
-        public List<String> getPath() { return path; }
     }
 
+    @Getter
     final class PatternMatch {
         private final String className;
         private final String methodName;
@@ -199,13 +188,9 @@ public interface AnalysisApi {
             this.metadata = metadata;
         }
 
-        public String getClassName() { return className; }
-        public String getMethodName() { return methodName; }
-        public int getLineNumber() { return lineNumber; }
-        public String getMatchedText() { return matchedText; }
-        public Map<String, Object> getMetadata() { return metadata; }
     }
 
+    @Getter
     final class StringInfo {
         private final String value;
         private final String className;
@@ -219,10 +204,6 @@ public interface AnalysisApi {
             this.lineNumber = lineNumber;
         }
 
-        public String getValue() { return value; }
-        public String getClassName() { return className; }
-        public String getMethodName() { return methodName; }
-        public int getLineNumber() { return lineNumber; }
     }
 
     @FunctionalInterface

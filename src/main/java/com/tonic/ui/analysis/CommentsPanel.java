@@ -113,9 +113,7 @@ public class CommentsPanel extends ThemedJPanel {
         statusLabel.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM));
         add(statusLabel, BorderLayout.SOUTH);
 
-        ProjectDatabaseService.getInstance().addListener((db, dirty) -> {
-            SwingUtilities.invokeLater(this::refresh);
-        });
+        ProjectDatabaseService.getInstance().addListener((db, dirty) -> SwingUtilities.invokeLater(this::refresh));
     }
 
     private JToolBar createToolbar() {

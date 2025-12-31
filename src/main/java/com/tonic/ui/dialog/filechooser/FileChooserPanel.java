@@ -4,6 +4,7 @@ import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.QuickAccessManager;
+import lombok.Getter;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -42,6 +43,11 @@ public class FileChooserPanel extends ThemedJPanel {
 
     private FileChooserMode mode = FileChooserMode.OPEN_FILE;
     private FileChooserListener listener;
+    /**
+     * -- GETTER --
+     *  Get the current directory.
+     */
+    @Getter
     private File currentDirectory;
 
     // Components
@@ -582,13 +588,6 @@ public class FileChooserPanel extends ThemedJPanel {
      */
     public void setCurrentDirectory(File directory) {
         navigateTo(directory);
-    }
-
-    /**
-     * Get the current directory.
-     */
-    public File getCurrentDirectory() {
-        return currentDirectory;
     }
 
     /**

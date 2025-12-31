@@ -79,9 +79,9 @@ public class BatchCommand implements Callable<Integer> {
                 futures.add(executor.submit(() -> processTarget(target)));
             }
 
-            for (int i = 0; i < futures.size(); i++) {
+            for (Future<ExecutionResult> future : futures) {
                 try {
-                    ExecutionResult result = futures.get(i).get();
+                    ExecutionResult result = future.get();
                     if (result.isSuccess()) {
                         successCount++;
                     } else {

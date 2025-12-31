@@ -530,7 +530,7 @@ public class DeobfuscationPanel extends ThemedJPanel {
         }
     }
 
-    private class StatusCellRenderer extends DefaultTableCellRenderer {
+    private static class StatusCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {

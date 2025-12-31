@@ -210,7 +210,7 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
             }
             addMenuItem(menu, "Remove", () -> manager.removeRecent(item.file));
             menu.addSeparator();
-            addMenuItem(menu, "Clear All Recent", () -> manager.clearRecent());
+            addMenuItem(menu, "Clear All Recent", manager::clearRecent);
         } else {
             if (!manager.isPinned(item.file)) {
                 addMenuItem(menu, "Pin to Quick Access", () -> manager.addPinned(item.file));
@@ -284,7 +284,7 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
 
         for (File root : FileSystemWorker.getRoots()) {
             String name = FileSystemWorker.getDisplayName(root);
-            if (name == null || name.isEmpty()) {
+            if (name.isEmpty()) {
                 name = root.getAbsolutePath();
             }
             drivesModel.addElement(new QuickAccessItem(name, root, QuickAccessItemType.DRIVE));
@@ -330,7 +330,7 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         }
     }
 
-    private class QuickAccessRenderer implements ListCellRenderer<QuickAccessItem> {
+    private static class QuickAccessRenderer implements ListCellRenderer<QuickAccessItem> {
         private final JPanel panel;
         private final JLabel iconLabel;
         private final JLabel textLabel;
@@ -363,13 +363,11 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
                                                       boolean isSelected, boolean cellHasFocus) {
             if (isSelected) {
                 panel.setBackground(JStudioTheme.getSelection());
-                textLabel.setForeground(JStudioTheme.getTextPrimary());
-                pinIndicator.setForeground(JStudioTheme.getTextSecondary());
             } else {
                 panel.setBackground(JStudioTheme.getBgSecondary());
-                textLabel.setForeground(JStudioTheme.getTextPrimary());
-                pinIndicator.setForeground(JStudioTheme.getTextSecondary());
             }
+            textLabel.setForeground(JStudioTheme.getTextPrimary());
+            pinIndicator.setForeground(JStudioTheme.getTextSecondary());
 
             textLabel.setText(value.name);
 

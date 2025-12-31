@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Recursive descent parser for the query DSL.
- *
+ * <p>
  * Grammar:
  * QUERY := (FIND | SHOW) TARGET [SCOPE] [WHERE PREDICATE] [WITH RUNSPEC] [LIMIT N] [ORDER BY KEY (ASC|DESC)]
  * TARGET := methods | classes | paths | events | strings | objects

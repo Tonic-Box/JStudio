@@ -3,6 +3,7 @@ package com.tonic.ui.script.pipeline;
 import com.tonic.ui.script.engine.ScriptFunction;
 import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.engine.ScriptValue;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -14,6 +15,7 @@ import java.util.function.Consumer;
 public class ScriptPipeline {
 
     private final ScriptInterpreter interpreter;
+    @Getter
     private final List<PipelineStage> stages = new ArrayList<>();
     private Consumer<String> logCallback;
     private boolean stopOnError = true;
@@ -167,9 +169,7 @@ public class ScriptPipeline {
     }
 
     private ScriptValue runPipelineAsync() {
-        Thread pipelineThread = new Thread(() -> {
-            runPipeline();
-        });
+        Thread pipelineThread = new Thread(this::runPipeline);
         pipelineThread.setName("ScriptPipeline");
         pipelineThread.start();
         return ScriptValue.bool(true);
@@ -265,7 +265,4 @@ public class ScriptPipeline {
         return newPipeline.createPipelineObject();
     }
 
-    public List<PipelineStage> getStages() {
-        return stages;
-    }
 }

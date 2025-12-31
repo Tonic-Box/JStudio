@@ -1,6 +1,7 @@
 package com.tonic.ui.service;
 
 import com.tonic.ui.console.LogLevel;
+import lombok.Getter;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ public class ConsoleLogService {
     private final List<BiConsumer<LogLevel, String>> listeners = new CopyOnWriteArrayList<>();
     private final List<LogEntry> logHistory = new ArrayList<>();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+    @Getter
     private boolean showTimestamps = true;
     private int maxHistory = 1000;
 
@@ -81,10 +83,6 @@ public class ConsoleLogService {
         this.showTimestamps = show;
     }
 
-    public boolean isShowTimestamps() {
-        return showTimestamps;
-    }
-
     public List<LogEntry> getHistory() {
         synchronized (logHistory) {
             return new ArrayList<>(logHistory);
@@ -139,6 +137,7 @@ public class ConsoleLogService {
         }
     }
 
+    @Getter
     public static class LogEntry {
         private final LogLevel level;
         private final String message;
@@ -150,16 +149,5 @@ public class ConsoleLogService {
             this.timestamp = timestamp;
         }
 
-        public LogLevel getLevel() {
-            return level;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public long getTimestamp() {
-            return timestamp;
-        }
     }
 }

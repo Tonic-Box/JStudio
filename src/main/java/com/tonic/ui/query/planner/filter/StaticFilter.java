@@ -58,7 +58,7 @@ public interface StaticFilter {
     }
 
     class CompositeFilter implements StaticFilter {
-        enum Op { AND, OR }
+        public enum Op { AND, OR }
 
         private final StaticFilter left;
         private final StaticFilter right;
@@ -78,11 +78,10 @@ public interface StaticFilter {
 
             if (op == Op.AND) {
                 leftResult.retainAll(rightResult);
-                return leftResult;
             } else {
                 leftResult.addAll(rightResult);
-                return leftResult;
             }
+            return leftResult;
         }
 
         @Override
@@ -93,11 +92,10 @@ public interface StaticFilter {
 
             if (op == Op.AND) {
                 leftResult.retainAll(rightResult);
-                return leftResult;
             } else {
                 leftResult.addAll(rightResult);
-                return leftResult;
             }
+            return leftResult;
         }
     }
 }

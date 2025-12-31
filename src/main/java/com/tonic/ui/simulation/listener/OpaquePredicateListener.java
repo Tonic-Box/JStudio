@@ -7,6 +7,7 @@ import com.tonic.analysis.simulation.state.SimValue;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.analysis.ssa.ir.BranchInstruction;
 import com.tonic.analysis.ssa.ir.CompareOp;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +18,7 @@ import java.util.Map;
 /**
  * Listener that detects opaque predicates - branch conditions that always
  * evaluate to the same value (always true or always false).
- *
+ * <p>
  * Opaque predicates are commonly used in obfuscation to:
  * - Confuse static analysis tools
  * - Add dead code paths
@@ -65,7 +66,7 @@ public class OpaquePredicateListener extends AbstractListener {
     }
 
     public List<BranchAnalysis> getAnalyzedBranches() {
-        return Collections.unmodifiableList(new ArrayList<>(branchAnalyses.values()));
+        return List.copyOf(branchAnalyses.values());
     }
 
     public List<BranchAnalysis> getOpaquePredicates() {
@@ -145,6 +146,7 @@ public class OpaquePredicateListener extends AbstractListener {
     /**
      * Tracks the analysis state of a single branch instruction.
      */
+    @Getter
     public static class BranchAnalysis {
         private final BranchInstruction instruction;
         private int trueCount = 0;
@@ -162,22 +164,6 @@ public class OpaquePredicateListener extends AbstractListener {
             } else {
                 falseCount++;
             }
-        }
-
-        public BranchInstruction getInstruction() {
-            return instruction;
-        }
-
-        public int getTrueCount() {
-            return trueCount;
-        }
-
-        public int getFalseCount() {
-            return falseCount;
-        }
-
-        public int getExecutionCount() {
-            return executionCount;
         }
 
         public boolean isOpaque() {

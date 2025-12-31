@@ -162,7 +162,7 @@ public class CommonAPI {
         ));
 
         props.put("of", ScriptValue.function(
-            ScriptFunction.nativeN("of", args -> ScriptValue.array(args))
+            ScriptFunction.nativeN("of", ScriptValue::array)
         ));
 
         return ScriptValue.object(props);

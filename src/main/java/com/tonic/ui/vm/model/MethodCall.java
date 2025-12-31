@@ -52,12 +52,8 @@ public class MethodCall {
     }
 
     public String getIndentedString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < depth; i++) {
-            sb.append("  ");
-        }
-        sb.append(getShortSignature());
-        return sb.toString();
+        return "  ".repeat(Math.max(0, depth)) +
+                getShortSignature();
     }
 
     @Override

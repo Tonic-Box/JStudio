@@ -1,8 +1,11 @@
 package com.tonic.ui.query.parser;
 
+import lombok.Getter;
+
 /**
  * Exception thrown when query parsing fails.
  */
+@Getter
 public class ParseException extends Exception {
 
     private final int position;
@@ -12,7 +15,4 @@ public class ParseException extends Exception {
         this.position = position;
     }
 
-    public int getPosition() {
-        return position;
-    }
 }

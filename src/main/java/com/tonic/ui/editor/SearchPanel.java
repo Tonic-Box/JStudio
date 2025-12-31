@@ -32,7 +32,6 @@ public class SearchPanel extends ThemedJPanel {
     private final JCheckBox regexBox;
     private final SearchContext context;
 
-    private int currentMatchIndex = 0;
     private int totalMatches = 0;
 
     public SearchPanel(RSyntaxTextArea textArea) {
@@ -185,7 +184,6 @@ public class SearchPanel extends ThemedJPanel {
         context.setSearchForward(true);
 
         totalMatches = countMatches();
-        currentMatchIndex = 0;
 
         if (totalMatches > 0) {
             matchCountLabel.setText(totalMatches + " matches");

@@ -4,6 +4,7 @@ import com.tonic.analysis.simulation.core.SimulationResult;
 import com.tonic.analysis.ssa.cfg.IRBlock;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.simulation.model.SimulationFinding;
+import lombok.Getter;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,11 +15,15 @@ import java.util.Set;
  */
 public class SimulationAnalysisResult {
 
+    @Getter
     private final MethodEntryModel method;
+    @Getter
     private final SimulationResult engineResult;
     private final List<SimulationFinding> findings;
     private final Set<IRBlock> deadBlocks;
+    @Getter
     private final int blocksVisited;
+    @Getter
     private final int branchCount;
 
     public SimulationAnalysisResult(MethodEntryModel method,
@@ -35,28 +40,12 @@ public class SimulationAnalysisResult {
         this.branchCount = branchCount;
     }
 
-    public MethodEntryModel getMethod() {
-        return method;
-    }
-
-    public SimulationResult getEngineResult() {
-        return engineResult;
-    }
-
     public List<SimulationFinding> getFindings() {
         return Collections.unmodifiableList(findings);
     }
 
     public Set<IRBlock> getDeadBlocks() {
         return Collections.unmodifiableSet(deadBlocks);
-    }
-
-    public int getBlocksVisited() {
-        return blocksVisited;
-    }
-
-    public int getBranchCount() {
-        return branchCount;
     }
 
     public boolean hasFindings() {

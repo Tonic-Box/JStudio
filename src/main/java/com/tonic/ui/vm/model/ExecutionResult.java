@@ -1,9 +1,11 @@
 package com.tonic.ui.vm.model;
 
-import java.util.ArrayList;
+import lombok.Getter;
+
 import java.util.Collections;
 import java.util.List;
 
+@Getter
 public class ExecutionResult {
 
     private final boolean success;
@@ -23,41 +25,9 @@ public class ExecutionResult {
         this.executionTimeMs = builder.executionTimeMs;
         this.instructionsExecuted = builder.instructionsExecuted;
         this.methodCalls = builder.methodCalls == null ?
-            Collections.emptyList() : Collections.unmodifiableList(new ArrayList<>(builder.methodCalls));
+            Collections.emptyList() : List.copyOf(builder.methodCalls);
         this.consoleOutput = builder.consoleOutput == null ?
-            Collections.emptyList() : Collections.unmodifiableList(new ArrayList<>(builder.consoleOutput));
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public Object getReturnValue() {
-        return returnValue;
-    }
-
-    public String getReturnType() {
-        return returnType;
-    }
-
-    public Throwable getException() {
-        return exception;
-    }
-
-    public long getExecutionTimeMs() {
-        return executionTimeMs;
-    }
-
-    public long getInstructionsExecuted() {
-        return instructionsExecuted;
-    }
-
-    public List<MethodCall> getMethodCalls() {
-        return methodCalls;
-    }
-
-    public List<String> getConsoleOutput() {
-        return consoleOutput;
+            Collections.emptyList() : List.copyOf(builder.consoleOutput);
     }
 
     public String getFormattedReturnValue() {

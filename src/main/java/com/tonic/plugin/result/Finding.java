@@ -1,5 +1,7 @@
 package com.tonic.plugin.result;
 
+import lombok.Getter;
+
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+@Getter
 public class Finding {
 
     private final String id;
@@ -27,45 +30,9 @@ public class Finding {
         this.message = builder.message;
         this.location = builder.location;
         this.metadata = builder.metadata != null ?
-            Collections.unmodifiableMap(new HashMap<>(builder.metadata)) : Collections.emptyMap();
+                Map.copyOf(builder.metadata) : Collections.emptyMap();
         this.timestamp = builder.timestamp != null ? builder.timestamp : Instant.now();
         this.pluginId = builder.pluginId;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public Severity getSeverity() {
-        return severity;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public Location getLocation() {
-        return location;
-    }
-
-    public Map<String, Object> getMetadata() {
-        return metadata;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public String getPluginId() {
-        return pluginId;
     }
 
     @SuppressWarnings("unchecked")

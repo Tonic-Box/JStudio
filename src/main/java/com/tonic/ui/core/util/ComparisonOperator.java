@@ -1,5 +1,8 @@
 package com.tonic.ui.core.util;
 
+import lombok.Getter;
+
+@Getter
 public enum ComparisonOperator {
     GT(">"),
     GTE(">="),
@@ -12,10 +15,6 @@ public enum ComparisonOperator {
 
     ComparisonOperator(String symbol) {
         this.symbol = symbol;
-    }
-
-    public String getSymbol() {
-        return symbol;
     }
 
     public boolean test(int left, int right) {

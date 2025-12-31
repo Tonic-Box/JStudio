@@ -2,12 +2,14 @@ package com.tonic.ui.vm.testgen;
 
 import com.tonic.ui.vm.model.ExecutionResult;
 import com.tonic.ui.vm.model.MethodCall;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TestCaseGenerator {
 
+    @Getter
     public enum JUnitVersion {
         JUNIT4("JUnit 4", "org.junit.Test", "org.junit.Assert"),
         JUNIT5("JUnit 5 (Jupiter)", "org.junit.jupiter.api.Test", "org.junit.jupiter.api.Assertions");
@@ -22,19 +24,9 @@ public class TestCaseGenerator {
             this.assertionsImport = assertionsImport;
         }
 
-        public String getDisplayName() {
-            return displayName;
-        }
-
-        public String getTestAnnotationImport() {
-            return testAnnotationImport;
-        }
-
-        public String getAssertionsImport() {
-            return assertionsImport;
-        }
     }
 
+    @Getter
     public static class GeneratedTest {
         private final String code;
         private final String suggestedFileName;
@@ -48,21 +40,6 @@ public class TestCaseGenerator {
             this.className = className;
         }
 
-        public String getCode() {
-            return code;
-        }
-
-        public String getSuggestedFileName() {
-            return suggestedFileName;
-        }
-
-        public String getPackageName() {
-            return packageName;
-        }
-
-        public String getClassName() {
-            return className;
-        }
     }
 
     public GeneratedTest generate(MethodCall call, JUnitVersion version,
@@ -81,7 +58,7 @@ public class TestCaseGenerator {
             imports.add("static " + version.getAssertionsImport() + ".*");
         }
 
-        if (packageName != null && !packageName.isEmpty()) {
+        if (!packageName.isEmpty()) {
             sb.append("package ").append(packageName).append(";\n\n");
         }
 
@@ -123,7 +100,7 @@ public class TestCaseGenerator {
             imports.add("static org.junit.jupiter.api.Assertions.assertThrows");
         }
 
-        if (packageName != null && !packageName.isEmpty()) {
+        if (!packageName.isEmpty()) {
             sb.append("package ").append(packageName).append(";\n\n");
         }
 
@@ -193,7 +170,7 @@ public class TestCaseGenerator {
         Object returnValue = result.getReturnValue();
 
         String exceptionClass = "RuntimeException";
-        if (hasException && result.getException() != null) {
+        if (hasException) {
             String excMessage = result.getException().getMessage();
             if (excMessage != null && excMessage.contains("VM Exception:")) {
                 int colonIdx = excMessage.indexOf(':');

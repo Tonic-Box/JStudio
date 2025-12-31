@@ -91,7 +91,7 @@ public abstract class ScriptFunction {
      */
     public static ScriptFunction native2(String name, java.util.function.BiFunction<ScriptValue, ScriptValue, ScriptValue> fn) {
         return new NativeFunction(name, args -> {
-            ScriptValue arg1 = args.size() > 0 ? args.get(0) : ScriptValue.NULL;
+            ScriptValue arg1 = !args.isEmpty() ? args.get(0) : ScriptValue.NULL;
             ScriptValue arg2 = args.size() > 1 ? args.get(1) : ScriptValue.NULL;
             return fn.apply(arg1, arg2);
         });

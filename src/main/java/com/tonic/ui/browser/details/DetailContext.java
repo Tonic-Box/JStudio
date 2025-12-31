@@ -3,7 +3,9 @@ package com.tonic.ui.browser.details;
 import com.tonic.parser.ConstPool;
 import com.tonic.parser.constpool.Item;
 import com.tonic.parser.constpool.Utf8Item;
+import lombok.Getter;
 
+@Getter
 public class DetailContext {
 
     private final ConstPool constPool;
@@ -12,14 +14,6 @@ public class DetailContext {
     public DetailContext(ConstPool constPool, boolean showHex) {
         this.constPool = constPool;
         this.showHex = showHex;
-    }
-
-    public ConstPool getConstPool() {
-        return constPool;
-    }
-
-    public boolean isShowHex() {
-        return showHex;
     }
 
     public String getUtf8(int index) {

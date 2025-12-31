@@ -1,8 +1,11 @@
 package com.tonic.plugin.api;
 
+import lombok.Getter;
+
 import java.util.Collections;
 import java.util.Map;
 
+@Getter
 public class PluginInfo {
 
     private final String id;
@@ -20,30 +23,6 @@ public class PluginInfo {
         this.author = builder.author;
         this.metadata = builder.metadata != null ?
             Collections.unmodifiableMap(builder.metadata) : Collections.emptyMap();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public Map<String, String> getMetadata() {
-        return metadata;
     }
 
     public static Builder builder() {

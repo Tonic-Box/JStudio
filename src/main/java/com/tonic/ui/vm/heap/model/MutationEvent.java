@@ -1,14 +1,16 @@
 package com.tonic.ui.vm.heap.model;
 
+import com.tonic.analysis.execution.heap.ArrayInstance;
+import com.tonic.analysis.execution.heap.ObjectInstance;
 import lombok.Getter;
 
 @Getter
 public class MutationEvent {
+    @Getter
     public enum MutationType {
         PUTFIELD(0xB5),
         PUTSTATIC(0xB3);
 
-        @Getter
         private final int opcode;
 
         MutationType(int opcode) {
@@ -62,15 +64,14 @@ public class MutationEvent {
         if (value == null) {
             return "null";
         }
-        if (value instanceof com.tonic.analysis.execution.heap.ObjectInstance) {
-            com.tonic.analysis.execution.heap.ObjectInstance obj =
-                (com.tonic.analysis.execution.heap.ObjectInstance) value;
-            return obj.getClassName() + " #" + obj.getId();
-        }
-        if (value instanceof com.tonic.analysis.execution.heap.ArrayInstance) {
+        if (value instanceof ArrayInstance) {
             com.tonic.analysis.execution.heap.ArrayInstance arr =
-                (com.tonic.analysis.execution.heap.ArrayInstance) value;
+                    (com.tonic.analysis.execution.heap.ArrayInstance) value;
             return arr.getComponentType() + "[" + arr.getLength() + "] #" + arr.getId();
+        }
+        if (value instanceof ObjectInstance) {
+            ObjectInstance obj = (ObjectInstance) value;
+            return obj.getClassName() + " #" + obj.getId();
         }
         return String.valueOf(value);
     }

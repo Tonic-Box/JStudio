@@ -19,7 +19,6 @@ public enum ArgumentType {
     public static ArgumentType fromString(String s) {
         if (s == null) return ANY;
         switch (s.toLowerCase()) {
-            case "any": return ANY;
             case "literal": return LITERAL;
             case "dynamic": return DYNAMIC;
             case "field": return FIELD;

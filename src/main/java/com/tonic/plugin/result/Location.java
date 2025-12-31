@@ -1,7 +1,10 @@
 package com.tonic.plugin.result;
 
+import lombok.Getter;
+
 import java.util.Objects;
 
+@Getter
 public class Location {
 
     private final String className;
@@ -18,30 +21,6 @@ public class Location {
         this.lineNumber = builder.lineNumber;
         this.instructionIndex = builder.instructionIndex;
         this.fieldName = builder.fieldName;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public String getMethodName() {
-        return methodName;
-    }
-
-    public String getMethodDescriptor() {
-        return methodDescriptor;
-    }
-
-    public int getLineNumber() {
-        return lineNumber;
-    }
-
-    public int getInstructionIndex() {
-        return instructionIndex;
-    }
-
-    public String getFieldName() {
-        return fieldName;
     }
 
     public String getSimpleClassName() {

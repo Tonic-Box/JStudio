@@ -1,5 +1,8 @@
 package com.tonic.ui.vm.testgen.objectspec;
 
+import lombok.Getter;
+
+@Getter
 public enum ValueMode {
     FIXED("Fixed Value"),
     FUZZ("Fuzz (Generate Variants)"),
@@ -10,10 +13,6 @@ public enum ValueMode {
 
     ValueMode(String displayName) {
         this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
     }
 
     @Override

@@ -2,9 +2,7 @@ package com.tonic.ui.vm.heap.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -24,7 +22,7 @@ public class ProvenanceInfo {
         this.descriptor = builder.descriptor;
         this.pc = builder.pc;
         this.lineNumber = builder.lineNumber;
-        this.callStack = Collections.unmodifiableList(new ArrayList<>(builder.callStack));
+        this.callStack = List.copyOf(builder.callStack);
     }
 
     public boolean hasCallStack() {

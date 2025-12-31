@@ -103,7 +103,7 @@ public class FileFilterComboBox extends JComboBox<ExtensionFileFilter> {
     /**
      * Custom renderer for filter items.
      */
-    private class FilterRenderer extends JLabel implements ListCellRenderer<ExtensionFileFilter> {
+    private static class FilterRenderer extends JLabel implements ListCellRenderer<ExtensionFileFilter> {
 
         FilterRenderer() {
             setOpaque(true);

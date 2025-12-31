@@ -12,11 +12,13 @@ import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.script.engine.ScriptFunction;
 import com.tonic.ui.script.engine.ScriptValue;
+import lombok.Getter;
 
 import java.util.*;
 
 public class TypeBridge extends AbstractBridge {
 
+    @Getter
     private IRMethod currentMethod;
     private final Map<String, IRMethod> methodCache = new HashMap<>();
 
@@ -415,7 +417,4 @@ public class TypeBridge extends AbstractBridge {
         return ScriptValue.object(props);
     }
 
-    public IRMethod getCurrentMethod() {
-        return currentMethod;
-    }
 }

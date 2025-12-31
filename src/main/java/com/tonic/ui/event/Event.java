@@ -1,8 +1,11 @@
 package com.tonic.ui.event;
 
+import lombok.Getter;
+
 /**
  * Base class for all JStudio events.
  */
+@Getter
 public abstract class Event {
 
     private final long timestamp;
@@ -13,11 +16,4 @@ public abstract class Event {
         this.source = source;
     }
 
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public Object getSource() {
-        return source;
-    }
 }

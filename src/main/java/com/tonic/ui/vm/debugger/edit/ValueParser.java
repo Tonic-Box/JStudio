@@ -55,8 +55,7 @@ public final class ValueParser {
                        !cleaned.contains(".") && cleaned.matches("-?0[0-7]+")) {
                 value = Integer.parseInt(cleaned, 8);
             } else if (cleaned.startsWith("'") && cleaned.endsWith("'") && cleaned.length() >= 3) {
-                char c = parseCharLiteral(cleaned);
-                value = c;
+                value = parseCharLiteral(cleaned);
             } else {
                 value = Integer.parseInt(cleaned);
             }

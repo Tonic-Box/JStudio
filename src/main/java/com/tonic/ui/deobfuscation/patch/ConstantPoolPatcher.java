@@ -6,6 +6,7 @@ import com.tonic.parser.constpool.Item;
 import com.tonic.parser.constpool.StringRefItem;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.ui.deobfuscation.model.DeobfuscationResult;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -118,6 +119,7 @@ public class ConstantPoolPatcher {
         return locations;
     }
 
+    @Getter
     public static class StringLocation {
         private final ClassFile classFile;
         private final int stringRefIndex;
@@ -131,20 +133,5 @@ public class ConstantPoolPatcher {
             this.value = value;
         }
 
-        public ClassFile getClassFile() {
-            return classFile;
-        }
-
-        public int getStringRefIndex() {
-            return stringRefIndex;
-        }
-
-        public int getUtf8Index() {
-            return utf8Index;
-        }
-
-        public String getValue() {
-            return value;
-        }
     }
 }

@@ -2,10 +2,12 @@ package com.tonic.ui.deobfuscation.model;
 
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class DecryptorCandidate {
 
     private final ClassFile classFile;
@@ -21,26 +23,6 @@ public class DecryptorCandidate {
         this.type = type;
         this.confidence = confidence;
         this.indicators = new ArrayList<>();
-    }
-
-    public ClassFile getClassFile() {
-        return classFile;
-    }
-
-    public MethodEntry getMethod() {
-        return method;
-    }
-
-    public DecryptorType getType() {
-        return type;
-    }
-
-    public double getConfidence() {
-        return confidence;
-    }
-
-    public List<String> getIndicators() {
-        return indicators;
     }
 
     public void addIndicator(String indicator) {
@@ -74,6 +56,7 @@ public class DecryptorCandidate {
         return (method.getAccess() & 0x0008) != 0;
     }
 
+    @Getter
     public enum DecryptorType {
         STRING_TO_STRING("String → String", "(Ljava/lang/String;)Ljava/lang/String;"),
         STRING_INT_TO_STRING("String, int → String", "(Ljava/lang/String;I)Ljava/lang/String;"),
@@ -89,14 +72,6 @@ public class DecryptorCandidate {
         DecryptorType(String description, String expectedDescriptor) {
             this.description = description;
             this.expectedDescriptor = expectedDescriptor;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public String getExpectedDescriptor() {
-            return expectedDescriptor;
         }
 
         public static DecryptorType fromDescriptor(String descriptor) {

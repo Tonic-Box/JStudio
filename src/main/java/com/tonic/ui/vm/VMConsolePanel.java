@@ -8,6 +8,7 @@ import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
 import com.tonic.ui.vm.model.ExecutionResult;
+import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -22,11 +23,11 @@ public class VMConsolePanel extends ThemedJPanel {
     private JTextField inputField;
     private JButton runButton;
     private JButton stopButton;
-    private JButton clearButton;
 
     private final CommandParser parser;
     private final List<String> commandHistory;
     private int historyIndex;
+    @Getter
     private boolean isExecuting;
 
     private Style defaultStyle;
@@ -96,7 +97,7 @@ public class VMConsolePanel extends ThemedJPanel {
 
         runButton = createButton("Run", e -> executeCommand());
         stopButton = createButton("Stop", e -> stopExecution());
-        clearButton = createButton("Clear", e -> clearOutput());
+        JButton clearButton = createButton("Clear", e -> clearOutput());
 
         stopButton.setEnabled(false);
 

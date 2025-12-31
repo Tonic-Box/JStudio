@@ -1,13 +1,19 @@
 package com.tonic.ui.vm.debugger.inspector;
 
 import com.tonic.analysis.execution.state.ValueTag;
+import lombok.Getter;
 
 public class FieldInfo {
 
+    @Getter
     private final String name;
+    @Getter
     private final String descriptor;
+    @Getter
     private final String ownerClass;
+    @Getter
     private final Object value;
+    @Getter
     private final ValueTag valueTag;
     private final boolean isFinal;
     private final boolean isStatic;
@@ -21,26 +27,6 @@ public class FieldInfo {
         this.valueTag = valueTag;
         this.isFinal = isFinal;
         this.isStatic = isStatic;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescriptor() {
-        return descriptor;
-    }
-
-    public String getOwnerClass() {
-        return ownerClass;
-    }
-
-    public Object getValue() {
-        return value;
-    }
-
-    public ValueTag getValueTag() {
-        return valueTag;
     }
 
     public boolean isFinal() {

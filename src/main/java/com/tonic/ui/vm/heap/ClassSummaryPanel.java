@@ -147,7 +147,7 @@ public class ClassSummaryPanel extends ThemedJPanel {
         }
     }
 
-    private class ClassTableModel extends AbstractTableModel {
+    private static class ClassTableModel extends AbstractTableModel {
         private final String[] columns = {"Class", "Count", "Δ"};
         private List<ClassEntry> data = new ArrayList<>();
 

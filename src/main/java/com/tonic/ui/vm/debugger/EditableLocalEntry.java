@@ -2,7 +2,9 @@ package com.tonic.ui.vm.debugger;
 
 import com.tonic.analysis.execution.state.ValueTag;
 import com.tonic.ui.vm.debugger.edit.ValueParser;
+import lombok.Getter;
 
+@Getter
 public class EditableLocalEntry extends LocalEntry {
 
     private final ValueTag valueTag;
@@ -15,18 +17,6 @@ public class EditableLocalEntry extends LocalEntry {
         this.valueTag = valueTag;
         this.rawValue = rawValue;
         this.userModified = false;
-    }
-
-    public ValueTag getValueTag() {
-        return valueTag;
-    }
-
-    public Object getRawValue() {
-        return rawValue;
-    }
-
-    public boolean isUserModified() {
-        return userModified;
     }
 
     public void setUserModified(boolean userModified) {

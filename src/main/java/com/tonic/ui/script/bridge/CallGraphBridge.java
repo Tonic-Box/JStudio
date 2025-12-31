@@ -8,9 +8,11 @@ import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.script.engine.ScriptFunction;
 import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.engine.ScriptValue;
+import lombok.Getter;
 
 import java.util.*;
 
+@Getter
 public class CallGraphBridge extends AbstractBridge {
 
     private CallGraph callGraph;
@@ -314,7 +316,4 @@ public class CallGraphBridge extends AbstractBridge {
         }
     }
 
-    public CallGraph getCallGraph() {
-        return callGraph;
-    }
 }

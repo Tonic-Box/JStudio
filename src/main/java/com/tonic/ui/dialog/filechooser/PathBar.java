@@ -1,6 +1,7 @@
 package com.tonic.ui.dialog.filechooser;
 
 import com.tonic.ui.theme.JStudioTheme;
+import lombok.Getter;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -51,6 +52,11 @@ public class PathBar extends JPanel {
     private final JPanel breadcrumbPanel;
     private final JTextField pathTextField;
 
+    /**
+     * -- GETTER --
+     *  Get the current directory.
+     */
+    @Getter
     private File currentDirectory;
     private boolean inEditMode = false;
 
@@ -228,7 +234,7 @@ public class PathBar extends JPanel {
 
     private JButton createBreadcrumb(File segment) {
         String name = FileSystemWorker.getDisplayName(segment);
-        if (name == null || name.isEmpty()) {
+        if (name.isEmpty()) {
             name = segment.getAbsolutePath();
         }
 
@@ -329,9 +335,7 @@ public class PathBar extends JPanel {
             Color original = pathTextField.getBackground();
             Color errorBg = new Color(JStudioTheme.getError().getRed() / 3, JStudioTheme.getError().getGreen() / 6, JStudioTheme.getError().getBlue() / 6);
             pathTextField.setBackground(errorBg);
-            Timer timer = new Timer(500, e -> {
-                pathTextField.setBackground(original);
-            });
+            Timer timer = new Timer(500, e -> pathTextField.setBackground(original));
             timer.setRepeats(false);
             timer.start();
             enterEditMode();
@@ -390,13 +394,6 @@ public class PathBar extends JPanel {
                 listener.onNavigate(parent);
             }
         }
-    }
-
-    /**
-     * Get the current directory.
-     */
-    public File getCurrentDirectory() {
-        return currentDirectory;
     }
 
     /**

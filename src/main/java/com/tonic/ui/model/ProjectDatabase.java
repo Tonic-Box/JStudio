@@ -1,9 +1,12 @@
 package com.tonic.ui.model;
 
+import lombok.Getter;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
 public class ProjectDatabase {
 
     public static final String VERSION = "1.0";
@@ -35,40 +38,20 @@ public class ProjectDatabase {
         this.targetPath = targetFile.getAbsolutePath();
     }
 
-    public String getVersion() {
-        return version;
-    }
-
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    public String getTargetPath() {
-        return targetPath;
     }
 
     public void setTargetPath(String targetPath) {
         this.targetPath = targetPath;
     }
 
-    public String getTargetHash() {
-        return targetHash;
-    }
-
     public void setTargetHash(String targetHash) {
         this.targetHash = targetHash;
     }
 
-    public long getCreated() {
-        return created;
-    }
-
     public void setCreated(long created) {
         this.created = created;
-    }
-
-    public long getModified() {
-        return modified;
     }
 
     public void setModified(long modified) {
@@ -79,24 +62,12 @@ public class ProjectDatabase {
         this.modified = System.currentTimeMillis();
     }
 
-    public CommentStore getComments() {
-        return comments;
-    }
-
     public void setComments(CommentStore comments) {
         this.comments = comments != null ? comments : new CommentStore();
     }
 
-    public BookmarkStore getBookmarks() {
-        return bookmarks;
-    }
-
     public void setBookmarks(BookmarkStore bookmarks) {
         this.bookmarks = bookmarks != null ? bookmarks : new BookmarkStore();
-    }
-
-    public Map<String, String> getRenames() {
-        return renames;
     }
 
     public void setRenames(Map<String, String> renames) {
@@ -110,10 +81,6 @@ public class ProjectDatabase {
 
     public String getRenamedName(String original) {
         return renames.getOrDefault(original, original);
-    }
-
-    public Map<String, Object> getMetadata() {
-        return metadata;
     }
 
     public void setMetadata(Map<String, Object> metadata) {

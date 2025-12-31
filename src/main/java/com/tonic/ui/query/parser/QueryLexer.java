@@ -3,69 +3,70 @@ package com.tonic.ui.query.parser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Tokenizer for the query DSL.
  */
 public class QueryLexer {
 
-    private static final Map<String, Token.TokenType> KEYWORDS = Map.ofEntries(
-        Map.entry("find", Token.TokenType.FIND),
-        Map.entry("show", Token.TokenType.SHOW),
-        Map.entry("where", Token.TokenType.WHERE),
-        Map.entry("in", Token.TokenType.IN),
-        Map.entry("during", Token.TokenType.DURING),
-        Map.entry("between", Token.TokenType.BETWEEN),
-        Map.entry("and", Token.TokenType.AND),
-        Map.entry("or", Token.TokenType.OR),
-        Map.entry("not", Token.TokenType.NOT),
-        Map.entry("before", Token.TokenType.BEFORE),
-        Map.entry("after", Token.TokenType.AFTER),
-        Map.entry("with", Token.TokenType.WITH),
-        Map.entry("limit", Token.TokenType.LIMIT),
-        Map.entry("order", Token.TokenType.ORDER),
-        Map.entry("by", Token.TokenType.BY),
-        Map.entry("asc", Token.TokenType.ASC),
-        Map.entry("desc", Token.TokenType.DESC),
-        Map.entry("of", Token.TokenType.OF),
-        Map.entry("all", Token.TokenType.ALL),
-        Map.entry("class", Token.TokenType.CLASS),
-        Map.entry("method", Token.TokenType.METHOD),
-        Map.entry("clinit", Token.TokenType.CLINIT),
-        Map.entry("<clinit>", Token.TokenType.CLINIT),
-        Map.entry("becomes", Token.TokenType.BECOMES),
-        Map.entry("non-null", Token.TokenType.NON_NULL),
-        Map.entry("null", Token.TokenType.NULL),
+    private static final Map<String, Token.TokenType> KEYWORDS = Map.<String, Token.TokenType>ofEntries(
+            Map.entry("find", Token.TokenType.FIND),
+            Map.entry("show", Token.TokenType.SHOW),
+            Map.entry("where", Token.TokenType.WHERE),
+            Map.entry("in", Token.TokenType.IN),
+            Map.entry("during", Token.TokenType.DURING),
+            Map.entry("between", Token.TokenType.BETWEEN),
+            Map.entry("and", Token.TokenType.AND),
+            Map.entry("or", Token.TokenType.OR),
+            Map.entry("not", Token.TokenType.NOT),
+            Map.entry("before", Token.TokenType.BEFORE),
+            Map.entry("after", Token.TokenType.AFTER),
+            Map.entry("with", Token.TokenType.WITH),
+            Map.entry("limit", Token.TokenType.LIMIT),
+            Map.entry("order", Token.TokenType.ORDER),
+            Map.entry("by", Token.TokenType.BY),
+            Map.entry("asc", Token.TokenType.ASC),
+            Map.entry("desc", Token.TokenType.DESC),
+            Map.entry("of", Token.TokenType.OF),
+            Map.entry("all", Token.TokenType.ALL),
+            Map.entry("class", Token.TokenType.CLASS),
+            Map.entry("method", Token.TokenType.METHOD),
+            Map.entry("clinit", Token.TokenType.CLINIT),
+            Map.entry("<clinit>", Token.TokenType.CLINIT),
+            Map.entry("becomes", Token.TokenType.BECOMES),
+            Map.entry("non-null", Token.TokenType.NON_NULL),
+            Map.entry("null", Token.TokenType.NULL),
 
-        Map.entry("methods", Token.TokenType.METHODS),
-        Map.entry("classes", Token.TokenType.CLASSES),
-        Map.entry("paths", Token.TokenType.PATHS),
-        Map.entry("events", Token.TokenType.EVENTS),
-        Map.entry("strings", Token.TokenType.STRINGS),
-        Map.entry("objects", Token.TokenType.OBJECTS),
+            Map.entry("methods", Token.TokenType.METHODS),
+            Map.entry("classes", Token.TokenType.CLASSES),
+            Map.entry("paths", Token.TokenType.PATHS),
+            Map.entry("events", Token.TokenType.EVENTS),
+            Map.entry("strings", Token.TokenType.STRINGS),
+            Map.entry("objects", Token.TokenType.OBJECTS),
 
-        Map.entry("calls", Token.TokenType.CALLS),
-        Map.entry("alloccount", Token.TokenType.ALLOC_COUNT),
-        Map.entry("alloc_count", Token.TokenType.ALLOC_COUNT),
-        Map.entry("writesfield", Token.TokenType.WRITES_FIELD),
-        Map.entry("writes_field", Token.TokenType.WRITES_FIELD),
-        Map.entry("readsfield", Token.TokenType.READS_FIELD),
-        Map.entry("reads_field", Token.TokenType.READS_FIELD),
-        Map.entry("field", Token.TokenType.FIELD),
-        Map.entry("containsstring", Token.TokenType.CONTAINS_STRING),
-        Map.entry("contains_string", Token.TokenType.CONTAINS_STRING),
-        Map.entry("throws", Token.TokenType.THROWS),
-        Map.entry("instructioncount", Token.TokenType.INSTRUCTION_COUNT),
-        Map.entry("instruction_count", Token.TokenType.INSTRUCTION_COUNT),
-        Map.entry("coverage", Token.TokenType.COVERAGE),
+            Map.entry("calls", Token.TokenType.CALLS),
+            Map.entry("alloccount", Token.TokenType.ALLOC_COUNT),
+            Map.entry("alloc_count", Token.TokenType.ALLOC_COUNT),
+            Map.entry("writesfield", Token.TokenType.WRITES_FIELD),
+            Map.entry("writes_field", Token.TokenType.WRITES_FIELD),
+            Map.entry("readsfield", Token.TokenType.READS_FIELD),
+            Map.entry("reads_field", Token.TokenType.READS_FIELD),
+            Map.entry("field", Token.TokenType.FIELD),
+            Map.entry("containsstring", Token.TokenType.CONTAINS_STRING),
+            Map.entry("contains_string", Token.TokenType.CONTAINS_STRING),
+            Map.entry("throws", Token.TokenType.THROWS),
+            Map.entry("instructioncount", Token.TokenType.INSTRUCTION_COUNT),
+            Map.entry("instruction_count", Token.TokenType.INSTRUCTION_COUNT),
+            Map.entry("coverage", Token.TokenType.COVERAGE),
 
-        Map.entry("any", Token.TokenType.ARG_ANY),
-        Map.entry("literal", Token.TokenType.ARG_LITERAL),
-        Map.entry("dynamic", Token.TokenType.ARG_DYNAMIC),
-        Map.entry("dynamicarg", Token.TokenType.ARG_DYNAMIC),
-        Map.entry("fieldarg", Token.TokenType.ARG_FIELD),
-        Map.entry("localarg", Token.TokenType.ARG_LOCAL),
-        Map.entry("callarg", Token.TokenType.ARG_CALL)
+            Map.entry("any", Token.TokenType.ARG_ANY),
+            Map.entry("literal", Token.TokenType.ARG_LITERAL),
+            Map.entry("dynamic", Token.TokenType.ARG_DYNAMIC),
+            Map.entry("dynamicarg", Token.TokenType.ARG_DYNAMIC),
+            Map.entry("fieldarg", Token.TokenType.ARG_FIELD),
+            Map.entry("localarg", Token.TokenType.ARG_LOCAL),
+            Map.entry("callarg", Token.TokenType.ARG_CALL)
     );
 
     private final String input;
@@ -194,13 +195,13 @@ public class QueryLexer {
         }
         advance();
 
-        String flags = "";
+        StringBuilder flags = new StringBuilder();
         while (position < input.length() && Character.isLetter(peek())) {
-            flags += advance();
+            flags.append(advance());
         }
 
         String pattern = sb.toString();
-        if (!flags.isEmpty()) {
+        if (flags.length() > 0) {
             pattern = "(?" + flags + ")" + pattern;
         }
         return new Token(Token.TokenType.REGEX, pattern, start);
@@ -245,11 +246,8 @@ public class QueryLexer {
         String lower = word.toLowerCase();
 
         Token.TokenType type = KEYWORDS.get(lower);
-        if (type != null) {
-            return new Token(type, word, start);
-        }
+        return new Token(Objects.requireNonNullElse(type, Token.TokenType.IDENTIFIER), word, start);
 
-        return new Token(Token.TokenType.IDENTIFIER, word, start);
     }
 
     private Token readComparison() throws ParseException {

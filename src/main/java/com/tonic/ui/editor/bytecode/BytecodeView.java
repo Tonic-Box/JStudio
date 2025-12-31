@@ -503,14 +503,11 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
             return true;
         }
 
-        if (methodStart >= 0) {
-            textPane.setCaretPosition(methodStart);
-            textPane.select(methodStart, methodStart + methodSignature.length());
-            textPane.requestFocus();
-            return true;
-        }
+        textPane.setCaretPosition(methodStart);
+        textPane.select(methodStart, methodStart + methodSignature.length());
+        textPane.requestFocus();
+        return true;
 
-        return false;
     }
 
     /**

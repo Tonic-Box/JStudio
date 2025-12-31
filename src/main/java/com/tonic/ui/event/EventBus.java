@@ -27,7 +27,6 @@ public class EventBus {
     /**
      * Register a handler for a specific event type.
      */
-    @SuppressWarnings("unchecked")
     public <T extends Event> void register(Class<T> eventType, EventHandler<T> handler) {
         synchronized (handlers) {
             List<EventHandler<?>> list = handlers.computeIfAbsent(eventType, k -> new CopyOnWriteArrayList<>());
@@ -68,12 +67,7 @@ public class EventBus {
                 ((EventHandler<Event>) handler).handle(event);
             } else {
                 EventHandler<Event> h = (EventHandler<Event>) handler;
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        h.handle(event);
-                    }
-                });
+                SwingUtilities.invokeLater(() -> h.handle(event));
             }
         }
     }
@@ -94,12 +88,7 @@ public class EventBus {
 
         for (EventHandler<?> handler : list) {
             EventHandler<Event> h = (EventHandler<Event>) handler;
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    h.handle(event);
-                }
-            });
+            SwingUtilities.invokeLater(() -> h.handle(event));
         }
     }
 

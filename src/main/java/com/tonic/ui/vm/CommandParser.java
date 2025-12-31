@@ -1,5 +1,7 @@
 package com.tonic.ui.vm;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -227,6 +229,7 @@ public class CommandParser {
         return "Ljava/lang/Object;";
     }
 
+    @Getter
     public static class ParseResult {
         public enum Type {
             EMPTY,
@@ -269,34 +272,6 @@ public class CommandParser {
 
         public static ParseResult error(String message) {
             return new ParseResult(Type.ERROR, null, null, null, null, null, message);
-        }
-
-        public Type getType() {
-            return type;
-        }
-
-        public String getCommand() {
-            return command;
-        }
-
-        public String getCommandArgs() {
-            return commandArgs;
-        }
-
-        public String getClassName() {
-            return className;
-        }
-
-        public String getMethodName() {
-            return methodName;
-        }
-
-        public Object[] getMethodArgs() {
-            return methodArgs;
-        }
-
-        public String getErrorMessage() {
-            return errorMessage;
         }
 
         public boolean isEmpty() {

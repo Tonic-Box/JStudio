@@ -89,9 +89,7 @@ class EventBusTest {
 
     @Test
     void testNoHandlersForEventType() {
-        assertDoesNotThrow(() -> {
-            SwingUtilities.invokeAndWait(() -> eventBus.post(new TestEvent("s", "d")));
-        });
+        assertDoesNotThrow(() -> SwingUtilities.invokeAndWait(() -> eventBus.post(new TestEvent("s", "d"))));
     }
 
     @Test
@@ -104,9 +102,7 @@ class EventBusTest {
             latch.countDown();
         });
 
-        eventBus.register(OtherEvent.class, event -> {
-            received.add("OtherEvent");
-        });
+        eventBus.register(OtherEvent.class, event -> received.add("OtherEvent"));
 
         SwingUtilities.invokeAndWait(() -> eventBus.post(new TestEvent("s", "d")));
 

@@ -15,18 +15,18 @@ import com.tonic.ui.deobfuscation.model.DecryptorCandidate;
 import com.tonic.ui.deobfuscation.model.DeobfuscationResult;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.service.ProjectService;
+import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DeobfuscationService {
 
     private static final DeobfuscationService INSTANCE = new DeobfuscationService();
 
+    @Getter
     private ClassPool classPool;
     private ClassResolver classResolver;
+    @Getter
     private SimpleHeapManager heapManager;
 
     private final int maxInstructions = 1_000_000;
@@ -147,16 +147,10 @@ public class DeobfuscationService {
 
         try {
             String decrypted;
-            switch (decryptor.getType()) {
-                case STRING_TO_STRING:
-                case STRING_INT_TO_STRING:
-                    decrypted = executeDecryptor(decryptor.getMethod(), encryptedValue);
-                    break;
-                case INT_TO_STRING:
-                    decrypted = executeDecryptor(decryptor.getMethod(), cpIndex);
-                    break;
-                default:
-                    decrypted = executeDecryptor(decryptor.getMethod(), encryptedValue);
+            if (Objects.requireNonNull(decryptor.getType()) == DecryptorCandidate.DecryptorType.INT_TO_STRING) {
+                decrypted = executeDecryptor(decryptor.getMethod(), cpIndex);
+            } else {
+                decrypted = executeDecryptor(decryptor.getMethod(), encryptedValue);
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
@@ -257,11 +251,4 @@ public class DeobfuscationService {
         return results;
     }
 
-    public ClassPool getClassPool() {
-        return classPool;
-    }
-
-    public SimpleHeapManager getHeapManager() {
-        return heapManager;
-    }
 }

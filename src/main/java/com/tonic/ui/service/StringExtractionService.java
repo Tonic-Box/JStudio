@@ -7,6 +7,7 @@ import com.tonic.parser.constpool.StringRefItem;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,6 +103,7 @@ public class StringExtractionService {
         }
     }
 
+    @Getter
     public static class ExtractedString {
         private final String value;
         private final String className;
@@ -115,24 +117,9 @@ public class StringExtractionService {
             this.constPoolIndex = constPoolIndex;
         }
 
-        public String getValue() {
-            return value;
-        }
-
-        public String getClassName() {
-            return className;
-        }
-
         public String getFormattedClassName() {
             return className != null ? className.replace('/', '.') : "?";
         }
 
-        public ClassEntryModel getClassEntry() {
-            return classEntry;
-        }
-
-        public int getConstPoolIndex() {
-            return constPoolIndex;
-        }
     }
 }

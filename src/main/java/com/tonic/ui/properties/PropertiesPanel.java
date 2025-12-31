@@ -9,6 +9,7 @@ import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
+import com.tonic.ui.simulation.metrics.ComplexityMetrics;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.BorderFactory;
@@ -189,6 +190,17 @@ public class PropertiesPanel extends ThemedJPanel {
             addProperty(methodPanel, row++, "Code", "None (abstract/native)");
         }
 
+        ComplexityMetrics metrics = method.getComplexityMetrics();
+        if (metrics != null) {
+            row = addSeparator(methodPanel, row, "Complexity");
+            addProperty(methodPanel, row++, "Cyclomatic",
+                    metrics.getCyclomaticComplexity() + " (" + metrics.getComplexityRating() + ")");
+            addProperty(methodPanel, row++, "Blocks", String.valueOf(metrics.getBlockCount()));
+            addProperty(methodPanel, row++, "Branches", String.valueOf(metrics.getBranchCount()));
+            addProperty(methodPanel, row++, "Loops", String.valueOf(metrics.getLoopCount()));
+            addProperty(methodPanel, row++, "Instructions", String.valueOf(metrics.getInstructionCount()));
+        }
+
         // Add filler
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -253,6 +265,22 @@ public class PropertiesPanel extends ThemedJPanel {
         JLabel valueComp = new JLabel(sanitize(value));
         valueComp.setForeground(JStudioTheme.getTextPrimary());
         panel.add(valueComp, gbc);
+    }
+
+    private int addSeparator(JPanel panel, int row, String title) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 4, 4, 4);
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        JLabel sep = new JLabel("\u2500\u2500 " + title + " \u2500\u2500");
+        sep.setForeground(JStudioTheme.getTextSecondary());
+        panel.add(sep, gbc);
+        return row + 1;
     }
 
     private String sanitize(String text) {

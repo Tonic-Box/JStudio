@@ -7,6 +7,7 @@ import com.tonic.analysis.callgraph.CallGraph;
 import com.tonic.analysis.callgraph.CallGraphNode;
 import com.tonic.analysis.callgraph.CallSite;
 import com.tonic.analysis.common.MethodReference;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -259,6 +260,7 @@ public class CallGraphRenderer {
         return text.substring(0, maxLength - 3) + "...";
     }
 
+    @Getter
     public static class RenderStats {
         private final int callerCount;
         private final int calleeCount;
@@ -268,12 +270,5 @@ public class CallGraphRenderer {
             this.calleeCount = calleeCount;
         }
 
-        public int getCallerCount() {
-            return callerCount;
-        }
-
-        public int getCalleeCount() {
-            return calleeCount;
-        }
     }
 }

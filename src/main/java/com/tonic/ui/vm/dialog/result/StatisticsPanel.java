@@ -21,7 +21,6 @@ public class StatisticsPanel extends ThemedJPanel {
     private final JLabel maxDepthLabel;
     private final JLabel deepestPathLabel;
 
-    private final JTable hotMethodsTable;
     private final DefaultTableModel hotMethodsModel;
 
     public StatisticsPanel() {
@@ -64,7 +63,7 @@ public class StatisticsPanel extends ThemedJPanel {
                 return false;
             }
         };
-        hotMethodsTable = new JTable(hotMethodsModel);
+        JTable hotMethodsTable = new JTable(hotMethodsModel);
         hotMethodsTable.setBackground(JStudioTheme.getBgPrimary());
         hotMethodsTable.setForeground(JStudioTheme.getTextPrimary());
         hotMethodsTable.setSelectionBackground(JStudioTheme.getSelection());
@@ -169,7 +168,6 @@ public class StatisticsPanel extends ThemedJPanel {
         List<String> deepestPath = new ArrayList<>();
 
         Deque<String> currentPath = new ArrayDeque<>();
-        int currentDepth = -1;
 
         for (MethodCall call : calls) {
             int depth = call.getDepth();

@@ -5,11 +5,9 @@ import com.tonic.ui.query.planner.probe.ProbeSet;
 
 public class ScopeProbeVisitor implements ScopeVisitor<Void> {
 
-    private final ProbeSet.Builder builder;
     private final ProbeCollectingVisitor predicateVisitor;
 
     public ScopeProbeVisitor(ProbeSet.Builder builder) {
-        this.builder = builder;
         this.predicateVisitor = new ProbeCollectingVisitor(builder);
     }
 

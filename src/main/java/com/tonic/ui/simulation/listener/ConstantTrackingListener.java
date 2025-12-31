@@ -9,6 +9,7 @@ import com.tonic.analysis.ssa.ir.ConstantInstruction;
 import com.tonic.analysis.ssa.ir.IRInstruction;
 import com.tonic.analysis.ssa.ir.UnaryOpInstruction;
 import com.tonic.analysis.ssa.value.SSAValue;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -113,6 +114,7 @@ public class ConstantTrackingListener extends AbstractListener {
     /**
      * Represents a constant value result for an instruction.
      */
+    @Getter
     public static class ConstantResult {
         private final IRInstruction instruction;
         private final Object value;
@@ -124,26 +126,6 @@ public class ConstantTrackingListener extends AbstractListener {
             this.instruction = instruction;
             this.value = value;
             this.foldable = foldable;
-        }
-
-        public IRInstruction getInstruction() {
-            return instruction;
-        }
-
-        public Object getValue() {
-            return value;
-        }
-
-        public boolean isFoldable() {
-            return foldable;
-        }
-
-        public int getExecutionCount() {
-            return executionCount;
-        }
-
-        public boolean isAlwaysConstant() {
-            return alwaysConstant;
         }
 
         void incrementExecutionCount() {

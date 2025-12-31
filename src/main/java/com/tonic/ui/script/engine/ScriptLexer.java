@@ -1,5 +1,7 @@
 package com.tonic.ui.script.engine;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +45,7 @@ public class ScriptLexer {
     private int current = 0;
     private int line = 1;
     private int column = 1;
+    @Getter
     private final List<String> errors = new ArrayList<>();
 
     public ScriptLexer(String source) {
@@ -57,10 +60,6 @@ public class ScriptLexer {
 
         tokens.add(new ScriptToken(ScriptToken.Type.EOF, "", line, column));
         return tokens;
-    }
-
-    public List<String> getErrors() {
-        return errors;
     }
 
     private void scanToken() {

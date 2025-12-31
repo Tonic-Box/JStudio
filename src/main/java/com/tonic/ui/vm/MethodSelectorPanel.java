@@ -13,6 +13,7 @@ import com.tonic.ui.navigator.NavigatorNode;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
+import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -31,6 +32,7 @@ public class MethodSelectorPanel extends ThemedJPanel {
     private final ClassTreeModel treeModel;
     private final JTextField searchField;
     private final JLabel selectedLabel;
+    @Getter
     private MethodEntryModel selectedMethod;
     private Consumer<MethodEntryModel> onMethodSelected;
 
@@ -214,10 +216,6 @@ public class MethodSelectorPanel extends ThemedJPanel {
             selectedLabel.setText("No method selected");
             selectedLabel.setForeground(JStudioTheme.getTextSecondary());
         }
-    }
-
-    public MethodEntryModel getSelectedMethod() {
-        return selectedMethod;
     }
 
     public void setOnMethodSelected(Consumer<MethodEntryModel> callback) {

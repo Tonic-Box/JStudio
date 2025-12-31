@@ -118,9 +118,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         setupContextMenu();
 
         // Listen for comment changes to update gutter icons
-        ProjectDatabaseService.getInstance().addListener((db, dirty) -> {
-            SwingUtilities.invokeLater(this::updateCommentGutterIcons);
-        });
+        ProjectDatabaseService.getInstance().addListener((db, dirty) -> SwingUtilities.invokeLater(this::updateCommentGutterIcons));
 
         ThemeManager.getInstance().addThemeChangeListener(this);
     }

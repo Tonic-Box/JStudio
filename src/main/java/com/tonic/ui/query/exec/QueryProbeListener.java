@@ -10,6 +10,7 @@ import com.tonic.analysis.instruction.InvokeInterfaceInstruction;
 import com.tonic.ui.query.planner.probe.ProbeResult;
 import com.tonic.ui.query.planner.probe.ProbeSet;
 import com.tonic.ui.query.planner.probe.ProbeSpec;
+import lombok.Getter;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -19,7 +20,7 @@ public class QueryProbeListener implements BytecodeListener {
     private final ProbeResult.Builder resultBuilder;
     private final AtomicLong sequenceCounter = new AtomicLong(0);
     private final long startTimeNs;
-
+    @Getter
     private String currentMethod;
     private int currentPc;
     private long instructionCount;
@@ -43,25 +44,24 @@ public class QueryProbeListener implements BytecodeListener {
         int opcode = instruction.getOpcode();
 
         if (opcode >= 0xB6 && opcode <= 0xBA) {
-            handleMethodCall(instruction, frame);
+            handleMethodCall(instruction);
         }
 
         if (opcode == 0xBB) {
-            handleAllocation(instruction, frame);
+            handleAllocation(instruction);
         }
 
         if (opcode >= 0xB2 && opcode <= 0xB5) {
-            handleFieldAccess(instruction, frame, opcode >= 0xB4);
+            handleFieldAccess(instruction, opcode >= 0xB4);
         }
 
         if (opcode == 0xBF) {
             handleException(frame);
         }
 
-        handleStringCheck(frame);
     }
 
-    private void handleMethodCall(Instruction instruction, StackFrame frame) {
+    private void handleMethodCall(Instruction instruction) {
         if (!probes.hasProbeType(ProbeSpec.ProbeType.CALL)) {
             return;
         }
@@ -96,9 +96,8 @@ public class QueryProbeListener implements BytecodeListener {
             return;
         }
 
-        for (ProbeSpec spec : probes.getProbesOfType(ProbeSpec.CallProbe.class)) {
-            ProbeSpec.CallProbe callProbe = (ProbeSpec.CallProbe) spec;
-            if (callProbe.matches(owner, name, desc)) {
+        for (ProbeSpec.CallProbe spec : probes.getProbesOfType(ProbeSpec.CallProbe.class)) {
+            if (spec.matches(owner, name, desc)) {
                 long seq = sequenceCounter.incrementAndGet();
                 resultBuilder.recordCall(seq, currentPc, owner, name, desc);
                 break;
@@ -106,7 +105,7 @@ public class QueryProbeListener implements BytecodeListener {
         }
     }
 
-    private void handleAllocation(Instruction instruction, StackFrame frame) {
+    private void handleAllocation(Instruction instruction) {
         if (!probes.hasProbeType(ProbeSpec.ProbeType.ALLOCATION)) {
             return;
         }
@@ -114,16 +113,15 @@ public class QueryProbeListener implements BytecodeListener {
         String typeName = extractAllocationType(instruction);
         if (typeName == null) return;
 
-        for (ProbeSpec spec : probes.getProbesOfType(ProbeSpec.AllocProbe.class)) {
-            ProbeSpec.AllocProbe allocProbe = (ProbeSpec.AllocProbe) spec;
-            if (allocProbe.matches(typeName)) {
+        for (ProbeSpec.AllocProbe spec : probes.getProbesOfType(ProbeSpec.AllocProbe.class)) {
+            if (spec.matches(typeName)) {
                 resultBuilder.recordAllocation(typeName);
                 break;
             }
         }
     }
 
-    private void handleFieldAccess(Instruction instruction, StackFrame frame, boolean isWrite) {
+    private void handleFieldAccess(Instruction instruction, boolean isWrite) {
         if (!probes.hasProbeType(ProbeSpec.ProbeType.FIELD)) {
             return;
         }
@@ -138,10 +136,9 @@ public class QueryProbeListener implements BytecodeListener {
         String name = parts[1];
         String desc = parts[2];
 
-        for (ProbeSpec spec : probes.getProbesOfType(ProbeSpec.FieldProbe.class)) {
-            ProbeSpec.FieldProbe fieldProbe = (ProbeSpec.FieldProbe) spec;
-            if (fieldProbe.matches(owner, name)) {
-                if ((isWrite && fieldProbe.trackWrites()) || (!isWrite && fieldProbe.trackReads())) {
+        for (ProbeSpec.FieldProbe spec : probes.getProbesOfType(ProbeSpec.FieldProbe.class)) {
+            if (spec.matches(owner, name)) {
+                if ((isWrite && spec.trackWrites()) || (!isWrite && spec.trackReads())) {
                     long seq = sequenceCounter.incrementAndGet();
                     resultBuilder.recordFieldAccess(seq, currentPc, owner, name, desc, isWrite);
                     break;
@@ -160,9 +157,8 @@ public class QueryProbeListener implements BytecodeListener {
 
         String exType = exception.getClassName();
 
-        for (ProbeSpec spec : probes.getProbesOfType(ProbeSpec.ExceptionProbe.class)) {
-            ProbeSpec.ExceptionProbe exProbe = (ProbeSpec.ExceptionProbe) spec;
-            if (exProbe.exceptionType() == null || exType.contains(exProbe.exceptionType())) {
+        for (ProbeSpec.ExceptionProbe spec : probes.getProbesOfType(ProbeSpec.ExceptionProbe.class)) {
+            if (spec.exceptionType() == null || exType.contains(spec.exceptionType())) {
                 long seq = sequenceCounter.incrementAndGet();
                 resultBuilder.recordException(seq, currentPc, exType, false);
                 break;
@@ -170,19 +166,10 @@ public class QueryProbeListener implements BytecodeListener {
         }
     }
 
-    private void handleStringCheck(StackFrame frame) {
-        if (!probes.hasProbeType(ProbeSpec.ProbeType.STRING)) {
-        }
-    }
-
     public ProbeResult buildResult() {
         resultBuilder.instructionCount(instructionCount);
         resultBuilder.executionTime(System.nanoTime() - startTimeNs);
         return resultBuilder.build();
-    }
-
-    private String extractMethodTarget(Instruction instruction) {
-        return instruction.toString();
     }
 
     private String extractAllocationType(Instruction instruction) {
@@ -195,30 +182,6 @@ public class QueryProbeListener implements BytecodeListener {
 
     private String extractFieldTarget(Instruction instruction) {
         return instruction.toString();
-    }
-
-    private String[] parseMethodRef(String methodRef) {
-        if (methodRef == null) return null;
-
-        int dot = methodRef.lastIndexOf('.');
-        int paren = methodRef.indexOf('(');
-
-        if (dot < 0 || paren < 0 || dot >= paren) {
-            return null;
-        }
-
-        String owner = methodRef.substring(0, dot);
-        String nameAndDesc = methodRef.substring(dot + 1);
-        int descStart = nameAndDesc.indexOf('(');
-
-        if (descStart < 0) {
-            return new String[] { owner, nameAndDesc, "" };
-        }
-
-        String name = nameAndDesc.substring(0, descStart);
-        String desc = nameAndDesc.substring(descStart);
-
-        return new String[] { owner, name, desc };
     }
 
     private String[] parseFieldRef(String fieldRef) {

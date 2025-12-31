@@ -597,15 +597,15 @@ public class ScriptDocumentation {
 
     public static String getContentForSection(String section) {
         switch (section) {
-            case "Overview":
-                return getOverview();
             case "  Loops":
+            case "Language":
                 return getLoops();
             case "  Array Methods":
                 return getArrayMethods();
             case "  Try/Catch":
                 return getTryCatch();
             case "  Results":
+            case "Analysis APIs":
                 return getResultsApi();
             case "  Project":
                 return getProjectApi();
@@ -618,6 +618,7 @@ public class ScriptDocumentation {
             case "  Patterns":
                 return getPatternApi();
             case "  Simulation":
+            case "Advanced APIs":
                 return getSimulationApi();
             case "  Instrumentation":
                 return getInstrumentApi();
@@ -628,17 +629,10 @@ public class ScriptDocumentation {
             case "  Pipeline":
                 return getPipelineApi();
             case "  Security Scanner":
+            case "Examples":
                 return getSecurityExample();
             case "  Dead Code Finder":
                 return getDeadCodeExample();
-            case "Language":
-                return getLoops();
-            case "Analysis APIs":
-                return getResultsApi();
-            case "Advanced APIs":
-                return getSimulationApi();
-            case "Examples":
-                return getSecurityExample();
             default:
                 return getOverview();
         }

@@ -15,7 +15,6 @@ public class AttributeDetailRegistry {
         registerTypeNames();
     }
 
-    @SuppressWarnings("unchecked")
     private static void registerFormatters() {
         register(CodeAttribute.class, (attr, sb, ctx) -> {
             sb.append("Max stack:  ").append(attr.getMaxStack()).append("\n");
@@ -35,9 +34,7 @@ public class AttributeDetailRegistry {
             sb.append("Source file: ").append(ctx.getUtf8(attr.getSourceFileIndex())).append("\n");
         });
 
-        register(ConstantValueAttribute.class, (attr, sb, ctx) -> {
-            sb.append("Value index: #").append(attr.getConstantValueIndex()).append("\n");
-        });
+        register(ConstantValueAttribute.class, (attr, sb, ctx) -> sb.append("Value index: #").append(attr.getConstantValueIndex()).append("\n"));
 
         register(ExceptionsAttribute.class, (attr, sb, ctx) -> {
             sb.append("Throws ").append(attr.getExceptionIndexTable().size()).append(" exception(s):\n");
@@ -46,9 +43,7 @@ public class AttributeDetailRegistry {
             }
         });
 
-        register(InnerClassesAttribute.class, (attr, sb, ctx) -> {
-            sb.append("Inner classes: ").append(attr.getClasses().size()).append("\n");
-        });
+        register(InnerClassesAttribute.class, (attr, sb, ctx) -> sb.append("Inner classes: ").append(attr.getClasses().size()).append("\n"));
 
         register(LineNumberTableAttribute.class, (attr, sb, ctx) -> {
             sb.append("Entries: ").append(attr.getLineNumberTable().size()).append("\n");
@@ -81,13 +76,9 @@ public class AttributeDetailRegistry {
             sb.append("Signature: ").append(ctx.getUtf8(attr.getSignatureIndex())).append("\n");
         });
 
-        register(DeprecatedAttribute.class, (attr, sb, ctx) -> {
-            sb.append("This element is deprecated.\n");
-        });
+        register(DeprecatedAttribute.class, (attr, sb, ctx) -> sb.append("This element is deprecated.\n"));
 
-        register(SyntheticAttribute.class, (attr, sb, ctx) -> {
-            sb.append("This element is synthetic (compiler-generated).\n");
-        });
+        register(SyntheticAttribute.class, (attr, sb, ctx) -> sb.append("This element is synthetic (compiler-generated).\n"));
     }
 
     private static void registerTypeNames() {
@@ -116,7 +107,6 @@ public class AttributeDetailRegistry {
         typeNames.put(NestMembersAttribute.class, "NestMembers");
     }
 
-    @SuppressWarnings("unchecked")
     private static <T extends Attribute> void register(Class<T> type, AttributeFormatter<T> formatter) {
         formatters.put(type, formatter);
     }

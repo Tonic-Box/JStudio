@@ -6,7 +6,6 @@ import com.tonic.analysis.dependency.DependencyNode;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.script.engine.ScriptFunction;
-import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.engine.ScriptValue;
 import lombok.Getter;
 

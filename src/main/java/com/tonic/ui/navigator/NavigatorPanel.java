@@ -28,8 +28,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.BorderLayout;
@@ -72,12 +70,7 @@ public class NavigatorPanel extends ThemedJPanel {
 
         ToolTipManager.sharedInstance().registerComponent(tree);
 
-        tree.addTreeSelectionListener(new TreeSelectionListener() {
-            @Override
-            public void valueChanged(TreeSelectionEvent e) {
-                handleSelection();
-            }
-        });
+        tree.addTreeSelectionListener(e -> handleSelection());
 
         tree.addMouseListener(new MouseAdapter() {
             @Override
@@ -379,35 +372,23 @@ public class NavigatorPanel extends ThemedJPanel {
     private void buildMethodMenu(JPopupMenu menu, NavigatorNode.MethodNode node) {
         MethodEntryModel method = node.getMethodEntry();
 
-        addMenuItem(menu, "View in Class Browser", () -> {
-            mainFrame.showClassBrowser(method.getOwner());
-        });
+        addMenuItem(menu, "View in Class Browser", () -> mainFrame.showClassBrowser(method.getOwner()));
 
-        addMenuItem(menu, "View in Call Graph", () -> {
-            mainFrame.showCallGraphForMethod(method.getMethodEntry());
-        });
+        addMenuItem(menu, "View in Call Graph", () -> mainFrame.showCallGraphForMethod(method.getMethodEntry()));
 
-        addMenuItem(menu, "Find Cross-References", () -> {
-            mainFrame.showXrefsForMethod(
-                method.getOwner().getClassName(),
-                method.getName(),
-                method.getDescriptor()
-            );
-        });
+        addMenuItem(menu, "Find Cross-References", () -> mainFrame.showXrefsForMethod(
+            method.getOwner().getClassName(),
+            method.getName(),
+            method.getDescriptor()
+        ));
 
-        addMenuItem(menu, "Find Usages", () -> {
-            mainFrame.showUsagesForMethod(method.getName());
-        });
+        addMenuItem(menu, "Find Usages", () -> mainFrame.showUsagesForMethod(method.getName()));
 
         menu.addSeparator();
 
-        addMenuItem(menu, "Execute Method...", () -> {
-            mainFrame.openExecuteMethodDialog(method);
-        });
+        addMenuItem(menu, "Execute Method...", () -> mainFrame.openExecuteMethodDialog(method));
 
-        addMenuItem(menu, "Fuzz & Generate Tests...", () -> {
-            openFuzzTestDialog(method);
-        });
+        addMenuItem(menu, "Fuzz & Generate Tests...", () -> openFuzzTestDialog(method));
 
         menu.addSeparator();
 
@@ -417,9 +398,7 @@ public class NavigatorPanel extends ThemedJPanel {
             copyToClipboard(sig);
         });
 
-        addMenuItem(menu, "Copy Descriptor", () -> {
-            copyToClipboard(method.getDescriptor());
-        });
+        addMenuItem(menu, "Copy Descriptor", () -> copyToClipboard(method.getDescriptor()));
 
         addMenuItem(menu, "Copy Full Reference", () -> {
             String fullRef = method.getOwner().getClassName() + "." + method.getName() + method.getDescriptor();
@@ -438,74 +417,48 @@ public class NavigatorPanel extends ThemedJPanel {
             });
         });
 
-        addMenuItem(menu, "View in Class Browser", () -> {
-            mainFrame.showClassBrowser(field.getOwner());
-        });
+        addMenuItem(menu, "View in Class Browser", () -> mainFrame.showClassBrowser(field.getOwner()));
 
-        addMenuItem(menu, "Find Cross-References", () -> {
-            mainFrame.showXrefsForField(
-                field.getOwner().getClassName(),
-                field.getName(),
-                field.getDescriptor()
-            );
-        });
+        addMenuItem(menu, "Find Cross-References", () -> mainFrame.showXrefsForField(
+            field.getOwner().getClassName(),
+            field.getName(),
+            field.getDescriptor()
+        ));
 
-        addMenuItem(menu, "Find Usages", () -> {
-            mainFrame.showUsagesForField(field.getName());
-        });
+        addMenuItem(menu, "Find Usages", () -> mainFrame.showUsagesForField(field.getName()));
 
         menu.addSeparator();
 
-        addMenuItem(menu, "Copy Name", () -> {
-            copyToClipboard(field.getName());
-        });
+        addMenuItem(menu, "Copy Name", () -> copyToClipboard(field.getName()));
 
         addMenuItem(menu, "Copy Full Name", () -> {
             String ownerSimple = getSimpleClassName(field.getOwner().getClassName());
             copyToClipboard(ownerSimple + "." + field.getName());
         });
 
-        addMenuItem(menu, "Copy Descriptor", () -> {
-            copyToClipboard(field.getDescriptor());
-        });
+        addMenuItem(menu, "Copy Descriptor", () -> copyToClipboard(field.getDescriptor()));
     }
 
     private void buildClassMenu(JPopupMenu menu, NavigatorNode.ClassNode node) {
         ClassEntryModel classEntry = node.getClassEntry();
 
-        addMenuItem(menu, "Open in Editor", () -> {
-            EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
-        });
+        addMenuItem(menu, "Open in Editor", () -> EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry)));
 
-        addMenuItem(menu, "View in Class Browser", () -> {
-            mainFrame.showClassBrowser(classEntry);
-        });
+        addMenuItem(menu, "View in Class Browser", () -> mainFrame.showClassBrowser(classEntry));
 
-        addMenuItem(menu, "View Dependencies", () -> {
-            mainFrame.showDependenciesForClass(classEntry.getClassName());
-        });
+        addMenuItem(menu, "View Dependencies", () -> mainFrame.showDependenciesForClass(classEntry.getClassName()));
 
-        addMenuItem(menu, "Find Cross-References", () -> {
-            mainFrame.showXrefsForClass(classEntry.getClassName());
-        });
+        addMenuItem(menu, "Find Cross-References", () -> mainFrame.showXrefsForClass(classEntry.getClassName()));
 
-        addMenuItem(menu, "Find Usages", () -> {
-            mainFrame.showUsagesForClass(classEntry.getClassName());
-        });
+        addMenuItem(menu, "Find Usages", () -> mainFrame.showUsagesForClass(classEntry.getClassName()));
 
         menu.addSeparator();
 
-        addMenuItem(menu, "Copy Class Name", () -> {
-            copyToClipboard(classEntry.getClassName().replace('/', '.'));
-        });
+        addMenuItem(menu, "Copy Class Name", () -> copyToClipboard(classEntry.getClassName().replace('/', '.')));
 
-        addMenuItem(menu, "Copy Internal Name", () -> {
-            copyToClipboard(classEntry.getClassName());
-        });
+        addMenuItem(menu, "Copy Internal Name", () -> copyToClipboard(classEntry.getClassName()));
 
-        addMenuItem(menu, "Copy Simple Name", () -> {
-            copyToClipboard(classEntry.getSimpleName());
-        });
+        addMenuItem(menu, "Copy Simple Name", () -> copyToClipboard(classEntry.getSimpleName()));
     }
 
     private void styleMenu(JPopupMenu menu) {
@@ -581,9 +534,7 @@ public class NavigatorPanel extends ThemedJPanel {
                     String elementType = parseOneType(params, i);
                     i += rawTypeLength(params, i);
                     result.append(elementType);
-                    for (int d = 0; d < arrayDims; d++) {
-                        result.append("[]");
-                    }
+                    result.append("[]".repeat(Math.max(0, arrayDims)));
                     break;
                 case 'L':
                     int semi = params.indexOf(';', i);

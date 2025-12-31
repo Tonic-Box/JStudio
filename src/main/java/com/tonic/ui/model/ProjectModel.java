@@ -3,6 +3,7 @@ package com.tonic.ui.model;
 import com.tonic.analysis.xref.XrefDatabase;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
+import lombok.Getter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -20,12 +21,17 @@ import java.util.stream.Collectors;
  */
 public class ProjectModel {
 
+    @Getter
     private String projectName;
+    @Getter
     private File sourceFile;
+    @Getter
     private ClassPool classPool;
+    @Getter
     private XrefDatabase xrefDatabase;
     private final Map<String, ClassEntryModel> classEntries = new HashMap<>();
     private final Set<String> userClassNames = new HashSet<>();
+    @Getter
     private boolean dirty;
 
     public ProjectModel() {
@@ -145,28 +151,12 @@ public class ProjectModel {
 
     // Getters and setters
 
-    public String getProjectName() {
-        return projectName;
-    }
-
     public void setProjectName(String projectName) {
         this.projectName = projectName;
     }
 
-    public File getSourceFile() {
-        return sourceFile;
-    }
-
     public void setSourceFile(File sourceFile) {
         this.sourceFile = sourceFile;
-    }
-
-    public ClassPool getClassPool() {
-        return classPool;
-    }
-
-    public XrefDatabase getXrefDatabase() {
-        return xrefDatabase;
     }
 
     public void setXrefDatabase(XrefDatabase xrefDatabase) {
@@ -196,10 +186,6 @@ public class ProjectModel {
         }
 
         return null;
-    }
-
-    public boolean isDirty() {
-        return dirty;
     }
 
     public void setDirty(boolean dirty) {

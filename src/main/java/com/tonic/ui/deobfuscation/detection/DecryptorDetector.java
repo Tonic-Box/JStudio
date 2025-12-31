@@ -46,7 +46,7 @@ public class DecryptorDetector {
         }
 
         DecryptorType type = DecryptorType.fromDescriptor(desc);
-        double confidence = 0.0;
+        double confidence;
         List<String> indicators = new ArrayList<>();
 
         if (type == DecryptorType.STRING_TO_STRING) {
@@ -138,7 +138,7 @@ public class DecryptorDetector {
             }
 
             int pc = 0;
-            int prevPc = -1;
+            int prevPc;
             while (pc < bytecode.length) {
                 int opcode = Byte.toUnsignedInt(bytecode[pc]);
                 int instrLen = getInstructionLength(opcode, bytecode, pc);
@@ -153,7 +153,7 @@ public class DecryptorDetector {
 
                 if (opcode >= 0x99 && opcode <= 0xA7 && instrLen >= 3) {
                     int branchOffset = ((bytecode[pc + 1] & 0xFF) << 8) | (bytecode[pc + 2] & 0xFF);
-                    if (branchOffset < 0 || (pc + branchOffset) < pc) {
+                    if (pc + branchOffset < pc) {
                         analysis.hasLoops = true;
                     }
                 }

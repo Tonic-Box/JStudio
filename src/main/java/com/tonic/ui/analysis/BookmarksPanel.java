@@ -81,9 +81,7 @@ public class BookmarksPanel extends ThemedJPanel {
         statusLabel.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
         add(statusLabel, BorderLayout.SOUTH);
 
-        ProjectDatabaseService.getInstance().addListener((db, dirty) -> {
-            SwingUtilities.invokeLater(this::refresh);
-        });
+        ProjectDatabaseService.getInstance().addListener((db, dirty) -> SwingUtilities.invokeLater(this::refresh));
     }
 
     private JToolBar createToolbar() {

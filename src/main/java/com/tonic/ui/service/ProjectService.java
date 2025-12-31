@@ -9,6 +9,7 @@ import com.tonic.ui.event.events.ProjectUpdatedEvent;
 import com.tonic.ui.event.events.StatusMessageEvent;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
+import lombok.Getter;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -26,10 +27,15 @@ import java.util.stream.Stream;
 /**
  * Service for loading and managing projects (JARs, directories, class files).
  */
+@Getter
 public class ProjectService {
 
     private static final ProjectService INSTANCE = new ProjectService();
 
+    /**
+     * -- GETTER --
+     *  Get the current project.
+     */
     private ProjectModel currentProject;
 
     private ProjectService() {
@@ -346,13 +352,6 @@ public class ProjectService {
             currentProject.clear();
             currentProject = null;
         }
-    }
-
-    /**
-     * Get the current project.
-     */
-    public ProjectModel getCurrentProject() {
-        return currentProject;
     }
 
     /**

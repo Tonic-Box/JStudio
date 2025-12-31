@@ -5,7 +5,9 @@ import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.analysis.ssa.ir.BranchInstruction;
 import com.tonic.analysis.ssa.ir.IRInstruction;
 import com.tonic.analysis.ssa.ir.SwitchInstruction;
+import lombok.Getter;
 
+@Getter
 public class ComplexityMetrics {
 
     private final int cyclomaticComplexity;
@@ -89,38 +91,6 @@ public class ComplexityMetrics {
         return Math.min(maxDepth, 10);
     }
 
-    public int getCyclomaticComplexity() {
-        return cyclomaticComplexity;
-    }
-
-    public int getBlockCount() {
-        return blockCount;
-    }
-
-    public int getEdgeCount() {
-        return edgeCount;
-    }
-
-    public int getBranchCount() {
-        return branchCount;
-    }
-
-    public int getSwitchCaseCount() {
-        return switchCaseCount;
-    }
-
-    public int getLoopCount() {
-        return loopCount;
-    }
-
-    public int getMaxNestingDepth() {
-        return maxNestingDepth;
-    }
-
-    public int getInstructionCount() {
-        return instructionCount;
-    }
-
     public String getComplexityRating() {
         if (cyclomaticComplexity <= 5) {
             return "Simple";
@@ -141,7 +111,7 @@ public class ComplexityMetrics {
 
     @Override
     public String toString() {
-        String sb = "ComplexityMetrics[\n" +
+        return "ComplexityMetrics[\n" +
                 "  Cyclomatic Complexity: " + cyclomaticComplexity +
                 " (" + getComplexityRating() + ")\n" +
                 "  Basic Blocks: " + blockCount + "\n" +
@@ -152,6 +122,5 @@ public class ComplexityMetrics {
                 "  Max Nesting: " + maxNestingDepth + "\n" +
                 "  Instructions: " + instructionCount + "\n" +
                 "]";
-        return sb;
     }
 }

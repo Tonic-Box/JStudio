@@ -37,7 +37,7 @@ public class JsonSerializer {
     }
 
     private static String toJson(ProjectDatabase db) {
-        String sb = "{\n" +
+        return "{\n" +
                 "  \"version\": " + quote(db.getVersion()) + ",\n" +
                 "  \"target\": {\n" +
                 "    \"path\": " + quote(db.getTargetPath()) + ",\n" +
@@ -50,7 +50,6 @@ public class JsonSerializer {
                 "  \"quickSlots\": " + quickSlotsToJson(db.getBookmarks()) + ",\n" +
                 "  \"renames\": " + mapToJson(db.getRenames()) + "\n" +
                 "}";
-        return sb;
     }
 
     private static String commentsToJson(CommentStore store) {

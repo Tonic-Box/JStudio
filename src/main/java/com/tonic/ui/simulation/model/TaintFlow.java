@@ -2,8 +2,6 @@ package com.tonic.ui.simulation.model;
 
 import com.tonic.analysis.ssa.ir.IRInstruction;
 import lombok.Getter;
-
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,7 +35,7 @@ public class TaintFlow extends SimulationFinding {
         this.sourceDescription = sourceDescription;
         this.sinkDescription = sinkDescription;
         this.flowPath = flowPath != null
-                ? Collections.unmodifiableList(new ArrayList<>(flowPath))
+                ? List.copyOf(flowPath)
                 : Collections.emptyList();
         this.blockId = sinkInstr != null && sinkInstr.getBlock() != null
                 ? sinkInstr.getBlock().getId() : -1;

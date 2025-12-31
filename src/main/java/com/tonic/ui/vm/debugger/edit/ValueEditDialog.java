@@ -3,6 +3,7 @@ package com.tonic.ui.vm.debugger.edit;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.analysis.execution.state.ValueTag;
 import com.tonic.ui.theme.JStudioTheme;
+import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -15,7 +16,9 @@ public class ValueEditDialog extends JDialog {
     private final JTextField valueField;
     private final JLabel errorLabel;
     private final ValueTag valueTag;
+    @Getter
     private ConcreteValue result;
+    @Getter
     private boolean confirmed;
 
     public ValueEditDialog(Window owner, String title, String currentValue, ValueTag tag) {
@@ -128,8 +131,6 @@ public class ValueEditDialog extends JDialog {
                 hint = "Accepts: decimal, 0x hex, 0b binary (optional L suffix)";
                 break;
             case FLOAT:
-                hint = "Accepts: decimal, scientific (1.5e10), NaN, Infinity";
-                break;
             case DOUBLE:
                 hint = "Accepts: decimal, scientific (1.5e10), NaN, Infinity";
                 break;
@@ -162,14 +163,6 @@ public class ValueEditDialog extends JDialog {
         confirmed = false;
         result = null;
         dispose();
-    }
-
-    public boolean isConfirmed() {
-        return confirmed;
-    }
-
-    public ConcreteValue getResult() {
-        return result;
     }
 
     public static ConcreteValue showDialog(Component parent, String title,

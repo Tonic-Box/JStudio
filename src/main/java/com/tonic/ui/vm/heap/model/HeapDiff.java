@@ -1,5 +1,7 @@
 package com.tonic.ui.vm.heap.model;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,7 +11,9 @@ import java.util.Map;
 import java.util.Set;
 
 public class HeapDiff {
+    @Getter
     private final HeapSnapshot before;
+    @Getter
     private final HeapSnapshot after;
     private final List<HeapObject> addedObjects;
     private final List<HeapObject> removedObjects;
@@ -83,7 +87,7 @@ public class HeapDiff {
                 changes.add(new FieldChange(key, null, afterVal, FieldChange.ChangeType.ADDED));
             } else if (beforeVal != null && afterVal == null) {
                 changes.add(new FieldChange(key, beforeVal, null, FieldChange.ChangeType.REMOVED));
-            } else if (beforeVal != null && afterVal != null) {
+            } else if (beforeVal != null) {
                 if (!valuesEqual(beforeVal.getValue(), afterVal.getValue())) {
                     changes.add(new FieldChange(key, beforeVal, afterVal, FieldChange.ChangeType.MODIFIED));
                 }
@@ -101,14 +105,6 @@ public class HeapDiff {
 
     public static HeapDiff compare(HeapSnapshot before, HeapSnapshot after) {
         return new HeapDiff(before, after);
-    }
-
-    public HeapSnapshot getBefore() {
-        return before;
-    }
-
-    public HeapSnapshot getAfter() {
-        return after;
     }
 
     public List<HeapObject> getAddedObjects() {
@@ -152,6 +148,7 @@ public class HeapDiff {
             '}';
     }
 
+    @Getter
     public static class ModifiedObject {
         private final HeapObject before;
         private final HeapObject after;
@@ -160,19 +157,7 @@ public class HeapDiff {
         public ModifiedObject(HeapObject before, HeapObject after, List<FieldChange> fieldChanges) {
             this.before = before;
             this.after = after;
-            this.fieldChanges = Collections.unmodifiableList(new ArrayList<>(fieldChanges));
-        }
-
-        public HeapObject getBefore() {
-            return before;
-        }
-
-        public HeapObject getAfter() {
-            return after;
-        }
-
-        public List<FieldChange> getFieldChanges() {
-            return fieldChanges;
+            this.fieldChanges = List.copyOf(fieldChanges);
         }
 
         public int getObjectId() {
@@ -184,6 +169,7 @@ public class HeapDiff {
         }
     }
 
+    @Getter
     public static class FieldChange {
         public enum ChangeType {
             ADDED, REMOVED, MODIFIED
@@ -199,22 +185,6 @@ public class HeapDiff {
             this.beforeValue = beforeValue;
             this.afterValue = afterValue;
             this.changeType = changeType;
-        }
-
-        public String getFieldKey() {
-            return fieldKey;
-        }
-
-        public FieldValue getBeforeValue() {
-            return beforeValue;
-        }
-
-        public FieldValue getAfterValue() {
-            return afterValue;
-        }
-
-        public ChangeType getChangeType() {
-            return changeType;
         }
 
         public String getFieldName() {
@@ -244,6 +214,7 @@ public class HeapDiff {
         }
     }
 
+    @Getter
     public static class ClassDiff {
         private final String className;
         private int addedCount;
@@ -252,22 +223,6 @@ public class HeapDiff {
 
         public ClassDiff(String className) {
             this.className = className;
-        }
-
-        public String getClassName() {
-            return className;
-        }
-
-        public int getAddedCount() {
-            return addedCount;
-        }
-
-        public int getRemovedCount() {
-            return removedCount;
-        }
-
-        public int getModifiedCount() {
-            return modifiedCount;
         }
 
         public int getNetChange() {

@@ -9,6 +9,7 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
+import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -28,6 +29,11 @@ import java.util.List;
 public class XrefPanel extends ThemedJPanel {
 
     private final ProjectModel project;
+    /**
+     * -- GETTER --
+     *  Get the current xref database.
+     */
+    @Getter
     private XrefDatabase xrefDatabase;
 
     private JTextField searchField;
@@ -210,7 +216,7 @@ public class XrefPanel extends ThemedJPanel {
             @Override
             protected XrefDatabase doInBackground() {
                 XrefBuilder builder = new XrefBuilder(project.getClassPool());
-                builder.setProgressCallback(msg -> publish(msg));
+                builder.setProgressCallback(this::publish);
                 return builder.build();
             }
 
@@ -408,13 +414,6 @@ public class XrefPanel extends ThemedJPanel {
         if (database != null) {
             statusLabel.setText(database.getSummary());
         }
-    }
-
-    /**
-     * Get the current xref database.
-     */
-    public XrefDatabase getXrefDatabase() {
-        return xrefDatabase;
     }
 
     /**

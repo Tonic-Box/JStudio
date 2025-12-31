@@ -3,13 +3,19 @@ package com.tonic.ui.editor.bytecode;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
 import com.tonic.parser.attribute.table.ExceptionTableEntry;
+import lombok.Getter;
 
 /**
  * Formats bytecode for display in the UI.
  * Uses the existing CodePrinter but formats output for styled display.
  */
+@Getter
 public class BytecodeFormatter {
 
+    /**
+     * -- GETTER --
+     *  Get the method being formatted.
+     */
     private final MethodEntry method;
 
     public BytecodeFormatter(MethodEntry method) {
@@ -61,10 +67,4 @@ public class BytecodeFormatter {
         return sb.toString();
     }
 
-    /**
-     * Get the method being formatted.
-     */
-    public MethodEntry getMethod() {
-        return method;
-    }
 }

@@ -1,8 +1,11 @@
 package com.tonic.ui.editor;
 
+import lombok.Getter;
+
 /**
  * View modes for the code editor.
  */
+@Getter
 public enum ViewMode {
     SOURCE("Source", "Decompiled Java source code"),
     BYTECODE("Bytecode", "Raw JVM bytecode"),
@@ -17,11 +20,4 @@ public enum ViewMode {
         this.description = description;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public String getDescription() {
-        return description;
-    }
 }

@@ -1,21 +1,23 @@
 package com.tonic.ui.vm.heap.model;
 
 import com.tonic.analysis.execution.heap.ArrayInstance;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class HeapArray extends HeapObject {
     private final String componentType;
     private final int length;
-    private final boolean isPrimitive;
+    private final boolean primitive;
     private final Object[] elements;
 
     private HeapArray(Builder builder) {
         super(builder);
         this.componentType = builder.componentType;
         this.length = builder.length;
-        this.isPrimitive = detectPrimitive(builder.componentType);
+        this.primitive = detectPrimitive(builder.componentType);
         this.elements = builder.elements;
     }
 
@@ -24,22 +26,6 @@ public class HeapArray extends HeapObject {
         char c = type.charAt(0);
         return c == 'B' || c == 'C' || c == 'D' || c == 'F' ||
                c == 'I' || c == 'J' || c == 'S' || c == 'Z';
-    }
-
-    public String getComponentType() {
-        return componentType;
-    }
-
-    public int getLength() {
-        return length;
-    }
-
-    public boolean isPrimitive() {
-        return isPrimitive;
-    }
-
-    public Object[] getElements() {
-        return elements;
     }
 
     public Object getElement(int index) {
@@ -122,11 +108,7 @@ public class HeapArray extends HeapObject {
         } else {
             elementName = getComponentTypeName();
         }
-        StringBuilder sb = new StringBuilder(elementName);
-        for (int i = 0; i < dims; i++) {
-            sb.append("[]");
-        }
-        return sb.toString();
+        return elementName + "[]".repeat(dims);
     }
 
     public static HeapArray fromArrayInstance(ArrayInstance instance, long allocationTime,

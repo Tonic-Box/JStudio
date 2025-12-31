@@ -2,6 +2,7 @@ package com.tonic.ui.analysis.callgraph;
 
 import com.tonic.analysis.callgraph.CallGraph;
 import com.tonic.analysis.common.MethodReference;
+import lombok.Getter;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,29 +10,20 @@ import java.util.Map;
 
 public class CallGraphModel {
 
+    @Getter
     private CallGraph callGraph;
+    @Getter
     private MethodReference focusMethod;
+    @Getter
     private int maxDepth = 3;
     private final Map<Object, MethodReference> cellToMethodMap = new HashMap<>();
-
-    public CallGraph getCallGraph() {
-        return callGraph;
-    }
 
     public void setCallGraph(CallGraph callGraph) {
         this.callGraph = callGraph;
     }
 
-    public MethodReference getFocusMethod() {
-        return focusMethod;
-    }
-
     public void setFocusMethod(MethodReference focusMethod) {
         this.focusMethod = focusMethod;
-    }
-
-    public int getMaxDepth() {
-        return maxDepth;
     }
 
     public void setMaxDepth(int maxDepth) {

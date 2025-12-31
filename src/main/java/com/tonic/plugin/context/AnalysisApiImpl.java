@@ -129,7 +129,6 @@ public class AnalysisApiImpl implements AnalysisApi {
         @Override
         public List<String> getCallChain(String fromClass, String fromMethod, String toClass, String toMethod) {
             if (callGraph == null) build();
-            if (callGraph == null) return Collections.emptyList();
 
             return Collections.emptyList();
         }
@@ -183,7 +182,7 @@ public class AnalysisApiImpl implements AnalysisApi {
         }
     }
 
-    private class DataFlowApiImpl implements DataFlowApi {
+    private static class DataFlowApiImpl implements DataFlowApi {
 
         @Override
         public DataFlowResult analyze(String className, String methodName) {

@@ -28,7 +28,7 @@ public class HeapObject {
         this.allocationTime = builder.allocationTime;
         this.provenance = builder.provenance;
         this.fields = Collections.unmodifiableMap(new LinkedHashMap<>(builder.fields));
-        this.mutations = Collections.unmodifiableList(new ArrayList<>(builder.mutations));
+        this.mutations = List.copyOf(builder.mutations);
         this.lambda = detectLambda(className);
         this.array = builder.isArray;
         this.string = "java/lang/String".equals(className);

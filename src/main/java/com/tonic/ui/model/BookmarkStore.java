@@ -1,9 +1,6 @@
 package com.tonic.ui.model;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -101,7 +98,7 @@ public class BookmarkStore {
     public List<Bookmark> getForClass(String className) {
         return bookmarksById.values().stream()
             .filter(b -> className.equals(b.getClassName()))
-            .sorted((a, b) -> Integer.compare(a.getLineNumber(), b.getLineNumber()))
+            .sorted(Comparator.comparingInt(Bookmark::getLineNumber))
             .collect(Collectors.toList());
     }
 

@@ -1,5 +1,7 @@
 package com.tonic.ui.dialog.filechooser;
 
+import lombok.Getter;
+
 import javax.swing.Icon;
 import javax.swing.table.AbstractTableModel;
 import java.io.File;
@@ -24,8 +26,23 @@ public class FileListModel extends AbstractTableModel {
     private static final Class<?>[] COLUMN_CLASSES = {Icon.class, String.class, Long.class, Date.class, String.class};
 
     private final List<FileEntry> entries = new ArrayList<>();
+    /**
+     * -- GETTER --
+     *  Get the current directory.
+     */
+    @Getter
     private File currentDirectory;
+    /**
+     * -- GETTER --
+     *  Get the current sort column.
+     */
+    @Getter
     private int sortColumn = COL_NAME;
+    /**
+     * -- GETTER --
+     *  Check if sorting is ascending.
+     */
+    @Getter
     private boolean sortAscending = true;
 
     @Override
@@ -134,13 +151,6 @@ public class FileListModel extends AbstractTableModel {
     }
 
     /**
-     * Get the current directory.
-     */
-    public File getCurrentDirectory() {
-        return currentDirectory;
-    }
-
-    /**
      * Set the current directory.
      */
     public void setCurrentDirectory(File directory) {
@@ -159,20 +169,6 @@ public class FileListModel extends AbstractTableModel {
         }
         sortEntries();
         fireTableDataChanged();
-    }
-
-    /**
-     * Get the current sort column.
-     */
-    public int getSortColumn() {
-        return sortColumn;
-    }
-
-    /**
-     * Check if sorting is ascending.
-     */
-    public boolean isSortAscending() {
-        return sortAscending;
     }
 
     /**
@@ -225,6 +221,7 @@ public class FileListModel extends AbstractTableModel {
     /**
      * File entry wrapper with cached properties.
      */
+    @Getter
     public static class FileEntry {
         private final File file;
         private final String name;
@@ -275,34 +272,6 @@ public class FileListModel extends AbstractTableModel {
                 }
             }
             return "File";
-        }
-
-        public File getFile() {
-            return file;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public boolean isDirectory() {
-            return directory;
-        }
-
-        public long getSize() {
-            return size;
-        }
-
-        public Date getLastModified() {
-            return lastModified;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public Icon getIcon() {
-            return icon;
         }
 
         /**

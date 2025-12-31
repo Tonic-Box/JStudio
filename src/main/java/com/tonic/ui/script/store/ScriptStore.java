@@ -54,7 +54,7 @@ public class ScriptStore {
      * Loads a script from a file.
      */
     public static Script loadScript(File file) throws IOException {
-        String json = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+        String json = Files.readString(file.toPath());
 
         Script script = new Script();
         script.setName(extractJsonString(json, "name", file.getName()));
@@ -72,7 +72,7 @@ public class ScriptStore {
      * Loads a script from plain text (for .js files).
      */
     public static Script loadPlainScript(File file) throws IOException {
-        String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+        String content = Files.readString(file.toPath());
 
         Script script = new Script();
         script.setName(Script.parseNameFromContent(content));

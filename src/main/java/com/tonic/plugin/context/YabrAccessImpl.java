@@ -1,6 +1,11 @@
 package com.tonic.plugin.context;
 
+import com.tonic.analysis.callgraph.CallGraph;
+import com.tonic.analysis.dataflow.DataFlowGraph;
+import com.tonic.analysis.ssa.SSA;
+import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.ClassFile;
+import com.tonic.parser.MethodEntry;
 import com.tonic.plugin.api.YabrAccess;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
@@ -51,14 +56,33 @@ public class YabrAccessImpl implements YabrAccess {
     public Object buildCallGraph() {
         com.tonic.parser.ClassPool pool = projectModel.getClassPool();
         if (pool == null) return null;
-        return null;
+        return CallGraph.build(pool);
     }
 
     @Override
     public Object buildDataFlowGraph(String className, String methodName, String descriptor) {
-        Optional<Object> irOpt = liftToIR(className, methodName, descriptor);
-        if (!irOpt.isPresent()) return null;
-        return null;
+        ClassEntryModel classEntry = projectModel.findClassByName(className);
+        if (classEntry == null) return null;
+
+        MethodEntryModel methodModel = classEntry.getMethod(methodName, descriptor);
+        if (methodModel == null) return null;
+
+        MethodEntry method = methodModel.getMethodEntry();
+        if (method == null || method.getCodeAttribute() == null) return null;
+
+        try {
+            SSA ssa = new com.tonic.analysis.ssa.SSA(
+                classEntry.getClassFile().getConstPool());
+            IRMethod irMethod = ssa.lift(method);
+            if (irMethod == null || irMethod.getEntryBlock() == null) return null;
+
+            DataFlowGraph dfg =
+                new DataFlowGraph(irMethod);
+            dfg.build();
+            return dfg;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override

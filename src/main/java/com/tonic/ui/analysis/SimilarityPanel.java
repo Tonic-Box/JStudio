@@ -101,9 +101,7 @@ public class SimilarityPanel extends ThemedJPanel {
         thresholdSlider = new JSlider(50, 100, 80);
         thresholdSlider.setBackground(JStudioTheme.getBgSecondary());
         thresholdSlider.setPreferredSize(new Dimension(100, 20));
-        thresholdSlider.addChangeListener(e -> {
-            thresholdLabel.setText(thresholdSlider.getValue() + "%");
-        });
+        thresholdSlider.addChangeListener(e -> thresholdLabel.setText(thresholdSlider.getValue() + "%"));
         panel.add(thresholdSlider);
         thresholdLabel = createLabel("80%");
         panel.add(thresholdLabel);

@@ -1,10 +1,13 @@
 package com.tonic.ui.model;
 
+import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.simulation.metrics.ComplexityMetrics;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.util.AccessFlags;
 import com.tonic.ui.util.DescriptorParser;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -29,7 +32,9 @@ public class MethodEntryModel {
     private AnalysisState analysisState = AnalysisState.NOT_ANALYZED;
     private IRMethod cachedIR;
     private long irCacheTimestamp;
-    private String irStringCache;  // Cached formatted IR string
+    private String irStringCache;
+    @Getter(AccessLevel.NONE)
+    private ComplexityMetrics complexityMetrics;
 
     // Display data
     private String displaySignature;
@@ -118,12 +123,14 @@ public class MethodEntryModel {
     public void setCachedIR(IRMethod cachedIR) {
         this.cachedIR = cachedIR;
         this.irCacheTimestamp = System.currentTimeMillis();
+        this.complexityMetrics = null;
     }
 
     public void invalidateIRCache() {
         this.cachedIR = null;
         this.irCacheTimestamp = 0;
         this.irStringCache = null;
+        this.complexityMetrics = null;
         this.analysisState = AnalysisState.NOT_ANALYZED;
     }
 
@@ -133,6 +140,32 @@ public class MethodEntryModel {
 
     public void setIrCache(String irString) {
         this.irStringCache = irString;
+    }
+
+    public ComplexityMetrics getComplexityMetrics() {
+        if (complexityMetrics == null && cachedIR != null) {
+            complexityMetrics = new ComplexityMetrics(cachedIR);
+        }
+        return complexityMetrics;
+    }
+
+    public ComplexityMetrics computeComplexityMetrics() {
+        if (complexityMetrics != null) {
+            return complexityMetrics;
+        }
+        if (cachedIR == null && methodEntry.getCodeAttribute() != null) {
+            try {
+                SSA ssa = new SSA(owner.getClassFile().getConstPool());
+                cachedIR = ssa.lift(methodEntry);
+                irCacheTimestamp = System.currentTimeMillis();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        if (cachedIR != null) {
+            complexityMetrics = new ComplexityMetrics(cachedIR);
+        }
+        return complexityMetrics;
     }
 
     @Override

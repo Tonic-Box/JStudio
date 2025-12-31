@@ -1,5 +1,8 @@
 package com.tonic.plugin.result;
 
+import lombok.Getter;
+
+@Getter
 public enum Severity {
 
     INFO("Info", 0),
@@ -16,14 +19,6 @@ public enum Severity {
         this.level = level;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
     public boolean isHigherThan(Severity other) {
         return this.level > other.level;
     }
@@ -36,8 +31,6 @@ public enum Severity {
         if (value == null) return INFO;
         String upper = value.toUpperCase();
         switch (upper) {
-            case "INFO":
-                return INFO;
             case "LOW":
                 return LOW;
             case "MEDIUM":

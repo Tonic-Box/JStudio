@@ -64,11 +64,10 @@ public class ExecutionTrace {
     }
 
     public String getSummary() {
-        String sb = "Trace: " + getEntrySignature() + "\n" +
+        return "Trace: " + getEntrySignature() + "\n" +
                 "Duration: " + getDurationMs() + "ms\n" +
                 "Total calls: " + getTotalCallCount() + "\n" +
                 "Max depth: " + getMaxDepth();
-        return sb;
     }
 
     public String toTreeString() {

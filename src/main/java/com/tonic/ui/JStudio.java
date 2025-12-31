@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 /**
  * JStudio - Java Reverse Engineering Suite
- *
+ * <p>
  * A professional reverse engineering and analysis tool for Java bytecode,
  * featuring decompilation, SSA IR visualization, call graph analysis,
  * and bytecode transformation capabilities.
@@ -29,30 +29,27 @@ public class JStudio {
         System.setProperty("awt.useSystemAAFontSettings", "on");
         System.setProperty("swing.aatext", "true");
 
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    FlatDarkLaf.setup();
+        EventQueue.invokeLater(() -> {
+            try {
+                FlatDarkLaf.setup();
 
-                    String savedTheme = Settings.getInstance().getTheme();
-                    ThemeManager.getInstance().setTheme(savedTheme);
+                String savedTheme = Settings.getInstance().getTheme();
+                ThemeManager.getInstance().setTheme(savedTheme);
 
-                    MainFrame frame = new MainFrame();
+                MainFrame frame = new MainFrame();
 
-                    KeyboardShortcuts.register(frame);
+                KeyboardShortcuts.register(frame);
 
-                    frame.setVisible(true);
+                frame.setVisible(true);
 
-                    if (args.length > 0) {
-                        frame.openFile(args[0]);
-                    }
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.err.println("Failed to initialize JStudio: " + e.getMessage());
-                    System.exit(1);
+                if (args.length > 0) {
+                    frame.openFile(args[0]);
                 }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Failed to initialize JStudio: " + e.getMessage());
+                System.exit(1);
             }
         });
     }

@@ -2,10 +2,12 @@ package com.tonic.ui.script.pipeline;
 
 import com.tonic.ui.script.engine.ScriptFunction;
 import com.tonic.ui.script.engine.ScriptValue;
+import lombok.Getter;
 
 /**
  * Represents a single stage in a script pipeline.
  */
+@Getter
 public class PipelineStage {
 
     private final String name;
@@ -20,40 +22,16 @@ public class PipelineStage {
         this.action = action;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public ScriptFunction getAction() {
-        return action;
-    }
-
-    public StageStatus getStatus() {
-        return status;
-    }
-
     public void setStatus(StageStatus status) {
         this.status = status;
-    }
-
-    public ScriptValue getResult() {
-        return result;
     }
 
     public void setResult(ScriptValue result) {
         this.result = result;
     }
 
-    public String getError() {
-        return error;
-    }
-
     public void setError(String error) {
         this.error = error;
-    }
-
-    public long getExecutionTimeMs() {
-        return executionTimeMs;
     }
 
     public void setExecutionTimeMs(long executionTimeMs) {

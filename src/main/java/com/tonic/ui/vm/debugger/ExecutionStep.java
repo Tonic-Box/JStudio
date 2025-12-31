@@ -1,8 +1,11 @@
 package com.tonic.ui.vm.debugger;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class ExecutionStep {
 
     private final String className;
@@ -50,47 +53,4 @@ public class ExecutionStep {
         this.note = note;
     }
 
-    public String getClassName() {
-        return className;
-    }
-
-    public String getMethodName() {
-        return methodName;
-    }
-
-    public String getDescriptor() {
-        return descriptor;
-    }
-
-    public int getPc() {
-        return pc;
-    }
-
-    public int getLineNumber() {
-        return lineNumber;
-    }
-
-    public String getInstruction() {
-        return instruction;
-    }
-
-    public List<String> getStackBefore() {
-        return stackBefore;
-    }
-
-    public List<String> getStackAfter() {
-        return stackAfter;
-    }
-
-    public List<String> getLocals() {
-        return locals;
-    }
-
-    public int getCallDepth() {
-        return callDepth;
-    }
-
-    public String getNote() {
-        return note;
-    }
 }

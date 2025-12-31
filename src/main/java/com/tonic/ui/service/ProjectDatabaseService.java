@@ -7,6 +7,7 @@ import com.tonic.ui.model.Comment;
 import com.tonic.ui.model.ProjectDatabase;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.util.JsonSerializer;
+import lombok.Getter;
 
 import javax.swing.Timer;
 import java.io.File;
@@ -21,7 +22,9 @@ public class ProjectDatabaseService {
     private static final ProjectDatabaseService INSTANCE = new ProjectDatabaseService();
 
     private ProjectDatabase currentDatabase;
+    @Getter
     private File projectFile;
+    @Getter
     private boolean dirty;
     private Timer autoSaveTimer;
     private final List<DatabaseChangeListener> listeners = new ArrayList<>();
@@ -78,10 +81,6 @@ public class ProjectDatabaseService {
         notifyListeners();
     }
 
-    public boolean isDirty() {
-        return dirty;
-    }
-
     public void markDirty() {
         if (!dirty) {
             dirty = true;
@@ -95,10 +94,6 @@ public class ProjectDatabaseService {
 
     public ProjectDatabase getDatabase() {
         return currentDatabase;
-    }
-
-    public File getProjectFile() {
-        return projectFile;
     }
 
     public void addComment(Comment comment) {

@@ -1,5 +1,7 @@
 package com.tonic.ui.query.planner;
 
+import lombok.Getter;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,10 +13,14 @@ import java.util.Map;
  */
 public class ResultRow {
 
+    @Getter
     private final String primaryLabel;
+    @Getter
     private final ClickTarget primaryTarget;
     private final Map<String, Object> columns;
+    @Getter
     private final List<Evidence> evidence;
+    @Getter
     private final List<ResultRow> children;
     private final boolean isChild;
 
@@ -34,28 +40,12 @@ public class ResultRow {
         this.isChild = isChild;
     }
 
-    public String getPrimaryLabel() {
-        return primaryLabel;
-    }
-
-    public ClickTarget getPrimaryTarget() {
-        return primaryTarget;
-    }
-
     public Map<String, Object> getColumns() {
         return Collections.unmodifiableMap(columns);
     }
 
     public Object getColumn(String name) {
         return columns.get(name);
-    }
-
-    public List<Evidence> getEvidence() {
-        return evidence;
-    }
-
-    public List<ResultRow> getChildren() {
-        return children;
     }
 
     public boolean hasChildren() {

@@ -341,13 +341,9 @@ public class MainFrame extends JFrame {
             @Override
             protected ProjectModel doInBackground() throws Exception {
                 if (file.isDirectory()) {
-                    return ProjectService.getInstance().loadDirectory(file, (current, total, msg) -> {
-                        SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg));
-                    });
+                    return ProjectService.getInstance().loadDirectory(file, (current, total, msg) -> SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg)));
                 } else if (file.getName().endsWith(".jar")) {
-                    return ProjectService.getInstance().loadJar(file, (current, total, msg) -> {
-                        SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg));
-                    });
+                    return ProjectService.getInstance().loadJar(file, (current, total, msg) -> SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg)));
                 } else if (file.getName().endsWith(".class")) {
                     return ProjectService.getInstance().loadClassFile(file);
                 } else {
@@ -467,13 +463,9 @@ public class MainFrame extends JFrame {
                 int totalAdded = 0;
                 for (File file : files) {
                     if (file.isDirectory()) {
-                        totalAdded += ProjectService.getInstance().appendDirectory(file, (current, total, msg) -> {
-                            SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg));
-                        });
+                        totalAdded += ProjectService.getInstance().appendDirectory(file, (current, total, msg) -> SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg)));
                     } else if (file.getName().endsWith(".jar")) {
-                        totalAdded += ProjectService.getInstance().appendJar(file, (current, total, msg) -> {
-                            SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg));
-                        });
+                        totalAdded += ProjectService.getInstance().appendJar(file, (current, total, msg) -> SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg)));
                     } else if (file.getName().endsWith(".class")) {
                         totalAdded += ProjectService.getInstance().appendClassFile(file);
                     }

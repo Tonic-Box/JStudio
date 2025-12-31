@@ -22,7 +22,6 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 public class QueryDialog extends JDialog {
@@ -228,9 +227,7 @@ public class QueryDialog extends JDialog {
         inputTabbedPane.addTab("DSL", dslPanel);
 
         builderPanel = new QueryBuilderPanel();
-        builderPanel.setQueryChangeListener(query -> {
-            queryInput.setText(query);
-        });
+        builderPanel.setQueryChangeListener(query -> queryInput.setText(query));
         inputTabbedPane.addTab("Builder", builderPanel);
 
         inputTabbedPane.addChangeListener(e -> {
@@ -455,52 +452,50 @@ public class QueryDialog extends JDialog {
             @Override
             public void onComplete(int matchCount) {
             }
-        }).thenAccept(result -> {
-            SwingUtilities.invokeLater(() -> {
-                running = false;
-                runButton.setEnabled(true);
-                stopButton.setEnabled(false);
-                progressBar.setVisible(false);
+        }).thenAccept(result -> SwingUtilities.invokeLater(() -> {
+            running = false;
+            runButton.setEnabled(true);
+            stopButton.setEnabled(false);
+            progressBar.setVisible(false);
 
-                if (result.hasError()) {
-                    statusLabel.setText("Error: " + result.error());
-                    statusLabel.setForeground(JStudioTheme.getError());
-                } else {
-                    tableModel.setResults(result.results());
-                    int methodCount = result.resultCount();
-                    int siteCount = result.results().stream()
-                        .mapToInt(r -> r.hasChildren() ? r.getChildren().size() : 0)
-                        .sum();
-                    String statusText = siteCount > 0
-                        ? "Found " + methodCount + " methods with " + siteCount + " call sites in " +
-                          result.executionTimeMs() + "ms (click [+] to expand, click status for details)"
-                        : "Found " + methodCount + " matches in " + result.executionTimeMs() + "ms (click status for details)";
-                    statusLabel.setText(statusText);
-                    statusLabel.setForeground(JStudioTheme.getSuccess());
+            if (result.hasError()) {
+                statusLabel.setText("Error: " + result.error());
+                statusLabel.setForeground(JStudioTheme.getError());
+            } else {
+                tableModel.setResults(result.results());
+                int methodCount = result.resultCount();
+                int siteCount = result.results().stream()
+                    .mapToInt(r -> r.hasChildren() ? r.getChildren().size() : 0)
+                    .sum();
+                String statusText = siteCount > 0
+                    ? "Found " + methodCount + " methods with " + siteCount + " call sites in " +
+                      result.executionTimeMs() + "ms (click [+] to expand, click status for details)"
+                    : "Found " + methodCount + " matches in " + result.executionTimeMs() + "ms (click status for details)";
+                statusLabel.setText(statusText);
+                statusLabel.setForeground(JStudioTheme.getSuccess());
 
-                    String diag = XrefMethodFilter.getLastDiagnostics();
-                    if (!diag.isEmpty()) {
-                        statusLabel.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
-                        statusLabel.setToolTipText("Click to see filter diagnostics");
-                        for (java.awt.event.MouseListener ml : statusLabel.getMouseListeners()) {
-                            statusLabel.removeMouseListener(ml);
-                        }
-                        statusLabel.addMouseListener(new java.awt.event.MouseAdapter() {
-                            @Override
-                            public void mouseClicked(java.awt.event.MouseEvent e) {
-                                JTextArea textArea = new JTextArea(diag);
-                                textArea.setEditable(false);
-                                textArea.setFont(JStudioTheme.getCodeFont(12));
-                                JScrollPane scroll = new JScrollPane(textArea);
-                                scroll.setPreferredSize(new Dimension(600, 400));
-                                JOptionPane.showMessageDialog(QueryDialog.this, scroll,
-                                    "Query Filter Diagnostics", JOptionPane.INFORMATION_MESSAGE);
-                            }
-                        });
+                String diag = XrefMethodFilter.getLastDiagnostics();
+                if (!diag.isEmpty()) {
+                    statusLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    statusLabel.setToolTipText("Click to see filter diagnostics");
+                    for (java.awt.event.MouseListener ml : statusLabel.getMouseListeners()) {
+                        statusLabel.removeMouseListener(ml);
                     }
+                    statusLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+                        @Override
+                        public void mouseClicked(java.awt.event.MouseEvent e) {
+                            JTextArea textArea = new JTextArea(diag);
+                            textArea.setEditable(false);
+                            textArea.setFont(JStudioTheme.getCodeFont(12));
+                            JScrollPane scroll = new JScrollPane(textArea);
+                            scroll.setPreferredSize(new Dimension(600, 400));
+                            JOptionPane.showMessageDialog(QueryDialog.this, scroll,
+                                "Query Filter Diagnostics", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
                 }
-            });
-        }).exceptionally(ex -> {
+            }
+        })).exceptionally(ex -> {
             SwingUtilities.invokeLater(() -> {
                 running = false;
                 runButton.setEnabled(true);

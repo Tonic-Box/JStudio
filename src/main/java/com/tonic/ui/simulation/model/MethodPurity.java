@@ -2,7 +2,6 @@ package com.tonic.ui.simulation.model;
 
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,16 +33,12 @@ public class MethodPurity extends SimulationFinding {
         this.arrayWriteCount = arrayWriteCount;
         this.methodCallCount = methodCallCount;
         this.impureReasons = impureReasons != null
-                ? Collections.unmodifiableList(new ArrayList<>(impureReasons))
+                ? List.copyOf(impureReasons)
                 : Collections.emptyList();
     }
 
     private static Severity getSeverityForPurity(PurityLevel level) {
         switch (level) {
-            case PURE:
-                return Severity.INFO;
-            case READS_FIELDS:
-                return Severity.INFO;
             case WRITES_FIELDS:
             case HAS_SIDE_EFFECTS:
                 return Severity.LOW;

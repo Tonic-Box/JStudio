@@ -2,6 +2,7 @@ package com.tonic.ui.dialog.filechooser;
 
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.Settings;
+import lombok.Getter;
 
 import javax.swing.JDialog;
 import javax.swing.SwingUtilities;
@@ -18,10 +19,20 @@ import java.util.List;
  */
 public class FileChooserDialog extends JDialog {
 
+    /**
+     * -- GETTER --
+     *  Get the panel for configuration.
+     */
+    @Getter
     private final FileChooserPanel panel;
     private FileChooserResult result = FileChooserResult.cancelled();
 
+    /**
+     * -- GETTER --
+     *  Get the last used directory.
+     */
     // Remember last used directory
+    @Getter
     private static File lastDirectory = new File(System.getProperty("user.home"));
 
     /**
@@ -69,13 +80,6 @@ public class FileChooserDialog extends JDialog {
     public FileChooserResult showDialog() {
         setVisible(true);
         return result;
-    }
-
-    /**
-     * Get the panel for configuration.
-     */
-    public FileChooserPanel getPanel() {
-        return panel;
     }
 
     // ======================== Static Factory Methods ========================
@@ -149,13 +153,6 @@ public class FileChooserDialog extends JDialog {
                 .title(title)
                 .build(parent)
                 .showDialog();
-    }
-
-    /**
-     * Get the last used directory.
-     */
-    public static File getLastDirectory() {
-        return lastDirectory;
     }
 
     /**

@@ -9,6 +9,7 @@ import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
+import lombok.Getter;
 
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
@@ -19,12 +20,27 @@ import java.awt.CardLayout;
  */
 public class EditorTab extends JPanel {
 
+    /**
+     * -- GETTER --
+     *  Get the class entry for this tab.
+     */
+    @Getter
     private final ClassEntryModel classEntry;
     private final CardLayout cardLayout;
     private final JPanel cardPanel;
+    /**
+     * -- GETTER --
+     *  Get the breadcrumb bar for this tab.
+     */
+    @Getter
     private final BreadcrumbBar breadcrumbBar;
 
     private final SourceCodeView sourceView;
+    /**
+     * -- GETTER --
+     *  Get the BytecodeView for direct access.
+     */
+    @Getter
     private final BytecodeView bytecodeView;
     private final IRView irView;
     private final HexView hexView;
@@ -64,20 +80,6 @@ public class EditorTab extends JPanel {
 
         // Show source view by default
         setViewMode(ViewMode.SOURCE);
-    }
-
-    /**
-     * Get the breadcrumb bar for this tab.
-     */
-    public BreadcrumbBar getBreadcrumbBar() {
-        return breadcrumbBar;
-    }
-
-    /**
-     * Get the class entry for this tab.
-     */
-    public ClassEntryModel getClassEntry() {
-        return classEntry;
     }
 
     /**
@@ -360,10 +362,4 @@ public class EditorTab extends JPanel {
         }
     }
 
-    /**
-     * Get the BytecodeView for direct access.
-     */
-    public BytecodeView getBytecodeView() {
-        return bytecodeView;
-    }
 }

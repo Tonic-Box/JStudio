@@ -15,7 +15,6 @@ public class ItemDetailRegistry {
         registerTypeNames();
     }
 
-    @SuppressWarnings("unchecked")
     private static void registerFormatters() {
         register(Utf8Item.class, (item, sb, ctx) -> {
             String val = item.getValue();
@@ -60,20 +59,14 @@ public class ItemDetailRegistry {
             sb.append("Value:      \"").append(ctx.getUtf8(utf8Idx)).append("\"\n");
         });
 
-        register(FieldRefItem.class, (item, sb, ctx) -> {
-            appendMemberRefDetails(sb, "Field", item.getValue().getClassIndex(),
-                    item.getValue().getNameAndTypeIndex(), ctx);
-        });
+        register(FieldRefItem.class, (item, sb, ctx) -> appendMemberRefDetails(sb, "Field", item.getValue().getClassIndex(),
+                item.getValue().getNameAndTypeIndex(), ctx));
 
-        register(MethodRefItem.class, (item, sb, ctx) -> {
-            appendMemberRefDetails(sb, "Method", item.getValue().getClassIndex(),
-                    item.getValue().getNameAndTypeIndex(), ctx);
-        });
+        register(MethodRefItem.class, (item, sb, ctx) -> appendMemberRefDetails(sb, "Method", item.getValue().getClassIndex(),
+                item.getValue().getNameAndTypeIndex(), ctx));
 
-        register(InterfaceRefItem.class, (item, sb, ctx) -> {
-            appendMemberRefDetails(sb, "Interface Method", item.getValue().getClassIndex(),
-                    item.getValue().getNameAndTypeIndex(), ctx);
-        });
+        register(InterfaceRefItem.class, (item, sb, ctx) -> appendMemberRefDetails(sb, "Interface Method", item.getValue().getClassIndex(),
+                item.getValue().getNameAndTypeIndex(), ctx));
 
         register(NameAndTypeRefItem.class, (item, sb, ctx) -> {
             int nameIdx = item.getValue().getNameIndex();
@@ -146,7 +139,6 @@ public class ItemDetailRegistry {
         typeNames.put(ModuleItem.class, "CONSTANT_Module");
     }
 
-    @SuppressWarnings("unchecked")
     private static <T extends Item<?>> void register(Class<T> type, ItemFormatter<T> formatter) {
         formatters.put(type, formatter);
     }

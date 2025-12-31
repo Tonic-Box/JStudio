@@ -105,11 +105,7 @@ public class ParamSpec {
         }
         String base = desc.substring(dims);
         ParamSpec temp = new ParamSpec(null, base);
-        StringBuilder sb = new StringBuilder(temp.getSimpleTypeName());
-        for (int i = 0; i < dims; i++) {
-            sb.append("[]");
-        }
-        return sb.toString();
+        return temp.getSimpleTypeName() + "[]".repeat(dims);
     }
 
     public String getSummary() {

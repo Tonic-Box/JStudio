@@ -53,8 +53,6 @@ public class ObjectFactory {
         }
 
         switch (resolved.getMode()) {
-            case NULL:
-                return Collections.singletonList(null);
 
             case CONSTRUCTOR:
                 return generateConstructorValues(resolved, count);
@@ -389,7 +387,6 @@ public class ObjectFactory {
         }
 
         if (totalCombos <= maxCombos) {
-            int[] indices = new int[valueLists.size()];
             for (int i = 0; i < totalCombos; i++) {
                 Object[] combo = new Object[valueLists.size()];
                 int idx = i;

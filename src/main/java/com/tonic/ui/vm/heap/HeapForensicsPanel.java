@@ -517,9 +517,7 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
 
     @Override
     public void onAllocationRecorded(AllocationEvent event) {
-        SwingUtilities.invokeLater(() -> {
-            classSummaryPanel.incrementClass(event.getClassName());
-        });
+        SwingUtilities.invokeLater(() -> classSummaryPanel.incrementClass(event.getClassName()));
     }
 
     @Override

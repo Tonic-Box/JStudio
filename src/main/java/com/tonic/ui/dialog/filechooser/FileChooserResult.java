@@ -1,22 +1,32 @@
 package com.tonic.ui.dialog.filechooser;
 
+import lombok.Getter;
+
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
  * Result from a file chooser dialog operation.
  */
+@Getter
 public class FileChooserResult {
 
+    /**
+     * -- GETTER --
+     *  Whether the user approved the selection (clicked Open/Save).
+     */
     private final boolean approved;
+    /**
+     * -- GETTER --
+     *  Get all selected files.
+     */
     private final List<File> selectedFiles;
 
     private FileChooserResult(boolean approved, List<File> selectedFiles) {
         this.approved = approved;
         this.selectedFiles = selectedFiles != null ?
-                Collections.unmodifiableList(new ArrayList<>(selectedFiles)) :
+                List.copyOf(selectedFiles) :
                 Collections.emptyList();
     }
 
@@ -42,13 +52,6 @@ public class FileChooserResult {
     }
 
     /**
-     * Whether the user approved the selection (clicked Open/Save).
-     */
-    public boolean isApproved() {
-        return approved;
-    }
-
-    /**
      * Whether the user cancelled the dialog.
      */
     public boolean isCancelled() {
@@ -60,13 +63,6 @@ public class FileChooserResult {
      */
     public File getSelectedFile() {
         return selectedFiles.isEmpty() ? null : selectedFiles.get(0);
-    }
-
-    /**
-     * Get all selected files.
-     */
-    public List<File> getSelectedFiles() {
-        return selectedFiles;
     }
 
     /**

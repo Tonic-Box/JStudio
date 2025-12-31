@@ -44,9 +44,7 @@ public class DescriptorParser {
             }
         }
 
-        for (int d = 0; d < arrayDim; d++) {
-            result.append("[]");
-        }
+        result.append("[]".repeat(Math.max(0, arrayDim)));
 
         return result.toString();
     }
@@ -119,9 +117,7 @@ public class DescriptorParser {
                             i++;
                         }
                         result.append(elem);
-                        for (int d = 0; d < arrayDim; d++) {
-                            result.append("[]");
-                        }
+                        result.append("[]".repeat(Math.max(0, arrayDim)));
                     }
                     break;
                 case 'L':

@@ -1,5 +1,8 @@
 package com.tonic.cli.output;
 
+import lombok.Getter;
+
+@Getter
 public enum OutputFormat {
     TEXT("txt"),
     JSON("json"),
@@ -11,7 +14,4 @@ public enum OutputFormat {
         this.extension = extension;
     }
 
-    public String getExtension() {
-        return extension;
-    }
 }

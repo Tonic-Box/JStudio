@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class FuzzStrategy {
 
+    @Getter
     public enum Type {
         DEFAULT("Default for Type"),
         INT_RANGE("Integer Range"),
@@ -24,9 +25,6 @@ public class FuzzStrategy {
             this.displayName = displayName;
         }
 
-        public String getDisplayName() {
-            return displayName;
-        }
     }
 
     private Type type = Type.DEFAULT;

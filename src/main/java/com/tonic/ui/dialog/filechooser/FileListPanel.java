@@ -13,8 +13,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
@@ -168,13 +166,10 @@ public class FileListPanel extends ThemedJPanel {
         });
 
         // Selection listener
-        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting() && listener != null) {
-                    List<File> selected = getSelectedFiles();
-                    listener.onSelectionChanged(selected);
-                }
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && listener != null) {
+                List<File> selected = getSelectedFiles();
+                listener.onSelectionChanged(selected);
             }
         });
     }

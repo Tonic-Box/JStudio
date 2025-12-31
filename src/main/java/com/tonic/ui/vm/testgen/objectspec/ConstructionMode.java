@@ -1,5 +1,8 @@
 package com.tonic.ui.vm.testgen.objectspec;
 
+import lombok.Getter;
+
+@Getter
 public enum ConstructionMode {
     CONSTRUCTOR("Use Constructor"),
     FACTORY_METHOD("Use Factory Method"),
@@ -12,10 +15,6 @@ public enum ConstructionMode {
 
     ConstructionMode(String displayName) {
         this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
     }
 
     @Override

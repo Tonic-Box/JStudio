@@ -3,7 +3,9 @@ package com.tonic.ui.navigator;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
+import com.tonic.ui.simulation.metrics.ComplexityMetrics;
 import com.tonic.ui.theme.Icons;
+import lombok.Getter;
 
 import javax.swing.Icon;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -79,6 +81,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
      * Node representing a package.
      */
     public static class PackageNode extends NavigatorNode {
+        @Getter
         private final String packageName;
         private String displayName;
 
@@ -88,10 +91,6 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
             // Show last segment of package name
             int lastDot = packageName.lastIndexOf('.');
             this.displayName = lastDot >= 0 ? packageName.substring(lastDot + 1) : packageName;
-        }
-
-        public String getPackageName() {
-            return packageName;
         }
 
         public void setDisplayName(String displayName) {
@@ -117,16 +116,13 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
     /**
      * Node representing a class.
      */
+    @Getter
     public static class ClassNode extends NavigatorNode {
         private final ClassEntryModel classEntry;
 
         public ClassNode(ClassEntryModel classEntry) {
             super(classEntry);
             this.classEntry = classEntry;
-        }
-
-        public ClassEntryModel getClassEntry() {
-            return classEntry;
         }
 
         @Override
@@ -148,16 +144,13 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
     /**
      * Node representing a method.
      */
+    @Getter
     public static class MethodNode extends NavigatorNode {
         private final MethodEntryModel methodEntry;
 
         public MethodNode(MethodEntryModel methodEntry) {
             super(methodEntry);
             this.methodEntry = methodEntry;
-        }
-
-        public MethodEntryModel getMethodEntry() {
-            return methodEntry;
         }
 
         @Override
@@ -172,23 +165,27 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
 
         @Override
         public String getTooltip() {
-            return sanitizeDisplayText(methodEntry.getName() + methodEntry.getDescriptor());
+            StringBuilder tooltip = new StringBuilder();
+            tooltip.append(sanitizeDisplayText(methodEntry.getName() + methodEntry.getDescriptor()));
+            ComplexityMetrics metrics = methodEntry.getComplexityMetrics();
+            if (metrics != null) {
+                tooltip.append("<br><i>").append(metrics.getSummary()).append("</i>");
+                return "<html>" + tooltip + "</html>";
+            }
+            return tooltip.toString();
         }
     }
 
     /**
      * Node representing a field.
      */
+    @Getter
     public static class FieldNode extends NavigatorNode {
         private final FieldEntryModel fieldEntry;
 
         public FieldNode(FieldEntryModel fieldEntry) {
             super(fieldEntry);
             this.fieldEntry = fieldEntry;
-        }
-
-        public FieldEntryModel getFieldEntry() {
-            return fieldEntry;
         }
 
         @Override

@@ -7,6 +7,7 @@ import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.analysis.ssa.ir.IRInstruction;
 import com.tonic.analysis.ssa.ir.PhiInstruction;
 import com.tonic.parser.MethodEntry;
+import lombok.Getter;
 
 /**
  * Formats SSA IR for display in the UI.
@@ -14,6 +15,11 @@ import com.tonic.parser.MethodEntry;
  */
 public class IRFormatter {
 
+    /**
+     * -- GETTER --
+     *  Get the method being formatted.
+     */
+    @Getter
     private final MethodEntry method;
     private final SSA ssa;
 
@@ -104,10 +110,4 @@ public class IRFormatter {
         return sb.toString();
     }
 
-    /**
-     * Get the method being formatted.
-     */
-    public MethodEntry getMethod() {
-        return method;
-    }
 }

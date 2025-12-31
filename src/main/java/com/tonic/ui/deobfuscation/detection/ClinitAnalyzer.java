@@ -5,6 +5,7 @@ import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
 import com.tonic.ui.deobfuscation.DeobfuscationService;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,8 +56,8 @@ public class ClinitAnalyzer {
             boolean hasInvokeStatic = false;
             boolean hasPutStatic = false;
 
-            for (int pc = 0; pc < bytecode.length; pc++) {
-                int opcode = Byte.toUnsignedInt(bytecode[pc]);
+            for (byte b : bytecode) {
+                int opcode = Byte.toUnsignedInt(b);
 
                 if (opcode == INVOKESTATIC) {
                     hasInvokeStatic = true;
@@ -106,10 +107,14 @@ public class ClinitAnalyzer {
     }
 
     public static class ClinitAnalysisResult {
+        @Getter
         private final ClassFile classFile;
         private boolean hasClinit;
+        @Getter
         private boolean likelyHasDecryptorCalls;
+        @Getter
         private final Map<String, String> decryptedFields;
+        @Getter
         private final List<String> decryptorCalls;
 
         public ClinitAnalysisResult(ClassFile classFile) {
@@ -120,10 +125,6 @@ public class ClinitAnalyzer {
             this.decryptorCalls = new ArrayList<>();
         }
 
-        public ClassFile getClassFile() {
-            return classFile;
-        }
-
         public boolean hasClinit() {
             return hasClinit;
         }
@@ -132,16 +133,8 @@ public class ClinitAnalyzer {
             this.hasClinit = hasClinit;
         }
 
-        public boolean isLikelyHasDecryptorCalls() {
-            return likelyHasDecryptorCalls;
-        }
-
         public void setLikelyHasDecryptorCalls(boolean value) {
             this.likelyHasDecryptorCalls = value;
-        }
-
-        public Map<String, String> getDecryptedFields() {
-            return decryptedFields;
         }
 
         public void addDecryptedField(String fieldName, String decryptorCall) {
@@ -149,10 +142,6 @@ public class ClinitAnalyzer {
             if (!decryptorCalls.contains(decryptorCall)) {
                 decryptorCalls.add(decryptorCall);
             }
-        }
-
-        public List<String> getDecryptorCalls() {
-            return decryptorCalls;
         }
 
         public int getDecryptedFieldCount() {
@@ -164,6 +153,7 @@ public class ClinitAnalyzer {
         }
     }
 
+    @Getter
     public static class FieldStringMapping {
         private final String className;
         private final String fieldName;
@@ -176,22 +166,6 @@ public class ClinitAnalyzer {
             this.fieldName = fieldName;
             this.descriptor = descriptor;
             this.value = value;
-        }
-
-        public String getClassName() {
-            return className;
-        }
-
-        public String getFieldName() {
-            return fieldName;
-        }
-
-        public String getDescriptor() {
-            return descriptor;
-        }
-
-        public String getValue() {
-            return value;
         }
 
         public String getFullFieldName() {

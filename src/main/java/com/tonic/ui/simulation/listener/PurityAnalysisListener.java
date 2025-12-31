@@ -8,6 +8,7 @@ import com.tonic.analysis.ssa.ir.GetFieldInstruction;
 import com.tonic.analysis.ssa.ir.InvokeInstruction;
 import com.tonic.analysis.ssa.ir.PutFieldInstruction;
 import com.tonic.ui.simulation.model.MethodPurity;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -16,10 +17,14 @@ import java.util.Set;
 
 public class PurityAnalysisListener extends AbstractListener {
 
+    @Getter
     private int fieldReadCount;
+    @Getter
     private int fieldWriteCount;
     private int staticFieldWriteCount;
+    @Getter
     private int arrayWriteCount;
+    @Getter
     private int methodCallCount;
     private int nativeCallCount;
     private final List<String> impureReasons = new ArrayList<>();
@@ -143,22 +148,6 @@ public class PurityAnalysisListener extends AbstractListener {
         }
 
         return MethodPurity.PurityLevel.PURE;
-    }
-
-    public int getFieldReadCount() {
-        return fieldReadCount;
-    }
-
-    public int getFieldWriteCount() {
-        return fieldWriteCount;
-    }
-
-    public int getArrayWriteCount() {
-        return arrayWriteCount;
-    }
-
-    public int getMethodCallCount() {
-        return methodCallCount;
     }
 
     public List<String> getImpureReasons() {

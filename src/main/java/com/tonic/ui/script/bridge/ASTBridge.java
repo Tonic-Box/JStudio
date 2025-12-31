@@ -95,21 +95,15 @@ public class ASTBridge {
         ));
 
         props.put("stringLiteral", ScriptValue.function(
-            ScriptFunction.native1("stringLiteral", arg -> {
-                return new ASTNodeWrapper(LiteralExpr.ofString(arg.asString())).toScriptValue();
-            })
+            ScriptFunction.native1("stringLiteral", arg -> new ASTNodeWrapper(LiteralExpr.ofString(arg.asString())).toScriptValue())
         ));
 
         props.put("boolLiteral", ScriptValue.function(
-            ScriptFunction.native1("boolLiteral", arg -> {
-                return new ASTNodeWrapper(LiteralExpr.ofBoolean(arg.asBoolean())).toScriptValue();
-            })
+            ScriptFunction.native1("boolLiteral", arg -> new ASTNodeWrapper(LiteralExpr.ofBoolean(arg.asBoolean())).toScriptValue())
         ));
 
         props.put("nullLiteral", ScriptValue.function(
-            ScriptFunction.native0("nullLiteral", () -> {
-                return new ASTNodeWrapper(LiteralExpr.ofNull()).toScriptValue();
-            })
+            ScriptFunction.native0("nullLiteral", () -> new ASTNodeWrapper(LiteralExpr.ofNull()).toScriptValue())
         ));
 
         props.put("fieldAccess", ScriptValue.function(
@@ -149,9 +143,6 @@ public class ASTBridge {
                 return LiteralExpr.ofInt((int) d);
             }
             return LiteralExpr.ofDouble(d);
-        }
-        if (arg.isString()) {
-            return LiteralExpr.ofString(arg.asString());
         }
         return LiteralExpr.ofString(arg.asString());
     }

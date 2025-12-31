@@ -1,5 +1,7 @@
 package com.tonic.ui.query.planner.probe;
 
+import lombok.Getter;
+
 import java.util.*;
 
 /**
@@ -18,16 +20,13 @@ public class ProbeSet {
         COVERAGE_TRACKING
     }
 
+    @Getter
     private final List<ProbeSpec> probes;
     private final EnumSet<Capability> requiredCapabilities;
 
     private ProbeSet(List<ProbeSpec> probes) {
         this.probes = List.copyOf(probes);
         this.requiredCapabilities = computeCapabilities(probes);
-    }
-
-    public List<ProbeSpec> getProbes() {
-        return probes;
     }
 
     public Set<Capability> getRequiredCapabilities() {

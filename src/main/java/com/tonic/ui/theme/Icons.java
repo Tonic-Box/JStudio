@@ -77,7 +77,6 @@ public class Icons {
             case "package":
                 return new PackageIcon(size);
             case "analyze":
-                return new PlayIcon(size);
             case "play":
             case "run":
                 return new PlayIcon(size);

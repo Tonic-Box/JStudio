@@ -36,8 +36,6 @@ import java.util.List;
 
 public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListener {
 
-    private final MainFrame mainFrame;
-
     // UI Components
     private RSyntaxTextArea codeEditor;
     private RTextScrollPane editorScrollPane;
@@ -57,7 +55,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
 
     public ScriptEditorPanel(MainFrame mainFrame) {
         super(BackgroundStyle.TERTIARY, new BorderLayout());
-        this.mainFrame = mainFrame;
         this.currentScript = new Script("Untitled", Script.Mode.AST, "");
 
         // Create main content

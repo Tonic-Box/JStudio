@@ -1,5 +1,7 @@
 package com.tonic.plugin.api;
 
+import lombok.Getter;
+
 import java.util.List;
 
 public interface TransformerPlugin extends Plugin {
@@ -11,6 +13,7 @@ public interface TransformerPlugin extends Plugin {
         transform(TransformScope.all());
     }
 
+    @Getter
     final class TransformScope {
         private final List<String> targetClasses;
         private final List<String> targetMethods;
@@ -21,10 +24,6 @@ public interface TransformerPlugin extends Plugin {
             this.targetMethods = targetMethods;
             this.dryRun = dryRun;
         }
-
-        public List<String> getTargetClasses() { return targetClasses; }
-        public List<String> getTargetMethods() { return targetMethods; }
-        public boolean isDryRun() { return dryRun; }
 
         public static TransformScope all() {
             return new TransformScope(List.of(), List.of(), false);
@@ -47,6 +46,7 @@ public interface TransformerPlugin extends Plugin {
         }
     }
 
+    @Getter
     final class TransformResult {
         private final boolean success;
         private final int classesModified;
@@ -65,13 +65,6 @@ public interface TransformerPlugin extends Plugin {
             this.actions = actions;
         }
 
-        public boolean isSuccess() { return success; }
-        public int getClassesModified() { return classesModified; }
-        public int getMethodsModified() { return methodsModified; }
-        public long getDurationMs() { return durationMs; }
-        public String getSummary() { return summary; }
-        public List<TransformAction> getActions() { return actions; }
-
         public static TransformResult success(int classes, int methods, long durationMs,
                                               String summary, List<TransformAction> actions) {
             return new TransformResult(true, classes, methods, durationMs, summary, actions);
@@ -87,6 +80,7 @@ public interface TransformerPlugin extends Plugin {
         }
     }
 
+    @Getter
     final class TransformAction {
         private final ActionType type;
         private final String target;
@@ -97,10 +91,6 @@ public interface TransformerPlugin extends Plugin {
             this.target = target;
             this.description = description;
         }
-
-        public ActionType getType() { return type; }
-        public String getTarget() { return target; }
-        public String getDescription() { return description; }
 
         public enum ActionType {
             ADD_INSTRUCTION,

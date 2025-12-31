@@ -9,13 +9,7 @@ import com.tonic.ui.util.JdkClassFilter;
 
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Tree model for the class navigator, backed by a ProjectModel.
@@ -190,7 +184,7 @@ public class ClassTreeModel extends DefaultTreeModel {
             classes = filtered;
         }
 
-        Collections.sort(classes, (a, b) -> a.getClassName().compareTo(b.getClassName()));
+        classes.sort(Comparator.comparing(ClassEntryModel::getClassName));
 
         return classes;
     }
@@ -273,7 +267,7 @@ public class ClassTreeModel extends DefaultTreeModel {
                         parent.insert(child, i);
                         return;
                     }
-                } else if (newIsPackage && !existingIsPackage) {
+                } else if (newIsPackage) {
                     parent.insert(child, i);
                     return;
                 }

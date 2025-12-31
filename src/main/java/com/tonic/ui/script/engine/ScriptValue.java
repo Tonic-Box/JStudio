@@ -194,10 +194,7 @@ public class ScriptValue {
             List<?> arr = (List<?>) value;
             if ("length".equals(name)) return number(arr.size());
         }
-        if (type == Type.NATIVE && value != null) {
-            // Could use reflection here for native object property access
-            return NULL;
-        }
+        // Could use reflection here for native object property access
         return NULL;
     }
 

@@ -1,7 +1,10 @@
 package com.tonic.ui.core.util;
 
+import lombok.Getter;
+
 import java.util.Objects;
 
+@Getter
 public final class MemberReference {
 
     private final String ownerClass;
@@ -12,18 +15,6 @@ public final class MemberReference {
         this.ownerClass = ownerClass;
         this.memberName = memberName;
         this.descriptor = descriptor;
-    }
-
-    public String getOwnerClass() {
-        return ownerClass;
-    }
-
-    public String getMemberName() {
-        return memberName;
-    }
-
-    public String getDescriptor() {
-        return descriptor;
     }
 
     public static MemberReference parseMethodRef(String methodRef) {

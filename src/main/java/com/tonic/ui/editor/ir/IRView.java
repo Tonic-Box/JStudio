@@ -118,14 +118,6 @@ public class IRView extends JPanel implements ThemeChangeListener {
         StyleConstants.setFontSize(style, 12);
     }
 
-    private SimpleAttributeSet createStyle(Color color) {
-        SimpleAttributeSet style = new SimpleAttributeSet();
-        StyleConstants.setForeground(style, color);
-        StyleConstants.setFontFamily(style, JStudioTheme.getCodeFont(12).getFamily());
-        StyleConstants.setFontSize(style, 12);
-        return style;
-    }
-
     /**
      * Refresh/reload the IR view.
      */

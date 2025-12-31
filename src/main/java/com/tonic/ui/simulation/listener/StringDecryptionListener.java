@@ -7,6 +7,7 @@ import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.analysis.ssa.ir.IRInstruction;
 import com.tonic.analysis.ssa.ir.InvokeInstruction;
 import com.tonic.analysis.ssa.value.Value;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -147,6 +148,7 @@ public class StringDecryptionListener extends AbstractListener {
         return decryptionResults.size();
     }
 
+    @Getter
     public static class DecryptionResult {
         private final InvokeInstruction instruction;
         private final String decryptedValue;
@@ -159,22 +161,6 @@ public class StringDecryptionListener extends AbstractListener {
             this.decryptedValue = decryptedValue;
             this.encryptedInput = encryptedInput;
             this.methodUsed = methodUsed;
-        }
-
-        public InvokeInstruction getInstruction() {
-            return instruction;
-        }
-
-        public String getDecryptedValue() {
-            return decryptedValue;
-        }
-
-        public String getEncryptedInput() {
-            return encryptedInput;
-        }
-
-        public String getMethodUsed() {
-            return methodUsed;
         }
 
         public int getBlockId() {

@@ -95,15 +95,11 @@ public class IRBridge {
         ));
 
         props.put("stringConstant", ScriptValue.function(
-            ScriptFunction.native1("stringConstant", arg -> {
-                return ScriptValue.native_(new StringConstant(arg.asString()));
-            })
+            ScriptFunction.native1("stringConstant", arg -> ScriptValue.native_(new StringConstant(arg.asString())))
         ));
 
         props.put("nullConstant", ScriptValue.function(
-            ScriptFunction.native0("nullConstant", () -> {
-                return ScriptValue.native_(NullConstant.INSTANCE);
-            })
+            ScriptFunction.native0("nullConstant", () -> ScriptValue.native_(NullConstant.INSTANCE))
         ));
 
         return ScriptValue.object(props);
@@ -117,9 +113,6 @@ public class IRBridge {
         }
 
         switch (typeStr) {
-            case "int":
-            case "integer":
-                return ScriptValue.native_(new IntConstant((int) value.asNumber()));
             case "long":
                 return ScriptValue.native_(new LongConstant((long) value.asNumber()));
             case "float":

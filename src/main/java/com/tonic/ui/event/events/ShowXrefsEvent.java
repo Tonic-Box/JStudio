@@ -47,8 +47,6 @@ public class ShowXrefsEvent extends Event {
     public String getTargetDisplay() {
         String displayClass = className != null ? className.replace('/', '.') : "unknown";
         switch (targetType) {
-            case CLASS:
-                return displayClass;
             case METHOD:
                 return displayClass + "." + memberName + "()";
             case FIELD:

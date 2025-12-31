@@ -6,6 +6,7 @@ import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.analysis.ssa.ir.InvokeInstruction;
 import com.tonic.analysis.ssa.value.SSAValue;
 import com.tonic.ui.simulation.model.TaintFlow;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -197,6 +198,7 @@ public class TaintTrackingListener extends AbstractListener {
         }
     }
 
+    @Getter
     public static class TaintFlowResult {
         private final InvokeInstruction sinkInstruction;
         private final String sourceDescription;
@@ -212,26 +214,6 @@ public class TaintTrackingListener extends AbstractListener {
             this.sinkDescription = sinkDescription;
             this.flowPath = flowPath;
             this.category = category;
-        }
-
-        public InvokeInstruction getSinkInstruction() {
-            return sinkInstruction;
-        }
-
-        public String getSourceDescription() {
-            return sourceDescription;
-        }
-
-        public String getSinkDescription() {
-            return sinkDescription;
-        }
-
-        public List<String> getFlowPath() {
-            return flowPath;
-        }
-
-        public TaintFlow.TaintCategory getCategory() {
-            return category;
         }
 
         public int getBlockId() {

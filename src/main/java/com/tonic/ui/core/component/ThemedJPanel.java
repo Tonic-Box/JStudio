@@ -4,6 +4,7 @@ import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
+import lombok.Getter;
 
 import javax.swing.JPanel;
 import java.awt.LayoutManager;
@@ -17,6 +18,7 @@ public class ThemedJPanel extends JPanel implements ThemeChangeListener {
         SURFACE
     }
 
+    @Getter
     private BackgroundStyle backgroundStyle;
     private boolean themeApplied = false;
 
@@ -45,10 +47,6 @@ public class ThemedJPanel extends JPanel implements ThemeChangeListener {
             applyTheme();
             themeApplied = true;
         }
-    }
-
-    public BackgroundStyle getBackgroundStyle() {
-        return backgroundStyle;
     }
 
     public void setBackgroundStyle(BackgroundStyle style) {

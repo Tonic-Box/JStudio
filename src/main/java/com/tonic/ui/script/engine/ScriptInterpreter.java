@@ -19,8 +19,11 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
     @Getter
     private ScriptContext currentContext;
 
+    @Getter
     private final List<String> logs = new ArrayList<>();
+    @Getter
     private final List<String> warnings = new ArrayList<>();
+    @Getter
     private final List<String> errors = new ArrayList<>();
 
     private Consumer<String> logCallback;
@@ -73,9 +76,7 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
 
         // Utility functions
         globalContext.defineConstant("typeof", ScriptValue.function(
-            ScriptFunction.native1("typeof", arg -> {
-                return ScriptValue.string(arg.getType().name().toLowerCase());
-            })
+            ScriptFunction.native1("typeof", arg -> ScriptValue.string(arg.getType().name().toLowerCase()))
         ));
 
         globalContext.defineConstant("parseInt", ScriptValue.function(
@@ -331,9 +332,7 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
 
             case "push":
                 return ScriptValue.function(ScriptFunction.nativeN("push", args -> {
-                    for (ScriptValue arg : args) {
-                        arr.add(arg);
-                    }
+                    arr.addAll(args);
                     return ScriptValue.number(arr.size());
                 }));
 
@@ -1068,18 +1067,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
         if (errorCallback != null) {
             errorCallback.accept("ERROR: " + message);
         }
-    }
-
-    public List<String> getLogs() {
-        return logs;
-    }
-
-    public List<String> getWarnings() {
-        return warnings;
-    }
-
-    public List<String> getErrors() {
-        return errors;
     }
 
     public void clearLogs() {
