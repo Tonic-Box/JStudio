@@ -32,7 +32,6 @@ public class FuzzTestGeneratorDialog extends JDialog {
     private JLabel statusLabel;
     private JLabel paramsConfigLabel;
 
-    private JTable resultsTable;
     private FuzzResultTableModel tableModel;
 
     private JComboBox<TestCaseGenerator.JUnitVersion> versionCombo;
@@ -48,7 +47,7 @@ public class FuzzTestGeneratorDialog extends JDialog {
 
     private List<FuzzResult> fuzzResults = new ArrayList<>();
     private List<ParamSpec> paramSpecs = new ArrayList<>();
-    private ObjectSpec thisSpec = null;
+    private final ObjectSpec thisSpec = null;
 
     public FuzzTestGeneratorDialog(Window owner) {
         super(owner, "Fuzz & Generate Tests", ModalityType.APPLICATION_MODAL);
@@ -111,7 +110,7 @@ public class FuzzTestGeneratorDialog extends JDialog {
         resultsPanel.setBorder(BorderFactory.createTitledBorder("Fuzz Results (select to include in tests)"));
 
         tableModel = new FuzzResultTableModel();
-        resultsTable = new JTable(tableModel);
+        JTable resultsTable = new JTable(tableModel);
         resultsTable.setRowHeight(22);
         resultsTable.getColumnModel().getColumn(0).setMaxWidth(40);
         resultsTable.getColumnModel().getColumn(1).setPreferredWidth(180);
@@ -579,9 +578,7 @@ public class FuzzTestGeneratorDialog extends JDialog {
         }
 
         public void setAllSelected(boolean value) {
-            for (int i = 0; i < selected.size(); i++) {
-                selected.set(i, value);
-            }
+            Collections.fill(selected, value);
             fireTableDataChanged();
             updatePreview();
         }
@@ -623,7 +620,6 @@ public class FuzzTestGeneratorDialog extends JDialog {
         @Override
         public String getColumnName(int column) {
             switch (column) {
-                case 0: return "";
                 case 1: return "Inputs";
                 case 2: return "Outcome";
                 case 3: return "Branch Path";

@@ -8,6 +8,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ArrayEditorDialog extends JDialog {
@@ -31,9 +32,7 @@ public class ArrayEditorDialog extends JDialog {
         this.componentType = componentType;
 
         if (initialValues != null) {
-            for (Object v : initialValues) {
-                elements.add(v);
-            }
+            Collections.addAll(elements, initialValues);
         }
 
         initComponents();

@@ -16,8 +16,6 @@ public class ConsoleOutputPanel extends ThemedJPanel {
     private final JTextPane outputPane;
     private final StyledDocument doc;
     private final JLabel lineCountLabel;
-    private final JButton clearBtn;
-    private final JButton exportBtn;
 
     private static Color stdoutColor() {
         return JStudioTheme.getTextPrimary();
@@ -34,11 +32,11 @@ public class ConsoleOutputPanel extends ThemedJPanel {
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
 
-        clearBtn = new JButton("Clear");
+        JButton clearBtn = new JButton("Clear");
         clearBtn.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         clearBtn.addActionListener(e -> clear());
 
-        exportBtn = new JButton("Export");
+        JButton exportBtn = new JButton("Export");
         exportBtn.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         exportBtn.addActionListener(e -> exportToFile());
 

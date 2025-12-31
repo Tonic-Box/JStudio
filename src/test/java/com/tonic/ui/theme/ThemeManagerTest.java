@@ -123,7 +123,7 @@ class ThemeManagerTest {
         Theme current = themeManager.getCurrentTheme();
         AtomicInteger callCount = new AtomicInteger(0);
 
-        ThemeManager.ThemeChangeListener listener = newTheme -> callCount.incrementAndGet();
+        ThemeChangeListener listener = newTheme -> callCount.incrementAndGet();
         themeManager.addThemeChangeListener(listener);
 
         try {
@@ -140,7 +140,7 @@ class ThemeManagerTest {
         String originalName = original.getName();
         List<Theme> receivedThemes = new ArrayList<>();
 
-        ThemeManager.ThemeChangeListener listener = receivedThemes::add;
+        ThemeChangeListener listener = receivedThemes::add;
         themeManager.addThemeChangeListener(listener);
 
         try {
@@ -160,7 +160,7 @@ class ThemeManagerTest {
         String originalName = original.getName();
         AtomicInteger callCount = new AtomicInteger(0);
 
-        ThemeManager.ThemeChangeListener listener = newTheme -> callCount.incrementAndGet();
+        ThemeChangeListener listener = newTheme -> callCount.incrementAndGet();
         themeManager.addThemeChangeListener(listener);
         themeManager.removeThemeChangeListener(listener);
 

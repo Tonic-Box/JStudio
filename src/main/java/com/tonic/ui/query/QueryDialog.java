@@ -42,7 +42,7 @@ public class QueryDialog extends JDialog {
     private JTable resultsTable;
     private TreeResultTableModel tableModel;
 
-    private QueryService queryService;
+    private final QueryService queryService;
     private volatile boolean running;
     private MainFrame mainFrame;
 
@@ -386,7 +386,7 @@ public class QueryDialog extends JDialog {
             @Override
             protected XrefDatabase doInBackground() {
                 XrefBuilder builder = new XrefBuilder(project.getClassPool());
-                builder.setProgressCallback(msg -> publish(msg));
+                builder.setProgressCallback(this::publish);
                 return builder.build();
             }
 
@@ -598,10 +598,10 @@ public class QueryDialog extends JDialog {
         super.dispose();
     }
 
-    private class TreeResultTableModel extends AbstractTableModel {
+    private static class TreeResultTableModel extends AbstractTableModel {
         private List<ResultRow> rootResults = new ArrayList<>();
-        private List<ResultRow> flatRows = new ArrayList<>();
-        private Set<ResultRow> expandedRows = new HashSet<>();
+        private final List<ResultRow> flatRows = new ArrayList<>();
+        private final Set<ResultRow> expandedRows = new HashSet<>();
 
         public void setResults(List<ResultRow> results) {
             this.rootResults = results != null ? new ArrayList<>(results) : new ArrayList<>();

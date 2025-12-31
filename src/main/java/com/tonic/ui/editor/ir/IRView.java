@@ -4,10 +4,8 @@ import com.tonic.analysis.ssa.SSA;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.theme.SyntaxColors;
-import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
+import com.tonic.ui.theme.*;
+import lombok.Getter;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -27,7 +25,7 @@ import javax.swing.SwingUtilities;
 /**
  * IR view showing SSA-form intermediate representation.
  */
-public class IRView extends JPanel implements ThemeManager.ThemeChangeListener {
+public class IRView extends JPanel implements ThemeChangeListener {
 
     private final ClassEntryModel classEntry;
     private final JTextPane textPane;
@@ -50,6 +48,7 @@ public class IRView extends JPanel implements ThemeManager.ThemeChangeListener {
 
     private static final String METHOD_DIVIDER = "=========================================================================";
 
+    @Getter
     private boolean loaded = false;
 
     public IRView(ClassEntryModel classEntry) {
@@ -142,7 +141,7 @@ public class IRView extends JPanel implements ThemeManager.ThemeChangeListener {
         // Lift IR in background
         SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
-            protected String doInBackground() throws Exception {
+            protected String doInBackground() {
                 return generateIR();
             }
 

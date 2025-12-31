@@ -24,7 +24,6 @@ public class InstrumentationBridge {
 
     private final ScriptInterpreter interpreter;
     private final ProjectModel projectModel;
-    private final IRBridge irBridge;
     private Consumer<String> logCallback;
 
     private final List<InstrumentationRule> rules = new ArrayList<>();
@@ -32,7 +31,6 @@ public class InstrumentationBridge {
     public InstrumentationBridge(ScriptInterpreter interpreter, ProjectModel projectModel, IRBridge irBridge) {
         this.interpreter = interpreter;
         this.projectModel = projectModel;
-        this.irBridge = irBridge;
     }
 
     public void setLogCallback(Consumer<String> callback) {

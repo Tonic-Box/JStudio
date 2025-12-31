@@ -31,19 +31,15 @@ import java.awt.FlowLayout;
 
 public class CallGraphPanel extends ThemedJPanel {
 
-    private final ProjectModel project;
     private final CallGraphModel model;
     private final CallGraphController controller;
-    private final CallGraphRenderer renderer;
     private final CallGraphExporter exporter;
     private final mxGraph graph;
-    private final mxGraphComponent graphComponent;
     private final JTextArea statusArea;
     private final JComboBox<String> focusCombo;
 
     public CallGraphPanel(ProjectModel project) {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
-        this.project = project;
         this.model = new CallGraphModel();
         this.exporter = new CallGraphExporter();
 
@@ -55,7 +51,7 @@ public class CallGraphPanel extends ThemedJPanel {
         add(controlPanel, BorderLayout.NORTH);
 
         graph = createGraph();
-        graphComponent = createGraphComponent();
+        mxGraphComponent graphComponent = createGraphComponent();
         add(graphComponent, BorderLayout.CENTER);
 
         statusArea = createStatusArea();
@@ -64,7 +60,7 @@ public class CallGraphPanel extends ThemedJPanel {
         CallGraphStyleFactory styleFactory = new CallGraphStyleFactory();
         styleFactory.setupStyles(graph);
 
-        renderer = new CallGraphRenderer(graph, model, styleFactory);
+        CallGraphRenderer renderer = new CallGraphRenderer(graph, model, styleFactory);
         controller = new CallGraphController(
                 project, model, renderer, graph, graphComponent,
                 focusCombo, this::updateStatus

@@ -4,17 +4,22 @@ import com.tonic.ui.MainFrame;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
+import lombok.Getter;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 /**
  * Dialog wrapper for the script editor panel.
  */
+@Getter
 public class ScriptEditorDialog extends JDialog {
 
+    /**
+     * -- GETTER --
+     *  Gets the editor panel.
+     */
     private final ScriptEditorPanel editorPanel;
 
     public ScriptEditorDialog(MainFrame parent) {
@@ -60,10 +65,4 @@ public class ScriptEditorDialog extends JDialog {
         editorPanel.setOnTransformComplete(callback);
     }
 
-    /**
-     * Gets the editor panel.
-     */
-    public ScriptEditorPanel getEditorPanel() {
-        return editorPanel;
-    }
 }

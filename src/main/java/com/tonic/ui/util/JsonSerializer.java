@@ -37,21 +37,20 @@ public class JsonSerializer {
     }
 
     private static String toJson(ProjectDatabase db) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\n");
-        sb.append("  \"version\": ").append(quote(db.getVersion())).append(",\n");
-        sb.append("  \"target\": {\n");
-        sb.append("    \"path\": ").append(quote(db.getTargetPath())).append(",\n");
-        sb.append("    \"hash\": ").append(quote(db.getTargetHash())).append("\n");
-        sb.append("  },\n");
-        sb.append("  \"created\": ").append(db.getCreated()).append(",\n");
-        sb.append("  \"modified\": ").append(db.getModified()).append(",\n");
-        sb.append("  \"comments\": ").append(commentsToJson(db.getComments())).append(",\n");
-        sb.append("  \"bookmarks\": ").append(bookmarksToJson(db.getBookmarks())).append(",\n");
-        sb.append("  \"quickSlots\": ").append(quickSlotsToJson(db.getBookmarks())).append(",\n");
-        sb.append("  \"renames\": ").append(mapToJson(db.getRenames())).append("\n");
-        sb.append("}");
-        return sb.toString();
+        String sb = "{\n" +
+                "  \"version\": " + quote(db.getVersion()) + ",\n" +
+                "  \"target\": {\n" +
+                "    \"path\": " + quote(db.getTargetPath()) + ",\n" +
+                "    \"hash\": " + quote(db.getTargetHash()) + "\n" +
+                "  },\n" +
+                "  \"created\": " + db.getCreated() + ",\n" +
+                "  \"modified\": " + db.getModified() + ",\n" +
+                "  \"comments\": " + commentsToJson(db.getComments()) + ",\n" +
+                "  \"bookmarks\": " + bookmarksToJson(db.getBookmarks()) + ",\n" +
+                "  \"quickSlots\": " + quickSlotsToJson(db.getBookmarks()) + ",\n" +
+                "  \"renames\": " + mapToJson(db.getRenames()) + "\n" +
+                "}";
+        return sb;
     }
 
     private static String commentsToJson(CommentStore store) {

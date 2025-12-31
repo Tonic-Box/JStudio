@@ -21,10 +21,8 @@ public class ObjectDetailPanel extends ThemedJPanel {
     private final DefaultMutableTreeNode rootNode;
     private final DefaultTreeModel treeModel;
     private final JTextArea mutationArea;
-    private final JTabbedPane tabbedPane;
 
     private HeapForensicsTracker tracker;
-    private HeapObject currentObject;
 
     public ObjectDetailPanel() {
         super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
@@ -35,7 +33,7 @@ public class ObjectDetailPanel extends ThemedJPanel {
         headerLabel.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
         add(headerLabel, BorderLayout.NORTH);
 
-        tabbedPane = new JTabbedPane();
+        JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setBackground(JStudioTheme.getBgSecondary());
 
         JPanel infoPanel = new JPanel(new BorderLayout(5, 5));
@@ -96,7 +94,6 @@ public class ObjectDetailPanel extends ThemedJPanel {
     }
 
     public void setObject(HeapObject object) {
-        this.currentObject = object;
 
         if (object == null) {
             headerLabel.setText("No object selected");
@@ -214,7 +211,7 @@ public class ObjectDetailPanel extends ThemedJPanel {
         return String.valueOf(value);
     }
 
-    private class FieldTreeCellRenderer extends DefaultTreeCellRenderer {
+    private static class FieldTreeCellRenderer extends DefaultTreeCellRenderer {
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value,
                 boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {

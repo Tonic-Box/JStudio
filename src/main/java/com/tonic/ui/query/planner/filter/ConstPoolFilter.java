@@ -18,11 +18,9 @@ import java.util.stream.Stream;
 public class ConstPoolFilter implements StaticFilter {
 
     private final Pattern pattern;
-    private final boolean isRegex;
 
     private ConstPoolFilter(String pattern, boolean isRegex) {
         this.pattern = isRegex ? Pattern.compile(pattern) : Pattern.compile(Pattern.quote(pattern));
-        this.isRegex = isRegex;
     }
 
     public static ConstPoolFilter containsString(String literal) {

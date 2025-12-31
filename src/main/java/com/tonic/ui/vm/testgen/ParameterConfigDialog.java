@@ -51,7 +51,7 @@ public class ParameterConfigDialog extends JDialog {
 
         JScrollPane scroll = new JScrollPane(paramsPanel);
         scroll.getViewport().setBackground(JStudioTheme.getBgPrimary());
-        scroll.setBorder(createTitledBorder("Parameters"));
+        scroll.setBorder(createTitledBorder());
         add(scroll, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -99,10 +99,10 @@ public class ParameterConfigDialog extends JDialog {
         return resultSpecs;
     }
 
-    private TitledBorder createTitledBorder(String title) {
+    private TitledBorder createTitledBorder() {
         return BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            title,
+                "Parameters",
             TitledBorder.LEFT,
             TitledBorder.TOP,
             new Font(Font.SANS_SERIF, Font.BOLD, 11),
@@ -111,17 +111,13 @@ public class ParameterConfigDialog extends JDialog {
     }
 
     private class ParamRow extends JPanel {
-        private final int index;
         private ParamSpec spec;
-        private final JLabel nameLabel;
-        private final JLabel typeLabel;
         private final JComboBox<ValueMode> modeCombo;
         private final JTextField valueField;
         private final JButton configButton;
         private final JLabel summaryLabel;
 
         ParamRow(int index, ParamSpec spec) {
-            this.index = index;
             this.spec = spec;
 
             setLayout(new FlowLayout(FlowLayout.LEFT, 8, 3));
@@ -132,12 +128,12 @@ public class ParameterConfigDialog extends JDialog {
             ));
             setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
 
-            nameLabel = createLabel(spec.getName() != null ? spec.getName() : "param" + index);
+            JLabel nameLabel = createLabel(spec.getName() != null ? spec.getName() : "param" + index);
             nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD));
             nameLabel.setPreferredSize(new Dimension(70, 20));
             add(nameLabel);
 
-            typeLabel = createLabel("(" + spec.getSimpleTypeName() + ")");
+            JLabel typeLabel = createLabel("(" + spec.getSimpleTypeName() + ")");
             typeLabel.setForeground(JStudioTheme.getTextSecondary());
             typeLabel.setPreferredSize(new Dimension(80, 20));
             add(typeLabel);
@@ -264,7 +260,7 @@ public class ParameterConfigDialog extends JDialog {
                 switch (typeDesc) {
                     case "Z": return Boolean.parseBoolean(text);
                     case "B": return Byte.parseByte(text);
-                    case "C": return text.isEmpty() ? ' ' : text.charAt(0);
+                    case "C": return text.charAt(0);
                     case "S": return Short.parseShort(text);
                     case "I": return Integer.parseInt(text);
                     case "J": return Long.parseLong(text);

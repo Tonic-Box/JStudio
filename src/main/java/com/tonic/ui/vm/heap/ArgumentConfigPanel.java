@@ -15,6 +15,7 @@ import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.testgen.MethodFuzzer;
 
 import com.tonic.analysis.execution.heap.ArrayInstance;
+import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -30,23 +31,17 @@ public class ArgumentConfigPanel extends ThemedJPanel {
 
     public enum Mode { MANUAL, FUZZ }
 
+    @Getter
     private Mode currentMode = Mode.MANUAL;
     private MethodEntry method;
     private List<String> paramTypes = new ArrayList<>();
     private SimpleHeapManager heapManager;
+    private final JPanel contentPanel;
+    private final CardLayout cardLayout;
+    private final JPanel manualPanel;
+    private final List<JTextField> paramFields = new ArrayList<>();
+    private final Map<Integer, Object[]> arrayValues = new HashMap<>();
 
-    private JPanel modeButtonPanel;
-    private JToggleButton manualBtn;
-    private JToggleButton fuzzBtn;
-
-    private JPanel contentPanel;
-    private CardLayout cardLayout;
-
-    private JPanel manualPanel;
-    private List<JTextField> paramFields = new ArrayList<>();
-    private Map<Integer, Object[]> arrayValues = new HashMap<>();
-
-    private JPanel fuzzPanel;
     private JCheckBox edgeCasesCheck;
     private JCheckBox randomCheck;
     private JCheckBox nullsCheck;
@@ -58,12 +53,11 @@ public class ArgumentConfigPanel extends ThemedJPanel {
 
     private ClassResolver classResolver;
     private JPanel receiverSection;
-    private JPanel receiverHeader;
     private JPanel receiverContent;
     private JComboBox<MethodEntry> constructorCombo;
-    private List<JTextField> ctorParamFields = new ArrayList<>();
+    private final List<JTextField> ctorParamFields = new ArrayList<>();
     private List<String> ctorParamTypes = new ArrayList<>();
-    private Map<Integer, Object[]> ctorArrayValues = new HashMap<>();
+    private final Map<Integer, Object[]> ctorArrayValues = new HashMap<>();
     private boolean receiverExpanded = false;
 
     public ArgumentConfigPanel() {
@@ -77,16 +71,16 @@ public class ArgumentConfigPanel extends ThemedJPanel {
             JStudioTheme.getTextPrimary()
         ));
 
-        modeButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 2));
+        JPanel modeButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 2));
         modeButtonPanel.setBackground(JStudioTheme.getBgSecondary());
 
         ButtonGroup modeGroup = new ButtonGroup();
-        manualBtn = new JToggleButton("Manual");
+        JToggleButton manualBtn = new JToggleButton("Manual");
         manualBtn.setSelected(true);
         manualBtn.addActionListener(e -> switchMode(Mode.MANUAL));
         modeGroup.add(manualBtn);
 
-        fuzzBtn = new JToggleButton("Fuzz");
+        JToggleButton fuzzBtn = new JToggleButton("Fuzz");
         fuzzBtn.addActionListener(e -> switchMode(Mode.FUZZ));
         modeGroup.add(fuzzBtn);
 
@@ -107,7 +101,7 @@ public class ArgumentConfigPanel extends ThemedJPanel {
         manualScroll.getViewport().setBackground(JStudioTheme.getBgSecondary());
         manualScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-        fuzzPanel = createFuzzPanel();
+        JPanel fuzzPanel = createFuzzPanel();
 
         contentPanel.add(manualScroll, "MANUAL");
         contentPanel.add(fuzzPanel, "FUZZ");
@@ -210,7 +204,7 @@ public class ArgumentConfigPanel extends ThemedJPanel {
         receiverSection.setBackground(JStudioTheme.getBgSecondary());
         receiverSection.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        receiverHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
+        JPanel receiverHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
         receiverHeader.setBackground(JStudioTheme.getBgTertiary());
         receiverHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
         receiverHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
@@ -686,10 +680,6 @@ public class ArgumentConfigPanel extends ThemedJPanel {
         return currentComboIndex;
     }
 
-    public Mode getCurrentMode() {
-        return currentMode;
-    }
-
     public String getCurrentArgsDescription() {
         Object[] args = currentMode == Mode.MANUAL ? collectManualArguments() : getCurrentFuzzArguments();
         if (args.length == 0) return "()";
@@ -734,7 +724,7 @@ public class ArgumentConfigPanel extends ThemedJPanel {
                 case "D":
                     return isEmpty ? 0.0 : Double.parseDouble(value.replace("d", "").replace("D", ""));
                 case "Z":
-                    return isEmpty ? false : Boolean.parseBoolean(value);
+                    return !isEmpty && Boolean.parseBoolean(value);
                 default:
                     if (isEmpty) return null;
                     if (type.equals("Ljava/lang/String;")) {
@@ -883,8 +873,7 @@ public class ArgumentConfigPanel extends ThemedJPanel {
                         array.set(index, null);
                     }
             }
-        } catch (Exception e) {
-            // Ignore element set errors
+        } catch (Exception ignored) {
         }
     }
 

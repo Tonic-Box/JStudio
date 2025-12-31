@@ -50,12 +50,12 @@ public class DeobfuscationResult {
     }
 
     public String getDisplayOriginal() {
-        return truncate(originalValue, 30);
+        return truncate(originalValue);
     }
 
     public String getDisplayDecrypted() {
         if (decryptedValue == null) return "-";
-        return truncate(decryptedValue, 30);
+        return truncate(decryptedValue);
     }
 
     public String getStatusText() {
@@ -64,10 +64,10 @@ public class DeobfuscationResult {
         return "Failed";
     }
 
-    private String truncate(String s, int maxLen) {
+    private String truncate(String s) {
         if (s == null) return "";
-        if (s.length() <= maxLen) return s;
-        return s.substring(0, maxLen - 3) + "...";
+        if (s.length() <= 30) return s;
+        return s.substring(0, 30 - 3) + "...";
     }
 
     public String getLocation() {

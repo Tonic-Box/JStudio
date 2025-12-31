@@ -37,13 +37,13 @@ public class DataFlowPanel extends ThemedJPanel {
     private final ProjectModel project;
     private final mxGraph graph;
     private final mxGraphComponent graphComponent;
-    private JTextArea statusArea;
+    private final JTextArea statusArea;
     private JComboBox<String> methodCombo;
     private JComboBox<String> filterCombo;
     private JCheckBox showTaintedCheckbox;
 
     private DataFlowGraph currentGraph;
-    private Map<Object, DataFlowNode> cellToNodeMap = new HashMap<>();
+    private final Map<Object, DataFlowNode> cellToNodeMap = new HashMap<>();
     private JPopupMenu contextMenu;
 
     private ClassFile currentClass;

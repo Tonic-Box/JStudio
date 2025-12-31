@@ -5,9 +5,7 @@ import com.tonic.analysis.source.ast.stmt.*;
 import com.tonic.analysis.source.ast.type.PrimitiveSourceType;
 import com.tonic.analysis.source.ast.type.ReferenceSourceType;
 import com.tonic.analysis.source.editor.*;
-import com.tonic.analysis.source.editor.handler.*;
 import com.tonic.ui.script.engine.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -181,7 +179,6 @@ public class ASTBridge {
                 return (Expression) obj;
             }
         }
-        // Create literal from primitive
         return createLiteral(val);
     }
 
@@ -331,7 +328,6 @@ public class ASTBridge {
         }
         if (result.isObject()) {
             // Could reconstruct expression from object properties
-            // For now, keep original
         }
         return Replacement.keep();
     }

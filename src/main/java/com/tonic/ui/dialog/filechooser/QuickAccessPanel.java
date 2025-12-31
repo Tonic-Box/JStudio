@@ -42,13 +42,13 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
     private final DefaultListModel<QuickAccessItem> recentModel;
     private final DefaultListModel<QuickAccessItem> drivesModel;
 
-    private JList<QuickAccessItem> pinnedList;
-    private JList<QuickAccessItem> quickAccessList;
-    private JList<QuickAccessItem> recentList;
-    private JList<QuickAccessItem> drivesList;
+    private final JList<QuickAccessItem> pinnedList;
+    private final JList<QuickAccessItem> quickAccessList;
+    private final JList<QuickAccessItem> recentList;
+    private final JList<QuickAccessItem> drivesList;
 
-    private JLabel pinnedHeader;
-    private JLabel recentHeader;
+    private final JLabel pinnedHeader;
+    private final JLabel recentHeader;
 
     public QuickAccessPanel(LocationListener listener) {
         super(BackgroundStyle.SECONDARY, new BorderLayout());

@@ -30,6 +30,7 @@ import java.awt.Insets;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.Objects;
 
 public class SearchPanel extends ThemedJPanel {
 
@@ -151,12 +152,12 @@ public class SearchPanel extends ThemedJPanel {
 
         SwingWorker<List<SearchResult>, Void> worker = new SwingWorker<>() {
             @Override
-            protected List<SearchResult> doInBackground() throws Exception {
+            protected List<SearchResult> doInBackground() {
                 PatternSearch search = new PatternSearch(project.getClassPool())
                         .inAllClasses()
                         .limit(100);
 
-                switch (searchType) {
+                switch (Objects.requireNonNull(searchType)) {
                     case "Method Calls":
                         if (pattern.isEmpty()) {
                             return search.findMethodCalls(Patterns.anyMethodCall());
@@ -285,11 +286,9 @@ public class SearchPanel extends ThemedJPanel {
         ClassFile classFile = result.getClassFile();
         if (classFile == null) return;
 
-        // Find the class entry in the project
         String className = classFile.getClassName();
         for (ClassEntryModel classEntry : project.getUserClasses()) {
             if (classEntry.getClassName().equals(className)) {
-                // Fire event to navigate to class
                 EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
                 statusLabel.setText("Navigated to: " + className);
                 return;

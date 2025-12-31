@@ -4,6 +4,7 @@ import com.tonic.parser.ClassFile;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
+import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.*;
@@ -14,7 +15,7 @@ import java.awt.datatransfer.StringSelection;
 /**
  * Hex view showing raw class file bytes in traditional hex dump format.
  */
-public class HexView extends JPanel implements ThemeManager.ThemeChangeListener {
+public class HexView extends JPanel implements ThemeChangeListener {
 
     private final ClassEntryModel classEntry;
     private final JTextPane textPane;

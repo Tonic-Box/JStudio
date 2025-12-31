@@ -1,7 +1,6 @@
 package com.tonic.ui.vm.heap.model;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
 public class TimelineEvent implements Comparable<TimelineEvent> {

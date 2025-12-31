@@ -15,6 +15,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.BorderLayout;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public abstract class GraphPanelBase extends AnalysisPanelBase {
 
@@ -63,7 +65,9 @@ public abstract class GraphPanelBase extends AnalysisPanelBase {
     }
 
     protected void exportAsPng() {
-        exportAsPng(null);
+        String name = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) +
+                ".png";
+        exportAsPng(name);
     }
 
     protected void exportAsPng(String suggestedFilename) {

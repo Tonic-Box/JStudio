@@ -178,12 +178,11 @@ public class CommentsPanel extends ThemedJPanel {
             previewArea.setText("");
             return;
         }
-        StringBuilder sb = new StringBuilder();
-        sb.append("Location: ").append(selected.getLocationKey()).append("\n");
-        sb.append("Type: ").append(selected.getType()).append("\n");
-        sb.append("Created: ").append(formatDate(selected.getTimestamp())).append("\n");
-        sb.append("\n").append(selected.getText());
-        previewArea.setText(sb.toString());
+        String sb = "Location: " + selected.getLocationKey() + "\n" +
+                "Type: " + selected.getType() + "\n" +
+                "Created: " + formatDate(selected.getTimestamp()) + "\n" +
+                "\n" + selected.getText();
+        previewArea.setText(sb);
         previewArea.setCaretPosition(0);
     }
 

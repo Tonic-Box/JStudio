@@ -33,15 +33,15 @@ public class XrefPanel extends ThemedJPanel {
     private JTextField searchField;
     private JComboBox<XrefType> typeFilterCombo;
     private JButton buildButton;
-    private JLabel statusLabel;
-    private JLabel targetLabel;
+    private final JLabel statusLabel;
+    private final JLabel targetLabel;
 
-    private JTree incomingTree;
-    private JTree outgoingTree;
-    private DefaultMutableTreeNode incomingRoot;
-    private DefaultMutableTreeNode outgoingRoot;
-    private DefaultTreeModel incomingModel;
-    private DefaultTreeModel outgoingModel;
+    private final JTree incomingTree;
+    private final JTree outgoingTree;
+    private final DefaultMutableTreeNode incomingRoot;
+    private final DefaultMutableTreeNode outgoingRoot;
+    private final DefaultTreeModel incomingModel;
+    private final DefaultTreeModel outgoingModel;
 
     private String currentTargetClass;
     private String currentTargetMember;

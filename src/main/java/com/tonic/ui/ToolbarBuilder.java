@@ -1,9 +1,6 @@
 package com.tonic.ui;
 
-import com.tonic.ui.theme.Icons;
-import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
+import com.tonic.ui.theme.*;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -21,7 +18,7 @@ import java.awt.event.KeyEvent;
 /**
  * Builds the main toolbar for JStudio.
  */
-public class ToolbarBuilder implements ThemeManager.ThemeChangeListener {
+public class ToolbarBuilder implements ThemeChangeListener {
 
     private final MainFrame mainFrame;
     private JToolBar toolbar;

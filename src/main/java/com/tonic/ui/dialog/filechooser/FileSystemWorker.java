@@ -48,7 +48,7 @@ public class FileSystemWorker {
         // Load asynchronously
         SwingWorker<List<File>, Void> worker = new SwingWorker<>() {
             @Override
-            protected List<File> doInBackground() throws Exception {
+            protected List<File> doInBackground() {
                 return listFilesSync(directory);
             }
 

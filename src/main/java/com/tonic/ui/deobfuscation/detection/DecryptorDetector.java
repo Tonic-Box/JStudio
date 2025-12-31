@@ -125,11 +125,7 @@ public class DecryptorDetector {
         if (name.length() <= 2) {
             return true;
         }
-        if (name.matches("^[a-z]$") || name.matches("^[a-z]{2}$")) {
-            return true;
-        }
-
-        return false;
+        return name.matches("^[a-z]$") || name.matches("^[a-z]{2}$");
     }
 
     private BytecodeAnalysis analyzeBytecode(CodeAttribute code) {
@@ -173,7 +169,7 @@ public class DecryptorDetector {
                     break;
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
 
         return analysis;

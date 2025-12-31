@@ -64,12 +64,11 @@ public class ExecutionTrace {
     }
 
     public String getSummary() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Trace: ").append(getEntrySignature()).append("\n");
-        sb.append("Duration: ").append(getDurationMs()).append("ms\n");
-        sb.append("Total calls: ").append(getTotalCallCount()).append("\n");
-        sb.append("Max depth: ").append(getMaxDepth());
-        return sb.toString();
+        String sb = "Trace: " + getEntrySignature() + "\n" +
+                "Duration: " + getDurationMs() + "ms\n" +
+                "Total calls: " + getTotalCallCount() + "\n" +
+                "Max depth: " + getMaxDepth();
+        return sb;
     }
 
     public String toTreeString() {

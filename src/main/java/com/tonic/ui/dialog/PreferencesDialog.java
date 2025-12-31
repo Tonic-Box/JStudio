@@ -1,9 +1,6 @@
 package com.tonic.ui.dialog;
 
-import com.tonic.ui.theme.AbstractTheme;
-import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
+import com.tonic.ui.theme.*;
 import com.tonic.ui.util.Settings;
 
 import javax.swing.BorderFactory;
@@ -38,7 +35,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.List;
 
-public class PreferencesDialog extends JDialog implements ThemeManager.ThemeChangeListener {
+public class PreferencesDialog extends JDialog implements ThemeChangeListener {
 
     private JComboBox<String> fontComboBox;
     private JSpinner fontSizeSpinner;

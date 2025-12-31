@@ -1,6 +1,7 @@
 package com.tonic.ui.theme;
 
 import com.tonic.ui.util.Settings;
+import lombok.Getter;
 
 import javax.swing.BorderFactory;
 import javax.swing.SwingUtilities;
@@ -17,6 +18,7 @@ public class ThemeManager {
     private static ThemeManager instance;
 
     private final Map<String, Theme> themes = new LinkedHashMap<>();
+    @Getter
     private Theme currentTheme;
     private final List<ThemeChangeListener> listeners = new ArrayList<>();
 
@@ -41,10 +43,6 @@ public class ThemeManager {
 
     public void registerTheme(Theme theme) {
         themes.put(theme.getName(), theme);
-    }
-
-    public Theme getCurrentTheme() {
-        return currentTheme;
     }
 
     public void setTheme(String themeName) {
@@ -190,7 +188,4 @@ public class ThemeManager {
         }
     }
 
-    public interface ThemeChangeListener {
-        void onThemeChanged(Theme newTheme);
-    }
 }

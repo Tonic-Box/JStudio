@@ -11,18 +11,30 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.ui.vm.heap.model.AllocationEvent;
 import com.tonic.ui.vm.heap.model.MutationEvent;
 import com.tonic.ui.vm.heap.model.ProvenanceInfo;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 public class HeapForensicsListener implements BytecodeListener {
 
     private final HeapForensicsTracker tracker;
+    private final Deque<StackFrame> callStackFrames = new ArrayDeque<>();
+
+    @Getter
     private int provenanceDepth = 1;
+    @Getter
+    @Setter
     private boolean trackMutations = true;
+    @Getter
+    @Setter
     private boolean trackStaticFields = true;
 
     private StackFrame currentFrame;
+    @Getter
     private long instructionCount = 0;
 
     public HeapForensicsListener(HeapForensicsTracker tracker) {
@@ -33,28 +45,9 @@ public class HeapForensicsListener implements BytecodeListener {
         this.provenanceDepth = Math.max(0, Math.min(depth, 10));
     }
 
-    public int getProvenanceDepth() {
-        return provenanceDepth;
-    }
-
-    public void setTrackMutations(boolean track) {
-        this.trackMutations = track;
-    }
-
-    public boolean isTrackMutations() {
-        return trackMutations;
-    }
-
-    public void setTrackStaticFields(boolean track) {
-        this.trackStaticFields = track;
-    }
-
-    public boolean isTrackStaticFields() {
-        return trackStaticFields;
-    }
-
     @Override
     public void onExecutionStart(MethodEntry entryPoint) {
+        callStackFrames.clear();
         System.out.println("[HeapForensics] === START: " +
             (entryPoint != null ? entryPoint.getOwnerName() + "." + entryPoint.getName() : "null") + " ===");
         instructionCount = 0;
@@ -174,11 +167,16 @@ public class HeapForensicsListener implements BytecodeListener {
 
     @Override
     public void onFramePush(StackFrame frame) {
+        callStackFrames.push(frame);
         currentFrame = frame;
     }
 
     @Override
     public void onFramePop(StackFrame frame, ConcreteValue returnValue) {
+        if (!callStackFrames.isEmpty()) {
+            callStackFrames.pop();
+        }
+        currentFrame = callStackFrames.peek();
     }
 
     private ProvenanceInfo captureProvenance() {
@@ -208,7 +206,26 @@ public class HeapForensicsListener implements BytecodeListener {
 
     private List<ProvenanceInfo.StackFrameInfo> captureCallStack(int maxFrames) {
         List<ProvenanceInfo.StackFrameInfo> frames = new ArrayList<>();
-
+        int count = 0;
+        for (StackFrame frame : callStackFrames) {
+            if (frame == currentFrame) {
+                continue;
+            }
+            if (count >= maxFrames) {
+                break;
+            }
+            MethodEntry method = frame.getMethod();
+            int pc = frame.getPC();
+            int lineNumber = getLineNumber(method, pc);
+            frames.add(new ProvenanceInfo.StackFrameInfo(
+                method.getOwnerName(),
+                method.getName(),
+                method.getDesc(),
+                pc,
+                lineNumber
+            ));
+            count++;
+        }
         return frames;
     }
 
@@ -234,7 +251,7 @@ public class HeapForensicsListener implements BytecodeListener {
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         return -1;
     }
@@ -273,12 +290,9 @@ public class HeapForensicsListener implements BytecodeListener {
         }
     }
 
-    public long getInstructionCount() {
-        return instructionCount;
-    }
-
     public void reset() {
         instructionCount = 0;
         currentFrame = null;
+        callStackFrames.clear();
     }
 }

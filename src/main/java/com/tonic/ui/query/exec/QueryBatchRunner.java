@@ -30,7 +30,7 @@ public class QueryBatchRunner {
     private int maxMethodsToRun = 100;
     private int seedsPerMethod = 5;
     private long timeBudgetMs = 60_000;
-    private volatile AtomicBoolean cancelled = new AtomicBoolean(false);
+    private final AtomicBoolean cancelled = new AtomicBoolean(false);
     private Set<String> userClassNames;
 
     public QueryBatchRunner(ClassPool classPool) {
@@ -233,9 +233,7 @@ public class QueryBatchRunner {
         if ((access & 0x0400) != 0) return false;
         if ((access & 0x0100) != 0) return false;
 
-        if (method.getCodeAttribute() == null) return false;
-
-        return true;
+        return method.getCodeAttribute() != null;
     }
 
     private List<Object[]> generateInputs(MethodEntry method) {

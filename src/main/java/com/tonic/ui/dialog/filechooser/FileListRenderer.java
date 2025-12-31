@@ -67,7 +67,7 @@ public class FileListRenderer extends DefaultTableCellRenderer {
                 setText(entry.getFormattedSize());
                 setHorizontalAlignment(JLabel.RIGHT);
                 if (entry.isDirectory()) {
-                    setForeground(isSelected ? JStudioTheme.getTextSecondary() : JStudioTheme.getTextSecondary());
+                    setForeground(JStudioTheme.getTextSecondary());
                 }
                 break;
 

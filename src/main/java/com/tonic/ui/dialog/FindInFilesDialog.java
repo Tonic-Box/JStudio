@@ -31,10 +31,8 @@ public class FindInFilesDialog extends JDialog {
     private final JCheckBox wholeWordBox;
     private final JTable resultsTable;
     private final ResultsTableModel tableModel;
-    private final TableRowSorter<ResultsTableModel> sorter;
     private final JLabel statusLabel;
     private final JButton searchButton;
-    private final JButton closeButton;
 
     private List<SearchMatch> allMatches = new ArrayList<>();
     private SwingWorker<List<SearchMatch>, SearchMatch> currentWorker;
@@ -96,7 +94,7 @@ public class FindInFilesDialog extends JDialog {
         // Results table
         tableModel = new ResultsTableModel();
         resultsTable = new JTable(tableModel);
-        sorter = new TableRowSorter<>(tableModel);
+        TableRowSorter<ResultsTableModel> sorter = new TableRowSorter<>(tableModel);
         resultsTable.setRowSorter(sorter);
 
         resultsTable.setBackground(JStudioTheme.getBgTertiary());
@@ -142,7 +140,7 @@ public class FindInFilesDialog extends JDialog {
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
         bottomPanel.add(statusLabel, BorderLayout.WEST);
 
-        closeButton = new JButton("Close");
+        JButton closeButton = new JButton("Close");
         closeButton.setBackground(JStudioTheme.getBgTertiary());
         closeButton.setForeground(JStudioTheme.getTextPrimary());
         closeButton.addActionListener(e -> dispose());
@@ -193,7 +191,7 @@ public class FindInFilesDialog extends JDialog {
 
         currentWorker = new SwingWorker<>() {
             @Override
-            protected List<SearchMatch> doInBackground() throws Exception {
+            protected List<SearchMatch> doInBackground() {
                 List<SearchMatch> matches = new ArrayList<>();
                 List<ClassEntryModel> classes = project.getAllClasses();
                 int processed = 0;
@@ -202,7 +200,6 @@ public class FindInFilesDialog extends JDialog {
                     if (isCancelled()) break;
 
                     try {
-                        // Get or generate decompiled source
                         String source = classEntry.getDecompilationCache();
                         if (source == null) {
                             ClassDecompiler decompiler = new ClassDecompiler(classEntry.getClassFile());

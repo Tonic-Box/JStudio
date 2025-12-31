@@ -21,9 +21,9 @@ public class REPLMode {
 
     private ProjectModel project;
     private PluginContextImpl context;
-    private GroovyShell shell;
-    private Binding binding;
-    private LineReader reader;
+    private final GroovyShell shell;
+    private final Binding binding;
+    private final LineReader reader;
     private boolean running;
 
     public REPLMode() throws IOException {

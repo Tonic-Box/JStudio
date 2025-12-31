@@ -141,18 +141,17 @@ public class ComplexityMetrics {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("ComplexityMetrics[\n");
-        sb.append("  Cyclomatic Complexity: ").append(cyclomaticComplexity)
-                .append(" (").append(getComplexityRating()).append(")\n");
-        sb.append("  Basic Blocks: ").append(blockCount).append("\n");
-        sb.append("  Edges: ").append(edgeCount).append("\n");
-        sb.append("  Branch Points: ").append(branchCount).append("\n");
-        sb.append("  Switch Cases: ").append(switchCaseCount).append("\n");
-        sb.append("  Estimated Loops: ").append(loopCount).append("\n");
-        sb.append("  Max Nesting: ").append(maxNestingDepth).append("\n");
-        sb.append("  Instructions: ").append(instructionCount).append("\n");
-        sb.append("]");
-        return sb.toString();
+        String sb = "ComplexityMetrics[\n" +
+                "  Cyclomatic Complexity: " + cyclomaticComplexity +
+                " (" + getComplexityRating() + ")\n" +
+                "  Basic Blocks: " + blockCount + "\n" +
+                "  Edges: " + edgeCount + "\n" +
+                "  Branch Points: " + branchCount + "\n" +
+                "  Switch Cases: " + switchCaseCount + "\n" +
+                "  Estimated Loops: " + loopCount + "\n" +
+                "  Max Nesting: " + maxNestingDepth + "\n" +
+                "  Instructions: " + instructionCount + "\n" +
+                "]";
+        return sb;
     }
 }

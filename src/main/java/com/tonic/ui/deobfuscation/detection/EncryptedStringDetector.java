@@ -144,12 +144,10 @@ public class EncryptedStringDetector {
         if (value.matches("^[a-z]+$") && value.length() < 20) return true;
         if (value.matches("^[A-Z_]+$")) return true;
         if (value.startsWith("<") && value.endsWith(">")) return true;
-        if (value.equals("Code") || value.equals("LineNumberTable") ||
-            value.equals("LocalVariableTable") || value.equals("StackMapTable") ||
-            value.equals("SourceFile") || value.equals("InnerClasses") ||
-            value.equals("Exceptions") || value.equals("Signature")) return true;
-
-        return false;
+        return value.equals("Code") || value.equals("LineNumberTable") ||
+                value.equals("LocalVariableTable") || value.equals("StackMapTable") ||
+                value.equals("SourceFile") || value.equals("InnerClasses") ||
+                value.equals("Exceptions") || value.equals("Signature");
     }
 
     public void setEntropyThreshold(double threshold) {

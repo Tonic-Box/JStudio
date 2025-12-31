@@ -27,7 +27,6 @@ public class ConstPoolTreeView extends ThemedJPanel {
     private final DefaultTreeModel treeModel;
 
     private BiConsumer<Item<?>, Integer> selectionListener;
-    private ConstPool constPool;
 
     public ConstPoolTreeView() {
         super(BackgroundStyle.TERTIARY, new BorderLayout());
@@ -63,7 +62,6 @@ public class ConstPoolTreeView extends ThemedJPanel {
     }
 
     public void loadConstPool(ConstPool constPool) {
-        this.constPool = constPool;
         root.removeAllChildren();
 
         if (constPool == null) {
@@ -85,13 +83,9 @@ public class ConstPoolTreeView extends ThemedJPanel {
             Item<?> item = items.get(i);
             if (item != null) {
                 String typeName = getTypeName(item);
-                String displayValue = formatValue(item, constPool, i);
+                String displayValue = formatValue(item, constPool);
                 ItemNode node = new ItemNode(i, item, typeName, displayValue);
-                List<ItemNode> list = grouped.get(typeName);
-                if (list == null) {
-                    list = new ArrayList<>();
-                    grouped.put(typeName, list);
-                }
+                List<ItemNode> list = grouped.computeIfAbsent(typeName, k -> new ArrayList<>());
                 list.add(node);
             }
         }
@@ -143,7 +137,7 @@ public class ConstPoolTreeView extends ThemedJPanel {
         return "Unknown";
     }
 
-    private String formatValue(Item<?> item, ConstPool cp, int index) {
+    private String formatValue(Item<?> item, ConstPool cp) {
         try {
             if (item instanceof Utf8Item) {
                 String val = ((Utf8Item) item).getValue();
@@ -330,7 +324,6 @@ public class ConstPoolTreeView extends ThemedJPanel {
                     setForeground(getTypeColor(typeNode.typeName));
                     setIcon(null);
                 } else if (userObj instanceof ItemNode) {
-                    ItemNode itemNode = (ItemNode) userObj;
                     if (!selected) {
                         setForeground(JStudioTheme.getTextPrimary());
                     }

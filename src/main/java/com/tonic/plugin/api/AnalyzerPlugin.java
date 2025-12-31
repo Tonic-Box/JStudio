@@ -1,5 +1,7 @@
 package com.tonic.plugin.api;
 
+import lombok.Getter;
+
 public interface AnalyzerPlugin extends Plugin {
 
     AnalysisResult analyze(AnalysisScope scope);
@@ -16,6 +18,7 @@ public interface AnalyzerPlugin extends Plugin {
         METHOD
     }
 
+    @Getter
     final class AnalysisResult {
         private final boolean success;
         private final int findingsCount;
@@ -28,11 +31,6 @@ public interface AnalyzerPlugin extends Plugin {
             this.durationMs = durationMs;
             this.summary = summary;
         }
-
-        public boolean isSuccess() { return success; }
-        public int getFindingsCount() { return findingsCount; }
-        public long getDurationMs() { return durationMs; }
-        public String getSummary() { return summary; }
 
         public static AnalysisResult success(int findings, long durationMs, String summary) {
             return new AnalysisResult(true, findings, durationMs, summary);

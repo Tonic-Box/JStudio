@@ -162,11 +162,8 @@ public class ProjectBridge extends AbstractBridge {
 
             for (ClassEntryModel classEntry : projectModel.getAllClasses()) {
                 ClassFile cf = classEntry.getClassFile();
-                boolean matches = true;
+                boolean matches = namePattern == null || matchesPattern(classEntry.getSimpleName(), namePattern);
 
-                if (namePattern != null && !matchesPattern(classEntry.getSimpleName(), namePattern)) {
-                    matches = false;
-                }
                 if (packagePattern != null && !matchesPattern(classEntry.getPackageName(), packagePattern)) {
                     matches = false;
                 }
@@ -213,11 +210,8 @@ public class ProjectBridge extends AbstractBridge {
             for (ClassEntryModel classEntry : projectModel.getAllClasses()) {
                 for (MethodEntryModel methodModel : classEntry.getMethods()) {
                     MethodEntry method = methodModel.getMethodEntry();
-                    boolean matches = true;
+                    boolean matches = namePattern == null || matchesPattern(method.getName(), namePattern);
 
-                    if (namePattern != null && !matchesPattern(method.getName(), namePattern)) {
-                        matches = false;
-                    }
                     if (access != null && !matchesAccess(method.getAccess(), access)) {
                         matches = false;
                     }
@@ -456,7 +450,7 @@ public class ProjectBridge extends AbstractBridge {
             if (item instanceof ClassRefItem) {
                 return ((ClassRefItem) item).getClassName();
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         return null;
     }
@@ -517,7 +511,7 @@ public class ProjectBridge extends AbstractBridge {
             if (typeItem instanceof Utf8Item) {
                 return ((Utf8Item) typeItem).getValue();
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         return null;
     }

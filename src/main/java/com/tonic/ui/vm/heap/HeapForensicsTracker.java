@@ -4,6 +4,7 @@ import com.tonic.analysis.execution.heap.ArrayInstance;
 import com.tonic.analysis.execution.heap.HeapManager;
 import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.ui.vm.heap.model.*;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 
 public class HeapForensicsTracker {
 
+    @Getter
     private final HeapManager heapManager;
     private final List<AllocationEvent> allocations;
     private final List<MutationEvent> mutations;
@@ -23,8 +25,8 @@ public class HeapForensicsTracker {
     private final Map<Integer, List<MutationEvent>> objectMutations;
     private final Map<Integer, Map<String, FieldValue>> objectFields;
 
-    private long executionStartTime;
     private long lastInstructionCount;
+    @Getter
     private boolean tracking = true;
 
     private final List<ForensicsEventListener> listeners;
@@ -44,7 +46,6 @@ public class HeapForensicsTracker {
     }
 
     public void onExecutionStart() {
-        executionStartTime = System.currentTimeMillis();
         lastInstructionCount = 0;
     }
 
@@ -77,12 +78,10 @@ public class HeapForensicsTracker {
 
         String fieldKey = event.getFieldOwner() + "." + event.getFieldName() + ":" + event.getFieldDescriptor();
         FieldValue fv = FieldValue.builder()
-            .key(fieldKey)
             .owner(event.getFieldOwner())
             .name(event.getFieldName())
             .descriptor(event.getFieldDescriptor())
             .value(event.getNewValue())
-            .referenceId(extractReferenceId(event.getNewValue()))
             .build();
 
         objectFields.computeIfAbsent(event.getObjectId(), k -> new ConcurrentHashMap<>()).put(fieldKey, fv);
@@ -137,13 +136,6 @@ public class HeapForensicsTracker {
         }
 
         return builder.build();
-    }
-
-    private int extractReferenceId(Object value) {
-        if (value instanceof ObjectInstance) {
-            return ((ObjectInstance) value).getId();
-        }
-        return -1;
     }
 
     public HeapDiff compareSnapshots(HeapSnapshot before, HeapSnapshot after) {
@@ -260,20 +252,12 @@ public class HeapForensicsTracker {
         return snapshots.isEmpty() ? null : snapshots.get(snapshots.size() - 1);
     }
 
-    public HeapManager getHeapManager() {
-        return heapManager;
-    }
-
     public ObjectInstance getLiveObject(int objectId) {
         return liveObjects.get(objectId);
     }
 
     public ProvenanceInfo getProvenance(int objectId) {
         return provenanceMap.get(objectId);
-    }
-
-    public boolean isTracking() {
-        return tracking;
     }
 
     public void setTracking(boolean tracking) {

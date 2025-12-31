@@ -5,10 +5,7 @@ import com.tonic.ui.MainFrame;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.theme.Icons;
-import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
+import com.tonic.ui.theme.*;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -40,7 +37,7 @@ import javax.swing.SwingUtilities;
 /**
  * Welcome tab showing project info and quick links to main() methods.
  */
-public class WelcomeTab extends JPanel implements ThemeManager.ThemeChangeListener {
+public class WelcomeTab extends JPanel implements ThemeChangeListener {
 
     private final MainFrame mainFrame;
     private ProjectModel projectModel;

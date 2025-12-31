@@ -4,6 +4,7 @@ import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.QuickAccessManager;
+import lombok.Getter;
 
 import javax.swing.BorderFactory;
 import javax.swing.JMenuItem;
@@ -36,10 +37,19 @@ public class FileListPanel extends ThemedJPanel {
         void onDirectoryEntered(File directory);
     }
 
+    /**
+     * -- GETTER --
+     *  Get the model.
+     */
+    @Getter
     private final FileListModel model;
+    /**
+     * -- GETTER --
+     *  Get the table.
+     */
+    @Getter
     private final JTable table;
     private final TableRowSorter<FileListModel> sorter;
-    private final JScrollPane scrollPane;
     private JPopupMenu contextMenu;
 
     private FileListListener listener;
@@ -47,7 +57,7 @@ public class FileListPanel extends ThemedJPanel {
     private File currentDirectory;
 
     // Type-ahead search
-    private StringBuilder typeAheadBuffer = new StringBuilder();
+    private final StringBuilder typeAheadBuffer = new StringBuilder();
     private long lastKeyTime = 0;
     private static final long TYPE_AHEAD_TIMEOUT = 1000; // 1 second
 
@@ -61,7 +71,7 @@ public class FileListPanel extends ThemedJPanel {
         setupTable();
         setupContextMenu();
 
-        scrollPane = new JScrollPane(table);
+        JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
@@ -469,20 +479,6 @@ public class FileListPanel extends ThemedJPanel {
                 break;
             }
         }
-    }
-
-    /**
-     * Get the model.
-     */
-    public FileListModel getModel() {
-        return model;
-    }
-
-    /**
-     * Get the table.
-     */
-    public JTable getTable() {
-        return table;
     }
 
     /**

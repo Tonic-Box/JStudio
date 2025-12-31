@@ -12,16 +12,15 @@ import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
+import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.script.bridge.AnnotationBridge;
 import com.tonic.ui.script.bridge.ASTBridge;
+import com.tonic.ui.script.bridge.BridgeRegistry;
 import com.tonic.ui.script.bridge.CommonAPI;
 import com.tonic.ui.script.bridge.IRBridge;
 import com.tonic.ui.script.engine.*;
 import com.tonic.ui.script.store.ScriptStore;
-import com.tonic.ui.theme.Icons;
-import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
+import com.tonic.ui.theme.*;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -35,7 +34,7 @@ import java.awt.*;
 import java.io.File;
 import java.util.List;
 
-public class ScriptEditorPanel extends ThemedJPanel implements ThemeManager.ThemeChangeListener {
+public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListener {
 
     private final MainFrame mainFrame;
 
@@ -459,6 +458,14 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeManager.Them
         );
         commonAPI.registerIn(interpreter);
 
+        // Register all project-wide bridges
+        ProjectModel projectModel = ProjectService.getInstance().getCurrentProject();
+        if (projectModel != null) {
+            BridgeRegistry registry = new BridgeRegistry(interpreter, projectModel);
+            registry.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
+            registry.registerAll();
+        }
+
         // Parse script
         ScriptLexer lexer = new ScriptLexer(code);
         List<ScriptToken> tokens = lexer.tokenize();
@@ -568,6 +575,14 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeManager.Them
                 msg -> SwingUtilities.invokeLater(() -> appendToConsole("ERROR: " + msg + "\n"))
             );
             commonAPI.registerIn(interpreter);
+
+            // Register all project-wide bridges
+            ProjectModel projectModel = ProjectService.getInstance().getCurrentProject();
+            if (projectModel != null) {
+                BridgeRegistry registry = new BridgeRegistry(interpreter, projectModel);
+                registry.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
+                registry.registerAll();
+            }
 
             // Create annotation bridge
             AnnotationBridge annotationBridge = new AnnotationBridge(interpreter);

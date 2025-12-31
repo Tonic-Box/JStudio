@@ -16,7 +16,7 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.service.ProjectService;
-import com.tonic.ui.simulation.listener.ConstantTrackingListener;
+
 import com.tonic.ui.simulation.listener.OpaquePredicateListener;
 import com.tonic.ui.simulation.listener.StringDecryptionListener;
 import com.tonic.ui.simulation.listener.TaintTrackingListener;

@@ -3,6 +3,7 @@ package com.tonic.ui.query.planner.probe;
 import com.tonic.ui.query.planner.ClickTarget;
 import com.tonic.ui.query.planner.Evidence;
 import com.tonic.ui.query.planner.ResultRow;
+import lombok.Getter;
 
 import java.util.*;
 
@@ -11,8 +12,11 @@ import java.util.*;
  */
 public class ProbeResult {
 
+    @Getter
     private final String methodSignature;
+    @Getter
     private final long instructionCount;
+    @Getter
     private final long executionTimeNs;
 
     private final Map<String, Integer> allocationCounts;
@@ -20,7 +24,6 @@ public class ProbeResult {
     private final List<FieldEvent> fieldEvents;
     private final List<StringEvent> stringEvents;
     private final List<ExceptionEvent> exceptionEvents;
-    private final List<BranchEvent> branchEvents;
 
     private ProbeResult(Builder builder) {
         this.methodSignature = builder.methodSignature;
@@ -31,19 +34,6 @@ public class ProbeResult {
         this.fieldEvents = new ArrayList<>(builder.fieldEvents);
         this.stringEvents = new ArrayList<>(builder.stringEvents);
         this.exceptionEvents = new ArrayList<>(builder.exceptionEvents);
-        this.branchEvents = new ArrayList<>(builder.branchEvents);
-    }
-
-    public String getMethodSignature() {
-        return methodSignature;
-    }
-
-    public long getInstructionCount() {
-        return instructionCount;
-    }
-
-    public long getExecutionTimeNs() {
-        return executionTimeNs;
     }
 
     public int getAllocationCount(String typeName) {
@@ -84,22 +74,22 @@ public class ProbeResult {
         }
 
         ClickTarget target = parseMethodTarget(methodSignature);
-        return Arrays.asList(ResultRow.builder(methodSignature)
-            .target(target)
-            .column("instructionCount", instructionCount)
-            .column("allocations", allocationCounts)
-            .evidence(evidence)
-            .build());
+        return Collections.singletonList(ResultRow.builder(methodSignature)
+                .target(target)
+                .column("instructionCount", instructionCount)
+                .column("allocations", allocationCounts)
+                .evidence(evidence)
+                .build());
     }
 
     public List<ResultRow> toClassRows() {
         String className = extractClass(methodSignature);
         ClickTarget target = new ClickTarget.ClassTarget(className);
-        return Arrays.asList(ResultRow.builder(className)
-            .target(target)
-            .column("methods", 1)
-            .column("allocations", allocationCounts)
-            .build());
+        return Collections.singletonList(ResultRow.builder(className)
+                .target(target)
+                .column("methods", 1)
+                .column("allocations", allocationCounts)
+                .build());
     }
 
     public List<ResultRow> toPathRows() {

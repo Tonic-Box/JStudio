@@ -11,8 +11,8 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.script.engine.ScriptFunction;
-import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.engine.ScriptValue;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -23,14 +23,13 @@ import java.util.function.Consumer;
  */
 public class DataFlowBridge {
 
-    private final ScriptInterpreter interpreter;
     private final ProjectModel projectModel;
     private final Map<String, DataFlowGraph> graphCache = new HashMap<>();
+    @Getter
     private DataFlowGraph currentGraph;
     private Consumer<String> logCallback;
 
-    public DataFlowBridge(ScriptInterpreter interpreter, ProjectModel projectModel) {
-        this.interpreter = interpreter;
+    public DataFlowBridge(ProjectModel projectModel) {
         this.projectModel = projectModel;
     }
 
@@ -398,7 +397,4 @@ public class DataFlowBridge {
         return ScriptValue.object(props);
     }
 
-    public DataFlowGraph getCurrentGraph() {
-        return currentGraph;
-    }
 }

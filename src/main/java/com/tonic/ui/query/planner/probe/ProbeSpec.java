@@ -54,10 +54,7 @@ public interface ProbeSpec {
             if (targetName != null && !targetName.equals(name)) {
                 return false;
             }
-            if (targetDesc != null && !targetDesc.equals(desc)) {
-                return false;
-            }
-            return true;
+            return targetDesc == null || targetDesc.equals(desc);
         }
 
         @Override
@@ -179,10 +176,7 @@ public interface ProbeSpec {
             if (ownerClass != null && !ownerClass.equals(owner) && !owner.endsWith("/" + ownerClass)) {
                 return false;
             }
-            if (fieldName != null && !fieldName.equals(name)) {
-                return false;
-            }
-            return true;
+            return fieldName == null || fieldName.equals(name);
         }
 
         @Override

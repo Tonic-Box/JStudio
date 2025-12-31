@@ -28,7 +28,7 @@ public class StatusBar extends ThemedJPanel {
     private final JLabel memoryLabel;
     private final JProgressBar progressBar;
 
-    private Timer memoryTimer;
+    private final Timer memoryTimer;
     private Timer clearMessageTimer;
 
     public StatusBar() {

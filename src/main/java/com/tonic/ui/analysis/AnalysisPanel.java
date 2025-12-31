@@ -10,7 +10,6 @@ import java.awt.BorderLayout;
 
 public class AnalysisPanel extends ThemedJPanel {
 
-    private final ProjectModel project;
     private final JTabbedPane tabbedPane;
 
     @Getter
@@ -38,7 +37,6 @@ public class AnalysisPanel extends ThemedJPanel {
 
     public AnalysisPanel(ProjectModel project) {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
-        this.project = project;
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         tabbedPane.setBackground(JStudioTheme.getBgSecondary());

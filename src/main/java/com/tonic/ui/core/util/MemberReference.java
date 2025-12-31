@@ -74,10 +74,7 @@ public final class MemberReference {
         if (memberName != null && !memberName.equals(name)) {
             return false;
         }
-        if (descriptor != null && !descriptor.equals(desc)) {
-            return false;
-        }
-        return true;
+        return descriptor == null || descriptor.equals(desc);
     }
 
     public boolean isWildcard() {

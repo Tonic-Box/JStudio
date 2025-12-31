@@ -4,13 +4,13 @@ import lombok.Getter;
 
 @Getter
 public class AllocationEvent {
+    @Getter
     public enum AllocationType {
         NEW(0xBB),
         NEWARRAY(0xBC),
         ANEWARRAY(0xBD),
         MULTIANEWARRAY(0xC5);
 
-        @Getter
         private final int opcode;
 
         AllocationType(int opcode) {

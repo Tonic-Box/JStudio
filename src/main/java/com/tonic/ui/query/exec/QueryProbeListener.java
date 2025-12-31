@@ -172,7 +172,6 @@ public class QueryProbeListener implements BytecodeListener {
 
     private void handleStringCheck(StackFrame frame) {
         if (!probes.hasProbeType(ProbeSpec.ProbeType.STRING)) {
-            return;
         }
     }
 

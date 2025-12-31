@@ -184,7 +184,7 @@ public class FileChooserDialog extends JDialog {
         private String title = "Select File";
         private File initialDirectory = lastDirectory;
         private String initialFileName = "";
-        private List<ExtensionFileFilter> filters = new ArrayList<>();
+        private final List<ExtensionFileFilter> filters = new ArrayList<>();
         private boolean useLastDirectory = true;
 
         private Builder() {

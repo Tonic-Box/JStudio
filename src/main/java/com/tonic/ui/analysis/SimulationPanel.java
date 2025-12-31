@@ -437,17 +437,16 @@ public class SimulationPanel extends ThemedJPanel {
         FindingEntry entry = filteredFindings.get(row);
         SimulationFinding finding = entry.finding;
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("=== ").append(finding.getTitle()).append(" ===\n\n");
-        sb.append("Type: ").append(finding.getType()).append("\n");
-        sb.append("Severity: ").append(finding.getSeverity()).append("\n");
-        sb.append("Location: ").append(finding.getMethodSignature()).append("\n\n");
-        sb.append("--- Description ---\n");
-        sb.append(finding.getDescription()).append("\n\n");
-        sb.append("--- Recommendation ---\n");
-        sb.append(finding.getRecommendation());
+        String sb = "=== " + finding.getTitle() + " ===\n\n" +
+                "Type: " + finding.getType() + "\n" +
+                "Severity: " + finding.getSeverity() + "\n" +
+                "Location: " + finding.getMethodSignature() + "\n\n" +
+                "--- Description ---\n" +
+                finding.getDescription() + "\n\n" +
+                "--- Recommendation ---\n" +
+                finding.getRecommendation();
 
-        detailsArea.setText(sb.toString());
+        detailsArea.setText(sb);
         detailsArea.setCaretPosition(0);
     }
 

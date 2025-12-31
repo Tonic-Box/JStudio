@@ -6,6 +6,7 @@ import com.tonic.ui.vm.testgen.objectspec.ObjectFactory;
 import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
 import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
 import com.tonic.ui.vm.testgen.objectspec.ValueMode;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -14,10 +15,15 @@ public class MethodFuzzer {
 
     public static class FuzzResult {
         private final Object[] inputs;
+        @Getter
         private final ExecutionResult result;
+        @Getter
         private final String outcomeKey;
+        @Getter
         private final String branchPathSignature;
+        @Getter
         private final String branchSummary;
+        @Getter
         private final int uniqueBranchPoints;
 
         public FuzzResult(Object[] inputs, ExecutionResult result) {
@@ -79,26 +85,6 @@ public class MethodFuzzer {
             return inputs.clone();
         }
 
-        public ExecutionResult getResult() {
-            return result;
-        }
-
-        public String getOutcomeKey() {
-            return outcomeKey;
-        }
-
-        public String getBranchPathSignature() {
-            return branchPathSignature;
-        }
-
-        public String getBranchSummary() {
-            return branchSummary;
-        }
-
-        public int getUniqueBranchPoints() {
-            return uniqueBranchPoints;
-        }
-
         public String getOutcomeDescription() {
             if (result.getException() != null) {
                 return "Throws " + extractExceptionName(result.getException().getMessage());
@@ -134,19 +120,19 @@ public class MethodFuzzer {
         }
     }
 
+    @Getter
     public static class FuzzConfig {
         private int iterationsPerType = 5;
         private boolean includeEdgeCases = true;
         private boolean includeNulls = true;
         private boolean includeRandom = true;
 
-        public int getIterationsPerType() { return iterationsPerType; }
         public void setIterationsPerType(int n) { this.iterationsPerType = n; }
-        public boolean isIncludeEdgeCases() { return includeEdgeCases; }
+
         public void setIncludeEdgeCases(boolean v) { this.includeEdgeCases = v; }
-        public boolean isIncludeNulls() { return includeNulls; }
+
         public void setIncludeNulls(boolean v) { this.includeNulls = v; }
-        public boolean isIncludeRandom() { return includeRandom; }
+
         public void setIncludeRandom(boolean v) { this.includeRandom = v; }
     }
 
@@ -156,7 +142,6 @@ public class MethodFuzzer {
     private final List<String> paramTypes;
     private final FuzzConfig config;
     private List<ParamSpec> paramSpecs;
-    private ObjectSpec thisSpec;
 
     public MethodFuzzer(String className, String methodName, String descriptor, FuzzConfig config) {
         this.className = className;
@@ -171,7 +156,6 @@ public class MethodFuzzer {
     }
 
     public void setThisSpec(ObjectSpec thisSpec) {
-        this.thisSpec = thisSpec;
     }
 
     public List<String> getParamTypes() {

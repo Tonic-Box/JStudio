@@ -7,6 +7,7 @@ import com.tonic.analysis.instruction.GotoInstruction;
 import com.tonic.analysis.instruction.Instruction;
 import com.tonic.analysis.instruction.LookupSwitchInstruction;
 import com.tonic.analysis.instruction.TableSwitchInstruction;
+import lombok.Getter;
 
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -23,8 +24,8 @@ public class BranchTrackingListener implements BytecodeListener {
 
     private int pendingBranchPC = -1;
     private String pendingMethodKey = null;
-    private boolean isBranchInstruction = false;
 
+    @Getter
     public static class BranchDecision {
         private final String methodKey;
         private final int branchPC;
@@ -36,18 +37,6 @@ public class BranchTrackingListener implements BytecodeListener {
             this.targetPC = targetPC;
         }
 
-        public String getMethodKey() {
-            return methodKey;
-        }
-
-        public int getBranchPC() {
-            return branchPC;
-        }
-
-        public int getTargetPC() {
-            return targetPC;
-        }
-
         @Override
         public String toString() {
             return methodKey + "@" + branchPC + "->" + targetPC;
@@ -56,7 +45,7 @@ public class BranchTrackingListener implements BytecodeListener {
 
     @Override
     public void beforeInstruction(StackFrame frame, Instruction instr) {
-        isBranchInstruction = isBranchInstruction(instr);
+        boolean isBranchInstruction = isBranchInstruction(instr);
 
         if (isBranchInstruction) {
             String methodKey = frame.getMethod().getOwnerName() + "." +
@@ -140,7 +129,7 @@ public class BranchTrackingListener implements BytecodeListener {
             for (byte b : digest) {
                 hex.append(String.format("%02x", b));
             }
-            return hex.toString().substring(0, 16);
+            return hex.substring(0, 16);
         } catch (Exception e) {
             return String.valueOf(input.hashCode());
         }

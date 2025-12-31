@@ -140,7 +140,7 @@ public class ResultCollector {
     @SuppressWarnings("unchecked")
     public <T> T getData(String key, Class<T> type) {
         Object value = data.get(key);
-        if (value != null && type.isInstance(value)) {
+        if (type.isInstance(value)) {
             return (T) value;
         }
         return null;

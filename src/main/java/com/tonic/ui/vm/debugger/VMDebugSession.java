@@ -6,6 +6,7 @@ import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.analysis.execution.state.ValueTag;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.vm.VMExecutionService;
+import lombok.Getter;
 
 import javax.swing.Timer;
 import java.util.ArrayList;
@@ -27,8 +28,11 @@ public class VMDebugSession {
 
     private final List<DebugListener> listeners = new CopyOnWriteArrayList<>();
     private DebugSession yabrSession;
+    @Getter
     private MethodEntry currentMethod;
+    @Getter
     private DebugStateModel lastState;
+    @Getter
     private boolean started;
     private Timer animationTimer;
 
@@ -177,38 +181,6 @@ public class VMDebugSession {
         }
     }
 
-    public void resume() {
-        if (!canStep()) return;
-
-        try {
-            yabrSession.resume();
-
-            if (yabrSession.isStopped()) {
-                started = false;
-                String reason = "Execution completed";
-                BytecodeResult result = yabrSession.getResult();
-                if (result != null) {
-                    if (result.hasException()) {
-                        reason = "Exception: " + result.getException();
-                    } else {
-                        String returnVal = formatReturnValue(result);
-                        if (returnVal != null) {
-                            reason = "Execution completed - Return: " + returnVal;
-                        }
-                    }
-                }
-                notifySessionStopped(reason);
-            } else {
-                updateState();
-            }
-        } catch (StackOverflowError e) {
-            notifyError("Stack overflow: " + e.getMessage());
-            handleExecutionError(e);
-        } catch (Exception e) {
-            handleExecutionError(e);
-        }
-    }
-
     public void resumeAnimated() {
         if (!canStep()) return;
 
@@ -291,14 +263,6 @@ public class VMDebugSession {
         }
     }
 
-    public int getAnimationDelay() {
-        return stepDelayMs;
-    }
-
-    private void handleExecutionError() {
-        handleExecutionError(null);
-    }
-
     private void handleExecutionError(Throwable error) {
         stopAnimation();
 
@@ -374,10 +338,6 @@ public class VMDebugSession {
         }
     }
 
-    public boolean isStarted() {
-        return started;
-    }
-
     public boolean isPaused() {
         return started && yabrSession != null && yabrSession.isPaused();
     }
@@ -446,14 +406,6 @@ public class VMDebugSession {
             notifyError("Failed to set field value: " + e.getMessage());
             return false;
         }
-    }
-
-    public DebugStateModel getLastState() {
-        return lastState;
-    }
-
-    public MethodEntry getCurrentMethod() {
-        return currentMethod;
     }
 
     public void addListener(DebugListener listener) {
@@ -703,9 +655,6 @@ public class VMDebugSession {
     }
 
     private class YabrDebugListener implements DebugEventListener {
-        @Override
-        public void onSessionStart(DebugSession session) {
-        }
 
         @Override
         public void onSessionStop(DebugSession session, BytecodeResult result) {
@@ -738,8 +687,5 @@ public class VMDebugSession {
             notifyError("Exception: " + exception.toString());
         }
 
-        @Override
-        public void onStateChange(DebugSession session, DebugSessionState oldState, DebugSessionState newState) {
-        }
     }
 }

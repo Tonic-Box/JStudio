@@ -3,6 +3,7 @@ package com.tonic.ui.script.bridge;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.pipeline.ScriptPipeline;
+import lombok.Getter;
 
 import java.util.function.Consumer;
 
@@ -15,22 +16,34 @@ public class BridgeRegistry {
     private final ScriptInterpreter interpreter;
     private final ProjectModel projectModel;
     private Consumer<String> logCallback;
-    private Consumer<String> warnCallback;
-    private Consumer<String> errorCallback;
 
+    @Getter
     private ASTBridge astBridge;
+    @Getter
     private IRBridge irBridge;
+    @Getter
     private AnnotationBridge annotationBridge;
+    @Getter
     private ResultsBridge resultsBridge;
+    @Getter
     private ProjectBridge projectBridge;
+    @Getter
     private CallGraphBridge callGraphBridge;
+    @Getter
     private DataFlowBridge dataFlowBridge;
+    @Getter
     private DependencyBridge dependencyBridge;
+    @Getter
     private SimulationBridge simulationBridge;
+    @Getter
     private InstrumentationBridge instrumentationBridge;
+    @Getter
     private PatternBridge patternBridge;
+    @Getter
     private TypeBridge typeBridge;
+    @Getter
     private StringBridge stringBridge;
+    @Getter
     private ScriptPipeline scriptPipeline;
 
     public BridgeRegistry(ScriptInterpreter interpreter, ProjectModel projectModel) {
@@ -38,10 +51,8 @@ public class BridgeRegistry {
         this.projectModel = projectModel;
     }
 
-    public void setCallbacks(Consumer<String> log, Consumer<String> warn, Consumer<String> error) {
+    public void setLogCallback(Consumer<String> log) {
         this.logCallback = log;
-        this.warnCallback = warn;
-        this.errorCallback = error;
     }
 
     public void registerAll() {
@@ -112,7 +123,7 @@ public class BridgeRegistry {
 
     public void registerDataFlowBridge() {
         if (projectModel != null) {
-            dataFlowBridge = new DataFlowBridge(interpreter, projectModel);
+            dataFlowBridge = new DataFlowBridge(projectModel);
             if (logCallback != null) {
                 dataFlowBridge.setLogCallback(logCallback);
             }
@@ -122,7 +133,7 @@ public class BridgeRegistry {
 
     public void registerDependencyBridge() {
         if (projectModel != null) {
-            dependencyBridge = new DependencyBridge(interpreter, projectModel);
+            dependencyBridge = new DependencyBridge(projectModel);
             if (logCallback != null) {
                 dependencyBridge.setLogCallback(logCallback);
             }
@@ -195,59 +206,4 @@ public class BridgeRegistry {
         interpreter.getGlobalContext().defineConstant("pipeline", scriptPipeline.createPipelineObject());
     }
 
-    public ASTBridge getAstBridge() {
-        return astBridge;
-    }
-
-    public IRBridge getIrBridge() {
-        return irBridge;
-    }
-
-    public AnnotationBridge getAnnotationBridge() {
-        return annotationBridge;
-    }
-
-    public ResultsBridge getResultsBridge() {
-        return resultsBridge;
-    }
-
-    public ProjectBridge getProjectBridge() {
-        return projectBridge;
-    }
-
-    public CallGraphBridge getCallGraphBridge() {
-        return callGraphBridge;
-    }
-
-    public DataFlowBridge getDataFlowBridge() {
-        return dataFlowBridge;
-    }
-
-    public DependencyBridge getDependencyBridge() {
-        return dependencyBridge;
-    }
-
-    public SimulationBridge getSimulationBridge() {
-        return simulationBridge;
-    }
-
-    public InstrumentationBridge getInstrumentationBridge() {
-        return instrumentationBridge;
-    }
-
-    public PatternBridge getPatternBridge() {
-        return patternBridge;
-    }
-
-    public TypeBridge getTypeBridge() {
-        return typeBridge;
-    }
-
-    public StringBridge getStringBridge() {
-        return stringBridge;
-    }
-
-    public ScriptPipeline getScriptPipeline() {
-        return scriptPipeline;
-    }
 }

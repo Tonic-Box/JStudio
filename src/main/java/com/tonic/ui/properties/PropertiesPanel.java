@@ -160,10 +160,9 @@ public class PropertiesPanel extends ThemedJPanel {
         classPanel.repaint();
 
         // Update details
-        StringBuilder sb = new StringBuilder();
-        sb.append("Full name: ").append(classEntry.getClassName().replace('/', '.')).append("\n");
-        sb.append("Internal name: ").append(classEntry.getClassName()).append("\n");
-        detailsArea.setText(sb.toString());
+        String sb = "Full name: " + classEntry.getClassName().replace('/', '.') + "\n" +
+                "Internal name: " + classEntry.getClassName() + "\n";
+        detailsArea.setText(sb);
     }
 
     private void updateMethodPanel(MethodEntryModel method) {
@@ -201,11 +200,10 @@ public class PropertiesPanel extends ThemedJPanel {
         methodPanel.repaint();
 
         // Update details
-        StringBuilder sb = new StringBuilder();
-        sb.append("Signature: ").append(entry.getName()).append(entry.getDesc()).append("\n");
-        sb.append("Return: ").append(parseReturnType(entry.getDesc())).append("\n");
-        sb.append("Parameters: ").append(parseParameters(entry.getDesc())).append("\n");
-        detailsArea.setText(sb.toString());
+        String sb = "Signature: " + entry.getName() + entry.getDesc() + "\n" +
+                "Return: " + parseReturnType(entry.getDesc()) + "\n" +
+                "Parameters: " + parseParameters(entry.getDesc()) + "\n";
+        detailsArea.setText(sb);
     }
 
     private void updateFieldPanel(FieldEntryModel field) {
@@ -234,9 +232,7 @@ public class PropertiesPanel extends ThemedJPanel {
         fieldPanel.repaint();
 
         // Update details
-        StringBuilder sb = new StringBuilder();
-        sb.append("Full signature: ").append(entry.getName()).append(" : ").append(entry.getDesc()).append("\n");
-        detailsArea.setText(sb.toString());
+        detailsArea.setText("Full signature: " + entry.getName() + " : " + entry.getDesc() + "\n");
     }
 
     private void addProperty(JPanel panel, int row, String label, String value) {

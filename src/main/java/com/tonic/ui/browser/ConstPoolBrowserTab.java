@@ -6,10 +6,8 @@ import com.tonic.parser.attribute.Attribute;
 import com.tonic.parser.constpool.Item;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.theme.Icons;
-import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
+import com.tonic.ui.theme.*;
+import lombok.Getter;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
@@ -28,23 +26,19 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class ConstPoolBrowserTab extends JPanel implements ThemeManager.ThemeChangeListener {
+public class ConstPoolBrowserTab extends JPanel implements ThemeChangeListener {
 
     private final ProjectModel projectModel;
+    @Getter
     private ClassEntryModel currentClass;
 
     private JComboBox<ClassEntryModel> classSelector;
     private DefaultComboBoxModel<ClassEntryModel> classSelectorModel;
-    private JButton refreshButton;
 
-    private JTabbedPane cpViewTabs;
     private ConstPoolTableView tableView;
     private ConstPoolTreeView treeView;
     private AttributesBrowserPanel attributesPanel;
     private DetailsPanel detailsPanel;
-
-    private JSplitPane mainSplit;
-    private JSplitPane leftSplit;
 
     public ConstPoolBrowserTab(ProjectModel projectModel) {
         this.projectModel = projectModel;
@@ -78,7 +72,7 @@ public class ConstPoolBrowserTab extends JPanel implements ThemeManager.ThemeCha
         treeView.setSelectionListener(this::onItemSelected);
         attributesPanel.setSelectionListener(this::onAttributeSelected);
 
-        cpViewTabs = new JTabbedPane(JTabbedPane.TOP);
+        JTabbedPane cpViewTabs = new JTabbedPane(JTabbedPane.TOP);
         cpViewTabs.setBackground(JStudioTheme.getBgSecondary());
         cpViewTabs.setForeground(JStudioTheme.getTextPrimary());
         cpViewTabs.addTab("Table", createScrollPane(tableView));
@@ -108,7 +102,7 @@ public class ConstPoolBrowserTab extends JPanel implements ThemeManager.ThemeCha
         ));
         attrPanel.add(createScrollPane(attributesPanel), BorderLayout.CENTER);
 
-        leftSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, cpPanel, attrPanel);
+        JSplitPane leftSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, cpPanel, attrPanel);
         leftSplit.setResizeWeight(0.6);
         leftSplit.setDividerSize(4);
         leftSplit.setBorder(null);
@@ -126,7 +120,7 @@ public class ConstPoolBrowserTab extends JPanel implements ThemeManager.ThemeCha
         ));
         detailsContainer.add(createScrollPane(detailsPanel), BorderLayout.CENTER);
 
-        mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, detailsContainer);
+        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftSplit, detailsContainer);
         mainSplit.setResizeWeight(0.6);
         mainSplit.setDividerSize(4);
         mainSplit.setBorder(null);
@@ -161,7 +155,7 @@ public class ConstPoolBrowserTab extends JPanel implements ThemeManager.ThemeCha
         populateClassSelector();
         toolbar.add(classSelector);
 
-        refreshButton = new JButton(Icons.getIcon("refresh"));
+        JButton refreshButton = new JButton(Icons.getIcon("refresh"));
         refreshButton.setToolTipText("Refresh");
         refreshButton.setBackground(JStudioTheme.getBgTertiary());
         refreshButton.setFocusable(false);
@@ -244,10 +238,6 @@ public class ConstPoolBrowserTab extends JPanel implements ThemeManager.ThemeCha
             return currentClass.getClassName().replace('/', '.');
         }
         return "Browse constant pool and attributes";
-    }
-
-    public ClassEntryModel getCurrentClass() {
-        return currentClass;
     }
 
     private static class ClassComboRenderer extends javax.swing.DefaultListCellRenderer {

@@ -3,11 +3,12 @@ package com.tonic.ui.core.component;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
+import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.JTextArea;
 
-public class ThemedJTextArea extends JTextArea implements ThemeManager.ThemeChangeListener {
+public class ThemedJTextArea extends JTextArea implements ThemeChangeListener {
 
     private boolean useCodeFont = true;
 

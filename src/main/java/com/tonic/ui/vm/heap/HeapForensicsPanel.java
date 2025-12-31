@@ -19,6 +19,7 @@ import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.MethodSelectorPanel;
 import com.tonic.ui.vm.heap.model.*;
+import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -28,10 +29,11 @@ import java.util.List;
 
 public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTracker.ForensicsEventListener {
 
+    @Getter
     private HeapForensicsTracker tracker;
+    @Getter
     private HeapForensicsListener listener;
 
-    private final MethodSelectorPanel methodSelector;
     private final ArgumentConfigPanel argumentConfigPanel;
     private final ClassSummaryPanel classSummaryPanel;
     private final ObjectListPanel objectListPanel;
@@ -39,10 +41,6 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
 
     private JLabel statusLabel;
     private JButton runBtn;
-    private JButton snapshotBtn;
-    private JButton refreshBtn;
-    private JButton clearBtn;
-    private JButton exportBtn;
     private JToggleButton trackingToggle;
     private JSpinner provenanceSpinner;
     private JCheckBox trackMutationsCheck;
@@ -69,7 +67,7 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         JPanel toolbarPanel = createToolbar();
         add(toolbarPanel, BorderLayout.NORTH);
 
-        methodSelector = new MethodSelectorPanel("Select Method");
+        MethodSelectorPanel methodSelector = new MethodSelectorPanel("Select Method");
         methodSelector.setPreferredSize(new Dimension(250, 0));
         methodSelector.setOnMethodSelected(this::onMethodSelected);
 
@@ -99,7 +97,7 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         rightSplit.setBackground(JStudioTheme.getBgPrimary());
 
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-            methodSelector,
+                methodSelector,
             rightSplit);
         mainSplit.setDividerLocation(255); //todo
         mainSplit.setResizeWeight(0.25);
@@ -139,7 +137,7 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         return panel;
     }
 
-    private void showLoading(String message) {
+    private void showLoading() {
         progressBar.setVisible(true);
 
         Window window = SwingUtilities.getWindowAncestor(this);
@@ -164,12 +162,12 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
                 rpc.setGlassPane(glass);
             }
             if (loadingLabel != null) {
-                loadingLabel.setText(message);
+                loadingLabel.setText("Initializing VM...");
             }
             glass.setVisible(true);
         }
 
-        final String baseMessage = message;
+        final String baseMessage = "Initializing VM...";
         spinnerTimer = new Timer(100, e -> {
             spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES.length;
             if (loadingLabel != null) {
@@ -253,19 +251,19 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
 
         toolbar.add(Box.createHorizontalStrut(15));
 
-        snapshotBtn = new JButton("Snapshot");
+        JButton snapshotBtn = new JButton("Snapshot");
         snapshotBtn.addActionListener(e -> takeSnapshot());
         toolbar.add(snapshotBtn);
 
-        refreshBtn = new JButton("Refresh");
+        JButton refreshBtn = new JButton("Refresh");
         refreshBtn.addActionListener(e -> refresh());
         toolbar.add(refreshBtn);
 
-        clearBtn = new JButton("Clear");
+        JButton clearBtn = new JButton("Clear");
         clearBtn.addActionListener(e -> reset());
         toolbar.add(clearBtn);
 
-        exportBtn = new JButton("Export...");
+        JButton exportBtn = new JButton("Export...");
         exportBtn.addActionListener(e -> showExportDialog());
         toolbar.add(exportBtn);
 
@@ -324,14 +322,12 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         isRunning = true;
         updateButtonStates();
         statusLabel.setText("Initializing...");
-        showLoading("Initializing VM...");
+        showLoading();
 
         ClassPool classPool = project.getClassPool();
 
         SwingWorker<ExecutionResultWrapper, String> worker = new SwingWorker<>() {
             private SimpleHeapManager heapManager;
-            private ClassResolver classResolver;
-            private ConcreteValue[] args;
 
             @Override
             protected ExecutionResultWrapper doInBackground() {
@@ -340,7 +336,7 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
                     SwingUtilities.invokeAndWait(() -> reset());
 
                     publish("Building class resolver...");
-                    classResolver = new ClassResolver(classPool);
+                    ClassResolver classResolver = new ClassResolver(classPool);
                     heapManager = (SimpleHeapManager) tracker.getHeapManager();
                     heapManager.setClassResolver(classResolver);
 
@@ -350,7 +346,7 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
                         argumentConfigPanel.setClassResolver(finalResolver);
                     });
 
-                    args = argumentConfigPanel.getArguments();
+                    ConcreteValue[] args = argumentConfigPanel.getArguments();
 
                     publish("Analyzing " + selectedMethod.getName() + "...");
 
@@ -519,23 +515,11 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         }
     }
 
-    public HeapForensicsTracker getTracker() {
-        return tracker;
-    }
-
-    public HeapForensicsListener getListener() {
-        return listener;
-    }
-
     @Override
     public void onAllocationRecorded(AllocationEvent event) {
         SwingUtilities.invokeLater(() -> {
             classSummaryPanel.incrementClass(event.getClassName());
         });
-    }
-
-    @Override
-    public void onMutationRecorded(MutationEvent event) {
     }
 
     @Override

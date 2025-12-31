@@ -1,5 +1,7 @@
 package com.tonic.ui.script.engine;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +12,7 @@ public class ScriptParser {
 
     private final List<ScriptToken> tokens;
     private int current = 0;
+    @Getter
     private final List<String> errors = new ArrayList<>();
 
     public ScriptParser(List<ScriptToken> tokens) {
@@ -32,10 +35,6 @@ public class ScriptParser {
         }
 
         return statements;
-    }
-
-    public List<String> getErrors() {
-        return errors;
     }
 
     // ==================== Statements ====================
@@ -415,7 +414,7 @@ public class ScriptParser {
             } else if (match(ScriptToken.Type.DOT)) {
                 ScriptToken name = consume(ScriptToken.Type.IDENTIFIER, "Expected property name after '.'");
                 expr = new ScriptAST.MemberAccessExpr(expr, name.getValue(), false);
-            } else if (check(ScriptToken.Type.QUESTION) && checkNext(ScriptToken.Type.DOT)) {
+            } else if (check(ScriptToken.Type.QUESTION) && checkNext()) {
                 advance(); // consume '?'
                 advance(); // consume '.'
                 ScriptToken name = consume(ScriptToken.Type.IDENTIFIER, "Expected property name after '?.'");
@@ -560,9 +559,9 @@ public class ScriptParser {
         return peek().getType() == type;
     }
 
-    private boolean checkNext(ScriptToken.Type type) {
+    private boolean checkNext() {
         if (current + 1 >= tokens.size()) return false;
-        return tokens.get(current + 1).getType() == type;
+        return tokens.get(current + 1).getType() == ScriptToken.Type.DOT;
     }
 
     private ScriptToken advance() {

@@ -24,7 +24,7 @@ public class ArgumentTypeAnalyzer {
             }
 
             Instruction invokeInstr = codeWriter.getInstructionAt(targetIndex);
-            if (invokeInstr == null || !isInvokeInstruction(invokeInstr)) {
+            if (!isInvokeInstruction(invokeInstr)) {
                 return ArgumentType.ANY;
             }
 
@@ -58,7 +58,7 @@ public class ArgumentTypeAnalyzer {
             }
 
             Instruction invokeInstr = codeWriter.getInstructionAt(targetIndex);
-            if (invokeInstr == null || !isInvokeInstruction(invokeInstr)) {
+            if (!isInvokeInstruction(invokeInstr)) {
                 return result;
             }
 

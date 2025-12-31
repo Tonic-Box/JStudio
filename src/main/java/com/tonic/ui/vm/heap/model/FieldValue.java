@@ -1,5 +1,7 @@
 package com.tonic.ui.vm.heap.model;
 
+import com.tonic.analysis.execution.heap.ArrayInstance;
+import com.tonic.analysis.execution.heap.ObjectInstance;
 import lombok.Getter;
 
 @Getter
@@ -50,15 +52,15 @@ public class FieldValue {
         if (value == null) {
             return "null";
         }
-        if (value instanceof com.tonic.analysis.execution.heap.ObjectInstance) {
-            com.tonic.analysis.execution.heap.ObjectInstance obj =
-                (com.tonic.analysis.execution.heap.ObjectInstance) value;
-            return obj.getClassName() + " #" + obj.getId();
-        }
-        if (value instanceof com.tonic.analysis.execution.heap.ArrayInstance) {
-            com.tonic.analysis.execution.heap.ArrayInstance arr =
-                (com.tonic.analysis.execution.heap.ArrayInstance) value;
+        if (value instanceof ArrayInstance) {
+            ArrayInstance arr =
+                    (ArrayInstance) value;
             return arr.getComponentType() + "[" + arr.getLength() + "] #" + arr.getId();
+        }
+        if (value instanceof ObjectInstance) {
+            ObjectInstance obj =
+                (ObjectInstance) value;
+            return obj.getClassName() + " #" + obj.getId();
         }
         return String.valueOf(value);
     }
@@ -104,17 +106,10 @@ public class FieldValue {
     }
 
     public static class Builder {
-        private String key;
         private String owner = "";
         private String name = "";
         private String descriptor = "";
         private Object value;
-        private int referenceId = -1;
-
-        public Builder key(String key) {
-            this.key = key;
-            return this;
-        }
 
         public Builder owner(String owner) {
             this.owner = owner;
@@ -136,14 +131,8 @@ public class FieldValue {
             return this;
         }
 
-        public Builder referenceId(int referenceId) {
-            this.referenceId = referenceId;
-            return this;
-        }
-
         public FieldValue build() {
-            FieldValue fv = new FieldValue(owner, name, descriptor, value);
-            return fv;
+            return new FieldValue(owner, name, descriptor, value);
         }
     }
 }

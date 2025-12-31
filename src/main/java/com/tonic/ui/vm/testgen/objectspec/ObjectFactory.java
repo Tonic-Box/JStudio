@@ -186,12 +186,17 @@ public class ObjectFactory {
             }
         }
 
-        Random rand = ThreadLocalRandom.current();
         int remaining = Math.max(0, count - values.size());
         for (int i = 0; i < remaining; i++) {
             int rangeMin = (int) Math.max(min, Integer.MIN_VALUE);
             int rangeMax = (int) Math.min(max, Integer.MAX_VALUE);
-            values.add(rand.nextInt(rangeMax - rangeMin + 1) + rangeMin);
+            if (rangeMin >= rangeMax) {
+                values.add(rangeMin);
+            } else if (rangeMin == Integer.MIN_VALUE && rangeMax == Integer.MAX_VALUE) {
+                values.add(ThreadLocalRandom.current().nextInt());
+            } else {
+                values.add(ThreadLocalRandom.current().nextInt(rangeMin, rangeMax + 1));
+            }
         }
 
         return values;
@@ -341,9 +346,7 @@ public class ObjectFactory {
 
         String[] stringSet = strategy.getStringSet();
         if (stringSet != null) {
-            for (String s : stringSet) {
-                values.add(s);
-            }
+            Collections.addAll(values, stringSet);
         }
 
         Random rand = ThreadLocalRandom.current();
@@ -370,6 +373,13 @@ public class ObjectFactory {
 
         if (valueLists.isEmpty()) {
             return result;
+        }
+
+        // Ensure no empty value lists - add null as default
+        for (List<Object> list : valueLists) {
+            if (list.isEmpty()) {
+                list.add(null);
+            }
         }
 
         int totalCombos = 1;

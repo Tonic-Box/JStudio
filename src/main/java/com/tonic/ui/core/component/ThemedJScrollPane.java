@@ -2,13 +2,14 @@ package com.tonic.ui.core.component;
 
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
+import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.BorderFactory;
 import javax.swing.JScrollPane;
 import java.awt.Component;
 
-public class ThemedJScrollPane extends JScrollPane implements ThemeManager.ThemeChangeListener {
+public class ThemedJScrollPane extends JScrollPane implements ThemeChangeListener {
 
     public ThemedJScrollPane() {
         super();

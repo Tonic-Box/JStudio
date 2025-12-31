@@ -232,7 +232,7 @@ public class FileListModel extends AbstractTableModel {
         private final long size;
         private final Date lastModified;
         private final String type;
-        private Icon icon;
+        private final Icon icon;
 
         public FileEntry(File file) {
             this.file = file;

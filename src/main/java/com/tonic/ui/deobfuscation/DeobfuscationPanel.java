@@ -44,7 +44,7 @@ public class DeobfuscationPanel extends ThemedJPanel {
 
     private List<SuspiciousString> suspiciousStrings = new ArrayList<>();
     private List<DecryptorCandidate> decryptorCandidates = new ArrayList<>();
-    private List<DeobfuscationResult> results = new ArrayList<>();
+    private final List<DeobfuscationResult> results = new ArrayList<>();
 
     public DeobfuscationPanel(ProjectModel project) {
         super(BackgroundStyle.PRIMARY);

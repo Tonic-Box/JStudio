@@ -34,15 +34,13 @@ public class ConstPoolTableView extends ThemedJPanel {
     private final ConstPoolTableModel tableModel;
     private final TableRowSorter<ConstPoolTableModel> sorter;
     private final JTextField filterField;
-    private final JPanel filterPanel;
 
     private BiConsumer<Item<?>, Integer> selectionListener;
-    private ConstPool constPool;
 
     public ConstPoolTableView() {
         super(BackgroundStyle.TERTIARY, new BorderLayout());
 
-        filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY));
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY));
         filterPanel.setBackground(JStudioTheme.getBgSecondary());
 
         JLabel filterLabel = new JLabel("Filter:");
@@ -127,7 +125,6 @@ public class ConstPoolTableView extends ThemedJPanel {
     }
 
     public void loadConstPool(ConstPool constPool) {
-        this.constPool = constPool;
         tableModel.loadConstPool(constPool);
     }
 
@@ -161,10 +158,8 @@ public class ConstPoolTableView extends ThemedJPanel {
     private static class ConstPoolTableModel extends AbstractTableModel {
         private static final String[] COLUMNS = {"#", "Tag", "Type", "Value"};
         private final List<ConstPoolEntry> entries = new ArrayList<>();
-        private ConstPool constPool;
 
         void loadConstPool(ConstPool constPool) {
-            this.constPool = constPool;
             entries.clear();
 
             if (constPool == null) {
@@ -403,7 +398,7 @@ public class ConstPoolTableView extends ThemedJPanel {
                 String type = value != null ? value.toString() : "";
                 setForeground(getTypeColor(type));
             } else {
-                setForeground(isSelected ? JStudioTheme.getTextPrimary() : JStudioTheme.getTextPrimary());
+                setForeground(JStudioTheme.getTextPrimary());
             }
 
             return this;

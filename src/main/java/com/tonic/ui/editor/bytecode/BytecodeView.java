@@ -3,10 +3,7 @@ package com.tonic.ui.editor.bytecode;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.theme.SyntaxColors;
-import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
+import com.tonic.ui.theme.*;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -30,7 +27,7 @@ import javax.swing.SwingUtilities;
 /**
  * Bytecode view showing disassembled JVM instructions.
  */
-public class BytecodeView extends JPanel implements ThemeManager.ThemeChangeListener {
+public class BytecodeView extends JPanel implements ThemeChangeListener {
 
     private final ClassEntryModel classEntry;
     private final JTextPane textPane;

@@ -30,9 +30,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.Set;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugListener {
@@ -45,7 +46,6 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
     private final CallStackPanel callStackPanel;
     private final JLabel statusLabel;
     private final JTextArea outputArea;
-    private final MethodSelectorPanel methodSelector;
 
     private JButton startBtn;
     private JButton stepIntoBtn;
@@ -58,12 +58,12 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
 
     private MethodEntry currentMethod;
     private MethodEntry displayedMethod;
-    private JScrollPane bytecodeScroll;
-    private ArgumentConfigPanel argumentConfigPanel;
+    private final JScrollPane bytecodeScroll;
+    private final ArgumentConfigPanel argumentConfigPanel;
     private boolean recursiveExecution = false;
-    private List<InstructionEntry> instructions;
-    private Map<Integer, Integer> pcToRowMap;
-    private Consumer<String> onStatusMessage;
+    private final List<InstructionEntry> instructions;
+    private final Map<Integer, Integer> pcToRowMap;
+    private final Set<Integer> breakpoints = new HashSet<>();
 
     private JToggleButton recordBtn;
     private JButton exportTraceBtn;
@@ -72,7 +72,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
     private ExecutionTrace currentTrace;
     private List<String> lastStackState = new ArrayList<>();
 
-    private JTabbedPane bottomTabbedPane;
+    private final JTabbedPane bottomTabbedPane;
     private static final int TAB_ARGUMENTS = 0;
     private static final int TAB_OUTPUT = 1;
 
@@ -88,7 +88,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         JPanel toolbarPanel = createToolbar();
         add(toolbarPanel, BorderLayout.NORTH);
 
-        methodSelector = new MethodSelectorPanel("Method Browser");
+        MethodSelectorPanel methodSelector = new MethodSelectorPanel("Method Browser");
         methodSelector.setPreferredSize(new Dimension(250, 0));
         methodSelector.setOnMethodSelected(this::onMethodSelected);
 
@@ -255,6 +255,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             instructions.add(new InstructionEntry(index, pc, mnemonic, operandStr, lineNum, category, false));
             pcToRowMap.put(pc, index);
 
+            assert opcode != null;
             int instrLength = calculateInstructionLength(bytecode, pc, opcode);
             pc += instrLength;
             index++;
@@ -536,7 +537,6 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         try {
             Item<?> item = constPool.getItem(index);
             if (item instanceof InvokeDynamicItem) {
-                InvokeDynamicItem invdyn = (InvokeDynamicItem) item;
                 return "invokedynamic#" + index;
             }
             return "#" + index;
@@ -595,11 +595,13 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         stopBtn = createToolButton("Stop", null, e -> stopDebugging());
 
         speedSelector = new JComboBox<>(new String[]{"5ms", "10ms", "20ms", "50ms", "100ms", "300ms"});
-        speedSelector.setSelectedIndex(3);
+        speedSelector.setSelectedIndex(4);
         speedSelector.setBackground(JStudioTheme.getBgTertiary());
         speedSelector.setForeground(JStudioTheme.getTextPrimary());
         speedSelector.setMaximumSize(new Dimension(80, 28));
         speedSelector.setToolTipText("Animation speed for Run mode");
+        int[] _delays = {5,10,20, 50, 100, 300};
+        session.setAnimationDelay(_delays[speedSelector.getSelectedIndex()]);
         speedSelector.addActionListener(e -> {
             int[] delays = {5,10,20, 50, 100, 300};
             session.setAnimationDelay(delays[speedSelector.getSelectedIndex()]);
@@ -610,9 +612,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         recursiveCheckbox.setBackground(JStudioTheme.getBgPrimary());
         recursiveCheckbox.setForeground(JStudioTheme.getTextPrimary());
         recursiveCheckbox.setToolTipText("Execute called methods recursively (vs stub with defaults)");
-        recursiveCheckbox.addActionListener(e -> {
-            recursiveExecution = recursiveCheckbox.isSelected();
-        });
+        recursiveCheckbox.addActionListener(e -> recursiveExecution = recursiveCheckbox.isSelected());
 
         panel.add(startBtn);
         panel.add(Box.createHorizontalStrut(10));
@@ -701,6 +701,17 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         bytecodeTable.getColumnModel().getColumn(1).setPreferredWidth(50);
         bytecodeTable.getColumnModel().getColumn(2).setPreferredWidth(100);
         bytecodeTable.getColumnModel().getColumn(3).setPreferredWidth(200);
+
+        JPopupMenu contextMenu = new JPopupMenu();
+        JMenuItem toggleBreakpoint = new JMenuItem("Toggle Breakpoint");
+        toggleBreakpoint.addActionListener(e -> toggleBreakpointAtSelectedRow());
+        contextMenu.add(toggleBreakpoint);
+
+        JMenuItem runToCursor = new JMenuItem("Run to Cursor");
+        runToCursor.addActionListener(e -> runToCursorAtSelectedRow());
+        contextMenu.add(runToCursor);
+
+        bytecodeTable.setComponentPopupMenu(contextMenu);
     }
 
     public void loadMethod(MethodEntryModel methodModel) {
@@ -721,6 +732,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
 
         instructions.clear();
         pcToRowMap.clear();
+        breakpoints.clear();
 
         CodeAttribute code = method.getCodeAttribute();
         if (code == null) {
@@ -829,121 +841,6 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
                (code[pos + 3] & 0xFF);
     }
 
-    private String formatOperands(byte[] bytecode, int pc, Opcode opcode, CodeAttribute code) {
-        int operandSize = opcode.getOperandCount();
-        if (operandSize == 0) {
-            return "";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        int idx = pc + 1;
-
-        switch (opcode) {
-            case BIPUSH:
-                if (idx < bytecode.length) {
-                    sb.append(bytecode[idx]);
-                }
-                break;
-            case SIPUSH:
-            case IFEQ:
-            case IFNE:
-            case IFLT:
-            case IFGE:
-            case IFGT:
-            case IFLE:
-            case IF_ICMPEQ:
-            case IF_ICMPNE:
-            case IF_ICMPLT:
-            case IF_ICMPGE:
-            case IF_ICMPGT:
-            case IF_ICMPLE:
-            case IF_ACMPEQ:
-            case IF_ACMPNE:
-            case GOTO:
-            case JSR:
-            case IFNULL:
-            case IFNONNULL:
-                if (idx + 1 < bytecode.length) {
-                    int value = ((bytecode[idx] & 0xFF) << 8) | (bytecode[idx + 1] & 0xFF);
-                    sb.append(value);
-                }
-                break;
-            case ILOAD:
-            case LLOAD:
-            case FLOAD:
-            case DLOAD:
-            case ALOAD:
-            case ISTORE:
-            case LSTORE:
-            case FSTORE:
-            case DSTORE:
-            case ASTORE:
-            case RET:
-                if (idx < bytecode.length) {
-                    sb.append(Byte.toUnsignedInt(bytecode[idx]));
-                }
-                break;
-            case LDC:
-                if (idx < bytecode.length) {
-                    int cpIdx = Byte.toUnsignedInt(bytecode[idx]);
-                    sb.append("#").append(cpIdx);
-                }
-                break;
-            case LDC_W:
-            case LDC2_W:
-            case GETSTATIC:
-            case PUTSTATIC:
-            case GETFIELD:
-            case PUTFIELD:
-            case INVOKEVIRTUAL:
-            case INVOKESPECIAL:
-            case INVOKESTATIC:
-            case NEW:
-            case ANEWARRAY:
-            case CHECKCAST:
-            case INSTANCEOF:
-                if (idx + 1 < bytecode.length) {
-                    int cpIdx = ((bytecode[idx] & 0xFF) << 8) | (bytecode[idx + 1] & 0xFF);
-                    sb.append("#").append(cpIdx);
-                }
-                break;
-            case IINC:
-                if (idx + 1 < bytecode.length) {
-                    int varIdx = Byte.toUnsignedInt(bytecode[idx]);
-                    int constVal = bytecode[idx + 1];
-                    sb.append(varIdx).append(", ").append(constVal);
-                }
-                break;
-            case INVOKEINTERFACE:
-            case INVOKEDYNAMIC:
-                if (idx + 1 < bytecode.length) {
-                    int cpIdx = ((bytecode[idx] & 0xFF) << 8) | (bytecode[idx + 1] & 0xFF);
-                    sb.append("#").append(cpIdx);
-                }
-                break;
-            case NEWARRAY:
-                if (idx < bytecode.length) {
-                    int atype = Byte.toUnsignedInt(bytecode[idx]);
-                    sb.append(getArrayTypeName(atype));
-                }
-                break;
-            case MULTIANEWARRAY:
-                if (idx + 2 < bytecode.length) {
-                    int cpIdx = ((bytecode[idx] & 0xFF) << 8) | (bytecode[idx + 1] & 0xFF);
-                    int dims = Byte.toUnsignedInt(bytecode[idx + 2]);
-                    sb.append("#").append(cpIdx).append(", ").append(dims);
-                }
-                break;
-            default:
-                for (int i = 0; i < operandSize && idx + i < bytecode.length; i++) {
-                    if (i > 0) sb.append(" ");
-                    sb.append(String.format("%02X", bytecode[idx + i]));
-                }
-        }
-
-        return sb.toString();
-    }
-
     private String getArrayTypeName(int atype) {
         switch (atype) {
             case 4: return "boolean";
@@ -978,8 +875,8 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             localsPanel.setClassResolver(vmService.getClassResolver());
             stackPanel.setClassResolver(vmService.getClassResolver());
 
-            ConcreteValue[] vmArgs = argumentConfigPanel.getArguments();
-            session.start(currentMethod, recursiveExecution, (Object[]) vmArgs);
+            Object[] vmArgs = args.length > 0 ? args : argumentConfigPanel.getArguments();
+            session.start(currentMethod, recursiveExecution, vmArgs);
 
             updateButtonStates();
             String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
@@ -1087,7 +984,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
 
         List<String> locals = new ArrayList<>();
         for (LocalEntry entry : state.getLocalVariables()) {
-            locals.add("local" + entry.getSlot() + ": " + entry.toString());
+            locals.add("local" + entry.getSlot() + ": " + entry);
         }
         step.setLocals(locals);
 
@@ -1191,6 +1088,41 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         stopBtn.setEnabled(isRunning || isAnimating);
     }
 
+    private void toggleBreakpointAtSelectedRow() {
+        int row = bytecodeTable.getSelectedRow();
+        if (row < 0) return;
+
+        InstructionEntry entry = bytecodeModel.getEntryAt(row);
+        if (entry == null || currentMethod == null) return;
+
+        int pc = entry.offset;
+        String className = currentMethod.getOwnerName();
+        String methodName = currentMethod.getName();
+        String desc = currentMethod.getDesc();
+
+        if (breakpoints.contains(pc)) {
+            breakpoints.remove(pc);
+            session.removeBreakpoint(className, methodName, desc, pc);
+            appendOutput("Breakpoint removed at PC " + pc);
+        } else {
+            breakpoints.add(pc);
+            session.addBreakpoint(className, methodName, desc, pc);
+            appendOutput("Breakpoint set at PC " + pc);
+        }
+        bytecodeModel.fireTableDataChanged();
+    }
+
+    private void runToCursorAtSelectedRow() {
+        int row = bytecodeTable.getSelectedRow();
+        if (row < 0) return;
+
+        InstructionEntry entry = bytecodeModel.getEntryAt(row);
+        if (entry == null) return;
+
+        ensureSessionStarted();
+        session.runToCursor(entry.offset);
+    }
+
     private void highlightInstruction(int pc) {
         Integer rowIndex = pcToRowMap.get(pc);
         if (rowIndex == null) {
@@ -1210,7 +1142,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             final int row = rowIndex;
             SwingUtilities.invokeLater(() -> {
                 int tableRowCount = bytecodeTable.getRowCount();
-                if (row >= 0 && row < tableRowCount) {
+                if (row < tableRowCount) {
                     bytecodeTable.setRowSelectionInterval(row, row);
                     bytecodeTable.scrollRectToVisible(bytecodeTable.getCellRect(row, 0, true));
                 }
@@ -1277,10 +1209,6 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             default:
                 return value.toString();
         }
-    }
-
-    public void setOnStatusMessage(Consumer<String> handler) {
-        this.onStatusMessage = handler;
     }
 
     @Override
@@ -1368,9 +1296,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
 
     @Override
     public void onBreakpointHit(String location) {
-        SwingUtilities.invokeLater(() -> {
-            appendOutput("Breakpoint hit: " + location);
-        });
+        SwingUtilities.invokeLater(() -> appendOutput("Breakpoint hit: " + location));
     }
 
     @Override
@@ -1411,13 +1337,9 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             this.category = category;
             this.current = current;
         }
-
-        InstructionEntry(int index, int offset, String mnemonic, String operands, int lineNumber, boolean current) {
-            this(index, offset, mnemonic, operands, lineNumber, InstructionCategory.OTHER, current);
-        }
     }
 
-    private class BytecodeTableModel extends AbstractTableModel {
+    private static class BytecodeTableModel extends AbstractTableModel {
         private final String[] columnNames = {"#", "Offset", "Opcode", "Operands"};
         private List<InstructionEntry> instructions = new ArrayList<>();
 
@@ -1481,13 +1403,20 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
 
             InstructionEntry entry = bytecodeModel.getEntryAt(row);
             boolean isHighlighted = isSelected || (entry != null && entry.current);
+            boolean hasBreakpoint = entry != null && breakpoints.contains(entry.offset);
 
             if (isSelected) {
                 setBackground(JStudioTheme.getAccent());
             } else if (entry != null && entry.current) {
                 setBackground(JStudioTheme.getSuccess().darker());
+            } else if (hasBreakpoint) {
+                setBackground(JStudioTheme.getError().darker().darker());
             } else {
                 setBackground(JStudioTheme.getBgSecondary());
+            }
+
+            if (column == 0 && hasBreakpoint) {
+                setText("\u25CF " + value);
             }
 
             if (isHighlighted) {

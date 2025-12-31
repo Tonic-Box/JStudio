@@ -165,9 +165,6 @@ public class PluginLoader {
             script.run();
         }
 
-        @Override
-        public void dispose() {
-        }
     }
 
     private static class CompositePlugin implements Plugin {

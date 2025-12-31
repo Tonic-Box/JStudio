@@ -17,8 +17,6 @@ import java.util.List;
 
 public class CallTracePanel extends ThemedJPanel {
 
-    private final JToggleButton treeViewBtn;
-    private final JToggleButton listViewBtn;
     private final JTextField filterField;
     private final JButton expandAllBtn;
     private final JButton collapseAllBtn;
@@ -55,11 +53,11 @@ public class CallTracePanel extends ThemedJPanel {
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
 
         ButtonGroup viewGroup = new ButtonGroup();
-        treeViewBtn = new JToggleButton("Tree", true);
+        JToggleButton treeViewBtn = new JToggleButton("Tree", true);
         treeViewBtn.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         treeViewBtn.addActionListener(e -> showTreeView());
 
-        listViewBtn = new JToggleButton("List");
+        JToggleButton listViewBtn = new JToggleButton("List");
         listViewBtn.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         listViewBtn.addActionListener(e -> showListView());
 
@@ -206,27 +204,25 @@ public class CallTracePanel extends ThemedJPanel {
 
             for (MethodCall call : currentCalls) {
                 StringBuilder indent = new StringBuilder();
-                for (int i = 0; i < call.getDepth(); i++) {
-                    indent.append("  ");
-                }
+                indent.append("  ".repeat(Math.max(0, call.getDepth())));
 
                 String arrow = "\u2192 ";
                 Style style = listPane.getStyle("entry");
 
-                String line = indent + arrow + call.getShortSignature();
+                StringBuilder line = new StringBuilder(indent + arrow + call.getShortSignature());
 
                 Object[] args = call.getArguments();
                 if (args.length > 0) {
-                    line += "(";
+                    line.append("(");
                     for (int i = 0; i < args.length; i++) {
-                        if (i > 0) line += ", ";
-                        line += formatArg(args[i]);
+                        if (i > 0) line.append(", ");
+                        line.append(formatArg(args[i]));
                     }
-                    line += ")";
+                    line.append(")");
                 }
 
-                line += "\n";
-                listDoc.insertString(listDoc.getLength(), line, style);
+                line.append("\n");
+                listDoc.insertString(listDoc.getLength(), line.toString(), style);
 
                 if (call.getReturnValue() != null || call.isExceptional()) {
                     String returnLine = indent + "\u2190 " + call.getShortSignature();

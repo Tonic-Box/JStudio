@@ -17,12 +17,9 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.Comment;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.service.ProjectDatabaseService;
-import com.tonic.ui.theme.Icons;
-import com.tonic.ui.theme.SyntaxColors;
-import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeManager;
+import com.tonic.ui.theme.*;
 
+import lombok.Getter;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
@@ -63,9 +60,14 @@ import javax.swing.SwingUtilities;
 /**
  * Source code view using RSyntaxTextArea for Java syntax highlighting.
  */
-public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeListener {
+public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
     private final ClassEntryModel classEntry;
+    /**
+     * -- GETTER --
+     *  Get the text area for direct access (e.g., for Ctrl+Click).
+     */
+    @Getter
     private final RSyntaxTextArea textArea;
     private final RTextScrollPane scrollPane;
     private final SearchPanel searchPanel;
@@ -73,7 +75,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
 
     private boolean loaded = false;
     private boolean omitAnnotations = false;
-    private List<GutterIconInfo> commentIcons = new ArrayList<>();
+    private final List<GutterIconInfo> commentIcons = new ArrayList<>();
 
     public SourceCodeView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -331,7 +333,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         while (parent != null && !(parent instanceof MainFrame)) {
             parent = parent.getParent();
         }
-        if (parent instanceof MainFrame) {
+        if (parent != null) {
             ((MainFrame) parent).runSimulationAnalysis();
         }
     }
@@ -418,7 +420,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
             if (identifier != null && !identifier.isEmpty()) {
                 navigateToIdentifier(identifier);
             }
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -470,7 +472,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
                     }
                 }
             }
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -555,7 +557,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
             if (start < end) {
                 return text.substring(start, end);
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         return null;
     }
@@ -668,7 +670,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         // Decompile in background
         SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
-            protected String doInBackground() throws Exception {
+            protected String doInBackground() {
                 try {
                     ClassDecompiler decompiler = new ClassDecompiler(classEntry.getClassFile());
                     return decompiler.decompile();
@@ -796,14 +798,12 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         StringBuilder result = new StringBuilder();
         String[] lines = source.split("\n", -1);
         int i = 0;
-        int removed = 0;
 
         while (i < lines.length) {
             String line = lines[i];
             String trimmed = line.trim();
 
             if (isAnnotationStart(trimmed, cleanName)) {
-                removed++;
                 int parenDepth = countChar(line, '(') - countChar(line, ')');
 
                 while (parenDepth > 0 && i + 1 < lines.length) {
@@ -860,12 +860,9 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         if (JAVA_KEYWORDS.contains(firstToken)) {
             return true;
         }
-        if (trimmed.contains("(") || trimmed.contains(")") ||
-            trimmed.contains("{") || trimmed.contains("}") ||
-            trimmed.contains("=") || trimmed.contains(";")) {
-            return true;
-        }
-        return false;
+        return trimmed.contains("(") || trimmed.contains(")") ||
+                trimmed.contains("{") || trimmed.contains("}") ||
+                trimmed.contains("=") || trimmed.contains(";");
     }
 
     private boolean isAnnotationStart(String trimmed, String annotationName) {
@@ -1007,10 +1004,4 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         textArea.setWrapStyleWord(enabled);
     }
 
-    /**
-     * Get the text area for direct access (e.g., for Ctrl+Click).
-     */
-    public RSyntaxTextArea getTextArea() {
-        return textArea;
-    }
 }

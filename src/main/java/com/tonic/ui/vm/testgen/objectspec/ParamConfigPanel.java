@@ -12,8 +12,6 @@ public class ParamConfigPanel extends ThemedJPanel {
     private final Window ownerWindow;
     private ParamSpec spec;
 
-    private JLabel nameLabel;
-    private JLabel typeLabel;
     private JComboBox<ValueMode> modeCombo;
     private JTextField valueField;
     private JButton configButton;
@@ -31,11 +29,11 @@ public class ParamConfigPanel extends ThemedJPanel {
         setLayout(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL + 1, UIConstants.SPACING_TINY));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
 
-        nameLabel = createLabel(spec.getName() != null ? spec.getName() : "param");
+        JLabel nameLabel = createLabel(spec.getName() != null ? spec.getName() : "param");
         nameLabel.setPreferredSize(new Dimension(80, 20));
         add(nameLabel);
 
-        typeLabel = createLabel("(" + spec.getSimpleTypeName() + ")");
+        JLabel typeLabel = createLabel("(" + spec.getSimpleTypeName() + ")");
         typeLabel.setForeground(JStudioTheme.getTextSecondary());
         typeLabel.setPreferredSize(new Dimension(80, 20));
         add(typeLabel);
@@ -170,13 +168,12 @@ public class ParamConfigPanel extends ThemedJPanel {
             switch (typeDesc) {
                 case "Z": return Boolean.parseBoolean(text);
                 case "B": return Byte.parseByte(text);
-                case "C": return text.isEmpty() ? ' ' : text.charAt(0);
+                case "C": return text.charAt(0);
                 case "S": return Short.parseShort(text);
                 case "I": return Integer.parseInt(text);
                 case "J": return Long.parseLong(text);
                 case "F": return Float.parseFloat(text);
                 case "D": return Double.parseDouble(text);
-                case "Ljava/lang/String;": return text;
                 default: return text;
             }
         } catch (NumberFormatException e) {

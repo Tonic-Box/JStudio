@@ -241,11 +241,8 @@ public class CallGraphBridge extends AbstractBridge {
 
             for (CallGraphNode node : callGraph.getPoolNodes()) {
                 MethodReference ref = node.getReference();
-                boolean matches = true;
+                boolean matches = namePattern == null || matchesPattern(ref.getName(), namePattern);
 
-                if (namePattern != null && !matchesPattern(ref.getName(), namePattern)) {
-                    matches = false;
-                }
                 if (ownerPattern != null && !matchesPattern(ref.getOwner(), ownerPattern)) {
                     matches = false;
                 }

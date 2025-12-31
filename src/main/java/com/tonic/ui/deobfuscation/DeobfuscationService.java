@@ -204,7 +204,7 @@ public class DeobfuscationService {
         }
 
         try {
-            BytecodeResult result = engine.execute(clinit, new ConcreteValue[0]);
+            BytecodeResult result = engine.execute(clinit);
 
             if (!result.isSuccess()) {
                 System.out.println("[DeobfuscationService] <clinit> execution failed: " + result.getException());

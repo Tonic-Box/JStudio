@@ -2,6 +2,7 @@ package com.tonic.ui.core.component;
 
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
+import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.JDialog;
@@ -9,7 +10,7 @@ import java.awt.Dialog;
 import java.awt.Frame;
 import java.awt.Window;
 
-public class ThemedJDialog extends JDialog implements ThemeManager.ThemeChangeListener {
+public class ThemedJDialog extends JDialog implements ThemeChangeListener {
 
     public ThemedJDialog() {
         super();

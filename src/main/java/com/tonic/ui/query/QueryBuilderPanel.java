@@ -17,7 +17,7 @@ public class QueryBuilderPanel extends ThemedJPanel {
     private JComboBox<String> scopeTypeCombo;
     private JTextField scopePatternField;
     private JPanel predicatesPanel;
-    private List<PredicateRow> predicateRows = new ArrayList<>();
+    private final List<PredicateRow> predicateRows = new ArrayList<>();
     private JSpinner limitSpinner;
     private JCheckBox useLimitCheck;
 
@@ -227,7 +227,7 @@ public class QueryBuilderPanel extends ThemedJPanel {
                 }
                 applyThemeRecursive(panel, bg, fg, border);
             } else if (c instanceof JLabel) {
-                ((JLabel) c).setForeground(fg);
+                c.setForeground(fg);
             } else if (c instanceof JComboBox) {
                 JComboBox<?> combo = (JComboBox<?>) c;
                 combo.setBackground(JStudioTheme.getBgSurface());
@@ -263,11 +263,10 @@ public class QueryBuilderPanel extends ThemedJPanel {
     }
 
     private static class PredicateRow extends JPanel {
-        private int index;
-        private JComboBox<String> connectorCombo;
-        private JComboBox<String> predicateTypeCombo;
-        private JPanel argumentsPanel;
-        private CardLayout argumentsLayout;
+        private final JComboBox<String> connectorCombo;
+        private final JComboBox<String> predicateTypeCombo;
+        private final JPanel argumentsPanel;
+        private final CardLayout argumentsLayout;
 
         private JTextField callsTargetField;
         private JTextField allocTypeField;
@@ -281,12 +280,9 @@ public class QueryBuilderPanel extends ThemedJPanel {
         private JComboBox<String> instructionOpCombo;
         private JSpinner instructionThresholdSpinner;
 
-        private Consumer<PredicateRow> removeCallback;
-        private Runnable changeCallback;
+        private final Runnable changeCallback;
 
         PredicateRow(int index, Consumer<PredicateRow> removeCallback, Runnable changeCallback) {
-            this.index = index;
-            this.removeCallback = removeCallback;
             this.changeCallback = changeCallback;
 
             setLayout(new FlowLayout(FlowLayout.LEFT, 5, 2));
@@ -332,7 +328,6 @@ public class QueryBuilderPanel extends ThemedJPanel {
         }
 
         void updateIndex(int newIndex) {
-            this.index = newIndex;
             connectorCombo.setVisible(newIndex > 0);
         }
 

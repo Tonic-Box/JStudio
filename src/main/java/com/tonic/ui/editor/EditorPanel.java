@@ -33,21 +33,15 @@ import java.util.Map;
  * Tabbed editor panel for viewing classes.
  */
 public class EditorPanel extends ThemedJPanel {
-
-    private static final String WELCOME_TAB_KEY = "__welcome__";
-
-    private final MainFrame mainFrame;
     private final JTabbedPane tabbedPane;
     private final Map<String, EditorTab> openTabs = new HashMap<>();
     private ProjectModel projectModel;
-    private WelcomeTab welcomeTab;
+    private final WelcomeTab welcomeTab;
 
-    private ViewMode currentViewMode = ViewMode.SOURCE;
     private boolean omitAnnotations = false;
 
     public EditorPanel(MainFrame mainFrame) {
         super(BackgroundStyle.TERTIARY, new BorderLayout());
-        this.mainFrame = mainFrame;
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         tabbedPane.setBackground(JStudioTheme.getBgSecondary());
@@ -350,7 +344,6 @@ public class EditorPanel extends ThemedJPanel {
      * Set view mode for all tabs.
      */
     public void setViewMode(ViewMode mode) {
-        this.currentViewMode = mode;
         EditorTab current = getCurrentTab();
         if (current != null) {
             current.setViewMode(mode);

@@ -54,12 +54,10 @@ public class PatternFilter implements StaticFilter {
                 if (methodPattern != null) {
                     String methodSig = m.getOwnerName() + "." + m.getName() + m.getDesc();
                     String methodName = m.getName();
-                    if (!methodPattern.matcher(methodSig).matches() &&
-                        !methodPattern.matcher(methodSig).find() &&
-                        !methodPattern.matcher(methodName).matches() &&
-                        !methodPattern.matcher(methodName).find()) {
-                        return false;
-                    }
+                    return methodPattern.matcher(methodSig).matches() ||
+                            methodPattern.matcher(methodSig).find() ||
+                            methodPattern.matcher(methodName).matches() ||
+                            methodPattern.matcher(methodName).find();
                 }
                 return true;
             })

@@ -2,7 +2,6 @@ package com.tonic.ui.query.planner;
 
 import com.tonic.analysis.xref.XrefDatabase;
 import com.tonic.ui.query.ast.*;
-import com.tonic.ui.query.planner.PostFilter;
 import com.tonic.ui.query.planner.filter.StaticFilter;
 import com.tonic.ui.query.planner.probe.ProbeSet;
 import com.tonic.ui.query.planner.visitor.*;
@@ -13,13 +12,11 @@ import com.tonic.ui.query.planner.visitor.*;
  */
 public class QueryPlanner {
 
-    private final XrefDatabase xrefDatabase;
     private final StaticFilterBuildingVisitor staticFilterVisitor;
     private final ScopeFilterVisitor scopeFilterVisitor;
     private final PostFilterBuildingVisitor postFilterVisitor;
 
     public QueryPlanner(XrefDatabase xrefDatabase) {
-        this.xrefDatabase = xrefDatabase;
         this.staticFilterVisitor = new StaticFilterBuildingVisitor(xrefDatabase);
         this.scopeFilterVisitor = new ScopeFilterVisitor(staticFilterVisitor);
         this.postFilterVisitor = new PostFilterBuildingVisitor();

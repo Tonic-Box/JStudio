@@ -38,17 +38,16 @@ public class ScriptStore {
      * Saves a script to a file.
      */
     public static void saveScript(Script script, File file) throws IOException {
-        StringBuilder json = new StringBuilder();
-        json.append("{\n");
-        json.append("  \"name\": ").append(escapeJson(script.getName())).append(",\n");
-        json.append("  \"description\": ").append(escapeJson(script.getDescription())).append(",\n");
-        json.append("  \"mode\": ").append(escapeJson(script.getMode().name().toLowerCase())).append(",\n");
-        json.append("  \"version\": ").append(escapeJson(script.getVersion())).append(",\n");
-        json.append("  \"author\": ").append(escapeJson(script.getAuthor())).append(",\n");
-        json.append("  \"script\": ").append(escapeJson(script.getContent())).append("\n");
-        json.append("}\n");
+        String json = "{\n" +
+                "  \"name\": " + escapeJson(script.getName()) + ",\n" +
+                "  \"description\": " + escapeJson(script.getDescription()) + ",\n" +
+                "  \"mode\": " + escapeJson(script.getMode().name().toLowerCase()) + ",\n" +
+                "  \"version\": " + escapeJson(script.getVersion()) + ",\n" +
+                "  \"author\": " + escapeJson(script.getAuthor()) + ",\n" +
+                "  \"script\": " + escapeJson(script.getContent()) + "\n" +
+                "}\n";
 
-        Files.write(file.toPath(), json.toString().getBytes(StandardCharsets.UTF_8));
+        Files.write(file.toPath(), json.getBytes(StandardCharsets.UTF_8));
     }
 
     /**

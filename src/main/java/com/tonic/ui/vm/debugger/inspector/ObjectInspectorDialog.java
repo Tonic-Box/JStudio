@@ -29,7 +29,7 @@ public class ObjectInspectorDialog extends JDialog {
     private final JTable fieldsTable;
     private final Set<Integer> visitedObjectIds;
 
-    private FieldEditCallback onFieldEdit;
+    private final FieldEditCallback onFieldEdit;
 
     @FunctionalInterface
     public interface FieldEditCallback {

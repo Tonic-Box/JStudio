@@ -3,13 +3,14 @@ package com.tonic.ui.core.component;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
+import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
 
-public class ThemedJTable extends JTable implements ThemeManager.ThemeChangeListener {
+public class ThemedJTable extends JTable implements ThemeChangeListener {
 
     public ThemedJTable() {
         super();

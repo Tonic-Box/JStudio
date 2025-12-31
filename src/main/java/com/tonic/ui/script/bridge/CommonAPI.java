@@ -109,7 +109,7 @@ public class CommonAPI {
                 if (logCallback != null) {
                     logCallback.accept(sb.toString());
                 } else {
-                    System.out.println(sb.toString());
+                    System.out.println(sb);
                 }
                 return ScriptValue.NULL;
             })

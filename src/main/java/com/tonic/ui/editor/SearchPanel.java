@@ -231,8 +231,7 @@ public class SearchPanel extends ThemedJPanel {
     private boolean isWholeWord(String text, int pos, int len) {
         if (pos > 0 && Character.isLetterOrDigit(text.charAt(pos - 1))) return false;
         int end = pos + len;
-        if (end < text.length() && Character.isLetterOrDigit(text.charAt(end))) return false;
-        return true;
+        return end >= text.length() || !Character.isLetterOrDigit(text.charAt(end));
     }
 
     private void findNext() {

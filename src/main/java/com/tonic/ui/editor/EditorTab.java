@@ -24,10 +24,10 @@ public class EditorTab extends JPanel {
     private final JPanel cardPanel;
     private final BreadcrumbBar breadcrumbBar;
 
-    private SourceCodeView sourceView;
-    private BytecodeView bytecodeView;
-    private IRView irView;
-    private HexView hexView;
+    private final SourceCodeView sourceView;
+    private final BytecodeView bytecodeView;
+    private final IRView irView;
+    private final HexView hexView;
 
     private ViewMode currentMode = ViewMode.SOURCE;
 

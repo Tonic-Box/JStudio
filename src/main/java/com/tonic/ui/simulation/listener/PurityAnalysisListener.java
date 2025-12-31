@@ -109,11 +109,7 @@ public class PurityAnalysisListener extends AbstractListener {
             }
         }
 
-        if ("println".equals(name) || "print".equals(name) || "write".equals(name)) {
-            return true;
-        }
-
-        return false;
+        return "println".equals(name) || "print".equals(name) || "write".equals(name);
     }
 
     private String formatMethodRef(InvokeInstruction instr) {

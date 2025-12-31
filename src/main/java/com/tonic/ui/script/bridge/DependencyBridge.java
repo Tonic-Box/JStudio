@@ -8,6 +8,7 @@ import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.script.engine.ScriptFunction;
 import com.tonic.ui.script.engine.ScriptInterpreter;
 import com.tonic.ui.script.engine.ScriptValue;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -18,13 +19,12 @@ import java.util.function.Consumer;
  */
 public class DependencyBridge {
 
-    private final ScriptInterpreter interpreter;
     private final ProjectModel projectModel;
+    @Getter
     private DependencyAnalyzer analyzer;
     private Consumer<String> logCallback;
 
-    public DependencyBridge(ScriptInterpreter interpreter, ProjectModel projectModel) {
-        this.interpreter = interpreter;
+    public DependencyBridge(ProjectModel projectModel) {
         this.projectModel = projectModel;
     }
 
@@ -282,7 +282,4 @@ public class DependencyBridge {
         return ScriptValue.object(props);
     }
 
-    public DependencyAnalyzer getAnalyzer() {
-        return analyzer;
-    }
 }

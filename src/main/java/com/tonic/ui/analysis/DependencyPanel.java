@@ -13,6 +13,7 @@ import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
+import lombok.Getter;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -43,11 +44,15 @@ public class DependencyPanel extends ThemedJPanel {
 
     private final ProjectModel project;
     private final mxGraph graph;
-    private final mxGraphComponent graphComponent;
     private final JTextArea statusArea;
     private final JComboBox<String> focusCombo;
     private final JSpinner depthSpinner;
 
+    /**
+     * -- GETTER --
+     *  Get the dependency analyzer.
+     */
+    @Getter
     private DependencyAnalyzer analyzer;
     private String focusClass;
     private int maxDepth = 2;
@@ -104,7 +109,7 @@ public class DependencyPanel extends ThemedJPanel {
         graph.setCellsMovable(true);
         graph.setCellsResizable(false);
 
-        graphComponent = new mxGraphComponent(graph);
+        mxGraphComponent graphComponent = new mxGraphComponent(graph);
         graphComponent.setBackground(JStudioTheme.getBgTertiary());
         graphComponent.getViewport().setBackground(JStudioTheme.getBgTertiary());
         graphComponent.setBorder(null);
@@ -159,7 +164,7 @@ public class DependencyPanel extends ThemedJPanel {
 
         // Cycle node style (uses error color)
         Map<String, Object> cycleStyle = new HashMap<>(style);
-        cycleStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(darker(JStudioTheme.getError(), 0.3f)));
+        cycleStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(darker(JStudioTheme.getError())));
         cycleStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getError()));
         stylesheet.putCellStyle("CYCLE", cycleStyle);
 
@@ -172,11 +177,11 @@ public class DependencyPanel extends ThemedJPanel {
         graph.getStylesheet().setDefaultEdgeStyle(edgeStyle);
     }
 
-    private static Color darker(Color c, float factor) {
+    private static Color darker(Color c) {
         return new Color(
-            Math.max(0, (int)(c.getRed() * factor)),
-            Math.max(0, (int)(c.getGreen() * factor)),
-            Math.max(0, (int)(c.getBlue() * factor))
+            Math.max(0, (int)(c.getRed() * (float) 0.3)),
+            Math.max(0, (int)(c.getGreen() * (float) 0.3)),
+            Math.max(0, (int)(c.getBlue() * (float) 0.3))
         );
     }
 
@@ -193,7 +198,7 @@ public class DependencyPanel extends ThemedJPanel {
 
         SwingWorker<DependencyAnalyzer, Void> worker = new SwingWorker<>() {
             @Override
-            protected DependencyAnalyzer doInBackground() throws Exception {
+            protected DependencyAnalyzer doInBackground() {
                 return new DependencyAnalyzer(project.getClassPool());
             }
 
@@ -427,13 +432,6 @@ public class DependencyPanel extends ThemedJPanel {
                 break;
             }
         }
-    }
-
-    /**
-     * Get the dependency analyzer.
-     */
-    public DependencyAnalyzer getAnalyzer() {
-        return analyzer;
     }
 
     /**

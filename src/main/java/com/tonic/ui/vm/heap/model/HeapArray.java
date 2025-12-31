@@ -139,7 +139,7 @@ public class HeapArray extends HeapObject {
             elements[i] = getArrayElement(instance, compType, i);
         }
 
-        return (HeapArray) builder()
+        return builder()
             .id(instance.getId())
             .className(compType + "[]")
             .allocationTime(allocationTime)

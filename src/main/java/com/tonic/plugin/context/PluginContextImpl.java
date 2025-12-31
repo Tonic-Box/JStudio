@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PluginContextImpl implements PluginContext {
 
-    private final ProjectModel projectModel;
     private final ConsolePluginLogger logger;
     private final MapPluginConfig config;
     private final ProjectApiImpl projectApi;
@@ -24,7 +23,6 @@ public class PluginContextImpl implements PluginContext {
     private File exportDir;
 
     public PluginContextImpl(ProjectModel projectModel, String pluginName) {
-        this.projectModel = projectModel;
         this.logger = new ConsolePluginLogger(pluginName);
         this.config = new MapPluginConfig();
         this.projectApi = new ProjectApiImpl(projectModel);
