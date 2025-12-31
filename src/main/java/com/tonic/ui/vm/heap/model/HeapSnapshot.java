@@ -1,7 +1,8 @@
 package com.tonic.ui.vm.heap.model;
 
+import lombok.Getter;
+
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Getter
 public class HeapSnapshot {
     private final int snapshotId;
     private final String label;
@@ -36,36 +38,8 @@ public class HeapSnapshot {
         return Collections.unmodifiableMap(counts);
     }
 
-    public int getSnapshotId() {
-        return snapshotId;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public long getInstructionCount() {
-        return instructionCount;
-    }
-
-    public Map<Integer, HeapObject> getObjects() {
-        return objects;
-    }
-
     public HeapObject getObject(int id) {
         return objects.get(id);
-    }
-
-    public Map<String, Integer> getClassCounts() {
-        return classCounts;
-    }
-
-    public int getTotalObjects() {
-        return totalObjects;
     }
 
     public List<HeapObject> getObjectsByClass(String className) {

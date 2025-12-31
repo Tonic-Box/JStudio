@@ -1,9 +1,12 @@
 package com.tonic.ui.simulation.model;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Getter
 public class MethodPurity extends SimulationFinding {
 
     public enum PurityLevel {
@@ -30,7 +33,9 @@ public class MethodPurity extends SimulationFinding {
         this.fieldWriteCount = fieldWriteCount;
         this.arrayWriteCount = arrayWriteCount;
         this.methodCallCount = methodCallCount;
-        this.impureReasons = impureReasons != null ? new ArrayList<>(impureReasons) : new ArrayList<>();
+        this.impureReasons = impureReasons != null
+                ? Collections.unmodifiableList(new ArrayList<>(impureReasons))
+                : Collections.emptyList();
     }
 
     private static Severity getSeverityForPurity(PurityLevel level) {
@@ -47,32 +52,8 @@ public class MethodPurity extends SimulationFinding {
         }
     }
 
-    public PurityLevel getPurityLevel() {
-        return purityLevel;
-    }
-
     public boolean isPure() {
         return purityLevel == PurityLevel.PURE;
-    }
-
-    public int getFieldReadCount() {
-        return fieldReadCount;
-    }
-
-    public int getFieldWriteCount() {
-        return fieldWriteCount;
-    }
-
-    public int getArrayWriteCount() {
-        return arrayWriteCount;
-    }
-
-    public int getMethodCallCount() {
-        return methodCallCount;
-    }
-
-    public List<String> getImpureReasons() {
-        return Collections.unmodifiableList(impureReasons);
     }
 
     @Override

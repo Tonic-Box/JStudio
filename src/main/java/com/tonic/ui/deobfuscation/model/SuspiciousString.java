@@ -1,7 +1,11 @@
 package com.tonic.ui.deobfuscation.model;
 
 import com.tonic.parser.ClassFile;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
+@Getter
+@RequiredArgsConstructor
 public class SuspiciousString {
 
     private final ClassFile classFile;
@@ -9,35 +13,6 @@ public class SuspiciousString {
     private final String value;
     private final SuspicionReason reason;
     private final double suspicionScore;
-
-    public SuspiciousString(ClassFile classFile, int constantPoolIndex, String value,
-                            SuspicionReason reason, double suspicionScore) {
-        this.classFile = classFile;
-        this.constantPoolIndex = constantPoolIndex;
-        this.value = value;
-        this.reason = reason;
-        this.suspicionScore = suspicionScore;
-    }
-
-    public ClassFile getClassFile() {
-        return classFile;
-    }
-
-    public int getConstantPoolIndex() {
-        return constantPoolIndex;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public SuspicionReason getReason() {
-        return reason;
-    }
-
-    public double getSuspicionScore() {
-        return suspicionScore;
-    }
 
     public String getClassName() {
         return classFile.getClassName();
@@ -50,6 +25,8 @@ public class SuspiciousString {
         return value;
     }
 
+    @Getter
+    @RequiredArgsConstructor
     public enum SuspicionReason {
         HIGH_ENTROPY("High entropy - random-looking characters"),
         BASE64_PATTERN("Matches Base64 encoding pattern"),
@@ -58,14 +35,6 @@ public class SuspiciousString {
         HEX_PATTERN("Matches hexadecimal pattern");
 
         private final String description;
-
-        SuspicionReason(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
-        }
     }
 
     @Override

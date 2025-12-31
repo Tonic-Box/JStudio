@@ -2,7 +2,6 @@ package com.tonic.ui.script.bridge;
 
 import com.tonic.analysis.callgraph.CallGraph;
 import com.tonic.analysis.callgraph.CallGraphNode;
-import com.tonic.analysis.callgraph.CallSite;
 import com.tonic.analysis.common.MethodReference;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.model.ProjectModel;

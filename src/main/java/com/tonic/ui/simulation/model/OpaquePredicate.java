@@ -1,11 +1,9 @@
 package com.tonic.ui.simulation.model;
 
 import com.tonic.analysis.ssa.ir.BranchInstruction;
+import lombok.Getter;
 
-/**
- * Represents a detected opaque predicate - a branch condition that always
- * evaluates to the same value.
- */
+@Getter
 public class OpaquePredicate extends SimulationFinding {
 
     private final BranchInstruction branchInstruction;
@@ -22,20 +20,8 @@ public class OpaquePredicate extends SimulationFinding {
         this.blockId = blockId;
     }
 
-    public BranchInstruction getBranchInstruction() {
-        return branchInstruction;
-    }
-
-    public boolean isAlwaysTrue() {
-        return alwaysTrue;
-    }
-
     public boolean isAlwaysFalse() {
         return !alwaysTrue;
-    }
-
-    public int getBlockId() {
-        return blockId;
     }
 
     public String getConditionType() {

@@ -1,11 +1,14 @@
 package com.tonic.ui.vm.heap.model;
 
+import lombok.Getter;
+
+@Getter
 public class FieldValue {
     private final String owner;
     private final String name;
     private final String descriptor;
     private final Object value;
-    private final boolean isReference;
+    private final boolean reference;
     private final int referenceId;
 
     public FieldValue(String owner, String name, String descriptor, Object value) {
@@ -13,7 +16,7 @@ public class FieldValue {
         this.name = name;
         this.descriptor = descriptor;
         this.value = value;
-        this.isReference = isReferenceDescriptor(descriptor);
+        this.reference = isReferenceDescriptor(descriptor);
         this.referenceId = extractReferenceId(value);
     }
 
@@ -31,32 +34,8 @@ public class FieldValue {
         return -1;
     }
 
-    public String getOwner() {
-        return owner;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescriptor() {
-        return descriptor;
-    }
-
-    public Object getValue() {
-        return value;
-    }
-
-    public boolean isReference() {
-        return isReference;
-    }
-
     public boolean isNull() {
         return value == null;
-    }
-
-    public int getReferenceId() {
-        return referenceId;
     }
 
     public boolean hasReferenceId() {

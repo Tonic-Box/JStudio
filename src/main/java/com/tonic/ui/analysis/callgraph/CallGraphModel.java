@@ -1,6 +1,5 @@
 package com.tonic.ui.analysis.callgraph;
 
-import com.mxgraph.model.mxCell;
 import com.tonic.analysis.callgraph.CallGraph;
 import com.tonic.analysis.common.MethodReference;
 

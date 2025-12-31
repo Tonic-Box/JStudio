@@ -1,7 +1,9 @@
 package com.tonic.ui.simulation.model;
 
 import com.tonic.analysis.ssa.ir.InvokeInstruction;
+import lombok.Getter;
 
+@Getter
 public class DecryptedString extends SimulationFinding {
 
     private final String decryptedValue;
@@ -20,22 +22,6 @@ public class DecryptedString extends SimulationFinding {
         this.decryptionMethod = decryptionMethod;
         this.blockId = invokeInstr != null && invokeInstr.getBlock() != null
                 ? invokeInstr.getBlock().getId() : -1;
-    }
-
-    public String getDecryptedValue() {
-        return decryptedValue;
-    }
-
-    public String getEncryptedInput() {
-        return encryptedInput;
-    }
-
-    public String getDecryptionMethod() {
-        return decryptionMethod;
-    }
-
-    public int getBlockId() {
-        return blockId;
     }
 
     @Override

@@ -191,7 +191,7 @@ public class FindInFilesDialog extends JDialog {
             return;
         }
 
-        currentWorker = new SwingWorker<List<SearchMatch>, SearchMatch>() {
+        currentWorker = new SwingWorker<>() {
             @Override
             protected List<SearchMatch> doInBackground() throws Exception {
                 List<SearchMatch> matches = new ArrayList<>();

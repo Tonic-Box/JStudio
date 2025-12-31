@@ -1,11 +1,13 @@
 package com.tonic.ui.simulation.model;
 
 import com.tonic.analysis.ssa.ir.IRInstruction;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Getter
 public class TaintFlow extends SimulationFinding {
 
     private final String sourceDescription;
@@ -34,7 +36,9 @@ public class TaintFlow extends SimulationFinding {
                         ? sinkInstr.getBlock().getBytecodeOffset() : -1);
         this.sourceDescription = sourceDescription;
         this.sinkDescription = sinkDescription;
-        this.flowPath = flowPath != null ? new ArrayList<>(flowPath) : new ArrayList<>();
+        this.flowPath = flowPath != null
+                ? Collections.unmodifiableList(new ArrayList<>(flowPath))
+                : Collections.emptyList();
         this.blockId = sinkInstr != null && sinkInstr.getBlock() != null
                 ? sinkInstr.getBlock().getId() : -1;
         this.category = category;
@@ -54,26 +58,6 @@ public class TaintFlow extends SimulationFinding {
             default:
                 return Severity.LOW;
         }
-    }
-
-    public String getSourceDescription() {
-        return sourceDescription;
-    }
-
-    public String getSinkDescription() {
-        return sinkDescription;
-    }
-
-    public List<String> getFlowPath() {
-        return Collections.unmodifiableList(flowPath);
-    }
-
-    public int getBlockId() {
-        return blockId;
-    }
-
-    public TaintCategory getCategory() {
-        return category;
     }
 
     @Override

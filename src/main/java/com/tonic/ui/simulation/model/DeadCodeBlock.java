@@ -1,17 +1,15 @@
 package com.tonic.ui.simulation.model;
 
 import com.tonic.analysis.ssa.cfg.IRBlock;
+import lombok.Getter;
 
-/**
- * Represents a detected dead code block - a block that was never visited
- * during simulation, indicating it is unreachable.
- */
+@Getter
 public class DeadCodeBlock extends SimulationFinding {
 
     private final int blockId;
     private final int instructionCount;
     private final String blockLabel;
-    private final boolean isExceptionHandler;
+    private final boolean exceptionHandler;
 
     public DeadCodeBlock(String className, String methodName, String methodDesc,
                          IRBlock block, boolean isExceptionHandler) {
@@ -21,28 +19,12 @@ public class DeadCodeBlock extends SimulationFinding {
         this.blockId = block.getId();
         this.instructionCount = block.getInstructions().size();
         this.blockLabel = block.getName();
-        this.isExceptionHandler = isExceptionHandler;
-    }
-
-    public int getBlockId() {
-        return blockId;
-    }
-
-    public int getInstructionCount() {
-        return instructionCount;
-    }
-
-    public String getBlockLabel() {
-        return blockLabel;
-    }
-
-    public boolean isExceptionHandler() {
-        return isExceptionHandler;
+        this.exceptionHandler = isExceptionHandler;
     }
 
     @Override
     public String getTitle() {
-        if (isExceptionHandler) {
+        if (exceptionHandler) {
             return "Unreachable Exception Handler (Block " + blockId + ")";
         }
         return "Dead Code Block (Block " + blockId + ")";
@@ -58,7 +40,7 @@ public class DeadCodeBlock extends SimulationFinding {
         sb.append(" was never reached during simulation.\n\n");
         sb.append("Instructions in block: ").append(instructionCount).append("\n\n");
 
-        if (isExceptionHandler) {
+        if (exceptionHandler) {
             sb.append("This block appears to be an exception handler that was never triggered.\n");
             sb.append("This is often normal - exception handlers are only reached when exceptions occur.\n");
         } else {
@@ -74,7 +56,7 @@ public class DeadCodeBlock extends SimulationFinding {
 
     @Override
     public String getRecommendation() {
-        if (isExceptionHandler) {
+        if (exceptionHandler) {
             return "Exception handlers are often unreachable in normal execution. " +
                     "Consider if this handler is still needed, but it may be valid defensive code.";
         }
@@ -87,6 +69,6 @@ public class DeadCodeBlock extends SimulationFinding {
     public String toString() {
         return "DeadCodeBlock[block=" + blockId +
                 ", instructions=" + instructionCount +
-                ", exHandler=" + isExceptionHandler + "]";
+                ", exHandler=" + exceptionHandler + "]";
     }
 }

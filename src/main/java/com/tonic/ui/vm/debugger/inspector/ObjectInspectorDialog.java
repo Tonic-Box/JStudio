@@ -7,7 +7,6 @@ import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.analysis.execution.state.ValueTag;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.debugger.edit.ValueEditDialog;
-import com.tonic.ui.vm.debugger.edit.ValueParser;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

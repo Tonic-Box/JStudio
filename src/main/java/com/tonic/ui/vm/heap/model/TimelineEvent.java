@@ -1,5 +1,9 @@
 package com.tonic.ui.vm.heap.model;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
 public class TimelineEvent implements Comparable<TimelineEvent> {
     public enum EventType {
         ALLOCATION,
@@ -52,26 +56,6 @@ public class TimelineEvent implements Comparable<TimelineEvent> {
             "SNAPSHOT: " + label,
             snapshot
         );
-    }
-
-    public EventType getType() {
-        return type;
-    }
-
-    public long getInstructionCount() {
-        return instructionCount;
-    }
-
-    public int getObjectId() {
-        return objectId;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Object getEventData() {
-        return eventData;
     }
 
     public AllocationEvent asAllocation() {

@@ -92,7 +92,7 @@ public class TestCaseGenerator {
 
         sb.append("public class ").append(testClassName).append(" {\n\n");
 
-        generateTestMethod(sb, call, version, testMethodName, simpleTargetClass, call.isStatic());
+        generateTestMethod(sb, call, version, testMethodName, simpleTargetClass, call.isStaticMethod());
 
         sb.append("}\n");
 

@@ -666,7 +666,7 @@ public class SourceCodeView extends JPanel implements ThemeManager.ThemeChangeLi
         textArea.setText("// Decompiling " + classEntry.getClassName() + "...\n");
 
         // Decompile in background
-        SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() throws Exception {
                 try {

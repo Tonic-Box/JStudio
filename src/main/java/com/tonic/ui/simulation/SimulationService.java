@@ -4,7 +4,6 @@ import com.tonic.analysis.simulation.core.SimulationContext;
 import com.tonic.analysis.simulation.core.SimulationEngine;
 import com.tonic.analysis.simulation.core.SimulationResult;
 import com.tonic.analysis.simulation.listener.ControlFlowListener;
-import com.tonic.analysis.simulation.listener.SimulationListener;
 import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRBlock;
 import com.tonic.analysis.ssa.cfg.IRMethod;

@@ -14,7 +14,6 @@ import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.event.events.MethodSelectedEvent;
 import com.tonic.ui.event.events.ProjectLoadedEvent;
 import com.tonic.ui.event.events.ProjectUpdatedEvent;
-import com.tonic.ui.event.events.StatusMessageEvent;
 import com.tonic.ui.model.Bookmark;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.Comment;
@@ -41,32 +40,25 @@ import com.tonic.ui.dialog.filechooser.ExtensionFileFilter;
 import com.tonic.ui.dialog.filechooser.FileChooserDialog;
 import com.tonic.ui.dialog.filechooser.FileChooserResult;
 import com.tonic.ui.vm.heap.HeapForensicsPanel;
+import lombok.Getter;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetAdapter;
 import java.awt.dnd.DropTargetDropEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -81,15 +73,21 @@ import java.util.List;
 public class MainFrame extends JFrame {
 
     // UI Components
+    @Getter
     private NavigatorPanel navigatorPanel;
+    @Getter
     private EditorPanel editorPanel;
+    @Getter
     private PropertiesPanel propertiesPanel;
+    @Getter
     private ConsolePanel consolePanel;
+    @Getter
     private StatusBar statusBar;
     private ToolbarBuilder toolbarBuilder;
 
     // Analysis and transform dialogs
     private JDialog analysisDialog;
+    @Getter
     private AnalysisPanel analysisPanel;
     private ProjectModel analysisProjectRef;
     private JDialog transformDialog;
@@ -120,6 +118,7 @@ public class MainFrame extends JFrame {
 
     // Current state
     private ViewMode currentViewMode = ViewMode.SOURCE;
+    @Getter
     private boolean omitAnnotations = false;
 
     // Editor settings
@@ -338,7 +337,7 @@ public class MainFrame extends JFrame {
 
         statusBar.showProgress("Loading " + file.getName() + "...");
 
-        SwingWorker<ProjectModel, Void> worker = new SwingWorker<ProjectModel, Void>() {
+        SwingWorker<ProjectModel, Void> worker = new SwingWorker<>() {
             @Override
             protected ProjectModel doInBackground() throws Exception {
                 if (file.isDirectory()) {
@@ -462,7 +461,7 @@ public class MainFrame extends JFrame {
     private void appendFiles(List<File> files) {
         statusBar.showProgress("Appending files...");
 
-        SwingWorker<Integer, Void> worker = new SwingWorker<Integer, Void>() {
+        SwingWorker<Integer, Void> worker = new SwingWorker<>() {
             @Override
             protected Integer doInBackground() throws Exception {
                 int totalAdded = 0;
@@ -690,11 +689,7 @@ public class MainFrame extends JFrame {
             if (result == JOptionPane.YES_OPTION) {
                 saveProject();
                 return true;
-            } else if (result == JOptionPane.NO_OPTION) {
-                return true;
-            } else {
-                return false;
-            }
+            } else return result == JOptionPane.NO_OPTION;
         }
         return true;
     }
@@ -820,10 +815,6 @@ public class MainFrame extends JFrame {
     public void setOmitAnnotations(boolean omit) {
         this.omitAnnotations = omit;
         editorPanel.setOmitAnnotations(omit);
-    }
-
-    public boolean isOmitAnnotations() {
-        return omitAnnotations;
     }
 
     public void toggleNavigatorPanel() {
@@ -1210,18 +1201,16 @@ public class MainFrame extends JFrame {
         // Show results in a dialog
         statusBar.showProgress("Finding usages...");
 
-        SwingWorker<List<SearchResult>, Void> worker = new SwingWorker<List<SearchResult>, Void>() {
+        SwingWorker<List<SearchResult>, Void> worker = new SwingWorker<>() {
             @Override
-            protected List<SearchResult> doInBackground() throws Exception {
+            protected List<SearchResult> doInBackground() {
                 PatternSearch search = new PatternSearch(project.getClassPool())
                         .inAllClasses()
                         .limit(100);
 
-                List<SearchResult> results = new ArrayList<>();
-
                 // Search for method calls to this class
                 String className = currentClass.getClassName();
-                results.addAll(search.findMethodCalls(className, ".*"));
+                List<SearchResult> results = new ArrayList<>(search.findMethodCalls(className, ".*"));
 
                 // Search for field accesses
                 PatternSearch fieldSearch = new PatternSearch(project.getClassPool())
@@ -1422,7 +1411,7 @@ public class MainFrame extends JFrame {
         // This method provides a manual trigger to rebuild the class file
         statusBar.showProgress("Rebuilding class...");
 
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
                 ClassFile cf = currentClass.getClassFile();
@@ -1461,37 +1450,36 @@ public class MainFrame extends JFrame {
 
     public void showKeyboardShortcuts() {
         String mod = System.getProperty("os.name").toLowerCase().contains("mac") ? "Cmd" : "Ctrl";
-        StringBuilder sb = new StringBuilder();
-        sb.append("Keyboard Shortcuts:\n\n");
-        sb.append("File:\n");
-        sb.append("  ").append(mod).append("+O       Open JAR/Class\n");
-        sb.append("  ").append(mod).append("+W       Close Tab\n");
-        sb.append("  ").append(mod).append("+Shift+W Close Project\n");
-        sb.append("  ").append(mod).append("+Q       Exit\n\n");
-        sb.append("Navigation:\n");
-        sb.append("  ").append(mod).append("+G       Go to Class\n");
-        sb.append("  ").append(mod).append("+L       Go to Line\n");
-        sb.append("  Alt+Left     Navigate Back\n");
-        sb.append("  Alt+Right    Navigate Forward\n\n");
-        sb.append("Edit:\n");
-        sb.append("  ").append(mod).append("+C       Copy\n");
-        sb.append("  ").append(mod).append("+F       Find\n");
-        sb.append("  ").append(mod).append("+Shift+F Find in Project\n\n");
-        sb.append("Views:\n");
-        sb.append("  F5           Source View\n");
-        sb.append("  F6           Bytecode View\n");
-        sb.append("  F7           IR View\n");
-        sb.append("  ").append(mod).append("+F5      Refresh\n\n");
-        sb.append("Panels:\n");
-        sb.append("  ").append(mod).append("+1       Toggle Navigator\n");
-        sb.append("  ").append(mod).append("+2       Toggle Properties\n");
-        sb.append("  ").append(mod).append("+3       Toggle Console\n\n");
-        sb.append("Analysis:\n");
-        sb.append("  F9           Run Analysis\n");
-        sb.append("  ").append(mod).append("+Shift+G Call Graph\n");
-        sb.append("  ").append(mod).append("+Shift+T Transforms\n");
+        String sb = "Keyboard Shortcuts:\n\n" +
+                "File:\n" +
+                "  " + mod + "+O       Open JAR/Class\n" +
+                "  " + mod + "+W       Close Tab\n" +
+                "  " + mod + "+Shift+W Close Project\n" +
+                "  " + mod + "+Q       Exit\n\n" +
+                "Navigation:\n" +
+                "  " + mod + "+G       Go to Class\n" +
+                "  " + mod + "+L       Go to Line\n" +
+                "  Alt+Left     Navigate Back\n" +
+                "  Alt+Right    Navigate Forward\n\n" +
+                "Edit:\n" +
+                "  " + mod + "+C       Copy\n" +
+                "  " + mod + "+F       Find\n" +
+                "  " + mod + "+Shift+F Find in Project\n\n" +
+                "Views:\n" +
+                "  F5           Source View\n" +
+                "  F6           Bytecode View\n" +
+                "  F7           IR View\n" +
+                "  " + mod + "+F5      Refresh\n\n" +
+                "Panels:\n" +
+                "  " + mod + "+1       Toggle Navigator\n" +
+                "  " + mod + "+2       Toggle Properties\n" +
+                "  " + mod + "+3       Toggle Console\n\n" +
+                "Analysis:\n" +
+                "  F9           Run Analysis\n" +
+                "  " + mod + "+Shift+G Call Graph\n" +
+                "  " + mod + "+Shift+T Transforms\n";
 
-        JOptionPane.showMessageDialog(this, sb.toString(), "Keyboard Shortcuts",
+        JOptionPane.showMessageDialog(this, sb, "Keyboard Shortcuts",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -1534,30 +1522,6 @@ public class MainFrame extends JFrame {
     }
 
     // === Getters ===
-
-    public EditorPanel getEditorPanel() {
-        return editorPanel;
-    }
-
-    public NavigatorPanel getNavigatorPanel() {
-        return navigatorPanel;
-    }
-
-    public PropertiesPanel getPropertiesPanel() {
-        return propertiesPanel;
-    }
-
-    public ConsolePanel getConsolePanel() {
-        return consolePanel;
-    }
-
-    public StatusBar getStatusBar() {
-        return statusBar;
-    }
-
-    public AnalysisPanel getAnalysisPanel() {
-        return analysisPanel;
-    }
 
     /**
      * Run simulation analysis on the current method or class.
@@ -1781,9 +1745,9 @@ public class MainFrame extends JFrame {
 
         if (queryDialog == null) {
             queryDialog = new com.tonic.ui.query.QueryDialog(
-                this,
-                project.getClassPool(),
-                () -> project.getXrefDatabase()
+                    this,
+                    project.getClassPool(),
+                    project::getXrefDatabase
             );
         }
         queryDialog.setVisible(true);

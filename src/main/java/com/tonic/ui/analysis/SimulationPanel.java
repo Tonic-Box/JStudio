@@ -16,7 +16,6 @@ import com.tonic.ui.simulation.model.TaintFlow;
 import com.tonic.ui.simulation.export.FindingsExporter;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
-import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.*;
@@ -28,7 +27,6 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class SimulationPanel extends ThemedJPanel {
 

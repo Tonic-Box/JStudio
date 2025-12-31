@@ -3,7 +3,6 @@ package com.tonic.ui.vm.testgen;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.testgen.MethodFuzzer.FuzzConfig;
 import com.tonic.ui.vm.testgen.MethodFuzzer.FuzzResult;
-import com.tonic.ui.vm.testgen.objectspec.ObjectBuilderDialog;
 import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
 import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
 import com.tonic.ui.vm.testgen.objectspec.ValueMode;

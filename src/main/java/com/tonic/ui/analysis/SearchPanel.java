@@ -149,7 +149,7 @@ public class SearchPanel extends ThemedJPanel {
         statusLabel.setText("Searching...");
         resultsModel.clear();
 
-        SwingWorker<List<SearchResult>, Void> worker = new SwingWorker<List<SearchResult>, Void>() {
+        SwingWorker<List<SearchResult>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<SearchResult> doInBackground() throws Exception {
                 PatternSearch search = new PatternSearch(project.getClassPool())

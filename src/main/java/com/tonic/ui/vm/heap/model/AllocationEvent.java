@@ -1,5 +1,8 @@
 package com.tonic.ui.vm.heap.model;
 
+import lombok.Getter;
+
+@Getter
 public class AllocationEvent {
     public enum AllocationType {
         NEW(0xBB),
@@ -7,14 +10,11 @@ public class AllocationEvent {
         ANEWARRAY(0xBD),
         MULTIANEWARRAY(0xC5);
 
+        @Getter
         private final int opcode;
 
         AllocationType(int opcode) {
             this.opcode = opcode;
-        }
-
-        public int getOpcode() {
-            return opcode;
         }
 
         public static AllocationType fromOpcode(int opcode) {
@@ -45,38 +45,6 @@ public class AllocationEvent {
         this.provenance = builder.provenance;
         this.arrayLength = builder.arrayLength;
         this.arrayDimensions = builder.arrayDimensions;
-    }
-
-    public int getObjectId() {
-        return objectId;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public AllocationType getAllocationType() {
-        return allocationType;
-    }
-
-    public int getOpcode() {
-        return opcode;
-    }
-
-    public long getInstructionCount() {
-        return instructionCount;
-    }
-
-    public ProvenanceInfo getProvenance() {
-        return provenance;
-    }
-
-    public int getArrayLength() {
-        return arrayLength;
-    }
-
-    public int[] getArrayDimensions() {
-        return arrayDimensions;
     }
 
     public boolean isArray() {

@@ -1,6 +1,5 @@
 package com.tonic.ui.vm.debugger;
 
-import com.tonic.analysis.execution.core.BytecodeContext;
 import com.tonic.analysis.execution.core.BytecodeResult;
 import com.tonic.analysis.execution.debug.*;
 import com.tonic.analysis.execution.state.ConcreteValue;
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
 
 public class VMDebugSession {
 
@@ -501,7 +499,7 @@ public class VMDebugSession {
     }
 
     private DebugStateModel convertToDebugStateModel(DebugState yabrState) {
-        DebugStateModel.Builder builder = DebugStateModel.builder();
+        var builder = DebugStateModel.builder();
 
         String methodSig = yabrState.getCurrentMethod();
         if (methodSig != null) {

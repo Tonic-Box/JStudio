@@ -2,13 +2,10 @@ package com.tonic.ui.browser;
 
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ConstPool;
-import com.tonic.parser.FieldEntry;
-import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.Attribute;
 import com.tonic.parser.constpool.Item;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;

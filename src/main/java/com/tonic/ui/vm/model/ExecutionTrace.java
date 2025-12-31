@@ -1,17 +1,21 @@
 package com.tonic.ui.vm.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Getter
 public class ExecutionTrace {
 
     private final String entryClass;
     private final String entryMethod;
     private final String entryDescriptor;
     private final long startTime;
-    private long endTime;
+    @Setter private long endTime;
     private final List<MethodCall> allCalls;
 
     public ExecutionTrace(String entryClass, String entryMethod, String entryDescriptor) {
@@ -20,30 +24,6 @@ public class ExecutionTrace {
         this.entryDescriptor = entryDescriptor;
         this.startTime = System.nanoTime();
         this.allCalls = new ArrayList<>();
-    }
-
-    public String getEntryClass() {
-        return entryClass;
-    }
-
-    public String getEntryMethod() {
-        return entryMethod;
-    }
-
-    public String getEntryDescriptor() {
-        return entryDescriptor;
-    }
-
-    public long getStartTime() {
-        return startTime;
-    }
-
-    public long getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(long endTime) {
-        this.endTime = endTime;
     }
 
     public long getDurationNanos() {

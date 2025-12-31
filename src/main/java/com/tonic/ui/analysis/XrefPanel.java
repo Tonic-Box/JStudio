@@ -2,7 +2,6 @@ package com.tonic.ui.analysis;
 
 import com.tonic.analysis.xref.*;
 import com.tonic.ui.core.component.ThemedJPanel;
-import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.event.events.ShowXrefsEvent;

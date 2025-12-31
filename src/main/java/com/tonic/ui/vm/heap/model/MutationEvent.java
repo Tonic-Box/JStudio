@@ -1,18 +1,18 @@
 package com.tonic.ui.vm.heap.model;
 
+import lombok.Getter;
+
+@Getter
 public class MutationEvent {
     public enum MutationType {
         PUTFIELD(0xB5),
         PUTSTATIC(0xB3);
 
+        @Getter
         private final int opcode;
 
         MutationType(int opcode) {
             this.opcode = opcode;
-        }
-
-        public int getOpcode() {
-            return opcode;
         }
 
         public static MutationType fromOpcode(int opcode) {
@@ -42,44 +42,8 @@ public class MutationEvent {
         this.provenance = builder.provenance;
     }
 
-    public int getObjectId() {
-        return objectId;
-    }
-
-    public String getFieldOwner() {
-        return fieldOwner;
-    }
-
-    public String getFieldName() {
-        return fieldName;
-    }
-
-    public String getFieldDescriptor() {
-        return fieldDescriptor;
-    }
-
-    public Object getOldValue() {
-        return oldValue;
-    }
-
-    public Object getNewValue() {
-        return newValue;
-    }
-
-    public long getInstructionCount() {
-        return instructionCount;
-    }
-
-    public MutationType getMutationType() {
-        return mutationType;
-    }
-
     public boolean isStatic() {
         return mutationType == MutationType.PUTSTATIC;
-    }
-
-    public ProvenanceInfo getProvenance() {
-        return provenance;
     }
 
     public String getFieldKey() {

@@ -5,7 +5,6 @@ import com.tonic.plugin.api.AnalyzerPlugin;
 import com.tonic.plugin.api.TransformerPlugin;
 import com.tonic.plugin.context.PluginContextImpl;
 import com.tonic.plugin.result.Finding;
-import com.tonic.plugin.result.ResultCollector;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.service.ProjectService;

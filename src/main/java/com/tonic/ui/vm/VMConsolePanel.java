@@ -7,7 +7,6 @@ import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
-import java.awt.Color;
 import com.tonic.ui.vm.model.ExecutionResult;
 
 import javax.swing.*;
@@ -348,7 +347,7 @@ public class VMConsolePanel extends ThemedJPanel {
 
         setExecuting(true);
 
-        SwingWorker<ExecutionResult, Void> worker = new SwingWorker<ExecutionResult, Void>() {
+        SwingWorker<ExecutionResult, Void> worker = new SwingWorker<>() {
             @Override
             protected ExecutionResult doInBackground() {
                 return VMExecutionService.getInstance().executeStaticMethod(className, methodName, null, args);

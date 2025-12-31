@@ -1,6 +1,5 @@
 package com.tonic.ui.simulation.listener;
 
-import com.tonic.analysis.simulation.core.SimulationResult;
 import com.tonic.analysis.simulation.core.SimulationState;
 import com.tonic.analysis.simulation.listener.AbstractListener;
 import com.tonic.analysis.simulation.state.SimValue;

@@ -3,6 +3,7 @@ package com.tonic.ui.analysis;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
+import lombok.Getter;
 
 import javax.swing.JTabbedPane;
 import java.awt.BorderLayout;
@@ -12,17 +13,28 @@ public class AnalysisPanel extends ThemedJPanel {
     private final ProjectModel project;
     private final JTabbedPane tabbedPane;
 
-    private CallGraphPanel callGraphPanel;
-    private DependencyPanel dependencyPanel;
-    private SearchPanel searchPanel;
-    private StringsPanel stringsPanel;
-    private UsagesPanel usagesPanel;
-    private XrefPanel xrefPanel;
-    private DataFlowPanel dataFlowPanel;
-    private SimilarityPanel similarityPanel;
-    private CommentsPanel commentsPanel;
-    private BookmarksPanel bookmarksPanel;
-    private SimulationPanel simulationPanel;
+    @Getter
+    private final CallGraphPanel callGraphPanel;
+    @Getter
+    private final DependencyPanel dependencyPanel;
+    @Getter
+    private final SearchPanel searchPanel;
+    @Getter
+    private final StringsPanel stringsPanel;
+    @Getter
+    private final UsagesPanel usagesPanel;
+    @Getter
+    private final XrefPanel xrefPanel;
+    @Getter
+    private final DataFlowPanel dataFlowPanel;
+    @Getter
+    private final SimilarityPanel similarityPanel;
+    @Getter
+    private final CommentsPanel commentsPanel;
+    @Getter
+    private final BookmarksPanel bookmarksPanel;
+    @Getter
+    private final SimulationPanel simulationPanel;
 
     public AnalysisPanel(ProjectModel project) {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -75,18 +87,6 @@ public class AnalysisPanel extends ThemedJPanel {
         bookmarksPanel.refresh();
         simulationPanel.refresh();
     }
-
-    public CallGraphPanel getCallGraphPanel() { return callGraphPanel; }
-    public DependencyPanel getDependencyPanel() { return dependencyPanel; }
-    public SearchPanel getSearchPanel() { return searchPanel; }
-    public StringsPanel getStringsPanel() { return stringsPanel; }
-    public UsagesPanel getUsagesPanel() { return usagesPanel; }
-    public XrefPanel getXrefPanel() { return xrefPanel; }
-    public DataFlowPanel getDataFlowPanel() { return dataFlowPanel; }
-    public SimilarityPanel getSimilarityPanel() { return similarityPanel; }
-    public CommentsPanel getCommentsPanel() { return commentsPanel; }
-    public BookmarksPanel getBookmarksPanel() { return bookmarksPanel; }
-    public SimulationPanel getSimulationPanel() { return simulationPanel; }
 
     public void showCallGraph() { tabbedPane.setSelectedComponent(callGraphPanel); }
     public void showDependencies() { tabbedPane.setSelectedComponent(dependencyPanel); }

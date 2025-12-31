@@ -1,18 +1,21 @@
 package com.tonic.ui.deobfuscation.model;
 
 import com.tonic.parser.MethodEntry;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
 public class DeobfuscationResult {
 
     private final String className;
     private final int constantPoolIndex;
     private final String originalValue;
-    private String decryptedValue;
-    private MethodEntry decryptorUsed;
-    private boolean success;
-    private String errorMessage;
-    private long executionTimeMs;
-    private boolean applied;
+    @Setter private String decryptedValue;
+    @Setter private MethodEntry decryptorUsed;
+    @Setter private boolean success;
+    @Setter private String errorMessage;
+    @Setter private long executionTimeMs;
+    @Setter private boolean applied;
 
     public DeobfuscationResult(String className, int constantPoolIndex, String originalValue) {
         this.className = className;
@@ -41,69 +44,9 @@ public class DeobfuscationResult {
         return result;
     }
 
-    public String getClassName() {
-        return className;
-    }
-
     public String getSimpleClassName() {
         int lastSlash = className.lastIndexOf('/');
         return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
-    }
-
-    public int getConstantPoolIndex() {
-        return constantPoolIndex;
-    }
-
-    public String getOriginalValue() {
-        return originalValue;
-    }
-
-    public String getDecryptedValue() {
-        return decryptedValue;
-    }
-
-    public void setDecryptedValue(String decryptedValue) {
-        this.decryptedValue = decryptedValue;
-    }
-
-    public MethodEntry getDecryptorUsed() {
-        return decryptorUsed;
-    }
-
-    public void setDecryptorUsed(MethodEntry decryptorUsed) {
-        this.decryptorUsed = decryptorUsed;
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
-    public long getExecutionTimeMs() {
-        return executionTimeMs;
-    }
-
-    public void setExecutionTimeMs(long executionTimeMs) {
-        this.executionTimeMs = executionTimeMs;
-    }
-
-    public boolean isApplied() {
-        return applied;
-    }
-
-    public void setApplied(boolean applied) {
-        this.applied = applied;
     }
 
     public String getDisplayOriginal() {

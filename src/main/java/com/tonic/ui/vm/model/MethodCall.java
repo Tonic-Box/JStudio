@@ -1,19 +1,23 @@
 package com.tonic.ui.vm.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Arrays;
 
+@Getter
 public class MethodCall {
 
     private final String ownerClass;
     private final String methodName;
     private final String descriptor;
     private final Object[] arguments;
-    private final boolean isStatic;
+    private final boolean staticMethod;
     private final int depth;
-    private Object returnValue;
-    private long startTimeNanos;
-    private long endTimeNanos;
-    private boolean exceptional;
+    @Setter private Object returnValue;
+    @Setter private long startTimeNanos;
+    @Setter private long endTimeNanos;
+    @Setter private boolean exceptional;
 
     public MethodCall(String ownerClass, String methodName, String descriptor,
                       Object[] arguments, boolean isStatic, int depth) {
@@ -21,69 +25,17 @@ public class MethodCall {
         this.methodName = methodName;
         this.descriptor = descriptor;
         this.arguments = arguments != null ? arguments.clone() : new Object[0];
-        this.isStatic = isStatic;
+        this.staticMethod = isStatic;
         this.depth = depth;
         this.startTimeNanos = System.nanoTime();
-    }
-
-    public String getOwnerClass() {
-        return ownerClass;
-    }
-
-    public String getMethodName() {
-        return methodName;
-    }
-
-    public String getDescriptor() {
-        return descriptor;
     }
 
     public Object[] getArguments() {
         return arguments.clone();
     }
 
-    public boolean isStatic() {
-        return isStatic;
-    }
-
-    public int getDepth() {
-        return depth;
-    }
-
-    public Object getReturnValue() {
-        return returnValue;
-    }
-
-    public void setReturnValue(Object returnValue) {
-        this.returnValue = returnValue;
-    }
-
-    public long getStartTimeNanos() {
-        return startTimeNanos;
-    }
-
-    public void setStartTimeNanos(long startTimeNanos) {
-        this.startTimeNanos = startTimeNanos;
-    }
-
-    public long getEndTimeNanos() {
-        return endTimeNanos;
-    }
-
-    public void setEndTimeNanos(long endTimeNanos) {
-        this.endTimeNanos = endTimeNanos;
-    }
-
     public long getDurationNanos() {
         return endTimeNanos - startTimeNanos;
-    }
-
-    public boolean isExceptional() {
-        return exceptional;
-    }
-
-    public void setExceptional(boolean exceptional) {
-        this.exceptional = exceptional;
     }
 
     public String getSimpleOwnerName() {
@@ -151,7 +103,7 @@ public class MethodCall {
         private String methodName;
         private String descriptor;
         private Object[] arguments;
-        private boolean isStatic;
+        private boolean staticMethod;
         private int depth;
 
         public Builder ownerClass(String ownerClass) {
@@ -174,8 +126,8 @@ public class MethodCall {
             return this;
         }
 
-        public Builder isStatic(boolean isStatic) {
-            this.isStatic = isStatic;
+        public Builder staticMethod(boolean staticMethod) {
+            this.staticMethod = staticMethod;
             return this;
         }
 
@@ -185,7 +137,7 @@ public class MethodCall {
         }
 
         public MethodCall build() {
-            return new MethodCall(ownerClass, methodName, descriptor, arguments, isStatic, depth);
+            return new MethodCall(ownerClass, methodName, descriptor, arguments, staticMethod, depth);
         }
     }
 }

@@ -6,7 +6,6 @@ import com.tonic.ui.model.Comment;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.service.ProjectDatabaseService;
-import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.Icons;

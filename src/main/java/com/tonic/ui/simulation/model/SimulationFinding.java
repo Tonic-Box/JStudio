@@ -1,8 +1,10 @@
 package com.tonic.ui.simulation.model;
 
-/**
- * Base class for all simulation-based analysis findings.
- */
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public abstract class SimulationFinding {
 
     public enum FindingType {
@@ -27,40 +29,6 @@ public abstract class SimulationFinding {
     protected final FindingType type;
     protected final Severity severity;
     protected final int bytecodeOffset;
-
-    protected SimulationFinding(String className, String methodName, String methodDesc,
-                                FindingType type, Severity severity, int bytecodeOffset) {
-        this.className = className;
-        this.methodName = methodName;
-        this.methodDesc = methodDesc;
-        this.type = type;
-        this.severity = severity;
-        this.bytecodeOffset = bytecodeOffset;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public String getMethodName() {
-        return methodName;
-    }
-
-    public String getMethodDesc() {
-        return methodDesc;
-    }
-
-    public FindingType getType() {
-        return type;
-    }
-
-    public Severity getSeverity() {
-        return severity;
-    }
-
-    public int getBytecodeOffset() {
-        return bytecodeOffset;
-    }
 
     public String getMethodSignature() {
         return className + "." + methodName + methodDesc;

@@ -140,7 +140,7 @@ public class IRView extends JPanel implements ThemeManager.ThemeChangeListener {
         }
 
         // Lift IR in background
-        SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() throws Exception {
                 return generateIR();

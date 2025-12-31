@@ -191,7 +191,7 @@ public class DependencyPanel extends ThemedJPanel {
 
         updateStatus("Analyzing dependencies...");
 
-        SwingWorker<DependencyAnalyzer, Void> worker = new SwingWorker<DependencyAnalyzer, Void>() {
+        SwingWorker<DependencyAnalyzer, Void> worker = new SwingWorker<>() {
             @Override
             protected DependencyAnalyzer doInBackground() throws Exception {
                 return new DependencyAnalyzer(project.getClassPool());

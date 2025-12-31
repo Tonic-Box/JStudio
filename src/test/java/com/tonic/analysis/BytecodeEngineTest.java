@@ -94,9 +94,7 @@ public class BytecodeEngineTest {
 
         System.out.println("[TEST] Starting execution of ArrayList.<init>()V");
         BytecodeResult result = engine.execute(constructor,
-            new com.tonic.analysis.execution.state.ConcreteValue[]{
-                com.tonic.analysis.execution.state.ConcreteValue.reference(arrayListInstance)
-            });
+                com.tonic.analysis.execution.state.ConcreteValue.reference(arrayListInstance));
         System.out.println("[TEST] Execution completed: " + result.getStatus());
         System.out.println("[TEST] Instructions executed: " + result.getInstructionsExecuted());
 

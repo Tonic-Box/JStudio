@@ -1,9 +1,13 @@
 package com.tonic.ui.vm.heap.model;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Getter
 public class ProvenanceInfo {
     private final String methodSignature;
     private final String className;
@@ -21,34 +25,6 @@ public class ProvenanceInfo {
         this.pc = builder.pc;
         this.lineNumber = builder.lineNumber;
         this.callStack = Collections.unmodifiableList(new ArrayList<>(builder.callStack));
-    }
-
-    public String getMethodSignature() {
-        return methodSignature;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public String getMethodName() {
-        return methodName;
-    }
-
-    public String getDescriptor() {
-        return descriptor;
-    }
-
-    public int getPc() {
-        return pc;
-    }
-
-    public int getLineNumber() {
-        return lineNumber;
-    }
-
-    public List<StackFrameInfo> getCallStack() {
-        return callStack;
     }
 
     public boolean hasCallStack() {
@@ -136,40 +112,14 @@ public class ProvenanceInfo {
         }
     }
 
+    @Getter
+    @RequiredArgsConstructor
     public static class StackFrameInfo {
         private final String className;
         private final String methodName;
         private final String descriptor;
         private final int pc;
         private final int lineNumber;
-
-        public StackFrameInfo(String className, String methodName, String descriptor, int pc, int lineNumber) {
-            this.className = className;
-            this.methodName = methodName;
-            this.descriptor = descriptor;
-            this.pc = pc;
-            this.lineNumber = lineNumber;
-        }
-
-        public String getClassName() {
-            return className;
-        }
-
-        public String getMethodName() {
-            return methodName;
-        }
-
-        public String getDescriptor() {
-            return descriptor;
-        }
-
-        public int getPc() {
-            return pc;
-        }
-
-        public int getLineNumber() {
-            return lineNumber;
-        }
 
         @Override
         public String toString() {

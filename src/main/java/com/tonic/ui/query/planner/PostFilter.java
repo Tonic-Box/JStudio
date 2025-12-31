@@ -2,7 +2,6 @@ package com.tonic.ui.query.planner;
 
 import com.tonic.ui.query.planner.probe.ProbeResult;
 
-import java.util.List;
 import java.util.function.Predicate;
 
 /**

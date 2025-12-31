@@ -1,10 +1,13 @@
 package com.tonic.ui.vm.debugger;
 
+import lombok.Getter;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class ExecutionTrace {
 
     private final String className;
@@ -33,22 +36,6 @@ public class ExecutionTrace {
         this.endTime = LocalDateTime.now();
         this.finalResult = result;
         this.completedNormally = normal;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public String getMethodName() {
-        return methodName;
-    }
-
-    public String getDescriptor() {
-        return descriptor;
-    }
-
-    public List<ExecutionStep> getSteps() {
-        return steps;
     }
 
     public String toMarkdown() {

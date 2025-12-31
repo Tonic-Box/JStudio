@@ -11,8 +11,6 @@ import com.tonic.ui.vm.model.ExecutionResult;
 import com.tonic.ui.vm.testgen.objectspec.ObjectBuilderDialog;
 import com.tonic.ui.vm.testgen.objectspec.ObjectFactory;
 import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
-import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
-import com.tonic.ui.vm.testgen.objectspec.ValueMode;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;

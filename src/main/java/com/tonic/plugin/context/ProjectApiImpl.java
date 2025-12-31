@@ -1,7 +1,6 @@
 package com.tonic.plugin.context;
 
 import com.tonic.parser.ClassFile;
-import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
 import com.tonic.plugin.api.ProjectApi;

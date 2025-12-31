@@ -1,8 +1,6 @@
 package com.tonic.plugin.context;
 
-import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.ClassFile;
-import com.tonic.parser.MethodEntry;
 import com.tonic.plugin.api.YabrAccess;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;

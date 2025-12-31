@@ -1,9 +1,6 @@
 package com.tonic.cli.commands;
 
 import com.tonic.parser.ClassFile;
-import com.tonic.parser.ClassPool;
-import com.tonic.parser.FieldEntry;
-import com.tonic.parser.MethodEntry;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.service.ProjectService;

@@ -2,6 +2,7 @@ package com.tonic.ui.vm.heap.model;
 
 import com.tonic.analysis.execution.heap.ArrayInstance;
 import com.tonic.analysis.execution.heap.ObjectInstance;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public class HeapObject {
     private final int id;
     private final String className;
@@ -16,9 +18,9 @@ public class HeapObject {
     private final ProvenanceInfo provenance;
     private final Map<String, FieldValue> fields;
     private final List<MutationEvent> mutations;
-    private final boolean isLambda;
-    private final boolean isArray;
-    private final boolean isString;
+    private final boolean lambda;
+    private final boolean array;
+    private final boolean string;
 
     protected HeapObject(Builder builder) {
         this.id = builder.id;
@@ -27,21 +29,13 @@ public class HeapObject {
         this.provenance = builder.provenance;
         this.fields = Collections.unmodifiableMap(new LinkedHashMap<>(builder.fields));
         this.mutations = Collections.unmodifiableList(new ArrayList<>(builder.mutations));
-        this.isLambda = detectLambda(className);
-        this.isArray = builder.isArray;
-        this.isString = "java/lang/String".equals(className);
+        this.lambda = detectLambda(className);
+        this.array = builder.isArray;
+        this.string = "java/lang/String".equals(className);
     }
 
     private boolean detectLambda(String name) {
         return name != null && (name.contains("$Lambda$") || name.contains("$$Lambda$"));
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getClassName() {
-        return className;
     }
 
     public String getSimpleClassName() {
@@ -52,44 +46,16 @@ public class HeapObject {
         return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
     }
 
-    public long getAllocationTime() {
-        return allocationTime;
-    }
-
-    public ProvenanceInfo getProvenance() {
-        return provenance;
-    }
-
-    public Map<String, FieldValue> getFields() {
-        return fields;
-    }
-
     public FieldValue getField(String key) {
         return fields.get(key);
-    }
-
-    public List<MutationEvent> getMutations() {
-        return mutations;
     }
 
     public boolean hasMutations() {
         return !mutations.isEmpty();
     }
 
-    public boolean isLambda() {
-        return isLambda;
-    }
-
-    public boolean isArray() {
-        return isArray;
-    }
-
-    public boolean isString() {
-        return isString;
-    }
-
     public List<String> getLambdaCaptureFieldNames() {
-        if (!isLambda) {
+        if (!lambda) {
             return Collections.emptyList();
         }
         List<String> captures = new ArrayList<>();

@@ -2,9 +2,7 @@ package com.tonic.ui.simulation.listener;
 
 import com.tonic.analysis.simulation.core.SimulationState;
 import com.tonic.analysis.simulation.listener.AbstractListener;
-import com.tonic.analysis.simulation.state.SimValue;
 import com.tonic.analysis.ssa.cfg.IRMethod;
-import com.tonic.analysis.ssa.ir.IRInstruction;
 import com.tonic.analysis.ssa.ir.InvokeInstruction;
 import com.tonic.analysis.ssa.value.SSAValue;
 import com.tonic.ui.simulation.model.TaintFlow;

@@ -2,13 +2,9 @@ package com.tonic.ui;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.tonic.cli.HeadlessRunner;
-import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.ThemeManager;
 import com.tonic.ui.util.KeyboardShortcuts;
 import com.tonic.ui.util.Settings;
-
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import java.awt.EventQueue;
 import java.util.Arrays;
 

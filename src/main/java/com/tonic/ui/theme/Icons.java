@@ -8,8 +8,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 /**

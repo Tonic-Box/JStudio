@@ -19,7 +19,6 @@ import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
