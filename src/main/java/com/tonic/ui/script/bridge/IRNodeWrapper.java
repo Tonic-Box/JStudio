@@ -62,25 +62,21 @@ public class IRNodeWrapper {
             props.put("args", wrapValueList(invoke.getArguments()));
             props.put("result", wrapValue(invoke.getResult()));
         }
-        else if (node instanceof GetFieldInstruction) {
-            GetFieldInstruction field = (GetFieldInstruction) node;
+        else if (node instanceof FieldAccessInstruction) {
+            FieldAccessInstruction field = (FieldAccessInstruction) node;
             props.put("fieldName", ScriptValue.string(field.getName()));
             props.put("name", ScriptValue.string(field.getName()));
             props.put("owner", ScriptValue.string(field.getOwner()));
             props.put("descriptor", ScriptValue.string(field.getDescriptor()));
             props.put("isStatic", ScriptValue.bool(field.isStatic()));
+            props.put("isLoad", ScriptValue.bool(field.isLoad()));
+            props.put("isStore", ScriptValue.bool(field.isStore()));
             props.put("objectRef", field.getObjectRef() != null ? wrapValue(field.getObjectRef()) : ScriptValue.NULL);
-            props.put("result", wrapValue(field.getResult()));
-        }
-        else if (node instanceof PutFieldInstruction) {
-            PutFieldInstruction field = (PutFieldInstruction) node;
-            props.put("fieldName", ScriptValue.string(field.getName()));
-            props.put("name", ScriptValue.string(field.getName()));
-            props.put("owner", ScriptValue.string(field.getOwner()));
-            props.put("descriptor", ScriptValue.string(field.getDescriptor()));
-            props.put("isStatic", ScriptValue.bool(field.isStatic()));
-            props.put("objectRef", field.getObjectRef() != null ? wrapValue(field.getObjectRef()) : ScriptValue.NULL);
-            props.put("value", wrapValue(field.getValue()));
+            if (field.isLoad()) {
+                props.put("result", wrapValue(field.getResult()));
+            } else {
+                props.put("value", wrapValue(field.getValue()));
+            }
         }
         else if (node instanceof ConstantInstruction) {
             ConstantInstruction constInstr = (ConstantInstruction) node;
@@ -107,11 +103,13 @@ public class IRNodeWrapper {
             props.put("className", ScriptValue.string(newInstr.getClassName()));
             props.put("result", wrapValue(newInstr.getResult()));
         }
-        else if (node instanceof CastInstruction) {
-            CastInstruction cast = (CastInstruction) node;
-            props.put("operand", wrapValue(cast.getObjectRef()));
-            props.put("targetType", ScriptValue.string(cast.getTargetType() != null ? cast.getTargetType().toString() : ""));
-            props.put("result", wrapValue(cast.getResult()));
+        else if (node instanceof TypeCheckInstruction) {
+            TypeCheckInstruction typeCheck = (TypeCheckInstruction) node;
+            props.put("operand", wrapValue(typeCheck.getOperand()));
+            props.put("targetType", ScriptValue.string(typeCheck.getTargetType() != null ? typeCheck.getTargetType().toString() : ""));
+            props.put("result", wrapValue(typeCheck.getResult()));
+            props.put("isCast", ScriptValue.bool(typeCheck.isCast()));
+            props.put("isInstanceOf", ScriptValue.bool(typeCheck.isInstanceOf()));
         }
         else if (node instanceof IRBlock) {
             IRBlock block = (IRBlock) node;

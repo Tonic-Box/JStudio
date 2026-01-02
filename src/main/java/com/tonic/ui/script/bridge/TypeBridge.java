@@ -220,15 +220,17 @@ public class TypeBridge extends AbstractBridge {
         List<ScriptValue> casts = new ArrayList<>();
         for (IRBlock block : currentMethod.getBlocks()) {
             for (IRInstruction instr : block.getInstructions()) {
-                if (instr instanceof CastInstruction) {
-                    CastInstruction cast = (CastInstruction) instr;
-                    Map<String, ScriptValue> props = new HashMap<>();
-                    props.put("targetType", ScriptValue.string(
-                        cast.getTargetType() != null ? cast.getTargetType().toString() : ""));
-                    props.put("operand", wrapValue(cast.getObjectRef()));
-                    props.put("result", wrapValue(cast.getResult()));
-                    props.put("blockId", ScriptValue.number(block.getId()));
-                    casts.add(ScriptValue.object(props));
+                if (instr instanceof TypeCheckInstruction) {
+                    TypeCheckInstruction typeCheck = (TypeCheckInstruction) instr;
+                    if (typeCheck.isCast()) {
+                        Map<String, ScriptValue> props = new HashMap<>();
+                        props.put("targetType", ScriptValue.string(
+                            typeCheck.getTargetType() != null ? typeCheck.getTargetType().toString() : ""));
+                        props.put("operand", wrapValue(typeCheck.getOperand()));
+                        props.put("result", wrapValue(typeCheck.getResult()));
+                        props.put("blockId", ScriptValue.number(block.getId()));
+                        casts.add(ScriptValue.object(props));
+                    }
                 }
             }
         }
@@ -241,15 +243,17 @@ public class TypeBridge extends AbstractBridge {
         List<ScriptValue> checks = new ArrayList<>();
         for (IRBlock block : currentMethod.getBlocks()) {
             for (IRInstruction instr : block.getInstructions()) {
-                if (instr instanceof InstanceOfInstruction) {
-                    InstanceOfInstruction iof = (InstanceOfInstruction) instr;
-                    Map<String, ScriptValue> props = new HashMap<>();
-                    props.put("checkType", ScriptValue.string(
-                        iof.getCheckType() != null ? iof.getCheckType().toString() : ""));
-                    props.put("operand", wrapValue(iof.getObjectRef()));
-                    props.put("result", wrapValue(iof.getResult()));
-                    props.put("blockId", ScriptValue.number(block.getId()));
-                    checks.add(ScriptValue.object(props));
+                if (instr instanceof TypeCheckInstruction) {
+                    TypeCheckInstruction typeCheck = (TypeCheckInstruction) instr;
+                    if (typeCheck.isInstanceOf()) {
+                        Map<String, ScriptValue> props = new HashMap<>();
+                        props.put("checkType", ScriptValue.string(
+                            typeCheck.getTargetType() != null ? typeCheck.getTargetType().toString() : ""));
+                        props.put("operand", wrapValue(typeCheck.getOperand()));
+                        props.put("result", wrapValue(typeCheck.getResult()));
+                        props.put("blockId", ScriptValue.number(block.getId()));
+                        checks.add(ScriptValue.object(props));
+                    }
                 }
             }
         }

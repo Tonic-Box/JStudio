@@ -2,13 +2,18 @@ package com.tonic.ui.analysis.callgraph;
 
 import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.model.mxCell;
+import com.mxgraph.util.mxConstants;
 import com.mxgraph.view.mxGraph;
 import com.tonic.analysis.callgraph.CallGraph;
+
+import javax.swing.SwingConstants;
 import com.tonic.analysis.callgraph.CallGraphNode;
 import com.tonic.analysis.callgraph.CallSite;
 import com.tonic.analysis.common.MethodReference;
+import com.tonic.ui.theme.JStudioTheme;
 import lombok.Getter;
 
+import java.awt.Color;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -21,8 +26,6 @@ public class CallGraphRenderer {
     private static final int MAX_NODE_WIDTH = 220;
     private static final int CHAR_WIDTH = 8;
     private static final int NODE_PADDING = 30;
-    private static final int INTER_RANK_SPACING = 70;
-    private static final int INTRA_CELL_SPACING = 40;
     private static final int MAX_CLASS_LENGTH = 22;
     private static final int MAX_METHOD_LENGTH = 20;
 
@@ -131,7 +134,7 @@ public class CallGraphRenderer {
         for (MethodReference caller : callers) {
             if (callGraph.calls(caller, focusMethod)) {
                 String edgeLabel = getEdgeTooltip(callGraph, caller, focusMethod);
-                String edgeStyle = styleFactory.getEdgeStyle(callGraph, caller, focusMethod);
+                String edgeStyle = buildInlineEdgeStyle(callGraph, caller, focusMethod);
                 Object edge = graph.insertEdge(parent, null, "",
                         nodeMap.get(caller), nodeMap.get(focusMethod), edgeStyle);
                 if (edge instanceof mxCell) {
@@ -146,7 +149,7 @@ public class CallGraphRenderer {
         for (MethodReference callee : callees) {
             if (callGraph.calls(focusMethod, callee)) {
                 String edgeLabel = getEdgeTooltip(callGraph, focusMethod, callee);
-                String edgeStyle = styleFactory.getEdgeStyle(callGraph, focusMethod, callee);
+                String edgeStyle = buildInlineEdgeStyle(callGraph, focusMethod, callee);
                 Object edge = graph.insertEdge(parent, null, "",
                         nodeMap.get(focusMethod), nodeMap.get(callee), edgeStyle);
                 if (edge instanceof mxCell) {
@@ -156,10 +159,56 @@ public class CallGraphRenderer {
         }
     }
 
+    private String buildInlineEdgeStyle(CallGraph callGraph, MethodReference caller, MethodReference callee) {
+        // Use bright red for debugging - very visible
+        String strokeColor = "#FF0000";
+
+        CallGraphNode callerNode = callGraph.getNode(caller);
+        if (callerNode != null) {
+            for (CallSite site : callerNode.getOutgoingCalls()) {
+                if (site.getTarget().equals(callee)) {
+                    switch (site.getInvokeType()) {
+                        case VIRTUAL:
+                            strokeColor = "#00FF00"; // bright green
+                            break;
+                        case STATIC:
+                            strokeColor = "#00FFFF"; // cyan
+                            break;
+                        case SPECIAL:
+                            strokeColor = "#FFFF00"; // yellow
+                            break;
+                        case INTERFACE:
+                            strokeColor = "#FF00FF"; // magenta
+                            break;
+                        case DYNAMIC:
+                            strokeColor = "#FF8800"; // orange
+                            break;
+                    }
+                    break;
+                }
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(mxConstants.STYLE_STROKECOLOR).append("=").append(strokeColor).append(";");
+        sb.append(mxConstants.STYLE_STROKEWIDTH).append("=3;"); // thicker for visibility
+        sb.append(mxConstants.STYLE_ENDARROW).append("=").append(mxConstants.ARROW_CLASSIC).append(";");
+        sb.append(mxConstants.STYLE_ROUNDED).append("=1;");
+        sb.append(mxConstants.STYLE_EDGE).append("=").append(mxConstants.EDGESTYLE_ORTHOGONAL).append(";");
+        return sb.toString();
+    }
+
+    private static String toHex(Color c) {
+        return String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue());
+    }
+
     private void applyLayout(Object parent) {
-        mxHierarchicalLayout layout = new mxHierarchicalLayout(graph);
-        layout.setInterRankCellSpacing(INTER_RANK_SPACING);
-        layout.setIntraCellSpacing(INTRA_CELL_SPACING);
+        mxHierarchicalLayout layout = new mxHierarchicalLayout(graph, SwingConstants.NORTH);
+        layout.setInterRankCellSpacing(60);
+        layout.setIntraCellSpacing(30);
+        layout.setParallelEdgeSpacing(10);
+        layout.setDisableEdgeStyle(false);
+        layout.setFineTuning(true);
         layout.execute(parent);
     }
 

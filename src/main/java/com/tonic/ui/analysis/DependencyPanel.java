@@ -18,6 +18,7 @@ import lombok.Getter;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.SwingConstants;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -135,7 +136,8 @@ public class DependencyPanel extends ThemedJPanel {
     }
 
     private void setupGraphStyles() {
-        mxStylesheet stylesheet = graph.getStylesheet();
+        mxStylesheet stylesheet = new mxStylesheet();
+        graph.setStylesheet(stylesheet);
         Map<String, Object> style = new HashMap<>();
 
         // Class node style
@@ -172,9 +174,20 @@ public class DependencyPanel extends ThemedJPanel {
         Map<String, Object> edgeStyle = new HashMap<>();
         edgeStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getGraphExternalStroke()));
         edgeStyle.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
+        edgeStyle.put(mxConstants.STYLE_ROUNDED, true);
+        edgeStyle.put(mxConstants.STYLE_EDGE, mxConstants.EDGESTYLE_ORTHOGONAL);
         stylesheet.putCellStyle("EDGE", edgeStyle);
 
         graph.getStylesheet().setDefaultEdgeStyle(edgeStyle);
+    }
+
+    private String buildInlineEdgeStyle() {
+        // Bright color for debugging
+        return mxConstants.STYLE_STROKECOLOR + "=#FF0000;" +
+               mxConstants.STYLE_STROKEWIDTH + "=3;" +
+               mxConstants.STYLE_ENDARROW + "=" + mxConstants.ARROW_CLASSIC + ";" +
+               mxConstants.STYLE_ROUNDED + "=1;" +
+               mxConstants.STYLE_EDGE + "=" + mxConstants.EDGESTYLE_ORTHOGONAL + ";";
     }
 
     private static Color darker(Color c) {
@@ -289,11 +302,12 @@ public class DependencyPanel extends ThemedJPanel {
             }
 
             // Create edges: focus -> dependencies
+            String edgeStyle = buildInlineEdgeStyle();
             DependencyNode focusNode2 = analyzer.getNode(focusClass);
             if (focusNode2 != null) {
                 for (String dep : focusNode2.getDependencies()) {
                     if (nodeMap.containsKey(dep)) {
-                        graph.insertEdge(parent, null, "", nodeMap.get(focusClass), nodeMap.get(dep), "EDGE");
+                        graph.insertEdge(parent, null, "", nodeMap.get(focusClass), nodeMap.get(dep), edgeStyle);
                     }
                 }
             }
@@ -301,14 +315,15 @@ public class DependencyPanel extends ThemedJPanel {
             // Create edges: dependents -> focus
             for (String dep : dependents) {
                 if (analyzer.dependsOn(dep, focusClass)) {
-                    graph.insertEdge(parent, null, "", nodeMap.get(dep), nodeMap.get(focusClass), "EDGE");
+                    graph.insertEdge(parent, null, "", nodeMap.get(dep), nodeMap.get(focusClass), edgeStyle);
                 }
             }
 
-            // Layout
-            mxHierarchicalLayout layout = new mxHierarchicalLayout(graph);
+            // Layout - top-to-bottom flow
+            mxHierarchicalLayout layout = new mxHierarchicalLayout(graph, SwingConstants.NORTH);
             layout.setInterRankCellSpacing(50);
             layout.setIntraCellSpacing(30);
+            layout.setDisableEdgeStyle(false);
             layout.execute(parent);
 
         } finally {

@@ -274,10 +274,10 @@ public class IRBridge {
                         matches = instr instanceof InvokeInstruction;
                         break;
                     case GET_FIELD:
-                        matches = instr instanceof GetFieldInstruction;
+                        matches = instr instanceof FieldAccessInstruction && ((FieldAccessInstruction) instr).isLoad();
                         break;
                     case PUT_FIELD:
-                        matches = instr instanceof PutFieldInstruction;
+                        matches = instr instanceof FieldAccessInstruction && ((FieldAccessInstruction) instr).isStore();
                         break;
                     case CONSTANT:
                         matches = instr instanceof ConstantInstruction;

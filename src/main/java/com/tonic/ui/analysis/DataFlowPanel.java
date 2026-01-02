@@ -6,6 +6,8 @@ import com.mxgraph.util.mxCellRenderer;
 import com.mxgraph.util.mxConstants;
 import com.mxgraph.view.mxGraph;
 import com.mxgraph.view.mxStylesheet;
+
+import javax.swing.SwingConstants;
 import com.tonic.analysis.dataflow.*;
 import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRMethod;
@@ -160,7 +162,8 @@ public class DataFlowPanel extends ThemedJPanel {
     }
 
     private void setupGraphStyles() {
-        mxStylesheet stylesheet = graph.getStylesheet();
+        mxStylesheet stylesheet = new mxStylesheet();
+        graph.setStylesheet(stylesheet);
 
         // Base node style
         Map<String, Object> baseStyle = new HashMap<>();
@@ -211,6 +214,8 @@ public class DataFlowPanel extends ThemedJPanel {
         edgeStyle.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
         edgeStyle.put(mxConstants.STYLE_FONTCOLOR, toHex(JStudioTheme.getTextSecondary()));
         edgeStyle.put(mxConstants.STYLE_FONTSIZE, 9);
+        edgeStyle.put(mxConstants.STYLE_ROUNDED, true);
+        edgeStyle.put(mxConstants.STYLE_EDGE, mxConstants.EDGESTYLE_ORTHOGONAL);
         stylesheet.putCellStyle("EDGE", edgeStyle);
 
         // Tainted edge style
@@ -442,23 +447,30 @@ public class DataFlowPanel extends ThemedJPanel {
                 Object targetCell = nodeToCell.get(edge.getTarget());
                 if (sourceCell == null || targetCell == null) continue;
 
-                String edgeStyle = "EDGE";
-                if (showTainted && edge.getSource().isTainted()) {
-                    edgeStyle = "TAINT_EDGE";
-                }
-
+                String edgeStyle = buildInlineEdgeStyle(showTainted && edge.getSource().isTainted());
                 graph.insertEdge(parent, null, "", sourceCell, targetCell, edgeStyle);
             }
 
-            // Layout
-            mxHierarchicalLayout layout = new mxHierarchicalLayout(graph);
-            layout.setInterRankCellSpacing(40);
-            layout.setIntraCellSpacing(20);
+            // Layout - top-to-bottom flow
+            mxHierarchicalLayout layout = new mxHierarchicalLayout(graph, SwingConstants.NORTH);
+            layout.setInterRankCellSpacing(50);
+            layout.setIntraCellSpacing(25);
+            layout.setDisableEdgeStyle(false);
             layout.execute(parent);
 
         } finally {
             graph.getModel().endUpdate();
         }
+    }
+
+    private String buildInlineEdgeStyle(boolean tainted) {
+        // Bright colors for debugging
+        String strokeColor = tainted ? "#FF0000" : "#00FF00";
+        return mxConstants.STYLE_STROKECOLOR + "=" + strokeColor + ";" +
+               mxConstants.STYLE_STROKEWIDTH + "=3;" +
+               mxConstants.STYLE_ENDARROW + "=" + mxConstants.ARROW_CLASSIC + ";" +
+               mxConstants.STYLE_ROUNDED + "=1;" +
+               mxConstants.STYLE_EDGE + "=" + mxConstants.EDGESTYLE_ORTHOGONAL + ";";
     }
 
     private boolean passesFilter(DataFlowNode node, String filter) {

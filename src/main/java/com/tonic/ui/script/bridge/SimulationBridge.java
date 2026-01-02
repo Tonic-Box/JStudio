@@ -255,13 +255,16 @@ public class SimulationBridge {
             for (ScriptFunction callback : onInvokeCallbacks) {
                 callCallback(callback, instrWrapper);
             }
-        } else if (instr instanceof GetFieldInstruction) {
-            for (ScriptFunction callback : onFieldReadCallbacks) {
-                callCallback(callback, instrWrapper);
-            }
-        } else if (instr instanceof PutFieldInstruction) {
-            for (ScriptFunction callback : onFieldWriteCallbacks) {
-                callCallback(callback, instrWrapper);
+        } else if (instr instanceof FieldAccessInstruction) {
+            FieldAccessInstruction field = (FieldAccessInstruction) instr;
+            if (field.isLoad()) {
+                for (ScriptFunction callback : onFieldReadCallbacks) {
+                    callCallback(callback, instrWrapper);
+                }
+            } else {
+                for (ScriptFunction callback : onFieldWriteCallbacks) {
+                    callCallback(callback, instrWrapper);
+                }
             }
         } else if (instr instanceof BranchInstruction) {
             for (ScriptFunction callback : onBranchCallbacks) {
@@ -469,16 +472,13 @@ public class SimulationBridge {
             props.put("name", ScriptValue.string(invoke.getName()));
             props.put("descriptor", ScriptValue.string(invoke.getDescriptor()));
             props.put("invokeType", ScriptValue.string(invoke.getInvokeType().name()));
-        } else if (instr instanceof GetFieldInstruction) {
-            GetFieldInstruction field = (GetFieldInstruction) instr;
+        } else if (instr instanceof FieldAccessInstruction) {
+            FieldAccessInstruction field = (FieldAccessInstruction) instr;
             props.put("owner", ScriptValue.string(field.getOwner()));
             props.put("name", ScriptValue.string(field.getName()));
             props.put("isStatic", ScriptValue.bool(field.isStatic()));
-        } else if (instr instanceof PutFieldInstruction) {
-            PutFieldInstruction field = (PutFieldInstruction) instr;
-            props.put("owner", ScriptValue.string(field.getOwner()));
-            props.put("name", ScriptValue.string(field.getName()));
-            props.put("isStatic", ScriptValue.bool(field.isStatic()));
+            props.put("isLoad", ScriptValue.bool(field.isLoad()));
+            props.put("isStore", ScriptValue.bool(field.isStore()));
         } else if (instr instanceof BranchInstruction) {
             BranchInstruction branch = (BranchInstruction) instr;
             props.put("condition", ScriptValue.string(

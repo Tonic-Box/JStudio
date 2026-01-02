@@ -79,7 +79,8 @@ public class CallGraphStyleFactory {
     }
 
     public void setupStyles(mxGraph graph) {
-        mxStylesheet stylesheet = graph.getStylesheet();
+        mxStylesheet stylesheet = new mxStylesheet();
+        graph.setStylesheet(stylesheet);
 
         Map<String, Object> baseStyle = createBaseNodeStyle();
 
@@ -179,6 +180,9 @@ public class CallGraphStyleFactory {
         style.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
         style.put(mxConstants.STYLE_STROKEWIDTH, STROKE_WIDTH_NORMAL);
         style.put(mxConstants.STYLE_FONTSIZE, FONT_SIZE_EDGE);
+        style.put(mxConstants.STYLE_ROUNDED, true);
+        style.put(mxConstants.STYLE_EDGE, mxConstants.EDGESTYLE_ORTHOGONAL);
+        style.put(mxConstants.STYLE_STROKECOLOR, getTextSecondary());
         return style;
     }
 

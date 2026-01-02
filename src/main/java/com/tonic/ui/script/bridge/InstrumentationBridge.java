@@ -441,19 +441,20 @@ public class InstrumentationBridge {
         int count = 0;
         for (IRBlock block : method.getBlocks()) {
             for (IRInstruction instr : new ArrayList<>(block.getInstructions())) {
-                if (rule.type == RuleType.BEFORE_FIELD_READ && instr instanceof GetFieldInstruction) {
-                    GetFieldInstruction field = (GetFieldInstruction) instr;
-                    if (matchesFieldTarget(field.getOwner(), field.getName(), rule.targetPattern)) {
-                        ScriptValue instrWrapper = wrapField(field);
-                        callCallback(rule.action, instrWrapper);
-                        count++;
-                    }
-                } else if (rule.type == RuleType.AFTER_FIELD_WRITE && instr instanceof PutFieldInstruction) {
-                    PutFieldInstruction field = (PutFieldInstruction) instr;
-                    if (matchesFieldTarget(field.getOwner(), field.getName(), rule.targetPattern)) {
-                        ScriptValue instrWrapper = wrapField(field);
-                        callCallback(rule.action, instrWrapper);
-                        count++;
+                if (instr instanceof FieldAccessInstruction) {
+                    FieldAccessInstruction field = (FieldAccessInstruction) instr;
+                    if (rule.type == RuleType.BEFORE_FIELD_READ && field.isLoad()) {
+                        if (matchesFieldTarget(field.getOwner(), field.getName(), rule.targetPattern)) {
+                            ScriptValue instrWrapper = wrapField(field);
+                            callCallback(rule.action, instrWrapper);
+                            count++;
+                        }
+                    } else if (rule.type == RuleType.AFTER_FIELD_WRITE && field.isStore()) {
+                        if (matchesFieldTarget(field.getOwner(), field.getName(), rule.targetPattern)) {
+                            ScriptValue instrWrapper = wrapField(field);
+                            callCallback(rule.action, instrWrapper);
+                            count++;
+                        }
                     }
                 }
             }
@@ -567,21 +568,15 @@ public class InstrumentationBridge {
         return ScriptValue.object(props);
     }
 
-    private ScriptValue wrapField(Object field) {
+    private ScriptValue wrapField(FieldAccessInstruction field) {
         Map<String, ScriptValue> props = new HashMap<>();
-        if (field instanceof GetFieldInstruction) {
-            GetFieldInstruction gf = (GetFieldInstruction) field;
-            props.put("type", ScriptValue.string("GetFieldInstruction"));
-            props.put("owner", ScriptValue.string(gf.getOwner()));
-            props.put("name", ScriptValue.string(gf.getName()));
-            props.put("isStatic", ScriptValue.bool(gf.isStatic()));
-        } else if (field instanceof PutFieldInstruction) {
-            PutFieldInstruction pf = (PutFieldInstruction) field;
-            props.put("type", ScriptValue.string("PutFieldInstruction"));
-            props.put("owner", ScriptValue.string(pf.getOwner()));
-            props.put("name", ScriptValue.string(pf.getName()));
-            props.put("isStatic", ScriptValue.bool(pf.isStatic()));
-        }
+        String typeName = field.isLoad() ? "FieldAccessInstruction(LOAD)" : "FieldAccessInstruction(STORE)";
+        props.put("type", ScriptValue.string(typeName));
+        props.put("owner", ScriptValue.string(field.getOwner()));
+        props.put("name", ScriptValue.string(field.getName()));
+        props.put("isStatic", ScriptValue.bool(field.isStatic()));
+        props.put("isLoad", ScriptValue.bool(field.isLoad()));
+        props.put("isStore", ScriptValue.bool(field.isStore()));
         return ScriptValue.object(props);
     }
 
