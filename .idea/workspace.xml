@@ -7,18 +7,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Cleanup p5">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Updated api usage for YABR SSA IR changes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DataFlowPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DataFlowPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DependencyPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DependencyPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphRenderer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphStyleFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphStyleFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/IRBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/IRBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/IRNodeWrapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/IRNodeWrapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/InstrumentationBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/InstrumentationBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/SimulationBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/SimulationBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/TypeBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/TypeBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/simulation/listener/PurityAnalysisListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/simulation/listener/PurityAnalysisListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptDocumentation.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptDocumentation.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/ASTBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/ASTBridge.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/ASTNodeWrapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/bridge/ASTNodeWrapper.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -556,7 +549,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767220048199</updated>
     </task>
-    <option name="localTasksCounter" value="40" />
+    <task id="LOCAL-00040" summary="- Updated api usage for YABR SSA IR changes">
+      <option name="closed" value="true" />
+      <created>1767395328842</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1767395328842</updated>
+    </task>
+    <option name="localTasksCounter" value="41" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -571,7 +572,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Hide annotations toggle" />
     <MESSAGE value="- Replace SSVM with YABR execution API&#10;- Bytecode Step Debugger&#10;- Method execution simulator" />
     <MESSAGE value="- readme" />
     <MESSAGE value="- Debugger" />
@@ -596,6 +596,7 @@
     <MESSAGE value="- Cleanup" />
     <MESSAGE value="- Cleanup p4" />
     <MESSAGE value="- Cleanup p5" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Cleanup p5" />
+    <MESSAGE value="- Updated api usage for YABR SSA IR changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Updated api usage for YABR SSA IR changes" />
   </component>
 </project>

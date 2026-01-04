@@ -17,6 +17,7 @@ import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
 import com.tonic.analysis.instruction.Instruction;
 import com.tonic.ui.event.EventBus;
+import com.tonic.ui.event.events.ProjectLoadedEvent;
 import com.tonic.ui.event.events.StatusMessageEvent;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.service.ProjectService;
@@ -55,6 +56,13 @@ public class VMExecutionService {
     private int maxInstructions = 10_000_000;
 
     private VMExecutionService() {
+        EventBus.getInstance().register(ProjectLoadedEvent.class, this::onProjectLoaded);
+    }
+
+    private void onProjectLoaded(ProjectLoadedEvent event) {
+        if (initialized.get()) {
+            shutdown();
+        }
     }
 
     public static VMExecutionService getInstance() {

@@ -57,7 +57,7 @@ public class ScriptDocumentation {
                 "<table>\n" +
                 "<tr><th>Global Object</th><th>Purpose</th></tr>\n" +
                 "<tr><td><code>context</code></td><td>Current class/method info</td></tr>\n" +
-                "<tr><td><code>ast</code></td><td>AST node handlers</td></tr>\n" +
+                "<tr><td><code>ast</code></td><td>AST manipulation, traversal, factory, and validation</td></tr>\n" +
                 "<tr><td><code>ir</code></td><td>IR instruction handlers</td></tr>\n" +
                 "<tr><td><code>annotations</code></td><td>Annotation handlers</td></tr>\n" +
                 "<tr><td><code>results</code></td><td>Findings collection and export</td></tr>\n" +
@@ -452,6 +452,117 @@ public class ScriptDocumentation {
                 "<span class='kw'>let</span> strings = types.<span class='fn'>findByType</span>(<span class='str'>\"String\"</span>);</pre>\n";
     }
 
+    public static String getAstApi() {
+        return getStylesheet() +
+                "<h1>AST API</h1>\n" +
+                "<p>The <code>ast</code> object provides AST manipulation, traversal, factory methods, and validation:</p>\n" +
+                "<h2>Handler Registration</h2>\n" +
+                "<pre><span class='cmt'>// Register handlers for AST node types</span>\n" +
+                "ast.<span class='fn'>onMethodCall</span>((call) => {\n" +
+                "    <span class='fn'>log</span>(<span class='str'>\"Call: \"</span> + call.name);\n" +
+                "    <span class='kw'>return</span> call; <span class='cmt'>// Return modified or original</span>\n" +
+                "});\n" +
+                "\n" +
+                "ast.<span class='fn'>onBinaryExpr</span>((expr) => {\n" +
+                "    <span class='kw'>if</span> (expr.op == <span class='str'>\"+\"</span>) {\n" +
+                "        <span class='kw'>return</span> ast.factory.<span class='fn'>mul</span>(expr.left, expr.right);\n" +
+                "    }\n" +
+                "    <span class='kw'>return</span> expr;\n" +
+                "});\n" +
+                "\n" +
+                "<span class='cmt'>// Other handlers: onFieldAccess, onUnaryExpr, onIf, onReturn</span></pre>\n" +
+                "<h2>Factory Methods</h2>\n" +
+                "<pre><span class='cmt'>// Literals</span>\n" +
+                "ast.factory.<span class='fn'>intLit</span>(<span class='num'>42</span>);\n" +
+                "ast.factory.<span class='fn'>stringLit</span>(<span class='str'>\"hello\"</span>);\n" +
+                "ast.factory.<span class='fn'>boolLit</span>(<span class='kw'>true</span>);\n" +
+                "ast.factory.<span class='fn'>nullLit</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Variables</span>\n" +
+                "ast.factory.<span class='fn'>varRef</span>(<span class='str'>\"x\"</span>, <span class='str'>\"int\"</span>);\n" +
+                "ast.factory.<span class='fn'>intVar</span>(<span class='str'>\"count\"</span>);\n" +
+                "ast.factory.<span class='fn'>boolVar</span>(<span class='str'>\"flag\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Binary operations</span>\n" +
+                "ast.factory.<span class='fn'>add</span>(left, right);  <span class='cmt'>// left + right</span>\n" +
+                "ast.factory.<span class='fn'>sub</span>(left, right);  <span class='cmt'>// left - right</span>\n" +
+                "ast.factory.<span class='fn'>mul</span>(left, right);  <span class='cmt'>// left * right</span>\n" +
+                "ast.factory.<span class='fn'>eq</span>(left, right);   <span class='cmt'>// left == right</span>\n" +
+                "ast.factory.<span class='fn'>lt</span>(left, right);   <span class='cmt'>// left < right</span>\n" +
+                "ast.factory.<span class='fn'>and</span>(left, right);  <span class='cmt'>// left && right</span>\n" +
+                "\n" +
+                "<span class='cmt'>// Unary operations</span>\n" +
+                "ast.factory.<span class='fn'>not</span>(expr);       <span class='cmt'>// !expr</span>\n" +
+                "ast.factory.<span class='fn'>neg</span>(expr);       <span class='cmt'>// -expr</span>\n" +
+                "ast.factory.<span class='fn'>preIncr</span>(expr);   <span class='cmt'>// ++expr</span>\n" +
+                "\n" +
+                "<span class='cmt'>// Statements</span>\n" +
+                "ast.factory.<span class='fn'>block</span>(stmt1, stmt2);\n" +
+                "ast.factory.<span class='fn'>ifElse</span>(cond, thenBlock, elseBlock);\n" +
+                "ast.factory.<span class='fn'>whileLoop</span>(cond, body);\n" +
+                "ast.factory.<span class='fn'>returnStmt</span>(value);</pre>\n" +
+                "<h2>Traversal Methods</h2>\n" +
+                "<pre><span class='cmt'>// Walk all descendants</span>\n" +
+                "node.<span class='fn'>walk</span>((child) => <span class='fn'>log</span>(child.type));\n" +
+                "\n" +
+                "<span class='cmt'>// Find first matching node</span>\n" +
+                "<span class='kw'>let</span> call = node.<span class='fn'>findFirst</span>(<span class='str'>\"MethodCallExpr\"</span>);\n" +
+                "<span class='kw'>let</span> namedVar = node.<span class='fn'>findFirst</span>(<span class='str'>\"VarRefExpr\"</span>, (v) => v.name == <span class='str'>\"x\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Find all matching nodes</span>\n" +
+                "<span class='kw'>let</span> calls = node.<span class='fn'>findAll</span>(<span class='str'>\"MethodCallExpr\"</span>);\n" +
+                "<span class='kw'>let</span> literals = node.<span class='fn'>findAll</span>(<span class='str'>\"LiteralExpr\"</span>, (lit) => lit.isNumeric);\n" +
+                "\n" +
+                "<span class='cmt'>// Navigate up the tree</span>\n" +
+                "<span class='kw'>let</span> parentIf = node.<span class='fn'>findAncestor</span>(<span class='str'>\"IfStmt\"</span>);\n" +
+                "\n" +
+                "<span class='cmt'>// Get immediate children</span>\n" +
+                "<span class='kw'>let</span> children = node.<span class='fn'>getChildren</span>();</pre>\n" +
+                "<h2>Mutation Operations</h2>\n" +
+                "<pre><span class='cmt'>// Deep clone a subtree</span>\n" +
+                "<span class='kw'>let</span> copy = node.<span class='fn'>clone</span>();\n" +
+                "\n" +
+                "<span class='cmt'>// Replace node in its parent</span>\n" +
+                "oldExpr.<span class='fn'>replaceWith</span>(newExpr);\n" +
+                "\n" +
+                "<span class='cmt'>// Remove node from parent</span>\n" +
+                "stmt.<span class='fn'>remove</span>();</pre>\n" +
+                "<h2>Fluent Setters</h2>\n" +
+                "<pre><span class='cmt'>// Chain modifications on nodes</span>\n" +
+                "<span class='kw'>let</span> modified = binaryExpr\n" +
+                "    .<span class='fn'>withLeft</span>(newLeft)\n" +
+                "    .<span class='fn'>withRight</span>(ast.factory.<span class='fn'>intLit</span>(<span class='num'>0</span>));\n" +
+                "\n" +
+                "<span class='kw'>let</span> updatedIf = ifStmt\n" +
+                "    .<span class='fn'>withCondition</span>(newCond)\n" +
+                "    .<span class='fn'>withElseBranch</span>(ast.factory.<span class='fn'>block</span>());\n" +
+                "\n" +
+                "<span class='cmt'>// Available: withLeft, withRight, withOperand, withCondition,</span>\n" +
+                "<span class='cmt'>// withThenBranch, withElseBranch, withBody, withValue, etc.</span></pre>\n" +
+                "<h2>Validation</h2>\n" +
+                "<pre><span class='cmt'>// Validate AST integrity</span>\n" +
+                "<span class='kw'>let</span> result = ast.<span class='fn'>validate</span>(node);\n" +
+                "<span class='kw'>if</span> (!result.valid) {\n" +
+                "    <span class='kw'>for</span> (<span class='kw'>let</span> error <span class='kw'>of</span> result.errors) {\n" +
+                "        <span class='fn'>error</span>(error.category + <span class='str'>\": \"</span> + error.message);\n" +
+                "    }\n" +
+                "}</pre>\n" +
+                "<h2>Type Utilities</h2>\n" +
+                "<pre><span class='cmt'>// Type checking</span>\n" +
+                "ast.<span class='fn'>isNumeric</span>(<span class='str'>\"int\"</span>);      <span class='cmt'>// true</span>\n" +
+                "ast.<span class='fn'>isPrimitive</span>(<span class='str'>\"int\"</span>);    <span class='cmt'>// true</span>\n" +
+                "ast.<span class='fn'>isReference</span>(<span class='str'>\"String\"</span>); <span class='cmt'>// true</span>\n" +
+                "ast.<span class='fn'>isVoid</span>(<span class='str'>\"void\"</span>);        <span class='cmt'>// true</span>\n" +
+                "ast.<span class='fn'>isBoxedType</span>(<span class='str'>\"Integer\"</span>);<span class='cmt'>// true</span>\n" +
+                "\n" +
+                "<span class='cmt'>// Boxing/unboxing</span>\n" +
+                "ast.<span class='fn'>box</span>(<span class='str'>\"int\"</span>);    <span class='cmt'>// \"Integer\"</span>\n" +
+                "ast.<span class='fn'>unbox</span>(<span class='str'>\"Integer\"</span>); <span class='cmt'>// \"int\"</span>\n" +
+                "\n" +
+                "<span class='cmt'>// Get simple name</span>\n" +
+                "ast.<span class='fn'>getSimpleName</span>(<span class='str'>\"java/lang/String\"</span>); <span class='cmt'>// \"String\"</span></pre>\n";
+    }
+
     public static String getStringsApi() {
         return getStylesheet() +
                 "<h1>Strings API</h1>\n" +
@@ -577,6 +688,7 @@ public class ScriptDocumentation {
                 "  Array Methods",
                 "  Try/Catch",
                 "Analysis APIs",
+                "  AST",
                 "  Results",
                 "  Project",
                 "  Call Graph",
@@ -604,8 +716,10 @@ public class ScriptDocumentation {
                 return getArrayMethods();
             case "  Try/Catch":
                 return getTryCatch();
-            case "  Results":
+            case "  AST":
             case "Analysis APIs":
+                return getAstApi();
+            case "  Results":
                 return getResultsApi();
             case "  Project":
                 return getProjectApi();
