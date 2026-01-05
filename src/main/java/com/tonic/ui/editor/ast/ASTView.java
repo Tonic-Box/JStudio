@@ -11,26 +11,39 @@ import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.theme.*;
 import lombok.Getter;
 
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
-import javax.swing.SwingWorker;
+import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import javax.swing.SwingUtilities;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ASTView extends JPanel implements ThemeChangeListener {
 
+    private static final String TEXT_VIEW = "TEXT";
+    private static final String TREE_VIEW = "TREE";
+
     private final ClassEntryModel classEntry;
+
     private final JTextPane textPane;
     private final StyledDocument doc;
+    private final JScrollPane textScrollPane;
+
+    private final JTree astTree;
+    private final ASTTreeModel treeModel;
+    private final JScrollPane treeScrollPane;
+
+    private final JPanel contentPanel;
+    private final CardLayout cardLayout;
+
+    private final JToolBar toolbar;
+    private final JToggleButton textViewBtn;
+    private final JToggleButton treeViewBtn;
+    private final JButton expandAllBtn;
+    private final JButton collapseAllBtn;
 
     private final SimpleAttributeSet defaultStyle = new SimpleAttributeSet();
     private final SimpleAttributeSet nodeStyle = new SimpleAttributeSet();
@@ -41,18 +54,20 @@ public class ASTView extends JPanel implements ThemeChangeListener {
     private final SimpleAttributeSet commentStyle = new SimpleAttributeSet();
     private final SimpleAttributeSet headerStyle = new SimpleAttributeSet();
 
-    private final JScrollPane scrollPane;
-
     private static final String METHOD_DIVIDER = "=========================================================================";
 
     @Getter
     private boolean loaded = false;
+    private boolean showingTreeView = false;
 
     public ASTView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
 
         setLayout(new BorderLayout());
         setBackground(JStudioTheme.getBgTertiary());
+
+        toolbar = createToolbar();
+        add(toolbar, BorderLayout.NORTH);
 
         textPane = new JTextPane();
         textPane.setEditable(false);
@@ -62,16 +77,122 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         textPane.setFont(JStudioTheme.getCodeFont(12));
 
         doc = textPane.getStyledDocument();
-
         initStyles();
 
-        scrollPane = new JScrollPane(textPane);
-        scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
+        textScrollPane = new JScrollPane(textPane);
+        textScrollPane.setBorder(null);
+        textScrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
-        add(scrollPane, BorderLayout.CENTER);
+        treeModel = new ASTTreeModel();
+        astTree = new JTree(treeModel);
+        astTree.setCellRenderer(new ASTTreeCellRenderer());
+        astTree.setBackground(JStudioTheme.getBgTertiary());
+        astTree.setRowHeight(20);
+        astTree.setRootVisible(true);
+        astTree.setShowsRootHandles(true);
+
+        treeScrollPane = new JScrollPane(astTree);
+        treeScrollPane.setBorder(null);
+        treeScrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
+
+        cardLayout = new CardLayout();
+        contentPanel = new JPanel(cardLayout);
+        contentPanel.add(textScrollPane, TEXT_VIEW);
+        contentPanel.add(treeScrollPane, TREE_VIEW);
+
+        add(contentPanel, BorderLayout.CENTER);
+
+        textViewBtn = (JToggleButton) toolbar.getComponentAtIndex(0);
+        treeViewBtn = (JToggleButton) toolbar.getComponentAtIndex(1);
+        expandAllBtn = (JButton) toolbar.getComponentAtIndex(3);
+        collapseAllBtn = (JButton) toolbar.getComponentAtIndex(4);
+
+        updateToolbarState();
 
         ThemeManager.getInstance().addThemeChangeListener(this);
+    }
+
+    private JToolBar createToolbar() {
+        JToolBar tb = new JToolBar();
+        tb.setFloatable(false);
+        tb.setBackground(JStudioTheme.getBgSecondary());
+        tb.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
+
+        ButtonGroup viewGroup = new ButtonGroup();
+
+        JToggleButton textBtn = new JToggleButton("Text");
+        styleToggleButton(textBtn);
+        textBtn.setSelected(true);
+        textBtn.addActionListener(e -> switchToView(TEXT_VIEW));
+        viewGroup.add(textBtn);
+        tb.add(textBtn);
+
+        JToggleButton treeBtn = new JToggleButton("Tree");
+        styleToggleButton(treeBtn);
+        treeBtn.addActionListener(e -> switchToView(TREE_VIEW));
+        viewGroup.add(treeBtn);
+        tb.add(treeBtn);
+
+        tb.addSeparator();
+
+        JButton expandBtn = new JButton("Expand All");
+        styleButton(expandBtn);
+        expandBtn.addActionListener(e -> expandAll());
+        expandBtn.setEnabled(false);
+        tb.add(expandBtn);
+
+        JButton collapseBtn = new JButton("Collapse All");
+        styleButton(collapseBtn);
+        collapseBtn.addActionListener(e -> collapseAll());
+        collapseBtn.setEnabled(false);
+        tb.add(collapseBtn);
+
+        return tb;
+    }
+
+    private void styleToggleButton(JToggleButton btn) {
+        btn.setFocusPainted(false);
+        btn.setBackground(JStudioTheme.getBgSecondary());
+        btn.setForeground(JStudioTheme.getTextPrimary());
+        btn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+            BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        ));
+        btn.setFont(JStudioTheme.getCodeFont(11));
+    }
+
+    private void styleButton(JButton btn) {
+        btn.setFocusPainted(false);
+        btn.setBackground(JStudioTheme.getBgSecondary());
+        btn.setForeground(JStudioTheme.getTextPrimary());
+        btn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+            BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        ));
+        btn.setFont(JStudioTheme.getCodeFont(11));
+    }
+
+    private void switchToView(String viewName) {
+        showingTreeView = TREE_VIEW.equals(viewName);
+        cardLayout.show(contentPanel, viewName);
+        updateToolbarState();
+    }
+
+    private void updateToolbarState() {
+        expandAllBtn.setEnabled(showingTreeView);
+        collapseAllBtn.setEnabled(showingTreeView);
+    }
+
+    private void expandAll() {
+        for (int i = 0; i < astTree.getRowCount(); i++) {
+            astTree.expandRow(i);
+        }
+    }
+
+    private void collapseAll() {
+        for (int i = astTree.getRowCount() - 1; i >= 1; i--) {
+            astTree.collapseRow(i);
+        }
     }
 
     @Override
@@ -82,11 +203,25 @@ public class ASTView extends JPanel implements ThemeChangeListener {
     private void applyTheme() {
         setBackground(JStudioTheme.getBgTertiary());
 
+        toolbar.setBackground(JStudioTheme.getBgSecondary());
+        toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
+
+        for (Component c : toolbar.getComponents()) {
+            if (c instanceof JToggleButton) {
+                styleToggleButton((JToggleButton) c);
+            } else if (c instanceof JButton) {
+                styleButton((JButton) c);
+            }
+        }
+
         textPane.setBackground(JStudioTheme.getBgTertiary());
         textPane.setForeground(JStudioTheme.getTextPrimary());
         textPane.setCaretColor(JStudioTheme.getTextPrimary());
 
-        scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
+        textScrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
+
+        astTree.setBackground(JStudioTheme.getBgTertiary());
+        treeScrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
         initStyles();
         repaint();
@@ -116,29 +251,32 @@ public class ASTView extends JPanel implements ThemeChangeListener {
             doc.remove(0, doc.getLength());
             doc.insertString(0, "// Decompiling to AST...\n", commentStyle);
         } catch (BadLocationException e) {
-            // Ignore
         }
 
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
+        treeModel.clear();
+
+        SwingWorker<ASTResult, Void> worker = new SwingWorker<>() {
             @Override
-            protected String doInBackground() {
-                return generateAST();
+            protected ASTResult doInBackground() {
+                return generateASTBoth();
             }
 
             @Override
             protected void done() {
                 try {
-                    String ast = get();
+                    ASTResult result = get();
                     doc.remove(0, doc.getLength());
-                    formatAST(ast);
+                    formatAST(result.textOutput);
                     textPane.setCaretPosition(0);
+
+                    treeModel.loadClass(classEntry.getClassName(), result.methodEntries);
+
                     loaded = true;
                 } catch (Exception e) {
                     try {
                         doc.remove(0, doc.getLength());
                         doc.insertString(0, "// Failed to generate AST: " + e.getMessage(), commentStyle);
                     } catch (BadLocationException ex) {
-                        // Ignore
                     }
                 }
             }
@@ -147,9 +285,16 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         worker.execute();
     }
 
-    private String generateAST() {
-        StringBuilder sb = new StringBuilder();
+    private static class ASTResult {
+        String textOutput;
+        List<ASTTreeModel.MethodASTEntry> methodEntries;
+    }
 
+    private ASTResult generateASTBoth() {
+        ASTResult result = new ASTResult();
+        result.methodEntries = new ArrayList<>();
+
+        StringBuilder sb = new StringBuilder();
         sb.append("// Class: ").append(classEntry.getClassName()).append("\n");
         sb.append("// Super: ").append(classEntry.getSuperClassName()).append("\n");
         if (!classEntry.getInterfaceNames().isEmpty()) {
@@ -172,10 +317,11 @@ public class ASTView extends JPanel implements ThemeChangeListener {
             sb.append("//").append(formatAccessFlags(method.getAccess()));
             sb.append(" ").append(method.getName()).append(method.getDesc()).append("\n\n");
 
+            BlockStmt body = null;
             if (method.getCodeAttribute() != null) {
                 try {
                     IRMethod ir = ssa.lift(method);
-                    BlockStmt body = MethodRecoverer.recoverMethod(ir, method);
+                    body = MethodRecoverer.recoverMethod(ir, method);
                     if (body != null) {
                         String astOutput = ASTPrinter.format(body);
                         sb.append(astOutput);
@@ -189,10 +335,12 @@ public class ASTView extends JPanel implements ThemeChangeListener {
                 sb.append("  // No code (abstract or native)\n");
             }
 
+            result.methodEntries.add(new ASTTreeModel.MethodASTEntry(method, body));
             sb.append("\n");
         }
 
-        return sb.toString();
+        result.textOutput = sb.toString();
+        return result;
     }
 
     private String formatAccessFlags(int flags) {
@@ -334,7 +482,6 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         try {
             doc.insertString(doc.getLength(), text, style);
         } catch (BadLocationException e) {
-            // Ignore
         }
     }
 
@@ -356,7 +503,6 @@ public class ASTView extends JPanel implements ThemeChangeListener {
             textPane.setCaretPosition(offset);
             textPane.requestFocus();
         } catch (Exception e) {
-            // Line out of range
         }
     }
 
@@ -397,6 +543,7 @@ public class ASTView extends JPanel implements ThemeChangeListener {
     public void setFontSize(int size) {
         textPane.setFont(JStudioTheme.getCodeFont(size));
         updateStyleFontSize(size);
+        astTree.setRowHeight(size + 8);
     }
 
     private void updateStyleFontSize(int size) {
@@ -411,6 +558,19 @@ public class ASTView extends JPanel implements ThemeChangeListener {
     }
 
     public void setWordWrap(boolean enabled) {
-        // JTextPane doesn't have built-in word wrap toggle
+    }
+
+    public boolean isShowingTreeView() {
+        return showingTreeView;
+    }
+
+    public void setShowTreeView(boolean showTree) {
+        if (showTree) {
+            treeViewBtn.setSelected(true);
+            switchToView(TREE_VIEW);
+        } else {
+            textViewBtn.setSelected(true);
+            switchToView(TEXT_VIEW);
+        }
     }
 }

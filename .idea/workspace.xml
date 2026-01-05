@@ -7,13 +7,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Updated api usage for YABR Expr/Stmt IR changes&#10;- vm service now correctly shuts down when closing current workspace">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="AST view">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/ASTView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/ASTView.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -223,10 +220,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.JStudio [run]" />
+        <item itemvalue="Gradle.JStudio [refreshDependencies]" />
         <item itemvalue="Gradle.Tests in 'JStudio.test'" />
         <item itemvalue="Gradle.BytecodeEngineTest" />
         <item itemvalue="Gradle.JStudio [build]" />
-        <item itemvalue="Gradle.JStudio [refreshDependencies]" />
       </list>
     </recent_temporary>
   </component>
@@ -567,7 +564,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767509592149</updated>
     </task>
-    <option name="localTasksCounter" value="42" />
+    <task id="LOCAL-00042" summary="AST view">
+      <option name="closed" value="true" />
+      <created>1767573032173</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1767573032173</updated>
+    </task>
+    <option name="localTasksCounter" value="43" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -582,7 +587,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- readme" />
     <MESSAGE value="- Debugger" />
     <MESSAGE value="- Debugger bug fixes" />
     <MESSAGE value="- Class View Typing → Filter Field&#10;- Right-Click Go to Definition Without Selection&#10;- Inline Search Bar &#10;- Go to Definition for All Symbols" />
@@ -607,6 +611,7 @@
     <MESSAGE value="- Cleanup p5" />
     <MESSAGE value="- Updated api usage for YABR SSA IR changes" />
     <MESSAGE value="- Updated api usage for YABR Expr/Stmt IR changes&#10;- vm service now correctly shuts down when closing current workspace" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Updated api usage for YABR Expr/Stmt IR changes&#10;- vm service now correctly shuts down when closing current workspace" />
+    <MESSAGE value="AST view" />
+    <option name="LAST_COMMIT_MESSAGE" value="AST view" />
   </component>
 </project>

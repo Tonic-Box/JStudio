@@ -117,7 +117,7 @@ public class CallGraphController {
                     statusCallback.accept("Call graph built: " + callGraph.size() + " methods, " +
                             callGraph.edgeCount() + " edges. Select a method to explore.");
                 } catch (Exception e) {
-                    statusCallback.accept("Failed to build call graph: " + e.getMessage());
+                    //statusCallback.accept("Failed to build call graph: " + e.getMessage());
                 }
             }
         };

@@ -31,6 +31,8 @@ dependencies {
 
     implementation("com.github.javaparser:javaparser-core:3.25.5")
 
+    // Use local YABR with debug prints for call graph debugging
+    //implementation("com.tonic:YABR:1.0.0")
     implementation("com.github.Tonic-Box:YABR:main-SNAPSHOT")
 
     // CLI dependencies
