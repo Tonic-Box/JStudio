@@ -26,6 +26,7 @@ public class ToolbarBuilder implements ThemeChangeListener {
     private JToggleButton sourceButton;
     private JToggleButton bytecodeButton;
     private JToggleButton irButton;
+    private JToggleButton astButton;
     private JToggleButton omitAnnotationsButton;
 
     public ToolbarBuilder(MainFrame mainFrame) {
@@ -85,6 +86,10 @@ public class ToolbarBuilder implements ThemeChangeListener {
         irButton = createToggleButton(Icons.getIcon("ir"), "IR View (F7)", viewGroup,
                 e -> mainFrame.switchToIRView());
         toolbar.add(irButton);
+
+        astButton = createToggleButton(Icons.getIcon("ast"), "AST View (F8)", viewGroup,
+                e -> mainFrame.switchToASTView());
+        toolbar.add(astButton);
 
         toolbar.addSeparator();
 
@@ -200,6 +205,9 @@ public class ToolbarBuilder implements ThemeChangeListener {
             case IR:
                 irButton.setSelected(true);
                 break;
+            case AST:
+                astButton.setSelected(true);
+                break;
         }
     }
 
@@ -209,6 +217,7 @@ public class ToolbarBuilder implements ThemeChangeListener {
     public enum ViewMode {
         SOURCE,
         BYTECODE,
-        IR
+        IR,
+        AST
     }
 }

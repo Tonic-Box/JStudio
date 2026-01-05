@@ -120,6 +120,8 @@ public class Icons {
                 return new ConstPoolIcon(size);
             case "heap":
                 return new HeapIcon(size);
+            case "ast":
+                return new TreeIcon(size);
             default:
                 return new PlaceholderIcon(size);
         }
@@ -353,6 +355,26 @@ public class Icons {
             g2.drawLine(8, 5, 8, 8);
             g2.drawLine(8, 8, 4, 11);
             g2.drawLine(8, 8, 12, 11);
+        }
+    }
+
+    private static class TreeIcon extends BaseIcon {
+        TreeIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getAccentSecondary());
+            g2.setStroke(getStroke());
+            g2.fillOval(6, 1, 4, 4);
+            g2.drawLine(8, 5, 8, 7);
+            g2.drawLine(8, 7, 4, 7);
+            g2.drawLine(8, 7, 12, 7);
+            g2.drawLine(4, 7, 4, 9);
+            g2.drawLine(12, 7, 12, 9);
+            g2.fillOval(2, 9, 4, 4);
+            g2.fillOval(10, 9, 4, 4);
         }
     }
 

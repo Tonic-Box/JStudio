@@ -10,6 +10,7 @@ public enum ViewMode {
     SOURCE("Source", "Decompiled Java source code"),
     BYTECODE("Bytecode", "Raw JVM bytecode"),
     IR("IR", "SSA Intermediate Representation"),
+    AST("AST", "Abstract Syntax Tree representation"),
     HEX("Hex", "Raw class file bytes");
 
     private final String displayName;

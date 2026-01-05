@@ -1,5 +1,6 @@
 package com.tonic.ui.editor;
 
+import com.tonic.ui.editor.ast.ASTView;
 import com.tonic.ui.editor.bytecode.BytecodeView;
 import com.tonic.ui.editor.hex.HexView;
 import com.tonic.ui.editor.ir.IRView;
@@ -43,6 +44,7 @@ public class EditorTab extends JPanel {
     @Getter
     private final BytecodeView bytecodeView;
     private final IRView irView;
+    private final ASTView astView;
     private final HexView hexView;
 
     private ViewMode currentMode = ViewMode.SOURCE;
@@ -72,6 +74,9 @@ public class EditorTab extends JPanel {
 
         irView = new IRView(classEntry);
         cardPanel.add(irView, ViewMode.IR.name());
+
+        astView = new ASTView(classEntry);
+        cardPanel.add(astView, ViewMode.AST.name());
 
         hexView = new HexView(classEntry);
         cardPanel.add(hexView, ViewMode.HEX.name());
@@ -107,6 +112,9 @@ public class EditorTab extends JPanel {
             case IR:
                 irView.refresh();
                 break;
+            case AST:
+                astView.refresh();
+                break;
             case HEX:
                 hexView.refresh();
                 break;
@@ -133,6 +141,9 @@ public class EditorTab extends JPanel {
                 break;
             case IR:
                 irView.refresh();
+                break;
+            case AST:
+                astView.refresh();
                 break;
             case HEX:
                 hexView.refresh();
@@ -176,6 +187,9 @@ public class EditorTab extends JPanel {
             case IR:
                 irView.copySelection();
                 break;
+            case AST:
+                astView.copySelection();
+                break;
             case HEX:
                 hexView.copySelection();
                 break;
@@ -193,6 +207,8 @@ public class EditorTab extends JPanel {
                 return bytecodeView.getText();
             case IR:
                 return irView.getText();
+            case AST:
+                return astView.getText();
             case HEX:
                 return hexView.getText();
             default:
@@ -214,6 +230,9 @@ public class EditorTab extends JPanel {
             case IR:
                 irView.goToLine(line);
                 break;
+            case AST:
+                astView.goToLine(line);
+                break;
             case HEX:
                 hexView.goToLine(line);
                 break;
@@ -233,6 +252,9 @@ public class EditorTab extends JPanel {
                 break;
             case IR:
                 irView.showFindDialog();
+                break;
+            case AST:
+                astView.showFindDialog();
                 break;
             case HEX:
                 hexView.showFindDialog();
@@ -264,6 +286,8 @@ public class EditorTab extends JPanel {
                 return bytecodeView.getSelectedText();
             case IR:
                 return irView.getSelectedText();
+            case AST:
+                return astView.getSelectedText();
             case HEX:
                 return hexView.getSelectedText();
             default:
@@ -287,6 +311,9 @@ public class EditorTab extends JPanel {
             case IR:
                 irView.scrollToText(methodName);
                 break;
+            case AST:
+                astView.scrollToText(methodName);
+                break;
             case HEX:
                 hexView.scrollToText(methodName);
                 break;
@@ -308,6 +335,7 @@ public class EditorTab extends JPanel {
         sourceView.setFontSize(size);
         bytecodeView.setFontSize(size);
         irView.setFontSize(size);
+        astView.setFontSize(size);
         hexView.setFontSize(size);
     }
 
@@ -318,6 +346,7 @@ public class EditorTab extends JPanel {
         sourceView.setWordWrap(enabled);
         bytecodeView.setWordWrap(enabled);
         irView.setWordWrap(enabled);
+        astView.setWordWrap(enabled);
         hexView.setWordWrap(enabled);
     }
 
@@ -356,6 +385,9 @@ public class EditorTab extends JPanel {
                 return true;
             case IR:
                 irView.scrollToText(methodName);
+                return true;
+            case AST:
+                astView.scrollToText(methodName);
                 return true;
             default:
                 return false;

@@ -797,6 +797,13 @@ public class MainFrame extends JFrame {
         toolbarBuilder.setViewMode(ToolbarBuilder.ViewMode.IR);
     }
 
+    public void switchToASTView() {
+        currentViewMode = ViewMode.AST;
+        editorPanel.setViewMode(ViewMode.AST);
+        statusBar.setMode("AST");
+        toolbarBuilder.setViewMode(ToolbarBuilder.ViewMode.AST);
+    }
+
     public void switchToHexView() {
         currentViewMode = ViewMode.HEX;
         editorPanel.setViewMode(ViewMode.HEX);
