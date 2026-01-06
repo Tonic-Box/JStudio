@@ -1,10 +1,11 @@
 package com.tonic.ui;
 
+import com.tonic.ui.editor.ViewMode;
+import com.tonic.ui.editor.ViewModeComboBox;
 import com.tonic.ui.theme.*;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
@@ -23,10 +24,7 @@ public class ToolbarBuilder implements ThemeChangeListener {
     private final MainFrame mainFrame;
     private JToolBar toolbar;
     private JTextField searchField;
-    private JToggleButton sourceButton;
-    private JToggleButton bytecodeButton;
-    private JToggleButton irButton;
-    private JToggleButton astButton;
+    private ViewModeComboBox viewModeCombo;
     private JToggleButton omitAnnotationsButton;
 
     public ToolbarBuilder(MainFrame mainFrame) {
@@ -71,26 +69,13 @@ public class ToolbarBuilder implements ThemeChangeListener {
         toolbar.add(createButton(Icons.getIcon("forward"), "Navigate Forward (Alt+Right)", e -> mainFrame.navigateForward()));
         toolbar.addSeparator();
 
-        // View switching (toggle buttons in a group)
-        ButtonGroup viewGroup = new ButtonGroup();
-
-        sourceButton = createToggleButton(Icons.getIcon("source"), "Source View (F5)", viewGroup,
-                e -> mainFrame.switchToSourceView());
-        sourceButton.setSelected(true);
-        toolbar.add(sourceButton);
-
-        bytecodeButton = createToggleButton(Icons.getIcon("bytecode"), "Bytecode View (F6)", viewGroup,
-                e -> mainFrame.switchToBytecodeView());
-        toolbar.add(bytecodeButton);
-
-        irButton = createToggleButton(Icons.getIcon("ir"), "IR View (F7)", viewGroup,
-                e -> mainFrame.switchToIRView());
-        toolbar.add(irButton);
-
-        astButton = createToggleButton(Icons.getIcon("ast"), "AST View (F8)", viewGroup,
-                e -> mainFrame.switchToASTView());
-        toolbar.add(astButton);
-
+        // View mode dropdown
+        viewModeCombo = new ViewModeComboBox();
+        viewModeCombo.addActionListener(e -> {
+            ViewMode mode = viewModeCombo.getSelectedViewMode();
+            mainFrame.switchToView(mode);
+        });
+        toolbar.add(viewModeCombo);
         toolbar.addSeparator();
 
         omitAnnotationsButton = new JToggleButton(Icons.getIcon("annotation"));
@@ -178,46 +163,7 @@ public class ToolbarBuilder implements ThemeChangeListener {
         return button;
     }
 
-    private JToggleButton createToggleButton(javax.swing.Icon icon, String tooltip,
-                                              ButtonGroup group, ActionListener action) {
-        JToggleButton button = new JToggleButton(icon);
-        button.setToolTipText(tooltip);
-        button.setFocusable(false);
-        button.setBorderPainted(false);
-        button.setPreferredSize(new Dimension(32, 32));
-        button.addActionListener(action);
-        group.add(button);
-
-        return button;
-    }
-
-    /**
-     * Update the view toggle buttons to reflect current view mode.
-     */
     public void setViewMode(ViewMode mode) {
-        switch (mode) {
-            case SOURCE:
-                sourceButton.setSelected(true);
-                break;
-            case BYTECODE:
-                bytecodeButton.setSelected(true);
-                break;
-            case IR:
-                irButton.setSelected(true);
-                break;
-            case AST:
-                astButton.setSelected(true);
-                break;
-        }
-    }
-
-    /**
-     * View mode enum for toolbar state.
-     */
-    public enum ViewMode {
-        SOURCE,
-        BYTECODE,
-        IR,
-        AST
+        viewModeCombo.setSelectedViewMode(mode);
     }
 }

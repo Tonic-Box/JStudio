@@ -122,6 +122,20 @@ public class Icons {
                 return new HeapIcon(size);
             case "ast":
                 return new TreeIcon(size);
+            case "zoom_in":
+                return new ZoomInIcon(size);
+            case "zoom_out":
+                return new ZoomOutIcon(size);
+            case "fit":
+                return new FitIcon(size);
+            case "pdg":
+                return new PDGIcon(size);
+            case "sdg":
+                return new SDGIcon(size);
+            case "cpg":
+                return new CPGIcon(size);
+            case "hex":
+                return new HexIcon(size);
             default:
                 return new PlaceholderIcon(size);
         }
@@ -840,6 +854,138 @@ public class Icons {
             g2.drawLine(12, 6, 12, 8);
             g2.drawLine(7, 4, 9, 4);
             g2.drawLine(7, 10, 9, 10);
+        }
+    }
+
+    private static class ZoomInIcon extends BaseIcon {
+        ZoomInIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.setStroke(getStroke());
+            g2.drawOval(2, 2, 9, 9);
+            g2.drawLine(10, 10, 14, 14);
+            g2.drawLine(4, 6, 9, 6);
+            g2.drawLine(6, 4, 6, 9);
+        }
+    }
+
+    private static class ZoomOutIcon extends BaseIcon {
+        ZoomOutIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.setStroke(getStroke());
+            g2.drawOval(2, 2, 9, 9);
+            g2.drawLine(10, 10, 14, 14);
+            g2.drawLine(4, 6, 9, 6);
+        }
+    }
+
+    private static class FitIcon extends BaseIcon {
+        FitIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.setStroke(getStroke());
+            g2.drawRect(4, 4, 8, 8);
+            g2.drawLine(2, 2, 5, 2);
+            g2.drawLine(2, 2, 2, 5);
+            g2.drawLine(14, 2, 11, 2);
+            g2.drawLine(14, 2, 14, 5);
+            g2.drawLine(2, 14, 5, 14);
+            g2.drawLine(2, 14, 2, 11);
+            g2.drawLine(14, 14, 11, 14);
+            g2.drawLine(14, 14, 14, 11);
+        }
+    }
+
+    private static class PDGIcon extends BaseIcon {
+        PDGIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getAccent());
+            g2.setStroke(getStroke());
+            g2.fillOval(6, 1, 4, 4);
+            g2.fillOval(2, 6, 4, 4);
+            g2.fillOval(10, 6, 4, 4);
+            g2.fillOval(6, 11, 4, 4);
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.drawLine(8, 5, 5, 6);
+            g2.drawLine(8, 5, 11, 6);
+            g2.drawLine(5, 10, 8, 11);
+            g2.drawLine(11, 10, 8, 11);
+        }
+    }
+
+    private static class SDGIcon extends BaseIcon {
+        SDGIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getAccentSecondary());
+            g2.setStroke(getStroke());
+            g2.drawRoundRect(1, 1, 6, 4, 2, 2);
+            g2.drawRoundRect(9, 1, 6, 4, 2, 2);
+            g2.drawRoundRect(5, 11, 6, 4, 2, 2);
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.drawLine(4, 5, 4, 8);
+            g2.drawLine(12, 5, 12, 8);
+            g2.drawLine(4, 8, 8, 11);
+            g2.drawLine(12, 8, 8, 11);
+        }
+    }
+
+    private static class CPGIcon extends BaseIcon {
+        CPGIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getSuccess());
+            g2.setStroke(getStroke());
+            g2.drawOval(6, 1, 4, 4);
+            g2.setColor(JStudioTheme.getAccent());
+            g2.drawOval(1, 6, 4, 4);
+            g2.drawOval(11, 6, 4, 4);
+            g2.setColor(JStudioTheme.getWarning());
+            g2.drawOval(6, 11, 4, 4);
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.drawLine(7, 5, 4, 7);
+            g2.drawLine(9, 5, 12, 7);
+            g2.drawLine(4, 10, 7, 12);
+            g2.drawLine(12, 10, 9, 12);
+            g2.drawLine(5, 8, 11, 8);
+        }
+    }
+
+    private static class HexIcon extends BaseIcon {
+        HexIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.setFont(JStudioTheme.getCodeFont(8));
+            g2.drawString("0x", 2, 8);
+            g2.setColor(JStudioTheme.getAccent());
+            g2.drawString("FF", 4, 14);
         }
     }
 }

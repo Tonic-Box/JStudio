@@ -776,39 +776,43 @@ public class MainFrame extends JFrame {
 
     // === View Operations ===
 
+    public void switchToView(ViewMode mode) {
+        currentViewMode = mode;
+        editorPanel.setViewMode(mode);
+        statusBar.setMode(mode.getDisplayName());
+        toolbarBuilder.setViewMode(mode);
+    }
+
     public void switchToSourceView() {
-        currentViewMode = ViewMode.SOURCE;
-        editorPanel.setViewMode(ViewMode.SOURCE);
-        statusBar.setMode("Source");
-        toolbarBuilder.setViewMode(ToolbarBuilder.ViewMode.SOURCE);
+        switchToView(ViewMode.SOURCE);
     }
 
     public void switchToBytecodeView() {
-        currentViewMode = ViewMode.BYTECODE;
-        editorPanel.setViewMode(ViewMode.BYTECODE);
-        statusBar.setMode("Bytecode");
-        toolbarBuilder.setViewMode(ToolbarBuilder.ViewMode.BYTECODE);
+        switchToView(ViewMode.BYTECODE);
     }
 
     public void switchToIRView() {
-        currentViewMode = ViewMode.IR;
-        editorPanel.setViewMode(ViewMode.IR);
-        statusBar.setMode("IR");
-        toolbarBuilder.setViewMode(ToolbarBuilder.ViewMode.IR);
+        switchToView(ViewMode.IR);
     }
 
     public void switchToASTView() {
-        currentViewMode = ViewMode.AST;
-        editorPanel.setViewMode(ViewMode.AST);
-        statusBar.setMode("AST");
-        toolbarBuilder.setViewMode(ToolbarBuilder.ViewMode.AST);
+        switchToView(ViewMode.AST);
     }
 
     public void switchToHexView() {
-        currentViewMode = ViewMode.HEX;
-        editorPanel.setViewMode(ViewMode.HEX);
-        statusBar.setMode("Hex");
-        // Note: Toolbar doesn't have HEX mode yet, leave it as is
+        switchToView(ViewMode.HEX);
+    }
+
+    public void switchToPDGView() {
+        switchToView(ViewMode.PDG);
+    }
+
+    public void switchToSDGView() {
+        switchToView(ViewMode.SDG);
+    }
+
+    public void switchToCPGView() {
+        switchToView(ViewMode.CPG);
     }
 
     public void setOmitAnnotations(boolean omit) {

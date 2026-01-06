@@ -2,6 +2,9 @@ package com.tonic.ui.editor;
 
 import com.tonic.ui.editor.ast.ASTView;
 import com.tonic.ui.editor.bytecode.BytecodeView;
+import com.tonic.ui.editor.graph.CPGView;
+import com.tonic.ui.editor.graph.PDGView;
+import com.tonic.ui.editor.graph.SDGView;
 import com.tonic.ui.editor.hex.HexView;
 import com.tonic.ui.editor.ir.IRView;
 import com.tonic.ui.editor.source.SourceCodeView;
@@ -46,6 +49,9 @@ public class EditorTab extends JPanel {
     private final IRView irView;
     private final ASTView astView;
     private final HexView hexView;
+    private final PDGView pdgView;
+    private final SDGView sdgView;
+    private final CPGView cpgView;
 
     private ViewMode currentMode = ViewMode.SOURCE;
 
@@ -81,6 +87,15 @@ public class EditorTab extends JPanel {
         hexView = new HexView(classEntry);
         cardPanel.add(hexView, ViewMode.HEX.name());
 
+        pdgView = new PDGView(classEntry);
+        cardPanel.add(pdgView, ViewMode.PDG.name());
+
+        sdgView = new SDGView(classEntry);
+        cardPanel.add(sdgView, ViewMode.SDG.name());
+
+        cpgView = new CPGView(classEntry);
+        cardPanel.add(cpgView, ViewMode.CPG.name());
+
         add(cardPanel, BorderLayout.CENTER);
 
         // Show source view by default
@@ -101,7 +116,6 @@ public class EditorTab extends JPanel {
         this.currentMode = mode;
         cardLayout.show(cardPanel, mode.name());
 
-        // Refresh the view when switching to it
         switch (mode) {
             case SOURCE:
                 sourceView.refresh();
@@ -117,6 +131,15 @@ public class EditorTab extends JPanel {
                 break;
             case HEX:
                 hexView.refresh();
+                break;
+            case PDG:
+                pdgView.refresh();
+                break;
+            case SDG:
+                sdgView.refresh();
+                break;
+            case CPG:
+                cpgView.refresh();
                 break;
         }
     }
@@ -147,6 +170,15 @@ public class EditorTab extends JPanel {
                 break;
             case HEX:
                 hexView.refresh();
+                break;
+            case PDG:
+                pdgView.refresh();
+                break;
+            case SDG:
+                sdgView.refresh();
+                break;
+            case CPG:
+                cpgView.refresh();
                 break;
         }
     }
@@ -193,6 +225,15 @@ public class EditorTab extends JPanel {
             case HEX:
                 hexView.copySelection();
                 break;
+            case PDG:
+                pdgView.copySelection();
+                break;
+            case SDG:
+                sdgView.copySelection();
+                break;
+            case CPG:
+                cpgView.copySelection();
+                break;
         }
     }
 
@@ -211,6 +252,12 @@ public class EditorTab extends JPanel {
                 return astView.getText();
             case HEX:
                 return hexView.getText();
+            case PDG:
+                return pdgView.getText();
+            case SDG:
+                return sdgView.getText();
+            case CPG:
+                return cpgView.getText();
             default:
                 return "";
         }
@@ -236,6 +283,15 @@ public class EditorTab extends JPanel {
             case HEX:
                 hexView.goToLine(line);
                 break;
+            case PDG:
+                pdgView.goToLine(line);
+                break;
+            case SDG:
+                sdgView.goToLine(line);
+                break;
+            case CPG:
+                cpgView.goToLine(line);
+                break;
         }
     }
 
@@ -258,6 +314,15 @@ public class EditorTab extends JPanel {
                 break;
             case HEX:
                 hexView.showFindDialog();
+                break;
+            case PDG:
+                pdgView.showFindDialog();
+                break;
+            case SDG:
+                sdgView.showFindDialog();
+                break;
+            case CPG:
+                cpgView.showFindDialog();
                 break;
         }
     }
@@ -290,6 +355,12 @@ public class EditorTab extends JPanel {
                 return astView.getSelectedText();
             case HEX:
                 return hexView.getSelectedText();
+            case PDG:
+                return pdgView.getSelectedText();
+            case SDG:
+                return sdgView.getSelectedText();
+            case CPG:
+                return cpgView.getSelectedText();
             default:
                 return null;
         }
@@ -299,7 +370,6 @@ public class EditorTab extends JPanel {
      * Scroll to show a specific method.
      */
     public void scrollToMethod(MethodEntryModel method) {
-        // Search for the method name in the text and scroll to it
         String methodName = method.getMethodEntry().getName();
         switch (currentMode) {
             case SOURCE:
@@ -316,6 +386,15 @@ public class EditorTab extends JPanel {
                 break;
             case HEX:
                 hexView.scrollToText(methodName);
+                break;
+            case PDG:
+                pdgView.scrollToText(methodName);
+                break;
+            case SDG:
+                sdgView.scrollToText(methodName);
+                break;
+            case CPG:
+                cpgView.scrollToText(methodName);
                 break;
         }
     }
@@ -337,6 +416,9 @@ public class EditorTab extends JPanel {
         irView.setFontSize(size);
         astView.setFontSize(size);
         hexView.setFontSize(size);
+        pdgView.setFontSize(size);
+        sdgView.setFontSize(size);
+        cpgView.setFontSize(size);
     }
 
     /**
@@ -348,6 +430,9 @@ public class EditorTab extends JPanel {
         irView.setWordWrap(enabled);
         astView.setWordWrap(enabled);
         hexView.setWordWrap(enabled);
+        pdgView.setWordWrap(enabled);
+        sdgView.setWordWrap(enabled);
+        cpgView.setWordWrap(enabled);
     }
 
     /**
@@ -388,6 +473,15 @@ public class EditorTab extends JPanel {
                 return true;
             case AST:
                 astView.scrollToText(methodName);
+                return true;
+            case PDG:
+                pdgView.scrollToText(methodName);
+                return true;
+            case SDG:
+                sdgView.scrollToText(methodName);
+                return true;
+            case CPG:
+                cpgView.scrollToText(methodName);
                 return true;
             default:
                 return false;
