@@ -34,9 +34,16 @@ import com.tonic.ui.vm.VMExecutionService;
 import com.tonic.ui.vm.debugger.DebuggerPanel;
 import com.tonic.ui.vm.dialog.ExecuteMethodDialog;
 
+import com.tonic.parser.ClassPool;
+import com.tonic.renamer.Renamer;
+import com.tonic.renamer.exception.RenameException;
 import com.tonic.ui.dialog.DeobfuscateNamesDialog;
 import com.tonic.ui.dialog.FindInFilesDialog;
 import com.tonic.ui.dialog.PreferencesDialog;
+import com.tonic.ui.dialog.RenameClassDialog;
+import com.tonic.ui.dialog.RenameFieldDialog;
+import com.tonic.ui.dialog.RenameMethodDialog;
+import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.dialog.filechooser.ExtensionFileFilter;
 import com.tonic.ui.dialog.filechooser.FileChooserDialog;
 import com.tonic.ui.dialog.filechooser.FileChooserResult;
@@ -1429,6 +1436,147 @@ public class MainFrame extends JFrame {
 
         DeobfuscateNamesDialog dialog = new DeobfuscateNamesDialog(this);
         dialog.setVisible(true);
+    }
+
+    public void showRenameClassDialog(ClassEntryModel classEntry) {
+        if (classEntry == null) {
+            showWarning("No class selected.");
+            return;
+        }
+
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null || project.getClassPool() == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        String oldName = classEntry.getClassName();
+        RenameClassDialog dialog = new RenameClassDialog(this, oldName);
+        dialog.setVisible(true);
+
+        if (!dialog.isConfirmed()) {
+            return;
+        }
+
+        String newName = dialog.getNewClassName();
+        if (newName.equals(oldName)) {
+            return;
+        }
+
+        setNavigatorLoading(true);
+        ClassPool classPool = project.getClassPool();
+
+        SwingUtilities.invokeLater(() -> {
+            try {
+                Renamer renamer = new Renamer(classPool);
+                renamer.mapClass(oldName, newName).apply();
+                project.notifyClassRenamed(oldName, newName);
+                refreshAfterRename(oldName, newName);
+                consolePanel.log("Renamed class: " + oldName.replace('/', '.') + " → " + newName.replace('/', '.'));
+            } catch (RenameException e) {
+                setNavigatorLoading(false);
+                showError("Rename failed: " + e.getMessage());
+                consolePanel.logError("Rename failed: " + e.getMessage());
+            }
+        });
+    }
+
+    public void showRenameMethodDialog(ClassEntryModel classEntry, MethodEntryModel method) {
+        if (classEntry == null || method == null) {
+            showWarning("No method selected.");
+            return;
+        }
+
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null || project.getClassPool() == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        String className = classEntry.getClassName();
+        String oldName = method.getName();
+        String desc = method.getMethodEntry().getDesc();
+
+        RenameMethodDialog dialog = new RenameMethodDialog(this, oldName, desc);
+        dialog.setVisible(true);
+
+        if (!dialog.isConfirmed()) {
+            return;
+        }
+
+        String newName = dialog.getNewMethodName();
+        if (newName.equals(oldName)) {
+            return;
+        }
+
+        setNavigatorLoading(true);
+        ClassPool classPool = project.getClassPool();
+
+        SwingUtilities.invokeLater(() -> {
+            try {
+                Renamer renamer = new Renamer(classPool);
+                renamer.mapMethod(className, oldName, desc, newName).apply();
+                classEntry.invalidateDecompilationCache();
+                navigatorPanel.refresh();
+                editorPanel.refreshCurrentTab();
+                setNavigatorLoading(false);
+                consolePanel.log("Renamed method: " + oldName + " → " + newName + " in " + classEntry.getSimpleName());
+                statusBar.setMessage("Renamed method: " + oldName + " → " + newName);
+            } catch (RenameException e) {
+                setNavigatorLoading(false);
+                showError("Rename failed: " + e.getMessage());
+                consolePanel.logError("Rename failed: " + e.getMessage());
+            }
+        });
+    }
+
+    public void showRenameFieldDialog(ClassEntryModel classEntry, FieldEntryModel field) {
+        if (classEntry == null || field == null) {
+            showWarning("No field selected.");
+            return;
+        }
+
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null || project.getClassPool() == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+
+        String className = classEntry.getClassName();
+        String oldName = field.getName();
+        String desc = field.getFieldEntry().getDesc();
+
+        RenameFieldDialog dialog = new RenameFieldDialog(this, oldName, desc);
+        dialog.setVisible(true);
+
+        if (!dialog.isConfirmed()) {
+            return;
+        }
+
+        String newName = dialog.getNewFieldName();
+        if (newName.equals(oldName)) {
+            return;
+        }
+
+        setNavigatorLoading(true);
+        ClassPool classPool = project.getClassPool();
+
+        SwingUtilities.invokeLater(() -> {
+            try {
+                Renamer renamer = new Renamer(classPool);
+                renamer.mapField(className, oldName, desc, newName).apply();
+                classEntry.invalidateDecompilationCache();
+                navigatorPanel.refresh();
+                editorPanel.refreshCurrentTab();
+                setNavigatorLoading(false);
+                consolePanel.log("Renamed field: " + oldName + " → " + newName + " in " + classEntry.getSimpleName());
+                statusBar.setMessage("Renamed field: " + oldName + " → " + newName);
+            } catch (RenameException e) {
+                setNavigatorLoading(false);
+                showError("Rename failed: " + e.getMessage());
+                consolePanel.logError("Rename failed: " + e.getMessage());
+            }
+        });
     }
 
     public void applyTransform(String transformName) {

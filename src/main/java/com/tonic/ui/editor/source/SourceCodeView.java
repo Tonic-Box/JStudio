@@ -15,6 +15,8 @@ import com.tonic.ui.MainFrame;
 import com.tonic.ui.model.Bookmark;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.Comment;
+import com.tonic.ui.model.FieldEntryModel;
+import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.service.ProjectDatabaseService;
 import com.tonic.ui.theme.*;
@@ -213,6 +215,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         });
         gotoItem.setEnabled(targetIdentifier != null && !targetIdentifier.isEmpty());
         menu.add(gotoItem);
+
+        // Rename (only for declarations on the current line)
+        DeclarationInfo decl = getDeclarationAtLine(line);
+        if (decl != null) {
+            JMenuItem renameItem = createMenuItem("Rename " + decl.type.displayName + " '" + decl.name + "'...", null);
+            renameItem.addActionListener(ev -> showRenameDialog(decl));
+            menu.add(renameItem);
+        }
 
         menu.addSeparator();
 
@@ -1100,4 +1110,163 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         textArea.setWrapStyleWord(enabled);
     }
 
+    private enum DeclarationType {
+        CLASS("Class"),
+        METHOD("Method"),
+        FIELD("Field");
+
+        final String displayName;
+
+        DeclarationType(String displayName) {
+            this.displayName = displayName;
+        }
+    }
+
+    private static class DeclarationInfo {
+        final DeclarationType type;
+        final String name;
+
+        DeclarationInfo(DeclarationType type, String name) {
+            this.type = type;
+            this.name = name;
+        }
+    }
+
+    private DeclarationInfo getDeclarationAtLine(int lineNumber) {
+        try {
+            int startOffset = textArea.getLineStartOffset(lineNumber - 1);
+            int endOffset = textArea.getLineEndOffset(lineNumber - 1);
+            String lineText = textArea.getText(startOffset, endOffset - startOffset);
+
+            String className = extractClassDeclaration(lineText);
+            if (className != null) {
+                return new DeclarationInfo(DeclarationType.CLASS, className);
+            }
+
+            String methodName = extractMethodDeclaration(lineText);
+            if (methodName != null) {
+                return new DeclarationInfo(DeclarationType.METHOD, methodName);
+            }
+
+            String fieldName = extractFieldDeclaration(lineText);
+            if (fieldName != null) {
+                return new DeclarationInfo(DeclarationType.FIELD, fieldName);
+            }
+        } catch (BadLocationException e) {
+            // ignore
+        }
+        return null;
+    }
+
+    private static final java.util.regex.Pattern CLASS_DECL_PATTERN = java.util.regex.Pattern.compile(
+        "^\\s*(?:public|private|protected|abstract|final|static|strictfp|\\s)*\\s*(?:class|interface|enum|@interface)\\s+(\\w+)"
+    );
+
+    private String extractClassDeclaration(String line) {
+        java.util.regex.Matcher m = CLASS_DECL_PATTERN.matcher(line);
+        if (m.find()) {
+            return m.group(1);
+        }
+        return null;
+    }
+
+    private static final java.util.regex.Pattern METHOD_DECL_PATTERN = java.util.regex.Pattern.compile(
+        "^\\s*(?:public|private|protected|static|final|abstract|synchronized|native|strictfp|\\s)*" +
+        "(?:<[^>]+>\\s*)?" +
+        "\\w+(?:<[^>]*>)?(?:\\[\\])*\\s+" +
+        "(\\w+)\\s*\\("
+    );
+
+    private String extractMethodDeclaration(String line) {
+        String trimmed = line.trim();
+        if (trimmed.startsWith("return") || trimmed.startsWith("if") ||
+            trimmed.startsWith("while") || trimmed.startsWith("for") ||
+            trimmed.startsWith("switch") || trimmed.startsWith("new ") ||
+            trimmed.startsWith("throw ") || trimmed.startsWith("//") ||
+            trimmed.startsWith("/*") || trimmed.startsWith("*")) {
+            return null;
+        }
+        if (line.contains(" new ") || line.contains("=")) {
+            return null;
+        }
+
+        java.util.regex.Matcher m = METHOD_DECL_PATTERN.matcher(line);
+        if (m.find()) {
+            String name = m.group(1);
+            if (!name.equals("if") && !name.equals("while") && !name.equals("for") &&
+                !name.equals("switch") && !name.equals("catch") && !name.equals("synchronized")) {
+                return name;
+            }
+        }
+        return null;
+    }
+
+    private static final java.util.regex.Pattern FIELD_DECL_PATTERN = java.util.regex.Pattern.compile(
+        "^\\s*(?:public|private|protected|static|final|volatile|transient|\\s)*" +
+        "\\w+(?:<[^>]*>)?(?:\\[\\])*\\s+" +
+        "(\\w+)\\s*[;=]"
+    );
+
+    private String extractFieldDeclaration(String line) {
+        String trimmed = line.trim();
+        if (trimmed.startsWith("return") || trimmed.startsWith("//") ||
+            trimmed.startsWith("/*") || trimmed.startsWith("*") ||
+            trimmed.contains("(")) {
+            return null;
+        }
+
+        java.util.regex.Matcher m = FIELD_DECL_PATTERN.matcher(line);
+        if (m.find()) {
+            return m.group(1);
+        }
+        return null;
+    }
+
+    private void showRenameDialog(DeclarationInfo decl) {
+        if (decl == null) {
+            return;
+        }
+
+        java.awt.Window window = javax.swing.SwingUtilities.getWindowAncestor(this);
+        if (!(window instanceof MainFrame)) {
+            return;
+        }
+        MainFrame mainFrame = (MainFrame) window;
+
+        switch (decl.type) {
+            case CLASS:
+                mainFrame.showRenameClassDialog(classEntry);
+                break;
+            case METHOD:
+                MethodEntryModel methodModel = findMethodByName(decl.name);
+                if (methodModel != null) {
+                    mainFrame.showRenameMethodDialog(classEntry, methodModel);
+                }
+                break;
+            case FIELD:
+                FieldEntryModel fieldModel = findFieldByName(decl.name);
+                if (fieldModel != null) {
+                    mainFrame.showRenameFieldDialog(classEntry, fieldModel);
+                }
+                break;
+        }
+    }
+
+    private MethodEntryModel findMethodByName(String name) {
+        for (MethodEntryModel method : classEntry.getMethods()) {
+            if (method.getName().equals(name)) {
+                return method;
+            }
+        }
+        return null;
+    }
+
+    private FieldEntryModel findFieldByName(String name) {
+        for (FieldEntryModel field : classEntry.getFields()) {
+            if (field.getName().equals(name)) {
+                return field;
+            }
+        }
+        return null;
+    }
 }

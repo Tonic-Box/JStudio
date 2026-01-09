@@ -453,6 +453,10 @@ public class NavigatorPanel extends ThemedJPanel {
 
         menu.addSeparator();
 
+        addMenuItem(menu, "Rename Method...", () -> mainFrame.showRenameMethodDialog(method.getOwner(), method));
+
+        menu.addSeparator();
+
         addMenuItem(menu, "Copy Signature", () -> {
             String ownerSimple = getSimpleClassName(method.getOwner().getClassName());
             String sig = ownerSimple + "." + method.getName() + formatDescriptorParams(method.getDescriptor());
@@ -487,6 +491,10 @@ public class NavigatorPanel extends ThemedJPanel {
         ));
 
         addMenuItem(menu, "Find Usages", () -> mainFrame.showUsagesForField(field.getName()));
+
+        menu.addSeparator();
+
+        addMenuItem(menu, "Rename Field...", () -> mainFrame.showRenameFieldDialog(field.getOwner(), field));
 
         menu.addSeparator();
 
