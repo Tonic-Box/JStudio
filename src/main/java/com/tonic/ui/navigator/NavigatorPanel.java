@@ -11,11 +11,14 @@ import com.tonic.ui.dialog.RenameClassDialog;
 import com.tonic.ui.editor.ViewMode;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
+import com.tonic.ui.event.events.FindUsagesEvent;
 import com.tonic.ui.event.events.MethodSelectedEvent;
+import com.tonic.ui.event.events.ResourceSelectedEvent;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
+import com.tonic.ui.model.ResourceEntryModel;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
@@ -295,9 +298,11 @@ public class NavigatorPanel extends ThemedJPanel {
         Object node = path.getLastPathComponent();
         
         // Handle folder nodes (expand/collapse on double-click)
-        if (node instanceof NavigatorNode.ProjectNode || 
-            node instanceof NavigatorNode.PackageNode || 
-            node instanceof NavigatorNode.CategoryNode) {
+        if (node instanceof NavigatorNode.ProjectNode ||
+            node instanceof NavigatorNode.PackageNode ||
+            node instanceof NavigatorNode.CategoryNode ||
+            node instanceof NavigatorNode.ResourcesRootNode ||
+            node instanceof NavigatorNode.ResourceFolderNode) {
             if (tree.isExpanded(path)) {
                 tree.collapsePath(path);
             } else {
@@ -329,6 +334,9 @@ public class NavigatorPanel extends ThemedJPanel {
                     mainFrame.getEditorPanel().scrollToField(fieldEntry);
                 }
             });
+        } else if (node instanceof NavigatorNode.ResourceNode) {
+            ResourceEntryModel resource = ((NavigatorNode.ResourceNode) node).getResource();
+            EventBus.getInstance().post(new ResourceSelectedEvent(this, resource));
         }
     }
 
@@ -443,7 +451,9 @@ public class NavigatorPanel extends ThemedJPanel {
             method.getDescriptor()
         ));
 
-        addMenuItem(menu, "Find Usages", () -> mainFrame.showUsagesForMethod(method.getName()));
+        addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
+            FindUsagesEvent.forMethod(this, method.getOwner().getClassName(),
+                method.getName(), method.getDescriptor())));
 
         menu.addSeparator();
 
@@ -490,7 +500,9 @@ public class NavigatorPanel extends ThemedJPanel {
             field.getDescriptor()
         ));
 
-        addMenuItem(menu, "Find Usages", () -> mainFrame.showUsagesForField(field.getName()));
+        addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
+            FindUsagesEvent.forField(this, field.getOwner().getClassName(),
+                field.getName(), field.getDescriptor())));
 
         menu.addSeparator();
 
@@ -519,7 +531,8 @@ public class NavigatorPanel extends ThemedJPanel {
 
         addMenuItem(menu, "Find Cross-References", () -> mainFrame.showXrefsForClass(classEntry.getClassName()));
 
-        addMenuItem(menu, "Find Usages", () -> mainFrame.showUsagesForClass(classEntry.getClassName()));
+        addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
+            FindUsagesEvent.forClass(this, classEntry.getClassName())));
 
         menu.addSeparator();
 

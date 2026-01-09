@@ -11,6 +11,7 @@ import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.ui.editor.SearchPanel;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
+import com.tonic.ui.event.events.FindUsagesEvent;
 import com.tonic.ui.MainFrame;
 import com.tonic.ui.model.Bookmark;
 import com.tonic.ui.model.ClassEntryModel;
@@ -216,12 +217,16 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         gotoItem.setEnabled(targetIdentifier != null && !targetIdentifier.isEmpty());
         menu.add(gotoItem);
 
-        // Rename (only for declarations on the current line)
+        // Rename and Find Usages (only for declarations on the current line)
         DeclarationInfo decl = getDeclarationAtLine(line);
         if (decl != null) {
             JMenuItem renameItem = createMenuItem("Rename " + decl.type.displayName + " '" + decl.name + "'...", null);
             renameItem.addActionListener(ev -> showRenameDialog(decl));
             menu.add(renameItem);
+
+            JMenuItem findUsagesItem = createMenuItem("Find Usages of " + decl.type.displayName + " '" + decl.name + "'", Icons.getIcon("search"));
+            findUsagesItem.addActionListener(ev -> findUsagesOfDeclaration(decl));
+            menu.add(findUsagesItem);
         }
 
         menu.addSeparator();
@@ -1247,6 +1252,33 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                 FieldEntryModel fieldModel = findFieldByName(decl.name);
                 if (fieldModel != null) {
                     mainFrame.showRenameFieldDialog(classEntry, fieldModel);
+                }
+                break;
+        }
+    }
+
+    private void findUsagesOfDeclaration(DeclarationInfo decl) {
+        if (decl == null) {
+            return;
+        }
+
+        String className = classEntry.getClassName();
+        switch (decl.type) {
+            case CLASS:
+                EventBus.getInstance().post(FindUsagesEvent.forClass(this, className));
+                break;
+            case METHOD:
+                MethodEntryModel method = findMethodByName(decl.name);
+                if (method != null) {
+                    EventBus.getInstance().post(FindUsagesEvent.forMethod(
+                            this, className, method.getName(), method.getDescriptor()));
+                }
+                break;
+            case FIELD:
+                FieldEntryModel field = findFieldByName(decl.name);
+                if (field != null) {
+                    EventBus.getInstance().post(FindUsagesEvent.forField(
+                            this, className, field.getName(), field.getFieldEntry().getDesc()));
                 }
                 break;
         }

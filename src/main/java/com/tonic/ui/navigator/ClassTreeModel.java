@@ -4,6 +4,7 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
+import com.tonic.ui.model.ResourceEntryModel;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.util.JdkClassFilter;
 
@@ -97,8 +98,142 @@ public class ClassTreeModel extends DefaultTreeModel {
 
         collapseEmptyPackages(root);
 
+        List<ResourceEntryModel> resources = getFilteredResources();
+        if (!resources.isEmpty()) {
+            addResourceTree(root, resources);
+        }
+
         setRoot(root);
         reload();
+    }
+
+    private List<ResourceEntryModel> getFilteredResources() {
+        List<ResourceEntryModel> resources = new ArrayList<>(project.getAllResources());
+        if (filterText != null && !filterText.isEmpty()) {
+            String lowerFilter = filterText.toLowerCase();
+            List<ResourceEntryModel> filtered = new ArrayList<>();
+            for (ResourceEntryModel res : resources) {
+                if (res.getName().toLowerCase().contains(lowerFilter) ||
+                        res.getPath().toLowerCase().contains(lowerFilter)) {
+                    filtered.add(res);
+                }
+            }
+            resources = filtered;
+        }
+        resources.sort(Comparator.comparing(ResourceEntryModel::getPath));
+        return resources;
+    }
+
+    private void addResourceTree(NavigatorNode.ProjectNode root, List<ResourceEntryModel> resources) {
+        NavigatorNode.ResourcesRootNode resourcesRoot = new NavigatorNode.ResourcesRootNode(resources.size());
+        Map<String, NavigatorNode.ResourceFolderNode> folderNodes = new HashMap<>();
+
+        for (ResourceEntryModel resource : resources) {
+            String directory = resource.getDirectory();
+            NavigatorNode parent;
+
+            if (directory.isEmpty()) {
+                parent = resourcesRoot;
+            } else {
+                parent = getOrCreateResourceFolder(resourcesRoot, folderNodes, directory);
+            }
+
+            parent.add(new NavigatorNode.ResourceNode(resource));
+        }
+
+        collapseEmptyResourceFolders(resourcesRoot);
+        root.add(resourcesRoot);
+    }
+
+    private NavigatorNode.ResourceFolderNode getOrCreateResourceFolder(
+            NavigatorNode.ResourcesRootNode root,
+            Map<String, NavigatorNode.ResourceFolderNode> folderNodes,
+            String folderPath) {
+
+        NavigatorNode.ResourceFolderNode node = folderNodes.get(folderPath);
+        if (node != null) {
+            return node;
+        }
+
+        String[] parts = folderPath.split("/");
+        StringBuilder fullPath = new StringBuilder();
+        NavigatorNode parent = root;
+
+        for (String part : parts) {
+            if (fullPath.length() > 0) {
+                fullPath.append("/");
+            }
+            fullPath.append(part);
+
+            String currentPath = fullPath.toString();
+            NavigatorNode.ResourceFolderNode current = folderNodes.get(currentPath);
+
+            if (current == null) {
+                current = new NavigatorNode.ResourceFolderNode(currentPath);
+                folderNodes.put(currentPath, current);
+                parent.add(current);
+            }
+
+            parent = current;
+        }
+
+        return folderNodes.get(folderPath);
+    }
+
+    private void collapseEmptyResourceFolders(NavigatorNode.ResourcesRootNode root) {
+        Deque<NavigatorNode> stack = new ArrayDeque<>();
+        for (int i = 0; i < root.getChildCount(); i++) {
+            TreeNode child = root.getChildAt(i);
+            if (child instanceof NavigatorNode.ResourceFolderNode) {
+                stack.push((NavigatorNode.ResourceFolderNode) child);
+            }
+        }
+
+        while (!stack.isEmpty()) {
+            NavigatorNode node = stack.pop();
+            if (!(node instanceof NavigatorNode.ResourceFolderNode)) {
+                continue;
+            }
+
+            NavigatorNode.ResourceFolderNode folderNode = (NavigatorNode.ResourceFolderNode) node;
+
+            while (hasSingleResourceFolderChild(folderNode)) {
+                NavigatorNode.ResourceFolderNode childFolder = getSingleResourceFolderChild(folderNode);
+                List<TreeNode> grandChildren = new ArrayList<>();
+                for (int i = 0; i < childFolder.getChildCount(); i++) {
+                    grandChildren.add(childFolder.getChildAt(i));
+                }
+
+                folderNode.remove(childFolder);
+
+                for (TreeNode grandChild : grandChildren) {
+                    if (grandChild instanceof NavigatorNode) {
+                        folderNode.add((NavigatorNode) grandChild);
+                    }
+                }
+            }
+
+            for (int i = 0; i < folderNode.getChildCount(); i++) {
+                TreeNode child = folderNode.getChildAt(i);
+                if (child instanceof NavigatorNode.ResourceFolderNode) {
+                    stack.push((NavigatorNode.ResourceFolderNode) child);
+                }
+            }
+        }
+    }
+
+    private boolean hasSingleResourceFolderChild(NavigatorNode.ResourceFolderNode node) {
+        if (node.getChildCount() != 1) {
+            return false;
+        }
+        return node.getChildAt(0) instanceof NavigatorNode.ResourceFolderNode;
+    }
+
+    private NavigatorNode.ResourceFolderNode getSingleResourceFolderChild(NavigatorNode.ResourceFolderNode node) {
+        if (node.getChildCount() == 1 && node.getChildAt(0) instanceof NavigatorNode.ResourceFolderNode) {
+            return (NavigatorNode.ResourceFolderNode) node.getChildAt(0);
+        }
+        return null;
     }
 
     private void collapseEmptyPackages(NavigatorNode.ProjectNode root) {

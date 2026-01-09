@@ -7,9 +7,11 @@ import lombok.Getter;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +33,7 @@ public class ProjectModel {
     private XrefDatabase xrefDatabase;
     private final Map<String, ClassEntryModel> classEntries = new HashMap<>();
     private final Set<String> userClassNames = new HashSet<>();
+    private final Map<String, ResourceEntryModel> resources = new LinkedHashMap<>();
     @Getter
     private boolean dirty;
 
@@ -134,12 +137,29 @@ public class ProjectModel {
         return classEntries.size();
     }
 
+    public void addResource(ResourceEntryModel resource) {
+        resources.put(resource.getPath(), resource);
+    }
+
+    public ResourceEntryModel getResource(String path) {
+        return resources.get(path);
+    }
+
+    public Collection<ResourceEntryModel> getAllResources() {
+        return Collections.unmodifiableCollection(resources.values());
+    }
+
+    public int getResourceCount() {
+        return resources.size();
+    }
+
     /**
      * Clear all classes from the project.
      */
     public void clear() {
         classEntries.clear();
         userClassNames.clear();
+        resources.clear();
         if (classPool != null) {
             classPool.getClasses().clear();
         }
@@ -235,6 +255,10 @@ public class ProjectModel {
 
     @Override
     public String toString() {
+        int resCount = getResourceCount();
+        if (resCount > 0) {
+            return projectName + " (" + getClassCount() + " classes, " + resCount + " resources)";
+        }
         return projectName + " (" + getClassCount() + " classes)";
     }
 }

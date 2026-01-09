@@ -3,6 +3,7 @@ package com.tonic.ui.navigator;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
+import com.tonic.ui.model.ResourceEntryModel;
 import com.tonic.ui.simulation.metrics.ComplexityMetrics;
 import com.tonic.ui.theme.Icons;
 import lombok.Getter;
@@ -230,6 +231,84 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
         @Override
         public String getTooltip() {
             return name;
+        }
+    }
+
+    @Getter
+    public static class ResourcesRootNode extends NavigatorNode {
+        private final int resourceCount;
+
+        public ResourcesRootNode(int resourceCount) {
+            super("Resources");
+            this.resourceCount = resourceCount;
+        }
+
+        @Override
+        public String getDisplayText() {
+            return "Resources (" + resourceCount + ")";
+        }
+
+        @Override
+        public Icon getIcon() {
+            return Icons.getIcon("resource");
+        }
+
+        @Override
+        public String getTooltip() {
+            return resourceCount + " resource files";
+        }
+    }
+
+    @Getter
+    public static class ResourceFolderNode extends NavigatorNode {
+        private final String folderPath;
+        private final String folderName;
+
+        public ResourceFolderNode(String folderPath) {
+            super(folderPath);
+            this.folderPath = folderPath;
+            int lastSlash = folderPath.lastIndexOf('/');
+            this.folderName = lastSlash >= 0 ? folderPath.substring(lastSlash + 1) : folderPath;
+        }
+
+        @Override
+        public String getDisplayText() {
+            return sanitizeDisplayText(folderName);
+        }
+
+        @Override
+        public Icon getIcon() {
+            return Icons.getIcon("package");
+        }
+
+        @Override
+        public String getTooltip() {
+            return sanitizeDisplayText(folderPath);
+        }
+    }
+
+    @Getter
+    public static class ResourceNode extends NavigatorNode {
+        private final ResourceEntryModel resource;
+
+        public ResourceNode(ResourceEntryModel resource) {
+            super(resource);
+            this.resource = resource;
+        }
+
+        @Override
+        public String getDisplayText() {
+            return sanitizeDisplayText(resource.getName());
+        }
+
+        @Override
+        public Icon getIcon() {
+            return resource.getIcon();
+        }
+
+        @Override
+        public String getTooltip() {
+            return sanitizeDisplayText(resource.getPath() + " (" + resource.getFormattedSize() + ")");
         }
     }
 }

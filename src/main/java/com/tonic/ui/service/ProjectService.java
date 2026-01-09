@@ -9,6 +9,7 @@ import com.tonic.ui.event.events.ProjectUpdatedEvent;
 import com.tonic.ui.event.events.StatusMessageEvent;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.ProjectModel;
+import com.tonic.ui.model.ResourceEntryModel;
 import lombok.Getter;
 
 import java.io.ByteArrayInputStream;
@@ -68,31 +69,48 @@ public class ProjectService {
 
         List<ClassFile> classes = new ArrayList<>();
 
+        List<ResourceEntryModel> resources = new ArrayList<>();
+
         try (JarFile jar = new JarFile(jarFile)) {
             Enumeration<JarEntry> entries = jar.entries();
             List<JarEntry> classEntries = new ArrayList<>();
+            List<JarEntry> resourceEntries = new ArrayList<>();
 
-            // First pass: count class files
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
-                if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                if (entry.getName().endsWith(".class")) {
                     classEntries.add(entry);
+                } else {
+                    resourceEntries.add(entry);
                 }
             }
 
-            int total = classEntries.size();
+            int total = classEntries.size() + resourceEntries.size();
             int current = 0;
 
-            // Second pass: load classes
             for (JarEntry entry : classEntries) {
                 try (InputStream is = jar.getInputStream(entry)) {
                     ClassFile cf = new ClassFile(is);
                     classes.add(cf);
                 } catch (Exception e) {
-                    // Log but continue loading other classes
                     System.err.println("Failed to load class: " + entry.getName() + " - " + e.getMessage());
                 }
+                current++;
+                if (progress != null) {
+                    progress.onProgress(current, total, "Loading " + entry.getName());
+                }
+            }
 
+            for (JarEntry entry : resourceEntries) {
+                try (InputStream is = jar.getInputStream(entry)) {
+                    byte[] data = is.readAllBytes();
+                    resources.add(new ResourceEntryModel(entry.getName(), data));
+                } catch (Exception e) {
+                    System.err.println("Failed to load resource: " + entry.getName() + " - " + e.getMessage());
+                }
                 current++;
                 if (progress != null) {
                     progress.onProgress(current, total, "Loading " + entry.getName());
@@ -109,15 +127,22 @@ public class ProjectService {
         ClassPool pool = createClassPoolWithJdk();
         project.setClassPool(pool);
 
-        // Add user classes (tracked separately from JDK)
         for (ClassFile cf : classes) {
             project.addClass(cf);
         }
 
+        for (ResourceEntryModel resource : resources) {
+            project.addResource(resource);
+        }
+
         this.currentProject = project;
 
-        EventBus.getInstance().post(new StatusMessageEvent(this,
-                "Loaded " + classes.size() + " classes from " + name));
+        String message = "Loaded " + classes.size() + " classes";
+        if (!resources.isEmpty()) {
+            message += ", " + resources.size() + " resources";
+        }
+        message += " from " + name;
+        EventBus.getInstance().post(new StatusMessageEvent(this, message));
         EventBus.getInstance().post(new ProjectLoadedEvent(this, project));
 
         return project;
@@ -233,31 +258,51 @@ public class ProjectService {
 
         EventBus.getInstance().post(new StatusMessageEvent(this, "Appending " + jarFile.getName() + "..."));
 
-        int addedCount = 0;
+        int addedClassCount = 0;
+        int addedResourceCount = 0;
 
         try (JarFile jar = new JarFile(jarFile)) {
             Enumeration<JarEntry> entries = jar.entries();
             List<JarEntry> classEntries = new ArrayList<>();
+            List<JarEntry> resourceEntries = new ArrayList<>();
 
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
-                if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                if (entry.getName().endsWith(".class")) {
                     classEntries.add(entry);
+                } else {
+                    resourceEntries.add(entry);
                 }
             }
 
-            int total = classEntries.size();
+            int total = classEntries.size() + resourceEntries.size();
             int current = 0;
 
             for (JarEntry entry : classEntries) {
                 try (InputStream is = jar.getInputStream(entry)) {
                     ClassFile cf = new ClassFile(is);
                     currentProject.addClass(cf);
-                    addedCount++;
+                    addedClassCount++;
                 } catch (Exception e) {
                     System.err.println("Failed to load class: " + entry.getName() + " - " + e.getMessage());
                 }
+                current++;
+                if (progress != null) {
+                    progress.onProgress(current, total, "Appending " + entry.getName());
+                }
+            }
 
+            for (JarEntry entry : resourceEntries) {
+                try (InputStream is = jar.getInputStream(entry)) {
+                    byte[] data = is.readAllBytes();
+                    currentProject.addResource(new ResourceEntryModel(entry.getName(), data));
+                    addedResourceCount++;
+                } catch (Exception e) {
+                    System.err.println("Failed to load resource: " + entry.getName() + " - " + e.getMessage());
+                }
                 current++;
                 if (progress != null) {
                     progress.onProgress(current, total, "Appending " + entry.getName());
@@ -265,11 +310,15 @@ public class ProjectService {
             }
         }
 
-        EventBus.getInstance().post(new StatusMessageEvent(this,
-                "Appended " + addedCount + " classes from " + jarFile.getName()));
-        EventBus.getInstance().post(new ProjectUpdatedEvent(this, currentProject, addedCount));
+        String message = "Appended " + addedClassCount + " classes";
+        if (addedResourceCount > 0) {
+            message += ", " + addedResourceCount + " resources";
+        }
+        message += " from " + jarFile.getName();
+        EventBus.getInstance().post(new StatusMessageEvent(this, message));
+        EventBus.getInstance().post(new ProjectUpdatedEvent(this, currentProject, addedClassCount));
 
-        return addedCount;
+        return addedClassCount;
     }
 
     /**

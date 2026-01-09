@@ -11,9 +11,12 @@ import com.tonic.ui.editor.EditorPanel;
 import com.tonic.ui.editor.ViewMode;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
+import com.tonic.ui.event.events.FindUsagesEvent;
 import com.tonic.ui.event.events.MethodSelectedEvent;
 import com.tonic.ui.event.events.ProjectLoadedEvent;
 import com.tonic.ui.event.events.ProjectUpdatedEvent;
+import com.tonic.ui.event.events.ResourceSelectedEvent;
+import com.tonic.ui.analysis.FindUsagesResultsPanel;
 import com.tonic.ui.model.Bookmark;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.Comment;
@@ -115,6 +118,10 @@ public class MainFrame extends JFrame {
     private DeobfuscationPanel deobfuscationPanel;
     private com.tonic.ui.query.QueryDialog queryDialog;
 
+    // Find Usages results panel (bottom panel)
+    private FindUsagesResultsPanel findUsagesPanel;
+    private JSplitPane editorBottomSplit;
+
     // Split panes for layout
     private JSplitPane mainHorizontalSplit;
     private JSplitPane rightVerticalSplit;
@@ -209,6 +216,11 @@ public class MainFrame extends JFrame {
         propertiesPanel = new PropertiesPanel(this);
         consolePanel = new ConsolePanel();
         statusBar = new StatusBar();
+
+        // Find Usages panel (hidden by default)
+        findUsagesPanel = new FindUsagesResultsPanel();
+        findUsagesPanel.setVisible(false);
+        findUsagesPanel.setOnClose(() -> editorBottomSplit.setDividerLocation(1.0));
     }
 
     private void initializeLayout() {
@@ -237,9 +249,18 @@ public class MainFrame extends JFrame {
         rightVerticalSplit.setBorder(null);
         rightVerticalSplit.setContinuousLayout(true);
 
+        // Editor + Find Usages bottom panel vertical split
+        editorBottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+                editorPanel, findUsagesPanel);
+        editorBottomSplit.setResizeWeight(1.0);
+        editorBottomSplit.setDividerSize(4);
+        editorBottomSplit.setBorder(null);
+        editorBottomSplit.setContinuousLayout(true);
+        editorBottomSplit.setDividerLocation(1.0);
+
         // Center + Right horizontal split
         leftRightSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                editorPanel, rightVerticalSplit);
+                editorBottomSplit, rightVerticalSplit);
         leftRightSplit.setResizeWeight(0.75);
         leftRightSplit.setDividerSize(4);
         leftRightSplit.setBorder(null);
@@ -293,6 +314,25 @@ public class MainFrame extends JFrame {
                 navigatorPanel.loadProject(project);
                 editorPanel.setProjectModel(project);
                 editorPanel.refreshWelcomeTab();
+            }
+        });
+
+        // Handle resource selection from navigator
+        EventBus.getInstance().register(ResourceSelectedEvent.class, event -> {
+            if (event.getResource() != null) {
+                editorPanel.openResource(event.getResource());
+            }
+        });
+
+        // Handle Find Usages requests
+        EventBus.getInstance().register(FindUsagesEvent.class, event -> {
+            ProjectModel project = ProjectService.getInstance().getCurrentProject();
+            if (project != null) {
+                findUsagesPanel.setProject(project);
+                findUsagesPanel.setVisible(true);
+                findUsagesPanel.showUsages(event);
+                int height = editorBottomSplit.getHeight();
+                editorBottomSplit.setDividerLocation(height - 200);
             }
         });
     }

@@ -136,6 +136,12 @@ public class Icons {
                 return new CPGIcon(size);
             case "hex":
                 return new HexIcon(size);
+            case "resource":
+                return new ResourceIcon(size);
+            case "image":
+                return new ImageIcon(size);
+            case "actual_size":
+                return new ActualSizeIcon(size);
             default:
                 return new PlaceholderIcon(size);
         }
@@ -986,6 +992,68 @@ public class Icons {
             g2.drawString("0x", 2, 8);
             g2.setColor(JStudioTheme.getAccent());
             g2.drawString("FF", 4, 14);
+        }
+    }
+
+    private static class ResourceIcon extends BaseIcon {
+        ResourceIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getAccentSecondary());
+            g2.setStroke(getStroke());
+            Path2D path = new Path2D.Float();
+            path.moveTo(2, 4);
+            path.lineTo(2, 13);
+            path.lineTo(14, 13);
+            path.lineTo(14, 6);
+            path.lineTo(8, 6);
+            path.lineTo(6, 4);
+            path.closePath();
+            g2.draw(path);
+            g2.setColor(JStudioTheme.getInfo());
+            g2.fillOval(9, 8, 3, 3);
+        }
+    }
+
+    private static class ImageIcon extends BaseIcon {
+        ImageIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.setStroke(getStroke());
+            g2.drawRect(2, 3, 12, 10);
+            g2.setColor(JStudioTheme.getSuccess());
+            g2.fillOval(4, 5, 3, 3);
+            g2.setColor(JStudioTheme.getAccent());
+            Path2D mountain = new Path2D.Float();
+            mountain.moveTo(3, 11);
+            mountain.lineTo(6, 8);
+            mountain.lineTo(9, 10);
+            mountain.lineTo(13, 6);
+            mountain.lineTo(13, 11);
+            mountain.closePath();
+            g2.fill(mountain);
+        }
+    }
+
+    private static class ActualSizeIcon extends BaseIcon {
+        ActualSizeIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.setStroke(getStroke());
+            g2.drawRect(4, 4, 8, 8);
+            g2.setFont(JStudioTheme.getCodeFont(7).deriveFont(java.awt.Font.BOLD));
+            g2.drawString("1:1", 5, 10);
         }
     }
 }

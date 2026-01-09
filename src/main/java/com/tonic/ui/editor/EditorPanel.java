@@ -3,10 +3,12 @@ package com.tonic.ui.editor;
 import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
+import com.tonic.ui.editor.resource.ResourceEditorTab;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
+import com.tonic.ui.model.ResourceEntryModel;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 
@@ -35,6 +37,7 @@ import java.util.Map;
 public class EditorPanel extends ThemedJPanel {
     private final JTabbedPane tabbedPane;
     private final Map<String, EditorTab> openTabs = new HashMap<>();
+    private final Map<String, ResourceEditorTab> openResourceTabs = new HashMap<>();
     private ProjectModel projectModel;
     private final WelcomeTab welcomeTab;
 
@@ -124,6 +127,96 @@ public class EditorPanel extends ThemedJPanel {
         int index = tabbedPane.getTabCount() - 1;
         tabbedPane.setTabComponentAt(index, createTabComponent(tab));
         tabbedPane.setSelectedIndex(index);
+    }
+
+    public void openResource(ResourceEntryModel resource) {
+        String key = resource.getPath();
+
+        ResourceEditorTab existingTab = openResourceTabs.get(key);
+        if (existingTab != null) {
+            int index = findResourceTabIndex(existingTab);
+            if (index >= 0) {
+                tabbedPane.setSelectedIndex(index);
+            }
+            return;
+        }
+
+        ResourceEditorTab tab = new ResourceEditorTab(resource);
+        openResourceTabs.put(key, tab);
+
+        tabbedPane.addTab(tab.getTitle(), resource.getIcon(), tab, tab.getTooltip());
+        int index = tabbedPane.getTabCount() - 1;
+        tabbedPane.setTabComponentAt(index, createResourceTabComponent(tab));
+        tabbedPane.setSelectedIndex(index);
+    }
+
+    private int findResourceTabIndex(ResourceEditorTab tab) {
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            if (tabbedPane.getComponentAt(i) == tab) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public void closeResourceTab(ResourceEditorTab tab) {
+        int index = findResourceTabIndex(tab);
+        if (index >= 0) {
+            tabbedPane.removeTabAt(index);
+            openResourceTabs.remove(tab.getResource().getPath());
+
+            if (openTabs.isEmpty() && openResourceTabs.isEmpty()) {
+                tabbedPane.setSelectedIndex(0);
+            }
+        }
+    }
+
+    private JPanel createResourceTabComponent(ResourceEditorTab tab) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 0));
+        panel.setOpaque(false);
+
+        JLabel iconLabel = new JLabel(tab.getResource().getIcon());
+        panel.add(iconLabel);
+
+        JLabel titleLabel = new JLabel(tab.getTitle());
+        titleLabel.setForeground(JStudioTheme.getTextPrimary());
+        titleLabel.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
+        panel.add(titleLabel);
+
+        JButton closeButton = new JButton(Icons.getIcon("close"));
+        closeButton.setPreferredSize(new Dimension(UIConstants.ICON_SIZE_SMALL, UIConstants.ICON_SIZE_SMALL));
+        closeButton.setBorderPainted(false);
+        closeButton.setContentAreaFilled(false);
+        closeButton.setFocusable(false);
+        closeButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                closeButton.setContentAreaFilled(true);
+                closeButton.setBackground(JStudioTheme.getHover());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                closeButton.setContentAreaFilled(false);
+            }
+        });
+        closeButton.addActionListener(e -> closeResourceTab(tab));
+        panel.add(closeButton);
+
+        MouseAdapter tabClickListener = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                int index = tabbedPane.indexOfTabComponent(panel);
+                if (index != -1) {
+                    tabbedPane.setSelectedIndex(index);
+                }
+            }
+        };
+        panel.addMouseListener(tabClickListener);
+        iconLabel.addMouseListener(tabClickListener);
+        titleLabel.addMouseListener(tabClickListener);
+
+        return panel;
     }
 
     private JPanel createTabComponent(EditorTab tab) {
@@ -269,6 +362,7 @@ public class EditorPanel extends ThemedJPanel {
             tabbedPane.removeTabAt(1);
         }
         openTabs.clear();
+        openResourceTabs.clear();
         tabbedPane.setSelectedIndex(0); // Switch to Welcome tab
     }
 
