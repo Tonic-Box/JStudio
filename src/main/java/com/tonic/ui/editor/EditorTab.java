@@ -367,16 +367,18 @@ public class EditorTab extends JPanel {
     }
 
     /**
-     * Scroll to show a specific method.
+     * Scroll to and highlight a specific method declaration.
+     * Only highlights in SOURCE and BYTECODE views.
      */
     public void scrollToMethod(MethodEntryModel method) {
         String methodName = method.getMethodEntry().getName();
+        String methodDesc = method.getMethodEntry().getDesc();
         switch (currentMode) {
             case SOURCE:
-                sourceView.scrollToText(methodName);
+                sourceView.scrollToMethodDeclaration(methodName, methodDesc);
                 break;
             case BYTECODE:
-                bytecodeView.scrollToText(methodName);
+                bytecodeView.scrollToMethod(methodName, methodDesc);
                 break;
             case IR:
                 irView.scrollToText(methodName);
@@ -400,11 +402,22 @@ public class EditorTab extends JPanel {
     }
 
     /**
-     * Scroll to show a specific field (source view only).
+     * Scroll to and highlight a specific field declaration.
+     * Only highlights in SOURCE and BYTECODE views.
      */
     public void scrollToField(FieldEntryModel field) {
-        setViewMode(ViewMode.SOURCE);
-        sourceView.scrollToText(field.getName());
+        String fieldName = field.getName();
+        switch (currentMode) {
+            case SOURCE:
+                sourceView.scrollToFieldDeclaration(fieldName);
+                break;
+            case BYTECODE:
+                bytecodeView.scrollToField(fieldName);
+                break;
+            default:
+                // Other views just scroll to text
+                break;
+        }
     }
 
     /**

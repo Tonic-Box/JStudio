@@ -1,9 +1,13 @@
 package com.tonic.ui.navigator;
 
+import com.tonic.parser.ClassPool;
+import com.tonic.renamer.Renamer;
+import com.tonic.renamer.exception.RenameException;
 import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.ColumnWidths;
 import com.tonic.ui.core.constants.UIConstants;
+import com.tonic.ui.dialog.RenameClassDialog;
 import com.tonic.ui.editor.ViewMode;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
@@ -12,18 +16,25 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
+import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
+import javax.swing.OverlayLayout;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.event.DocumentEvent;
@@ -31,7 +42,10 @@ import javax.swing.event.DocumentListener;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyAdapter;
@@ -47,6 +61,8 @@ public class NavigatorPanel extends ThemedJPanel {
     private final JTextField searchField;
     private final JToolBar toolbar;
     private final JScrollPane scrollPane;
+    private final JPanel loadingOverlay;
+    private final JPanel contentWrapper;
 
     public NavigatorPanel(MainFrame mainFrame) {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -117,7 +133,38 @@ public class NavigatorPanel extends ThemedJPanel {
         scrollPane = new JScrollPane(tree);
         scrollPane.setBorder(null);
 
-        add(scrollPane, BorderLayout.CENTER);
+        loadingOverlay = createLoadingOverlay();
+        loadingOverlay.setVisible(false);
+
+        contentWrapper = new JPanel();
+        contentWrapper.setLayout(new OverlayLayout(contentWrapper));
+        loadingOverlay.setAlignmentX(0.5f);
+        loadingOverlay.setAlignmentY(0.5f);
+        scrollPane.setAlignmentX(0.5f);
+        scrollPane.setAlignmentY(0.5f);
+        contentWrapper.add(loadingOverlay);
+        contentWrapper.add(scrollPane);
+
+        add(contentWrapper, BorderLayout.CENTER);
+    }
+
+    private JPanel createLoadingOverlay() {
+        JPanel overlay = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                g.setColor(new Color(0, 0, 0, 120));
+                g.fillRect(0, 0, getWidth(), getHeight());
+                super.paintComponent(g);
+            }
+        };
+        overlay.setOpaque(false);
+
+        JLabel label = new JLabel("Renaming...", SwingConstants.CENTER);
+        label.setForeground(Color.WHITE);
+        label.setFont(JStudioTheme.getUIFont(14).deriveFont(Font.BOLD));
+        overlay.add(label, BorderLayout.CENTER);
+
+        return overlay;
     }
 
     @Override
@@ -259,7 +306,7 @@ public class NavigatorPanel extends ThemedJPanel {
             return;
         }
         
-        // Handle class, method, and field nodes (existing behavior)
+        // Handle class, method, and field nodes
         if (node instanceof NavigatorNode.ClassNode) {
             ClassEntryModel classEntry = ((NavigatorNode.ClassNode) node).getClassEntry();
             EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
@@ -267,12 +314,20 @@ public class NavigatorPanel extends ThemedJPanel {
             MethodEntryModel methodEntry = ((NavigatorNode.MethodNode) node).getMethodEntry();
             EventBus.getInstance().post(new MethodSelectedEvent(this, methodEntry));
             EventBus.getInstance().post(new ClassSelectedEvent(this, methodEntry.getOwner()));
+            SwingUtilities.invokeLater(() -> {
+                ViewMode currentMode = mainFrame.getEditorPanel().getViewMode();
+                if (currentMode == ViewMode.SOURCE || currentMode == ViewMode.BYTECODE) {
+                    mainFrame.getEditorPanel().scrollToMethod(methodEntry);
+                }
+            });
         } else if (node instanceof NavigatorNode.FieldNode) {
             FieldEntryModel fieldEntry = ((NavigatorNode.FieldNode) node).getFieldEntry();
             EventBus.getInstance().post(new ClassSelectedEvent(this, fieldEntry.getOwner()));
             SwingUtilities.invokeLater(() -> {
-                mainFrame.getEditorPanel().setViewMode(ViewMode.SOURCE);
-                mainFrame.getEditorPanel().scrollToField(fieldEntry);
+                ViewMode currentMode = mainFrame.getEditorPanel().getViewMode();
+                if (currentMode == ViewMode.SOURCE || currentMode == ViewMode.BYTECODE) {
+                    mainFrame.getEditorPanel().scrollToField(fieldEntry);
+                }
             });
         }
     }
@@ -292,6 +347,12 @@ public class NavigatorPanel extends ThemedJPanel {
         if (project != null) {
             treeModel.loadProject(project);
         }
+    }
+
+    public void setLoading(boolean loading) {
+        loadingOverlay.setVisible(loading);
+        contentWrapper.revalidate();
+        contentWrapper.repaint();
     }
 
     public void filterByName(String name) {
@@ -454,11 +515,76 @@ public class NavigatorPanel extends ThemedJPanel {
 
         menu.addSeparator();
 
+        addMenuItem(menu, "Rename Class...", () -> renameClass(classEntry));
+
+        menu.addSeparator();
+
         addMenuItem(menu, "Copy Class Name", () -> copyToClipboard(classEntry.getClassName().replace('/', '.')));
 
         addMenuItem(menu, "Copy Internal Name", () -> copyToClipboard(classEntry.getClassName()));
 
         addMenuItem(menu, "Copy Simple Name", () -> copyToClipboard(classEntry.getSimpleName()));
+    }
+
+    private void renameClass(ClassEntryModel classEntry) {
+        String oldName = classEntry.getClassName();
+
+        RenameClassDialog dialog = new RenameClassDialog(
+                SwingUtilities.getWindowAncestor(this), oldName);
+        dialog.setVisible(true);
+
+        if (!dialog.isConfirmed()) {
+            return;
+        }
+
+        String newName = dialog.getNewClassName();
+        if (newName.equals(oldName)) {
+            return;
+        }
+
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null || project.getClassPool() == null) {
+            JOptionPane.showMessageDialog(this,
+                    "No project loaded",
+                    "Rename Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        ClassPool classPool = project.getClassPool();
+
+        setLoading(true);
+
+        try {
+            Renamer renamer = new Renamer(classPool);
+            renamer.mapClass(oldName, newName).apply();
+
+            project.notifyClassRenamed(oldName, newName);
+
+            mainFrame.refreshAfterRename(oldName, newName);
+
+            SwingUtilities.invokeLater(() -> {
+                selectClass(newName);
+                JOptionPane.showMessageDialog(this,
+                        "Class renamed successfully:\n" +
+                                oldName.replace('/', '.') + " → " + newName.replace('/', '.'),
+                        "Rename Complete",
+                        JOptionPane.INFORMATION_MESSAGE);
+            });
+
+        } catch (RenameException e) {
+            setLoading(false);
+            JOptionPane.showMessageDialog(this,
+                    "Rename failed: " + e.getMessage(),
+                    "Rename Error",
+                    JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            setLoading(false);
+            JOptionPane.showMessageDialog(this,
+                    "Unexpected error during rename: " + e.getMessage(),
+                    "Rename Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void styleMenu(JPopupMenu menu) {

@@ -555,7 +555,7 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     }
 
     /**
-     * Navigate to a method by name and descriptor.
+     * Navigate to a method by name and descriptor, highlighting the declaration line.
      * @param methodName the method name
      * @param methodDesc the method descriptor (can be null for partial match)
      * @return true if the method was found
@@ -570,8 +570,35 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         int index = text.indexOf(searchPattern);
 
         if (index >= 0) {
+            clearHighlights();
+            int lineNumber = getLineAtOffset(index);
+            addHighlight(lineNumber);
             textPane.setCaretPosition(index);
-            textPane.select(index, index + searchPattern.length());
+            textPane.requestFocus();
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Navigate to a field by name, highlighting the declaration line.
+     * @param fieldName the field name
+     * @return true if the field was found
+     */
+    public boolean scrollToField(String fieldName) {
+        if (!loaded) {
+            refresh();
+        }
+
+        String text = textPane.getText();
+        int index = text.indexOf(fieldName);
+
+        if (index >= 0) {
+            clearHighlights();
+            int lineNumber = getLineAtOffset(index);
+            addHighlight(lineNumber);
+            textPane.setCaretPosition(index);
             textPane.requestFocus();
             return true;
         }

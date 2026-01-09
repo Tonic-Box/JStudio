@@ -192,6 +192,47 @@ public class ProjectModel {
         this.dirty = dirty;
     }
 
+    public void notifyClassRenamed(String oldName, String newName) {
+        ClassEntryModel entry = classEntries.remove(oldName);
+        if (entry != null) {
+            entry.refreshDisplayData();
+            classEntries.put(newName, entry);
+        }
+
+        if (userClassNames.remove(oldName)) {
+            userClassNames.add(newName);
+        }
+
+        if (xrefDatabase != null) {
+            xrefDatabase.clear();
+        }
+
+        dirty = true;
+    }
+
+    public void applyClassNameMappings(Map<String, String> oldToNewNames) {
+        for (Map.Entry<String, String> entry : oldToNewNames.entrySet()) {
+            String oldName = entry.getKey();
+            String newName = entry.getValue();
+
+            if (userClassNames.remove(oldName)) {
+                userClassNames.add(newName);
+            }
+
+            ClassEntryModel classEntry = classEntries.remove(oldName);
+            if (classEntry != null) {
+                classEntry.refreshDisplayData();
+                classEntries.put(newName, classEntry);
+            }
+        }
+
+        if (xrefDatabase != null) {
+            xrefDatabase.clear();
+        }
+
+        dirty = true;
+    }
+
     @Override
     public String toString() {
         return projectName + " (" + getClassCount() + " classes)";

@@ -253,6 +253,13 @@ public class EditorPanel extends ThemedJPanel {
         }
     }
 
+    public void closeTabForClass(String className) {
+        EditorTab tab = openTabs.get(className);
+        if (tab != null) {
+            closeTab(tab);
+        }
+    }
+
     /**
      * Close all tabs (except Welcome tab).
      */
@@ -341,13 +348,24 @@ public class EditorPanel extends ThemedJPanel {
     }
 
     /**
-     * Set view mode for all tabs.
+     * Set view mode for current tab.
      */
     public void setViewMode(ViewMode mode) {
         EditorTab current = getCurrentTab();
         if (current != null) {
             current.setViewMode(mode);
         }
+    }
+
+    /**
+     * Get the current view mode.
+     */
+    public ViewMode getViewMode() {
+        EditorTab current = getCurrentTab();
+        if (current != null) {
+            return current.getViewMode();
+        }
+        return ViewMode.SOURCE;
     }
 
     /**

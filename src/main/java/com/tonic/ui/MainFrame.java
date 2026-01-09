@@ -34,6 +34,7 @@ import com.tonic.ui.vm.VMExecutionService;
 import com.tonic.ui.vm.debugger.DebuggerPanel;
 import com.tonic.ui.vm.dialog.ExecuteMethodDialog;
 
+import com.tonic.ui.dialog.DeobfuscateNamesDialog;
 import com.tonic.ui.dialog.FindInFilesDialog;
 import com.tonic.ui.dialog.PreferencesDialog;
 import com.tonic.ui.dialog.filechooser.ExtensionFileFilter;
@@ -871,6 +872,35 @@ public class MainFrame extends JFrame {
         editorPanel.refreshCurrentTab();
     }
 
+    public void refreshAfterRename(String oldClassName, String newClassName) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) return;
+
+        editorPanel.closeTabForClass(oldClassName);
+        navigatorPanel.refresh();
+        navigatorPanel.setLoading(false);
+        editorPanel.refreshWelcomeTab();
+
+        statusBar.setMessage("Renamed: " + oldClassName.replace('/', '.') +
+                " → " + newClassName.replace('/', '.'));
+    }
+
+    public void refreshAfterBulkRename(java.util.Set<String> oldClassNames, int totalRenamed) {
+        for (String oldName : oldClassNames) {
+            editorPanel.closeTabForClass(oldName);
+        }
+
+        navigatorPanel.refresh();
+        navigatorPanel.setLoading(false);
+        editorPanel.refreshWelcomeTab();
+
+        statusBar.setMessage("Deobfuscation complete: " + totalRenamed + " items renamed");
+    }
+
+    public void setNavigatorLoading(boolean loading) {
+        navigatorPanel.setLoading(loading);
+    }
+
     // === Font Size Operations ===
 
     public void increaseFontSize() {
@@ -1388,6 +1418,17 @@ public class MainFrame extends JFrame {
         deobfuscationDialog.toFront();
         consolePanel.log("String Deobfuscation panel opened");
         statusBar.setMessage("String Deobfuscation");
+    }
+
+    public void showDeobfuscateNamesDialog() {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded. Load a project first.");
+            return;
+        }
+
+        DeobfuscateNamesDialog dialog = new DeobfuscateNamesDialog(this);
+        dialog.setVisible(true);
     }
 
     public void applyTransform(String transformName) {

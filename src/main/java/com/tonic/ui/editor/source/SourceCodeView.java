@@ -76,6 +76,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private boolean loaded = false;
     private boolean omitAnnotations = false;
     private final List<GutterIconInfo> commentIcons = new ArrayList<>();
+    private Object currentLineHighlight;
 
     public SourceCodeView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -475,33 +476,130 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     }
 
     /**
-     * Scroll to a method definition in the source view.
+     * Scroll to a method definition in the source view and highlight the line.
+     * Looks for actual method declarations, not call sites.
      */
     private void scrollToMethodDefinition(String methodName) {
         String text = textArea.getText();
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
-            "\\b" + java.util.regex.Pattern.quote(methodName) + "\\s*\\("
+        String[] lines = text.split("\n");
+
+        String quotedName = java.util.regex.Pattern.quote(methodName);
+        java.util.regex.Pattern declarationPattern = java.util.regex.Pattern.compile(
+            "^\\s*(public|private|protected|static|final|abstract|synchronized|native|strictfp|\\s)+.*\\s+" +
+            quotedName + "\\s*\\("
         );
-        java.util.regex.Matcher matcher = pattern.matcher(text);
-        if (matcher.find()) {
-            textArea.setCaretPosition(matcher.start());
-            textArea.requestFocusInWindow();
+        java.util.regex.Pattern simplePattern = java.util.regex.Pattern.compile(
+            "^\\s+\\w+.*\\s+" + quotedName + "\\s*\\("
+        );
+
+        int charOffset = 0;
+        for (int lineNum = 0; lineNum < lines.length; lineNum++) {
+            String line = lines[lineNum];
+            boolean isDeclaration = declarationPattern.matcher(line).find() ||
+                                   (simplePattern.matcher(line).find() &&
+                                    !line.contains("." + methodName) &&
+                                    !line.contains("this." + methodName) &&
+                                    !line.trim().startsWith("return") &&
+                                    !line.trim().startsWith("if") &&
+                                    !line.trim().startsWith("while"));
+
+            if (isDeclaration) {
+                highlightAndScrollToLine(lineNum);
+                return;
+            }
+            charOffset += line.length() + 1;
         }
     }
 
     /**
-     * Scroll to a field definition in the source view.
+     * Scroll to a field definition in the source view and highlight the line.
+     * Looks for field declarations with type annotations.
      */
     private void scrollToFieldDefinition(String fieldName) {
         String text = textArea.getText();
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
-            "\\b" + java.util.regex.Pattern.quote(fieldName) + "\\s*[;=]"
+        String[] lines = text.split("\n");
+
+        String quotedName = java.util.regex.Pattern.quote(fieldName);
+        java.util.regex.Pattern declarationPattern = java.util.regex.Pattern.compile(
+            "^\\s*(public|private|protected|static|final|volatile|transient|\\s)+.*\\s+" +
+            quotedName + "\\s*[;=]"
         );
-        java.util.regex.Matcher matcher = pattern.matcher(text);
-        if (matcher.find()) {
-            textArea.setCaretPosition(matcher.start());
-            textArea.requestFocusInWindow();
+        java.util.regex.Pattern simplePattern = java.util.regex.Pattern.compile(
+            "^\\s+\\w+.*\\s+" + quotedName + "\\s*[;=]"
+        );
+
+        for (int lineNum = 0; lineNum < lines.length; lineNum++) {
+            String line = lines[lineNum];
+            boolean isDeclaration = declarationPattern.matcher(line).find() ||
+                                   simplePattern.matcher(line).find();
+
+            if (isDeclaration && !line.contains("." + fieldName)) {
+                highlightAndScrollToLine(lineNum);
+                return;
+            }
         }
+    }
+
+    /**
+     * Highlight a specific line and scroll to make it visible.
+     * Places caret on line below so the highlighted line is clearly visible.
+     */
+    private void highlightAndScrollToLine(int lineNumber) {
+        clearHighlight();
+        try {
+            currentLineHighlight = textArea.addLineHighlight(lineNumber, JStudioTheme.getLineHighlight());
+
+            int caretLine = Math.max(lineNumber - 1, 0);
+            int caretOffset = textArea.getLineStartOffset(caretLine);
+            textArea.setCaretPosition(caretOffset);
+            textArea.getCaret().setVisible(true);
+
+            int highlightOffset = textArea.getLineStartOffset(lineNumber);
+            java.awt.Rectangle rect = textArea.modelToView2D(highlightOffset).getBounds();
+            if (rect != null) {
+                rect.height = textArea.getHeight() / 3;
+                textArea.scrollRectToVisible(rect);
+            }
+        } catch (BadLocationException e) {
+            // ignore
+        }
+    }
+
+    /**
+     * Highlight a specific line (0-based line number).
+     */
+    public void highlightLine(int lineNumber) {
+        highlightAndScrollToLine(lineNumber);
+    }
+
+    /**
+     * Clear the current line highlight.
+     */
+    public void clearHighlight() {
+        if (currentLineHighlight != null) {
+            textArea.removeLineHighlight(currentLineHighlight);
+            currentLineHighlight = null;
+        }
+    }
+
+    /**
+     * Scroll to and highlight a method declaration line.
+     */
+    public void scrollToMethodDeclaration(String methodName, String methodDesc) {
+        if (!loaded) {
+            refresh();
+        }
+        scrollToMethodDefinition(methodName);
+    }
+
+    /**
+     * Scroll to and highlight a field declaration line.
+     */
+    public void scrollToFieldDeclaration(String fieldName) {
+        if (!loaded) {
+            refresh();
+        }
+        scrollToFieldDefinition(fieldName);
     }
 
     /**

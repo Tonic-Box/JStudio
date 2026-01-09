@@ -281,6 +281,9 @@ public class MenuBarBuilder {
         menu.add(createMenuItem("String Deobfuscation...", KeyEvent.VK_D, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
                 null, e -> mainFrame.showDeobfuscationPanel()));
 
+        menu.add(createMenuItem("Deobfuscate Names...", 0, 0,
+                null, e -> mainFrame.showDeobfuscateNamesDialog()));
+
         menu.addSeparator();
 
         JMenu optimizeMenu = new JMenu("Optimize");

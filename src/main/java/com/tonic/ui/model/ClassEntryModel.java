@@ -73,6 +73,11 @@ public class ClassEntryModel {
         }
     }
 
+    public void refreshDisplayData() {
+        buildDisplayData();
+        invalidateDecompilationCache();
+    }
+
     private void buildMemberModels() {
         // Build method models
         for (MethodEntry method : classFile.getMethods()) {
