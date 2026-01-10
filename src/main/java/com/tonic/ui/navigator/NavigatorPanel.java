@@ -445,11 +445,9 @@ public class NavigatorPanel extends ThemedJPanel {
 
         addMenuItem(menu, "View in Call Graph", () -> mainFrame.showCallGraphForMethod(method.getMethodEntry()));
 
-        addMenuItem(menu, "Find Cross-References", () -> mainFrame.showXrefsForMethod(
-            method.getOwner().getClassName(),
-            method.getName(),
-            method.getDescriptor()
-        ));
+        addMenuItem(menu, "Find Cross-References", () -> EventBus.getInstance().post(
+            FindUsagesEvent.forMethod(this, method.getOwner().getClassName(),
+                method.getName(), method.getDescriptor())));
 
         addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
             FindUsagesEvent.forMethod(this, method.getOwner().getClassName(),
@@ -494,11 +492,9 @@ public class NavigatorPanel extends ThemedJPanel {
 
         addMenuItem(menu, "View in Class Browser", () -> mainFrame.showClassBrowser(field.getOwner()));
 
-        addMenuItem(menu, "Find Cross-References", () -> mainFrame.showXrefsForField(
-            field.getOwner().getClassName(),
-            field.getName(),
-            field.getDescriptor()
-        ));
+        addMenuItem(menu, "Find Cross-References", () -> EventBus.getInstance().post(
+            FindUsagesEvent.forField(this, field.getOwner().getClassName(),
+                field.getName(), field.getDescriptor())));
 
         addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
             FindUsagesEvent.forField(this, field.getOwner().getClassName(),
@@ -529,7 +525,8 @@ public class NavigatorPanel extends ThemedJPanel {
 
         addMenuItem(menu, "View Dependencies", () -> mainFrame.showDependenciesForClass(classEntry.getClassName()));
 
-        addMenuItem(menu, "Find Cross-References", () -> mainFrame.showXrefsForClass(classEntry.getClassName()));
+        addMenuItem(menu, "Find Cross-References", () -> EventBus.getInstance().post(
+            FindUsagesEvent.forClass(this, classEntry.getClassName())));
 
         addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
             FindUsagesEvent.forClass(this, classEntry.getClassName())));
