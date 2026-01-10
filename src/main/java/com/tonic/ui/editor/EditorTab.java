@@ -296,6 +296,23 @@ public class EditorTab extends JPanel {
     }
 
     /**
+     * Highlight a specific line, scroll to it, and place caret one line above.
+     */
+    public void highlightLine(int line) {
+        switch (currentMode) {
+            case SOURCE:
+                sourceView.highlightLine(line - 1);
+                break;
+            case BYTECODE:
+                bytecodeView.highlightLine(line);
+                break;
+            default:
+                goToLine(line);
+                break;
+        }
+    }
+
+    /**
      * Show find dialog.
      */
     public void showFindDialog() {

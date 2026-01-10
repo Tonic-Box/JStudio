@@ -5,12 +5,13 @@ import com.tonic.analysis.xref.XrefBuilder;
 import com.tonic.analysis.xref.XrefDatabase;
 import com.tonic.analysis.xref.XrefType;
 import com.tonic.ui.core.component.ThemedJPanel;
+import com.tonic.ui.editor.EditorPanel;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.event.events.FindUsagesEvent;
 import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
@@ -35,56 +36,20 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
     @Setter
     private ProjectModel project;
 
+    @Setter
+    private EditorPanel editorPanel;
+
     private final JTree resultsTree;
     private final DefaultMutableTreeNode rootNode;
     private final DefaultTreeModel treeModel;
-    private final JLabel targetLabel;
     private final JLabel statusLabel;
-    private final JButton closeButton;
-    private final JPanel headerPanel;
     private final JScrollPane scrollPane;
 
     @Getter
-    @Setter
-    private Runnable onClose;
-
-    private FindUsagesEvent currentEvent;
+    private String tabTitle = "Find Usages";
 
     public FindUsagesResultsPanel() {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
-
-        headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(JStudioTheme.getBgSecondary());
-        headerPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, JStudioTheme.getBorder()));
-
-        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        titlePanel.setOpaque(false);
-
-        targetLabel = new JLabel("Find Usages");
-        targetLabel.setForeground(JStudioTheme.getAccent());
-        targetLabel.setFont(JStudioTheme.getUIFont(12).deriveFont(Font.BOLD));
-        titlePanel.add(targetLabel);
-
-        headerPanel.add(titlePanel, BorderLayout.WEST);
-
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 4));
-        buttonsPanel.setOpaque(false);
-
-        closeButton = new JButton(Icons.getIcon("close", 12));
-        closeButton.setToolTipText("Close");
-        closeButton.setBorderPainted(false);
-        closeButton.setContentAreaFilled(false);
-        closeButton.setFocusable(false);
-        closeButton.addActionListener(e -> {
-            setVisible(false);
-            if (onClose != null) {
-                onClose.run();
-            }
-        });
-        buttonsPanel.add(closeButton);
-
-        headerPanel.add(buttonsPanel, BorderLayout.EAST);
-        add(headerPanel, BorderLayout.NORTH);
 
         rootNode = new DefaultMutableTreeNode("Usages");
         treeModel = new DefaultTreeModel(rootNode);
@@ -125,8 +90,7 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
     }
 
     public void showUsages(FindUsagesEvent event) {
-        this.currentEvent = event;
-        targetLabel.setText("Usages of " + event.getTargetDisplay());
+        this.tabTitle = event.getTargetDisplay();
 
         if (project == null || project.getClassPool() == null) {
             statusLabel.setText("No project loaded.");
@@ -256,11 +220,28 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
         if (userObject instanceof UsageNode) {
             UsageNode usageNode = (UsageNode) userObject;
             if (usageNode.xref != null) {
-                String className = usageNode.xref.getSourceClass();
+                Xref xref = usageNode.xref;
+                String className = xref.getSourceClass();
                 ClassEntryModel classEntry = project.findClassByName(className);
                 if (classEntry != null) {
-                    EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry,
-                            usageNode.xref.getSourceMethod(), usageNode.xref.getLineNumber()));
+                    EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
+
+                    if (editorPanel != null) {
+                        int lineNumber = xref.getLineNumber();
+                        String methodName = xref.getSourceMethod();
+                        String methodDesc = xref.getSourceMethodDesc();
+
+                        SwingUtilities.invokeLater(() -> {
+                            if (lineNumber > 0) {
+                                editorPanel.goToLineAndHighlight(lineNumber);
+                            } else if (methodName != null && !methodName.isEmpty()) {
+                                MethodEntryModel method = classEntry.getMethod(methodName, methodDesc);
+                                if (method != null) {
+                                    editorPanel.scrollToMethod(method);
+                                }
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -272,9 +253,6 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
     }
 
     private void applyThemeToComponents() {
-        headerPanel.setBackground(JStudioTheme.getBgSecondary());
-        headerPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, JStudioTheme.getBorder()));
-        targetLabel.setForeground(JStudioTheme.getAccent());
         resultsTree.setBackground(JStudioTheme.getBgTertiary());
         resultsTree.setForeground(JStudioTheme.getTextPrimary());
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());

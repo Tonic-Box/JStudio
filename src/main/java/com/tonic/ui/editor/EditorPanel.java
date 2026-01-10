@@ -558,6 +558,16 @@ public class EditorPanel extends ThemedJPanel {
     }
 
     /**
+     * Go to a specific line and highlight it.
+     */
+    public void goToLineAndHighlight(int line) {
+        EditorTab tab = getCurrentTab();
+        if (tab != null && line > 0) {
+            tab.highlightLine(line);
+        }
+    }
+
+    /**
      * Set the font size for all open tabs.
      */
     public void setFontSize(int size) {

@@ -383,6 +383,31 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    /**
+     * Highlight a specific line and scroll to it.
+     * Places caret one line above for visibility.
+     */
+    public void highlightLine(int line) {
+        clearHighlights();
+        addHighlight(line - 1);
+        try {
+            int caretLine = Math.max(line - 2, 0);
+            Element root = textPane.getDocument().getDefaultRootElement();
+            int caretOffset = root.getElement(caretLine).getStartOffset();
+            textPane.setCaretPosition(caretOffset);
+
+            int highlightOffset = root.getElement(line - 1).getStartOffset();
+            java.awt.Rectangle rect = textPane.modelToView2D(highlightOffset).getBounds();
+            if (rect != null) {
+                rect.height = textPane.getHeight() / 3;
+                textPane.scrollRectToVisible(rect);
+            }
+            textPane.requestFocus();
+        } catch (Exception e) {
+            // Line out of range
+        }
+    }
+
     private String lastSearch;
 
     /**

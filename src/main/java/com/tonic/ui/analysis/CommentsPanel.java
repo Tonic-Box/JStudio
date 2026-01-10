@@ -19,9 +19,9 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
@@ -86,7 +86,6 @@ public class CommentsPanel extends ThemedJPanel {
         JScrollPane listScroll = new JScrollPane(commentList);
         listScroll.setBorder(BorderFactory.createEmptyBorder());
         listScroll.getViewport().setBackground(JStudioTheme.getBgPrimary());
-        listScroll.setPreferredSize(new Dimension(0, 200));
 
         previewArea = new JTextArea();
         previewArea.setEditable(false);
@@ -102,11 +101,12 @@ public class CommentsPanel extends ThemedJPanel {
                 BorderFactory.createLineBorder(JStudioTheme.getBorder()),
                 "Preview"));
 
-        JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.add(listScroll, BorderLayout.CENTER);
-        centerPanel.add(previewScroll, BorderLayout.SOUTH);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listScroll, previewScroll);
+        splitPane.setResizeWeight(0.5);
+        splitPane.setBorder(null);
+        splitPane.setBackground(JStudioTheme.getBgPrimary());
 
-        add(centerPanel, BorderLayout.CENTER);
+        add(splitPane, BorderLayout.CENTER);
 
         statusLabel = new JLabel("No comments");
         statusLabel.setForeground(JStudioTheme.getTextSecondary());

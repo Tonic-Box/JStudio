@@ -25,10 +25,6 @@ public class AnalysisPanel extends ThemedJPanel {
     @Getter
     private final SimilarityPanel similarityPanel;
     @Getter
-    private final CommentsPanel commentsPanel;
-    @Getter
-    private final BookmarksPanel bookmarksPanel;
-    @Getter
     private final SimulationPanel simulationPanel;
 
     public AnalysisPanel(ProjectModel project) {
@@ -46,8 +42,6 @@ public class AnalysisPanel extends ThemedJPanel {
         stringsPanel = new StringsPanel(project);
         dataFlowPanel = new DataFlowPanel(project);
         similarityPanel = new SimilarityPanel(project);
-        commentsPanel = new CommentsPanel(project);
-        bookmarksPanel = new BookmarksPanel(project);
         simulationPanel = new SimulationPanel(project);
 
         // Add tabs
@@ -57,8 +51,6 @@ public class AnalysisPanel extends ThemedJPanel {
         tabbedPane.addTab("Similarity", similarityPanel);
         tabbedPane.addTab("Search", searchPanel);
         tabbedPane.addTab("Strings", stringsPanel);
-        tabbedPane.addTab("Bookmarks", bookmarksPanel);
-        tabbedPane.addTab("Comments", commentsPanel);
         tabbedPane.addTab("Simulation", simulationPanel);
 
         add(tabbedPane, BorderLayout.CENTER);
@@ -71,8 +63,6 @@ public class AnalysisPanel extends ThemedJPanel {
         stringsPanel.refresh();
         dataFlowPanel.refresh();
         similarityPanel.refresh();
-        commentsPanel.refresh();
-        bookmarksPanel.refresh();
         simulationPanel.refresh();
     }
 
@@ -82,7 +72,5 @@ public class AnalysisPanel extends ThemedJPanel {
     public void showStrings() { tabbedPane.setSelectedComponent(stringsPanel); }
     public void showDataFlow() { tabbedPane.setSelectedComponent(dataFlowPanel); }
     public void showSimilarity() { tabbedPane.setSelectedComponent(similarityPanel); }
-    public void showComments() { tabbedPane.setSelectedComponent(commentsPanel); }
-    public void showBookmarks() { tabbedPane.setSelectedComponent(bookmarksPanel); }
     public void showSimulation() { tabbedPane.setSelectedComponent(simulationPanel); }
 }

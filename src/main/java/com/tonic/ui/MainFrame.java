@@ -16,7 +16,8 @@ import com.tonic.ui.event.events.MethodSelectedEvent;
 import com.tonic.ui.event.events.ProjectLoadedEvent;
 import com.tonic.ui.event.events.ProjectUpdatedEvent;
 import com.tonic.ui.event.events.ResourceSelectedEvent;
-import com.tonic.ui.analysis.FindUsagesResultsPanel;
+import com.tonic.ui.bottom.BottomPanel;
+import com.tonic.ui.bottom.BottomToolbar;
 import com.tonic.ui.model.Bookmark;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.Comment;
@@ -118,8 +119,9 @@ public class MainFrame extends JFrame {
     private DeobfuscationPanel deobfuscationPanel;
     private com.tonic.ui.query.QueryDialog queryDialog;
 
-    // Find Usages results panel (bottom panel)
-    private FindUsagesResultsPanel findUsagesPanel;
+    // Bottom panel with tabbed results
+    private BottomPanel sidePanel;
+    private BottomToolbar bottomToolbar;
     private JSplitPane editorBottomSplit;
 
     // Split panes for layout
@@ -217,10 +219,29 @@ public class MainFrame extends JFrame {
         consolePanel = new ConsolePanel();
         statusBar = new StatusBar();
 
-        // Find Usages panel (hidden by default)
-        findUsagesPanel = new FindUsagesResultsPanel();
-        findUsagesPanel.setVisible(false);
-        findUsagesPanel.setOnClose(() -> editorBottomSplit.setDividerLocation(1.0));
+        // Bottom panel with tabbed results (Find Usages, Bookmarks, Comments)
+        sidePanel = new BottomPanel();
+        sidePanel.setEditorPanel(editorPanel);
+        sidePanel.setOnAllTabsClosed(() -> editorBottomSplit.setDividerLocation(editorBottomSplit.getHeight()));
+        sidePanel.setOnTabOpened(() -> {
+            int height = editorBottomSplit.getHeight();
+            if (editorBottomSplit.getDividerLocation() > height - 50) {
+                editorBottomSplit.setDividerLocation(height - 200);
+            }
+        });
+
+        // Bottom toolbar (always visible, outside split pane)
+        bottomToolbar = new BottomToolbar();
+        bottomToolbar.setOnBookmarksClicked(() -> {
+            ProjectModel project = ProjectService.getInstance().getCurrentProject();
+            sidePanel.setProject(project);
+            sidePanel.toggleBookmarksTab();
+        });
+        bottomToolbar.setOnCommentsClicked(() -> {
+            ProjectModel project = ProjectService.getInstance().getCurrentProject();
+            sidePanel.setProject(project);
+            sidePanel.toggleCommentsTab();
+        });
     }
 
     private void initializeLayout() {
@@ -249,18 +270,32 @@ public class MainFrame extends JFrame {
         rightVerticalSplit.setBorder(null);
         rightVerticalSplit.setContinuousLayout(true);
 
-        // Editor + Find Usages bottom panel vertical split
-        editorBottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                editorPanel, findUsagesPanel);
+        // Editor + side panel vertical split
+        editorBottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, editorPanel, sidePanel);
         editorBottomSplit.setResizeWeight(1.0);
         editorBottomSplit.setDividerSize(4);
         editorBottomSplit.setBorder(null);
         editorBottomSplit.setContinuousLayout(true);
-        editorBottomSplit.setDividerLocation(1.0);
+        // Collapse bottom panel initially (must be done after component is visible)
+        editorBottomSplit.addComponentListener(new java.awt.event.ComponentAdapter() {
+            private boolean initialized = false;
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                if (!initialized && editorBottomSplit.getHeight() > 0) {
+                    initialized = true;
+                    editorBottomSplit.setDividerLocation(editorBottomSplit.getHeight());
+                }
+            }
+        });
+
+        // Wrapper for split pane + always-visible toolbar
+        JPanel editorAreaWrapper = new JPanel(new BorderLayout());
+        editorAreaWrapper.add(editorBottomSplit, BorderLayout.CENTER);
+        editorAreaWrapper.add(bottomToolbar, BorderLayout.SOUTH);
 
         // Center + Right horizontal split
         leftRightSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                editorBottomSplit, rightVerticalSplit);
+                editorAreaWrapper, rightVerticalSplit);
         leftRightSplit.setResizeWeight(0.75);
         leftRightSplit.setDividerSize(4);
         leftRightSplit.setBorder(null);
@@ -286,6 +321,13 @@ public class MainFrame extends JFrame {
             ClassEntryModel classEntry = event.getClassEntry();
             if (classEntry != null) {
                 openClassInEditor(classEntry);
+                if (event.hasScrollTarget()) {
+                    SwingUtilities.invokeLater(() -> {
+                        if (event.getHighlightLine() > 0) {
+                            editorPanel.goToLineAndHighlight(event.getHighlightLine());
+                        }
+                    });
+                }
             }
         });
 
@@ -300,6 +342,8 @@ public class MainFrame extends JFrame {
         // Handle project loaded
         EventBus.getInstance().register(ProjectLoadedEvent.class, event -> {
             ProjectModel project = event.getProject();
+            editorPanel.closeAllTabs();
+            sidePanel.closeAllTabs();
             navigatorPanel.loadProject(project);
             editorPanel.setProjectModel(project);
             editorPanel.refreshWelcomeTab();
@@ -328,11 +372,8 @@ public class MainFrame extends JFrame {
         EventBus.getInstance().register(FindUsagesEvent.class, event -> {
             ProjectModel project = ProjectService.getInstance().getCurrentProject();
             if (project != null) {
-                findUsagesPanel.setProject(project);
-                findUsagesPanel.setVisible(true);
-                findUsagesPanel.showUsages(event);
-                int height = editorBottomSplit.getHeight();
-                editorBottomSplit.setDividerLocation(height - 200);
+                sidePanel.setProject(project);
+                sidePanel.openFindUsagesTab(event);
             }
         });
     }
@@ -622,6 +663,7 @@ public class MainFrame extends JFrame {
         ProjectDatabaseService.getInstance().close();
         navigatorPanel.clear();
         editorPanel.closeAllTabs();
+        sidePanel.closeAllTabs();
         navigationHistory.clear();
         historyIndex = -1;
 
@@ -1061,18 +1103,18 @@ public class MainFrame extends JFrame {
     }
 
     public void showBookmarksPanel() {
-        showAnalysisDialog();
-        if (analysisPanel != null) {
-            analysisPanel.showBookmarks();
-            analysisPanel.getBookmarksPanel().refresh();
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project != null) {
+            sidePanel.setProject(project);
+            sidePanel.toggleBookmarksTab();
         }
     }
 
     public void showCommentsPanel() {
-        showAnalysisDialog();
-        if (analysisPanel != null) {
-            analysisPanel.showComments();
-            analysisPanel.getCommentsPanel().refresh();
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project != null) {
+            sidePanel.setProject(project);
+            sidePanel.toggleCommentsTab();
         }
     }
 
