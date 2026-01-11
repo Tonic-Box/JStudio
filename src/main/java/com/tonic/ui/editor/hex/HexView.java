@@ -1,6 +1,7 @@
 package com.tonic.ui.editor.hex;
 
 import com.tonic.parser.ClassFile;
+import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
@@ -25,6 +26,8 @@ public class HexView extends JPanel implements ThemeChangeListener {
 
     private static final int BYTES_PER_LINE = 16;
     private boolean loaded = false;
+    private final LoadingOverlay loadingOverlay;
+    private SwingWorker<byte[], Void> currentWorker;
 
     // Style names
     private static final String STYLE_OFFSET = "offset";
@@ -39,7 +42,6 @@ public class HexView extends JPanel implements ThemeChangeListener {
         setLayout(new BorderLayout());
         setBackground(JStudioTheme.getBgTertiary());
 
-        // Create styled text pane
         textPane = new JTextPane();
         textPane.setEditable(false);
         textPane.setFont(JStudioTheme.getCodeFont(12));
@@ -47,16 +49,25 @@ public class HexView extends JPanel implements ThemeChangeListener {
         textPane.setForeground(JStudioTheme.getTextPrimary());
         textPane.setCaretColor(JStudioTheme.getTextPrimary());
 
-        // Setup styles
         setupStyles();
 
         scrollPane = new JScrollPane(textPane);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
-        add(scrollPane, BorderLayout.CENTER);
+        loadingOverlay = new LoadingOverlay();
 
-        // Header showing what the columns mean
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new OverlayLayout(contentPanel));
+        loadingOverlay.setAlignmentX(0.5f);
+        loadingOverlay.setAlignmentY(0.5f);
+        scrollPane.setAlignmentX(0.5f);
+        scrollPane.setAlignmentY(0.5f);
+        contentPanel.add(loadingOverlay);
+        contentPanel.add(scrollPane);
+
+        add(contentPanel, BorderLayout.CENTER);
+
         headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setBackground(JStudioTheme.getBgSecondary());
         headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
@@ -115,29 +126,60 @@ public class HexView extends JPanel implements ThemeChangeListener {
         StyleConstants.setForeground(highlightStyle, JStudioTheme.getWarning());
     }
 
-    /**
-     * Refresh/reload the hex view.
-     */
     public void refresh() {
         if (loaded) {
-            return; // Already loaded
+            return;
         }
 
-        textPane.setText("");
+        cancelCurrentWorker();
 
-        try {
-            // Serialize the class file to bytes
-            ClassFile cf = classEntry.getClassFile();
-            byte[] bytes = cf.write();
-            displayHexDump(bytes);
-            loaded = true;
-        } catch (Exception e) {
-            try {
-                StyledDocument doc = textPane.getStyledDocument();
-                doc.insertString(0, "Failed to read class file bytes: " + e.getMessage(), null);
-            } catch (BadLocationException ex) {
-                // Ignore
+        textPane.setText("");
+        loadingOverlay.showLoading("Loading hex dump...");
+
+        currentWorker = new SwingWorker<>() {
+            @Override
+            protected byte[] doInBackground() {
+                try {
+                    ClassFile cf = classEntry.getClassFile();
+                    return cf.write();
+                } catch (Exception e) {
+                    return null;
+                }
             }
+
+            @Override
+            protected void done() {
+                loadingOverlay.hideLoading();
+                if (isCancelled()) {
+                    return;
+                }
+                try {
+                    byte[] bytes = get();
+                    if (bytes != null) {
+                        displayHexDump(bytes);
+                        loaded = true;
+                    } else {
+                        StyledDocument doc = textPane.getStyledDocument();
+                        doc.insertString(0, "Failed to read class file bytes", null);
+                    }
+                } catch (Exception e) {
+                    try {
+                        StyledDocument doc = textPane.getStyledDocument();
+                        doc.insertString(0, "Failed to read class file bytes: " + e.getMessage(), null);
+                    } catch (BadLocationException ex) {
+                        // Ignore
+                    }
+                }
+            }
+        };
+
+        currentWorker.execute();
+    }
+
+    private void cancelCurrentWorker() {
+        if (currentWorker != null && !currentWorker.isDone()) {
+            currentWorker.cancel(true);
+            loadingOverlay.hideLoading();
         }
     }
 

@@ -61,18 +61,20 @@ public class ConstPoolTableModel extends AbstractTableModel {
     }
 
     public void loadFromClassEntry(ClassEntryModel classEntry) {
-        allEntries.clear();
-        filteredEntries.clear();
+        List<ConstPoolEntry> entries = buildEntries(classEntry);
+        setEntries(entries);
+    }
+
+    public static List<ConstPoolEntry> buildEntries(ClassEntryModel classEntry) {
+        List<ConstPoolEntry> entries = new ArrayList<>();
 
         if (classEntry == null || classEntry.getClassFile() == null) {
-            fireTableDataChanged();
-            return;
+            return entries;
         }
 
         ConstPool cp = classEntry.getClassFile().getConstPool();
         if (cp == null) {
-            fireTableDataChanged();
-            return;
+            return entries;
         }
 
         List<Item<?>> items = cp.getItems();
@@ -82,10 +84,15 @@ public class ConstPoolTableModel extends AbstractTableModel {
                 String typeName = getTypeName(item);
                 String displayValue = formatValue(item, cp);
                 String rawValue = getRawValue(item, cp);
-                allEntries.add(new ConstPoolEntry(i, typeName, displayValue, rawValue));
+                entries.add(new ConstPoolEntry(i, typeName, displayValue, rawValue));
             }
         }
 
+        return entries;
+    }
+
+    public void setEntries(List<ConstPoolEntry> entries) {
+        allEntries = new ArrayList<>(entries);
         applyFilters();
     }
 
@@ -122,7 +129,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
-    private String getTypeName(Item<?> item) {
+    private static String getTypeName(Item<?> item) {
         if (item instanceof Utf8Item) return "Utf8";
         if (item instanceof IntegerItem) return "Integer";
         if (item instanceof FloatItem) return "Float";
@@ -143,7 +150,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
         return "Unknown";
     }
 
-    private String formatValue(Item<?> item, ConstPool cp) {
+    private static String formatValue(Item<?> item, ConstPool cp) {
         try {
             if (item instanceof Utf8Item) {
                 String val = ((Utf8Item) item).getValue();
@@ -227,7 +234,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
         return "";
     }
 
-    private String getRawValue(Item<?> item, ConstPool cp) {
+    private static String getRawValue(Item<?> item, ConstPool cp) {
         try {
             if (item instanceof Utf8Item) {
                 return ((Utf8Item) item).getValue();
@@ -247,7 +254,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
         return formatValue(item, cp);
     }
 
-    private String formatMemberRef(int classIdx, int natIdx, ConstPool cp, boolean isField) {
+    private static String formatMemberRef(int classIdx, int natIdx, ConstPool cp, boolean isField) {
         try {
             String className = "";
             Item<?> classItem = cp.getItem(classIdx);
@@ -277,7 +284,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
         }
     }
 
-    private String formatNameAndType(int natIdx, ConstPool cp) {
+    private static String formatNameAndType(int natIdx, ConstPool cp) {
         try {
             Item<?> natItem = cp.getItem(natIdx);
             if (natItem instanceof NameAndTypeRefItem) {
@@ -291,7 +298,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
         return "#" + natIdx;
     }
 
-    private String getHandleKindName(int kind) {
+    private static String getHandleKindName(int kind) {
         switch (kind) {
             case 1: return "getField";
             case 2: return "getStatic";
@@ -306,7 +313,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
         }
     }
 
-    private String getUtf8(ConstPool cp, int index) {
+    private static String getUtf8(ConstPool cp, int index) {
         try {
             Item<?> item = cp.getItem(index);
             if (item instanceof Utf8Item) {
@@ -318,7 +325,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
         return "#" + index;
     }
 
-    private String escapeString(String s) {
+    private static String escapeString(String s) {
         if (s == null) return "";
         return s.replace("\\", "\\\\")
                 .replace("\n", "\\n")
@@ -327,7 +334,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
                 .replace("\0", "\\0");
     }
 
-    private String truncate(String s, int maxLen) {
+    private static String truncate(String s, int maxLen) {
         if (s == null) return "";
         if (s.length() <= maxLen) return s;
         return s.substring(0, maxLen - 3) + "...";

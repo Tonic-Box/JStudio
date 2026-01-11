@@ -8,6 +8,7 @@ import com.tonic.parser.attribute.Attribute;
 import com.tonic.parser.attribute.RuntimeVisibleAnnotationsAttribute;
 import com.tonic.parser.attribute.anotation.Annotation;
 import com.tonic.parser.constpool.Utf8Item;
+import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.ui.editor.SearchPanel;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
@@ -34,12 +35,14 @@ import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
 
 import javax.swing.BorderFactory;
+import javax.swing.JLayeredPane;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.OverlayLayout;
 import javax.swing.SwingWorker;
 import javax.swing.text.BadLocationException;
 import java.awt.BorderLayout;
@@ -80,6 +83,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private boolean omitAnnotations = false;
     private final List<GutterIconInfo> commentIcons = new ArrayList<>();
     private Object currentLineHighlight;
+    private final LoadingOverlay loadingOverlay;
+    private SwingWorker<String, Void> currentWorker;
 
     public SourceCodeView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -87,28 +92,30 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         setLayout(new BorderLayout());
         setBackground(JStudioTheme.getBgTertiary());
 
-        // Create syntax-highlighted text area
         textArea = new RSyntaxTextArea();
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
-        textArea.setCodeFoldingEnabled(true);
         textArea.setAntiAliasingEnabled(true);
         textArea.setEditable(false);
         textArea.setFont(JStudioTheme.getCodeFont(13));
 
-        // Enable bracket matching to highlight both brackets in a pair
-        textArea.setBracketMatchingEnabled(true);
-        textArea.setAnimateBracketMatching(true);
-        textArea.setPaintMatchedBracketPair(true);
-
-        // Scroll pane with line numbers
         scrollPane = new RTextScrollPane(textArea);
         scrollPane.setLineNumbersEnabled(true);
         scrollPane.setIconRowHeaderEnabled(true);
         scrollPane.setBorder(null);
 
-        add(scrollPane, BorderLayout.CENTER);
+        loadingOverlay = new LoadingOverlay();
 
-        // Inline search panel (initially hidden)
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new OverlayLayout(contentPanel));
+        loadingOverlay.setAlignmentX(0.5f);
+        loadingOverlay.setAlignmentY(0.5f);
+        scrollPane.setAlignmentX(0.5f);
+        scrollPane.setAlignmentY(0.5f);
+        contentPanel.add(loadingOverlay);
+        contentPanel.add(scrollPane);
+
+        add(contentPanel, BorderLayout.CENTER);
+
         searchPanel = new SearchPanel(textArea);
         add(searchPanel, BorderLayout.SOUTH);
 
@@ -766,20 +773,24 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
      * Refresh/reload the source view.
      */
     public void refresh() {
-        if (loaded && classEntry.getDecompilationCache() != null) {
-            // Use cached decompilation
-            String source = classEntry.getDecompilationCache();
-            textArea.setText(omitAnnotations ? filterAnnotations(source) : source);
-            textArea.setCaretPosition(0);
+        String cachedSource = classEntry.getDecompilationCache();
+        if (cachedSource != null) {
+            String textToSet = omitAnnotations ? filterAnnotations(cachedSource) : cachedSource;
+            applyTextToEditor(textToSet);
+            loaded = true;
             updateCommentGutterIcons();
             return;
         }
 
-        // Show loading message
-        textArea.setText("// Decompiling " + classEntry.getClassName() + "...\n");
+        if (loaded) {
+            return;
+        }
 
-        // Decompile in background
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
+        cancelCurrentWorker();
+        textArea.setText("");
+        loadingOverlay.showLoading("Decompiling " + classEntry.getSimpleName() + "...");
+
+        currentWorker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
                 try {
@@ -794,20 +805,49 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
             @Override
             protected void done() {
+                if (isCancelled()) {
+                    loadingOverlay.hideLoading();
+                    return;
+                }
                 try {
                     String source = get();
                     classEntry.setDecompilationCache(source);
-                    textArea.setText(omitAnnotations ? filterAnnotations(source) : source);
-                    textArea.setCaretPosition(0);
+                    String textToSet = omitAnnotations ? filterAnnotations(source) : source;
+                    applyTextToEditor(textToSet);
                     loaded = true;
+                    loadingOverlay.hideLoading();
                     updateCommentGutterIcons();
                 } catch (Exception e) {
+                    loadingOverlay.hideLoading();
                     textArea.setText("// Failed to decompile: " + e.getMessage());
                 }
             }
         };
 
-        worker.execute();
+        currentWorker.execute();
+    }
+
+    private void cancelCurrentWorker() {
+        if (currentWorker != null && !currentWorker.isDone()) {
+            currentWorker.cancel(true);
+            loadingOverlay.hideLoading();
+        }
+    }
+
+    private void applyTextToEditor(String text) {
+        textArea.setCodeFoldingEnabled(false);
+        textArea.setBracketMatchingEnabled(false);
+        textArea.setText(text);
+        textArea.setCaretPosition(0);
+
+        SwingUtilities.invokeLater(() -> {
+            textArea.setBracketMatchingEnabled(true);
+            textArea.setAnimateBracketMatching(true);
+            textArea.setPaintMatchedBracketPair(true);
+            if (text.length() < 100000) {
+                textArea.setCodeFoldingEnabled(true);
+            }
+        });
     }
 
     /**

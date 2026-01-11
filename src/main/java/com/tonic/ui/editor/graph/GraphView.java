@@ -7,6 +7,7 @@ import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.util.mxConstants;
 import com.mxgraph.view.mxGraph;
 import com.mxgraph.view.mxStylesheet;
+import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.theme.*;
 import lombok.Getter;
@@ -51,12 +52,18 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
     @Getter
     protected boolean loaded = false;
 
+    protected boolean initializing = true;
+
     protected String currentDOT = "";
+
+    protected LoadingOverlay loadingOverlay;
+    protected SwingWorker<String, Void> currentWorker;
 
     public GraphView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
         initComponents();
         ThemeManager.getInstance().addThemeChangeListener(this);
+        initializing = false;
     }
 
     private void initComponents() {
@@ -76,7 +83,18 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
         contentPanel.add(graphComponent, VISUAL_CARD);
         contentPanel.add(dotScrollPane, DOT_CARD);
 
-        add(contentPanel, BorderLayout.CENTER);
+        loadingOverlay = new LoadingOverlay();
+
+        JPanel wrapperPanel = new JPanel();
+        wrapperPanel.setLayout(new OverlayLayout(wrapperPanel));
+        loadingOverlay.setAlignmentX(0.5f);
+        loadingOverlay.setAlignmentY(0.5f);
+        contentPanel.setAlignmentX(0.5f);
+        contentPanel.setAlignmentY(0.5f);
+        wrapperPanel.add(loadingOverlay);
+        wrapperPanel.add(contentPanel);
+
+        add(wrapperPanel, BorderLayout.CENTER);
     }
 
     private void createToolbar() {
@@ -260,40 +278,77 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
     }
 
     public void refresh() {
-        setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR));
+        if (loaded) {
+            return;
+        }
+
+        cancelCurrentWorker();
+
+        loadingOverlay.showLoading("Building graph...");
         graphComponent.setEnabled(false);
 
-        javax.swing.Timer timer = new javax.swing.Timer(50, e -> {
-            try {
-                buildGraph();
-                currentDOT = generateDOT();
-                applyLayout((String) layoutCombo.getSelectedItem());
-                updateDOTView();
-                loaded = true;
-            } catch (Exception ex) {
-                showError("Failed to build graph: " + ex.getMessage());
-            } finally {
-                graphComponent.setEnabled(true);
-                setCursor(java.awt.Cursor.getDefaultCursor());
+        currentWorker = new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() {
+                prepareGraphData();
+                return generateDOT();
             }
-        });
-        timer.setRepeats(false);
-        timer.start();
+
+            @Override
+            protected void done() {
+                loadingOverlay.hideLoading();
+                graphComponent.setEnabled(true);
+
+                if (isCancelled()) {
+                    return;
+                }
+
+                try {
+                    currentDOT = get();
+                    renderGraph();
+                    applyLayout((String) layoutCombo.getSelectedItem());
+                    updateDOTView();
+                    loaded = true;
+                } catch (Exception ex) {
+                    showError("Failed to build graph: " + ex.getMessage());
+                }
+            }
+        };
+
+        currentWorker.execute();
     }
 
-    protected abstract void buildGraph();
+    private void cancelCurrentWorker() {
+        if (currentWorker != null && !currentWorker.isDone()) {
+            currentWorker.cancel(true);
+            loadingOverlay.hideLoading();
+        }
+    }
+
+    protected abstract void prepareGraphData();
+
+    protected abstract void renderGraph();
 
     protected abstract String generateDOT();
 
     protected void onMethodFilterChanged() {
+        if (initializing) {
+            return;
+        }
+        loaded = false;
         refresh();
     }
 
     protected void populateMethodFilter() {
-        methodFilterCombo.removeAllItems();
-        methodFilterCombo.addItem("All Methods");
-        for (var method : classEntry.getMethods()) {
-            methodFilterCombo.addItem(method.getName() + method.getMethodEntry().getDesc());
+        initializing = true;
+        try {
+            methodFilterCombo.removeAllItems();
+            methodFilterCombo.addItem("All Methods");
+            for (var method : classEntry.getMethods()) {
+                methodFilterCombo.addItem(method.getName() + method.getMethodEntry().getDesc());
+            }
+        } finally {
+            initializing = false;
         }
     }
 

@@ -1,6 +1,7 @@
 package com.tonic.ui.editor.bytecode;
 
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.theme.*;
@@ -9,6 +10,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+import javax.swing.OverlayLayout;
+import javax.swing.SwingWorker;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 import javax.swing.text.SimpleAttributeSet;
@@ -54,6 +57,8 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     private static final String METHOD_DIVIDER = "=========================================================================";
 
     private boolean loaded = false;
+    private final LoadingOverlay loadingOverlay;
+    private SwingWorker<String, Void> currentWorker;
 
     private final Set<Integer> highlightedLines = new HashSet<>();
     private int lastClickedLine = -1;
@@ -74,14 +79,24 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
 
         doc = textPane.getStyledDocument();
 
-        // Initialize styles
         initStyles();
 
         scrollPane = new JScrollPane(textPane);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
-        add(scrollPane, BorderLayout.CENTER);
+        loadingOverlay = new LoadingOverlay();
+
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new OverlayLayout(contentPanel));
+        loadingOverlay.setAlignmentX(0.5f);
+        loadingOverlay.setAlignmentY(0.5f);
+        scrollPane.setAlignmentX(0.5f);
+        scrollPane.setAlignmentY(0.5f);
+        contentPanel.add(loadingOverlay);
+        contentPanel.add(scrollPane);
+
+        add(contentPanel, BorderLayout.CENTER);
 
         setupMouseListener();
 
@@ -165,58 +180,158 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         return style;
     }
 
-    /**
-     * Refresh/reload the bytecode view.
-     */
     public void refresh() {
+        cancelCurrentWorker();
+
         try {
             doc.remove(0, doc.getLength());
+        } catch (BadLocationException e) {
+            // Ignore
+        }
 
-            // Class header
-            appendText("// Class: " + classEntry.getClassName() + "\n", commentStyle);
-            appendText("// Super: " + classEntry.getSuperClassName() + "\n", commentStyle);
-            if (!classEntry.getInterfaceNames().isEmpty()) {
-                appendText("// Implements: " + String.join(", ", classEntry.getInterfaceNames()) + "\n", commentStyle);
+        loadingOverlay.showLoading("Loading bytecode...");
+
+        currentWorker = new SwingWorker<>() {
+            @Override
+            protected String doInBackground() {
+                return generateBytecodeContent();
+            }
+
+            @Override
+            protected void done() {
+                loadingOverlay.hideLoading();
+                if (isCancelled()) {
+                    return;
+                }
+                try {
+                    String content = get();
+                    applyBytecodeContent(content);
+                    textPane.setCaretPosition(0);
+                    loaded = true;
+                } catch (Exception e) {
+                    try {
+                        doc.insertString(0, "// Error displaying bytecode: " + e.getMessage(), commentStyle);
+                    } catch (BadLocationException ex) {
+                        // Ignore
+                    }
+                }
+            }
+        };
+
+        currentWorker.execute();
+    }
+
+    private void cancelCurrentWorker() {
+        if (currentWorker != null && !currentWorker.isDone()) {
+            currentWorker.cancel(true);
+            loadingOverlay.hideLoading();
+        }
+    }
+
+    private String generateBytecodeContent() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("// Class: ").append(classEntry.getClassName()).append("\n");
+        sb.append("// Super: ").append(classEntry.getSuperClassName()).append("\n");
+        if (!classEntry.getInterfaceNames().isEmpty()) {
+            sb.append("// Implements: ").append(String.join(", ", classEntry.getInterfaceNames())).append("\n");
+        }
+        sb.append("\n");
+
+        int methodIndex = 0;
+        int totalMethods = classEntry.getMethods().size();
+        for (MethodEntryModel methodModel : classEntry.getMethods()) {
+            methodIndex++;
+            MethodEntry method = methodModel.getMethodEntry();
+
+            sb.append("\n// ").append(METHOD_DIVIDER).append("\n");
+            sb.append("// Method ").append(methodIndex).append(" of ").append(totalMethods).append("\n");
+            sb.append("// ").append(METHOD_DIVIDER).append("\n\n");
+
+            sb.append(formatAccessFlags(method.getAccess()));
+            sb.append(" ").append(method.getName()).append(method.getDesc()).append("\n");
+
+            if (method.getCodeAttribute() != null) {
+                BytecodeFormatter formatter = new BytecodeFormatter(method);
+                sb.append(formatter.format());
+            } else {
+                sb.append("  // No code (abstract or native)\n");
+            }
+
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    private void applyBytecodeContent(String content) {
+        try {
+            doc.remove(0, doc.getLength());
+        } catch (BadLocationException e) {
+            // Ignore
+        }
+
+        String[] lines = content.split("\n");
+        for (String line : lines) {
+            applyFormattedLine(line);
+        }
+    }
+
+    private void applyFormattedLine(String line) {
+        if (line.isEmpty()) {
+            appendText("\n", defaultStyle);
+            return;
+        }
+
+        if (line.startsWith("// " + METHOD_DIVIDER) || line.startsWith("// Method ")) {
+            appendText(line + "\n", dividerStyle);
+            return;
+        }
+
+        if (line.startsWith("// Class:") || line.startsWith("// Super:") ||
+            line.startsWith("// Implements:") || line.startsWith("  // No code")) {
+            appendText(line + "\n", commentStyle);
+            return;
+        }
+
+        if (line.startsWith("//") && (line.contains("public") || line.contains("private") ||
+            line.contains("protected") || line.contains("static"))) {
+            int spaceIdx = line.indexOf(' ', 2);
+            if (spaceIdx > 0) {
+                String flagsPart = line.substring(0, line.lastIndexOf(' ') + 1);
+                String namePart = line.substring(line.lastIndexOf(' ') + 1);
+                appendText(flagsPart, commentStyle);
+                appendText(namePart + "\n", headerStyle);
+                return;
+            }
+        }
+
+        String trimmed = line.trim();
+        if (trimmed.startsWith("//")) {
+            appendText(line + "\n", commentStyle);
+            return;
+        }
+
+        int colonIndex = trimmed.indexOf(':');
+        if (colonIndex > 0 && Character.isDigit(trimmed.charAt(0))) {
+            String offset = trimmed.substring(0, colonIndex);
+            appendText("  " + offset, offsetStyle);
+            appendText(": ", defaultStyle);
+
+            String rest = trimmed.substring(colonIndex + 1).trim();
+            String[] parts = rest.split("\\s+", 2);
+            String opcode = parts[0];
+            String operands = parts.length > 1 ? parts[1] : "";
+
+            SimpleAttributeSet opcodeStyle = getOpcodeStyle(opcode);
+            appendText(opcode, opcodeStyle);
+
+            if (!operands.isEmpty()) {
+                appendText(" " + operands, defaultStyle);
             }
             appendText("\n", defaultStyle);
-
-            // Methods
-            int methodIndex = 0;
-            int totalMethods = classEntry.getMethods().size();
-            for (MethodEntryModel methodModel : classEntry.getMethods()) {
-                methodIndex++;
-                MethodEntry method = methodModel.getMethodEntry();
-
-                // Method divider
-                appendText("\n// " + METHOD_DIVIDER + "\n", dividerStyle);
-                appendText("// Method " + methodIndex + " of " + totalMethods + "\n", dividerStyle);
-                appendText("// " + METHOD_DIVIDER + "\n\n", dividerStyle);
-
-                // Method header
-                appendText(formatAccessFlags(method.getAccess()), commentStyle);
-                appendText(" " + method.getName() + method.getDesc() + "\n", headerStyle);
-
-                // Method code
-                if (method.getCodeAttribute() != null) {
-                    BytecodeFormatter formatter = new BytecodeFormatter(method);
-                    String bytecode = formatter.format();
-                    formatBytecode(bytecode);
-                } else {
-                    appendText("  // No code (abstract or native)\n", commentStyle);
-                }
-
-                appendText("\n", defaultStyle);
-            }
-
-            textPane.setCaretPosition(0);
-            loaded = true;
-
-        } catch (Exception e) {
-            try {
-                doc.insertString(0, "// Error displaying bytecode: " + e.getMessage(), commentStyle);
-            } catch (BadLocationException ex) {
-                // Ignore
-            }
+        } else {
+            appendText(line + "\n", defaultStyle);
         }
     }
 
@@ -232,55 +347,6 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         if ((flags & 0x0100) != 0) sb.append(" native");
         if ((flags & 0x0400) != 0) sb.append(" abstract");
         return sb.toString();
-    }
-
-    private void formatBytecode(String bytecode) {
-        String[] lines = bytecode.split("\n");
-        for (String line : lines) {
-            formatBytcodeLine(line);
-        }
-    }
-
-    private void formatBytcodeLine(String line) {
-        if (line.trim().isEmpty()) {
-            appendText("\n", defaultStyle);
-            return;
-        }
-
-        // Check for comment lines
-        if (line.trim().startsWith("//")) {
-            appendText(line + "\n", commentStyle);
-            return;
-        }
-
-        // Try to parse instruction line: "  offset: opcode operands"
-        String trimmed = line.trim();
-        int colonIndex = trimmed.indexOf(':');
-
-        if (colonIndex > 0) {
-            // Offset
-            String offset = trimmed.substring(0, colonIndex);
-            appendText("  " + offset, offsetStyle);
-            appendText(": ", defaultStyle);
-
-            // Rest of line (opcode + operands)
-            String rest = trimmed.substring(colonIndex + 1).trim();
-            String[] parts = rest.split("\\s+", 2);
-            String opcode = parts[0];
-            String operands = parts.length > 1 ? parts[1] : "";
-
-            // Color based on opcode category
-            SimpleAttributeSet opcodeStyle = getOpcodeStyle(opcode);
-            appendText(opcode, opcodeStyle);
-
-            if (!operands.isEmpty()) {
-                appendText(" " + operands, defaultStyle);
-            }
-            appendText("\n", defaultStyle);
-        } else {
-            // Non-instruction line
-            appendText(line + "\n", defaultStyle);
-        }
     }
 
     private SimpleAttributeSet getOpcodeStyle(String opcode) {

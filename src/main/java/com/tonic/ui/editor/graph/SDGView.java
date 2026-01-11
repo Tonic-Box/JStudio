@@ -29,10 +29,12 @@ public class SDGView extends GraphView {
         populateMethodFilter();
     }
 
+    private String prepareError = null;
+
     @Override
-    protected void buildGraph() {
-        clearGraph();
+    protected void prepareGraphData() {
         sdg = null;
+        prepareError = null;
         Map<MethodReference, IRMethod> irMethods = new LinkedHashMap<>();
 
         ClassFile classFile = classEntry.getClassFile();
@@ -65,7 +67,20 @@ public class SDGView extends GraphView {
             CallGraph callGraph = CallGraph.build(pool);
             sdg = SDGBuilder.build(callGraph, irMethods);
         } catch (Exception e) {
-            showError("Failed to build SDG: " + e.getMessage());
+            prepareError = "Failed to build SDG: " + e.getMessage();
+        }
+    }
+
+    @Override
+    protected void renderGraph() {
+        clearGraph();
+
+        if (prepareError != null) {
+            showError(prepareError);
+            return;
+        }
+
+        if (sdg == null) {
             return;
         }
 

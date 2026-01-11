@@ -1,5 +1,6 @@
 package com.tonic.ui.editor.constpool;
 
+import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
@@ -23,6 +24,8 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
     private final JTextField searchField;
     private final JLabel statusLabel;
     private final JScrollPane scrollPane;
+    private final LoadingOverlay loadingOverlay;
+    private SwingWorker<?, ?> currentWorker;
 
     private static final String[] TYPE_OPTIONS = {
             "All",
@@ -52,7 +55,19 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         scrollPane = new JScrollPane(table);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(JStudioTheme.getBgPrimary());
-        add(scrollPane, BorderLayout.CENTER);
+
+        loadingOverlay = new LoadingOverlay();
+
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new OverlayLayout(contentPanel));
+        loadingOverlay.setAlignmentX(0.5f);
+        loadingOverlay.setAlignmentY(0.5f);
+        scrollPane.setAlignmentX(0.5f);
+        scrollPane.setAlignmentY(0.5f);
+        contentPanel.add(loadingOverlay);
+        contentPanel.add(scrollPane);
+
+        add(contentPanel, BorderLayout.CENTER);
 
         statusLabel = new JLabel("No entries");
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
@@ -210,8 +225,40 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
     }
 
     public void refresh() {
-        tableModel.loadFromClassEntry(classEntry);
-        updateStatus();
+        cancelCurrentWorker();
+
+        loadingOverlay.showLoading("Loading constant pool...");
+
+        currentWorker = new SwingWorker<java.util.List<ConstPoolEntry>, Void>() {
+            @Override
+            protected java.util.List<ConstPoolEntry> doInBackground() {
+                return ConstPoolTableModel.buildEntries(classEntry);
+            }
+
+            @Override
+            protected void done() {
+                loadingOverlay.hideLoading();
+                if (isCancelled()) {
+                    return;
+                }
+                try {
+                    java.util.List<ConstPoolEntry> entries = get();
+                    tableModel.setEntries(entries);
+                    updateStatus();
+                } catch (Exception e) {
+                    // Ignore
+                }
+            }
+        };
+
+        currentWorker.execute();
+    }
+
+    private void cancelCurrentWorker() {
+        if (currentWorker != null && !currentWorker.isDone()) {
+            currentWorker.cancel(true);
+            loadingOverlay.hideLoading();
+        }
     }
 
     private void updateStatus() {

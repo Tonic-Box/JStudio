@@ -29,38 +29,44 @@ public class PDGView extends GraphView {
     }
 
     @Override
-    protected void buildGraph() {
-        clearGraph();
+    protected void prepareGraphData() {
         methodPDGs.clear();
 
         String selectedMethod = (String) methodFilterCombo.getSelectedItem();
         boolean showAll = "All Methods".equals(selectedMethod);
+
+        for (MethodEntryModel method : classEntry.getMethods()) {
+            MethodEntry entry = method.getMethodEntry();
+            if (entry.getCodeAttribute() == null) continue;
+
+            String methodKey = method.getName() + entry.getDesc();
+            if (!showAll && !methodKey.equals(selectedMethod)) continue;
+
+            try {
+                SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
+                IRMethod irMethod = ssa.lift(entry);
+                if (irMethod == null) continue;
+
+                PDG pdg = PDGBuilder.build(irMethod);
+                methodPDGs.put(method, pdg);
+            } catch (Exception e) {
+                // Skip methods that fail to analyze
+            }
+        }
+    }
+
+    @Override
+    protected void renderGraph() {
+        clearGraph();
 
         graph.getModel().beginUpdate();
         try {
             Object parent = graph.getDefaultParent();
             int methodOffset = 0;
 
-            for (MethodEntryModel method : classEntry.getMethods()) {
-                MethodEntry entry = method.getMethodEntry();
-                if (entry.getCodeAttribute() == null) continue;
-
-                String methodKey = method.getName() + entry.getDesc();
-                if (!showAll && !methodKey.equals(selectedMethod)) continue;
-
-                try {
-                    SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
-                    IRMethod irMethod = ssa.lift(entry);
-                    if (irMethod == null) continue;
-
-                    PDG pdg = PDGBuilder.build(irMethod);
-                    methodPDGs.put(method, pdg);
-
-                    renderPDG(parent, pdg, method.getName(), methodOffset);
-                    methodOffset += 400;
-                } catch (Exception e) {
-                    // Skip methods that fail to analyze
-                }
+            for (Map.Entry<MethodEntryModel, PDG> entry : methodPDGs.entrySet()) {
+                renderPDG(parent, entry.getValue(), entry.getKey().getName(), methodOffset);
+                methodOffset += 400;
             }
         } finally {
             graph.getModel().endUpdate();

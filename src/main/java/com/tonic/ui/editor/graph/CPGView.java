@@ -29,10 +29,12 @@ public class CPGView extends GraphView {
         }
     }
 
+    private String prepareError = null;
+
     @Override
-    protected void buildGraph() {
-        clearGraph();
+    protected void prepareGraphData() {
         cpg = null;
+        prepareError = null;
 
         ClassFile classFile = classEntry.getClassFile();
 
@@ -45,7 +47,20 @@ public class CPGView extends GraphView {
                 .withPDG()
                 .build();
         } catch (Exception e) {
-            showError("Failed to build CPG: " + e.getMessage());
+            prepareError = "Failed to build CPG: " + e.getMessage();
+        }
+    }
+
+    @Override
+    protected void renderGraph() {
+        clearGraph();
+
+        if (prepareError != null) {
+            showError(prepareError);
+            return;
+        }
+
+        if (cpg == null) {
             return;
         }
 

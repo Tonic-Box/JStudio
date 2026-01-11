@@ -63,17 +63,14 @@ public class EditorTab extends JPanel {
         setLayout(new BorderLayout());
         setBackground(JStudioTheme.getBgTertiary());
 
-        // Breadcrumb bar at top
         breadcrumbBar = new BreadcrumbBar();
         breadcrumbBar.setClass(classEntry);
         add(breadcrumbBar, BorderLayout.NORTH);
 
-        // Card layout to switch between views
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
         cardPanel.setBackground(JStudioTheme.getBgTertiary());
 
-        // Create views lazily
         sourceView = new SourceCodeView(classEntry);
         cardPanel.add(sourceView, ViewMode.SOURCE.name());
 
@@ -102,9 +99,6 @@ public class EditorTab extends JPanel {
         cardPanel.add(cpgView, ViewMode.CPG.name());
 
         add(cardPanel, BorderLayout.CENTER);
-
-        // Show source view by default
-        setViewMode(ViewMode.SOURCE);
     }
 
     /**
