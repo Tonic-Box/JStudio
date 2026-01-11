@@ -9,13 +9,9 @@
   <component name="ChangeListManager">
     <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- cleanup">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/AnalysisPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/AnalysisPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/CommentsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/CommentsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/FindUsagesResultsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/FindUsagesResultsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewModeComboBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewModeComboBox.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -238,14 +234,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00001" summary="init">
-      <option name="closed" value="true" />
-      <created>1765914392248</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1765914392248</updated>
     </task>
     <task id="LOCAL-00002" summary="Annotation mutability support for transformer scripting">
       <option name="closed" value="true" />
@@ -631,7 +619,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768026744603</updated>
     </task>
-    <option name="localTasksCounter" value="50" />
+    <task id="LOCAL-00050" summary="- cleanup">
+      <option name="closed" value="true" />
+      <created>1768041408372</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1768041408372</updated>
+    </task>
+    <option name="localTasksCounter" value="51" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

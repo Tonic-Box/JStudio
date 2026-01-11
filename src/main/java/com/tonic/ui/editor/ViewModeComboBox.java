@@ -28,6 +28,7 @@ public class ViewModeComboBox extends JComboBox<Object> {
         addItem(ViewMode.SOURCE);
         addItem(SEPARATOR);
         addItem(ViewMode.BYTECODE);
+        addItem(ViewMode.CONSTPOOL);
         addItem(ViewMode.IR);
         addItem(SEPARATOR);
         addItem(ViewMode.AST);

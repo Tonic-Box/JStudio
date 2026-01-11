@@ -2,6 +2,7 @@ package com.tonic.ui.editor;
 
 import com.tonic.ui.editor.ast.ASTView;
 import com.tonic.ui.editor.bytecode.BytecodeView;
+import com.tonic.ui.editor.constpool.ConstPoolView;
 import com.tonic.ui.editor.graph.CPGView;
 import com.tonic.ui.editor.graph.PDGView;
 import com.tonic.ui.editor.graph.SDGView;
@@ -46,6 +47,7 @@ public class EditorTab extends JPanel {
      */
     @Getter
     private final BytecodeView bytecodeView;
+    private final ConstPoolView constPoolView;
     private final IRView irView;
     private final ASTView astView;
     private final HexView hexView;
@@ -77,6 +79,9 @@ public class EditorTab extends JPanel {
 
         bytecodeView = new BytecodeView(classEntry);
         cardPanel.add(bytecodeView, ViewMode.BYTECODE.name());
+
+        constPoolView = new ConstPoolView(classEntry);
+        cardPanel.add(constPoolView, ViewMode.CONSTPOOL.name());
 
         irView = new IRView(classEntry);
         cardPanel.add(irView, ViewMode.IR.name());
@@ -123,6 +128,9 @@ public class EditorTab extends JPanel {
             case BYTECODE:
                 bytecodeView.refresh();
                 break;
+            case CONSTPOOL:
+                constPoolView.refresh();
+                break;
             case IR:
                 irView.refresh();
                 break;
@@ -161,6 +169,9 @@ public class EditorTab extends JPanel {
                 break;
             case BYTECODE:
                 bytecodeView.refresh();
+                break;
+            case CONSTPOOL:
+                constPoolView.refresh();
                 break;
             case IR:
                 irView.refresh();
@@ -216,6 +227,9 @@ public class EditorTab extends JPanel {
             case BYTECODE:
                 bytecodeView.copySelection();
                 break;
+            case CONSTPOOL:
+                constPoolView.copySelection();
+                break;
             case IR:
                 irView.copySelection();
                 break;
@@ -246,6 +260,8 @@ public class EditorTab extends JPanel {
                 return sourceView.getText();
             case BYTECODE:
                 return bytecodeView.getText();
+            case CONSTPOOL:
+                return constPoolView.getText();
             case IR:
                 return irView.getText();
             case AST:
@@ -273,6 +289,9 @@ public class EditorTab extends JPanel {
                 break;
             case BYTECODE:
                 bytecodeView.goToLine(line);
+                break;
+            case CONSTPOOL:
+                constPoolView.goToLine(line);
                 break;
             case IR:
                 irView.goToLine(line);
@@ -306,6 +325,9 @@ public class EditorTab extends JPanel {
             case BYTECODE:
                 bytecodeView.highlightLine(line);
                 break;
+            case CONSTPOOL:
+                constPoolView.highlightLine(line);
+                break;
             default:
                 goToLine(line);
                 break;
@@ -322,6 +344,9 @@ public class EditorTab extends JPanel {
                 break;
             case BYTECODE:
                 bytecodeView.showFindDialog();
+                break;
+            case CONSTPOOL:
+                constPoolView.showFindDialog();
                 break;
             case IR:
                 irView.showFindDialog();
@@ -366,6 +391,8 @@ public class EditorTab extends JPanel {
                 return sourceView.getSelectedText();
             case BYTECODE:
                 return bytecodeView.getSelectedText();
+            case CONSTPOOL:
+                return constPoolView.getSelectedText();
             case IR:
                 return irView.getSelectedText();
             case AST:
@@ -396,6 +423,9 @@ public class EditorTab extends JPanel {
                 break;
             case BYTECODE:
                 bytecodeView.scrollToMethod(methodName, methodDesc);
+                break;
+            case CONSTPOOL:
+                constPoolView.scrollToText(methodName);
                 break;
             case IR:
                 irView.scrollToText(methodName);
@@ -443,6 +473,7 @@ public class EditorTab extends JPanel {
     public void setFontSize(int size) {
         sourceView.setFontSize(size);
         bytecodeView.setFontSize(size);
+        constPoolView.setFontSize(size);
         irView.setFontSize(size);
         astView.setFontSize(size);
         hexView.setFontSize(size);
@@ -497,6 +528,9 @@ public class EditorTab extends JPanel {
                 return bytecodeView.scrollToMethod(methodName, methodDesc);
             case SOURCE:
                 sourceView.scrollToText(methodName);
+                return true;
+            case CONSTPOOL:
+                constPoolView.scrollToText(methodName);
                 return true;
             case IR:
                 irView.scrollToText(methodName);

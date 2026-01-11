@@ -9,6 +9,7 @@ import lombok.Getter;
 public enum ViewMode {
     SOURCE("Source", "Decompiled Java source code"),
     BYTECODE("Bytecode", "Raw JVM bytecode"),
+    CONSTPOOL("Const Pool", "Constant pool entries"),
     IR("SSA IR", "SSA Intermediate Representation"),
     AST("AST", "Abstract Syntax Tree representation"),
     PDG("PDG", "Program Dependence Graph"),
