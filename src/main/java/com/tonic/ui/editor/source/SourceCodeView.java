@@ -24,6 +24,7 @@ import com.tonic.ui.service.ProjectDatabaseService;
 import com.tonic.ui.theme.*;
 
 import lombok.Getter;
+import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
@@ -35,7 +36,6 @@ import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
 
 import javax.swing.BorderFactory;
-import javax.swing.JLayeredPane;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -44,6 +44,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.OverlayLayout;
 import javax.swing.SwingWorker;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -86,6 +88,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private final LoadingOverlay loadingOverlay;
     private SwingWorker<String, Void> currentWorker;
 
+    private final FloatingCompileToolbar compileToolbar;
+    private final SourceCompilerParser compilerParser;
+    private String originalSource;
+    @Getter
+    private boolean dirty = false;
+    private boolean editableMode = true;
+    private boolean ignoreDocumentChanges = false;
+
     public SourceCodeView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
 
@@ -95,8 +105,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         textArea = new RSyntaxTextArea();
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
         textArea.setAntiAliasingEnabled(true);
-        textArea.setEditable(false);
+        textArea.setEditable(true);
         textArea.setFont(JStudioTheme.getCodeFont(13));
+
+        compilerParser = new SourceCompilerParser();
+        compilerParser.setOriginalClass(classEntry.getClassFile());
+        textArea.addParser(compilerParser);
+
+        ErrorStrip errorStrip = new ErrorStrip(textArea);
 
         scrollPane = new RTextScrollPane(textArea);
         scrollPane.setLineNumbersEnabled(true);
@@ -105,19 +121,34 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
         loadingOverlay = new LoadingOverlay();
 
+        compileToolbar = new FloatingCompileToolbar(this::doRecompile, this::discardChanges);
+        compileToolbar.setLineNavigator(line -> {
+            if (line > 0) {
+                goToLine(line);
+                highlightLine(line - 1);
+            }
+        });
+
+        JPanel editorPanel = new JPanel(new BorderLayout());
+        editorPanel.add(scrollPane, BorderLayout.CENTER);
+        editorPanel.add(errorStrip, BorderLayout.LINE_END);
+
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new OverlayLayout(contentPanel));
         loadingOverlay.setAlignmentX(0.5f);
         loadingOverlay.setAlignmentY(0.5f);
-        scrollPane.setAlignmentX(0.5f);
-        scrollPane.setAlignmentY(0.5f);
+        editorPanel.setAlignmentX(0.5f);
+        editorPanel.setAlignmentY(0.5f);
         contentPanel.add(loadingOverlay);
-        contentPanel.add(scrollPane);
+        contentPanel.add(editorPanel);
 
+        add(compileToolbar, BorderLayout.NORTH);
         add(contentPanel, BorderLayout.CENTER);
 
         searchPanel = new SearchPanel(textArea);
         add(searchPanel, BorderLayout.SOUTH);
+
+        setupDocumentListener();
 
         // Apply theme (must be after scrollPane is created)
         applyTheme();
@@ -132,6 +163,121 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         ProjectDatabaseService.getInstance().addListener((db, dirty) -> SwingUtilities.invokeLater(this::updateCommentGutterIcons));
 
         ThemeManager.getInstance().addThemeChangeListener(this);
+    }
+
+    private void setupDocumentListener() {
+        textArea.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                onSourceChanged();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                onSourceChanged();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                onSourceChanged();
+            }
+        });
+    }
+
+    private void onSourceChanged() {
+        if (ignoreDocumentChanges || !editableMode) {
+            return;
+        }
+
+        String currentText = textArea.getText();
+        boolean nowDirty = originalSource != null && !currentText.equals(originalSource);
+
+        if (nowDirty != dirty) {
+            dirty = nowDirty;
+            if (dirty) {
+                compilerParser.setEnabled(true);
+                compileToolbar.showModified();
+            } else {
+                compilerParser.setEnabled(false);
+                compileToolbar.hideToolbar();
+            }
+        }
+
+        if (dirty) {
+            SwingUtilities.invokeLater(this::updateToolbarState);
+        }
+    }
+
+    private void updateToolbarState() {
+        int errorCount = compilerParser.getErrorCount();
+        int warningCount = compilerParser.getWarningCount();
+        compileToolbar.showWithErrors(errorCount, warningCount);
+    }
+
+    private void doRecompile() {
+        if (!dirty) {
+            return;
+        }
+
+        String source = textArea.getText();
+        compileToolbar.showCompiling();
+
+        SwingWorker<CompilationResult, Void> worker = new SwingWorker<>() {
+            @Override
+            protected CompilationResult doInBackground() {
+                return compilerParser.compile(source, projectModel != null ? projectModel.getClassPool() : null);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    CompilationResult result = get();
+                    if (result.isSuccess()) {
+                        classEntry.updateClassFile(result.getCompiledClass());
+                        compilerParser.setOriginalClass(result.getCompiledClass());
+                        originalSource = source;
+                        dirty = false;
+                        compileToolbar.showSuccess(result.getCompilationTimeMs());
+
+                        javax.swing.Timer hideTimer = new javax.swing.Timer(1500, evt -> {
+                            if (!SourceCodeView.this.dirty) {
+                                compileToolbar.hideToolbar();
+                            }
+                        });
+                        hideTimer.setRepeats(false);
+                        hideTimer.start();
+                    } else {
+                        compileToolbar.showWithErrors(result.getErrorCount(), result.getWarningCount(), result.getErrors());
+                    }
+                } catch (Exception e) {
+                    compileToolbar.showWithErrors(1, 0, java.util.Collections.singletonList(
+                            CompilationError.error(1, 1, 0, 1, "Compilation failed: " + e.getMessage())
+                    ));
+                }
+            }
+        };
+
+        worker.execute();
+    }
+
+    private void discardChanges() {
+        if (originalSource != null) {
+            ignoreDocumentChanges = true;
+            textArea.setText(originalSource);
+            textArea.setCaretPosition(0);
+            ignoreDocumentChanges = false;
+            dirty = false;
+            compileToolbar.hideToolbar();
+        }
+    }
+
+    public void setEditableMode(boolean editable) {
+        this.editableMode = editable;
+        textArea.setEditable(editable);
+        compilerParser.setEnabled(editable);
+        if (!editable) {
+            compileToolbar.hideToolbar();
+        }
     }
 
     @Override
@@ -835,10 +981,15 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     }
 
     private void applyTextToEditor(String text) {
+        ignoreDocumentChanges = true;
         textArea.setCodeFoldingEnabled(false);
         textArea.setBracketMatchingEnabled(false);
         textArea.setText(text);
         textArea.setCaretPosition(0);
+        originalSource = text;
+        dirty = false;
+        compileToolbar.hideToolbar();
+        ignoreDocumentChanges = false;
 
         SwingUtilities.invokeLater(() -> {
             textArea.setBracketMatchingEnabled(true);
@@ -857,8 +1008,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         this.omitAnnotations = omit;
         if (loaded && classEntry.getDecompilationCache() != null) {
             String source = classEntry.getDecompilationCache();
-            textArea.setText(omitAnnotations ? filterAnnotations(source) : source);
+            String textToSet = omitAnnotations ? filterAnnotations(source) : source;
+            ignoreDocumentChanges = true;
+            textArea.setText(textToSet);
             textArea.setCaretPosition(0);
+            originalSource = textToSet;
+            dirty = false;
+            compileToolbar.hideToolbar();
+            ignoreDocumentChanges = false;
         }
     }
 

@@ -142,6 +142,10 @@ public class Icons {
                 return new ImageIcon(size);
             case "actual_size":
                 return new ActualSizeIcon(size);
+            case "compile":
+                return new CompileIcon(size);
+            case "undo":
+                return new UndoIcon(size);
             default:
                 return new PlaceholderIcon(size);
         }
@@ -1054,6 +1058,40 @@ public class Icons {
             g2.drawRect(4, 4, 8, 8);
             g2.setFont(JStudioTheme.getCodeFont(7).deriveFont(java.awt.Font.BOLD));
             g2.drawString("1:1", 5, 10);
+        }
+    }
+
+    private static class CompileIcon extends BaseIcon {
+        CompileIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getSuccess());
+            g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.drawOval(2, 2, 12, 12);
+            Path2D arrow = new Path2D.Float();
+            arrow.moveTo(6, 5);
+            arrow.lineTo(6, 11);
+            arrow.lineTo(11, 8);
+            arrow.closePath();
+            g2.fill(arrow);
+        }
+    }
+
+    private static class UndoIcon extends BaseIcon {
+        UndoIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.drawArc(4, 4, 10, 10, 45, 270);
+            g2.drawLine(4, 4, 4, 8);
+            g2.drawLine(4, 4, 8, 4);
         }
     }
 }

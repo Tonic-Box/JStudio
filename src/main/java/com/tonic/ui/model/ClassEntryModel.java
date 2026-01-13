@@ -19,7 +19,7 @@ import java.util.Map;
 @Getter
 public class ClassEntryModel {
 
-    private final ClassFile classFile;
+    private ClassFile classFile;
     private final Map<String, MethodEntryModel> methods = new HashMap<>();
     private final Map<String, FieldEntryModel> fields = new HashMap<>();
 
@@ -183,6 +183,16 @@ public class ClassEntryModel {
     public void invalidateDecompilationCache() {
         this.decompilationCache = null;
         this.decompilationTimestamp = 0;
+    }
+
+    public void updateClassFile(ClassFile newClassFile) {
+        this.classFile = newClassFile;
+        this.methods.clear();
+        this.fields.clear();
+        buildMemberModels();
+        buildDisplayData();
+        invalidateDecompilationCache();
+        setDirty(true);
     }
 
     @Override

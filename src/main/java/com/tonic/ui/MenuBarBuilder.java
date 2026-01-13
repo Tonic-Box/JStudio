@@ -81,6 +81,9 @@ public class MenuBarBuilder {
         menu.add(createMenuItem("Export All Classes...", 0, 0,
                 null, e -> mainFrame.exportAllClasses()));
 
+        menu.add(createMenuItem("Export as JAR...", KeyEvent.VK_J, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
+                Icons.getIcon("package"), e -> mainFrame.exportAsJar()));
+
         menu.addSeparator();
 
         menu.add(createMenuItem("Close Project", KeyEvent.VK_W, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,

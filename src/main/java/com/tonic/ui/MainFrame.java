@@ -48,6 +48,7 @@ import com.tonic.ui.dialog.RenameClassDialog;
 import com.tonic.ui.dialog.RenameFieldDialog;
 import com.tonic.ui.dialog.RenameMethodDialog;
 import com.tonic.ui.model.FieldEntryModel;
+import com.tonic.ui.model.ResourceEntryModel;
 import com.tonic.ui.dialog.filechooser.ExtensionFileFilter;
 import com.tonic.ui.dialog.filechooser.FileChooserDialog;
 import com.tonic.ui.dialog.filechooser.FileChooserResult;
@@ -76,8 +77,12 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
 /**
  * Main application window for JStudio.
@@ -653,6 +658,75 @@ public class MainFrame extends JFrame {
             consolePanel.log("Exported " + count + " classes" + (errors > 0 ? " (" + errors + " errors)" : ""));
             showInfo("Exported " + count + " classes to " + outputDir.getName());
         }
+    }
+
+    public void exportAsJar() {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showInfo("No project is currently open.");
+            return;
+        }
+
+        List<ClassEntryModel> classes = project.getUserClasses();
+        Collection<ResourceEntryModel> resources = project.getAllResources();
+
+        if (classes.isEmpty() && resources.isEmpty()) {
+            showInfo("No classes or resources to export.");
+            return;
+        }
+
+        FileChooserResult result = FileChooserDialog.showSaveDialog(this,
+                "output.jar", ExtensionFileFilter.jarFiles());
+
+        if (!result.isApproved()) {
+            return;
+        }
+
+        File outputFile = result.getSelectedFile();
+
+        try (JarOutputStream jar = new JarOutputStream(new FileOutputStream(outputFile))) {
+            writeManifest(jar, project);
+
+            for (ClassEntryModel classEntry : classes) {
+                String entryPath = classEntry.getClassName() + ".class";
+                jar.putNextEntry(new JarEntry(entryPath));
+                jar.write(classEntry.getClassFile().write());
+                jar.closeEntry();
+            }
+
+            int resourceCount = 0;
+            for (ResourceEntryModel resource : resources) {
+                if (resource.getPath().equals("META-INF/MANIFEST.MF")) {
+                    continue;
+                }
+                jar.putNextEntry(new JarEntry(resource.getPath()));
+                jar.write(resource.getData());
+                jar.closeEntry();
+                resourceCount++;
+            }
+
+            consolePanel.log("Exported " + classes.size() + " classes and " +
+                    resourceCount + " resources to " + outputFile.getName());
+            showInfo("Successfully exported to " + outputFile.getName());
+
+        } catch (IOException e) {
+            consolePanel.logError("Failed to export JAR: " + e.getMessage());
+            showError("Export failed: " + e.getMessage());
+        }
+    }
+
+    private void writeManifest(JarOutputStream jar, ProjectModel project) throws IOException {
+        jar.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"));
+
+        ResourceEntryModel existingManifest = project.getResource("META-INF/MANIFEST.MF");
+        if (existingManifest != null) {
+            jar.write(existingManifest.getData());
+        } else {
+            String manifest = "Manifest-Version: 1.0\r\n\r\n";
+            jar.write(manifest.getBytes(StandardCharsets.UTF_8));
+        }
+
+        jar.closeEntry();
     }
 
     public void closeProject() {
