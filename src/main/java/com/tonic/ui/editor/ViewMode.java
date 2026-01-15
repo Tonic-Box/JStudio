@@ -11,10 +11,11 @@ public enum ViewMode {
     BYTECODE("Bytecode", "Raw JVM bytecode"),
     CONSTPOOL("Const Pool", "Constant pool entries"),
     IR("SSA IR", "SSA Intermediate Representation"),
-    AST("AST", "Abstract Syntax Tree representation"),
+    AST("AST IR", "Abstract Syntax Tree representation"),
     PDG("PDG", "Program Dependence Graph"),
     SDG("SDG", "System Dependence Graph"),
     CPG("CPG", "Code Property Graph"),
+    CFG("Control Flow", "Control flow graph visualization"),
     HEX("Hex", "Raw class file bytes");
 
     private final String displayName;

@@ -2,6 +2,7 @@ package com.tonic.ui.editor;
 
 import com.tonic.ui.editor.ast.ASTView;
 import com.tonic.ui.editor.bytecode.BytecodeView;
+import com.tonic.ui.editor.cfg.ControlFlowView;
 import com.tonic.ui.editor.constpool.ConstPoolView;
 import com.tonic.ui.editor.graph.CPGView;
 import com.tonic.ui.editor.graph.PDGView;
@@ -54,6 +55,7 @@ public class EditorTab extends JPanel {
     private final PDGView pdgView;
     private final SDGView sdgView;
     private final CPGView cpgView;
+    private final ControlFlowView controlFlowView;
 
     private ViewMode currentMode = ViewMode.SOURCE;
 
@@ -97,6 +99,9 @@ public class EditorTab extends JPanel {
 
         cpgView = new CPGView(classEntry);
         cardPanel.add(cpgView, ViewMode.CPG.name());
+
+        controlFlowView = new ControlFlowView(classEntry);
+        cardPanel.add(controlFlowView, ViewMode.CFG.name());
 
         add(cardPanel, BorderLayout.CENTER);
     }
@@ -143,6 +148,9 @@ public class EditorTab extends JPanel {
             case CPG:
                 cpgView.refresh();
                 break;
+            case CFG:
+                controlFlowView.refresh();
+                break;
         }
     }
 
@@ -184,6 +192,9 @@ public class EditorTab extends JPanel {
                 break;
             case CPG:
                 cpgView.refresh();
+                break;
+            case CFG:
+                controlFlowView.refresh();
                 break;
         }
     }
@@ -242,6 +253,9 @@ public class EditorTab extends JPanel {
             case CPG:
                 cpgView.copySelection();
                 break;
+            case CFG:
+                controlFlowView.copySelection();
+                break;
         }
     }
 
@@ -268,6 +282,8 @@ public class EditorTab extends JPanel {
                 return sdgView.getText();
             case CPG:
                 return cpgView.getText();
+            case CFG:
+                return controlFlowView.getText();
             default:
                 return "";
         }
@@ -304,6 +320,9 @@ public class EditorTab extends JPanel {
                 break;
             case CPG:
                 cpgView.goToLine(line);
+                break;
+            case CFG:
+                controlFlowView.goToLine(line);
                 break;
         }
     }
@@ -360,6 +379,9 @@ public class EditorTab extends JPanel {
             case CPG:
                 cpgView.showFindDialog();
                 break;
+            case CFG:
+                controlFlowView.showFindDialog();
+                break;
         }
     }
 
@@ -399,6 +421,8 @@ public class EditorTab extends JPanel {
                 return sdgView.getSelectedText();
             case CPG:
                 return cpgView.getSelectedText();
+            case CFG:
+                return controlFlowView.getSelectedText();
             default:
                 return null;
         }
@@ -439,6 +463,9 @@ public class EditorTab extends JPanel {
             case CPG:
                 cpgView.scrollToText(methodName);
                 break;
+            case CFG:
+                controlFlowView.scrollToText(methodName);
+                break;
         }
     }
 
@@ -474,6 +501,7 @@ public class EditorTab extends JPanel {
         pdgView.setFontSize(size);
         sdgView.setFontSize(size);
         cpgView.setFontSize(size);
+        controlFlowView.setFontSize(size);
     }
 
     /**
@@ -488,6 +516,7 @@ public class EditorTab extends JPanel {
         pdgView.setWordWrap(enabled);
         sdgView.setWordWrap(enabled);
         cpgView.setWordWrap(enabled);
+        controlFlowView.setWordWrap(enabled);
     }
 
     /**
@@ -540,6 +569,9 @@ public class EditorTab extends JPanel {
                 return true;
             case CPG:
                 cpgView.scrollToText(methodName);
+                return true;
+            case CFG:
+                controlFlowView.scrollToText(methodName);
                 return true;
             default:
                 return false;

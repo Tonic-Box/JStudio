@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class ViewModeComboBox extends JComboBox<Object> {
 
-    public static final String SEPARATOR = "---";
+    public static final String HEADER_PREFIX = "# ";
 
     private static final Map<ViewMode, String> SHORTCUTS = new LinkedHashMap<>();
     static {
@@ -25,24 +25,30 @@ public class ViewModeComboBox extends JComboBox<Object> {
         setMaximumSize(new Dimension(180, 25));
         setPreferredSize(new Dimension(150, 25));
 
+        addItem(HEADER_PREFIX + "Code");
         addItem(ViewMode.SOURCE);
-        addItem(SEPARATOR);
         addItem(ViewMode.BYTECODE);
-        addItem(ViewMode.CONSTPOOL);
+
+        addItem(HEADER_PREFIX + "IR");
         addItem(ViewMode.IR);
-        addItem(SEPARATOR);
         addItem(ViewMode.AST);
+
+        addItem(HEADER_PREFIX + "Graphing");
+        addItem(ViewMode.CFG);
         addItem(ViewMode.PDG);
         addItem(ViewMode.SDG);
         addItem(ViewMode.CPG);
-        addItem(SEPARATOR);
+
+        addItem(HEADER_PREFIX + "Other");
+        addItem(ViewMode.CONSTPOOL);
         addItem(ViewMode.HEX);
 
         setRenderer(new ViewModeListCellRenderer());
+        setSelectedItem(ViewMode.SOURCE);
 
         addActionListener(e -> {
             Object selected = getSelectedItem();
-            if (SEPARATOR.equals(selected)) {
+            if (selected instanceof String && ((String) selected).startsWith(HEADER_PREFIX)) {
                 setSelectedItem(ViewMode.SOURCE);
             }
         });
@@ -62,7 +68,7 @@ public class ViewModeComboBox extends JComboBox<Object> {
 
     @Override
     public void setSelectedItem(Object item) {
-        if (!SEPARATOR.equals(item)) {
+        if (!(item instanceof String) || !((String) item).startsWith(HEADER_PREFIX)) {
             super.setSelectedItem(item);
         }
     }
@@ -73,14 +79,19 @@ public class ViewModeComboBox extends JComboBox<Object> {
         public Component getListCellRendererComponent(JList<?> list, Object value,
                                                       int index, boolean isSelected, boolean cellHasFocus) {
 
-            if (SEPARATOR.equals(value)) {
-                JSeparator sep = new JSeparator(JSeparator.HORIZONTAL);
-                sep.setPreferredSize(new Dimension(0, 5));
-                return sep;
-            }
-
             JLabel label = (JLabel) super.getListCellRendererComponent(
-                list, value, index, isSelected, cellHasFocus);
+                list, value, index, false, false);
+
+            if (value instanceof String && ((String) value).startsWith(HEADER_PREFIX)) {
+                String headerText = ((String) value).substring(HEADER_PREFIX.length());
+                label.setText(headerText);
+                label.setFont(JStudioTheme.getCodeFont(10).deriveFont(Font.BOLD));
+                label.setForeground(JStudioTheme.getTextSecondary());
+                label.setBackground(JStudioTheme.getBgPrimary());
+                label.setBorder(BorderFactory.createEmptyBorder(6, 4, 2, 4));
+                label.setEnabled(false);
+                return label;
+            }
 
             if (value instanceof ViewMode) {
                 ViewMode mode = (ViewMode) value;
@@ -97,7 +108,7 @@ public class ViewModeComboBox extends JComboBox<Object> {
             }
 
             label.setFont(JStudioTheme.getCodeFont(11));
-            label.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
+            label.setBorder(BorderFactory.createEmptyBorder(3, 12, 3, 6));
 
             if (isSelected) {
                 label.setBackground(JStudioTheme.getAccent());

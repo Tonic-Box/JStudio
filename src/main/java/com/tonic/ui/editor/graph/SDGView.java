@@ -7,12 +7,13 @@ import com.tonic.analysis.pdg.edge.PDGEdge;
 import com.tonic.analysis.pdg.node.PDGNode;
 import com.tonic.analysis.pdg.sdg.SDG;
 import com.tonic.analysis.pdg.sdg.SDGBuilder;
-import com.tonic.analysis.pdg.sdg.node.*;
 import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.editor.graph.render.GraphVertex;
+import com.tonic.ui.editor.graph.render.SDGVertexRenderer;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 
@@ -20,16 +21,16 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class SDGView extends GraphView {
+public class SDGView extends BaseGraphView {
 
     private SDG sdg;
+    private String prepareError = null;
+    private final SDGVertexRenderer renderer = new SDGVertexRenderer();
 
     public SDGView(ClassEntryModel classEntry) {
         super(classEntry);
         populateMethodFilter();
     }
-
-    private String prepareError = null;
 
     @Override
     protected void prepareGraphData() {
@@ -72,7 +73,7 @@ public class SDGView extends GraphView {
     }
 
     @Override
-    protected void renderGraph() {
+    protected void rebuildGraph() {
         clearGraph();
 
         if (prepareError != null) {
@@ -99,15 +100,12 @@ public class SDGView extends GraphView {
         Map<PDGNode, Object> nodeMap = new HashMap<>();
 
         for (PDGNode node : sdg.getAllNodes()) {
-            String label = getNodeLabel(node);
-            String style = getNodeStyle(node);
+            GraphVertex<PDGNode> vertex = new GraphVertex<>(node, renderer);
+            String style = vertex.getStyle();
 
-            double width = Math.max(120, label.length() * 7);
-            double height = 35;
-
-            Object vertex = graph.insertVertex(parent, null, label,
-                0, 0, width, height, style);
-            nodeMap.put(node, vertex);
+            Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 50, style);
+            graph.updateCellSize(cell);
+            nodeMap.put(node, cell);
         }
 
         for (PDGEdge edge : sdg.getParameterEdges()) {
@@ -128,65 +126,6 @@ public class SDGView extends GraphView {
                 graph.insertEdge(parent, null, "summary", source, target, "DATA");
             }
         }
-    }
-
-    private String getNodeLabel(PDGNode node) {
-        if (node instanceof SDGEntryNode) {
-            SDGEntryNode entry = (SDGEntryNode) node;
-            String name = entry.getMethodName();
-            if (name != null) {
-                int lastDot = name.lastIndexOf('.');
-                if (lastDot >= 0) {
-                    name = name.substring(lastDot + 1);
-                }
-                int paren = name.indexOf('(');
-                if (paren >= 0) {
-                    name = name.substring(0, paren);
-                }
-            }
-            return "ENTRY: " + (name != null ? name : "?");
-        }
-
-        if (node instanceof SDGCallNode) {
-            SDGCallNode call = (SDGCallNode) node;
-            return "CALL: " + call.getTargetName();
-        }
-
-        if (node instanceof SDGFormalInNode) {
-            SDGFormalInNode formal = (SDGFormalInNode) node;
-            return "F_IN[" + formal.getParameterIndex() + "]";
-        }
-
-        if (node instanceof SDGFormalOutNode) {
-            return "F_OUT";
-        }
-
-        if (node instanceof SDGActualInNode) {
-            SDGActualInNode actual = (SDGActualInNode) node;
-            return "A_IN[" + actual.getParameterIndex() + "]";
-        }
-
-        if (node instanceof SDGActualOutNode) {
-            return "A_OUT";
-        }
-
-        return node.getType().name();
-    }
-
-    private String getNodeStyle(PDGNode node) {
-        if (node instanceof SDGEntryNode) {
-            return "ENTRY";
-        }
-        if (node instanceof SDGCallNode) {
-            return "CALL";
-        }
-        if (node instanceof SDGFormalInNode || node instanceof SDGActualInNode) {
-            return "BLOCK";
-        }
-        if (node instanceof SDGFormalOutNode || node instanceof SDGActualOutNode) {
-            return "EXIT";
-        }
-        return "NODE";
     }
 
     private String getEdgeStyle(PDGEdge edge) {

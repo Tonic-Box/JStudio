@@ -103,6 +103,8 @@ public class SourceCompiler {
         String ownerClass = original.getClassName();
 
         ASTLowerer lowerer = new ASTLowerer(original.getConstPool(), classPool);
+        lowerer.setCurrentClassDecl(classDecl);
+        lowerer.setImports(cu.getImports());
         SSA ssa = new SSA(original.getConstPool());
 
         for (MethodDecl methodDecl : classDecl.getMethods()) {

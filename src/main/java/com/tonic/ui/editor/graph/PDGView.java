@@ -4,24 +4,22 @@ import com.tonic.analysis.graph.export.PDGDOTExporter;
 import com.tonic.analysis.pdg.PDG;
 import com.tonic.analysis.pdg.PDGBuilder;
 import com.tonic.analysis.pdg.edge.PDGEdge;
-import com.tonic.analysis.pdg.node.PDGInstructionNode;
 import com.tonic.analysis.pdg.node.PDGNode;
-import com.tonic.analysis.pdg.node.PDGNodeType;
-import com.tonic.analysis.pdg.node.PDGRegionNode;
 import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRMethod;
-import com.tonic.analysis.ssa.ir.InvokeInstruction;
-import com.tonic.analysis.ssa.ir.PhiInstruction;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.editor.graph.render.GraphVertex;
+import com.tonic.ui.editor.graph.render.PDGVertexRenderer;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class PDGView extends GraphView {
+public class PDGView extends BaseGraphView {
 
     private final Map<MethodEntryModel, PDG> methodPDGs = new HashMap<>();
+    private final PDGVertexRenderer renderer = new PDGVertexRenderer();
 
     public PDGView(ClassEntryModel classEntry) {
         super(classEntry);
@@ -56,36 +54,31 @@ public class PDGView extends GraphView {
     }
 
     @Override
-    protected void renderGraph() {
+    protected void rebuildGraph() {
         clearGraph();
 
         graph.getModel().beginUpdate();
         try {
             Object parent = graph.getDefaultParent();
-            int methodOffset = 0;
 
             for (Map.Entry<MethodEntryModel, PDG> entry : methodPDGs.entrySet()) {
-                renderPDG(parent, entry.getValue(), entry.getKey().getName(), methodOffset);
-                methodOffset += 400;
+                renderPDG(parent, entry.getValue());
             }
         } finally {
             graph.getModel().endUpdate();
         }
     }
 
-    private void renderPDG(Object parent, PDG pdg, String methodName, int xOffset) {
+    private void renderPDG(Object parent, PDG pdg) {
         Map<PDGNode, Object> nodeMap = new HashMap<>();
 
         for (PDGNode node : pdg.getNodes()) {
-            String label = getNodeLabel(node);
-            String style = getNodeStyle(node);
+            GraphVertex<PDGNode> vertex = new GraphVertex<>(node, renderer);
+            String style = vertex.getStyle();
 
-            double width = Math.max(100, label.length() * 7);
-            double height = 30;
-
-            Object vertex = graph.insertVertex(parent, null, label,
-                xOffset, 0, width, height, style);
-            nodeMap.put(node, vertex);
+            Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 40, style);
+            graph.updateCellSize(cell);
+            nodeMap.put(node, cell);
         }
 
         for (PDGEdge edge : pdg.getEdges()) {
@@ -100,55 +93,6 @@ public class PDGView extends GraphView {
         }
     }
 
-    private String getNodeLabel(PDGNode node) {
-        if (node instanceof PDGRegionNode) {
-            PDGRegionNode region = (PDGRegionNode) node;
-            if (region.isEntry()) return "ENTRY";
-            if (region.isExit()) return "EXIT";
-            return region.getLabel();
-        }
-
-        if (node instanceof PDGInstructionNode) {
-            PDGInstructionNode instrNode = (PDGInstructionNode) node;
-            var instr = instrNode.getInstruction();
-            if (instr == null) return "?";
-
-            String repr = instr.toString();
-            if (repr.length() > 40) {
-                repr = repr.substring(0, 37) + "...";
-            }
-            return repr;
-        }
-
-        return node.getType().name();
-    }
-
-    private String getNodeStyle(PDGNode node) {
-        PDGNodeType type = node.getType();
-
-        switch (type) {
-            case ENTRY:
-                return "ENTRY";
-            case EXIT:
-                return "EXIT";
-            case PHI:
-                return "PHI";
-            case CALL_SITE:
-                return "CALL";
-            default:
-                if (node instanceof PDGInstructionNode) {
-                    PDGInstructionNode instrNode = (PDGInstructionNode) node;
-                    if (instrNode.getInstruction() instanceof InvokeInstruction) {
-                        return "CALL";
-                    }
-                    if (instrNode.getInstruction() instanceof PhiInstruction) {
-                        return "PHI";
-                    }
-                }
-                return "NODE";
-        }
-    }
-
     private String getEdgeLabel(PDGEdge edge) {
         String var = edge.getVariable();
         if (var != null && !var.isEmpty()) {
@@ -160,9 +104,6 @@ public class PDGView extends GraphView {
     private String getEdgeStyle(PDGEdge edge) {
         if (edge.getType().isControlDependence()) {
             return "CONTROL";
-        }
-        if (edge.getType().isDataDependence()) {
-            return "DATA";
         }
         return "DATA";
     }

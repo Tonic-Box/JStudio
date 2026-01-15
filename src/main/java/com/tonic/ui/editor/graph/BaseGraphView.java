@@ -9,7 +9,11 @@ import com.mxgraph.view.mxGraph;
 import com.mxgraph.view.mxStylesheet;
 import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.theme.*;
+import com.tonic.ui.theme.Icons;
+import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.theme.Theme;
+import com.tonic.ui.theme.ThemeChangeListener;
+import com.tonic.ui.theme.ThemeManager;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -19,13 +23,17 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.MouseWheelEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class GraphView extends JPanel implements ThemeChangeListener {
+public abstract class BaseGraphView extends JPanel implements ThemeChangeListener {
 
     protected final ClassEntryModel classEntry;
 
@@ -43,6 +51,7 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
     protected JToggleButton dotBtn;
     protected JComboBox<String> layoutCombo;
     protected JComboBox<String> methodFilterCombo;
+    protected JLabel methodFilterLabel;
 
     private static final String VISUAL_CARD = "VISUAL";
     private static final String DOT_CARD = "DOT";
@@ -59,7 +68,10 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
     protected LoadingOverlay loadingOverlay;
     protected SwingWorker<String, Void> currentWorker;
 
-    public GraphView(ClassEntryModel classEntry) {
+    private Point panStartPoint;
+    private Point panStartScroll;
+
+    public BaseGraphView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
         initComponents();
         ThemeManager.getInstance().addThemeChangeListener(this);
@@ -121,12 +133,12 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
         toolbar.addSeparator();
 
         JButton zoomInBtn = new JButton(Icons.getIcon("zoom_in", 16));
-        zoomInBtn.setToolTipText("Zoom In");
+        zoomInBtn.setToolTipText("Zoom In (Ctrl+Wheel)");
         zoomInBtn.addActionListener(e -> zoomIn());
         toolbar.add(zoomInBtn);
 
         JButton zoomOutBtn = new JButton(Icons.getIcon("zoom_out", 16));
-        zoomOutBtn.setToolTipText("Zoom Out");
+        zoomOutBtn.setToolTipText("Zoom Out (Ctrl+Wheel)");
         zoomOutBtn.addActionListener(e -> zoomOut());
         toolbar.add(zoomOutBtn);
 
@@ -141,12 +153,17 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
         layoutCombo = new JComboBox<>(new String[]{"Hierarchical", "Organic", "Circular"});
         layoutCombo.setFont(JStudioTheme.getCodeFont(11));
         layoutCombo.setMaximumSize(new Dimension(120, 25));
-        layoutCombo.addActionListener(e -> applyLayout((String) layoutCombo.getSelectedItem()));
+        layoutCombo.addActionListener(e -> {
+            if (!initializing) {
+                applyLayout((String) layoutCombo.getSelectedItem());
+            }
+        });
         toolbar.add(layoutCombo);
 
         toolbar.addSeparator();
 
-        toolbar.add(new JLabel(" Method: "));
+        methodFilterLabel = new JLabel(" Method: ");
+        toolbar.add(methodFilterLabel);
         methodFilterCombo = new JComboBox<>(new String[]{"All Methods"});
         methodFilterCombo.setFont(JStudioTheme.getCodeFont(11));
         methodFilterCombo.setMaximumSize(new Dimension(200, 25));
@@ -168,6 +185,8 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
         graph.setVertexLabelsMovable(false);
         graph.setCellsEditable(false);
         graph.setCellsResizable(false);
+        graph.setAutoSizeCells(true);
+        graph.setHtmlLabels(true);
 
         setupGraphStyles();
 
@@ -178,65 +197,132 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
         graphComponent.setBackground(JStudioTheme.getBgTertiary());
         graphComponent.setBorder(null);
         graphComponent.setToolTips(true);
+
+        graphComponent.getGraphControl().addMouseWheelListener(this::handleMouseWheel);
+
+        graphComponent.getGraphControl().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    panStartPoint = e.getPoint();
+                    panStartScroll = graphComponent.getViewport().getViewPosition();
+                    graphComponent.getGraphControl().setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                panStartPoint = null;
+                graphComponent.getGraphControl().setCursor(Cursor.getDefaultCursor());
+            }
+        });
+
+        graphComponent.getGraphControl().addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (panStartPoint != null && SwingUtilities.isLeftMouseButton(e)) {
+                    int dx = panStartPoint.x - e.getX();
+                    int dy = panStartPoint.y - e.getY();
+
+                    JViewport viewport = graphComponent.getViewport();
+                    Rectangle viewRect = viewport.getViewRect();
+                    Dimension viewSize = viewport.getViewSize();
+
+                    int newX = Math.max(0, Math.min(panStartScroll.x + dx, viewSize.width - viewRect.width));
+                    int newY = Math.max(0, Math.min(panStartScroll.y + dy, viewSize.height - viewRect.height));
+
+                    viewport.setViewPosition(new Point(newX, newY));
+                }
+            }
+        });
     }
 
     protected void setupGraphStyles() {
         mxStylesheet stylesheet = graph.getStylesheet();
 
-        Map<String, Object> nodeStyle = new HashMap<>();
-        nodeStyle.put(mxConstants.STYLE_SHAPE, mxConstants.SHAPE_RECTANGLE);
-        nodeStyle.put(mxConstants.STYLE_ROUNDED, true);
-        nodeStyle.put(mxConstants.STYLE_FILLCOLOR, toHex(JStudioTheme.getBgSecondary()));
-        nodeStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getBorder()));
-        nodeStyle.put(mxConstants.STYLE_FONTCOLOR, toHex(JStudioTheme.getTextPrimary()));
-        nodeStyle.put(mxConstants.STYLE_FONTSIZE, 10);
-        nodeStyle.put(mxConstants.STYLE_ALIGN, mxConstants.ALIGN_CENTER);
-        nodeStyle.put(mxConstants.STYLE_VERTICAL_ALIGN, mxConstants.ALIGN_MIDDLE);
-        stylesheet.putCellStyle("NODE", nodeStyle);
+        Map<String, Object> baseVertex = new HashMap<>();
+        baseVertex.put(mxConstants.STYLE_SHAPE, mxConstants.SHAPE_RECTANGLE);
+        baseVertex.put(mxConstants.STYLE_ROUNDED, true);
+        baseVertex.put(mxConstants.STYLE_ARCSIZE, 8);
+        baseVertex.put(mxConstants.STYLE_FILLCOLOR, toHex(JStudioTheme.getBgSecondary()));
+        baseVertex.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getBorder()));
+        baseVertex.put(mxConstants.STYLE_FONTCOLOR, toHex(JStudioTheme.getTextPrimary()));
+        baseVertex.put(mxConstants.STYLE_FONTSIZE, 10);
+        baseVertex.put(mxConstants.STYLE_ALIGN, mxConstants.ALIGN_LEFT);
+        baseVertex.put(mxConstants.STYLE_VERTICAL_ALIGN, mxConstants.ALIGN_TOP);
+        baseVertex.put(mxConstants.STYLE_SPACING, 4);
+        stylesheet.putCellStyle("NODE", baseVertex);
 
-        Map<String, Object> entryStyle = new HashMap<>(nodeStyle);
-        entryStyle.put(mxConstants.STYLE_FILLCOLOR, "#228B22");
-        entryStyle.put(mxConstants.STYLE_FONTCOLOR, "#FFFFFF");
+        Map<String, Object> entryStyle = new HashMap<>(baseVertex);
+        entryStyle.put(mxConstants.STYLE_STROKECOLOR, "#27ae60");
+        entryStyle.put(mxConstants.STYLE_STROKEWIDTH, 2);
         stylesheet.putCellStyle("ENTRY", entryStyle);
 
-        Map<String, Object> exitStyle = new HashMap<>(nodeStyle);
-        exitStyle.put(mxConstants.STYLE_FILLCOLOR, "#DC143C");
-        exitStyle.put(mxConstants.STYLE_FONTCOLOR, "#FFFFFF");
+        Map<String, Object> exitStyle = new HashMap<>(baseVertex);
+        exitStyle.put(mxConstants.STYLE_STROKECOLOR, "#e74c3c");
+        exitStyle.put(mxConstants.STYLE_STROKEWIDTH, 2);
         stylesheet.putCellStyle("EXIT", exitStyle);
 
-        Map<String, Object> phiStyle = new HashMap<>(nodeStyle);
-        phiStyle.put(mxConstants.STYLE_FILLCOLOR, "#FF8C00");
-        phiStyle.put(mxConstants.STYLE_FONTCOLOR, "#000000");
-        stylesheet.putCellStyle("PHI", phiStyle);
-
-        Map<String, Object> callStyle = new HashMap<>(nodeStyle);
-        callStyle.put(mxConstants.STYLE_FILLCOLOR, "#8B008B");
-        callStyle.put(mxConstants.STYLE_FONTCOLOR, "#FFFFFF");
+        Map<String, Object> callStyle = new HashMap<>(baseVertex);
+        callStyle.put(mxConstants.STYLE_STROKECOLOR, "#9b59b6");
+        callStyle.put(mxConstants.STYLE_STROKEWIDTH, 2);
         stylesheet.putCellStyle("CALL", callStyle);
 
-        Map<String, Object> blockStyle = new HashMap<>(nodeStyle);
-        blockStyle.put(mxConstants.STYLE_FILLCOLOR, "#4682B4");
-        blockStyle.put(mxConstants.STYLE_FONTCOLOR, "#FFFFFF");
+        Map<String, Object> phiStyle = new HashMap<>(baseVertex);
+        phiStyle.put(mxConstants.STYLE_STROKECOLOR, "#e67e22");
+        phiStyle.put(mxConstants.STYLE_STROKEWIDTH, 2);
+        stylesheet.putCellStyle("PHI", phiStyle);
+
+        Map<String, Object> blockStyle = new HashMap<>(baseVertex);
+        blockStyle.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getInfo()));
+        blockStyle.put(mxConstants.STYLE_STROKEWIDTH, 2);
         stylesheet.putCellStyle("BLOCK", blockStyle);
+
+        Map<String, Object> handlerStyle = new HashMap<>(baseVertex);
+        handlerStyle.put(mxConstants.STYLE_STROKECOLOR, "#e67e22");
+        handlerStyle.put(mxConstants.STYLE_STROKEWIDTH, 2);
+        stylesheet.putCellStyle("HANDLER", handlerStyle);
+
+        Map<String, Object> defaultEdge = stylesheet.getDefaultEdgeStyle();
+        defaultEdge.put(mxConstants.STYLE_ROUNDED, true);
+        defaultEdge.put(mxConstants.STYLE_STROKEWIDTH, 1.5);
+        defaultEdge.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
 
         Map<String, Object> controlEdge = new HashMap<>();
         controlEdge.put(mxConstants.STYLE_STROKECOLOR, "#FF6347");
         controlEdge.put(mxConstants.STYLE_DASHED, true);
         controlEdge.put(mxConstants.STYLE_FONTCOLOR, toHex(JStudioTheme.getTextSecondary()));
         controlEdge.put(mxConstants.STYLE_FONTSIZE, 9);
+        controlEdge.put(mxConstants.STYLE_ROUNDED, true);
+        controlEdge.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
         stylesheet.putCellStyle("CONTROL", controlEdge);
 
         Map<String, Object> dataEdge = new HashMap<>();
         dataEdge.put(mxConstants.STYLE_STROKECOLOR, "#4169E1");
         dataEdge.put(mxConstants.STYLE_FONTCOLOR, toHex(JStudioTheme.getTextSecondary()));
         dataEdge.put(mxConstants.STYLE_FONTSIZE, 9);
+        dataEdge.put(mxConstants.STYLE_ROUNDED, true);
+        dataEdge.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
         stylesheet.putCellStyle("DATA", dataEdge);
 
         Map<String, Object> cfgEdge = new HashMap<>();
         cfgEdge.put(mxConstants.STYLE_STROKECOLOR, "#32CD32");
         cfgEdge.put(mxConstants.STYLE_FONTCOLOR, toHex(JStudioTheme.getTextSecondary()));
         cfgEdge.put(mxConstants.STYLE_FONTSIZE, 9);
+        cfgEdge.put(mxConstants.STYLE_ROUNDED, true);
+        cfgEdge.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
         stylesheet.putCellStyle("CFG", cfgEdge);
+    }
+
+    private void handleMouseWheel(MouseWheelEvent e) {
+        if (e.isControlDown()) {
+            if (e.getWheelRotation() < 0) {
+                graphComponent.zoomIn();
+            } else {
+                graphComponent.zoomOut();
+            }
+            e.consume();
+        }
     }
 
     private void createDOTTextPane() {
@@ -256,7 +342,13 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
 
     @Override
     public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
+        SwingUtilities.invokeLater(() -> {
+            applyTheme();
+            setupGraphStyles();
+            if (loaded) {
+                rebuildGraph();
+            }
+        });
     }
 
     private void applyTheme() {
@@ -267,14 +359,11 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
 
         graphComponent.getViewport().setBackground(JStudioTheme.getBgTertiary());
         graphComponent.setBackground(JStudioTheme.getBgTertiary());
-        setupGraphStyles();
 
         dotTextPane.setBackground(JStudioTheme.getBgTertiary());
         dotTextPane.setForeground(JStudioTheme.getTextPrimary());
         dotTextPane.setCaretColor(JStudioTheme.getTextPrimary());
         dotScrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
-
-        repaint();
     }
 
     public void refresh() {
@@ -287,7 +376,7 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
         loadingOverlay.showLoading("Building graph...");
         graphComponent.setEnabled(false);
 
-        currentWorker = new SwingWorker<String, Void>() {
+        currentWorker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
                 prepareGraphData();
@@ -305,8 +394,8 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
 
                 try {
                     currentDOT = get();
-                    renderGraph();
-                    applyLayout((String) layoutCombo.getSelectedItem());
+                    rebuildGraph();
+                    applyHierarchicalLayout();
                     updateDOTView();
                     loaded = true;
                 } catch (Exception ex) {
@@ -327,7 +416,7 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
 
     protected abstract void prepareGraphData();
 
-    protected abstract void renderGraph();
+    protected abstract void rebuildGraph();
 
     protected abstract String generateDOT();
 
@@ -349,6 +438,28 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
             }
         } finally {
             initializing = false;
+        }
+    }
+
+    protected void hideMethodFilter() {
+        methodFilterLabel.setVisible(false);
+        methodFilterCombo.setVisible(false);
+    }
+
+    protected void applyHierarchicalLayout() {
+        Object parent = graph.getDefaultParent();
+        if (graph.getChildVertices(parent).length == 0) {
+            return;
+        }
+
+        graph.getModel().beginUpdate();
+        try {
+            mxHierarchicalLayout layout = new mxHierarchicalLayout(graph);
+            layout.setInterRankCellSpacing(50);
+            layout.setIntraCellSpacing(30);
+            layout.execute(parent);
+        } finally {
+            graph.getModel().endUpdate();
         }
     }
 
@@ -468,6 +579,15 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
         return String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
     }
 
+    protected static String escapeHtml(String text) {
+        if (text == null) return "";
+        return text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;");
+    }
+
     public String getText() {
         return currentDOT;
     }
@@ -499,6 +619,10 @@ public abstract class GraphView extends JPanel implements ThemeChangeListener {
         } catch (Exception e) {
             // Line out of range
         }
+    }
+
+    public void highlightLine(int line) {
+        goToLine(line);
     }
 
     public void showFindDialog() {

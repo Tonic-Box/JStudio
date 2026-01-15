@@ -3,33 +3,27 @@ package com.tonic.ui.editor.graph;
 import com.tonic.analysis.cpg.CPGBuilder;
 import com.tonic.analysis.cpg.CodePropertyGraph;
 import com.tonic.analysis.cpg.edge.CPGEdge;
-import com.tonic.analysis.cpg.node.*;
+import com.tonic.analysis.cpg.node.CPGNode;
 import com.tonic.analysis.graph.export.CPGDOTExporter;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
+import com.tonic.ui.editor.graph.render.CPGVertexRenderer;
+import com.tonic.ui.editor.graph.render.GraphVertex;
 import com.tonic.ui.model.ClassEntryModel;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class CPGView extends GraphView {
+public class CPGView extends BaseGraphView {
 
     private CodePropertyGraph cpg;
+    private String prepareError = null;
+    private final CPGVertexRenderer renderer = new CPGVertexRenderer();
 
     public CPGView(ClassEntryModel classEntry) {
         super(classEntry);
-        methodFilterCombo.setVisible(false);
-        for (int i = 0; i < toolbar.getComponentCount(); i++) {
-            if (toolbar.getComponent(i) instanceof javax.swing.JLabel) {
-                javax.swing.JLabel label = (javax.swing.JLabel) toolbar.getComponent(i);
-                if (" Method: ".equals(label.getText())) {
-                    label.setVisible(false);
-                }
-            }
-        }
+        hideMethodFilter();
     }
-
-    private String prepareError = null;
 
     @Override
     protected void prepareGraphData() {
@@ -52,7 +46,7 @@ public class CPGView extends GraphView {
     }
 
     @Override
-    protected void renderGraph() {
+    protected void rebuildGraph() {
         clearGraph();
 
         if (prepareError != null) {
@@ -79,15 +73,12 @@ public class CPGView extends GraphView {
         Map<CPGNode, Object> nodeMap = new HashMap<>();
 
         for (CPGNode node : cpg.getAllNodes()) {
-            String label = getNodeLabel(node);
-            String style = getNodeStyle(node);
+            GraphVertex<CPGNode> vertex = new GraphVertex<>(node, renderer);
+            String style = vertex.getStyle();
 
-            double width = Math.max(100, label.length() * 7);
-            double height = 30;
-
-            Object vertex = graph.insertVertex(parent, null, label,
-                0, 0, width, height, style);
-            nodeMap.put(node, vertex);
+            Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 50, style);
+            graph.updateCellSize(cell);
+            nodeMap.put(node, cell);
         }
 
         for (CPGEdge edge : cpg.getAllEdges()) {
@@ -99,56 +90,6 @@ public class CPGView extends GraphView {
                 String edgeStyle = getEdgeStyle(edge);
                 graph.insertEdge(parent, null, edgeLabel, source, target, edgeStyle);
             }
-        }
-    }
-
-    private String getNodeLabel(CPGNode node) {
-        if (node instanceof MethodNode) {
-            MethodNode method = (MethodNode) node;
-            String name = method.getName();
-            if (name != null && name.length() > 30) {
-                name = name.substring(0, 27) + "...";
-            }
-            return name;
-        }
-
-        if (node instanceof BlockNode) {
-            BlockNode block = (BlockNode) node;
-            String label = "B" + block.getBlockId();
-            if (block.isEntryBlock()) label += " (entry)";
-            if (block.isExitBlock()) label += " (exit)";
-            return label;
-        }
-
-        if (node instanceof InstructionNode) {
-            InstructionNode instr = (InstructionNode) node;
-            String label = instr.getLabel();
-            if (label != null && label.length() > 40) {
-                label = label.substring(0, 37) + "...";
-            }
-            return label;
-        }
-
-        if (node instanceof CallSiteNode) {
-            CallSiteNode call = (CallSiteNode) node;
-            return "CALL: " + call.getTargetName();
-        }
-
-        return node.getLabel();
-    }
-
-    private String getNodeStyle(CPGNode node) {
-        switch (node.getNodeType()) {
-            case METHOD:
-                return "ENTRY";
-            case BLOCK:
-                return "BLOCK";
-            case INSTRUCTION:
-                return "NODE";
-            case CALL_SITE:
-                return "CALL";
-            default:
-                return "NODE";
         }
     }
 
