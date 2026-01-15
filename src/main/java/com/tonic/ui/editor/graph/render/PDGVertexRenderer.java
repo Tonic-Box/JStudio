@@ -18,32 +18,81 @@ public class PDGVertexRenderer implements GraphVertexRenderer<PDGNode> {
         StringBuilder sb = new StringBuilder();
         sb.append("<html><pre style='margin:4px;font-family:monospace;font-size:10px'>");
 
-        String typeColor = getTypeColor(node);
-        String typeName = getTypeName(node);
-
-        sb.append("<b style='color:").append(typeColor).append("'>")
-          .append(escapeHtml(typeName))
-          .append("</b>\n");
-
         if (node instanceof PDGRegionNode) {
-            PDGRegionNode region = (PDGRegionNode) node;
-            String label = region.getLabel();
-            if (label != null && !label.isEmpty() && !label.equals(typeName)) {
-                sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
-                  .append("'>").append(escapeHtml(truncate(label, 40))).append("</span>\n");
-            }
+            renderRegionNode(sb, (PDGRegionNode) node);
         } else if (node instanceof PDGInstructionNode) {
-            PDGInstructionNode instrNode = (PDGInstructionNode) node;
-            IRInstruction instr = instrNode.getInstruction();
-            if (instr != null) {
-                String repr = instr.toString();
-                sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
-                  .append("'>").append(escapeHtml(truncate(repr, 50))).append("</span>\n");
-            }
+            renderInstructionNode(sb, (PDGInstructionNode) node);
+        } else {
+            renderGenericNode(sb, node);
         }
 
         sb.append("</pre></html>");
         return sb.toString();
+    }
+
+    private void renderRegionNode(StringBuilder sb, PDGRegionNode region) {
+        String color;
+        String typeName;
+
+        if (region.isEntry()) {
+            color = "#27ae60";
+            typeName = "entry:";
+        } else if (region.isExit()) {
+            color = "#e74c3c";
+            typeName = "exit:";
+        } else {
+            color = toHex(JStudioTheme.getInfo());
+            typeName = "region:";
+        }
+
+        sb.append("<b style='color:").append(color).append("'>").append(typeName).append("</b>\n");
+
+        String label = region.getLabel();
+        if (label != null && !label.isEmpty() && !label.equals(typeName)) {
+            sb.append("<span style='color:#888'>").append(escapeHtml(truncate(label, 45))).append("</span>\n");
+        }
+    }
+
+    private void renderInstructionNode(StringBuilder sb, PDGInstructionNode instrNode) {
+        IRInstruction instr = instrNode.getInstruction();
+
+        String color = toHex(JStudioTheme.getTextPrimary());
+        String typeName = "instr";
+
+        if (instr instanceof InvokeInstruction) {
+            color = "#9b59b6";
+            typeName = "call";
+        } else if (instr instanceof PhiInstruction) {
+            color = "#e67e22";
+            typeName = "phi";
+        }
+
+        sb.append("<b style='color:").append(color).append("'>").append(typeName).append(":</b>\n");
+
+        if (instr != null) {
+            String repr = instr.toString();
+            String[] lines = repr.split("\n");
+            int maxLines = 10;
+            int count = 0;
+
+            for (String line : lines) {
+                if (count >= maxLines) {
+                    sb.append("<span style='color:#888'>... (").append(lines.length - maxLines).append(" more)</span>\n");
+                    break;
+                }
+                sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary())).append("'>")
+                  .append(escapeHtml(truncate(line.trim(), 50))).append("</span>\n");
+                count++;
+            }
+        }
+    }
+
+    private void renderGenericNode(StringBuilder sb, PDGNode node) {
+        String typeColor = getTypeColor(node);
+        String typeName = node.getType().name().toLowerCase();
+
+        sb.append("<b style='color:").append(typeColor).append("'>")
+          .append(typeName).append(":</b>\n");
     }
 
     @Override
@@ -74,25 +123,6 @@ public class PDGVertexRenderer implements GraphVertexRenderer<PDGNode> {
         }
     }
 
-    private String getTypeName(PDGNode node) {
-        if (node instanceof PDGRegionNode) {
-            PDGRegionNode region = (PDGRegionNode) node;
-            if (region.isEntry()) return "ENTRY";
-            if (region.isExit()) return "EXIT";
-            return "REGION";
-        }
-
-        if (node instanceof PDGInstructionNode) {
-            PDGInstructionNode instrNode = (PDGInstructionNode) node;
-            IRInstruction instr = instrNode.getInstruction();
-            if (instr instanceof InvokeInstruction) return "INVOKE";
-            if (instr instanceof PhiInstruction) return "PHI";
-            return "INSTR";
-        }
-
-        return node.getType().name();
-    }
-
     private String getTypeColor(PDGNode node) {
         PDGNodeType type = node.getType();
 
@@ -106,12 +136,6 @@ public class PDGVertexRenderer implements GraphVertexRenderer<PDGNode> {
             case CALL_SITE:
                 return "#9b59b6";
             default:
-                if (node instanceof PDGInstructionNode) {
-                    PDGInstructionNode instrNode = (PDGInstructionNode) node;
-                    IRInstruction instr = instrNode.getInstruction();
-                    if (instr instanceof InvokeInstruction) return "#9b59b6";
-                    if (instr instanceof PhiInstruction) return "#e67e22";
-                }
                 return toHex(JStudioTheme.getTextPrimary());
         }
     }

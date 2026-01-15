@@ -88,6 +88,7 @@ public class SDGView extends BaseGraphView {
         graph.getModel().beginUpdate();
         try {
             renderSDG();
+            applyHierarchicalLayout();
         } finally {
             graph.getModel().endUpdate();
         }
@@ -103,7 +104,7 @@ public class SDGView extends BaseGraphView {
             GraphVertex<PDGNode> vertex = new GraphVertex<>(node, renderer);
             String style = vertex.getStyle();
 
-            Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 50, style);
+            Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 60, style);
             graph.updateCellSize(cell);
             nodeMap.put(node, cell);
         }

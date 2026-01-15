@@ -61,6 +61,7 @@ public class CPGView extends BaseGraphView {
         graph.getModel().beginUpdate();
         try {
             renderCPG();
+            applyHierarchicalLayout();
         } finally {
             graph.getModel().endUpdate();
         }
@@ -76,7 +77,7 @@ public class CPGView extends BaseGraphView {
             GraphVertex<CPGNode> vertex = new GraphVertex<>(node, renderer);
             String style = vertex.getStyle();
 
-            Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 50, style);
+            Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 60, style);
             graph.updateCellSize(cell);
             nodeMap.put(node, cell);
         }

@@ -21,14 +21,7 @@ public class CPGVertexRenderer implements GraphVertexRenderer<CPGNode> {
         } else if (node instanceof CallSiteNode) {
             renderCallSiteNode(sb, (CallSiteNode) node);
         } else {
-            sb.append("<b style='color:").append(toHex(JStudioTheme.getTextPrimary())).append("'>")
-              .append(escapeHtml(node.getNodeType().name()))
-              .append("</b>\n");
-            String label = node.getLabel();
-            if (label != null && !label.isEmpty()) {
-                sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
-                  .append("'>").append(escapeHtml(truncate(label, 40))).append("</span>\n");
-            }
+            renderGenericNode(sb, node);
         }
 
         sb.append("</pre></html>");
@@ -36,9 +29,10 @@ public class CPGVertexRenderer implements GraphVertexRenderer<CPGNode> {
     }
 
     private void renderMethodNode(StringBuilder sb, MethodNode node) {
-        sb.append("<b style='color:#27ae60'>METHOD</b>\n");
+        sb.append("<b style='color:#27ae60'>method:</b>\n");
         String name = node.getName();
         if (name != null) {
+            sb.append("<span style='color:#888'>name: </span>");
             sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
               .append("'>").append(escapeHtml(truncate(name, 40))).append("</span>\n");
         }
@@ -47,6 +41,7 @@ public class CPGVertexRenderer implements GraphVertexRenderer<CPGNode> {
     private void renderBlockNode(StringBuilder sb, BlockNode node) {
         String color;
         String extra = "";
+
         if (node.isEntryBlock()) {
             color = "#27ae60";
             extra = " (entry)";
@@ -57,25 +52,48 @@ public class CPGVertexRenderer implements GraphVertexRenderer<CPGNode> {
             color = toHex(JStudioTheme.getInfo());
         }
 
-        sb.append("<b style='color:").append(color).append("'>B")
-          .append(node.getBlockId()).append("</b>").append(extra).append("\n");
+        sb.append("<b style='color:").append(color).append("'>block:</b>").append(extra).append("\n");
+        sb.append("<span style='color:#888'>id: </span>");
+        sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
+          .append("'>B").append(node.getBlockId()).append("</span>\n");
     }
 
     private void renderInstructionNode(StringBuilder sb, InstructionNode node) {
-        sb.append("<b style='color:").append(toHex(JStudioTheme.getTextPrimary())).append("'>INSTR</b>\n");
+        sb.append("<b style='color:").append(toHex(JStudioTheme.getTextPrimary())).append("'>instr:</b>\n");
         String label = node.getLabel();
         if (label != null) {
-            sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
-              .append("'>").append(escapeHtml(truncate(label, 50))).append("</span>\n");
+            String[] lines = label.split("\n");
+            int maxLines = 10;
+            int count = 0;
+
+            for (String line : lines) {
+                if (count >= maxLines) {
+                    sb.append("<span style='color:#888'>... (").append(lines.length - maxLines).append(" more)</span>\n");
+                    break;
+                }
+                sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary())).append("'>")
+                  .append(escapeHtml(truncate(line.trim(), 50))).append("</span>\n");
+                count++;
+            }
         }
     }
 
     private void renderCallSiteNode(StringBuilder sb, CallSiteNode node) {
-        sb.append("<b style='color:#9b59b6'>CALL</b>\n");
+        sb.append("<b style='color:#9b59b6'>call:</b>\n");
         String target = node.getTargetName();
         if (target != null) {
+            sb.append("<span style='color:#888'>target: </span>");
             sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
               .append("'>").append(escapeHtml(truncate(target, 40))).append("</span>\n");
+        }
+    }
+
+    private void renderGenericNode(StringBuilder sb, CPGNode node) {
+        sb.append("<b style='color:").append(toHex(JStudioTheme.getTextPrimary())).append("'>")
+          .append(escapeHtml(node.getNodeType().name().toLowerCase())).append(":</b>\n");
+        String label = node.getLabel();
+        if (label != null && !label.isEmpty()) {
+            sb.append("<span style='color:#888'>").append(escapeHtml(truncate(label, 45))).append("</span>\n");
         }
     }
 

@@ -68,8 +68,8 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
     protected LoadingOverlay loadingOverlay;
     protected SwingWorker<String, Void> currentWorker;
 
-    private Point panStartPoint;
-    private Point panStartScroll;
+    private Point panStartScreen;
+    private Point panStartViewport;
 
     public BaseGraphView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -131,6 +131,8 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         toolbar.add(dotBtn);
 
         toolbar.addSeparator();
+
+        createAdditionalToolbarItems();
 
         JButton zoomInBtn = new JButton(Icons.getIcon("zoom_in", 16));
         zoomInBtn.setToolTipText("Zoom In (Ctrl+Wheel)");
@@ -204,32 +206,51 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    panStartPoint = e.getPoint();
-                    panStartScroll = graphComponent.getViewport().getViewPosition();
+                    panStartScreen = e.getLocationOnScreen();
+                    panStartViewport = graphComponent.getViewport().getViewPosition();
                     graphComponent.getGraphControl().setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
                 }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                panStartPoint = null;
+                panStartScreen = null;
+                panStartViewport = null;
                 graphComponent.getGraphControl().setCursor(Cursor.getDefaultCursor());
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    handleDoubleClick(e);
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (panStartScreen != null && !SwingUtilities.isLeftMouseButton(e)) {
+                    panStartScreen = null;
+                    panStartViewport = null;
+                    graphComponent.getGraphControl().setCursor(Cursor.getDefaultCursor());
+                }
             }
         });
 
         graphComponent.getGraphControl().addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                if (panStartPoint != null && SwingUtilities.isLeftMouseButton(e)) {
-                    int dx = panStartPoint.x - e.getX();
-                    int dy = panStartPoint.y - e.getY();
-
+                if (panStartScreen != null && panStartViewport != null && SwingUtilities.isLeftMouseButton(e)) {
                     JViewport viewport = graphComponent.getViewport();
-                    Rectangle viewRect = viewport.getViewRect();
-                    Dimension viewSize = viewport.getViewSize();
+                    Point currentScreen = e.getLocationOnScreen();
 
-                    int newX = Math.max(0, Math.min(panStartScroll.x + dx, viewSize.width - viewRect.width));
-                    int newY = Math.max(0, Math.min(panStartScroll.y + dy, viewSize.height - viewRect.height));
+                    int dx = panStartScreen.x - currentScreen.x;
+                    int dy = panStartScreen.y - currentScreen.y;
+
+                    Dimension viewSize = viewport.getViewSize();
+                    Rectangle viewRect = viewport.getViewRect();
+
+                    int newX = Math.max(0, Math.min(panStartViewport.x + dx, viewSize.width - viewRect.width));
+                    int newY = Math.max(0, Math.min(panStartViewport.y + dy, viewSize.height - viewRect.height));
 
                     viewport.setViewPosition(new Point(newX, newY));
                 }
@@ -315,14 +336,12 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
     }
 
     private void handleMouseWheel(MouseWheelEvent e) {
-        if (e.isControlDown()) {
-            if (e.getWheelRotation() < 0) {
-                graphComponent.zoomIn();
-            } else {
-                graphComponent.zoomOut();
-            }
-            e.consume();
+        if (e.getWheelRotation() < 0) {
+            graphComponent.zoomIn();
+        } else {
+            graphComponent.zoomOut();
         }
+        e.consume();
     }
 
     private void createDOTTextPane() {
@@ -395,7 +414,6 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
                 try {
                     currentDOT = get();
                     rebuildGraph();
-                    applyHierarchicalLayout();
                     updateDOTView();
                     loaded = true;
                 } catch (Exception ex) {
@@ -419,6 +437,12 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
     protected abstract void rebuildGraph();
 
     protected abstract String generateDOT();
+
+    protected void createAdditionalToolbarItems() {
+    }
+
+    protected void handleDoubleClick(MouseEvent e) {
+    }
 
     protected void onMethodFilterChanged() {
         if (initializing) {

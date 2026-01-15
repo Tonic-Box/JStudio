@@ -27,8 +27,7 @@ public class SDGVertexRenderer implements GraphVertexRenderer<PDGNode> {
             renderActualOut(sb);
         } else {
             sb.append("<b style='color:").append(toHex(JStudioTheme.getTextPrimary())).append("'>")
-              .append(escapeHtml(node.getType().name()))
-              .append("</b>\n");
+              .append(escapeHtml(node.getType().name().toLowerCase())).append(":</b>\n");
         }
 
         sb.append("</pre></html>");
@@ -36,53 +35,47 @@ public class SDGVertexRenderer implements GraphVertexRenderer<PDGNode> {
     }
 
     private void renderEntryNode(StringBuilder sb, SDGEntryNode node) {
-        sb.append("<b style='color:#27ae60'>ENTRY</b>\n");
+        sb.append("<b style='color:#27ae60'>entry:</b>\n");
         String name = node.getMethodName();
         if (name != null) {
             int lastDot = name.lastIndexOf('.');
             if (lastDot >= 0) {
                 name = name.substring(lastDot + 1);
             }
-            int paren = name.indexOf('(');
-            if (paren >= 0) {
-                name = name.substring(0, paren);
-            }
+            sb.append("<span style='color:#888'>method: </span>");
             sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
-              .append("'>").append(escapeHtml(truncate(name, 30))).append("</span>\n");
+              .append("'>").append(escapeHtml(truncate(name, 35))).append("</span>\n");
         }
     }
 
     private void renderCallNode(StringBuilder sb, SDGCallNode node) {
-        sb.append("<b style='color:#9b59b6'>CALL</b>\n");
+        sb.append("<b style='color:#9b59b6'>call:</b>\n");
         String target = node.getTargetName();
         if (target != null) {
+            sb.append("<span style='color:#888'>target: </span>");
             sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
-              .append("'>").append(escapeHtml(truncate(target, 30))).append("</span>\n");
+              .append("'>").append(escapeHtml(truncate(target, 35))).append("</span>\n");
         }
     }
 
     private void renderFormalIn(StringBuilder sb, SDGFormalInNode node) {
-        sb.append("<b style='color:").append(toHex(JStudioTheme.getInfo())).append("'>F_IN</b>\n");
-        sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
-          .append("'>param[").append(node.getParameterIndex()).append("]</span>\n");
+        sb.append("<b style='color:").append(toHex(JStudioTheme.getInfo())).append("'>formal_in:</b>\n");
+        sb.append("<span style='color:#888'>param[").append(node.getParameterIndex()).append("]</span>\n");
     }
 
     private void renderFormalOut(StringBuilder sb) {
-        sb.append("<b style='color:#e74c3c'>F_OUT</b>\n");
-        sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
-          .append("'>return</span>\n");
+        sb.append("<b style='color:#e74c3c'>formal_out:</b>\n");
+        sb.append("<span style='color:#888'>return value</span>\n");
     }
 
     private void renderActualIn(StringBuilder sb, SDGActualInNode node) {
-        sb.append("<b style='color:").append(toHex(JStudioTheme.getInfo())).append("'>A_IN</b>\n");
-        sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
-          .append("'>arg[").append(node.getParameterIndex()).append("]</span>\n");
+        sb.append("<b style='color:").append(toHex(JStudioTheme.getInfo())).append("'>actual_in:</b>\n");
+        sb.append("<span style='color:#888'>arg[").append(node.getParameterIndex()).append("]</span>\n");
     }
 
     private void renderActualOut(StringBuilder sb) {
-        sb.append("<b style='color:#e74c3c'>A_OUT</b>\n");
-        sb.append("<span style='color:").append(toHex(JStudioTheme.getTextSecondary()))
-          .append("'>result</span>\n");
+        sb.append("<b style='color:#e74c3c'>actual_out:</b>\n");
+        sb.append("<span style='color:#888'>result</span>\n");
     }
 
     @Override

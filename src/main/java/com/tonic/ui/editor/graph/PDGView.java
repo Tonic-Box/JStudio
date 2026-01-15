@@ -64,6 +64,8 @@ public class PDGView extends BaseGraphView {
             for (Map.Entry<MethodEntryModel, PDG> entry : methodPDGs.entrySet()) {
                 renderPDG(parent, entry.getValue());
             }
+
+            applyHierarchicalLayout();
         } finally {
             graph.getModel().endUpdate();
         }
@@ -76,7 +78,7 @@ public class PDGView extends BaseGraphView {
             GraphVertex<PDGNode> vertex = new GraphVertex<>(node, renderer);
             String style = vertex.getStyle();
 
-            Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 40, style);
+            Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 60, style);
             graph.updateCellSize(cell);
             nodeMap.put(node, cell);
         }
