@@ -3,6 +3,7 @@ package com.tonic.ui.editor;
 import com.tonic.ui.editor.ast.ASTView;
 import com.tonic.ui.editor.attributes.AttributesView;
 import com.tonic.ui.editor.bytecode.BytecodeView;
+import com.tonic.ui.editor.statistics.StatisticsView;
 import com.tonic.ui.editor.cfg.ControlFlowView;
 import com.tonic.ui.editor.constpool.ConstPoolView;
 import com.tonic.ui.editor.graph.CPGView;
@@ -65,6 +66,7 @@ public class EditorTab extends JPanel {
     private volatile CPGView cpgView;
     private volatile ControlFlowView controlFlowView;
     private volatile AttributesView attributesView;
+    private volatile StatisticsView statisticsView;
 
     private int fontSize = 12;
     private boolean wordWrap = false;
@@ -130,25 +132,10 @@ public class EditorTab extends JPanel {
                 return controlFlowView != null;
             case ATTRIBUTES:
                 return attributesView != null;
+            case STATISTICS:
+                return statisticsView != null;
             default:
                 return false;
-        }
-    }
-
-    private JPanel getViewPanel(ViewMode mode) {
-        switch (mode) {
-            case SOURCE: return sourceView;
-            case BYTECODE: return bytecodeView;
-            case CONSTPOOL: return constPoolView;
-            case HEX: return hexView;
-            case IR: return irView;
-            case AST: return astView;
-            case PDG: return pdgView;
-            case SDG: return sdgView;
-            case CPG: return cpgView;
-            case CFG: return controlFlowView;
-            case ATTRIBUTES: return attributesView;
-            default: return null;
         }
     }
 
@@ -207,6 +194,9 @@ public class EditorTab extends JPanel {
         } else if (view instanceof AttributesView) {
             ((AttributesView) view).setFontSize(fontSize);
             ((AttributesView) view).setWordWrap(wordWrap);
+        } else if (view instanceof StatisticsView) {
+            ((StatisticsView) view).setFontSize(fontSize);
+            ((StatisticsView) view).setWordWrap(wordWrap);
         }
     }
 
@@ -233,6 +223,9 @@ public class EditorTab extends JPanel {
             case ATTRIBUTES:
                 if (attributesView == null) loadViewInBackground(mode, () -> new AttributesView(classEntry), v -> attributesView = v);
                 break;
+            case STATISTICS:
+                if (statisticsView == null) loadViewInBackground(mode, () -> new StatisticsView(classEntry), v -> statisticsView = v);
+                break;
             default:
                 break;
         }
@@ -251,6 +244,7 @@ public class EditorTab extends JPanel {
             case CPG: if (cpgView != null) cpgView.refresh(); break;
             case CFG: if (controlFlowView != null) controlFlowView.refresh(); break;
             case ATTRIBUTES: if (attributesView != null) attributesView.refresh(); break;
+            case STATISTICS: if (statisticsView != null) statisticsView.refresh(); break;
         }
     }
 
@@ -318,6 +312,7 @@ public class EditorTab extends JPanel {
             case CPG: if (cpgView != null) cpgView.copySelection(); break;
             case CFG: if (controlFlowView != null) controlFlowView.copySelection(); break;
             case ATTRIBUTES: if (attributesView != null) attributesView.copySelection(); break;
+            case STATISTICS: if (statisticsView != null) statisticsView.copySelection(); break;
         }
     }
 
@@ -334,6 +329,7 @@ public class EditorTab extends JPanel {
             case CPG: return cpgView != null ? cpgView.getText() : "";
             case CFG: return controlFlowView != null ? controlFlowView.getText() : "";
             case ATTRIBUTES: return attributesView != null ? attributesView.getText() : "";
+            case STATISTICS: return statisticsView != null ? statisticsView.getText() : "";
             default: return "";
         }
     }
@@ -351,6 +347,7 @@ public class EditorTab extends JPanel {
             case CPG: if (cpgView != null) cpgView.goToLine(line); break;
             case CFG: if (controlFlowView != null) controlFlowView.goToLine(line); break;
             case ATTRIBUTES: if (attributesView != null) attributesView.goToLine(line); break;
+            case STATISTICS: if (statisticsView != null) statisticsView.goToLine(line); break;
         }
     }
 
@@ -387,6 +384,7 @@ public class EditorTab extends JPanel {
             case CPG: if (cpgView != null) cpgView.showFindDialog(); break;
             case CFG: if (controlFlowView != null) controlFlowView.showFindDialog(); break;
             case ATTRIBUTES: if (attributesView != null) attributesView.showFindDialog(); break;
+            case STATISTICS: if (statisticsView != null) statisticsView.showFindDialog(); break;
         }
     }
 
@@ -416,6 +414,7 @@ public class EditorTab extends JPanel {
             case CPG: return cpgView != null ? cpgView.getSelectedText() : null;
             case CFG: return controlFlowView != null ? controlFlowView.getSelectedText() : null;
             case ATTRIBUTES: return attributesView != null ? attributesView.getSelectedText() : null;
+            case STATISTICS: return statisticsView != null ? statisticsView.getSelectedText() : null;
             default: return null;
         }
     }
@@ -435,6 +434,7 @@ public class EditorTab extends JPanel {
             case CPG: if (cpgView != null) cpgView.scrollToText(methodName); break;
             case CFG: if (controlFlowView != null) controlFlowView.scrollToText(methodName); break;
             case ATTRIBUTES: if (attributesView != null) attributesView.scrollToText(methodName); break;
+            case STATISTICS: if (statisticsView != null) statisticsView.scrollToText(methodName); break;
         }
     }
 
@@ -473,6 +473,7 @@ public class EditorTab extends JPanel {
         if (cpgView != null) cpgView.setFontSize(size);
         if (controlFlowView != null) controlFlowView.setFontSize(size);
         if (attributesView != null) attributesView.setFontSize(size);
+        if (statisticsView != null) statisticsView.setFontSize(size);
     }
 
     /**
@@ -490,6 +491,7 @@ public class EditorTab extends JPanel {
         if (cpgView != null) cpgView.setWordWrap(enabled);
         if (controlFlowView != null) controlFlowView.setWordWrap(enabled);
         if (attributesView != null) attributesView.setWordWrap(enabled);
+        if (statisticsView != null) statisticsView.setWordWrap(enabled);
     }
 
     /**
@@ -525,6 +527,7 @@ public class EditorTab extends JPanel {
             case CPG: if (cpgView != null) { cpgView.scrollToText(methodName); return true; } return false;
             case CFG: if (controlFlowView != null) { controlFlowView.scrollToText(methodName); return true; } return false;
             case ATTRIBUTES: if (attributesView != null) { attributesView.scrollToText(methodName); return true; } return false;
+            case STATISTICS: if (statisticsView != null) { statisticsView.scrollToText(methodName); return true; } return false;
             default: return false;
         }
     }

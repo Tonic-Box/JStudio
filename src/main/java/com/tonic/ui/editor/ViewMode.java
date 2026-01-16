@@ -12,12 +12,13 @@ public enum ViewMode {
     CONSTPOOL("Const Pool", "Constant pool entries"),
     IR("SSA IR", "SSA Intermediate Representation"),
     AST("AST IR", "Abstract Syntax Tree representation"),
-    PDG("PDG", "Program Dependence Graph"),
-    SDG("SDG", "System Dependence Graph"),
-    CPG("CPG", "Code Property Graph"),
-    CFG("Control Flow", "Control flow graph visualization"),
+    PDG("Program Dependence", "Program Dependence Graph"),
+    SDG("System Dependence", "System Dependence Graph"),
+    CPG("Code Property", "Code Property Graph"),
+    CFG("Control Flow", "Control Flow Graph"),
     HEX("Hex", "Raw class file bytes"),
-    ATTRIBUTES("Attributes", "Class, field, and method attributes");
+    ATTRIBUTES("Attributes", "Class, field, and method attributes"),
+    STATISTICS("Statistics", "Class statistics and metrics");
 
     private final String displayName;
     private final String description;

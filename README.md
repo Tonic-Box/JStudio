@@ -17,18 +17,17 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 - **SSA IR** - Static Single Assignment intermediate representation
 - **AST IR** - Abstract Syntax Tree representation
 
-**Other**
-- **Const Pool** - Constant pool entry browser
-- **Hex** - Raw class file bytes
-
-### Graph Visualization
-
-Interactive graph views with drag panning, zoom, and DOT export:
-
+**Graph Views**
 - **Control Flow** - Basic block CFG with bytecode/IR toggle
-- **PDG** - Program Dependence Graph (data + control dependencies)
-- **SDG** - System Dependence Graph (interprocedural)
-- **CPG** - Code Property Graph (unified representation)
+- **Program Dependence** - Data and control dependency graph
+- **System Dependence** - Interprocedural dependence graph
+- **Code Property** - Unified code property graph
+
+**Other Views**
+- **Const Pool** - Constant pool entry browser with filtering
+- **Attributes** - Class, field, and method attributes tree view
+- **Statistics** - Class metrics dashboard with charts (method sizes, complexity, opcode distribution)
+- **Hex** - Raw class file bytes
 
 ### Analysis Tools
 

@@ -42,6 +42,7 @@ public class ViewModeComboBox extends JComboBox<Object> {
         addItem(HEADER_PREFIX + "Other");
         addItem(ViewMode.CONSTPOOL);
         addItem(ViewMode.ATTRIBUTES);
+        addItem(ViewMode.STATISTICS);
         addItem(ViewMode.HEX);
 
         setRenderer(new ViewModeListCellRenderer());
