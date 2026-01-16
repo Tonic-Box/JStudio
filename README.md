@@ -1,209 +1,180 @@
 ![img.png](img.png)
 ![img_1.png](img_1.png)
+
 A Java reverse engineering and static analysis IDE for analyzing, decompiling, and transforming Java bytecode.
 
 Powered by [YABR](https://github.com/Tonic-Box/YABR)
 
 ## Features
 
-### Multi-View Code Editor
-- **Source View** - Decompiled Java with syntax highlighting
-- **Bytecode View** - Disassembled JVM instructions with color-coded opcodes
-- **IR View** - SSA-form intermediate representation
-- **Hex View** - Raw class file bytes
+### Multi-View Editor
+
+**Code Views**
+- **Source** - Decompiled Java with syntax highlighting
+- **Bytecode** - JVM instructions with color-coded opcodes
+
+**IR Views**
+- **SSA IR** - Static Single Assignment intermediate representation
+- **AST IR** - Abstract Syntax Tree representation
+
+**Other**
+- **Const Pool** - Constant pool entry browser
+- **Hex** - Raw class file bytes
+
+### Graph Visualization
+
+Interactive graph views with drag panning, zoom, and DOT export:
+
+- **Control Flow** - Basic block CFG with bytecode/IR toggle
+- **PDG** - Program Dependence Graph (data + control dependencies)
+- **SDG** - System Dependence Graph (interprocedural)
+- **CPG** - Code Property Graph (unified representation)
 
 ### Analysis Tools
-- **Call Graph** - Visual method call hierarchies
-- **Dependencies** - Class dependency visualization
+
+- **Call Graph** - Method call hierarchy visualization
+- **Dependencies** - Class dependency graphs with cycle detection
+- **Data Flow** - Forward/backward flow analysis with taint tracking
+- **Pattern Search** - Find method calls, field access, allocations, type casts
+- **Similarity** - Detect duplicate and renamed methods
+- **Simulation** - Find opaque predicates, dead code, decryption patterns
+- **Strings** - Extract and search constant pool strings
+- **Query Explorer** - Flexible query builder for code searches
 - **Cross-References** - Bidirectional symbol reference tracking
-- **Data Flow** - SSA-based data flow analysis
-- **Similarity** - Method duplicate detection
-- **String Extraction** - Constant pool string search
-- **Usages** - Find method calls, field accesses, allocations
-- **Constant Pool Browser** - Inspect constant pool entries with tree/table views
 
 ### Bytecode Debugger
-- **Breakpoints** - Set breakpoints at any bytecode instruction
-- **Stepping** - Step into, step over, step out, run to cursor
-- **Variable Inspection** - View and edit local variables while paused
-- **Stack Inspection** - View and edit operand stack values
-- **Object Inspector** - Drill down into object fields with nested inspection
-- **Call Stack** - Full call stack visualization with frame selection
-- **Execution Trace** - Record and replay execution history
+
+- **Breakpoints** - Set breakpoints on any instruction
+- **Stepping** - Step into, over, out, run to cursor
+- **Variable Inspection** - View and edit locals and stack
+- **Call Stack** - Navigate stack frames
+- **Execution Modes** - Stub mode (fast) or recursive mode (full)
+- **Tracing** - Record execution history, export to Markdown
 
 ### Heap Analysis
-- **Object Browser** - Explore all allocated objects by class
-- **Field Inspection** - View object fields and array contents
-- **Heap Snapshots** - Capture and compare heap state at different points
-- **Allocation Tracking** - Track object creation and mutation events
-- **Forensics** - Provenance tracking for object origins
+
+- **Object Browser** - Explore allocated objects by class
+- **Field Inspection** - View object fields and arrays
+- **Snapshots** - Capture and compare heap state
+- **Forensics** - Track object creation and mutations
 
 ### Test Generation
-- **Method Execution** - Execute methods with custom arguments
-- **Fuzz Testing** - Automated input generation for branch coverage
-- **Parameter Configuration** - Configure primitive, object, and array parameters
-- **Object Templates** - Reusable object construction specifications
+
+- **Method Execution** - Run methods with custom arguments
+- **Fuzz Testing** - Automated input generation
+- **JUnit Export** - Generate JUnit 4/5 test cases
 
 ### Deobfuscation
-- **Encrypted String Detection** - Find obfuscated strings in bytecode
-- **Decryptor Identification** - Locate string decryption methods
-- **Auto-Decryption** - Execute decryptors to reveal original strings
-- **Constant Pool Patching** - Replace encrypted strings with decrypted values
+
+- **String Detection** - Find encrypted strings
+- **Decryptor ID** - Locate decryption methods
+- **Auto-Decrypt** - Execute decryptors to reveal strings
+- **Name Recovery** - Deobfuscate class/method/field names
 
 ### Code Transformation
-- **SSA Transforms** - Apply static single assignment optimizations with before/after preview
-- **Custom Scripting** - Built-in scripting language for AST and IR manipulation
+
+- **Script Editor** - Custom scripting language for AST/bytecode/IR manipulation
+- **Optimizations** - Constant folding, copy propagation, dead code elimination, strength reduction
+- **Stack Frames** - Recompute stack map frames
 
 ### UI
+
 - Tabbed editor with multiple views per class
 - Navigator tree with package hierarchy
-- Properties panel for class/method/field metadata
+- Properties panel for metadata
 - Console with multi-level logging
-- 8 built-in themes (dark and light)
+- 8 built-in themes
 
 ## Building & Running
 
-### Quick Start
 ```bash
-./gradlew run              # Run the application directly
-./gradlew build            # Compile + test + create fat JAR
-```
-
-### Distribution
-```bash
+./gradlew run              # Run directly
+./gradlew build            # Compile + test + create JAR
 ./gradlew shadowJar        # Create fat JAR only
-java -jar build/libs/JStudio.jar           # Launch GUI
-java -jar build/libs/JStudio.jar --cli     # Launch CLI mode
 ```
 
-### Development
 ```bash
-./gradlew clean build      # Fresh build
-./gradlew refreshDependencies build  # Force refresh SNAPSHOT deps
+java -jar build/libs/JStudio.jar           # Launch GUI
+java -jar build/libs/JStudio.jar --cli     # Launch CLI
 ```
 
 ## Usage
 
-1. **Open a project**: File → Open (Ctrl+O) to load a JAR, directory, or class file
-2. **Navigate**: Use the class tree on the left to browse packages and classes
-3. **View code**: Double-click a class to open it, use View menu to switch between Source/Bytecode/IR/Hex
-4. **Analyze**: Use Analysis menu for call graphs, dependencies, cross-references, etc.
-5. **Debug**: Right-click a method → Debug Method to launch the bytecode debugger
-6. **Execute**: Right-click a method → Execute Method to run with custom arguments
-7. **Deobfuscate**: Use Tools → Deobfuscation to detect and decrypt obfuscated strings
-8. **Transform**: Use Scripting menu to open the script editor for custom transformations
+1. **Open**: File → Open (Ctrl+O) to load JAR, directory, or class file
+2. **Navigate**: Browse packages and classes in the tree
+3. **View**: Switch views using the dropdown or View menu
+4. **Analyze**: Use Analysis menu for graphs, dependencies, searches
+5. **Debug**: Right-click method → Debug Method
+6. **Execute**: Right-click method → Execute Method
+7. **Transform**: Use Transform menu for scripts and optimizations
 
 ## Keyboard Shortcuts
 
 | Action | Shortcut |
 |--------|----------|
-| Open Project | Ctrl+O |
+| Open | Ctrl+O |
 | Source View | F5 |
 | Bytecode View | F6 |
 | IR View | F7 |
 | Find in Files | Ctrl+Shift+F |
-| Go to Class | Ctrl+Shift+N |
-| Increase Font | Ctrl++ |
-| Decrease Font | Ctrl+- |
+| Go to Class | Ctrl+G |
+| Run Analysis | F9 |
+| Call Graph | Ctrl+Shift+G |
 
-**Debugger Shortcuts** (when debugger is open):
+**Debugger:**
 
 | Action | Shortcut |
 |--------|----------|
 | Step Into | F7 |
 | Step Over | F8 |
 | Step Out | Shift+F8 |
-| Resume/Pause | F9 |
+| Resume | F9 |
 
 ## CLI Mode
 
-JStudio includes a headless CLI for scripted analysis and automation. Add `--cli` anywhere in arguments to enable CLI mode.
+```bash
+java -jar JStudio.jar --cli --help
+```
 
 ### Commands
 
 ```bash
-# Show help
-java -jar JStudio.jar --cli --help
-
-# Display target information
+# Display info
 java -jar JStudio.jar --cli info app.jar
-java -jar JStudio.jar --cli info app.jar --stats
-java -jar JStudio.jar --cli info app.jar -c com.example.Main --methods
+java -jar JStudio.jar --cli info app.jar --stats --json
 
-# Run a plugin/script on target
-java -jar JStudio.jar --cli run app.jar -p scanner.groovy
-java -jar JStudio.jar --cli run app.jar -p plugin.jar -o results.json -f json
+# Run plugin/script
+java -jar JStudio.jar --cli run app.jar -p script.groovy
+java -jar JStudio.jar --cli run app.jar -p plugin.jar -o results.json
 
-# Interactive REPL mode
+# Interactive REPL
 java -jar JStudio.jar --cli repl app.jar
 
-# Batch process multiple targets
+# Batch processing
 java -jar JStudio.jar --cli batch *.jar -p analyzer.groovy --parallel
 ```
-
-### Info Command Options
-
-| Option | Description |
-|--------|-------------|
-| `-c, --class <name>` | Show details for specific class |
-| `-m, --methods` | List methods |
-| `-f, --fields` | List fields |
-| `--stats` | Show statistics only |
-| `--json` | Output as JSON |
-
-### Run Command Options
-
-| Option | Description |
-|--------|-------------|
-| `-p, --plugin <file>` | Plugin/script file (.groovy, .jar) |
-| `-d, --plugin-dir <dir>` | Directory containing plugins |
-| `-o, --output <file>` | Output file |
-| `-f, --format <fmt>` | Output format: text, json, csv |
-| `-c, --class <pattern>` | Target specific class |
-| `-m, --method <pattern>` | Target specific method |
-| `--dry-run` | Validate without executing |
 
 ### REPL Commands
 
 | Command | Description |
 |---------|-------------|
-| `:load <path>` | Load JAR/class file/directory |
-| `:classes [pattern]` | List classes (optional filter) |
-| `:methods <class>` | List methods of a class |
+| `:load <path>` | Load JAR/class/directory |
+| `:classes [pattern]` | List classes |
+| `:methods <class>` | List methods |
 | `:info <class>` | Show class details |
-| `:run <script>` | Execute script file |
-| `:stats` | Show project statistics |
-| `:clear` | Clear screen |
-| `:help` | Show help |
-| `:quit` | Exit REPL |
-
-### REPL Scripting
-
-The REPL provides Groovy scripting with these variables:
-
-| Variable | Description |
-|----------|-------------|
-| `project` | ProjectApi for class/method access |
-| `analysis` | AnalysisApi for call graph, patterns |
-| `yabr` | YabrAccess for raw bytecode access |
-| `results` | ResultCollector for findings |
-| `log` | Logger for output |
-
-Example:
-```groovy
-project.classes.each { println it.name }
-```
+| `:run <script>` | Execute script |
+| `:quit` | Exit |
 
 ## Dependencies
 
-- [FlatLaf](https://www.formdev.com/flatlaf/) - Modern Swing look and feel
+- [FlatLaf](https://www.formdev.com/flatlaf/) - Swing look and feel
 - [RSyntaxTextArea](https://github.com/bobbylight/RSyntaxTextArea) - Syntax highlighting
 - [JGraphX](https://github.com/jgraph/jgraphx) - Graph visualization
 - [JavaParser](https://javaparser.org/) - Java parsing
-- [YABR](https://github.com/Tonic-Box/YABR) - Bytecode analysis framework
+- [YABR](https://github.com/Tonic-Box/YABR) - Bytecode analysis
 - [picocli](https://picocli.info/) - CLI framework
-- [JLine](https://github.com/jline/jline3) - Terminal handling for REPL
-- [Groovy](https://groovy-lang.org/) - Scripting language support
+- [JLine](https://github.com/jline/jline3) - Terminal handling
+- [Groovy](https://groovy-lang.org/) - Scripting support
 
 ## License
 
