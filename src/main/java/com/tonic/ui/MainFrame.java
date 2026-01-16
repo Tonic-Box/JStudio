@@ -1,7 +1,5 @@
 package com.tonic.ui;
 
-import com.tonic.analysis.pattern.PatternSearch;
-import com.tonic.analysis.pattern.SearchResult;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.analysis.AnalysisPanel;
@@ -1315,130 +1313,6 @@ public class MainFrame extends JFrame {
         }
     }
 
-    public void findUsages() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass == null) {
-            showWarning("No class selected.");
-            return;
-        }
-
-        // Show results in a dialog
-        statusBar.showProgress("Finding usages...");
-
-        SwingWorker<List<SearchResult>, Void> worker = new SwingWorker<>() {
-            @Override
-            protected List<SearchResult> doInBackground() {
-                PatternSearch search = new PatternSearch(project.getClassPool())
-                        .inAllClasses()
-                        .limit(100);
-
-                // Search for method calls to this class
-                String className = currentClass.getClassName();
-                List<SearchResult> results = new ArrayList<>(search.findMethodCalls(className, ".*"));
-
-                // Search for field accesses
-                PatternSearch fieldSearch = new PatternSearch(project.getClassPool())
-                        .inAllClasses()
-                        .limit(50);
-                results.addAll(fieldSearch.findFieldAccesses(className));
-
-                // Search for allocations
-                PatternSearch allocSearch = new PatternSearch(project.getClassPool())
-                        .inAllClasses()
-                        .limit(50);
-                results.addAll(allocSearch.findAllocations(className));
-
-                return results;
-            }
-
-            @Override
-            protected void done() {
-                statusBar.hideProgress();
-                try {
-                    List<SearchResult> results = get();
-                    showUsageResults(currentClass.getClassName(), results);
-                } catch (Exception e) {
-                    showError("Find usages failed: " + e.getMessage());
-                }
-            }
-        };
-
-        worker.execute();
-    }
-
-    private void showUsageResults(String className, List<SearchResult> results) {
-        if (results.isEmpty()) {
-            showInfo("No usages found for " + className);
-            return;
-        }
-
-        // Show in analysis panel's search tab
-        showAnalysisDialog();
-        analysisPanel.showSearch();
-
-        // Log results to console
-        consolePanel.log("Found " + results.size() + " usages of " + className);
-        for (SearchResult result : results) {
-            String location = "";
-            if (result.getClassFile() != null) {
-                location = result.getClassFile().getClassName();
-            }
-            if (result.getMethod() != null) {
-                location += "." + result.getMethod().getName();
-            }
-            consolePanel.log("  " + location + " - " + result.getDescription());
-        }
-    }
-
-    public void goToDefinition() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        // Get selected text from editor
-        String selectedText = editorPanel.getSelectedText();
-        if (selectedText == null || selectedText.trim().isEmpty()) {
-            showInfo("Select a class name, method name, or field name to go to its definition.");
-            return;
-        }
-
-        String searchTerm = selectedText.trim();
-
-        // First try to find it as a class
-        for (ClassEntryModel classEntry : project.getAllClasses()) {
-            String simpleName = classEntry.getSimpleName();
-            String fullName = classEntry.getClassName();
-
-            if (simpleName.equals(searchTerm) || fullName.equals(searchTerm) ||
-                fullName.replace('/', '.').equals(searchTerm)) {
-                openClassInEditor(classEntry);
-                return;
-            }
-        }
-
-        // Try to find as method name
-        ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass != null) {
-            for (MethodEntryModel method : currentClass.getMethods()) {
-                if (method.getMethodEntry().getName().equals(searchTerm)) {
-                    // Scroll to method in editor
-                    editorPanel.scrollToMethod(method);
-                    return;
-                }
-            }
-        }
-
-        showInfo("Could not find definition for: " + searchTerm);
-    }
-
     // === Transform Operations ===
 
     public void showTransformDialog() {
@@ -1734,32 +1608,57 @@ public class MainFrame extends JFrame {
         String mod = System.getProperty("os.name").toLowerCase().contains("mac") ? "Cmd" : "Ctrl";
         String sb = "Keyboard Shortcuts:\n\n" +
                 "File:\n" +
-                "  " + mod + "+O       Open JAR/Class\n" +
-                "  " + mod + "+W       Close Tab\n" +
-                "  " + mod + "+Shift+W Close Project\n" +
-                "  " + mod + "+Q       Exit\n\n" +
+                "  " + mod + "+O         Open JAR/Class\n" +
+                "  " + mod + "+Shift+O   Open Recent\n" +
+                "  " + mod + "+S         Save Project\n" +
+                "  " + mod + "+Shift+S   Save Project As\n" +
+                "  " + mod + "+Alt+E     Export Class\n" +
+                "  " + mod + "+Shift+J   Export as JAR\n" +
+                "  " + mod + "+W         Close Tab\n" +
+                "  " + mod + "+Shift+W   Close Project\n" +
+                "  " + mod + "+Q         Exit\n\n" +
                 "Navigation:\n" +
-                "  " + mod + "+G       Go to Class\n" +
-                "  " + mod + "+L       Go to Line\n" +
-                "  Alt+Left     Navigate Back\n" +
-                "  Alt+Right    Navigate Forward\n\n" +
+                "  " + mod + "+G         Go to Class\n" +
+                "  " + mod + "+L         Go to Line\n" +
+                "  Alt+Left       Navigate Back\n" +
+                "  Alt+Right      Navigate Forward\n\n" +
                 "Edit:\n" +
-                "  " + mod + "+C       Copy\n" +
-                "  " + mod + "+F       Find\n" +
-                "  " + mod + "+Shift+F Find in Project\n\n" +
+                "  " + mod + "+C         Copy\n" +
+                "  " + mod + "+F         Find in File\n" +
+                "  " + mod + "+Shift+F   Find in Project\n" +
+                "  " + mod + "+B         Add Bookmark\n" +
+                "  " + mod + "+Shift+B   View Bookmarks\n" +
+                "  " + mod + "+;         Add Comment\n" +
+                "  " + mod + "+,         Preferences\n\n" +
                 "Views:\n" +
-                "  F5           Source View\n" +
-                "  F6           Bytecode View\n" +
-                "  F7           IR View\n" +
-                "  " + mod + "+F5      Refresh\n\n" +
+                "  F5             Source View\n" +
+                "  F6             Bytecode View\n" +
+                "  F7             IR View\n" +
+                "  F8             Hex View\n" +
+                "  " + mod + "+F5        Refresh\n" +
+                "  Alt+Z          Word Wrap\n\n" +
                 "Panels:\n" +
-                "  " + mod + "+1       Toggle Navigator\n" +
-                "  " + mod + "+2       Toggle Properties\n" +
-                "  " + mod + "+3       Toggle Console\n\n" +
+                "  " + mod + "+1         Toggle Navigator\n" +
+                "  " + mod + "+2         Toggle Properties\n" +
+                "  " + mod + "+3         Toggle Console\n\n" +
+                "Font:\n" +
+                "  " + mod + "+=         Increase Font\n" +
+                "  " + mod + "+-         Decrease Font\n" +
+                "  " + mod + "+0         Reset Font\n\n" +
                 "Analysis:\n" +
-                "  F9           Run Analysis\n" +
-                "  " + mod + "+Shift+G Call Graph\n" +
-                "  " + mod + "+Shift+T Transforms\n";
+                "  F9             Run Analysis\n" +
+                "  F10            Simulation Analysis\n" +
+                "  " + mod + "+Shift+Q   Query Explorer\n" +
+                "  " + mod + "+Shift+G   Call Graph\n\n" +
+                "Transform:\n" +
+                "  " + mod + "+Shift+T   Apply Transforms\n" +
+                "  " + mod + "+Alt+S     Script Editor\n" +
+                "  " + mod + "+Shift+D   String Deobfuscation\n\n" +
+                "VM:\n" +
+                "  F11            Bytecode Debugger\n" +
+                "  " + mod + "+Shift+C   VM Console\n" +
+                "  " + mod + "+Shift+E   Execute Method\n" +
+                "  " + mod + "+Shift+H   Heap Forensics\n";
 
         JOptionPane.showMessageDialog(this, sb, "Keyboard Shortcuts",
                 JOptionPane.INFORMATION_MESSAGE);

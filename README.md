@@ -109,25 +109,99 @@ java -jar build/libs/JStudio.jar --cli     # Launch CLI
 
 ## Keyboard Shortcuts
 
+**File**
+
 | Action | Shortcut |
 |--------|----------|
-| Open | Ctrl+O |
+| Open JAR/Class | Ctrl+O |
+| Open Recent | Ctrl+Shift+O |
+| Save Project | Ctrl+S |
+| Save Project As | Ctrl+Shift+S |
+| Export Class | Ctrl+Alt+E |
+| Export as JAR | Ctrl+Shift+J |
+| Close Tab | Ctrl+W |
+| Close Project | Ctrl+Shift+W |
+| Exit | Ctrl+Q |
+
+**Navigation**
+
+| Action | Shortcut |
+|--------|----------|
+| Go to Class | Ctrl+G |
+| Go to Line | Ctrl+L |
+| Navigate Back | Alt+Left |
+| Navigate Forward | Alt+Right |
+
+**Edit**
+
+| Action | Shortcut |
+|--------|----------|
+| Copy | Ctrl+C |
+| Find in File | Ctrl+F |
+| Find in Project | Ctrl+Shift+F |
+| Add Bookmark | Ctrl+B |
+| View Bookmarks | Ctrl+Shift+B |
+| Add Comment | Ctrl+; |
+| Preferences | Ctrl+, |
+
+**Views**
+
+| Action | Shortcut |
+|--------|----------|
 | Source View | F5 |
 | Bytecode View | F6 |
 | IR View | F7 |
-| Find in Files | Ctrl+Shift+F |
-| Go to Class | Ctrl+G |
-| Run Analysis | F9 |
-| Call Graph | Ctrl+Shift+G |
+| Hex View | F8 |
+| Refresh | Ctrl+F5 |
+| Word Wrap | Alt+Z |
 
-**Debugger:**
+**Panels**
 
 | Action | Shortcut |
 |--------|----------|
-| Step Into | F7 |
-| Step Over | F8 |
-| Step Out | Shift+F8 |
-| Resume | F9 |
+| Toggle Navigator | Ctrl+1 |
+| Toggle Properties | Ctrl+2 |
+| Toggle Console | Ctrl+3 |
+
+**Font**
+
+| Action | Shortcut |
+|--------|----------|
+| Increase Font | Ctrl+= |
+| Decrease Font | Ctrl+- |
+| Reset Font | Ctrl+0 |
+
+**Analysis**
+
+| Action | Shortcut |
+|--------|----------|
+| Run Analysis | F9 |
+| Simulation Analysis | F10 |
+| Query Explorer | Ctrl+Shift+Q |
+| Call Graph | Ctrl+Shift+G |
+
+**Transform**
+
+| Action | Shortcut |
+|--------|----------|
+| Apply Transforms | Ctrl+Shift+T |
+| Script Editor | Ctrl+Alt+S |
+| String Deobfuscation | Ctrl+Shift+D |
+
+**VM**
+
+| Action | Shortcut |
+|--------|----------|
+| Bytecode Debugger | F11 |
+| VM Console | Ctrl+Shift+C |
+| Execute Method | Ctrl+Shift+E |
+| Heap Forensics | Ctrl+Shift+H |
+
+**Help**
+
+| Action | Shortcut |
+|--------|----------|
+| Keyboard Shortcuts | F1 |
 
 ## CLI Mode
 

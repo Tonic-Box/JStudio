@@ -7,11 +7,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Stats view&#10;- Attribute view&#10;- updated README.md">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewModeComboBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewModeComboBox.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/KeyboardShortcuts.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/KeyboardShortcuts.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -221,14 +221,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00010" summary="- readme">
-      <option name="closed" value="true" />
-      <created>1766553088606</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1766553088606</updated>
     </task>
     <task id="LOCAL-00011" summary="- Debugger">
       <option name="closed" value="true" />
@@ -614,7 +606,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768555615500</updated>
     </task>
-    <option name="localTasksCounter" value="59" />
+    <task id="LOCAL-00059" summary="- Stats view&#10;- Attribute view&#10;- updated README.md">
+      <option name="closed" value="true" />
+      <created>1768557171513</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1768557171513</updated>
+    </task>
+    <option name="localTasksCounter" value="60" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -629,7 +629,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Heap analysis: ui improvements" />
     <MESSAGE value="- Heap analysis: argument fix" />
     <MESSAGE value="- Heap analysis: cleanup" />
     <MESSAGE value="-Debugger" />
@@ -654,7 +653,8 @@
     <MESSAGE value="- Restructured graphing views to reuse the same component&#10;- Made the graphing views draggable and zoomable via mouse wheel" />
     <MESSAGE value="- Update readme" />
     <MESSAGE value="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui" />
+    <MESSAGE value="- Stats view&#10;- Attribute view&#10;- updated README.md" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Stats view&#10;- Attribute view&#10;- updated README.md" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

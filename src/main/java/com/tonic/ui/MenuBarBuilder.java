@@ -244,14 +244,6 @@ public class MenuBarBuilder {
         menu.add(createMenuItem("Simulation Analysis", KeyEvent.VK_F10, 0,
                 Icons.getIcon("analyze"), e -> mainFrame.runSimulationAnalysis()));
 
-        menu.addSeparator();
-
-        menu.add(createMenuItem("Find Usages", KeyEvent.VK_U, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.findUsages()));
-
-        menu.add(createMenuItem("Go to Definition", KeyEvent.VK_B, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.goToDefinition()));
-
         return menu;
     }
 

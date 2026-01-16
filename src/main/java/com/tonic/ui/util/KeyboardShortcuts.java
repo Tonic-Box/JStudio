@@ -84,12 +84,6 @@ public class KeyboardShortcuts {
         registerAction(rootPane, condition, KeyStroke.getKeyStroke(KeyEvent.VK_T, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK),
                 "showTransforms", e -> mainFrame.showTransformDialog());
 
-        registerAction(rootPane, condition, KeyStroke.getKeyStroke(KeyEvent.VK_U, MENU_SHORTCUT_MASK),
-                "findUsages", e -> mainFrame.findUsages());
-
-        registerAction(rootPane, condition, KeyStroke.getKeyStroke(KeyEvent.VK_B, MENU_SHORTCUT_MASK),
-                "goToDefinition", e -> mainFrame.goToDefinition());
-
         // Panel toggles
         registerAction(rootPane, condition, KeyStroke.getKeyStroke(KeyEvent.VK_1, MENU_SHORTCUT_MASK),
                 "toggleNavigator", e -> mainFrame.toggleNavigatorPanel());
