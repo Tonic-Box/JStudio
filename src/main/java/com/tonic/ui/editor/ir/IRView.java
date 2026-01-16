@@ -2,54 +2,50 @@ package com.tonic.ui.editor.ir;
 
 import com.tonic.analysis.ssa.SSA;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.theme.*;
+
 import lombok.Getter;
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.Token;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rtextarea.RTextScrollPane;
+import org.fife.ui.rtextarea.SearchContext;
+import org.fife.ui.rtextarea.SearchEngine;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
+import javax.swing.OverlayLayout;
 import javax.swing.SwingWorker;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
+import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
-import javax.swing.SwingUtilities;
 
-/**
- * IR view showing SSA-form intermediate representation.
- */
 public class IRView extends JPanel implements ThemeChangeListener {
 
+    private static final String SYNTAX_STYLE_IR = "text/ir";
+
+    static {
+        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
+        atmf.putMapping(SYNTAX_STYLE_IR, "com.tonic.ui.editor.ir.IRTokenMaker");
+    }
+
     private final ClassEntryModel classEntry;
-    private final JTextPane textPane;
-    private final StyledDocument doc;
-
-    // Styles for different IR elements
-    private final SimpleAttributeSet defaultStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet blockStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet phiStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet valueStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet operatorStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet controlStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet invokeStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet fieldStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet constStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet commentStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet headerStyle = new SimpleAttributeSet();
-
-    private final JScrollPane scrollPane;
+    private final RSyntaxTextArea textArea;
+    private final RTextScrollPane scrollPane;
+    private final LoadingOverlay loadingOverlay;
 
     private static final String METHOD_DIVIDER = "=========================================================================";
 
     @Getter
     private boolean loaded = false;
+    private SwingWorker<String, Void> currentWorker;
 
     public IRView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -57,24 +53,32 @@ public class IRView extends JPanel implements ThemeChangeListener {
         setLayout(new BorderLayout());
         setBackground(JStudioTheme.getBgTertiary());
 
-        textPane = new JTextPane();
-        textPane.setEditable(false);
-        textPane.setBackground(JStudioTheme.getBgTertiary());
-        textPane.setForeground(JStudioTheme.getTextPrimary());
-        textPane.setCaretColor(JStudioTheme.getTextPrimary());
-        textPane.setFont(JStudioTheme.getCodeFont(12));
+        textArea = new RSyntaxTextArea();
+        textArea.setSyntaxEditingStyle(SYNTAX_STYLE_IR);
+        textArea.setEditable(false);
+        textArea.setAntiAliasingEnabled(true);
+        textArea.setFont(JStudioTheme.getCodeFont(12));
+        textArea.setCodeFoldingEnabled(false);
+        textArea.setBracketMatchingEnabled(false);
 
-        doc = textPane.getStyledDocument();
-
-        // Initialize styles
-        initStyles();
-
-        scrollPane = new JScrollPane(textPane);
+        scrollPane = new RTextScrollPane(textArea);
+        scrollPane.setLineNumbersEnabled(true);
         scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
-        add(scrollPane, BorderLayout.CENTER);
+        loadingOverlay = new LoadingOverlay();
 
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new OverlayLayout(contentPanel));
+        loadingOverlay.setAlignmentX(0.5f);
+        loadingOverlay.setAlignmentY(0.5f);
+        scrollPane.setAlignmentX(0.5f);
+        scrollPane.setAlignmentY(0.5f);
+        contentPanel.add(loadingOverlay);
+        contentPanel.add(scrollPane);
+
+        add(contentPanel, BorderLayout.CENTER);
+
+        applyTheme();
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
@@ -86,52 +90,55 @@ public class IRView extends JPanel implements ThemeChangeListener {
     private void applyTheme() {
         setBackground(JStudioTheme.getBgTertiary());
 
-        textPane.setBackground(JStudioTheme.getBgTertiary());
-        textPane.setForeground(JStudioTheme.getTextPrimary());
-        textPane.setCaretColor(JStudioTheme.getTextPrimary());
+        textArea.setBackground(JStudioTheme.getBgTertiary());
+        textArea.setForeground(JStudioTheme.getTextPrimary());
+        textArea.setCaretColor(JStudioTheme.getTextPrimary());
+        textArea.setSelectionColor(JStudioTheme.getSelection());
+        textArea.setCurrentLineHighlightColor(JStudioTheme.getLineHighlight());
+        textArea.setFadeCurrentLineHighlight(true);
 
-        scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
+        scrollPane.getGutter().setBackground(JStudioTheme.getBgSecondary());
+        scrollPane.getGutter().setLineNumberColor(JStudioTheme.getTextSecondary());
+        scrollPane.getGutter().setBorderColor(JStudioTheme.getBorder());
 
-        initStyles();
+        SyntaxScheme scheme = textArea.getSyntaxScheme();
+
+        setTokenStyle(scheme, Token.IDENTIFIER, JStudioTheme.getTextPrimary());
+        setTokenStyle(scheme, Token.WHITESPACE, JStudioTheme.getTextPrimary());
+        setTokenStyle(scheme, Token.SEPARATOR, JStudioTheme.getTextSecondary());
+        setTokenStyle(scheme, Token.OPERATOR, SyntaxColors.getIrOperator());
+        setTokenStyle(scheme, Token.LITERAL_STRING_DOUBLE_QUOTE, SyntaxColors.getJavaString());
+        setTokenStyle(scheme, Token.LITERAL_CHAR, SyntaxColors.getJavaString());
+
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_COMMENT, JStudioTheme.getTextSecondary());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_DIVIDER, JStudioTheme.getAccentSecondary());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_HEADER, JStudioTheme.getAccent());
+
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_BLOCK, SyntaxColors.getIrBlock());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_PHI, SyntaxColors.getIrPhi());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_VALUE, SyntaxColors.getIrValue());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_OPERATOR, SyntaxColors.getIrOperator());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_CONTROL, SyntaxColors.getIrControl());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_INVOKE, SyntaxColors.getIrInvoke());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_FIELD, SyntaxColors.getIrGetField());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_CONST, SyntaxColors.getIrConstant());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_NEW, SyntaxColors.getIrNew());
+        setTokenStyle(scheme, IRTokenMaker.TOKEN_CAST, SyntaxColors.getIrCast());
+
         repaint();
     }
 
-    private void initStyles() {
-        updateStyle(defaultStyle, JStudioTheme.getTextPrimary());
-        updateStyle(blockStyle, SyntaxColors.getIrBlock());
-        StyleConstants.setBold(blockStyle, true);
-        updateStyle(phiStyle, SyntaxColors.getIrPhi());
-        updateStyle(valueStyle, SyntaxColors.getIrValue());
-        updateStyle(operatorStyle, SyntaxColors.getIrOperator());
-        updateStyle(controlStyle, SyntaxColors.getIrControl());
-        updateStyle(invokeStyle, SyntaxColors.getBcInvoke());
-        updateStyle(fieldStyle, SyntaxColors.getBcField());
-        updateStyle(constStyle, SyntaxColors.getBcConst());
-        updateStyle(commentStyle, JStudioTheme.getTextSecondary());
-        updateStyle(headerStyle, JStudioTheme.getAccent());
-        StyleConstants.setBold(headerStyle, true);
-    }
-
-    private void updateStyle(SimpleAttributeSet style, Color color) {
-        StyleConstants.setForeground(style, color);
-        StyleConstants.setFontFamily(style, JStudioTheme.getCodeFont(12).getFamily());
-        StyleConstants.setFontSize(style, 12);
-    }
-
-    /**
-     * Refresh/reload the IR view.
-     */
-    public void refresh() {
-        // Show loading message
-        try {
-            doc.remove(0, doc.getLength());
-            doc.insertString(0, "// Lifting to SSA IR...\n", commentStyle);
-        } catch (BadLocationException e) {
-            // Ignore
+    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color) {
+        if (scheme.getStyle(tokenType) != null) {
+            scheme.getStyle(tokenType).foreground = color;
         }
+    }
 
-        // Lift IR in background
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
+    public void refresh() {
+        cancelCurrentWorker();
+        loadingOverlay.showLoading("Lifting to SSA IR...");
+
+        currentWorker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
                 return generateIR();
@@ -139,30 +146,34 @@ public class IRView extends JPanel implements ThemeChangeListener {
 
             @Override
             protected void done() {
+                loadingOverlay.hideLoading();
+                if (isCancelled()) {
+                    return;
+                }
                 try {
-                    String ir = get();
-                    doc.remove(0, doc.getLength());
-                    formatIR(ir);
-                    textPane.setCaretPosition(0);
+                    String irText = get();
+                    textArea.setText(irText);
+                    textArea.setCaretPosition(0);
                     loaded = true;
                 } catch (Exception e) {
-                    try {
-                        doc.remove(0, doc.getLength());
-                        doc.insertString(0, "// Failed to generate IR: " + e.getMessage(), commentStyle);
-                    } catch (BadLocationException ex) {
-                        // Ignore
-                    }
+                    textArea.setText("// Failed to generate IR: " + e.getMessage());
                 }
             }
         };
 
-        worker.execute();
+        currentWorker.execute();
+    }
+
+    private void cancelCurrentWorker() {
+        if (currentWorker != null && !currentWorker.isDone()) {
+            currentWorker.cancel(true);
+            loadingOverlay.hideLoading();
+        }
     }
 
     private String generateIR() {
         StringBuilder sb = new StringBuilder();
 
-        // Class header
         sb.append("// Class: ").append(classEntry.getClassName()).append("\n");
         sb.append("// Super: ").append(classEntry.getSuperClassName()).append("\n");
         if (!classEntry.getInterfaceNames().isEmpty()) {
@@ -170,28 +181,22 @@ public class IRView extends JPanel implements ThemeChangeListener {
         }
         sb.append("\n");
 
-        // Create SSA processor
         SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
 
-        // Methods
         int methodIndex = 0;
         int totalMethods = classEntry.getMethods().size();
         for (MethodEntryModel methodModel : classEntry.getMethods()) {
             methodIndex++;
             MethodEntry method = methodModel.getMethodEntry();
 
-            // Method divider
             sb.append("\n// ").append(METHOD_DIVIDER).append("\n");
             sb.append("// Method ").append(methodIndex).append(" of ").append(totalMethods).append("\n");
             sb.append("// ").append(METHOD_DIVIDER).append("\n\n");
 
-            // Method header
             sb.append("//").append(formatAccessFlags(method.getAccess()));
             sb.append(" ").append(method.getName()).append(method.getDesc()).append("\n");
 
-            // Method IR
             if (method.getCodeAttribute() != null) {
-                // Check cache first
                 String cachedIR = methodModel.getIrCache();
                 if (cachedIR != null) {
                     sb.append(cachedIR);
@@ -228,177 +233,23 @@ public class IRView extends JPanel implements ThemeChangeListener {
         return sb.toString();
     }
 
-    private void formatIR(String ir) {
-        String[] lines = ir.split("\n");
-        for (String line : lines) {
-            formatIRLine(line);
-        }
-    }
-
-    private void formatIRLine(String line) {
-        if (line.trim().isEmpty()) {
-            appendText("\n", defaultStyle);
-            return;
-        }
-
-        String trimmed = line.trim();
-
-        // Comment lines
-        if (trimmed.startsWith("//")) {
-            appendText(line + "\n", commentStyle);
-            return;
-        }
-
-        // Block headers (BLOCK B0:)
-        if (trimmed.startsWith("BLOCK ")) {
-            appendText(line + "\n", blockStyle);
-            return;
-        }
-
-        // PHI instructions
-        if (trimmed.startsWith("PHI:")) {
-            formatPhiLine(line);
-            return;
-        }
-
-        // Regular IR instructions
-        formatInstructionLine(line);
-    }
-
-    private void formatPhiLine(String line) {
-        int phiIdx = line.indexOf("PHI:");
-        if (phiIdx >= 0) {
-            appendText(line.substring(0, phiIdx), defaultStyle);
-            appendText("PHI", phiStyle);
-            appendText(": ", defaultStyle);
-            String rest = line.substring(phiIdx + 4);
-            formatPhiBody(rest);
-        } else {
-            appendText(line + "\n", phiStyle);
-        }
-    }
-
-    private void formatPhiBody(String body) {
-        // phi(B0:v1, B1:v2)
-        appendText(body + "\n", valueStyle);
-    }
-
-    private void formatInstructionLine(String line) {
-        String trimmed = line.trim();
-
-        // Find the leading whitespace
-        int leadingSpaces = line.length() - trimmed.length();
-        if (leadingSpaces > 0) {
-            appendText(line.substring(0, leadingSpaces), defaultStyle);
-        }
-
-        // Check for result assignment (v1 = ...)
-        int eqIdx = trimmed.indexOf(" = ");
-        if (eqIdx > 0) {
-            String result = trimmed.substring(0, eqIdx);
-            appendText(result, valueStyle);
-            appendText(" = ", operatorStyle);
-            String rest = trimmed.substring(eqIdx + 3);
-            formatInstructionBody(rest);
-        } else {
-            formatInstructionBody(trimmed);
-        }
-    }
-
-    private void formatInstructionBody(String body) {
-        // Determine instruction type and style
-        SimpleAttributeSet style = getInstructionStyle(body);
-
-        // Parse keyword and operands
-        int spaceIdx = body.indexOf(' ');
-        if (spaceIdx > 0) {
-            String keyword = body.substring(0, spaceIdx);
-            String operands = body.substring(spaceIdx);
-            appendText(keyword, style);
-            appendText(operands + "\n", defaultStyle);
-        } else {
-            appendText(body + "\n", style);
-        }
-    }
-
-    private SimpleAttributeSet getInstructionStyle(String instruction) {
-        String lower = instruction.toLowerCase();
-
-        // Control flow
-        if (lower.startsWith("if ") || lower.startsWith("goto ") ||
-                lower.startsWith("return") || lower.startsWith("switch ") ||
-                lower.startsWith("throw")) {
-            return controlStyle;
-        }
-
-        // Invocations
-        if (lower.startsWith("invoke")) {
-            return invokeStyle;
-        }
-
-        // Field access
-        if (lower.startsWith("getfield") || lower.startsWith("putfield") ||
-                lower.startsWith("getstatic") || lower.startsWith("putstatic")) {
-            return fieldStyle;
-        }
-
-        // Constants
-        if (lower.startsWith("const ")) {
-            return constStyle;
-        }
-
-        // PHI
-        if (lower.startsWith("phi")) {
-            return phiStyle;
-        }
-
-        // Operators (binary, unary)
-        if (lower.startsWith("add") || lower.startsWith("sub") ||
-                lower.startsWith("mul") || lower.startsWith("div") ||
-                lower.startsWith("rem") || lower.startsWith("neg") ||
-                lower.startsWith("and") || lower.startsWith("or") ||
-                lower.startsWith("xor") || lower.startsWith("shl") ||
-                lower.startsWith("shr") || lower.startsWith("ushr")) {
-            return operatorStyle;
-        }
-
-        return defaultStyle;
-    }
-
-    private void appendText(String text, SimpleAttributeSet style) {
-        try {
-            doc.insertString(doc.getLength(), text, style);
-        } catch (BadLocationException e) {
-            // Ignore
-        }
-    }
-
-    /**
-     * Get the current text.
-     */
     public String getText() {
-        return textPane.getText();
+        return textArea.getText();
     }
 
-    /**
-     * Copy current selection to clipboard.
-     */
     public void copySelection() {
-        String selected = textPane.getSelectedText();
+        String selected = textArea.getSelectedText();
         if (selected != null && !selected.isEmpty()) {
             StringSelection selection = new StringSelection(selected);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
         }
     }
 
-    /**
-     * Go to a specific line.
-     */
     public void goToLine(int line) {
         try {
-            int offset = textPane.getDocument().getDefaultRootElement().getElement(line - 1).getStartOffset();
-            textPane.setCaretPosition(offset);
-            textPane.requestFocus();
+            int offset = textArea.getLineStartOffset(line - 1);
+            textArea.setCaretPosition(offset);
+            textArea.requestFocus();
         } catch (Exception e) {
             // Line out of range
         }
@@ -406,9 +257,6 @@ public class IRView extends JPanel implements ThemeChangeListener {
 
     private String lastSearch;
 
-    /**
-     * Show find dialog.
-     */
     public void showFindDialog() {
         String input = (String) JOptionPane.showInputDialog(
             this,
@@ -425,56 +273,25 @@ public class IRView extends JPanel implements ThemeChangeListener {
         }
     }
 
-    /**
-     * Get the selected text.
-     */
     public String getSelectedText() {
-        return textPane.getSelectedText();
+        return textArea.getSelectedText();
     }
 
-    /**
-     * Scroll to and highlight text.
-     */
     public void scrollToText(String searchText) {
         if (searchText == null || searchText.isEmpty()) return;
 
-        String text = textPane.getText();
-        int index = text.toLowerCase().indexOf(searchText.toLowerCase());
-        if (index >= 0) {
-            textPane.setCaretPosition(index);
-            textPane.select(index, index + searchText.length());
-            textPane.requestFocus();
-        }
+        SearchContext context = new SearchContext(searchText);
+        context.setMatchCase(false);
+        context.setWholeWord(false);
+        SearchEngine.find(textArea, context);
     }
 
-    /**
-     * Set the font size.
-     */
     public void setFontSize(int size) {
-        textPane.setFont(JStudioTheme.getCodeFont(size));
-        // Update styles to match
-        updateStyleFontSize(size);
+        textArea.setFont(JStudioTheme.getCodeFont(size));
     }
 
-    private void updateStyleFontSize(int size) {
-        StyleConstants.setFontSize(defaultStyle, size);
-        StyleConstants.setFontSize(blockStyle, size);
-        StyleConstants.setFontSize(phiStyle, size);
-        StyleConstants.setFontSize(valueStyle, size);
-        StyleConstants.setFontSize(operatorStyle, size);
-        StyleConstants.setFontSize(controlStyle, size);
-        StyleConstants.setFontSize(invokeStyle, size);
-        StyleConstants.setFontSize(fieldStyle, size);
-        StyleConstants.setFontSize(constStyle, size);
-        StyleConstants.setFontSize(commentStyle, size);
-        StyleConstants.setFontSize(headerStyle, size);
-    }
-
-    /**
-     * Set word wrap enabled/disabled.
-     */
     public void setWordWrap(boolean enabled) {
-        // JTextPane doesn't have built-in word wrap toggle like JTextArea
-        // For now, this is a no-op for JTextPane-based views
+        textArea.setLineWrap(enabled);
+        textArea.setWrapStyleWord(enabled);
     }
 }

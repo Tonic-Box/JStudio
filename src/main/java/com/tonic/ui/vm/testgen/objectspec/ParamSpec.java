@@ -122,9 +122,9 @@ public class ParamSpec {
                 return "🎲 " + (fuzzStrategy != null ? fuzzStrategy.getDescription() : "fuzz");
             case OBJECT_SPEC:
                 if (nestedObjectSpec != null) {
-                    return "→ " + nestedObjectSpec.getSummary();
+                    return "-> " + nestedObjectSpec.getSummary();
                 }
-                return "→ configured";
+                return "-> configured";
             case NULL:
                 return "null";
             default:

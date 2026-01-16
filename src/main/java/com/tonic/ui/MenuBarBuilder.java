@@ -142,19 +142,8 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Find...", KeyEvent.VK_F, MENU_SHORTCUT_MASK,
-                Icons.getIcon("search"), e -> mainFrame.showFindDialog()));
-
         menu.add(createMenuItem("Find in Project...", KeyEvent.VK_F, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
                 null, e -> mainFrame.showFindInProjectDialog()));
-
-        menu.addSeparator();
-
-        menu.add(createMenuItem("Go to Class...", KeyEvent.VK_G, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.showGoToClassDialog()));
-
-        menu.add(createMenuItem("Go to Line...", KeyEvent.VK_L, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.showGoToLineDialog()));
 
         menu.addSeparator();
 
@@ -226,9 +215,6 @@ public class MenuBarBuilder {
                 Icons.getIcon("refresh"), e -> mainFrame.refreshCurrentView()));
 
         menu.addSeparator();
-
-        menu.add(createMenuItem("Class Browser...", KeyEvent.VK_B, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                Icons.getIcon("browser"), e -> mainFrame.showClassBrowser()));
 
         return menu;
     }

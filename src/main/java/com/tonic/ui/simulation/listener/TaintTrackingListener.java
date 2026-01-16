@@ -62,7 +62,7 @@ public class TaintTrackingListener extends AbstractListener {
             String sourceDesc = "Method parameter (user-controlled input)";
             String sinkDesc = formatMethodRef(owner, name, desc);
             List<String> path = new ArrayList<>(currentFlowPath);
-            path.add("→ " + sinkDesc);
+            path.add("-> " + sinkDesc);
 
             taintFlows.add(new TaintFlowResult(
                     instr,

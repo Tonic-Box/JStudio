@@ -58,12 +58,12 @@ public class DecryptorCandidate {
 
     @Getter
     public enum DecryptorType {
-        STRING_TO_STRING("String → String", "(Ljava/lang/String;)Ljava/lang/String;"),
-        STRING_INT_TO_STRING("String, int → String", "(Ljava/lang/String;I)Ljava/lang/String;"),
-        INT_TO_STRING("int → String (index-based)", "(I)Ljava/lang/String;"),
-        BYTES_TO_STRING("byte[] → String", "([B)Ljava/lang/String;"),
-        STRING_TO_BYTES("String → byte[]", "(Ljava/lang/String;)[B"),
-        CHAR_ARRAY_TO_STRING("char[] → String", "([C)Ljava/lang/String;"),
+        STRING_TO_STRING("String -> String", "(Ljava/lang/String;)Ljava/lang/String;"),
+        STRING_INT_TO_STRING("String, int -> String", "(Ljava/lang/String;I)Ljava/lang/String;"),
+        INT_TO_STRING("int -> String (index-based)", "(I)Ljava/lang/String;"),
+        BYTES_TO_STRING("byte[] -> String", "([B)Ljava/lang/String;"),
+        STRING_TO_BYTES("String -> byte[]", "(Ljava/lang/String;)[B"),
+        CHAR_ARRAY_TO_STRING("char[] -> String", "([C)Ljava/lang/String;"),
         UNKNOWN("Unknown pattern", null);
 
         private final String description;

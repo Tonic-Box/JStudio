@@ -100,12 +100,12 @@ java -jar build/libs/JStudio.jar --cli     # Launch CLI
 
 ## Usage
 
-1. **Open**: File → Open (Ctrl+O) to load JAR, directory, or class file
+1. **Open**: File -> Open (Ctrl+O) to load JAR, directory, or class file
 2. **Navigate**: Browse packages and classes in the tree
 3. **View**: Switch views using the dropdown or View menu
 4. **Analyze**: Use Analysis menu for graphs, dependencies, searches
-5. **Debug**: Right-click method → Debug Method
-6. **Execute**: Right-click method → Execute Method
+5. **Debug**: Right-click method -> Debug Method
+6. **Execute**: Right-click method -> Execute Method
 7. **Transform**: Use Transform menu for scripts and optimizations
 
 ## Keyboard Shortcuts

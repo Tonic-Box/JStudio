@@ -7,16 +7,50 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Control Flow view&#10;- Cleanup">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/ASTTokenMaker.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/attributes/AttributesView.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeSearchPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeTokenMaker.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/cfg/CFGBlockDetailPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ir/IRTokenMaker.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/event/events/CFGBlockSelectedEvent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/AttributesBrowserPanel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/ConstPoolBrowserTab.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/ConstPoolTableView.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/ConstPoolTreeView.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/DetailsPanel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/details/AttributeDetailRegistry.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/details/AttributeFormatter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/details/DetailContext.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/details/ItemDetailRegistry.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/browser/details/ItemFormatter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/deobfuscation/detection/DecryptorDetector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/deobfuscation/detection/DecryptorDetector.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/deobfuscation/model/DecryptorCandidate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/deobfuscation/model/DecryptorCandidate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/deobfuscation/model/DeobfuscationResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/deobfuscation/model/DeobfuscationResult.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewModeComboBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewModeComboBox.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/ASTView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/ASTView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/ExpressionTreeNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/ExpressionTreeNode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/StatementTreeNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/StatementTreeNode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/cfg/CFGBlockVertex.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/cfg/CFGBlockVertex.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/cfg/ControlFlowView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/cfg/ControlFlowView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/BaseGraphView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/BaseGraphView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/CPGView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/CPGView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/PDGView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/PDGView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/SDGView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/SDGView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/render/CPGVertexRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/render/CPGVertexRenderer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/render/PDGVertexRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/render/PDGVertexRenderer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/render/SDGVertexRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/render/SDGVertexRenderer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ir/IRView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ir/IRView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/simulation/listener/TaintTrackingListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/simulation/listener/TaintTrackingListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/ExecutionTrace.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/ExecutionTrace.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ObjectDetailPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ObjectDetailPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/ParameterConfigDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/ParameterConfigDialog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ParamConfigPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ParamConfigPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ParamSpec.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/objectspec/ParamSpec.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,7 +131,7 @@
       <recent name="com.tonic.ui.theme" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.JStudio [run]">
+  <component name="RunManager" selected="Gradle.JStudio [build]">
     <configuration name="JStudio [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -210,10 +244,10 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.JStudio [run]" />
         <item itemvalue="Gradle.JStudio [build]" />
-        <item itemvalue="Gradle.JStudio [refreshDependencies]" />
+        <item itemvalue="Gradle.JStudio [run]" />
         <item itemvalue="Gradle.JStudio [clean]" />
+        <item itemvalue="Gradle.JStudio [refreshDependencies]" />
         <item itemvalue="Gradle.Tests in 'JStudio.test'" />
       </list>
     </recent_temporary>
@@ -226,30 +260,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00006" summary="- Updated gradle tasks and readme section for building/running">
-      <option name="closed" value="true" />
-      <created>1765922587418</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1765922587418</updated>
-    </task>
-    <task id="LOCAL-00007" summary="- Updated gradle tasks and readme section for building/running">
-      <option name="closed" value="true" />
-      <created>1765922659302</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1765922659302</updated>
-    </task>
-    <task id="LOCAL-00008" summary="- Hide annotations toggle">
-      <option name="closed" value="true" />
-      <created>1765937330308</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1765937330308</updated>
     </task>
     <task id="LOCAL-00009" summary="- Replace SSVM with YABR execution API&#10;- Bytecode Step Debugger&#10;- Method execution simulator">
       <option name="closed" value="true" />
@@ -619,7 +629,31 @@
       <option name="project" value="LOCAL" />
       <updated>1768517097981</updated>
     </task>
-    <option name="localTasksCounter" value="55" />
+    <task id="LOCAL-00055" summary="- Restructured graphing views to reuse the same component&#10;- Made the graphing views draggable and zoomable via mouse wheel">
+      <option name="closed" value="true" />
+      <created>1768519677588</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1768519677588</updated>
+    </task>
+    <task id="LOCAL-00056" summary="- Update readme">
+      <option name="closed" value="true" />
+      <created>1768519805624</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1768519805624</updated>
+    </task>
+    <task id="LOCAL-00057" summary="- Update readme">
+      <option name="closed" value="true" />
+      <created>1768523011129</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1768523011129</updated>
+    </task>
+    <option name="localTasksCounter" value="58" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -634,9 +668,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- debugger improvements&#10;- Heap analysis" />
-    <MESSAGE value="- Heap analysis" />
-    <MESSAGE value="- Heap analysis: default args" />
     <MESSAGE value="- Heap analysis: ui improvements" />
     <MESSAGE value="- Heap analysis: argument fix" />
     <MESSAGE value="- Heap analysis: cleanup" />
@@ -646,7 +677,6 @@
     <MESSAGE value="- Cleanup pt 1" />
     <MESSAGE value="- Cleanup pt 2" />
     <MESSAGE value="- Cleanup theming" />
-    <MESSAGE value="- Cleanup" />
     <MESSAGE value="- Cleanup p4" />
     <MESSAGE value="- Cleanup p5" />
     <MESSAGE value="- Updated api usage for YABR SSA IR changes" />
@@ -659,7 +689,11 @@
     <MESSAGE value="- cleanup" />
     <MESSAGE value="- Compilation functionality&#10;- Jar export" />
     <MESSAGE value="- Control Flow view&#10;- Cleanup" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Control Flow view&#10;- Cleanup" />
+    <MESSAGE value="- Cleanup" />
+    <MESSAGE value="- Restructured graphing views to reuse the same component&#10;- Made the graphing views draggable and zoomable via mouse wheel" />
+    <MESSAGE value="- Update readme" />
+    <MESSAGE value="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

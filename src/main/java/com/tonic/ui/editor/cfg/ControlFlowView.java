@@ -3,6 +3,7 @@ package com.tonic.ui.editor.cfg;
 import com.tonic.ui.editor.graph.BaseGraphView;
 import com.tonic.ui.event.Event;
 import com.tonic.ui.event.EventBus;
+import com.tonic.ui.event.events.CFGBlockSelectedEvent;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
@@ -155,7 +156,7 @@ public class ControlFlowView extends BaseGraphView {
             Object value = graph.getModel().getValue(cell);
             if (value instanceof CFGBlockVertex) {
                 CFGBlockVertex vertex = (CFGBlockVertex) value;
-                navigateToBytecode(vertex.getBlock().getStartOffset());
+                EventBus.getInstance().post(new CFGBlockSelectedEvent(vertex));
             }
         }
     }

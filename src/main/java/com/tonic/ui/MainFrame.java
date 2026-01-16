@@ -5,7 +5,6 @@ import com.tonic.analysis.pattern.SearchResult;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.analysis.AnalysisPanel;
-import com.tonic.ui.browser.ConstPoolBrowserTab;
 import com.tonic.ui.console.ConsolePanel;
 import com.tonic.ui.editor.EditorPanel;
 import com.tonic.ui.editor.ViewMode;
@@ -112,8 +111,6 @@ public class MainFrame extends JFrame {
     private FindInFilesDialog findInFilesDialog;
     private ScriptEditorDialog scriptEditorDialog;
     private PreferencesDialog preferencesDialog;
-    private JDialog classBrowserDialog;
-    private ConstPoolBrowserTab classBrowserTab;
     private JDialog vmConsoleDialog;
     private VMConsolePanel vmConsolePanel;
     private JDialog debuggerDialog;
@@ -128,6 +125,7 @@ public class MainFrame extends JFrame {
     private BottomPanel sidePanel;
     private BottomToolbar bottomToolbar;
     private JSplitPane editorBottomSplit;
+    private boolean bottomPanelCollapsed = true;
 
     // Split panes for layout
     private JSplitPane mainHorizontalSplit;
@@ -227,8 +225,12 @@ public class MainFrame extends JFrame {
         // Bottom panel with tabbed results (Find Usages, Bookmarks, Comments)
         sidePanel = new BottomPanel();
         sidePanel.setEditorPanel(editorPanel);
-        sidePanel.setOnAllTabsClosed(() -> editorBottomSplit.setDividerLocation(editorBottomSplit.getHeight()));
+        sidePanel.setOnAllTabsClosed(() -> {
+            bottomPanelCollapsed = true;
+            editorBottomSplit.setDividerLocation(editorBottomSplit.getHeight());
+        });
         sidePanel.setOnTabOpened(() -> {
+            bottomPanelCollapsed = false;
             int height = editorBottomSplit.getHeight();
             if (editorBottomSplit.getDividerLocation() > height - 50) {
                 editorBottomSplit.setDividerLocation(height - 200);
@@ -281,13 +283,11 @@ public class MainFrame extends JFrame {
         editorBottomSplit.setDividerSize(4);
         editorBottomSplit.setBorder(null);
         editorBottomSplit.setContinuousLayout(true);
-        // Collapse bottom panel initially (must be done after component is visible)
+        // Keep bottom panel collapsed on resize if it has no tabs
         editorBottomSplit.addComponentListener(new java.awt.event.ComponentAdapter() {
-            private boolean initialized = false;
             @Override
             public void componentResized(java.awt.event.ComponentEvent e) {
-                if (!initialized && editorBottomSplit.getHeight() > 0) {
-                    initialized = true;
+                if (bottomPanelCollapsed && editorBottomSplit.getHeight() > 0) {
                     editorBottomSplit.setDividerLocation(editorBottomSplit.getHeight());
                 }
             }
@@ -1045,7 +1045,7 @@ public class MainFrame extends JFrame {
         editorPanel.refreshWelcomeTab();
 
         statusBar.setMessage("Renamed: " + oldClassName.replace('/', '.') +
-                " → " + newClassName.replace('/', '.'));
+                " -> " + newClassName.replace('/', '.'));
     }
 
     public void refreshAfterBulkRename(java.util.Set<String> oldClassNames, int totalRenamed) {
@@ -1149,7 +1149,7 @@ public class MainFrame extends JFrame {
 
         Bookmark bookmark = new Bookmark(currentClass.getClassName(), name.trim());
         ProjectDatabaseService.getInstance().addBookmark(bookmark);
-        consolePanel.log("Added bookmark: " + name.trim() + " → " + currentClass.getSimpleName());
+        consolePanel.log("Added bookmark: " + name.trim() + " -> " + currentClass.getSimpleName());
     }
 
     public void addCommentAtCurrentLocation() {
@@ -1562,7 +1562,7 @@ public class MainFrame extends JFrame {
                 renamer.mapClass(oldName, newName).apply();
                 project.notifyClassRenamed(oldName, newName);
                 refreshAfterRename(oldName, newName);
-                consolePanel.log("Renamed class: " + oldName.replace('/', '.') + " → " + newName.replace('/', '.'));
+                consolePanel.log("Renamed class: " + oldName.replace('/', '.') + " -> " + newName.replace('/', '.'));
             } catch (RenameException e) {
                 setNavigatorLoading(false);
                 showError("Rename failed: " + e.getMessage());
@@ -1610,8 +1610,8 @@ public class MainFrame extends JFrame {
                 navigatorPanel.refresh();
                 editorPanel.refreshCurrentTab();
                 setNavigatorLoading(false);
-                consolePanel.log("Renamed method: " + oldName + " → " + newName + " in " + classEntry.getSimpleName());
-                statusBar.setMessage("Renamed method: " + oldName + " → " + newName);
+                consolePanel.log("Renamed method: " + oldName + " -> " + newName + " in " + classEntry.getSimpleName());
+                statusBar.setMessage("Renamed method: " + oldName + " -> " + newName);
             } catch (RenameException e) {
                 setNavigatorLoading(false);
                 showError("Rename failed: " + e.getMessage());
@@ -1659,8 +1659,8 @@ public class MainFrame extends JFrame {
                 navigatorPanel.refresh();
                 editorPanel.refreshCurrentTab();
                 setNavigatorLoading(false);
-                consolePanel.log("Renamed field: " + oldName + " → " + newName + " in " + classEntry.getSimpleName());
-                statusBar.setMessage("Renamed field: " + oldName + " → " + newName);
+                consolePanel.log("Renamed field: " + oldName + " -> " + newName + " in " + classEntry.getSimpleName());
+                statusBar.setMessage("Renamed field: " + oldName + " -> " + newName);
             } catch (RenameException e) {
                 setNavigatorLoading(false);
                 showError("Rename failed: " + e.getMessage());
@@ -1767,9 +1767,7 @@ public class MainFrame extends JFrame {
 
     public void showAboutDialog() {
         String message = JStudio.APP_NAME + " " + JStudio.APP_VERSION + "\n\n" +
-                "A professional Java reverse engineering and analysis suite.\n\n" +
-                "Features decompilation, SSA IR analysis, call graphs,\n" +
-                "and bytecode transformations.";
+                "A professional Java reverse engineering and analysis suite.";
 
         JOptionPane.showMessageDialog(this, message, "About " + JStudio.APP_NAME,
                 JOptionPane.INFORMATION_MESSAGE);
@@ -1829,60 +1827,6 @@ public class MainFrame extends JFrame {
                 consolePanel.log("Select a method or class to analyze.");
             }
         }
-    }
-
-    /**
-     * Show the class browser dialog for viewing constant pool and attributes.
-     */
-    public void showClassBrowser() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        ClassEntryModel currentClass = editorPanel.getCurrentClass();
-
-        if (classBrowserDialog == null || classBrowserTab == null) {
-            if (currentClass != null) {
-                classBrowserTab = new ConstPoolBrowserTab(project, currentClass);
-            } else {
-                classBrowserTab = new ConstPoolBrowserTab(project);
-            }
-            classBrowserDialog = new JDialog(this, "Class Browser", false);
-            classBrowserDialog.setSize(1000, 700);
-            classBrowserDialog.setLocationRelativeTo(this);
-            classBrowserDialog.add(classBrowserTab);
-        } else if (currentClass != null && currentClass != classBrowserTab.getCurrentClass()) {
-            classBrowserTab.loadClass(currentClass);
-        }
-
-        classBrowserDialog.setVisible(true);
-        classBrowserDialog.toFront();
-    }
-
-    /**
-     * Show class browser for a specific class.
-     */
-    public void showClassBrowser(ClassEntryModel classEntry) {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        if (classBrowserDialog == null || classBrowserTab == null) {
-            classBrowserTab = new ConstPoolBrowserTab(project, classEntry);
-            classBrowserDialog = new JDialog(this, "Class Browser", false);
-            classBrowserDialog.setSize(1000, 700);
-            classBrowserDialog.setLocationRelativeTo(this);
-            classBrowserDialog.add(classBrowserTab);
-        } else {
-            classBrowserTab.loadClass(classEntry);
-        }
-
-        classBrowserDialog.setVisible(true);
-        classBrowserDialog.toFront();
     }
 
     // === VM Operations ===

@@ -27,7 +27,6 @@ import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JLayeredPane;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -46,7 +45,6 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Toolkit;
@@ -441,13 +439,7 @@ public class NavigatorPanel extends ThemedJPanel {
     private void buildMethodMenu(JPopupMenu menu, NavigatorNode.MethodNode node) {
         MethodEntryModel method = node.getMethodEntry();
 
-        addMenuItem(menu, "View in Class Browser", () -> mainFrame.showClassBrowser(method.getOwner()));
-
         addMenuItem(menu, "View in Call Graph", () -> mainFrame.showCallGraphForMethod(method.getMethodEntry()));
-
-        addMenuItem(menu, "Find Cross-References", () -> EventBus.getInstance().post(
-            FindUsagesEvent.forMethod(this, method.getOwner().getClassName(),
-                method.getName(), method.getDescriptor())));
 
         addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
             FindUsagesEvent.forMethod(this, method.getOwner().getClassName(),
@@ -490,12 +482,6 @@ public class NavigatorPanel extends ThemedJPanel {
             });
         });
 
-        addMenuItem(menu, "View in Class Browser", () -> mainFrame.showClassBrowser(field.getOwner()));
-
-        addMenuItem(menu, "Find Cross-References", () -> EventBus.getInstance().post(
-            FindUsagesEvent.forField(this, field.getOwner().getClassName(),
-                field.getName(), field.getDescriptor())));
-
         addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
             FindUsagesEvent.forField(this, field.getOwner().getClassName(),
                 field.getName(), field.getDescriptor())));
@@ -521,12 +507,7 @@ public class NavigatorPanel extends ThemedJPanel {
 
         addMenuItem(menu, "Open in Editor", () -> EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry)));
 
-        addMenuItem(menu, "View in Class Browser", () -> mainFrame.showClassBrowser(classEntry));
-
         addMenuItem(menu, "View Dependencies", () -> mainFrame.showDependenciesForClass(classEntry.getClassName()));
-
-        addMenuItem(menu, "Find Cross-References", () -> EventBus.getInstance().post(
-            FindUsagesEvent.forClass(this, classEntry.getClassName())));
 
         addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
             FindUsagesEvent.forClass(this, classEntry.getClassName())));
@@ -585,7 +566,7 @@ public class NavigatorPanel extends ThemedJPanel {
                 selectClass(newName);
                 JOptionPane.showMessageDialog(this,
                         "Class renamed successfully:\n" +
-                                oldName.replace('/', '.') + " → " + newName.replace('/', '.'),
+                                oldName.replace('/', '.') + " -> " + newName.replace('/', '.'),
                         "Rename Complete",
                         JOptionPane.INFORMATION_MESSAGE);
             });

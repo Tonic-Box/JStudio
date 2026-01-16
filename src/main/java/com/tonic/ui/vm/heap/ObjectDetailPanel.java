@@ -159,7 +159,7 @@ public class ObjectDetailPanel extends ThemedJPanel {
                 DefaultMutableTreeNode fieldNode = new DefaultMutableTreeNode(field);
 
                 if (field.hasReferenceId() && tracker != null) {
-                    fieldNode.add(new DefaultMutableTreeNode("→ Object #" + field.getReferenceId()));
+                    fieldNode.add(new DefaultMutableTreeNode("-> Object #" + field.getReferenceId()));
                 }
 
                 rootNode.add(fieldNode);

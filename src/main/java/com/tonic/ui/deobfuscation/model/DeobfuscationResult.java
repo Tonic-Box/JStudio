@@ -77,10 +77,10 @@ public class DeobfuscationResult {
     @Override
     public String toString() {
         if (success) {
-            return String.format("%s: \"%s\" → \"%s\"",
+            return String.format("%s: \"%s\" -> \"%s\"",
                 getLocation(), getDisplayOriginal(), getDisplayDecrypted());
         } else {
-            return String.format("%s: \"%s\" → ERROR: %s",
+            return String.format("%s: \"%s\" -> ERROR: %s",
                 getLocation(), getDisplayOriginal(), errorMessage);
         }
     }

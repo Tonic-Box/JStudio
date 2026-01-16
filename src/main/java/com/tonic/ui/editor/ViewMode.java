@@ -16,7 +16,8 @@ public enum ViewMode {
     SDG("SDG", "System Dependence Graph"),
     CPG("CPG", "Code Property Graph"),
     CFG("Control Flow", "Control flow graph visualization"),
-    HEX("Hex", "Raw class file bytes");
+    HEX("Hex", "Raw class file bytes"),
+    ATTRIBUTES("Attributes", "Class, field, and method attributes");
 
     private final String displayName;
     private final String description;

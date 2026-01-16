@@ -64,7 +64,7 @@ public class ExecutionTrace {
         for (ExecutionStep step : steps) {
             String stepMethod = step.getClassName() + "." + step.getMethodName();
             if (!stepMethod.equals(currentMethod)) {
-                sb.append("\n### → Entered: `").append(step.getClassName().replace('/', '.')).append(".").append(step.getMethodName()).append("`\n\n");
+                sb.append("\n### -> Entered: `").append(step.getClassName().replace('/', '.')).append(".").append(step.getMethodName()).append("`\n\n");
                 currentMethod = stepMethod;
             }
 

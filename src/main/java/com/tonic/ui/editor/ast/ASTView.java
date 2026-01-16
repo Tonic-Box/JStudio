@@ -6,16 +6,22 @@ import com.tonic.analysis.source.ast.stmt.BlockStmt;
 import com.tonic.analysis.source.recovery.MethodRecoverer;
 import com.tonic.analysis.ssa.SSA;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.theme.*;
+
 import lombok.Getter;
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.Token;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rtextarea.RTextScrollPane;
+import org.fife.ui.rtextarea.SearchContext;
+import org.fife.ui.rtextarea.SearchEngine;
 
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.util.ArrayList;
@@ -23,14 +29,19 @@ import java.util.List;
 
 public class ASTView extends JPanel implements ThemeChangeListener {
 
+    private static final String SYNTAX_STYLE_AST = "text/ast";
     private static final String TEXT_VIEW = "TEXT";
     private static final String TREE_VIEW = "TREE";
 
+    static {
+        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
+        atmf.putMapping(SYNTAX_STYLE_AST, "com.tonic.ui.editor.ast.ASTTokenMaker");
+    }
+
     private final ClassEntryModel classEntry;
 
-    private final JTextPane textPane;
-    private final StyledDocument doc;
-    private final JScrollPane textScrollPane;
+    private final RSyntaxTextArea textArea;
+    private final RTextScrollPane textScrollPane;
 
     private final JTree astTree;
     private final ASTTreeModel treeModel;
@@ -38,6 +49,7 @@ public class ASTView extends JPanel implements ThemeChangeListener {
 
     private final JPanel contentPanel;
     private final CardLayout cardLayout;
+    private final LoadingOverlay loadingOverlay;
 
     private final JToolBar toolbar;
     private final JToggleButton textViewBtn;
@@ -45,20 +57,13 @@ public class ASTView extends JPanel implements ThemeChangeListener {
     private final JButton expandAllBtn;
     private final JButton collapseAllBtn;
 
-    private final SimpleAttributeSet defaultStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet nodeStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet typeStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet labelStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet valueStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet bracketStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet commentStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet headerStyle = new SimpleAttributeSet();
-
     private static final String METHOD_DIVIDER = "=========================================================================";
 
     @Getter
     private boolean loaded = false;
+    @Getter
     private boolean showingTreeView = false;
+    private SwingWorker<ASTResult, Void> currentWorker;
 
     public ASTView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -69,19 +74,17 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         toolbar = createToolbar();
         add(toolbar, BorderLayout.NORTH);
 
-        textPane = new JTextPane();
-        textPane.setEditable(false);
-        textPane.setBackground(JStudioTheme.getBgTertiary());
-        textPane.setForeground(JStudioTheme.getTextPrimary());
-        textPane.setCaretColor(JStudioTheme.getTextPrimary());
-        textPane.setFont(JStudioTheme.getCodeFont(12));
+        textArea = new RSyntaxTextArea();
+        textArea.setSyntaxEditingStyle(SYNTAX_STYLE_AST);
+        textArea.setEditable(false);
+        textArea.setAntiAliasingEnabled(true);
+        textArea.setFont(JStudioTheme.getCodeFont(12));
+        textArea.setCodeFoldingEnabled(false);
+        textArea.setBracketMatchingEnabled(false);
 
-        doc = textPane.getStyledDocument();
-        initStyles();
-
-        textScrollPane = new JScrollPane(textPane);
+        textScrollPane = new RTextScrollPane(textArea);
+        textScrollPane.setLineNumbersEnabled(true);
         textScrollPane.setBorder(null);
-        textScrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
         treeModel = new ASTTreeModel();
         astTree = new JTree(treeModel);
@@ -100,13 +103,25 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         contentPanel.add(textScrollPane, TEXT_VIEW);
         contentPanel.add(treeScrollPane, TREE_VIEW);
 
-        add(contentPanel, BorderLayout.CENTER);
+        loadingOverlay = new LoadingOverlay();
+
+        JPanel overlayPanel = new JPanel();
+        overlayPanel.setLayout(new OverlayLayout(overlayPanel));
+        loadingOverlay.setAlignmentX(0.5f);
+        loadingOverlay.setAlignmentY(0.5f);
+        contentPanel.setAlignmentX(0.5f);
+        contentPanel.setAlignmentY(0.5f);
+        overlayPanel.add(loadingOverlay);
+        overlayPanel.add(contentPanel);
+
+        add(overlayPanel, BorderLayout.CENTER);
 
         textViewBtn = (JToggleButton) toolbar.getComponentAtIndex(0);
         treeViewBtn = (JToggleButton) toolbar.getComponentAtIndex(1);
         expandAllBtn = (JButton) toolbar.getComponentAtIndex(3);
         collapseAllBtn = (JButton) toolbar.getComponentAtIndex(4);
 
+        applyTheme();
         updateToolbarState();
 
         ThemeManager.getInstance().addThemeChangeListener(this);
@@ -214,48 +229,55 @@ public class ASTView extends JPanel implements ThemeChangeListener {
             }
         }
 
-        textPane.setBackground(JStudioTheme.getBgTertiary());
-        textPane.setForeground(JStudioTheme.getTextPrimary());
-        textPane.setCaretColor(JStudioTheme.getTextPrimary());
+        textArea.setBackground(JStudioTheme.getBgTertiary());
+        textArea.setForeground(JStudioTheme.getTextPrimary());
+        textArea.setCaretColor(JStudioTheme.getTextPrimary());
+        textArea.setSelectionColor(JStudioTheme.getSelection());
+        textArea.setCurrentLineHighlightColor(JStudioTheme.getLineHighlight());
+        textArea.setFadeCurrentLineHighlight(true);
 
-        textScrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
+        textScrollPane.getGutter().setBackground(JStudioTheme.getBgSecondary());
+        textScrollPane.getGutter().setLineNumberColor(JStudioTheme.getTextSecondary());
+        textScrollPane.getGutter().setBorderColor(JStudioTheme.getBorder());
+
+        SyntaxScheme scheme = textArea.getSyntaxScheme();
+
+        setTokenStyle(scheme, Token.IDENTIFIER, JStudioTheme.getTextPrimary());
+        setTokenStyle(scheme, Token.WHITESPACE, JStudioTheme.getTextPrimary());
+        setTokenStyle(scheme, Token.SEPARATOR, JStudioTheme.getTextSecondary());
+        setTokenStyle(scheme, Token.OPERATOR, JStudioTheme.getTextSecondary());
+
+        setTokenStyle(scheme, ASTTokenMaker.TOKEN_COMMENT, JStudioTheme.getTextSecondary());
+        setTokenStyle(scheme, ASTTokenMaker.TOKEN_DIVIDER, JStudioTheme.getAccentSecondary());
+        setTokenStyle(scheme, ASTTokenMaker.TOKEN_HEADER, JStudioTheme.getAccent());
+
+        setTokenStyle(scheme, ASTTokenMaker.TOKEN_NODE, SyntaxColors.getJavaKeyword());
+        setTokenStyle(scheme, ASTTokenMaker.TOKEN_EXPR_NODE, SyntaxColors.getJavaMethod());
+        setTokenStyle(scheme, ASTTokenMaker.TOKEN_TYPE_NODE, SyntaxColors.getJavaType());
+        setTokenStyle(scheme, ASTTokenMaker.TOKEN_LABEL, SyntaxColors.getIrValue());
+        setTokenStyle(scheme, ASTTokenMaker.TOKEN_STRING, SyntaxColors.getJavaString());
+        setTokenStyle(scheme, ASTTokenMaker.TOKEN_NUMBER, SyntaxColors.getJavaNumber());
+        setTokenStyle(scheme, ASTTokenMaker.TOKEN_KEYWORD, SyntaxColors.getJavaKeyword());
+        setTokenStyle(scheme, Token.LITERAL_CHAR, SyntaxColors.getJavaString());
 
         astTree.setBackground(JStudioTheme.getBgTertiary());
         treeScrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
-        initStyles();
         repaint();
     }
 
-    private void initStyles() {
-        updateStyle(defaultStyle, JStudioTheme.getTextPrimary());
-        updateStyle(nodeStyle, SyntaxColors.getJavaKeyword());
-        StyleConstants.setBold(nodeStyle, true);
-        updateStyle(typeStyle, SyntaxColors.getJavaType());
-        updateStyle(labelStyle, SyntaxColors.getIrValue());
-        updateStyle(valueStyle, SyntaxColors.getJavaString());
-        updateStyle(bracketStyle, JStudioTheme.getTextSecondary());
-        updateStyle(commentStyle, JStudioTheme.getTextSecondary());
-        updateStyle(headerStyle, JStudioTheme.getAccent());
-        StyleConstants.setBold(headerStyle, true);
-    }
-
-    private void updateStyle(SimpleAttributeSet style, Color color) {
-        StyleConstants.setForeground(style, color);
-        StyleConstants.setFontFamily(style, JStudioTheme.getCodeFont(12).getFamily());
-        StyleConstants.setFontSize(style, 12);
+    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color) {
+        if (scheme.getStyle(tokenType) != null) {
+            scheme.getStyle(tokenType).foreground = color;
+        }
     }
 
     public void refresh() {
-        try {
-            doc.remove(0, doc.getLength());
-            doc.insertString(0, "// Decompiling to AST...\n", commentStyle);
-        } catch (BadLocationException e) {
-        }
-
+        cancelCurrentWorker();
+        loadingOverlay.showLoading("Decompiling to AST...");
         treeModel.clear();
 
-        SwingWorker<ASTResult, Void> worker = new SwingWorker<>() {
+        currentWorker = new SwingWorker<>() {
             @Override
             protected ASTResult doInBackground() {
                 return generateASTBoth();
@@ -263,26 +285,30 @@ public class ASTView extends JPanel implements ThemeChangeListener {
 
             @Override
             protected void done() {
+                loadingOverlay.hideLoading();
+                if (isCancelled()) {
+                    return;
+                }
                 try {
                     ASTResult result = get();
-                    doc.remove(0, doc.getLength());
-                    formatAST(result.textOutput);
-                    textPane.setCaretPosition(0);
-
+                    textArea.setText(result.textOutput);
+                    textArea.setCaretPosition(0);
                     treeModel.loadClass(classEntry.getClassName(), result.methodEntries);
-
                     loaded = true;
                 } catch (Exception e) {
-                    try {
-                        doc.remove(0, doc.getLength());
-                        doc.insertString(0, "// Failed to generate AST: " + e.getMessage(), commentStyle);
-                    } catch (BadLocationException ex) {
-                    }
+                    textArea.setText("// Failed to generate AST: " + e.getMessage());
                 }
             }
         };
 
-        worker.execute();
+        currentWorker.execute();
+    }
+
+    private void cancelCurrentWorker() {
+        if (currentWorker != null && !currentWorker.isDone()) {
+            currentWorker.cancel(true);
+            loadingOverlay.hideLoading();
+        }
     }
 
     private static class ASTResult {
@@ -356,141 +382,12 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         return sb.toString();
     }
 
-    private void formatAST(String ast) {
-        String[] lines = ast.split("\n");
-        for (String line : lines) {
-            formatASTLine(line);
-        }
-    }
-
-    private void formatASTLine(String line) {
-        if (line.trim().isEmpty()) {
-            appendText("\n", defaultStyle);
-            return;
-        }
-
-        String trimmed = line.trim();
-
-        if (trimmed.startsWith("//")) {
-            appendText(line + "\n", commentStyle);
-            return;
-        }
-
-        int leadingSpaces = line.length() - trimmed.length();
-        if (leadingSpaces > 0) {
-            appendText(line.substring(0, leadingSpaces), defaultStyle);
-        }
-
-        formatASTContent(trimmed);
-    }
-
-    private void formatASTContent(String content) {
-        int parenIdx = content.indexOf('(');
-        int colonIdx = content.indexOf(':');
-
-        if (parenIdx > 0 && (colonIdx < 0 || parenIdx < colonIdx)) {
-            String nodeName = content.substring(0, parenIdx);
-            appendText(nodeName, nodeStyle);
-
-            String rest = content.substring(parenIdx);
-            formatParenContent(rest);
-        } else if (colonIdx > 0) {
-            String label = content.substring(0, colonIdx);
-            appendText(label, labelStyle);
-            appendText(":", defaultStyle);
-            String rest = content.substring(colonIdx + 1);
-            if (!rest.isEmpty()) {
-                appendText(rest + "\n", defaultStyle);
-            } else {
-                appendText("\n", defaultStyle);
-            }
-        } else {
-            appendText(content + "\n", defaultStyle);
-        }
-    }
-
-    private void formatParenContent(String content) {
-        StringBuilder current = new StringBuilder();
-        int depth = 0;
-        boolean inString = false;
-
-        for (int i = 0; i < content.length(); i++) {
-            char c = content.charAt(i);
-
-            if (c == '"' && (i == 0 || content.charAt(i - 1) != '\\')) {
-                inString = !inString;
-            }
-
-            if (!inString) {
-                if (c == '(' || c == '[') {
-                    if (current.length() > 0) {
-                        appendText(current.toString(), defaultStyle);
-                        current = new StringBuilder();
-                    }
-                    appendText(String.valueOf(c), bracketStyle);
-                    depth++;
-                    continue;
-                } else if (c == ')' || c == ']') {
-                    if (current.length() > 0) {
-                        formatValue(current.toString());
-                        current = new StringBuilder();
-                    }
-                    appendText(String.valueOf(c), bracketStyle);
-                    depth--;
-                    continue;
-                } else if (c == ':' && depth == 0) {
-                    if (current.length() > 0) {
-                        formatValue(current.toString());
-                        current = new StringBuilder();
-                    }
-                    appendText(" : ", defaultStyle);
-
-                    String rest = content.substring(i + 1).trim();
-                    if (!rest.isEmpty()) {
-                        appendText(rest, typeStyle);
-                    }
-                    appendText("\n", defaultStyle);
-                    return;
-                }
-            }
-
-            current.append(c);
-        }
-
-        if (current.length() > 0) {
-            formatValue(current.toString());
-        }
-        appendText("\n", defaultStyle);
-    }
-
-    private void formatValue(String value) {
-        String trimmed = value.trim();
-        if (trimmed.isEmpty()) return;
-
-        if (trimmed.startsWith("\"") || trimmed.startsWith("'")) {
-            appendText(trimmed, valueStyle);
-        } else if (trimmed.matches("-?\\d+(\\.\\d+)?[fFdDlL]?")) {
-            appendText(trimmed, valueStyle);
-        } else if (trimmed.equals("null") || trimmed.equals("true") || trimmed.equals("false")) {
-            appendText(trimmed, valueStyle);
-        } else {
-            appendText(trimmed, defaultStyle);
-        }
-    }
-
-    private void appendText(String text, SimpleAttributeSet style) {
-        try {
-            doc.insertString(doc.getLength(), text, style);
-        } catch (BadLocationException e) {
-        }
-    }
-
     public String getText() {
-        return textPane.getText();
+        return textArea.getText();
     }
 
     public void copySelection() {
-        String selected = textPane.getSelectedText();
+        String selected = textArea.getSelectedText();
         if (selected != null && !selected.isEmpty()) {
             StringSelection selection = new StringSelection(selected);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
@@ -499,10 +396,11 @@ public class ASTView extends JPanel implements ThemeChangeListener {
 
     public void goToLine(int line) {
         try {
-            int offset = textPane.getDocument().getDefaultRootElement().getElement(line - 1).getStartOffset();
-            textPane.setCaretPosition(offset);
-            textPane.requestFocus();
+            int offset = textArea.getLineStartOffset(line - 1);
+            textArea.setCaretPosition(offset);
+            textArea.requestFocus();
         } catch (Exception e) {
+            // Line out of range
         }
     }
 
@@ -525,43 +423,26 @@ public class ASTView extends JPanel implements ThemeChangeListener {
     }
 
     public String getSelectedText() {
-        return textPane.getSelectedText();
+        return textArea.getSelectedText();
     }
 
     public void scrollToText(String searchText) {
         if (searchText == null || searchText.isEmpty()) return;
 
-        String text = textPane.getText();
-        int index = text.toLowerCase().indexOf(searchText.toLowerCase());
-        if (index >= 0) {
-            textPane.setCaretPosition(index);
-            textPane.select(index, index + searchText.length());
-            textPane.requestFocus();
-        }
+        SearchContext context = new SearchContext(searchText);
+        context.setMatchCase(false);
+        context.setWholeWord(false);
+        SearchEngine.find(textArea, context);
     }
 
     public void setFontSize(int size) {
-        textPane.setFont(JStudioTheme.getCodeFont(size));
-        updateStyleFontSize(size);
+        textArea.setFont(JStudioTheme.getCodeFont(size));
         astTree.setRowHeight(size + 8);
     }
 
-    private void updateStyleFontSize(int size) {
-        StyleConstants.setFontSize(defaultStyle, size);
-        StyleConstants.setFontSize(nodeStyle, size);
-        StyleConstants.setFontSize(typeStyle, size);
-        StyleConstants.setFontSize(labelStyle, size);
-        StyleConstants.setFontSize(valueStyle, size);
-        StyleConstants.setFontSize(bracketStyle, size);
-        StyleConstants.setFontSize(commentStyle, size);
-        StyleConstants.setFontSize(headerStyle, size);
-    }
-
     public void setWordWrap(boolean enabled) {
-    }
-
-    public boolean isShowingTreeView() {
-        return showingTreeView;
+        textArea.setLineWrap(enabled);
+        textArea.setWrapStyleWord(enabled);
     }
 
     public void setShowTreeView(boolean showTree) {

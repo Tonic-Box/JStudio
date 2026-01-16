@@ -51,20 +51,20 @@ public class DecryptorDetector {
 
         if (type == DecryptorType.STRING_TO_STRING) {
             confidence = 0.6;
-            indicators.add("String→String signature");
+            indicators.add("String->String signature");
         } else if (type == DecryptorType.INT_TO_STRING) {
             confidence = 0.5;
-            indicators.add("int→String signature (index-based)");
+            indicators.add("int->String signature (index-based)");
         } else if (type == DecryptorType.BYTES_TO_STRING) {
             confidence = 0.4;
-            indicators.add("byte[]→String signature");
+            indicators.add("byte[]->String signature");
         } else if (type == DecryptorType.STRING_TO_BYTES) {
             confidence = 0.4;
-            indicators.add("String→byte[] signature");
+            indicators.add("String->byte[] signature");
         } else if (desc.equals("(Ljava/lang/String;I)Ljava/lang/String;")) {
             type = DecryptorType.STRING_INT_TO_STRING;
             confidence = 0.55;
-            indicators.add("String,int→String signature");
+            indicators.add("String,int->String signature");
         } else {
             return null;
         }

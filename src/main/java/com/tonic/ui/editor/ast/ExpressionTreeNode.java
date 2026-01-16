@@ -125,7 +125,7 @@ public class ExpressionTreeNode extends ASTTreeNode {
         } else if (expr instanceof NewExpr) {
             return ((NewExpr) expr).getSimpleName();
         } else if (expr instanceof CastExpr) {
-            return "→ " + ((CastExpr) expr).getTargetType().toJavaSource();
+            return "-> " + ((CastExpr) expr).getTargetType().toJavaSource();
         } else if (expr instanceof InstanceOfExpr) {
             InstanceOfExpr instanceOf = (InstanceOfExpr) expr;
             String result = instanceOf.getCheckType().toJavaSource();

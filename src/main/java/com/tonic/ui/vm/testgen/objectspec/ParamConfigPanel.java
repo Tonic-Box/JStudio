@@ -122,6 +122,10 @@ public class ParamConfigPanel extends ThemedJPanel {
 
     private void updateSummary() {
         ValueMode mode = (ValueMode) modeCombo.getSelectedItem();
+        if(mode == null)
+        {
+            return;
+        }
 
         switch (mode) {
             case FUZZ:
@@ -133,7 +137,7 @@ public class ParamConfigPanel extends ThemedJPanel {
                 break;
             case OBJECT_SPEC:
                 if (spec.getNestedObjectSpec() != null) {
-                    summaryLabel.setText("→ " + spec.getNestedObjectSpec().getSummary());
+                    summaryLabel.setText("-> " + spec.getNestedObjectSpec().getSummary());
                 } else {
                     summaryLabel.setText("(not configured)");
                 }

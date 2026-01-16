@@ -5,6 +5,9 @@ import com.tonic.ui.analysis.CommentsPanel;
 import com.tonic.ui.analysis.FindUsagesResultsPanel;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.editor.EditorPanel;
+import com.tonic.ui.editor.cfg.CFGBlockDetailPanel;
+import com.tonic.ui.event.EventBus;
+import com.tonic.ui.event.events.CFGBlockSelectedEvent;
 import com.tonic.ui.event.events.FindUsagesEvent;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.Icons;
@@ -31,6 +34,7 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
 
     private BookmarksPanel bookmarksPanel;
     private CommentsPanel commentsPanel;
+    private CFGBlockDetailPanel cfgBlockDetailPanel;
 
     private Runnable onAllTabsClosed;
     private Runnable onTabOpened;
@@ -49,6 +53,21 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
         setMinimumSize(new Dimension(0, 100));
 
         ThemeManager.getInstance().addThemeChangeListener(this);
+        EventBus.getInstance().register(CFGBlockSelectedEvent.class, this::onCFGBlockSelected);
+    }
+
+    private void onCFGBlockSelected(CFGBlockSelectedEvent event) {
+        if (cfgBlockDetailPanel == null) {
+            cfgBlockDetailPanel = new CFGBlockDetailPanel();
+        }
+        cfgBlockDetailPanel.showBlock(event.getVertex());
+
+        int existingIndex = tabbedPane.indexOfComponent(cfgBlockDetailPanel);
+        if (existingIndex == -1) {
+            addClosableTab("Block Details", cfgBlockDetailPanel);
+        }
+        tabbedPane.setSelectedComponent(cfgBlockDetailPanel);
+        notifyExpanded();
     }
 
     public void setOnAllTabsClosed(Runnable callback) {

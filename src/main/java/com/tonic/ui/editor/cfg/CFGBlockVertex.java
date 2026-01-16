@@ -7,9 +7,14 @@ import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.analysis.ssa.ir.IRInstruction;
 import com.tonic.parser.ConstPool;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.theme.SyntaxColors;
 import lombok.Getter;
 
+import java.awt.Color;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Getter
 public class CFGBlockVertex {
@@ -92,7 +97,7 @@ public class CFGBlockVertex {
 
         for (IRInstruction phi : irBlock.getPhiInstructions()) {
             if (count >= maxLines) break;
-            sb.append(escapeHtml(phi.toString())).append("\n");
+            sb.append(formatIRInstruction(phi.toString(), true)).append("\n");
             count++;
         }
 
@@ -101,9 +106,114 @@ public class CFGBlockVertex {
                 sb.append("... (more)\n");
                 break;
             }
-            sb.append(escapeHtml(instr.toString())).append("\n");
+            sb.append(formatIRInstruction(instr.toString(), false)).append("\n");
             count++;
         }
+    }
+
+    private static final Pattern VALUE_PATTERN = Pattern.compile("\\bv\\d+\\b");
+    private static final Set<String> CONTROL_OPS = Set.of(
+            "GOTO", "IF", "RETURN", "THROW", "SWITCH", "TABLESWITCH", "LOOKUPSWITCH"
+    );
+    private static final Set<String> INVOKE_OPS = Set.of(
+            "INVOKEVIRTUAL", "INVOKESPECIAL", "INVOKESTATIC", "INVOKEINTERFACE", "INVOKEDYNAMIC"
+    );
+    private static final Set<String> FIELD_OPS = Set.of(
+            "GETFIELD", "PUTFIELD", "GETSTATIC", "PUTSTATIC"
+    );
+    private static final Set<String> NEW_OPS = Set.of(
+            "NEW", "NEWARRAY", "ANEWARRAY", "MULTIANEWARRAY"
+    );
+    private static final Set<String> CAST_OPS = Set.of(
+            "CHECKCAST", "INSTANCEOF"
+    );
+
+    private String formatIRInstruction(String instr, boolean isPhi) {
+        if (instr.length() > 50) {
+            instr = instr.substring(0, 47) + "...";
+        }
+
+        String escaped = escapeHtml(instr);
+
+        if (isPhi) {
+            escaped = colorize(escaped, SyntaxColors.getIrPhi());
+            escaped = highlightValues(escaped);
+            return escaped;
+        }
+
+        String upperInstr = instr.toUpperCase();
+        Color instrColor = null;
+
+        for (String op : CONTROL_OPS) {
+            if (upperInstr.contains(op)) {
+                instrColor = SyntaxColors.getIrControl();
+                break;
+            }
+        }
+        if (instrColor == null) {
+            for (String op : INVOKE_OPS) {
+                if (upperInstr.contains(op)) {
+                    instrColor = SyntaxColors.getIrInvoke();
+                    break;
+                }
+            }
+        }
+        if (instrColor == null) {
+            for (String op : FIELD_OPS) {
+                if (upperInstr.contains(op)) {
+                    instrColor = SyntaxColors.getIrGetField();
+                    break;
+                }
+            }
+        }
+        if (instrColor == null) {
+            for (String op : NEW_OPS) {
+                if (upperInstr.contains(op)) {
+                    instrColor = SyntaxColors.getIrNew();
+                    break;
+                }
+            }
+        }
+        if (instrColor == null) {
+            for (String op : CAST_OPS) {
+                if (upperInstr.contains(op)) {
+                    instrColor = SyntaxColors.getIrCast();
+                    break;
+                }
+            }
+        }
+
+        if (instrColor != null) {
+            escaped = colorize(escaped, instrColor);
+        }
+
+        escaped = highlightValues(escaped);
+        return escaped;
+    }
+
+    private String highlightValues(String text) {
+        String valueColor = colorToHex(SyntaxColors.getIrValue());
+        Matcher matcher = VALUE_PATTERN.matcher(text);
+        StringBuilder result = new StringBuilder();
+        int lastEnd = 0;
+
+        while (matcher.find()) {
+            result.append(text, lastEnd, matcher.start());
+            result.append("<span style='color:").append(valueColor).append("'>")
+                  .append(matcher.group())
+                  .append("</span>");
+            lastEnd = matcher.end();
+        }
+        result.append(text.substring(lastEnd));
+        return result.toString();
+    }
+
+    private String colorize(String text, Color color) {
+        return "<span style='color:" + colorToHex(color) + "'>" + text + "</span>";
+    }
+
+    private String colorToHex(Color color) {
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
     private IRBlock findMatchingIRBlock() {

@@ -205,7 +205,7 @@ public class ParameterConfigDialog extends JDialog {
                     break;
                 case OBJECT_SPEC:
                     if (spec.getNestedObjectSpec() != null) {
-                        summaryLabel.setText("→ " + spec.getNestedObjectSpec().getSummary());
+                        summaryLabel.setText("-> " + spec.getNestedObjectSpec().getSummary());
                     } else {
                         summaryLabel.setText("(click Configure)");
                     }

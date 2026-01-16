@@ -593,7 +593,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
     /**
      * Navigate to the definition of a given identifier.
-     * Searches: current class methods → current class fields → project classes → project methods.
+     * Searches: current class methods -> current class fields -> project classes -> project methods.
      */
     private void navigateToIdentifier(String identifier) {
         if (projectModel == null || identifier == null || identifier.isEmpty()) return;

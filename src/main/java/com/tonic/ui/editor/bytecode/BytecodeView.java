@@ -6,17 +6,17 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.theme.*;
 
-import javax.swing.JOptionPane;
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.Token;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rtextarea.RTextScrollPane;
+
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
 import javax.swing.OverlayLayout;
 import javax.swing.SwingWorker;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Element;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
+import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Toolkit;
@@ -25,44 +25,29 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.Set;
-import javax.swing.SwingUtilities;
 
-/**
- * Bytecode view showing disassembled JVM instructions.
- */
 public class BytecodeView extends JPanel implements ThemeChangeListener {
 
+    private static final String SYNTAX_STYLE_BYTECODE = "text/bytecode";
+
+    static {
+        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
+        atmf.putMapping(SYNTAX_STYLE_BYTECODE, "com.tonic.ui.editor.bytecode.BytecodeTokenMaker");
+    }
+
     private final ClassEntryModel classEntry;
-    private final JTextPane textPane;
-    private final StyledDocument doc;
-
-    // Styles for different instruction types
-    private final SimpleAttributeSet defaultStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet loadStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet storeStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet invokeStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet fieldStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet branchStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet stackStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet constStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet returnStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet newStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet offsetStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet commentStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet headerStyle = new SimpleAttributeSet();
-    private final SimpleAttributeSet dividerStyle = new SimpleAttributeSet();
-
-    private final JScrollPane scrollPane;
+    private final RSyntaxTextArea textArea;
+    private final RTextScrollPane scrollPane;
+    private final BytecodeSearchPanel searchPanel;
+    private final LoadingOverlay loadingOverlay;
 
     private static final String METHOD_DIVIDER = "=========================================================================";
 
     private boolean loaded = false;
-    private final LoadingOverlay loadingOverlay;
     private SwingWorker<String, Void> currentWorker;
 
     private final Set<Integer> highlightedLines = new HashSet<>();
     private int lastClickedLine = -1;
-    private final SimpleAttributeSet persistentHighlightStyle = new SimpleAttributeSet();
 
     public BytecodeView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -70,20 +55,17 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         setLayout(new BorderLayout());
         setBackground(JStudioTheme.getBgTertiary());
 
-        textPane = new JTextPane();
-        textPane.setEditable(false);
-        textPane.setBackground(JStudioTheme.getBgTertiary());
-        textPane.setForeground(JStudioTheme.getTextPrimary());
-        textPane.setCaretColor(JStudioTheme.getTextPrimary());
-        textPane.setFont(JStudioTheme.getCodeFont(12));
+        textArea = new RSyntaxTextArea();
+        textArea.setSyntaxEditingStyle(SYNTAX_STYLE_BYTECODE);
+        textArea.setEditable(false);
+        textArea.setAntiAliasingEnabled(true);
+        textArea.setFont(JStudioTheme.getCodeFont(12));
+        textArea.setCodeFoldingEnabled(false);
+        textArea.setBracketMatchingEnabled(false);
 
-        doc = textPane.getStyledDocument();
-
-        initStyles();
-
-        scrollPane = new JScrollPane(textPane);
+        scrollPane = new RTextScrollPane(textArea);
+        scrollPane.setLineNumbersEnabled(true);
         scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
         loadingOverlay = new LoadingOverlay();
 
@@ -98,30 +80,38 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
 
         add(contentPanel, BorderLayout.CENTER);
 
+        searchPanel = new BytecodeSearchPanel(textArea);
+        add(searchPanel, BorderLayout.SOUTH);
+
+        applyTheme();
         setupMouseListener();
 
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     private void setupMouseListener() {
-        textPane.addMouseListener(new MouseAdapter() {
+        textArea.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getButton() != MouseEvent.BUTTON1) return;
 
-                int offset = textPane.viewToModel2D(e.getPoint());
-                int lineNum = getLineAtOffset(offset);
-                if (lineNum < 0) return;
+                try {
+                    int offset = textArea.viewToModel2D(e.getPoint());
+                    int lineNum = textArea.getLineOfOffset(offset);
+                    if (lineNum < 0) return;
 
-                if (e.isControlDown()) {
-                    toggleHighlight(lineNum);
-                } else if (e.isShiftDown() && lastClickedLine >= 0) {
-                    highlightRange(lastClickedLine, lineNum);
-                } else {
-                    clearHighlights();
-                    addHighlight(lineNum);
+                    if (e.isControlDown()) {
+                        toggleHighlight(lineNum);
+                    } else if (e.isShiftDown() && lastClickedLine >= 0) {
+                        highlightRange(lastClickedLine, lineNum);
+                    } else {
+                        clearHighlights();
+                        addHighlight(lineNum);
+                    }
+                    lastClickedLine = lineNum;
+                } catch (Exception ex) {
+                    // Ignore
                 }
-                lastClickedLine = lineNum;
             }
         });
     }
@@ -134,67 +124,57 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     private void applyTheme() {
         setBackground(JStudioTheme.getBgTertiary());
 
-        textPane.setBackground(JStudioTheme.getBgTertiary());
-        textPane.setForeground(JStudioTheme.getTextPrimary());
-        textPane.setCaretColor(JStudioTheme.getTextPrimary());
+        textArea.setBackground(JStudioTheme.getBgTertiary());
+        textArea.setForeground(JStudioTheme.getTextPrimary());
+        textArea.setCaretColor(JStudioTheme.getTextPrimary());
+        textArea.setSelectionColor(JStudioTheme.getSelection());
+        textArea.setCurrentLineHighlightColor(JStudioTheme.getLineHighlight());
+        textArea.setFadeCurrentLineHighlight(true);
 
-        scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
+        scrollPane.getGutter().setBackground(JStudioTheme.getBgSecondary());
+        scrollPane.getGutter().setLineNumberColor(JStudioTheme.getTextSecondary());
+        scrollPane.getGutter().setBorderColor(JStudioTheme.getBorder());
 
-        initStyles();
+        SyntaxScheme scheme = textArea.getSyntaxScheme();
+
+        setTokenStyle(scheme, Token.IDENTIFIER, JStudioTheme.getTextPrimary());
+        setTokenStyle(scheme, Token.WHITESPACE, JStudioTheme.getTextPrimary());
+        setTokenStyle(scheme, Token.SEPARATOR, JStudioTheme.getTextSecondary());
+
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_COMMENT, JStudioTheme.getTextSecondary());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_DIVIDER, JStudioTheme.getAccentSecondary());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_HEADER, JStudioTheme.getAccent());
+
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OFFSET, SyntaxColors.getBcOffset());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_LOAD, SyntaxColors.getBcLoad());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_STORE, SyntaxColors.getBcStore());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_INVOKE, SyntaxColors.getBcInvoke());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_FIELD, SyntaxColors.getBcField());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_BRANCH, SyntaxColors.getBcBranch());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_STACK, SyntaxColors.getBcStack());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_CONST, SyntaxColors.getBcConst());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_RETURN, SyntaxColors.getBcReturn());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_NEW, SyntaxColors.getBcNew());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_ARITHMETIC, SyntaxColors.getBcArithmetic());
+        setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_TYPE, SyntaxColors.getBcType());
+
         repaint();
     }
 
-    private void initStyles() {
-        updateStyle(defaultStyle, JStudioTheme.getTextPrimary());
-        updateStyle(loadStyle, SyntaxColors.getBcLoad());
-        updateStyle(storeStyle, SyntaxColors.getBcStore());
-        updateStyle(invokeStyle, SyntaxColors.getBcInvoke());
-        updateStyle(fieldStyle, SyntaxColors.getBcField());
-        updateStyle(branchStyle, SyntaxColors.getBcBranch());
-        updateStyle(stackStyle, SyntaxColors.getBcStack());
-        updateStyle(constStyle, SyntaxColors.getBcConst());
-        updateStyle(returnStyle, SyntaxColors.getBcReturn());
-        updateStyle(newStyle, SyntaxColors.getBcNew());
-        updateStyle(offsetStyle, SyntaxColors.getBcOffset());
-        updateStyle(commentStyle, JStudioTheme.getTextSecondary());
-        updateStyle(headerStyle, JStudioTheme.getAccent());
-        StyleConstants.setBold(headerStyle, true);
-        updateStyle(dividerStyle, JStudioTheme.getAccentSecondary());
-
-        Color highlightBase = JStudioTheme.getAccentSecondary();
-        StyleConstants.setBackground(persistentHighlightStyle, new Color(highlightBase.getRed(), highlightBase.getGreen(), highlightBase.getBlue(), 100));
-    }
-
-    private void updateStyle(SimpleAttributeSet style, Color color) {
-        if (style == null) return;
-        StyleConstants.setForeground(style, color);
-        StyleConstants.setFontFamily(style, JStudioTheme.getCodeFont(12).getFamily());
-        StyleConstants.setFontSize(style, 12);
-    }
-
-    private SimpleAttributeSet createStyle(Color color) {
-        SimpleAttributeSet style = new SimpleAttributeSet();
-        StyleConstants.setForeground(style, color);
-        StyleConstants.setFontFamily(style, JStudioTheme.getCodeFont(12).getFamily());
-        StyleConstants.setFontSize(style, 12);
-        return style;
+    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color) {
+        if (scheme.getStyle(tokenType) != null) {
+            scheme.getStyle(tokenType).foreground = color;
+        }
     }
 
     public void refresh() {
         cancelCurrentWorker();
-
-        try {
-            doc.remove(0, doc.getLength());
-        } catch (BadLocationException e) {
-            // Ignore
-        }
-
         loadingOverlay.showLoading("Loading bytecode...");
 
         currentWorker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
-                return generateBytecodeContent();
+                return generateBytecodeText();
             }
 
             @Override
@@ -204,16 +184,12 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
                     return;
                 }
                 try {
-                    String content = get();
-                    applyBytecodeContent(content);
-                    textPane.setCaretPosition(0);
+                    String bytecodeText = get();
+                    textArea.setText(bytecodeText);
+                    textArea.setCaretPosition(0);
                     loaded = true;
                 } catch (Exception e) {
-                    try {
-                        doc.insertString(0, "// Error displaying bytecode: " + e.getMessage(), commentStyle);
-                    } catch (BadLocationException ex) {
-                        // Ignore
-                    }
+                    textArea.setText("// Error displaying bytecode: " + e.getMessage());
                 }
             }
         };
@@ -221,16 +197,8 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         currentWorker.execute();
     }
 
-    private void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
-            currentWorker.cancel(true);
-            loadingOverlay.hideLoading();
-        }
-    }
-
-    private String generateBytecodeContent() {
+    private String generateBytecodeText() {
         StringBuilder sb = new StringBuilder();
-
         sb.append("// Class: ").append(classEntry.getClassName()).append("\n");
         sb.append("// Super: ").append(classEntry.getSuperClassName()).append("\n");
         if (!classEntry.getInterfaceNames().isEmpty()) {
@@ -264,74 +232,10 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         return sb.toString();
     }
 
-    private void applyBytecodeContent(String content) {
-        try {
-            doc.remove(0, doc.getLength());
-        } catch (BadLocationException e) {
-            // Ignore
-        }
-
-        String[] lines = content.split("\n");
-        for (String line : lines) {
-            applyFormattedLine(line);
-        }
-    }
-
-    private void applyFormattedLine(String line) {
-        if (line.isEmpty()) {
-            appendText("\n", defaultStyle);
-            return;
-        }
-
-        if (line.startsWith("// " + METHOD_DIVIDER) || line.startsWith("// Method ")) {
-            appendText(line + "\n", dividerStyle);
-            return;
-        }
-
-        if (line.startsWith("// Class:") || line.startsWith("// Super:") ||
-            line.startsWith("// Implements:") || line.startsWith("  // No code")) {
-            appendText(line + "\n", commentStyle);
-            return;
-        }
-
-        if (line.startsWith("//") && (line.contains("public") || line.contains("private") ||
-            line.contains("protected") || line.contains("static"))) {
-            int spaceIdx = line.indexOf(' ', 2);
-            if (spaceIdx > 0) {
-                String flagsPart = line.substring(0, line.lastIndexOf(' ') + 1);
-                String namePart = line.substring(line.lastIndexOf(' ') + 1);
-                appendText(flagsPart, commentStyle);
-                appendText(namePart + "\n", headerStyle);
-                return;
-            }
-        }
-
-        String trimmed = line.trim();
-        if (trimmed.startsWith("//")) {
-            appendText(line + "\n", commentStyle);
-            return;
-        }
-
-        int colonIndex = trimmed.indexOf(':');
-        if (colonIndex > 0 && Character.isDigit(trimmed.charAt(0))) {
-            String offset = trimmed.substring(0, colonIndex);
-            appendText("  " + offset, offsetStyle);
-            appendText(": ", defaultStyle);
-
-            String rest = trimmed.substring(colonIndex + 1).trim();
-            String[] parts = rest.split("\\s+", 2);
-            String opcode = parts[0];
-            String operands = parts.length > 1 ? parts[1] : "";
-
-            SimpleAttributeSet opcodeStyle = getOpcodeStyle(opcode);
-            appendText(opcode, opcodeStyle);
-
-            if (!operands.isEmpty()) {
-                appendText(" " + operands, defaultStyle);
-            }
-            appendText("\n", defaultStyle);
-        } else {
-            appendText(line + "\n", defaultStyle);
+    private void cancelCurrentWorker() {
+        if (currentWorker != null && !currentWorker.isDone()) {
+            currentWorker.cancel(true);
+            loadingOverlay.hideLoading();
         }
     }
 
@@ -349,223 +253,83 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         return sb.toString();
     }
 
-    private SimpleAttributeSet getOpcodeStyle(String opcode) {
-        opcode = opcode.toLowerCase();
-
-        // Load instructions
-        if (opcode.contains("load") || opcode.equals("ldc") || opcode.equals("ldc_w") ||
-                opcode.equals("ldc2_w") || opcode.startsWith("aload") || opcode.startsWith("iload") ||
-                opcode.startsWith("lload") || opcode.startsWith("fload") || opcode.startsWith("dload")) {
-            return loadStyle;
-        }
-
-        // Store instructions
-        if (opcode.contains("store") || opcode.startsWith("astore") || opcode.startsWith("istore") ||
-                opcode.startsWith("lstore") || opcode.startsWith("fstore") || opcode.startsWith("dstore")) {
-            return storeStyle;
-        }
-
-        // Invoke instructions
-        if (opcode.startsWith("invoke")) {
-            return invokeStyle;
-        }
-
-        // Field access
-        if (opcode.startsWith("get") || opcode.startsWith("put")) {
-            return fieldStyle;
-        }
-
-        // Branch instructions
-        if (opcode.startsWith("if") || opcode.equals("goto") || opcode.equals("goto_w") ||
-                opcode.equals("jsr") || opcode.equals("jsr_w") || opcode.equals("ret") ||
-                opcode.equals("tableswitch") || opcode.equals("lookupswitch")) {
-            return branchStyle;
-        }
-
-        // Stack operations
-        if (opcode.equals("pop") || opcode.equals("pop2") || opcode.equals("dup") ||
-                opcode.equals("dup_x1") || opcode.equals("dup_x2") || opcode.equals("dup2") ||
-                opcode.equals("dup2_x1") || opcode.equals("dup2_x2") || opcode.equals("swap")) {
-            return stackStyle;
-        }
-
-        // Constants
-        if (opcode.startsWith("iconst") || opcode.startsWith("lconst") || opcode.startsWith("fconst") ||
-                opcode.startsWith("dconst") || opcode.equals("aconst_null") || opcode.startsWith("bipush") ||
-                opcode.startsWith("sipush")) {
-            return constStyle;
-        }
-
-        // Return
-        if (opcode.contains("return") || opcode.equals("athrow")) {
-            return returnStyle;
-        }
-
-        // New/allocation
-        if (opcode.equals("new") || opcode.equals("newarray") || opcode.equals("anewarray") ||
-                opcode.equals("multianewarray")) {
-            return newStyle;
-        }
-
-        return defaultStyle;
-    }
-
-    private void appendText(String text, SimpleAttributeSet style) {
-        try {
-            doc.insertString(doc.getLength(), text, style);
-        } catch (BadLocationException e) {
-            // Ignore
-        }
-    }
-
-    /**
-     * Get the current text.
-     */
     public String getText() {
-        return textPane.getText();
+        return textArea.getText();
     }
 
-    /**
-     * Copy current selection to clipboard.
-     */
     public void copySelection() {
-        String selected = textPane.getSelectedText();
+        String selected = textArea.getSelectedText();
         if (selected != null && !selected.isEmpty()) {
             StringSelection selection = new StringSelection(selected);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
         }
     }
 
-    /**
-     * Go to a specific line.
-     */
     public void goToLine(int line) {
         try {
-            int offset = textPane.getDocument().getDefaultRootElement().getElement(line - 1).getStartOffset();
-            textPane.setCaretPosition(offset);
-            textPane.requestFocus();
+            int offset = textArea.getLineStartOffset(line - 1);
+            textArea.setCaretPosition(offset);
+            textArea.requestFocus();
         } catch (Exception e) {
             // Line out of range
         }
     }
 
-    /**
-     * Highlight a specific line and scroll to it.
-     * Places caret one line above for visibility.
-     */
     public void highlightLine(int line) {
         clearHighlights();
         addHighlight(line - 1);
         try {
             int caretLine = Math.max(line - 2, 0);
-            Element root = textPane.getDocument().getDefaultRootElement();
-            int caretOffset = root.getElement(caretLine).getStartOffset();
-            textPane.setCaretPosition(caretOffset);
+            int caretOffset = textArea.getLineStartOffset(caretLine);
+            textArea.setCaretPosition(caretOffset);
 
-            int highlightOffset = root.getElement(line - 1).getStartOffset();
-            java.awt.Rectangle rect = textPane.modelToView2D(highlightOffset).getBounds();
+            int highlightOffset = textArea.getLineStartOffset(line - 1);
+            java.awt.Rectangle rect = textArea.modelToView2D(highlightOffset).getBounds();
             if (rect != null) {
-                rect.height = textPane.getHeight() / 3;
-                textPane.scrollRectToVisible(rect);
+                rect.height = textArea.getHeight() / 3;
+                textArea.scrollRectToVisible(rect);
             }
-            textPane.requestFocus();
+            textArea.requestFocus();
         } catch (Exception e) {
             // Line out of range
         }
     }
 
-    private String lastSearch;
-
-    /**
-     * Show find dialog.
-     */
     public void showFindDialog() {
-        String input = (String) JOptionPane.showInputDialog(
-            this,
-            "Find:",
-            "Find",
-            JOptionPane.PLAIN_MESSAGE,
-            null,
-            null,
-            lastSearch
-        );
-        lastSearch = input;
-        if (input != null && !input.isEmpty()) {
-            scrollToText(input);
-        }
+        searchPanel.showPanel();
     }
 
-    /**
-     * Get the selected text.
-     */
     public String getSelectedText() {
-        return textPane.getSelectedText();
+        return textArea.getSelectedText();
     }
 
-    /**
-     * Scroll to and highlight text.
-     */
     public void scrollToText(String searchText) {
         if (searchText == null || searchText.isEmpty()) return;
 
-        String text = textPane.getText();
+        String text = textArea.getText();
         int index = text.toLowerCase().indexOf(searchText.toLowerCase());
         if (index >= 0) {
-            textPane.setCaretPosition(index);
-            textPane.select(index, index + searchText.length());
-            textPane.requestFocus();
+            textArea.setCaretPosition(index);
+            textArea.select(index, index + searchText.length());
+            textArea.requestFocus();
         }
     }
 
-    /**
-     * Set the font size.
-     */
     public void setFontSize(int size) {
-        textPane.setFont(JStudioTheme.getCodeFont(size));
-        // Update styles to match
-        updateStyleFontSize(size);
+        textArea.setFont(JStudioTheme.getCodeFont(size));
     }
 
-    private void updateStyleFontSize(int size) {
-        StyleConstants.setFontSize(defaultStyle, size);
-        StyleConstants.setFontSize(loadStyle, size);
-        StyleConstants.setFontSize(storeStyle, size);
-        StyleConstants.setFontSize(invokeStyle, size);
-        StyleConstants.setFontSize(fieldStyle, size);
-        StyleConstants.setFontSize(branchStyle, size);
-        StyleConstants.setFontSize(stackStyle, size);
-        StyleConstants.setFontSize(constStyle, size);
-        StyleConstants.setFontSize(returnStyle, size);
-        StyleConstants.setFontSize(newStyle, size);
-        StyleConstants.setFontSize(offsetStyle, size);
-        StyleConstants.setFontSize(commentStyle, size);
-        StyleConstants.setFontSize(headerStyle, size);
-        StyleConstants.setFontSize(dividerStyle, size);
-    }
-
-    /**
-     * Set word wrap enabled/disabled.
-     */
     public void setWordWrap(boolean enabled) {
-        // JTextPane doesn't have built-in word wrap toggle like JTextArea
-        // We can achieve this by modifying the viewport behavior
-        // For now, this is a no-op for JTextPane-based views
+        textArea.setLineWrap(enabled);
+        textArea.setWrapStyleWord(enabled);
     }
 
-    /**
-     * Highlight and scroll to a specific PC (bytecode offset) within a method.
-     * Uses persistent highlighting (does not auto-clear).
-     * @param methodName the method name
-     * @param methodDesc the method descriptor
-     * @param pc the bytecode offset to highlight
-     * @return true if the PC was found and highlighted
-     */
     public boolean highlightPC(String methodName, String methodDesc, int pc) {
         if (!loaded) {
             refresh();
         }
 
-        String text = textPane.getText();
+        String text = textArea.getText();
         String methodSignature = methodName + methodDesc;
         int methodStart = text.indexOf(methodSignature);
         if (methodStart < 0) {
@@ -584,37 +348,32 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         }
 
         if (pcIndex >= 0) {
-            textPane.setCaretPosition(pcIndex);
-            textPane.requestFocus();
+            textArea.setCaretPosition(pcIndex);
+            textArea.requestFocus();
 
-            int lineNum = getLineAtOffset(pcIndex);
-            clearHighlights();
-            addHighlight(lineNum);
-            lastClickedLine = lineNum;
+            try {
+                int lineNum = textArea.getLineOfOffset(pcIndex);
+                clearHighlights();
+                addHighlight(lineNum);
+                lastClickedLine = lineNum;
+            } catch (Exception e) {
+                // Ignore
+            }
             return true;
         }
 
-        textPane.setCaretPosition(methodStart);
-        textPane.select(methodStart, methodStart + methodSignature.length());
-        textPane.requestFocus();
+        textArea.setCaretPosition(methodStart);
+        textArea.select(methodStart, methodStart + methodSignature.length());
+        textArea.requestFocus();
         return true;
-
     }
 
-    /**
-     * Highlight and scroll to a specific PC without clearing existing highlights.
-     * Useful for adding multiple highlights (e.g., from query results).
-     * @param methodName the method name
-     * @param methodDesc the method descriptor
-     * @param pc the bytecode offset to highlight
-     * @return true if the PC was found and highlighted
-     */
     public boolean highlightPCAdditive(String methodName, String methodDesc, int pc) {
         if (!loaded) {
             refresh();
         }
 
-        String text = textPane.getText();
+        String text = textArea.getText();
         String methodSignature = methodName + methodDesc;
         int methodStart = text.indexOf(methodSignature);
         if (methodStart < 0) {
@@ -633,100 +392,101 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         }
 
         if (pcIndex >= 0) {
-            textPane.setCaretPosition(pcIndex);
-            textPane.requestFocus();
+            textArea.setCaretPosition(pcIndex);
+            textArea.requestFocus();
 
-            int lineNum = getLineAtOffset(pcIndex);
-            addHighlight(lineNum);
-            lastClickedLine = lineNum;
+            try {
+                int lineNum = textArea.getLineOfOffset(pcIndex);
+                addHighlight(lineNum);
+                lastClickedLine = lineNum;
+            } catch (Exception e) {
+                // Ignore
+            }
             return true;
         }
 
         return false;
     }
 
-    /**
-     * Navigate to a method by name and descriptor, highlighting the declaration line.
-     * @param methodName the method name
-     * @param methodDesc the method descriptor (can be null for partial match)
-     * @return true if the method was found
-     */
     public boolean scrollToMethod(String methodName, String methodDesc) {
         if (!loaded) {
             refresh();
         }
 
-        String text = textPane.getText();
+        String text = textArea.getText();
         String searchPattern = methodDesc != null ? methodName + methodDesc : methodName;
         int index = text.indexOf(searchPattern);
 
         if (index >= 0) {
             clearHighlights();
-            int lineNumber = getLineAtOffset(index);
-            addHighlight(lineNumber);
-            textPane.setCaretPosition(index);
-            textPane.requestFocus();
+            try {
+                int lineNumber = textArea.getLineOfOffset(index);
+                addHighlight(lineNumber);
+            } catch (Exception e) {
+                // Ignore
+            }
+            textArea.setCaretPosition(index);
+            textArea.requestFocus();
             return true;
         }
 
         return false;
     }
 
-    /**
-     * Navigate to a field by name, highlighting the declaration line.
-     * @param fieldName the field name
-     * @return true if the field was found
-     */
     public boolean scrollToField(String fieldName) {
         if (!loaded) {
             refresh();
         }
 
-        String text = textPane.getText();
+        String text = textArea.getText();
         int index = text.indexOf(fieldName);
 
         if (index >= 0) {
             clearHighlights();
-            int lineNumber = getLineAtOffset(index);
-            addHighlight(lineNumber);
-            textPane.setCaretPosition(index);
-            textPane.requestFocus();
+            try {
+                int lineNumber = textArea.getLineOfOffset(index);
+                addHighlight(lineNumber);
+            } catch (Exception e) {
+                // Ignore
+            }
+            textArea.setCaretPosition(index);
+            textArea.requestFocus();
             return true;
         }
 
         return false;
     }
 
-    private int getLineAtOffset(int offset) {
-        Element root = doc.getDefaultRootElement();
-        return root.getElementIndex(offset);
-    }
-
-    private int[] getLineOffsetRange(int lineNumber) {
-        Element root = doc.getDefaultRootElement();
-        if (lineNumber < 0 || lineNumber >= root.getElementCount()) {
-            return null;
-        }
-        Element line = root.getElement(lineNumber);
-        return new int[] { line.getStartOffset(), line.getEndOffset() };
-    }
-
     public void clearHighlights() {
         for (int lineNum : highlightedLines) {
-            removeHighlightVisual(lineNum);
+            try {
+                textArea.removeLineHighlight(lineNum);
+            } catch (Exception e) {
+                // Ignore
+            }
         }
         highlightedLines.clear();
     }
 
     public void addHighlight(int lineNumber) {
         if (highlightedLines.add(lineNumber)) {
-            applyHighlightVisual(lineNumber);
+            try {
+                Color highlightColor = JStudioTheme.getAccentSecondary();
+                Color bgColor = new Color(highlightColor.getRed(), highlightColor.getGreen(), highlightColor.getBlue(), 100);
+                textArea.addLineHighlight(lineNumber, bgColor);
+            } catch (Exception e) {
+                // Ignore
+            }
         }
     }
 
     public void removeHighlight(int lineNumber) {
         if (highlightedLines.remove(lineNumber)) {
-            removeHighlightVisual(lineNumber);
+            try {
+                textArea.removeLineHighlight(lineNumber);
+            } catch (Exception e) {
+                // Ignore
+            }
         }
     }
 
@@ -743,28 +503,6 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         int end = Math.max(fromLine, toLine);
         for (int i = start; i <= end; i++) {
             addHighlight(i);
-        }
-    }
-
-    private void applyHighlightVisual(int lineNumber) {
-        int[] range = getLineOffsetRange(lineNumber);
-        if (range == null) return;
-        try {
-            doc.setCharacterAttributes(range[0], range[1] - range[0], persistentHighlightStyle, false);
-        } catch (Exception e) {
-            // ignore
-        }
-    }
-
-    private void removeHighlightVisual(int lineNumber) {
-        int[] range = getLineOffsetRange(lineNumber);
-        if (range == null) return;
-        try {
-            SimpleAttributeSet clearBg = new SimpleAttributeSet();
-            StyleConstants.setBackground(clearBg, JStudioTheme.getBgTertiary());
-            doc.setCharacterAttributes(range[0], range[1] - range[0], clearBg, false);
-        } catch (Exception e) {
-            // ignore
         }
     }
 

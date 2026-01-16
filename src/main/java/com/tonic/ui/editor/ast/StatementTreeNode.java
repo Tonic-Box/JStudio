@@ -143,13 +143,13 @@ public class StatementTreeNode extends ASTTreeNode {
             if (ifStmt.hasElse()) return "with else";
             return "";
         } else if (stmt instanceof WhileStmt) {
-            String label = ((WhileStmt) stmt).getLabel();
+            String label = stmt.getLabel();
             return label != null ? "label=" + label : "";
         } else if (stmt instanceof DoWhileStmt) {
-            String label = ((DoWhileStmt) stmt).getLabel();
+            String label = stmt.getLabel();
             return label != null ? "label=" + label : "";
         } else if (stmt instanceof ForStmt) {
-            String label = ((ForStmt) stmt).getLabel();
+            String label = stmt.getLabel();
             return label != null ? "label=" + label : "";
         } else if (stmt instanceof ForEachStmt) {
             ForEachStmt forEach = (ForEachStmt) stmt;
@@ -167,7 +167,7 @@ public class StatementTreeNode extends ASTTreeNode {
             String target = ((ContinueStmt) stmt).getTargetLabel();
             return target != null ? target : "";
         } else if (stmt instanceof LabeledStmt) {
-            return ((LabeledStmt) stmt).getLabel();
+            return stmt.getLabel();
         } else if (stmt instanceof SwitchStmt) {
             int cases = ((SwitchStmt) stmt).getCases().size();
             return cases + (cases == 1 ? " case" : " cases");
@@ -189,7 +189,7 @@ public class StatementTreeNode extends ASTTreeNode {
         if (stmt instanceof VarDeclStmt) {
             VarDeclStmt varDecl = (VarDeclStmt) stmt;
             if (varDecl.isUseVarKeyword()) {
-                return "var → " + varDecl.getType().toJavaSource();
+                return "var -> " + varDecl.getType().toJavaSource();
             }
             return varDecl.getType().toJavaSource();
         }
