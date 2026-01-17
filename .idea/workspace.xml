@@ -7,11 +7,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Stats view&#10;- Attribute view&#10;- updated README.md">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Updated README.md&#10;- Updated shortcuts dialogue&#10;- cleanup">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/KeyboardShortcuts.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/KeyboardShortcuts.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -92,7 +90,7 @@
       <recent name="com.tonic.ui.theme" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.JStudio [run]">
+  <component name="RunManager" selected="Gradle.JStudio [build]">
     <configuration name="JStudio [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -205,8 +203,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.JStudio [run]" />
         <item itemvalue="Gradle.JStudio [build]" />
+        <item itemvalue="Gradle.JStudio [run]" />
         <item itemvalue="Gradle.JStudio [clean]" />
         <item itemvalue="Gradle.JStudio [refreshDependencies]" />
         <item itemvalue="Gradle.Tests in 'JStudio.test'" />
@@ -221,14 +219,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00011" summary="- Debugger">
-      <option name="closed" value="true" />
-      <created>1766592266924</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1766592266924</updated>
     </task>
     <task id="LOCAL-00012" summary="- Debugger bug fixes">
       <option name="closed" value="true" />
@@ -614,7 +604,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768557171513</updated>
     </task>
-    <option name="localTasksCounter" value="60" />
+    <task id="LOCAL-00060" summary="- Updated README.md&#10;- Updated shortcuts dialogue&#10;- cleanup">
+      <option name="closed" value="true" />
+      <created>1768594123989</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1768594123989</updated>
+    </task>
+    <option name="localTasksCounter" value="61" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -629,7 +627,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Heap analysis: argument fix" />
     <MESSAGE value="- Heap analysis: cleanup" />
     <MESSAGE value="-Debugger" />
     <MESSAGE value="-Debugger &amp; readme" />
@@ -654,7 +651,8 @@
     <MESSAGE value="- Update readme" />
     <MESSAGE value="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui" />
     <MESSAGE value="- Stats view&#10;- Attribute view&#10;- updated README.md" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Stats view&#10;- Attribute view&#10;- updated README.md" />
+    <MESSAGE value="- Updated README.md&#10;- Updated shortcuts dialogue&#10;- cleanup" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Updated README.md&#10;- Updated shortcuts dialogue&#10;- cleanup" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

@@ -214,8 +214,6 @@ public class MenuBarBuilder {
         menu.add(createMenuItem("Refresh", KeyEvent.VK_F5, MENU_SHORTCUT_MASK,
                 Icons.getIcon("refresh"), e -> mainFrame.refreshCurrentView()));
 
-        menu.addSeparator();
-
         return menu;
     }
 
