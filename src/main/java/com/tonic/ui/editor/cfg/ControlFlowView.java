@@ -38,7 +38,8 @@ public class ControlFlowView extends BaseGraphView {
         toolbar.add(new JLabel(" Method: "));
         cfgMethodSelector = new JComboBox<>();
         cfgMethodSelector.setFont(JStudioTheme.getCodeFont(11));
-        cfgMethodSelector.setMaximumSize(new Dimension(300, 25));
+        cfgMethodSelector.setMaximumSize(new Dimension(250, 25));
+        cfgMethodSelector.setPreferredSize(new Dimension(200, 25));
         cfgMethodSelector.setRenderer(new MethodListRenderer());
         cfgMethodSelector.addActionListener(e -> onCFGMethodSelected());
         toolbar.add(cfgMethodSelector);

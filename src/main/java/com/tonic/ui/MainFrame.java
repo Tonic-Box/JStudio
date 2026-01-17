@@ -1236,47 +1236,6 @@ public class MainFrame extends JFrame {
         analysisDialog.toFront();
     }
 
-    public void showCallGraph() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        showAnalysisDialog();
-        analysisPanel.showCallGraph();
-
-        // Build the call graph if not already built
-        if (analysisPanel.getCallGraphPanel().getCallGraph() == null) {
-            analysisPanel.getCallGraphPanel().buildCallGraph();
-        }
-
-        // If a method is selected, focus on it
-        MethodEntryModel currentMethod = editorPanel.getCurrentMethod();
-        if (currentMethod != null) {
-            analysisPanel.getCallGraphPanel().focusOnMethod(currentMethod.getMethodEntry());
-        }
-    }
-
-    public void showCallGraphForMethod(MethodEntry method) {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        showAnalysisDialog();
-        analysisPanel.showCallGraph();
-
-        if (analysisPanel.getCallGraphPanel().getCallGraph() == null) {
-            analysisPanel.getCallGraphPanel().buildCallGraph();
-        }
-
-        if (method != null) {
-            analysisPanel.getCallGraphPanel().focusOnMethod(method);
-        }
-    }
-
     public void showDependencies() {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project == null) {

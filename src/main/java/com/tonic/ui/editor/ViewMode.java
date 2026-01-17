@@ -15,6 +15,7 @@ public enum ViewMode {
     PDG("Program Dependence", "Program Dependence Graph"),
     SDG("System Dependence", "System Dependence Graph"),
     CPG("Code Property", "Code Property Graph"),
+    CALLGRAPH("Call Graph", "Method call relationship graph"),
     CFG("Control Flow", "Control Flow Graph"),
     HEX("Hex", "Raw class file bytes"),
     ATTRIBUTES("Attributes", "Class, field, and method attributes"),

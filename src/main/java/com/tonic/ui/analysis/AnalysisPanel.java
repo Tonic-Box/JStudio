@@ -11,9 +11,6 @@ import java.awt.BorderLayout;
 public class AnalysisPanel extends ThemedJPanel {
 
     private final JTabbedPane tabbedPane;
-
-    @Getter
-    private final CallGraphPanel callGraphPanel;
     @Getter
     private final DependencyPanel dependencyPanel;
     @Getter
@@ -36,7 +33,6 @@ public class AnalysisPanel extends ThemedJPanel {
         tabbedPane.setBorder(null);
 
         // Create panels
-        callGraphPanel = new CallGraphPanel(project);
         dependencyPanel = new DependencyPanel(project);
         searchPanel = new SearchPanel(project);
         stringsPanel = new StringsPanel(project);
@@ -45,7 +41,6 @@ public class AnalysisPanel extends ThemedJPanel {
         simulationPanel = new SimulationPanel(project);
 
         // Add tabs
-        tabbedPane.addTab("Call Graph", callGraphPanel);
         tabbedPane.addTab("Dependencies", dependencyPanel);
         tabbedPane.addTab("Data Flow", dataFlowPanel);
         tabbedPane.addTab("Similarity", similarityPanel);
@@ -57,7 +52,6 @@ public class AnalysisPanel extends ThemedJPanel {
     }
 
     public void refresh() {
-        callGraphPanel.refresh();
         dependencyPanel.refresh();
         searchPanel.refresh();
         stringsPanel.refresh();
@@ -66,7 +60,6 @@ public class AnalysisPanel extends ThemedJPanel {
         simulationPanel.refresh();
     }
 
-    public void showCallGraph() { tabbedPane.setSelectedComponent(callGraphPanel); }
     public void showDependencies() { tabbedPane.setSelectedComponent(dependencyPanel); }
     public void showSearch() { tabbedPane.setSelectedComponent(searchPanel); }
     public void showStrings() { tabbedPane.setSelectedComponent(stringsPanel); }

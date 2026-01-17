@@ -439,8 +439,6 @@ public class NavigatorPanel extends ThemedJPanel {
     private void buildMethodMenu(JPopupMenu menu, NavigatorNode.MethodNode node) {
         MethodEntryModel method = node.getMethodEntry();
 
-        addMenuItem(menu, "View in Call Graph", () -> mainFrame.showCallGraphForMethod(method.getMethodEntry()));
-
         addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
             FindUsagesEvent.forMethod(this, method.getOwner().getClassName(),
                 method.getName(), method.getDescriptor())));

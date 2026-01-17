@@ -78,9 +78,6 @@ public class KeyboardShortcuts {
         registerAction(rootPane, condition, KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0),
                 "runAnalysis", e -> mainFrame.runAnalysis());
 
-        registerAction(rootPane, condition, KeyStroke.getKeyStroke(KeyEvent.VK_G, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK),
-                "showCallGraph", e -> mainFrame.showCallGraph());
-
         registerAction(rootPane, condition, KeyStroke.getKeyStroke(KeyEvent.VK_T, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK),
                 "showTransforms", e -> mainFrame.showTransformDialog());
 

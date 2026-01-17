@@ -96,7 +96,6 @@ public class ToolbarBuilder implements ThemeChangeListener {
 
         // Analysis
         toolbar.add(createButton(Icons.getIcon("analyze"), "Run Analysis (F9)", e -> mainFrame.runAnalysis()));
-        toolbar.add(createButton(Icons.getIcon("callgraph"), "Show Call Graph (Ctrl+Shift+G)", e -> mainFrame.showCallGraph()));
         toolbar.add(createButton(Icons.getIcon("transform"), "Apply Transforms (Ctrl+Shift+T)", e -> mainFrame.showTransformDialog()));
         toolbar.addSeparator();
 

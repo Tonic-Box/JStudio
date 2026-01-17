@@ -22,6 +22,7 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 - **Program Dependence** - Data and control dependency graph
 - **System Dependence** - Interprocedural dependence graph
 - **Code Property** - Unified code property graph
+- **Call Graph** - Method call hierarchy with depth control and invoke-type colored edges (virtual, static, special, interface, dynamic)
 
 **Other Views**
 - **Const Pool** - Constant pool entry browser with filtering

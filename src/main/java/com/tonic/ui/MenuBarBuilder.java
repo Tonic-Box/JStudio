@@ -231,9 +231,6 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Show Call Graph", KeyEvent.VK_G, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                Icons.getIcon("callgraph"), e -> mainFrame.showCallGraph()));
-
         menu.add(createMenuItem("Show Dependencies", 0, 0,
                 Icons.getIcon("dependency"), e -> mainFrame.showDependencies()));
 

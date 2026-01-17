@@ -38,6 +38,7 @@ public class ViewModeComboBox extends JComboBox<Object> {
         addItem(ViewMode.PDG);
         addItem(ViewMode.SDG);
         addItem(ViewMode.CPG);
+        addItem(ViewMode.CALLGRAPH);
 
         addItem(HEADER_PREFIX + "Other");
         addItem(ViewMode.CONSTPOOL);
