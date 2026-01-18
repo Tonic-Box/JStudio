@@ -7,25 +7,30 @@ import com.tonic.analysis.callgraph.CallGraphNode;
 import com.tonic.analysis.callgraph.CallSite;
 import com.tonic.analysis.common.MethodReference;
 import com.tonic.parser.ClassPool;
+import com.tonic.ui.core.component.FilterableComboBox;
 import com.tonic.ui.editor.graph.BaseGraphView;
 import com.tonic.ui.editor.graph.render.GraphVertex;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
+import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class CallGraphView extends BaseGraphView {
 
-    private JComboBox<MethodEntryModel> methodSelector;
+    private FilterableComboBox<MethodEntryModel> methodSelector;
     private JSpinner depthSpinner;
 
+    private ProjectModel projectModel;
     private CallGraph callGraph;
     private MethodEntryModel currentMethod;
     private MethodReference focusRef;
@@ -34,6 +39,7 @@ public class CallGraphView extends BaseGraphView {
     private Set<MethodReference> callees = Collections.emptySet();
 
     private String prepareError = null;
+    private int pendingDepth = 3;
 
     public CallGraphView(ClassEntryModel classEntry) {
         super(classEntry);
@@ -41,14 +47,18 @@ public class CallGraphView extends BaseGraphView {
         populateMethodSelector();
     }
 
+    public void setProjectModel(ProjectModel projectModel) {
+        this.projectModel = projectModel;
+        this.callGraph = null;
+    }
+
     @Override
     protected void createAdditionalToolbarItems() {
         toolbar.add(new JLabel(" Method: "));
-        methodSelector = new JComboBox<>();
+        methodSelector = new FilterableComboBox<>(m -> m.getName() + m.getMethodEntry().getDesc());
         methodSelector.setFont(JStudioTheme.getCodeFont(11));
         methodSelector.setMaximumSize(new Dimension(250, 25));
         methodSelector.setPreferredSize(new Dimension(200, 25));
-        methodSelector.setRenderer(new MethodListRenderer());
         methodSelector.addActionListener(e -> onMethodSelected());
         toolbar.add(methodSelector);
 
@@ -83,25 +93,30 @@ public class CallGraphView extends BaseGraphView {
     }
 
     private void populateMethodSelector() {
-        methodSelector.removeAllItems();
+        List<MethodEntryModel> methods = new ArrayList<>();
         for (MethodEntryModel method : classEntry.getMethods()) {
             if (method.getMethodEntry().getCodeAttribute() != null) {
-                methodSelector.addItem(method);
+                methods.add(method);
             }
         }
+        methodSelector.setAllItems(methods);
     }
 
     private void onMethodSelected() {
         if (initializing) return;
-        currentMethod = (MethodEntryModel) methodSelector.getSelectedItem();
-        if (currentMethod != null) {
-            loaded = false;
-            refresh();
+        Object selected = methodSelector.getSelectedItem();
+        if (!(selected instanceof MethodEntryModel)) {
+            return;
         }
+        currentMethod = (MethodEntryModel) selected;
+        pendingDepth = (Integer) depthSpinner.getValue();
+        loaded = false;
+        refresh();
     }
 
     private void onSettingsChanged() {
         if (initializing || currentMethod == null) return;
+        pendingDepth = (Integer) depthSpinner.getValue();
         loaded = false;
         refresh();
     }
@@ -109,9 +124,24 @@ public class CallGraphView extends BaseGraphView {
     private void ensureCallGraph() {
         if (callGraph == null) {
             ClassPool pool = new ClassPool(true);
-            pool.put(classEntry.getClassFile());
+            if (projectModel != null && projectModel.getClassPool() != null) {
+                for (com.tonic.parser.ClassFile cf : projectModel.getClassPool().getClasses()) {
+                    if (projectModel.isUserClass(cf.getClassName())) {
+                        pool.put(cf);
+                    }
+                }
+            } else {
+                pool.put(classEntry.getClassFile());
+            }
             callGraph = CallGraph.build(pool);
         }
+    }
+
+    private boolean isUserDefinedClass(MethodReference ref) {
+        if (projectModel == null) {
+            return true;
+        }
+        return projectModel.isUserClass(ref.getOwner());
     }
 
     @Override
@@ -134,9 +164,8 @@ public class CallGraphView extends BaseGraphView {
                 currentMethod.getMethodEntry().getDesc()
             );
 
-            int depth = (Integer) depthSpinner.getValue();
-            callers = collectCallers(callGraph, focusRef, depth);
-            callees = collectCallees(callGraph, focusRef, depth);
+            callers = collectCallers(callGraph, focusRef, pendingDepth);
+            callees = collectCallees(callGraph, focusRef, pendingDepth);
         } catch (Exception e) {
             prepareError = "Failed to build call graph: " + e.getMessage();
         }
@@ -154,7 +183,9 @@ public class CallGraphView extends BaseGraphView {
         Set<MethodReference> methodCallers = graph.getCallers(method);
         for (MethodReference caller : methodCallers) {
             if (result.add(caller)) {
-                collectCallersRecursive(graph, caller, depth - 1, result);
+                if (isUserDefinedClass(caller)) {
+                    collectCallersRecursive(graph, caller, depth - 1, result);
+                }
             }
         }
     }
@@ -171,7 +202,9 @@ public class CallGraphView extends BaseGraphView {
         Set<MethodReference> methodCallees = graph.getCallees(method);
         for (MethodReference callee : methodCallees) {
             if (result.add(callee)) {
-                collectCalleesRecursive(graph, callee, depth - 1, result);
+                if (isUserDefinedClass(callee)) {
+                    collectCalleesRecursive(graph, callee, depth - 1, result);
+                }
             }
         }
     }
@@ -320,20 +353,6 @@ public class CallGraphView extends BaseGraphView {
             methodSelector.setSelectedIndex(0);
         } else {
             super.refresh();
-        }
-    }
-
-    private static class MethodListRenderer extends DefaultListCellRenderer {
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value,
-                                                      int index, boolean isSelected, boolean cellHasFocus) {
-            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (value instanceof MethodEntryModel) {
-                MethodEntryModel method = (MethodEntryModel) value;
-                setText(method.getName() + method.getMethodEntry().getDesc());
-                setFont(JStudioTheme.getCodeFont(11));
-            }
-            return this;
         }
     }
 }

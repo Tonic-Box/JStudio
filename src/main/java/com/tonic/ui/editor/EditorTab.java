@@ -76,6 +76,7 @@ public class EditorTab extends JPanel {
     private static final String LOADING_CARD = "LOADING";
 
     private ViewMode currentMode = ViewMode.SOURCE;
+    private ProjectModel projectModel;
 
     public EditorTab(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -228,7 +229,10 @@ public class EditorTab extends JPanel {
                 if (controlFlowView == null) loadViewInBackground(mode, () -> new ControlFlowView(classEntry), v -> controlFlowView = v);
                 break;
             case CALLGRAPH:
-                if (callGraphView == null) loadViewInBackground(mode, () -> new CallGraphView(classEntry), v -> callGraphView = v);
+                if (callGraphView == null) loadViewInBackground(mode, () -> new CallGraphView(classEntry), v -> {
+                    callGraphView = v;
+                    if (projectModel != null) v.setProjectModel(projectModel);
+                });
                 break;
             case ATTRIBUTES:
                 if (attributesView == null) loadViewInBackground(mode, () -> new AttributesView(classEntry), v -> attributesView = v);
@@ -517,7 +521,11 @@ public class EditorTab extends JPanel {
      * Set the project model for navigation features.
      */
     public void setProjectModel(ProjectModel projectModel) {
+        this.projectModel = projectModel;
         sourceView.setProjectModel(projectModel);
+        if (callGraphView != null) {
+            callGraphView.setProjectModel(projectModel);
+        }
     }
 
     /**

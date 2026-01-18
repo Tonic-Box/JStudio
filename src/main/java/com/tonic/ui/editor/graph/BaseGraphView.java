@@ -4,6 +4,7 @@ import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.layout.mxCircleLayout;
 import com.mxgraph.layout.mxOrganicLayout;
 import com.mxgraph.swing.mxGraphComponent;
+import com.mxgraph.util.mxCellRenderer;
 import com.mxgraph.util.mxConstants;
 import com.mxgraph.view.mxGraph;
 import com.mxgraph.view.mxStylesheet;
@@ -27,11 +28,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseWheelEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import javax.imageio.ImageIO;
 
 public abstract class BaseGraphView extends JPanel implements ThemeChangeListener {
 
@@ -174,10 +177,15 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
 
         toolbar.add(Box.createHorizontalGlue());
 
-        JButton exportBtn = new JButton("Export DOT");
-        exportBtn.setFont(JStudioTheme.getCodeFont(11));
-        exportBtn.addActionListener(e -> exportDOT());
-        toolbar.add(exportBtn);
+        JButton exportDotBtn = new JButton("Export DOT");
+        exportDotBtn.setFont(JStudioTheme.getCodeFont(11));
+        exportDotBtn.addActionListener(e -> exportDOT());
+        toolbar.add(exportDotBtn);
+
+        JButton exportPngBtn = new JButton("Export PNG");
+        exportPngBtn.setFont(JStudioTheme.getCodeFont(11));
+        exportPngBtn.addActionListener(e -> exportPNG());
+        toolbar.add(exportPngBtn);
     }
 
     private void createGraphComponent() {
@@ -479,8 +487,8 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         graph.getModel().beginUpdate();
         try {
             mxHierarchicalLayout layout = new mxHierarchicalLayout(graph);
-            layout.setInterRankCellSpacing(50);
-            layout.setIntraCellSpacing(30);
+            layout.setInterRankCellSpacing(80);
+            layout.setIntraCellSpacing(35);
             layout.execute(parent);
         } finally {
             graph.getModel().endUpdate();
@@ -571,6 +579,32 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
                 JOptionPane.showMessageDialog(this,
                     "Exported to: " + file.getAbsolutePath(),
                     "Export Successful", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this,
+                    "Failed to export: " + e.getMessage(),
+                    "Export Failed", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    public void exportPNG() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setSelectedFile(new File(classEntry.getSimpleName() + ".png"));
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            try {
+                BufferedImage image = mxCellRenderer.createBufferedImage(
+                    graph, null, 1, Color.WHITE, true, null);
+                if (image != null) {
+                    ImageIO.write(image, "PNG", file);
+                    JOptionPane.showMessageDialog(this,
+                        "Exported to: " + file.getAbsolutePath(),
+                        "Export Successful", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                        "No graph to export",
+                        "Export Failed", JOptionPane.WARNING_MESSAGE);
+                }
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(this,
                     "Failed to export: " + e.getMessage(),

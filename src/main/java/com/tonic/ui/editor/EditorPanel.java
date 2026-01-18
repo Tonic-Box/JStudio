@@ -442,12 +442,11 @@ public class EditorPanel extends ThemedJPanel {
     }
 
     /**
-     * Set view mode for current tab.
+     * Set view mode for all open tabs.
      */
     public void setViewMode(ViewMode mode) {
-        EditorTab current = getCurrentTab();
-        if (current != null) {
-            current.setViewMode(mode);
+        for (EditorTab tab : openTabs.values()) {
+            tab.setViewMode(mode);
         }
     }
 

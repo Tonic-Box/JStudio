@@ -1,5 +1,6 @@
 package com.tonic.ui.editor.cfg;
 
+import com.tonic.ui.core.component.FilterableComboBox;
 import com.tonic.ui.editor.graph.BaseGraphView;
 import com.tonic.ui.event.Event;
 import com.tonic.ui.event.EventBus;
@@ -12,6 +13,7 @@ import lombok.Getter;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +22,7 @@ public class ControlFlowView extends BaseGraphView {
 
     private final CFGBuilder cfgBuilder;
 
-    private JComboBox<MethodEntryModel> cfgMethodSelector;
+    private FilterableComboBox<MethodEntryModel> cfgMethodSelector;
 
     private MethodEntryModel currentMethod;
     private List<CFGBlock> currentBlocks;
@@ -36,11 +38,10 @@ public class ControlFlowView extends BaseGraphView {
     @Override
     protected void createAdditionalToolbarItems() {
         toolbar.add(new JLabel(" Method: "));
-        cfgMethodSelector = new JComboBox<>();
+        cfgMethodSelector = new FilterableComboBox<>(m -> m.getName() + m.getMethodEntry().getDesc());
         cfgMethodSelector.setFont(JStudioTheme.getCodeFont(11));
         cfgMethodSelector.setMaximumSize(new Dimension(250, 25));
         cfgMethodSelector.setPreferredSize(new Dimension(200, 25));
-        cfgMethodSelector.setRenderer(new MethodListRenderer());
         cfgMethodSelector.addActionListener(e -> onCFGMethodSelected());
         toolbar.add(cfgMethodSelector);
 
@@ -73,20 +74,23 @@ public class ControlFlowView extends BaseGraphView {
     }
 
     private void populateCFGMethodSelector() {
-        cfgMethodSelector.removeAllItems();
+        List<MethodEntryModel> methods = new ArrayList<>();
         for (MethodEntryModel method : classEntry.getMethods()) {
             if (method.getMethodEntry().getCodeAttribute() != null) {
-                cfgMethodSelector.addItem(method);
+                methods.add(method);
             }
         }
+        cfgMethodSelector.setAllItems(methods);
     }
 
     private void onCFGMethodSelected() {
-        currentMethod = (MethodEntryModel) cfgMethodSelector.getSelectedItem();
-        if (currentMethod != null) {
-            loaded = false;
-            refresh();
+        Object selected = cfgMethodSelector.getSelectedItem();
+        if (!(selected instanceof MethodEntryModel)) {
+            return;
         }
+        currentMethod = (MethodEntryModel) selected;
+        loaded = false;
+        refresh();
     }
 
     @Override
@@ -187,20 +191,6 @@ public class ControlFlowView extends BaseGraphView {
             cfgMethodSelector.setSelectedIndex(0);
         } else {
             super.refresh();
-        }
-    }
-
-    private static class MethodListRenderer extends DefaultListCellRenderer {
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value,
-                                                      int index, boolean isSelected, boolean cellHasFocus) {
-            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (value instanceof MethodEntryModel) {
-                MethodEntryModel method = (MethodEntryModel) value;
-                setText(method.getName() + method.getMethodEntry().getDesc());
-                setFont(JStudioTheme.getCodeFont(11));
-            }
-            return this;
         }
     }
 
