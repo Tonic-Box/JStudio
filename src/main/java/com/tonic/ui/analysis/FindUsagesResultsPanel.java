@@ -170,7 +170,8 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
 
         List<Xref> filtered = new ArrayList<>();
         for (Xref xref : results) {
-            if (!JdkClassFilter.isJdkClass(xref.getSourceClass())) {
+            if (!JdkClassFilter.isJdkClass(xref.getSourceClass())
+                && xref.getSourceMethod() != null) {
                 filtered.add(xref);
             }
         }

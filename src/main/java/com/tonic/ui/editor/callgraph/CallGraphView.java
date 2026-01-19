@@ -103,7 +103,7 @@ public class CallGraphView extends BaseGraphView {
     }
 
     private void onMethodSelected() {
-        if (initializing) return;
+        if (initializing || methodSelector.isFiltering()) return;
         Object selected = methodSelector.getSelectedItem();
         if (!(selected instanceof MethodEntryModel)) {
             return;

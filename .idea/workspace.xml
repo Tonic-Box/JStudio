@@ -7,13 +7,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- cleanup&#10;- Call Graph view">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- ui cleanup and improvements&#10;- xref fix for overloads&#10;- xref fix for bootstrap handles and nested bootstraps&#10;- other various bug fixes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/FindUsagesResultsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/FindUsagesResultsPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/FilterableComboBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/FilterableComboBox.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/SearchPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/SearchPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/callgraph/CallGraphView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/callgraph/CallGraphView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/cfg/ControlFlowView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/cfg/ControlFlowView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/BaseGraphView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/BaseGraphView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/properties/PropertiesPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/properties/PropertiesPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -223,14 +228,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00014" summary="- bug fixes">
-      <option name="closed" value="true" />
-      <created>1766617102343</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1766617102343</updated>
     </task>
     <task id="LOCAL-00015" summary="- bug fixes">
       <option name="closed" value="true" />
@@ -616,7 +613,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768648422864</updated>
     </task>
-    <option name="localTasksCounter" value="63" />
+    <task id="LOCAL-00063" summary="- ui cleanup and improvements">
+      <option name="closed" value="true" />
+      <created>1768695647682</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1768695647682</updated>
+    </task>
+    <option name="localTasksCounter" value="64" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -631,9 +636,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="-Debugger" />
-    <MESSAGE value="-Debugger &amp; readme" />
-    <MESSAGE value="- Query System" />
     <MESSAGE value="- Cleanup pt 1" />
     <MESSAGE value="- Cleanup pt 2" />
     <MESSAGE value="- Cleanup theming" />
@@ -656,7 +658,10 @@
     <MESSAGE value="- Updated README.md&#10;- Updated shortcuts dialogue&#10;- cleanup" />
     <MESSAGE value="- cleanup" />
     <MESSAGE value="- cleanup&#10;- Call Graph view" />
-    <option name="LAST_COMMIT_MESSAGE" value="- cleanup&#10;- Call Graph view" />
+    <MESSAGE value="- ui cleanup and improvements" />
+    <MESSAGE value="- ui cleanup and improvements&#10;- xref fix for overloads" />
+    <MESSAGE value="- ui cleanup and improvements&#10;- xref fix for overloads&#10;- xref fix for bootstrap handles and nested bootstraps&#10;- other various bug fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="- ui cleanup and improvements&#10;- xref fix for overloads&#10;- xref fix for bootstrap handles and nested bootstraps&#10;- other various bug fixes" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

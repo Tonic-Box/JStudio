@@ -603,7 +603,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             ClassFile currentClassFile = classEntry.getClassFile();
             for (MethodEntry method : currentClassFile.getMethods()) {
                 if (method.getName().equals(identifier)) {
-                    scrollToMethodDefinition(method.getName());
+                    scrollToMethodDefinition(method.getName(), method.getDesc());
                     return;
                 }
             }
@@ -646,10 +646,15 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     /**
      * Scroll to a method definition in the source view and highlight the line.
      * Looks for actual method declarations, not call sites.
+     * Uses descriptor to match correct overload.
      */
-    private void scrollToMethodDefinition(String methodName) {
+    private void scrollToMethodDefinition(String methodName, String methodDesc) {
         String text = textArea.getText();
         String[] lines = text.split("\n");
+
+        String methodWithParen = methodName + "(";
+        String dotMethod = "." + methodName;
+        String thisMethod = "this." + methodName;
 
         String quotedName = java.util.regex.Pattern.quote(methodName);
         java.util.regex.Pattern declarationPattern = java.util.regex.Pattern.compile(
@@ -660,23 +665,69 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             "^\\s+\\w+.*\\s+" + quotedName + "\\s*\\("
         );
 
-        int charOffset = 0;
+        List<Integer> matchingLines = new ArrayList<>();
         for (int lineNum = 0; lineNum < lines.length; lineNum++) {
             String line = lines[lineNum];
+
+            if (!line.contains(methodWithParen)) {
+                continue;
+            }
+
+            if (line.contains(dotMethod) || line.contains(thisMethod)) {
+                continue;
+            }
+
+            String trimmed = line.trim();
+            if (trimmed.startsWith("return") || trimmed.startsWith("if") || trimmed.startsWith("while")) {
+                continue;
+            }
+
             boolean isDeclaration = declarationPattern.matcher(line).find() ||
-                                   (simplePattern.matcher(line).find() &&
-                                    !line.contains("." + methodName) &&
-                                    !line.contains("this." + methodName) &&
-                                    !line.trim().startsWith("return") &&
-                                    !line.trim().startsWith("if") &&
-                                    !line.trim().startsWith("while"));
+                                   simplePattern.matcher(line).find();
 
             if (isDeclaration) {
+                matchingLines.add(lineNum);
+            }
+        }
+
+        if (matchingLines.isEmpty()) {
+            return;
+        }
+
+        if (matchingLines.size() == 1 || methodDesc == null) {
+            highlightAndScrollToLine(matchingLines.get(0));
+            return;
+        }
+
+        int descParamCount = countDescriptorParams(methodDesc);
+        String descReturnType = extractReturnTypeFromDesc(methodDesc);
+
+        for (int lineNum : matchingLines) {
+            String line = lines[lineNum];
+            String sourceParams = extractMethodParams(line);
+            int sourceParamCount = countParams(sourceParams);
+            String sourceReturnType = extractReturnTypeFromSource(line);
+            if (sourceParamCount == descParamCount &&
+                paramsMatch(sourceParams, methodDesc) &&
+                returnTypeMatches(sourceReturnType, descReturnType)) {
                 highlightAndScrollToLine(lineNum);
                 return;
             }
-            charOffset += line.length() + 1;
         }
+
+        for (int lineNum : matchingLines) {
+            String line = lines[lineNum];
+            String sourceParams = extractMethodParams(line);
+            int sourceParamCount = countParams(sourceParams);
+            String sourceReturnType = extractReturnTypeFromSource(line);
+            if (sourceParamCount == descParamCount &&
+                returnTypeMatches(sourceReturnType, descReturnType)) {
+                highlightAndScrollToLine(lineNum);
+                return;
+            }
+        }
+
+        highlightAndScrollToLine(matchingLines.get(0));
     }
 
     /**
@@ -686,6 +737,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private void scrollToFieldDefinition(String fieldName) {
         String text = textArea.getText();
         String[] lines = text.split("\n");
+
+        String dotField = "." + fieldName;
 
         String quotedName = java.util.regex.Pattern.quote(fieldName);
         java.util.regex.Pattern declarationPattern = java.util.regex.Pattern.compile(
@@ -698,10 +751,19 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
         for (int lineNum = 0; lineNum < lines.length; lineNum++) {
             String line = lines[lineNum];
+
+            if (!line.contains(fieldName)) {
+                continue;
+            }
+
+            if (line.contains(dotField)) {
+                continue;
+            }
+
             boolean isDeclaration = declarationPattern.matcher(line).find() ||
                                    simplePattern.matcher(line).find();
 
-            if (isDeclaration && !line.contains("." + fieldName)) {
+            if (isDeclaration) {
                 highlightAndScrollToLine(lineNum);
                 return;
             }
@@ -757,7 +819,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         if (!loaded) {
             refresh();
         }
-        scrollToMethodDefinition(methodName);
+        scrollToMethodDefinition(methodName, methodDesc);
     }
 
     /**
@@ -1327,10 +1389,16 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private static class DeclarationInfo {
         final DeclarationType type;
         final String name;
+        final String descriptor;
 
         DeclarationInfo(DeclarationType type, String name) {
+            this(type, name, null);
+        }
+
+        DeclarationInfo(DeclarationType type, String name, String descriptor) {
             this.type = type;
             this.name = name;
+            this.descriptor = descriptor;
         }
     }
 
@@ -1347,6 +1415,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
             String methodName = extractMethodDeclaration(lineText);
             if (methodName != null) {
+                String paramTypes = extractMethodParams(lineText);
+                MethodEntryModel method = findMethodByNameAndParams(methodName, paramTypes);
+                if (method != null) {
+                    return new DeclarationInfo(DeclarationType.METHOD, methodName, method.getDescriptor());
+                }
                 return new DeclarationInfo(DeclarationType.METHOD, methodName);
             }
 
@@ -1424,6 +1497,189 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         return null;
     }
 
+    private String extractMethodParams(String line) {
+        int parenStart = line.indexOf('(');
+        int parenEnd = line.lastIndexOf(')');
+        if (parenStart >= 0 && parenEnd > parenStart) {
+            return line.substring(parenStart + 1, parenEnd).trim();
+        }
+        return "";
+    }
+
+    private MethodEntryModel findMethodByNameAndParams(String name, String sourceParams) {
+        List<MethodEntryModel> candidates = new ArrayList<>();
+        for (MethodEntryModel method : classEntry.getMethods()) {
+            if (method.getName().equals(name)) {
+                candidates.add(method);
+            }
+        }
+
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        if (candidates.size() == 1) {
+            return candidates.get(0);
+        }
+
+        int sourceParamCount = countParams(sourceParams);
+        for (MethodEntryModel method : candidates) {
+            String desc = method.getDescriptor();
+            int descParamCount = countDescriptorParams(desc);
+            if (descParamCount == sourceParamCount) {
+                if (paramsMatch(sourceParams, desc)) {
+                    return method;
+                }
+            }
+        }
+
+        for (MethodEntryModel method : candidates) {
+            String desc = method.getDescriptor();
+            int descParamCount = countDescriptorParams(desc);
+            if (descParamCount == sourceParamCount) {
+                return method;
+            }
+        }
+
+        return candidates.get(0);
+    }
+
+    private int countParams(String sourceParams) {
+        if (sourceParams == null || sourceParams.isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        int depth = 0;
+        for (int i = 0; i < sourceParams.length(); i++) {
+            char c = sourceParams.charAt(i);
+            if (c == '<') depth++;
+            else if (c == '>') depth--;
+            else if (c == ',' && depth == 0) count++;
+        }
+        return count + 1;
+    }
+
+    private int countDescriptorParams(String desc) {
+        int count = 0;
+        int i = 1;
+        while (i < desc.length() && desc.charAt(i) != ')') {
+            char c = desc.charAt(i);
+            if (c == 'L') {
+                while (i < desc.length() && desc.charAt(i) != ';') i++;
+            } else if (c == '[') {
+                i++;
+                continue;
+            }
+            count++;
+            i++;
+        }
+        return count;
+    }
+
+    private boolean paramsMatch(String sourceParams, String desc) {
+        String[] sourceTypes = sourceParams.split(",");
+        int descIndex = 1;
+        int paramIndex = 0;
+
+        while (descIndex < desc.length() && desc.charAt(descIndex) != ')') {
+            if (paramIndex >= sourceTypes.length) {
+                return false;
+            }
+            String sourceType = sourceTypes[paramIndex].trim();
+            int spaceIdx = sourceType.lastIndexOf(' ');
+            if (spaceIdx > 0) {
+                sourceType = sourceType.substring(0, spaceIdx).trim();
+            }
+            int genericIdx = sourceType.indexOf('<');
+            if (genericIdx > 0) {
+                sourceType = sourceType.substring(0, genericIdx);
+            }
+            sourceType = sourceType.replace("[]", "");
+
+            String descType = extractDescType(desc, descIndex);
+            if (!typeMatches(sourceType, descType)) {
+                return false;
+            }
+
+            descIndex = skipDescType(desc, descIndex);
+            paramIndex++;
+        }
+        return paramIndex == sourceTypes.length || (sourceTypes.length == 1 && sourceTypes[0].trim().isEmpty());
+    }
+
+    private String extractDescType(String desc, int index) {
+        char c = desc.charAt(index);
+        switch (c) {
+            case 'Z': return "boolean";
+            case 'B': return "byte";
+            case 'C': return "char";
+            case 'S': return "short";
+            case 'I': return "int";
+            case 'J': return "long";
+            case 'F': return "float";
+            case 'D': return "double";
+            case 'V': return "void";
+            case '[': return extractDescType(desc, index + 1) + "[]";
+            case 'L':
+                int end = desc.indexOf(';', index);
+                String className = desc.substring(index + 1, end);
+                int lastSlash = className.lastIndexOf('/');
+                return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
+            default: return "";
+        }
+    }
+
+    private int skipDescType(String desc, int index) {
+        char c = desc.charAt(index);
+        if (c == '[') {
+            return skipDescType(desc, index + 1);
+        } else if (c == 'L') {
+            return desc.indexOf(';', index) + 1;
+        } else {
+            return index + 1;
+        }
+    }
+
+    private boolean typeMatches(String sourceType, String descType) {
+        if (sourceType.equals(descType)) {
+            return true;
+        }
+        String simpleSource = sourceType;
+        int dotIdx = simpleSource.lastIndexOf('.');
+        if (dotIdx >= 0) {
+            simpleSource = simpleSource.substring(dotIdx + 1);
+        }
+        return simpleSource.equals(descType);
+    }
+
+    private String extractReturnTypeFromDesc(String desc) {
+        if (desc == null) return null;
+        int parenClose = desc.indexOf(')');
+        if (parenClose < 0 || parenClose >= desc.length() - 1) return null;
+        return extractDescType(desc, parenClose + 1);
+    }
+
+    private String extractReturnTypeFromSource(String line) {
+        String trimmed = line.trim();
+        int parenIdx = trimmed.indexOf('(');
+        if (parenIdx < 0) return null;
+
+        String beforeParen = trimmed.substring(0, parenIdx).trim();
+        String[] parts = beforeParen.split("\\s+");
+        if (parts.length < 2) return null;
+
+        String returnType = parts[parts.length - 2];
+        int genericIdx = returnType.indexOf('<');
+        if (genericIdx > 0) {
+            returnType = returnType.substring(0, genericIdx);
+        }
+        return returnType;
+    }
+
+    private boolean returnTypeMatches(String sourceReturnType, String descReturnType) {
+        if (sourceReturnType == null || descReturnType == null) return true;
+        return typeMatches(sourceReturnType, descReturnType);
+    }
+
     private void showRenameDialog(DeclarationInfo decl) {
         if (decl == null) {
             return;
@@ -1465,10 +1721,15 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                 EventBus.getInstance().post(FindUsagesEvent.forClass(this, className));
                 break;
             case METHOD:
-                MethodEntryModel method = findMethodByName(decl.name);
-                if (method != null) {
+                if (decl.descriptor != null) {
                     EventBus.getInstance().post(FindUsagesEvent.forMethod(
-                            this, className, method.getName(), method.getDescriptor()));
+                            this, className, decl.name, decl.descriptor));
+                } else {
+                    MethodEntryModel method = findMethodByName(decl.name);
+                    if (method != null) {
+                        EventBus.getInstance().post(FindUsagesEvent.forMethod(
+                                this, className, method.getName(), method.getDescriptor()));
+                    }
                 }
                 break;
             case FIELD:

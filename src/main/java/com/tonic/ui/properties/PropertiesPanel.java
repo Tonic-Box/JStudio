@@ -143,7 +143,7 @@ public class PropertiesPanel extends ThemedJPanel {
         addProperty(classPanel, row++, "Name", classEntry.getClassName());
         addProperty(classPanel, row++, "Super", classEntry.getSuperClassName());
         addProperty(classPanel, row++, "Interfaces", String.join(", ", classEntry.getInterfaceNames()));
-        addProperty(classPanel, row++, "Access", formatAccessFlags(classEntry.getClassFile().getAccess()));
+        addProperty(classPanel, row++, "Access", formatAccessFlags(classEntry.getClassFile().getAccess(), AccessContext.CLASS));
         addProperty(classPanel, row++, "Version", classEntry.getClassFile().getMajorVersion() + "." +
                 classEntry.getClassFile().getMinorVersion());
         addProperty(classPanel, row++, "Methods", String.valueOf(classEntry.getMethods().size()));
@@ -178,7 +178,7 @@ public class PropertiesPanel extends ThemedJPanel {
         int row = 0;
         addProperty(methodPanel, row++, "Name", entry.getName());
         addProperty(methodPanel, row++, "Descriptor", entry.getDesc());
-        addProperty(methodPanel, row++, "Access", formatAccessFlags(entry.getAccess()));
+        addProperty(methodPanel, row++, "Access", formatAccessFlags(entry.getAccess(), AccessContext.METHOD));
 
         CodeAttribute code = entry.getCodeAttribute();
         if (code != null) {
@@ -231,7 +231,7 @@ public class PropertiesPanel extends ThemedJPanel {
         addProperty(fieldPanel, row++, "Name", entry.getName());
         addProperty(fieldPanel, row++, "Descriptor", entry.getDesc());
         addProperty(fieldPanel, row++, "Type", parseFieldType(entry.getDesc()));
-        addProperty(fieldPanel, row++, "Access", formatAccessFlags(entry.getAccess()));
+        addProperty(fieldPanel, row++, "Access", formatAccessFlags(entry.getAccess(), AccessContext.FIELD));
 
         // Add filler
         GridBagConstraints gbc = new GridBagConstraints();
@@ -292,22 +292,48 @@ public class PropertiesPanel extends ThemedJPanel {
     }
 
     private String formatAccessFlags(int flags) {
+        return formatAccessFlags(flags, AccessContext.METHOD);
+    }
+
+    private String formatAccessFlags(int flags, AccessContext context) {
         StringBuilder sb = new StringBuilder();
         if ((flags & 0x0001) != 0) sb.append("public ");
         if ((flags & 0x0002) != 0) sb.append("private ");
         if ((flags & 0x0004) != 0) sb.append("protected ");
         if ((flags & 0x0008) != 0) sb.append("static ");
         if ((flags & 0x0010) != 0) sb.append("final ");
-        if ((flags & 0x0020) != 0) sb.append("synchronized ");
-        if ((flags & 0x0040) != 0) sb.append("volatile ");
-        if ((flags & 0x0080) != 0) sb.append("transient ");
+
+        if ((flags & 0x0020) != 0) {
+            if (context == AccessContext.METHOD) {
+                sb.append("synchronized ");
+            }
+        }
+        if ((flags & 0x0040) != 0) {
+            if (context == AccessContext.FIELD) {
+                sb.append("volatile ");
+            } else if (context == AccessContext.METHOD) {
+                sb.append("bridge ");
+            }
+        }
+        if ((flags & 0x0080) != 0) {
+            if (context == AccessContext.FIELD) {
+                sb.append("transient ");
+            } else if (context == AccessContext.METHOD) {
+                sb.append("varargs ");
+            }
+        }
         if ((flags & 0x0100) != 0) sb.append("native ");
         if ((flags & 0x0200) != 0) sb.append("interface ");
         if ((flags & 0x0400) != 0) sb.append("abstract ");
+        if ((flags & 0x0800) != 0) sb.append("strictfp ");
         if ((flags & 0x1000) != 0) sb.append("synthetic ");
         if ((flags & 0x2000) != 0) sb.append("annotation ");
         if ((flags & 0x4000) != 0) sb.append("enum ");
         return sb.toString().trim();
+    }
+
+    private enum AccessContext {
+        CLASS, METHOD, FIELD
     }
 
     private String parseReturnType(String desc) {

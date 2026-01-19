@@ -1,5 +1,7 @@
 package com.tonic.ui.core.component;
 
+import lombok.Getter;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -15,7 +17,9 @@ public class FilterableComboBox<T> extends JComboBox<T> {
 
     private List<T> allItems = new ArrayList<>();
     private final Function<T, String> textExtractor;
+    @Getter
     private boolean filtering = false;
+    private boolean selecting = false;
     private boolean editorFocused = false;
     private T lastSelectedItem = null;
 
@@ -128,10 +132,11 @@ public class FilterableComboBox<T> extends JComboBox<T> {
     }
 
     private void filter() {
-        if (filtering || !editorFocused) return;
-        filtering = true;
+        if (filtering || selecting || !editorFocused) return;
 
         SwingUtilities.invokeLater(() -> {
+            if (selecting) return;
+            filtering = true;
             try {
                 JTextField editor = (JTextField) getEditor().getEditorComponent();
                 String text = editor.getText();
@@ -166,11 +171,16 @@ public class FilterableComboBox<T> extends JComboBox<T> {
 
     @Override
     public void setSelectedItem(Object item) {
-        super.setSelectedItem(item);
-        if (item != null && allItems.contains(item)) {
-            lastSelectedItem = (T) item;
-            JTextField editor = (JTextField) getEditor().getEditorComponent();
-            editor.setText(textExtractor.apply(lastSelectedItem));
+        selecting = true;
+        try {
+            super.setSelectedItem(item);
+            if (item != null && allItems.contains(item)) {
+                lastSelectedItem = (T) item;
+                JTextField editor = (JTextField) getEditor().getEditorComponent();
+                editor.setText(textExtractor.apply(lastSelectedItem));
+            }
+        } finally {
+            selecting = false;
         }
     }
 }

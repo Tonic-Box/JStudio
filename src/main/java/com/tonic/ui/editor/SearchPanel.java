@@ -16,8 +16,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.Dimension;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -62,21 +60,13 @@ public class SearchPanel extends ThemedJPanel {
             BorderFactory.createEmptyBorder(2, 6, 2, 6)
         ));
 
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) { onSearchTextChanged(); }
-            @Override
-            public void removeUpdate(DocumentEvent e) { onSearchTextChanged(); }
-            @Override
-            public void changedUpdate(DocumentEvent e) { onSearchTextChanged(); }
-        });
-
         searchField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                     setHidden();
                 } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    performSearch();
                     if (e.isShiftDown()) {
                         findPrevious();
                     } else {
@@ -108,21 +98,21 @@ public class SearchPanel extends ThemedJPanel {
         caseSensitiveBox = createCheckBox("Aa", "Case Sensitive");
         caseSensitiveBox.addActionListener(e -> {
             context.setMatchCase(caseSensitiveBox.isSelected());
-            onSearchTextChanged();
+            performSearch();
         });
         add(caseSensitiveBox);
 
         wholeWordBox = createCheckBox("W", "Whole Word");
         wholeWordBox.addActionListener(e -> {
             context.setWholeWord(wholeWordBox.isSelected());
-            onSearchTextChanged();
+            performSearch();
         });
         add(wholeWordBox);
 
         regexBox = createCheckBox(".*", "Regular Expression");
         regexBox.addActionListener(e -> {
             context.setRegularExpression(regexBox.isSelected());
-            onSearchTextChanged();
+            performSearch();
         });
         add(regexBox);
 
@@ -162,7 +152,7 @@ public class SearchPanel extends ThemedJPanel {
         String selected = textArea.getSelectedText();
         if (selected != null && !selected.isEmpty() && !selected.contains("\n")) {
             searchField.setText(selected);
-            onSearchTextChanged();
+            performSearch();
         }
     }
 
@@ -172,7 +162,7 @@ public class SearchPanel extends ThemedJPanel {
         SearchEngine.markAll(textArea, new SearchContext());
     }
 
-    private void onSearchTextChanged() {
+    private void performSearch() {
         String searchText = searchField.getText();
         if (searchText.isEmpty()) {
             matchCountLabel.setText("");

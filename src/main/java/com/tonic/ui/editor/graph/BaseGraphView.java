@@ -594,7 +594,7 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
             File file = chooser.getSelectedFile();
             try {
                 BufferedImage image = mxCellRenderer.createBufferedImage(
-                    graph, null, 1, Color.WHITE, true, null);
+                    graph, null, 1, JStudioTheme.getBgPrimary(), true, null);
                 if (image != null) {
                     ImageIO.write(image, "PNG", file);
                     JOptionPane.showMessageDialog(this,

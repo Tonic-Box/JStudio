@@ -40,6 +40,10 @@ public class Icons {
                 return new ArrowIcon(size, true);
             case "forward":
                 return new ArrowIcon(size, false);
+            case "arrow_up":
+                return new VerticalArrowIcon(size, true);
+            case "arrow_down":
+                return new VerticalArrowIcon(size, false);
             case "search":
                 return new SearchIcon(size);
             case "home":
@@ -317,6 +321,31 @@ public class Icons {
                 g2.drawLine(6, mid, 12, mid);
                 g2.drawLine(12, mid, 9, mid - 3);
                 g2.drawLine(12, mid, 9, mid + 3);
+            }
+        }
+    }
+
+    private static class VerticalArrowIcon extends BaseIcon {
+        private final boolean up;
+
+        VerticalArrowIcon(int size, boolean up) {
+            super(size);
+            this.up = up;
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getTextPrimary());
+            g2.setStroke(getStroke());
+            int mid = size / 2;
+            if (up) {
+                g2.drawLine(mid, 10, mid, 4);
+                g2.drawLine(mid, 4, mid - 3, 7);
+                g2.drawLine(mid, 4, mid + 3, 7);
+            } else {
+                g2.drawLine(mid, 4, mid, 10);
+                g2.drawLine(mid, 10, mid - 3, 7);
+                g2.drawLine(mid, 10, mid + 3, 7);
             }
         }
     }

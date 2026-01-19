@@ -84,6 +84,7 @@ public class ControlFlowView extends BaseGraphView {
     }
 
     private void onCFGMethodSelected() {
+        if (cfgMethodSelector.isFiltering()) return;
         Object selected = cfgMethodSelector.getSelectedItem();
         if (!(selected instanceof MethodEntryModel)) {
             return;
