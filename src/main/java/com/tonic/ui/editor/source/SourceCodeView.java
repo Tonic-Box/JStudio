@@ -234,6 +234,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                     CompilationResult result = get();
                     if (result.isSuccess()) {
                         classEntry.updateClassFile(result.getCompiledClass());
+                        classEntry.setDecompilationCache(source);
                         compilerParser.setOriginalClass(result.getCompiledClass());
                         originalSource = source;
                         dirty = false;

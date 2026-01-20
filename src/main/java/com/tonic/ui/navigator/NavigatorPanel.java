@@ -1,5 +1,6 @@
 package com.tonic.ui.navigator;
 
+import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.renamer.Renamer;
 import com.tonic.renamer.exception.RenameException;
@@ -7,18 +8,22 @@ import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.ColumnWidths;
 import com.tonic.ui.core.constants.UIConstants;
+import com.tonic.ui.dialog.NewClassDialog;
 import com.tonic.ui.dialog.RenameClassDialog;
 import com.tonic.ui.editor.ViewMode;
 import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.event.events.FindUsagesEvent;
 import com.tonic.ui.event.events.MethodSelectedEvent;
+import com.tonic.ui.event.events.ProjectUpdatedEvent;
 import com.tonic.ui.event.events.ResourceSelectedEvent;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.model.ProjectModel;
 import com.tonic.ui.model.ResourceEntryModel;
+import com.tonic.ui.service.ClassCreationService;
+import com.tonic.ui.service.ClassCreationService.ClassCreationParams;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
@@ -26,6 +31,7 @@ import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -53,6 +59,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.nio.file.Files;
 
 public class NavigatorPanel extends ThemedJPanel {
 
@@ -429,6 +437,14 @@ public class NavigatorPanel extends ThemedJPanel {
             buildFieldMenu(menu, (NavigatorNode.FieldNode) node);
         } else if (node instanceof NavigatorNode.ClassNode) {
             buildClassMenu(menu, (NavigatorNode.ClassNode) node);
+        } else if (node instanceof NavigatorNode.PackageNode) {
+            buildPackageMenu(menu, (NavigatorNode.PackageNode) node);
+        } else if (node instanceof NavigatorNode.ResourceFolderNode) {
+            buildResourceFolderMenu(menu, (NavigatorNode.ResourceFolderNode) node);
+        } else if (node instanceof NavigatorNode.ResourcesRootNode) {
+            buildResourcesRootMenu(menu);
+        } else if (node instanceof NavigatorNode.ResourceNode) {
+            buildResourceMenu(menu, (NavigatorNode.ResourceNode) node);
         }
 
         if (menu.getComponentCount() > 0) {
@@ -514,6 +530,8 @@ public class NavigatorPanel extends ThemedJPanel {
 
         addMenuItem(menu, "Rename Class...", () -> renameClass(classEntry));
 
+        addMenuItem(menu, "Delete", () -> deleteClass(classEntry));
+
         menu.addSeparator();
 
         addMenuItem(menu, "Copy Class Name", () -> copyToClipboard(classEntry.getClassName().replace('/', '.')));
@@ -521,6 +539,186 @@ public class NavigatorPanel extends ThemedJPanel {
         addMenuItem(menu, "Copy Internal Name", () -> copyToClipboard(classEntry.getClassName()));
 
         addMenuItem(menu, "Copy Simple Name", () -> copyToClipboard(classEntry.getSimpleName()));
+    }
+
+    private void buildPackageMenu(JPopupMenu menu, NavigatorNode.PackageNode node) {
+        addMenuItem(menu, "Add New Class...", () -> showNewClassDialog(node.getPackageName()));
+    }
+
+    private void buildResourceFolderMenu(JPopupMenu menu, NavigatorNode.ResourceFolderNode node) {
+        addMenuItem(menu, "New Empty File...", () -> showNewResourceFileDialog(node.getFolderPath()));
+        addMenuItem(menu, "Import File...", () -> showImportResourceDialog(node.getFolderPath()));
+    }
+
+    private void buildResourcesRootMenu(JPopupMenu menu) {
+        addMenuItem(menu, "New Empty File...", () -> showNewResourceFileDialog(""));
+        addMenuItem(menu, "Import File...", () -> showImportResourceDialog(""));
+    }
+
+    private void buildResourceMenu(JPopupMenu menu, NavigatorNode.ResourceNode node) {
+        ResourceEntryModel resource = node.getResource();
+        addMenuItem(menu, "Open", () -> EventBus.getInstance().post(new ResourceSelectedEvent(this, resource)));
+        menu.addSeparator();
+        addMenuItem(menu, "Delete", () -> deleteResource(resource));
+    }
+
+    private void showNewClassDialog(String packageName) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            JOptionPane.showMessageDialog(this,
+                    "No project loaded",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String internalPackageName = packageName.replace('.', '/');
+        NewClassDialog dialog = new NewClassDialog(
+                SwingUtilities.getWindowAncestor(this), internalPackageName);
+        dialog.setVisible(true);
+
+        if (!dialog.isConfirmed()) {
+            return;
+        }
+
+        ClassCreationParams params = dialog.getCreationParams();
+
+        try {
+            ClassFile classFile = ClassCreationService.getInstance().createClass(params);
+            ClassEntryModel entry = project.addClass(classFile);
+
+            EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 1));
+
+            SwingUtilities.invokeLater(() -> {
+                selectClass(entry.getClassName());
+                EventBus.getInstance().post(new ClassSelectedEvent(this, entry));
+            });
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Failed to create class: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void showNewResourceFileDialog(String folderPath) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            JOptionPane.showMessageDialog(this,
+                    "No project loaded",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String filename = JOptionPane.showInputDialog(this,
+                "Enter filename (with extension):",
+                "New Resource File",
+                JOptionPane.PLAIN_MESSAGE);
+
+        if (filename == null || filename.trim().isEmpty()) {
+            return;
+        }
+
+        filename = filename.trim();
+        if (!isValidFilename(filename)) {
+            JOptionPane.showMessageDialog(this,
+                    "Invalid filename",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String path = folderPath.isEmpty() ? filename : folderPath + "/" + filename;
+
+        if (project.getResource(path) != null) {
+            JOptionPane.showMessageDialog(this,
+                    "A resource with this name already exists",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        ResourceEntryModel resource = new ResourceEntryModel(path, new byte[0]);
+        project.addResource(resource);
+
+        EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 0));
+
+        SwingUtilities.invokeLater(() ->
+                EventBus.getInstance().post(new ResourceSelectedEvent(this, resource)));
+    }
+
+    private void showImportResourceDialog(String folderPath) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            JOptionPane.showMessageDialog(this,
+                    "No project loaded",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Import Resource File");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setMultiSelectionEnabled(true);
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File[] selectedFiles = fileChooser.getSelectedFiles();
+        int importedCount = 0;
+
+        for (File file : selectedFiles) {
+            try {
+                byte[] data = Files.readAllBytes(file.toPath());
+                String path = folderPath.isEmpty() ? file.getName() : folderPath + "/" + file.getName();
+
+                if (project.getResource(path) != null) {
+                    int overwrite = JOptionPane.showConfirmDialog(this,
+                            "Resource '" + path + "' already exists. Overwrite?",
+                            "Confirm Overwrite",
+                            JOptionPane.YES_NO_OPTION);
+                    if (overwrite != JOptionPane.YES_OPTION) {
+                        continue;
+                    }
+                }
+
+                ResourceEntryModel resource = new ResourceEntryModel(path, data);
+                project.addResource(resource);
+                importedCount++;
+
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                        "Failed to import " + file.getName() + ": " + e.getMessage(),
+                        "Import Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        if (importedCount > 0) {
+            EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 0));
+            JOptionPane.showMessageDialog(this,
+                    "Imported " + importedCount + " file(s)",
+                    "Import Complete",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private boolean isValidFilename(String filename) {
+        if (filename == null || filename.isEmpty()) {
+            return false;
+        }
+        String invalidChars = "<>:\"/\\|?*";
+        for (char c : invalidChars.toCharArray()) {
+            if (filename.indexOf(c) >= 0) {
+                return false;
+            }
+        }
+        return !filename.equals(".") && !filename.equals("..");
     }
 
     private void renameClass(ClassEntryModel classEntry) {
@@ -581,6 +779,55 @@ public class NavigatorPanel extends ThemedJPanel {
                     "Unexpected error during rename: " + e.getMessage(),
                     "Rename Error",
                     JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void deleteClass(ClassEntryModel classEntry) {
+        String className = classEntry.getClassName();
+        String displayName = className.replace('/', '.');
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Delete class '" + displayName + "'?\n\nThis cannot be undone.",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            return;
+        }
+
+        if (project.removeClass(className)) {
+            mainFrame.closeEditorForClass(className);
+            EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, -1));
+        }
+    }
+
+    private void deleteResource(ResourceEntryModel resource) {
+        String path = resource.getPath();
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Delete resource '" + path + "'?\n\nThis cannot be undone.",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            return;
+        }
+
+        if (project.removeResource(path)) {
+            mainFrame.closeEditorForResource(path);
+            EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 0));
         }
     }
 

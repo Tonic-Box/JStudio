@@ -353,6 +353,13 @@ public class EditorPanel extends ThemedJPanel {
         }
     }
 
+    public void closeTabForResource(String path) {
+        ResourceEditorTab tab = openResourceTabs.get(path);
+        if (tab != null) {
+            closeResourceTab(tab);
+        }
+    }
+
     /**
      * Close all tabs (except Welcome tab).
      */

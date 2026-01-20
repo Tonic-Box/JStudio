@@ -3,9 +3,11 @@ package com.tonic.ui.model;
 import com.tonic.analysis.xref.XrefDatabase;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
+import com.tonic.ui.util.Settings;
 import lombok.Getter;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -63,6 +65,55 @@ public class ProjectModel {
         userClassNames.add(className);
         dirty = true;
         return entry;
+    }
+
+    /**
+     * Remove a class from the project and rebuild all analysis state.
+     * This invalidates the ClassPool, xref database, and all decompilation caches.
+     * @return true if the class was removed, false if it didn't exist
+     */
+    public boolean removeClass(String className) {
+        ClassEntryModel entry = classEntries.remove(className);
+        if (entry == null) {
+            return false;
+        }
+        userClassNames.remove(className);
+
+        rebuildClassPool();
+
+        if (xrefDatabase != null) {
+            xrefDatabase.clear();
+        }
+
+        for (ClassEntryModel c : classEntries.values()) {
+            c.invalidateDecompilationCache();
+        }
+
+        dirty = true;
+        return true;
+    }
+
+    /**
+     * Rebuild the ClassPool from the current user classes.
+     * This creates a fresh ClassPool and repopulates it with all remaining classes.
+     */
+    private void rebuildClassPool() {
+        ClassPool newPool;
+        if (!Settings.getInstance().isLoadJdkClassesEnabled()) {
+            newPool = new ClassPool(true);
+        } else {
+            try {
+                newPool = new ClassPool();
+            } catch (IOException e) {
+                newPool = new ClassPool(true);
+            }
+        }
+
+        for (ClassEntryModel entry : classEntries.values()) {
+            newPool.put(entry.getClassFile());
+        }
+
+        this.classPool = newPool;
     }
 
     /**
@@ -139,6 +190,20 @@ public class ProjectModel {
 
     public void addResource(ResourceEntryModel resource) {
         resources.put(resource.getPath(), resource);
+        dirty = true;
+    }
+
+    /**
+     * Remove a resource from the project.
+     * @return true if the resource was removed, false if it didn't exist
+     */
+    public boolean removeResource(String path) {
+        ResourceEntryModel removed = resources.remove(path);
+        if (removed != null) {
+            dirty = true;
+            return true;
+        }
+        return false;
     }
 
     public ResourceEntryModel getResource(String path) {

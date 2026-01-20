@@ -1,7 +1,6 @@
 package com.tonic.ui;
 
 import com.tonic.parser.ClassFile;
-import com.tonic.parser.MethodEntry;
 import com.tonic.ui.analysis.AnalysisPanel;
 import com.tonic.ui.console.ConsolePanel;
 import com.tonic.ui.editor.EditorPanel;
@@ -1044,6 +1043,14 @@ public class MainFrame extends JFrame {
 
         statusBar.setMessage("Renamed: " + oldClassName.replace('/', '.') +
                 " -> " + newClassName.replace('/', '.'));
+    }
+
+    public void closeEditorForClass(String className) {
+        editorPanel.closeTabForClass(className);
+    }
+
+    public void closeEditorForResource(String path) {
+        editorPanel.closeTabForResource(path);
     }
 
     public void refreshAfterBulkRename(java.util.Set<String> oldClassNames, int totalRenamed) {
