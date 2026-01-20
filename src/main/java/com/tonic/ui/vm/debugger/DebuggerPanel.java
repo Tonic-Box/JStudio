@@ -651,7 +651,52 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         panel.add(exportTraceBtn);
         panel.add(clearTraceBtn);
 
+        panel.add(Box.createHorizontalStrut(20));
+
+        JButton reinitBtn = createToolButton("Reinit VM", null, e -> reinitializeVM());
+        reinitBtn.setToolTipText("Reinitialize VM to pick up newly compiled methods");
+        panel.add(reinitBtn);
+
         return panel;
+    }
+
+    private void reinitializeVM() {
+        try {
+            VMExecutionService vmService = VMExecutionService.getInstance();
+
+            if (session.isStarted()) {
+                session.stop();
+            }
+
+            vmService.reset();
+            vmService.initialize();
+
+            appendOutput("VM reinitialized - new methods are now available");
+            statusLabel.setText("VM reinitialized successfully");
+
+            if (currentMethod != null) {
+                ClassFile classFile = ProjectService.getInstance().getCurrentProject()
+                    .getClassPool().get(currentMethod.getOwnerName());
+                if (classFile != null) {
+                    for (MethodEntry m : classFile.getMethods()) {
+                        if (m.getName().equals(currentMethod.getName()) &&
+                            m.getDesc().equals(currentMethod.getDesc())) {
+                            setMethod(m);
+                            appendOutput("Reloaded method: " + m.getName());
+                            break;
+                        }
+                    }
+                }
+            }
+
+            updateButtonStates();
+        } catch (Exception e) {
+            appendOutput("Failed to reinitialize VM: " + e.getMessage());
+            JOptionPane.showMessageDialog(this,
+                "Failed to reinitialize VM: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private JButton createToolButton(String text, String shortcut, java.awt.event.ActionListener action) {
