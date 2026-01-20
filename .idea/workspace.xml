@@ -7,9 +7,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion&#10;- fixed a caching bug in decompilation">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Added refresh button to the bytecode debugger">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../YABR-fixed/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../YABR-fixed/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -220,14 +219,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00017" summary="- string analysis">
-      <option name="closed" value="true" />
-      <created>1766630642013</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1766630642013</updated>
     </task>
     <task id="LOCAL-00018" summary="- test generation">
       <option name="closed" value="true" />
@@ -613,7 +604,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768926466559</updated>
     </task>
-    <option name="localTasksCounter" value="66" />
+    <task id="LOCAL-00066" summary="- Added refresh button to the bytecode debugger">
+      <option name="closed" value="true" />
+      <created>1768930530790</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1768930530790</updated>
+    </task>
+    <option name="localTasksCounter" value="67" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -628,7 +627,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Cleanup theming" />
     <MESSAGE value="- Cleanup p4" />
     <MESSAGE value="- Cleanup p5" />
     <MESSAGE value="- Updated api usage for YABR SSA IR changes" />
@@ -653,7 +651,8 @@
     <MESSAGE value="- ui cleanup and improvements&#10;- xref fix for overloads&#10;- xref fix for bootstrap handles and nested bootstraps&#10;- other various bug fixes" />
     <MESSAGE value="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion" />
     <MESSAGE value="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion&#10;- fixed a caching bug in decompilation" />
-    <option name="LAST_COMMIT_MESSAGE" value="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion&#10;- fixed a caching bug in decompilation" />
+    <MESSAGE value="- Added refresh button to the bytecode debugger" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Added refresh button to the bytecode debugger" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
