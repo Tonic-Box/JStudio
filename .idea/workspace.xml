@@ -7,9 +7,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Added refresh button to the bytecode debugger">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- cleanup">
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../YABR-fixed/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../YABR-fixed/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,7 +93,29 @@
       <recent name="com.tonic.ui.theme" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.JStudio [run]">
+  <component name="RunManager" selected="Gradle.JStudio [clean]">
+    <configuration name="JStudio [buildDependents]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="buildDependents" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <method v="2" />
+    </configuration>
     <configuration name="JStudio [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -179,35 +204,13 @@
       <RunAsTest>false</RunAsTest>
       <method v="2" />
     </configuration>
-    <configuration name="Tests in 'JStudio.test'" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value=":test" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>true</RunAsTest>
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Gradle.JStudio [clean]" />
         <item itemvalue="Gradle.JStudio [run]" />
         <item itemvalue="Gradle.JStudio [build]" />
-        <item itemvalue="Gradle.JStudio [clean]" />
         <item itemvalue="Gradle.JStudio [refreshDependencies]" />
-        <item itemvalue="Gradle.Tests in 'JStudio.test'" />
+        <item itemvalue="Gradle.JStudio [buildDependents]" />
       </list>
     </recent_temporary>
   </component>
@@ -219,14 +222,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00018" summary="- test generation">
-      <option name="closed" value="true" />
-      <created>1766633410220</created>
-      <option name="number" value="00018" />
-      <option name="presentableId" value="LOCAL-00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1766633410220</updated>
     </task>
     <task id="LOCAL-00019" summary="- fuzzer for comprehensive test generation coverage">
       <option name="closed" value="true" />
@@ -612,7 +607,15 @@
       <option name="project" value="LOCAL" />
       <updated>1768930530790</updated>
     </task>
-    <option name="localTasksCounter" value="67" />
+    <task id="LOCAL-00067" summary="- cleanup">
+      <option name="closed" value="true" />
+      <created>1768931835169</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1768931835169</updated>
+    </task>
+    <option name="localTasksCounter" value="68" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -644,7 +647,6 @@
     <MESSAGE value="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui" />
     <MESSAGE value="- Stats view&#10;- Attribute view&#10;- updated README.md" />
     <MESSAGE value="- Updated README.md&#10;- Updated shortcuts dialogue&#10;- cleanup" />
-    <MESSAGE value="- cleanup" />
     <MESSAGE value="- cleanup&#10;- Call Graph view" />
     <MESSAGE value="- ui cleanup and improvements" />
     <MESSAGE value="- ui cleanup and improvements&#10;- xref fix for overloads" />
@@ -652,7 +654,8 @@
     <MESSAGE value="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion" />
     <MESSAGE value="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion&#10;- fixed a caching bug in decompilation" />
     <MESSAGE value="- Added refresh button to the bytecode debugger" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Added refresh button to the bytecode debugger" />
+    <MESSAGE value="- cleanup" />
+    <option name="LAST_COMMIT_MESSAGE" value="- cleanup" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
