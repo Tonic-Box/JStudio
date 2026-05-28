@@ -534,6 +534,10 @@ public class NavigatorPanel extends ThemedJPanel {
 
         menu.addSeparator();
 
+        addMenuItem(menu, "Export Class...", () -> mainFrame.exportClass(classEntry));
+
+        menu.addSeparator();
+
         addMenuItem(menu, "Copy Class Name", () -> copyToClipboard(classEntry.getClassName().replace('/', '.')));
 
         addMenuItem(menu, "Copy Internal Name", () -> copyToClipboard(classEntry.getClassName()));

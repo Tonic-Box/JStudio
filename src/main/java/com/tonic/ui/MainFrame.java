@@ -588,20 +588,25 @@ public class MainFrame extends JFrame {
             showWarning("No class selected to export.");
             return;
         }
+        exportClass(currentClass);
+    }
+
+    public void exportClass(ClassEntryModel classEntry) {
+        if (classEntry == null) return;
 
         FileChooserResult result = FileChooserDialog.showSaveDialog(this,
-                currentClass.getSimpleName() + ".class",
+                classEntry.getSimpleName() + ".class",
                 ExtensionFileFilter.classFiles());
 
         if (result.isApproved()) {
             File outputFile = result.getSelectedFile();
             try {
-                ClassFile cf = currentClass.getClassFile();
+                ClassFile cf = classEntry.getClassFile();
                 byte[] data = cf.write();
                 try (FileOutputStream fos = new FileOutputStream(outputFile)) {
                     fos.write(data);
                 }
-                consolePanel.log("Exported " + currentClass.getClassName() + " to " + outputFile.getName());
+                consolePanel.log("Exported " + classEntry.getClassName() + " to " + outputFile.getName());
             } catch (IOException e) {
                 showError("Export failed: " + e.getMessage());
                 consolePanel.logError("Export failed: " + e.getMessage());
