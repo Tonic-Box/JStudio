@@ -93,7 +93,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private String originalSource;
     @Getter
     private boolean dirty = false;
-    private boolean editableMode = true;
     private boolean ignoreDocumentChanges = false;
 
     public SourceCodeView(ClassEntryModel classEntry) {
@@ -145,7 +144,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         add(compileToolbar, BorderLayout.NORTH);
         add(contentPanel, BorderLayout.CENTER);
 
-        searchPanel = new SearchPanel(textArea);
+        searchPanel = new SearchPanel(textArea, scrollPane);
         add(searchPanel, BorderLayout.SOUTH);
 
         setupDocumentListener();
@@ -185,7 +184,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     }
 
     private void onSourceChanged() {
-        if (ignoreDocumentChanges || !editableMode) {
+        if (ignoreDocumentChanges) {
             return;
         }
 
@@ -268,15 +267,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             textArea.setCaretPosition(0);
             ignoreDocumentChanges = false;
             dirty = false;
-            compileToolbar.hideToolbar();
-        }
-    }
-
-    public void setEditableMode(boolean editable) {
-        this.editableMode = editable;
-        textArea.setEditable(editable);
-        compilerParser.setEnabled(editable);
-        if (!editable) {
             compileToolbar.hideToolbar();
         }
     }
@@ -1332,13 +1322,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
      */
     public void showFindDialog() {
         searchPanel.showPanel();
-    }
-
-    /**
-     * Hide the search panel.
-     */
-    public void hideSearchPanel() {
-        searchPanel.setHidden();
     }
 
     /**

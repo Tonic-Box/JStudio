@@ -6,6 +6,8 @@ import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.MethodEntryModel;
 import com.tonic.ui.theme.*;
 
+import com.tonic.ui.editor.SearchPanel;
+
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
@@ -38,7 +40,7 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     private final ClassEntryModel classEntry;
     private final RSyntaxTextArea textArea;
     private final RTextScrollPane scrollPane;
-    private final BytecodeSearchPanel searchPanel;
+    private final SearchPanel searchPanel;
     private final LoadingOverlay loadingOverlay;
 
     private static final String METHOD_DIVIDER = "=========================================================================";
@@ -80,7 +82,7 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
 
         add(contentPanel, BorderLayout.CENTER);
 
-        searchPanel = new BytecodeSearchPanel(textArea);
+        searchPanel = new SearchPanel(textArea, scrollPane);
         add(searchPanel, BorderLayout.SOUTH);
 
         applyTheme();
@@ -303,18 +305,6 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         return textArea.getSelectedText();
     }
 
-    public void scrollToText(String searchText) {
-        if (searchText == null || searchText.isEmpty()) return;
-
-        String text = textArea.getText();
-        int index = text.toLowerCase().indexOf(searchText.toLowerCase());
-        if (index >= 0) {
-            textArea.setCaretPosition(index);
-            textArea.select(index, index + searchText.length());
-            textArea.requestFocus();
-        }
-    }
-
     public void setFontSize(int size) {
         textArea.setFont(JStudioTheme.getCodeFont(size));
     }
@@ -366,46 +356,6 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         textArea.select(methodStart, methodStart + methodSignature.length());
         textArea.requestFocus();
         return true;
-    }
-
-    public boolean highlightPCAdditive(String methodName, String methodDesc, int pc) {
-        if (!loaded) {
-            refresh();
-        }
-
-        String text = textArea.getText();
-        String methodSignature = methodName + methodDesc;
-        int methodStart = text.indexOf(methodSignature);
-        if (methodStart < 0) {
-            methodStart = text.indexOf(methodName);
-        }
-        if (methodStart < 0) {
-            return false;
-        }
-
-        String pcPattern = String.format("%d:", pc);
-        int pcIndex = text.indexOf(pcPattern, methodStart);
-
-        if (pcIndex < 0) {
-            pcPattern = String.format(" %d:", pc);
-            pcIndex = text.indexOf(pcPattern, methodStart);
-        }
-
-        if (pcIndex >= 0) {
-            textArea.setCaretPosition(pcIndex);
-            textArea.requestFocus();
-
-            try {
-                int lineNum = textArea.getLineOfOffset(pcIndex);
-                addHighlight(lineNum);
-                lastClickedLine = lineNum;
-            } catch (Exception e) {
-                // Ignore
-            }
-            return true;
-        }
-
-        return false;
     }
 
     public boolean scrollToMethod(String methodName, String methodDesc) {
@@ -506,7 +456,4 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         }
     }
 
-    public Set<Integer> getHighlightedLines() {
-        return new HashSet<>(highlightedLines);
-    }
 }
