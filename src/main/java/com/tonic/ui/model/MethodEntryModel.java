@@ -33,6 +33,7 @@ public class MethodEntryModel {
     private IRMethod cachedIR;
     private long irCacheTimestamp;
     private String irStringCache;
+    private String llvmStringCache;
     @Getter(AccessLevel.NONE)
     private ComplexityMetrics complexityMetrics;
 
@@ -130,6 +131,7 @@ public class MethodEntryModel {
         this.cachedIR = null;
         this.irCacheTimestamp = 0;
         this.irStringCache = null;
+        this.llvmStringCache = null;
         this.complexityMetrics = null;
         this.analysisState = AnalysisState.NOT_ANALYZED;
     }
@@ -140,6 +142,14 @@ public class MethodEntryModel {
 
     public void setIrCache(String irString) {
         this.irStringCache = irString;
+    }
+
+    public String getLlvmCache() {
+        return llvmStringCache;
+    }
+
+    public void setLlvmCache(String llvmString) {
+        this.llvmStringCache = llvmString;
     }
 
     public ComplexityMetrics getComplexityMetrics() {

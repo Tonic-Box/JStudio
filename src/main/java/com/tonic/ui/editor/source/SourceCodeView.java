@@ -94,6 +94,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     @Getter
     private boolean dirty = false;
     private boolean ignoreDocumentChanges = false;
+    /** Invoked after a successful recompile so the owning tab can refresh its other views. */
+    private Runnable onRecompiled;
 
     public SourceCodeView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -213,6 +215,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         compileToolbar.showWithErrors(errorCount, warningCount);
     }
 
+    /** Sets a callback invoked after a successful recompile (the owning tab refreshes its views). */
+    public void setOnRecompiled(Runnable onRecompiled) {
+        this.onRecompiled = onRecompiled;
+    }
+
     private void doRecompile() {
         if (!dirty) {
             return;
@@ -237,7 +244,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                         compilerParser.setOriginalClass(result.getCompiledClass());
                         originalSource = source;
                         dirty = false;
-                        compileToolbar.showSuccess(result.getCompilationTimeMs());
+                        if (onRecompiled != null) {
+                            onRecompiled.run();
+                        }
+                        if (result.hasWarnings()) {
+                            compileToolbar.showWithErrors(0, result.getWarningCount(), result.getErrors());
+                        } else {
+                            compileToolbar.showSuccess(result.getCompilationTimeMs());
+                        }
 
                         javax.swing.Timer hideTimer = new javax.swing.Timer(1500, evt -> {
                             if (!SourceCodeView.this.dirty) {

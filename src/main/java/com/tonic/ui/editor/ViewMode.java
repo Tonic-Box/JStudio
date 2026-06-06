@@ -12,6 +12,7 @@ public enum ViewMode {
     CONSTPOOL("Const Pool", "Constant pool entries"),
     IR("SSA IR", "SSA Intermediate Representation"),
     AST("AST IR", "Abstract Syntax Tree representation"),
+    LLVM("LLVM IR", "LLVM IR lowering of the SSA form"),
     PDG("Program Dependence", "Program Dependence Graph"),
     SDG("System Dependence", "System Dependence Graph"),
     CPG("Code Property", "Code Property Graph"),

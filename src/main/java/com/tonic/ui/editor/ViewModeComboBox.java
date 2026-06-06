@@ -32,6 +32,7 @@ public class ViewModeComboBox extends JComboBox<Object> {
         addItem(HEADER_PREFIX + "IR");
         addItem(ViewMode.IR);
         addItem(ViewMode.AST);
+        addItem(ViewMode.LLVM);
 
         addItem(HEADER_PREFIX + "Graphing");
         addItem(ViewMode.CFG);

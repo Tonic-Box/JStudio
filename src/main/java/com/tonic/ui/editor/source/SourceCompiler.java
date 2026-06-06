@@ -2,10 +2,21 @@ package com.tonic.ui.editor.source;
 
 import com.tonic.analysis.source.ast.decl.ClassDecl;
 import com.tonic.analysis.source.ast.decl.CompilationUnit;
+import com.tonic.analysis.source.ast.decl.FieldDecl;
 import com.tonic.analysis.source.ast.decl.MethodDecl;
+import com.tonic.analysis.source.ast.decl.Modifier;
 import com.tonic.analysis.source.ast.decl.TypeDecl;
+import com.tonic.analysis.source.ast.expr.BinaryExpr;
+import com.tonic.analysis.source.ast.expr.BinaryOperator;
+import com.tonic.analysis.source.ast.expr.VarRefExpr;
+import com.tonic.analysis.source.ast.stmt.BlockStmt;
+import com.tonic.analysis.source.ast.stmt.ExprStmt;
+import com.tonic.analysis.source.ast.stmt.Statement;
+import com.tonic.analysis.source.ast.type.VoidSourceType;
 import com.tonic.analysis.source.lower.ASTLowerer;
 import com.tonic.analysis.source.lower.LoweringException;
+import com.tonic.analysis.source.lower.SyntheticArrayConstructor;
+import com.tonic.analysis.source.lower.SyntheticLambdaMethod;
 import com.tonic.analysis.source.parser.JavaParser;
 import com.tonic.analysis.source.parser.ParseErrorListener;
 import com.tonic.analysis.source.parser.ParseException;
@@ -13,11 +24,14 @@ import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
+import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SourceCompiler {
 
@@ -51,8 +65,15 @@ public class SourceCompiler {
         }
 
         try {
-            ClassFile newClass = lowerToClassFile(cu, originalClass, classPool);
-            return CompilationResult.success(newClass, source, elapsed(startTime));
+            List<CompilationError> methodWarnings = new ArrayList<>();
+            ClassFile newClass = lowerToClassFile(cu, originalClass, classPool, methodWarnings);
+            return CompilationResult.builder()
+                    .success(true)
+                    .compiledClass(newClass)
+                    .sourceCode(source)
+                    .errors(methodWarnings)
+                    .compilationTimeMs(elapsed(startTime))
+                    .build();
         } catch (LoweringException e) {
             errors.add(CompilationError.error(1, 1, 0, 1, "Lowering error: " + e.getMessage()));
             return CompilationResult.failure(errors, source, elapsed(startTime));
@@ -89,7 +110,8 @@ public class SourceCompiler {
         return errors;
     }
 
-    private ClassFile lowerToClassFile(CompilationUnit cu, ClassFile original, ClassPool classPool) {
+    private ClassFile lowerToClassFile(CompilationUnit cu, ClassFile original, ClassPool classPool,
+                                       List<CompilationError> warnings) {
         TypeDecl primaryType = cu.getPrimaryType();
         if (primaryType == null) {
             throw new LoweringException("No type declaration found in source");
@@ -107,6 +129,8 @@ public class SourceCompiler {
         lowerer.setImports(cu.getImports());
         SSA ssa = new SSA(original.getConstPool());
 
+        syncNewFields(classDecl, original, warnings);
+
         for (MethodDecl methodDecl : classDecl.getMethods()) {
             if (methodDecl.getBody() == null) {
                 continue;
@@ -116,17 +140,45 @@ public class SourceCompiler {
             String descriptor = buildDescriptor(methodDecl);
 
             MethodEntry targetMethod = findMethod(original, methodName, descriptor);
+            boolean isNew = targetMethod == null;
+            if (isNew) {
+                try {
+                    original.createNewMethodWithDescriptor(
+                        accessFromModifiers(methodDecl.getModifiers()), methodName, descriptor);
+                    targetMethod = findMethod(original, methodName, descriptor);
+                } catch (Exception e) {
+                    warnings.add(CompilationError.warning(1, 1, 0, 1,
+                        "Could not add new method '" + methodName + descriptor + "': " + e.getMessage()));
+                    continue;
+                }
+            }
             if (targetMethod == null) {
+                warnings.add(CompilationError.warning(1, 1, 0, 1,
+                    "Could not locate method '" + methodName + descriptor + "' after creating it."));
                 continue;
             }
 
+            // Per-method resilience: a method that cannot be lowered keeps its original bytecode (or,
+            // for a newly added method, is reported) instead of aborting the whole-class recompile,
+            // which would discard edits to every other, lowerable method.
             try {
                 IRMethod irMethod = lowerer.lower(methodDecl, ownerClass);
                 ssa.lower(irMethod, targetMethod);
             } catch (Exception e) {
-                throw new LoweringException("Failed to lower method " + methodName + ": " + e.getMessage(), e);
+                String prefix = isNew
+                    ? "Could not compile new method '"
+                    : "Could not recompile method '";
+                String suffix = isNew ? "': " : "' (kept original): ";
+                warnings.add(CompilationError.warning(1, 1, 0, 1,
+                    prefix + methodName + descriptor + suffix + e.getMessage()));
             }
         }
+
+        synthesizeStaticInitializer(classDecl, original, lowerer, ssa, ownerClass, warnings);
+
+        emitPendingSynthetics(lowerer, ssa, original, ownerClass, warnings);
+
+        removeDeletedMethods(classDecl, original);
 
         try {
             original.rebuild();
@@ -136,14 +188,200 @@ public class SourceCompiler {
         return original;
     }
 
+    /** Access flags for generated synthetic methods: private static synthetic. */
+    private static final int SYNTHETIC_METHOD_ACCESS = 0x0002 | 0x0008 | 0x1000;
+
+    /**
+     * Materializes synthetic methods (lambda bodies, array constructors) produced while lowering.
+     * A synthetic the original class already provides (matching name and descriptor) is left
+     * untouched, so round-tripped classes keep their working synthetic bodies; only genuinely new
+     * synthetics — from freshly written or edited code — are generated. Generation is best-effort:
+     * failures are reported as warnings rather than aborting the recompile.
+     */
+    private void emitPendingSynthetics(ASTLowerer lowerer, SSA ssa, ClassFile original,
+                                       String ownerClass, List<CompilationError> warnings) {
+        int guard = 0;
+        while (lowerer.hasPendingSynthetics() && guard++ < 1000) {
+            for (SyntheticLambdaMethod synthetic : lowerer.drainPendingLambdas()) {
+                if (findMethod(original, synthetic.getName(), synthetic.getDescriptor()) != null) {
+                    continue;
+                }
+                if (!synthetic.isStatic()) {
+                    warnings.add(CompilationError.warning(1, 1, 0, 1,
+                        "Lambda '" + synthetic.getName() + "' captures 'this' and could not be generated; "
+                            + "its call site may not resolve."));
+                    continue;
+                }
+                try {
+                    original.createNewMethodWithDescriptor(
+                        SYNTHETIC_METHOD_ACCESS, synthetic.getName(), synthetic.getDescriptor());
+                    MethodEntry entry = findMethod(original, synthetic.getName(), synthetic.getDescriptor());
+                    IRMethod irMethod = lowerer.lowerSyntheticLambda(synthetic, ownerClass);
+                    ssa.lower(irMethod, entry);
+                } catch (Exception e) {
+                    original.removeMethod(synthetic.getName(), synthetic.getDescriptor());
+                    warnings.add(CompilationError.warning(1, 1, 0, 1,
+                        "Could not generate lambda method '" + synthetic.getName() + "': " + e.getMessage()));
+                }
+            }
+            for (SyntheticArrayConstructor constructor : lowerer.drainPendingArrayConstructors()) {
+                if (findMethod(original, constructor.getName(), constructor.getDescriptor()) != null) {
+                    continue;
+                }
+                try {
+                    original.createNewMethodWithDescriptor(
+                        SYNTHETIC_METHOD_ACCESS, constructor.getName(), constructor.getDescriptor());
+                    MethodEntry entry = findMethod(original, constructor.getName(), constructor.getDescriptor());
+                    IRMethod irMethod = lowerer.lowerSyntheticArrayConstructor(constructor, ownerClass);
+                    ssa.lower(irMethod, entry);
+                } catch (Exception e) {
+                    original.removeMethod(constructor.getName(), constructor.getDescriptor());
+                    warnings.add(CompilationError.warning(1, 1, 0, 1,
+                        "Could not generate array constructor '" + constructor.getName() + "': " + e.getMessage()));
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes user-authored methods that the edited source no longer declares. Constructors,
+     * static initializers and compiler-generated members (synthetic flag, or {@code lambda$} /
+     * {@code access$} / {@code $deserializeLambda$} names) are never removed, since the decompiled
+     * source represents them implicitly and removing them would break their call sites.
+     */
+    private void removeDeletedMethods(ClassDecl classDecl, ClassFile original) {
+        Set<String> sourceMethods = new HashSet<>();
+        for (MethodDecl methodDecl : classDecl.getMethods()) {
+            if (methodDecl.getBody() == null) {
+                continue;
+            }
+            sourceMethods.add(methodDecl.getName() + buildDescriptor(methodDecl));
+        }
+
+        List<MethodEntry> toRemove = new ArrayList<>();
+        for (MethodEntry method : original.getMethods()) {
+            String name = method.getName();
+            if (name.equals("<init>") || name.equals("<clinit>")) {
+                continue;
+            }
+            if (isCompilerGenerated(name, method.getAccess())) {
+                continue;
+            }
+            if (!sourceMethods.contains(name + method.getDesc())) {
+                toRemove.add(method);
+            }
+        }
+        for (MethodEntry method : toRemove) {
+            original.removeMethod(method.getName(), method.getDesc());
+        }
+    }
+
+    private boolean isCompilerGenerated(String name, int access) {
+        if ((access & 0x1000) != 0) {
+            return true;
+        }
+        return name.startsWith("lambda$") || name.startsWith("access$")
+            || name.equals("$deserializeLambda$");
+    }
+
+    /**
+     * Creates ClassFile entries for fields present in the edited source but absent from the
+     * original class, so that newly declared fields exist (with their JVM default value) and
+     * any references to them resolve. Existing fields are left untouched.
+     */
+    private void syncNewFields(ClassDecl classDecl, ClassFile original, List<CompilationError> warnings) {
+        for (FieldDecl field : classDecl.getFields()) {
+            if (fieldExists(original, field.getName())) {
+                continue;
+            }
+            try {
+                String descriptor = field.getType().toIRType().getDescriptor();
+                original.createNewField(accessFromModifiers(field.getModifiers()),
+                    field.getName(), descriptor, new ArrayList<>());
+            } catch (Exception e) {
+                warnings.add(CompilationError.warning(1, 1, 0, 1,
+                    "Could not add new field '" + field.getName() + "': " + e.getMessage()));
+            }
+        }
+    }
+
+    /**
+     * Regenerates {@code <clinit>} from the source's static field initializers and static
+     * initializer blocks, finding or creating the method entry and lowering into it. Field
+     * initializers run first, then static initializer blocks in declaration order. Does nothing
+     * when the source declares no static initialization.
+     */
+    private void synthesizeStaticInitializer(ClassDecl classDecl, ClassFile original,
+                                             ASTLowerer lowerer, SSA ssa, String ownerClass,
+                                             List<CompilationError> warnings) {
+        List<Statement> initStatements = new ArrayList<>();
+        for (FieldDecl field : classDecl.getFields()) {
+            if (field.isStatic() && field.hasInitializer()) {
+                VarRefExpr ref = new VarRefExpr(field.getName(), field.getType());
+                BinaryExpr assign = new BinaryExpr(
+                    BinaryOperator.ASSIGN, ref, field.getInitializer(), field.getType());
+                initStatements.add(new ExprStmt(assign));
+            }
+        }
+        for (BlockStmt block : classDecl.getStaticInitializers()) {
+            initStatements.addAll(block.getStatements());
+        }
+        if (initStatements.isEmpty()) {
+            return;
+        }
+
+        try {
+            MethodDecl clinit = new MethodDecl("<clinit>", VoidSourceType.INSTANCE)
+                .addModifier(Modifier.STATIC)
+                .withBody(new BlockStmt(initStatements));
+            MethodEntry entry = findMethod(original, "<clinit>", "()V");
+            if (entry == null) {
+                original.createNewMethodWithDescriptor(0x0008, "<clinit>", "()V");
+                entry = findMethod(original, "<clinit>", "()V");
+            }
+            IRMethod irMethod = lowerer.lower(clinit, ownerClass);
+            ssa.lower(irMethod, entry);
+        } catch (Exception e) {
+            warnings.add(CompilationError.warning(1, 1, 0, 1,
+                "Could not synthesize static initializer: " + e.getMessage()));
+        }
+    }
+
+    private boolean fieldExists(ClassFile classFile, String name) {
+        for (FieldEntry field : classFile.getFields()) {
+            if (field.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Translates source-level modifiers into JVM access flags for created members.
+     */
+    private int accessFromModifiers(Set<Modifier> modifiers) {
+        int flags = 0;
+        if (modifiers.contains(Modifier.PUBLIC)) {
+            flags |= 0x0001;
+        }
+        if (modifiers.contains(Modifier.PRIVATE)) {
+            flags |= 0x0002;
+        }
+        if (modifiers.contains(Modifier.PROTECTED)) {
+            flags |= 0x0004;
+        }
+        if (modifiers.contains(Modifier.STATIC)) {
+            flags |= 0x0008;
+        }
+        if (modifiers.contains(Modifier.FINAL)) {
+            flags |= 0x0010;
+        }
+        return flags;
+    }
+
     private MethodEntry findMethod(ClassFile classFile, String name, String descriptor) {
         for (MethodEntry method : classFile.getMethods()) {
             if (method.getName().equals(name) && method.getDesc().equals(descriptor)) {
-                return method;
-            }
-        }
-        for (MethodEntry method : classFile.getMethods()) {
-            if (method.getName().equals(name)) {
                 return method;
             }
         }

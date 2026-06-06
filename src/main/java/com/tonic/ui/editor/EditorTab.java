@@ -12,6 +12,7 @@ import com.tonic.ui.editor.graph.PDGView;
 import com.tonic.ui.editor.graph.SDGView;
 import com.tonic.ui.editor.hex.HexView;
 import com.tonic.ui.editor.ir.IRView;
+import com.tonic.ui.editor.llvm.LLVMView;
 import com.tonic.ui.editor.source.SourceCodeView;
 import com.tonic.ui.model.ClassEntryModel;
 import com.tonic.ui.model.FieldEntryModel;
@@ -61,6 +62,7 @@ public class EditorTab extends JPanel {
     private final HexView hexView;
 
     private volatile IRView irView;
+    private volatile LLVMView llvmView;
     private volatile ASTView astView;
     private volatile PDGView pdgView;
     private volatile SDGView sdgView;
@@ -100,6 +102,7 @@ public class EditorTab extends JPanel {
         cardPanel.add(loadingPanel, LOADING_CARD);
 
         sourceView = new SourceCodeView(classEntry);
+        sourceView.setOnRecompiled(this::onClassRecompiled);
         cardPanel.add(sourceView, ViewMode.SOURCE.name());
 
         bytecodeView = new BytecodeView(classEntry);
@@ -123,6 +126,8 @@ public class EditorTab extends JPanel {
                 return true;
             case IR:
                 return irView != null;
+            case LLVM:
+                return llvmView != null;
             case AST:
                 return astView != null;
             case PDG:
@@ -181,6 +186,9 @@ public class EditorTab extends JPanel {
         if (view instanceof IRView) {
             ((IRView) view).setFontSize(fontSize);
             ((IRView) view).setWordWrap(wordWrap);
+        } else if (view instanceof LLVMView) {
+            ((LLVMView) view).setFontSize(fontSize);
+            ((LLVMView) view).setWordWrap(wordWrap);
         } else if (view instanceof ASTView) {
             ((ASTView) view).setFontSize(fontSize);
             ((ASTView) view).setWordWrap(wordWrap);
@@ -212,6 +220,9 @@ public class EditorTab extends JPanel {
         switch (mode) {
             case IR:
                 if (irView == null) loadViewInBackground(mode, () -> new IRView(classEntry), v -> irView = v);
+                break;
+            case LLVM:
+                if (llvmView == null) loadViewInBackground(mode, () -> new LLVMView(classEntry), v -> llvmView = v);
                 break;
             case AST:
                 if (astView == null) loadViewInBackground(mode, () -> new ASTView(classEntry), v -> astView = v);
@@ -252,6 +263,7 @@ public class EditorTab extends JPanel {
             case CONSTPOOL: constPoolView.refresh(); break;
             case HEX: hexView.refresh(); break;
             case IR: if (irView != null) irView.refresh(); break;
+            case LLVM: if (llvmView != null) llvmView.refresh(); break;
             case AST: if (astView != null) astView.refresh(); break;
             case PDG: if (pdgView != null) pdgView.refresh(); break;
             case SDG: if (sdgView != null) sdgView.refresh(); break;
@@ -293,6 +305,28 @@ public class EditorTab extends JPanel {
     }
 
     /**
+     * Called after the source view successfully recompiles the class (which mutates {@code classEntry}
+     * in place). Every other instantiated view reads from {@code classEntry}, so refreshing them makes
+     * the bytecode/IR/constpool/hex/etc. views reflect the recompiled class immediately instead of
+     * showing stale output until the next tab switch.
+     */
+    private void onClassRecompiled() {
+        breadcrumbBar.setClass(classEntry);
+        if (bytecodeView != null) bytecodeView.refresh();
+        if (constPoolView != null) constPoolView.refresh();
+        if (hexView != null) hexView.refresh();
+        if (irView != null) irView.refresh();
+        if (astView != null) astView.refresh();
+        if (pdgView != null) pdgView.refresh();
+        if (sdgView != null) sdgView.refresh();
+        if (cpgView != null) cpgView.refresh();
+        if (controlFlowView != null) controlFlowView.refresh();
+        if (callGraphView != null) callGraphView.refresh();
+        if (attributesView != null) attributesView.refresh();
+        if (statisticsView != null) statisticsView.refresh();
+    }
+
+    /**
      * Get the title for this tab.
      */
     public String getTitle() {
@@ -321,6 +355,7 @@ public class EditorTab extends JPanel {
             case CONSTPOOL: constPoolView.copySelection(); break;
             case HEX: hexView.copySelection(); break;
             case IR: if (irView != null) irView.copySelection(); break;
+            case LLVM: if (llvmView != null) llvmView.copySelection(); break;
             case AST: if (astView != null) astView.copySelection(); break;
             case PDG: if (pdgView != null) pdgView.copySelection(); break;
             case SDG: if (sdgView != null) sdgView.copySelection(); break;
@@ -339,6 +374,7 @@ public class EditorTab extends JPanel {
             case CONSTPOOL: return constPoolView.getText();
             case HEX: return hexView.getText();
             case IR: return irView != null ? irView.getText() : "";
+            case LLVM: return llvmView != null ? llvmView.getText() : "";
             case AST: return astView != null ? astView.getText() : "";
             case PDG: return pdgView != null ? pdgView.getText() : "";
             case SDG: return sdgView != null ? sdgView.getText() : "";
@@ -358,6 +394,7 @@ public class EditorTab extends JPanel {
             case CONSTPOOL: constPoolView.goToLine(line); break;
             case HEX: hexView.goToLine(line); break;
             case IR: if (irView != null) irView.goToLine(line); break;
+            case LLVM: if (llvmView != null) llvmView.goToLine(line); break;
             case AST: if (astView != null) astView.goToLine(line); break;
             case PDG: if (pdgView != null) pdgView.goToLine(line); break;
             case SDG: if (sdgView != null) sdgView.goToLine(line); break;
@@ -396,6 +433,7 @@ public class EditorTab extends JPanel {
             case CONSTPOOL: constPoolView.showFindDialog(); break;
             case HEX: hexView.showFindDialog(); break;
             case IR: if (irView != null) irView.showFindDialog(); break;
+            case LLVM: if (llvmView != null) llvmView.showFindDialog(); break;
             case AST: if (astView != null) astView.showFindDialog(); break;
             case PDG: if (pdgView != null) pdgView.showFindDialog(); break;
             case SDG: if (sdgView != null) sdgView.showFindDialog(); break;
@@ -427,6 +465,7 @@ public class EditorTab extends JPanel {
             case CONSTPOOL: return constPoolView.getSelectedText();
             case HEX: return hexView.getSelectedText();
             case IR: return irView != null ? irView.getSelectedText() : null;
+            case LLVM: return llvmView != null ? llvmView.getSelectedText() : null;
             case AST: return astView != null ? astView.getSelectedText() : null;
             case PDG: return pdgView != null ? pdgView.getSelectedText() : null;
             case SDG: return sdgView != null ? sdgView.getSelectedText() : null;
@@ -448,6 +487,7 @@ public class EditorTab extends JPanel {
             case CONSTPOOL: constPoolView.scrollToText(methodName); break;
             case HEX: hexView.scrollToText(methodName); break;
             case IR: if (irView != null) irView.scrollToText(methodName); break;
+            case LLVM: if (llvmView != null) llvmView.scrollToText(methodName); break;
             case AST: if (astView != null) astView.scrollToText(methodName); break;
             case PDG: if (pdgView != null) pdgView.scrollToText(methodName); break;
             case SDG: if (sdgView != null) sdgView.scrollToText(methodName); break;
@@ -488,6 +528,7 @@ public class EditorTab extends JPanel {
         constPoolView.setFontSize(size);
         hexView.setFontSize(size);
         if (irView != null) irView.setFontSize(size);
+        if (llvmView != null) llvmView.setFontSize(size);
         if (astView != null) astView.setFontSize(size);
         if (pdgView != null) pdgView.setFontSize(size);
         if (sdgView != null) sdgView.setFontSize(size);
@@ -507,6 +548,7 @@ public class EditorTab extends JPanel {
         bytecodeView.setWordWrap(enabled);
         hexView.setWordWrap(enabled);
         if (irView != null) irView.setWordWrap(enabled);
+        if (llvmView != null) llvmView.setWordWrap(enabled);
         if (astView != null) astView.setWordWrap(enabled);
         if (pdgView != null) pdgView.setWordWrap(enabled);
         if (sdgView != null) sdgView.setWordWrap(enabled);
@@ -548,6 +590,7 @@ public class EditorTab extends JPanel {
             case CONSTPOOL: constPoolView.scrollToText(methodName); return true;
             case HEX: return false;
             case IR: if (irView != null) { irView.scrollToText(methodName); return true; } return false;
+            case LLVM: if (llvmView != null) { llvmView.scrollToText(methodName); return true; } return false;
             case AST: if (astView != null) { astView.scrollToText(methodName); return true; } return false;
             case PDG: if (pdgView != null) { pdgView.scrollToText(methodName); return true; } return false;
             case SDG: if (sdgView != null) { sdgView.scrollToText(methodName); return true; } return false;
