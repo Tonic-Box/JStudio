@@ -20,6 +20,7 @@ public class NewClassDialog extends ThemedJDialog {
     private final JTextField nameField;
     private final JComboBox<ClassType> typeCombo;
     private final JComboBox<String> accessCombo;
+    private final JComboBox<BytecodeVersion> versionCombo;
     private final JCheckBox abstractCheck;
     private final JCheckBox finalCheck;
     private final JTextField superClassField;
@@ -123,6 +124,24 @@ public class NewClassDialog extends ThemedJDialog {
         accessCombo = new JComboBox<>(new String[]{"public", "package-private"});
         styleComboBox(accessCombo);
         content.add(accessCombo, gbc);
+
+        row++;
+        gbc.gridwidth = 1;
+        gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        JLabel versionLabel = new JLabel("Bytecode:");
+        versionLabel.setForeground(JStudioTheme.getTextPrimary());
+        content.add(versionLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        versionCombo = new JComboBox<>(BytecodeVersion.values());
+        versionCombo.setSelectedItem(BytecodeVersion.JAVA_8);
+        styleComboBox(versionCombo);
+        content.add(versionCombo, gbc);
 
         row++;
         gbc.gridwidth = 1;
@@ -444,6 +463,8 @@ public class NewClassDialog extends ThemedJDialog {
 
         List<String> interfaces = parseInterfaces();
 
+        BytecodeVersion version = (BytecodeVersion) versionCombo.getSelectedItem();
+
         return ClassCreationParams.builder(fullClassName)
                 .classType(type)
                 .publicAccess(isPublic)
@@ -451,6 +472,7 @@ public class NewClassDialog extends ThemedJDialog {
                 .isFinal(finalCheck.isSelected())
                 .superClass(superClass)
                 .interfaces(interfaces)
+                .majorVersion(version != null ? version.major : BytecodeVersion.JAVA_8.major)
                 .build();
     }
 
@@ -469,5 +491,27 @@ public class NewClassDialog extends ThemedJDialog {
             }
         }
         return result;
+    }
+
+    /** Selectable class-file (bytecode) versions, mapping a label to its class-file major version. */
+    private enum BytecodeVersion {
+        JAVA_8("Java 8 (52)", 52),
+        JAVA_11("Java 11 (55)", 55),
+        JAVA_17("Java 17 (61)", 61),
+        JAVA_21("Java 21 (65)", 65),
+        JAVA_23("Java 23 (67)", 67);
+
+        private final String label;
+        private final int major;
+
+        BytecodeVersion(String label, int major) {
+            this.label = label;
+            this.major = major;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
     }
 }

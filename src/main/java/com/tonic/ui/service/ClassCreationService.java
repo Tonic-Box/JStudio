@@ -38,7 +38,7 @@ public class ClassCreationService implements AccessFlags {
         int accessFlags = computeClassAccessFlags(params);
 
         ClassBuilder builder = ClassBuilder.create(params.getFullClassName())
-                .version(V1_8, 0)
+                .version(params.getMajorVersion(), 0)
                 .access(accessFlags)
                 .superClass(params.getSuperClass());
 
@@ -51,7 +51,7 @@ public class ClassCreationService implements AccessFlags {
 
     private ClassFile createInterface(ClassCreationParams params) {
         ClassBuilder builder = ClassBuilder.create(params.getFullClassName())
-                .version(V1_8, 0)
+                .version(params.getMajorVersion(), 0)
                 .access(ACC_PUBLIC, ACC_INTERFACE, ACC_ABSTRACT)
                 .superClass("java/lang/Object");
 
@@ -67,7 +67,7 @@ public class ClassCreationService implements AccessFlags {
         String className = params.getFullClassName();
 
         ClassBuilder builder = ClassBuilder.create(className)
-                .version(V1_8, 0)
+                .version(params.getMajorVersion(), 0)
                 .access(ACC_PUBLIC, ACC_FINAL, ACC_ENUM)
                 .superClass("java/lang/Enum");
 
@@ -124,7 +124,7 @@ public class ClassCreationService implements AccessFlags {
 
     private ClassFile createAnnotation(ClassCreationParams params) {
         ClassBuilder builder = ClassBuilder.create(params.getFullClassName())
-                .version(V1_8, 0)
+                .version(params.getMajorVersion(), 0)
                 .access(ACC_PUBLIC, ACC_INTERFACE, ACC_ABSTRACT, ACC_ANNOTATION)
                 .superClass("java/lang/Object")
                 .interfaces("java/lang/annotation/Annotation");
@@ -199,6 +199,8 @@ public class ClassCreationService implements AccessFlags {
         private final String superClass;
         @Getter
         private final List<String> interfaces;
+        @Getter
+        private final int majorVersion;
 
         private ClassCreationParams(Builder builder) {
             this.fullClassName = builder.fullClassName;
@@ -208,6 +210,7 @@ public class ClassCreationService implements AccessFlags {
             this.isFinal = builder.isFinal;
             this.superClass = builder.superClass != null ? builder.superClass : "java/lang/Object";
             this.interfaces = builder.interfaces;
+            this.majorVersion = builder.majorVersion;
         }
 
         public boolean isAbstract() {
@@ -230,9 +233,15 @@ public class ClassCreationService implements AccessFlags {
             private boolean isFinal = false;
             private String superClass;
             private List<String> interfaces;
+            private int majorVersion = V1_8;
 
             private Builder(String fullClassName) {
                 this.fullClassName = fullClassName;
+            }
+
+            public Builder majorVersion(int majorVersion) {
+                this.majorVersion = majorVersion;
+                return this;
             }
 
             public Builder classType(ClassType classType) {
