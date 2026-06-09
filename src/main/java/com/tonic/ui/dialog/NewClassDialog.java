@@ -16,6 +16,9 @@ import java.util.List;
 
 public class NewClassDialog extends ThemedJDialog {
 
+    /** Placeholder shown for the root package; treated as an empty (default) package. */
+    private static final String DEFAULT_PACKAGE_LABEL = "(default package)";
+
     private final JTextField packageField;
     private final JTextField nameField;
     private final JComboBox<ClassType> typeCombo;
@@ -368,7 +371,7 @@ public class NewClassDialog extends ThemedJDialog {
     private boolean validateInput() {
         errorLabel.setText(" ");
 
-        String pkg = packageField.getText().trim();
+        String pkg = normalizedPackage();
         if (!pkg.isEmpty()) {
             String[] pkgParts = pkg.split("\\.");
             for (String part : pkgParts) {
@@ -443,9 +446,18 @@ public class NewClassDialog extends ThemedJDialog {
         return true;
     }
 
+    /**
+     * The trimmed package text, with the {@link #DEFAULT_PACKAGE_LABEL} placeholder normalized to
+     * empty so creating a class in the root package is accepted rather than rejected as invalid.
+     */
+    private String normalizedPackage() {
+        String pkg = packageField.getText().trim();
+        return pkg.equals(DEFAULT_PACKAGE_LABEL) ? "" : pkg;
+    }
+
     public ClassCreationParams getCreationParams() {
         String name = nameField.getText().trim();
-        String pkg = packageField.getText().trim().replace('.', '/');
+        String pkg = normalizedPackage().replace('.', '/');
         String fullClassName;
         if (!pkg.isEmpty()) {
             fullClassName = pkg + "/" + name;

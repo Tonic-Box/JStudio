@@ -15,6 +15,7 @@ import com.tonic.ui.event.EventBus;
 import com.tonic.ui.event.events.ClassSelectedEvent;
 import com.tonic.ui.event.events.FindUsagesEvent;
 import com.tonic.ui.event.events.MethodSelectedEvent;
+import com.tonic.ui.event.events.ProjectLoadedEvent;
 import com.tonic.ui.event.events.ProjectUpdatedEvent;
 import com.tonic.ui.event.events.ResourceSelectedEvent;
 import com.tonic.ui.model.ClassEntryModel;
@@ -439,6 +440,8 @@ public class NavigatorPanel extends ThemedJPanel {
             buildClassMenu(menu, (NavigatorNode.ClassNode) node);
         } else if (node instanceof NavigatorNode.PackageNode) {
             buildPackageMenu(menu, (NavigatorNode.PackageNode) node);
+        } else if (node instanceof NavigatorNode.ProjectNode) {
+            buildProjectMenu(menu);
         } else if (node instanceof NavigatorNode.ResourceFolderNode) {
             buildResourceFolderMenu(menu, (NavigatorNode.ResourceFolderNode) node);
         } else if (node instanceof NavigatorNode.ResourcesRootNode) {
@@ -549,6 +552,12 @@ public class NavigatorPanel extends ThemedJPanel {
         addMenuItem(menu, "Add New Class...", () -> showNewClassDialog(node.getPackageName()));
     }
 
+    private void buildProjectMenu(JPopupMenu menu) {
+        // Works whether or not a project is loaded: with no project, creating a class spins up a
+        // new (Untitled) project in the root package and opens the class in it.
+        addMenuItem(menu, "Add New Class...", () -> showNewClassDialog(""));
+    }
+
     private void buildResourceFolderMenu(JPopupMenu menu, NavigatorNode.ResourceFolderNode node) {
         addMenuItem(menu, "New Empty File...", () -> showNewResourceFileDialog(node.getFolderPath()));
         addMenuItem(menu, "Import File...", () -> showImportResourceDialog(node.getFolderPath()));
@@ -567,14 +576,7 @@ public class NavigatorPanel extends ThemedJPanel {
     }
 
     private void showNewClassDialog(String packageName) {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            JOptionPane.showMessageDialog(this,
-                    "No project loaded",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+        ProjectModel existingProject = ProjectService.getInstance().getCurrentProject();
 
         String internalPackageName = packageName.replace('.', '/');
         NewClassDialog dialog = new NewClassDialog(
@@ -589,9 +591,21 @@ public class NavigatorPanel extends ThemedJPanel {
 
         try {
             ClassFile classFile = ClassCreationService.getInstance().createClass(params);
+
+            // With no project open, creating a class spins up a new project to hold it. Done only
+            // after the dialog is confirmed so cancelling leaves the "No Project" state untouched.
+            boolean newProject = existingProject == null;
+            ProjectModel project = newProject
+                    ? ProjectService.getInstance().createProject("Untitled")
+                    : existingProject;
+
             ClassEntryModel entry = project.addClass(classFile);
 
-            EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 1));
+            if (newProject) {
+                EventBus.getInstance().post(new ProjectLoadedEvent(this, project));
+            } else {
+                EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 1));
+            }
 
             SwingUtilities.invokeLater(() -> {
                 selectClass(entry.getClassName());

@@ -7,10 +7,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Fix recompiled changes not persisting to bytecode/export and surface results in the editor:&#10;- Per-method resilience: a method that can't lower keeps its original bytecode and reports a warning instead of aborting the whole class&#10;- Refresh all open views (bytecode, const-pool, hex, IR, AST, ...) after a successful recompile&#10;- Add new methods/fields and regenerate &lt;clinit&gt; from static initializers&#10;- Remove methods dropped from source (constructors/synthetics guarded)&#10;- Materialize synthetic lambdas (rolls back on failure)&#10;&#10;LLVM Support:&#10;- View support for LLVM IR as a View">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Can create new classes from blank project now">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/NewClassDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/NewClassDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/service/ClassCreationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/service/ClassCreationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -220,14 +221,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00022" summary="- Heap analysis">
-      <option name="closed" value="true" />
-      <created>1766773989346</created>
-      <option name="number" value="00022" />
-      <option name="presentableId" value="LOCAL-00022" />
-      <option name="project" value="LOCAL" />
-      <updated>1766773989346</updated>
     </task>
     <task id="LOCAL-00023" summary="- Heap analysis: default args">
       <option name="closed" value="true" />
@@ -613,7 +606,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780737778707</updated>
     </task>
-    <option name="localTasksCounter" value="71" />
+    <task id="LOCAL-00071" summary="- support for changing class level of created classes">
+      <option name="closed" value="true" />
+      <created>1780795407428</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1780795407428</updated>
+    </task>
+    <option name="localTasksCounter" value="72" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -628,8 +629,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Updated api usage for YABR SSA IR changes" />
-    <MESSAGE value="- Updated api usage for YABR Expr/Stmt IR changes&#10;- vm service now correctly shuts down when closing current workspace" />
     <MESSAGE value="AST view" />
     <MESSAGE value="PDG/SDG/CPG views/analysis" />
     <MESSAGE value="- renaming capabilities" />
@@ -653,7 +652,9 @@
     <MESSAGE value="- cleanup" />
     <MESSAGE value="- cleanup &amp; bump" />
     <MESSAGE value="Fix recompiled changes not persisting to bytecode/export and surface results in the editor:&#10;- Per-method resilience: a method that can't lower keeps its original bytecode and reports a warning instead of aborting the whole class&#10;- Refresh all open views (bytecode, const-pool, hex, IR, AST, ...) after a successful recompile&#10;- Add new methods/fields and regenerate &lt;clinit&gt; from static initializers&#10;- Remove methods dropped from source (constructors/synthetics guarded)&#10;- Materialize synthetic lambdas (rolls back on failure)&#10;&#10;LLVM Support:&#10;- View support for LLVM IR as a View" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix recompiled changes not persisting to bytecode/export and surface results in the editor:&#10;- Per-method resilience: a method that can't lower keeps its original bytecode and reports a warning instead of aborting the whole class&#10;- Refresh all open views (bytecode, const-pool, hex, IR, AST, ...) after a successful recompile&#10;- Add new methods/fields and regenerate &lt;clinit&gt; from static initializers&#10;- Remove methods dropped from source (constructors/synthetics guarded)&#10;- Materialize synthetic lambdas (rolls back on failure)&#10;&#10;LLVM Support:&#10;- View support for LLVM IR as a View" />
+    <MESSAGE value="- support for changing class level of created classes" />
+    <MESSAGE value="- Can create new classes from blank project now" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Can create new classes from blank project now" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

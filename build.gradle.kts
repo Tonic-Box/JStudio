@@ -16,6 +16,10 @@ repositories {
     maven { url = uri("https://www.jitpack.io") }
 }
 
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
+}
+
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
