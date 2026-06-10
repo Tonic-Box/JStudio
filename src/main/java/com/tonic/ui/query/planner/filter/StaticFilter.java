@@ -29,10 +29,6 @@ public interface StaticFilter {
         return new AllFilter();
     }
 
-    static StaticFilter none() {
-        return new NoneFilter();
-    }
-
     class AllFilter implements StaticFilter {
         @Override
         public Set<MethodEntry> filterMethods(Stream<MethodEntry> methods) {
@@ -42,18 +38,6 @@ public interface StaticFilter {
         @Override
         public Set<ClassFile> filterClasses(Stream<ClassFile> classes) {
             return classes.collect(Collectors.toSet());
-        }
-    }
-
-    class NoneFilter implements StaticFilter {
-        @Override
-        public Set<MethodEntry> filterMethods(Stream<MethodEntry> methods) {
-            return Set.of();
-        }
-
-        @Override
-        public Set<ClassFile> filterClasses(Stream<ClassFile> classes) {
-            return Set.of();
         }
     }
 

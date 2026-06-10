@@ -1,16 +1,17 @@
 package com.tonic.ui.query.planner.visitor;
 
-import com.tonic.ui.query.ast.*;
+import com.tonic.ui.query.ast.AllScope;
+import com.tonic.ui.query.ast.ClassScope;
+import com.tonic.ui.query.ast.DuringScope;
+import com.tonic.ui.query.ast.MethodScope;
+import com.tonic.ui.query.ast.ScopeVisitor;
 import com.tonic.ui.query.planner.filter.PatternFilter;
 import com.tonic.ui.query.planner.filter.StaticFilter;
 
+/**
+ * Translates a {@link com.tonic.ui.query.ast.Scope} into a static prefilter over the candidate set.
+ */
 public class ScopeFilterVisitor implements ScopeVisitor<StaticFilter> {
-
-    private final StaticFilterBuildingVisitor predicateVisitor;
-
-    public ScopeFilterVisitor(StaticFilterBuildingVisitor predicateVisitor) {
-        this.predicateVisitor = predicateVisitor;
-    }
 
     @Override
     public StaticFilter visitAll(AllScope scope) {
@@ -37,15 +38,5 @@ public class ScopeFilterVisitor implements ScopeVisitor<StaticFilter> {
             return clinitFilter;
         }
         return PatternFilter.methodMatching(scope.methodPattern());
-    }
-
-    @Override
-    public StaticFilter visitBetween(BetweenScope scope) {
-        StaticFilter startFilter = scope.startEvent().accept(predicateVisitor);
-        StaticFilter endFilter = scope.endEvent().accept(predicateVisitor);
-        if (startFilter != null && endFilter != null) {
-            return startFilter.or(endFilter);
-        }
-        return StaticFilter.all();
     }
 }

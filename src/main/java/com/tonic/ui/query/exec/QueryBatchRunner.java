@@ -1,53 +1,52 @@
 package com.tonic.ui.query.exec;
 
-import com.tonic.analysis.xref.Xref;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
-import com.tonic.ui.query.ast.Predicate;
+import com.tonic.ui.query.ast.Condition;
+import com.tonic.ui.query.ast.OrderBy;
+import com.tonic.ui.query.ast.Query;
+import com.tonic.ui.query.ast.Target;
+import com.tonic.ui.query.eval.AttributeRegistry;
+import com.tonic.ui.query.eval.ConditionEvaluator;
+import com.tonic.ui.query.eval.DefaultAttributes;
+import com.tonic.ui.query.eval.EvalContext;
+import com.tonic.ui.query.eval.EvidenceCollector;
+import com.tonic.ui.query.eval.Subject;
 import com.tonic.ui.query.planner.ClickTarget;
 import com.tonic.ui.query.planner.ProbePlan;
 import com.tonic.ui.query.planner.ResultRow;
 import com.tonic.ui.query.planner.filter.StaticFilter;
-import com.tonic.ui.query.planner.filter.XrefMethodFilter;
-import com.tonic.ui.vm.testgen.MethodFuzzer;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Executes a {@link ProbePlan} by evaluating its query condition over the scope-filtered candidates
+ * with the registry-driven {@link ConditionEvaluator}. Matches are projected into navigable
+ * {@link ResultRow}s whose children point at the bytecode evidence the evaluator collected.
+ */
 public class QueryBatchRunner {
 
-    private final ClassPool classPool;
-    private final QueryExecutor executor;
+    private static final AttributeRegistry REGISTRY = DefaultAttributes.create();
 
-    private int maxMethodsToRun = 100;
-    private int seedsPerMethod = 5;
+    private final ClassPool classPool;
+
     private long timeBudgetMs = 60_000;
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
     private Set<String> userClassNames;
 
     public QueryBatchRunner(ClassPool classPool) {
         this.classPool = classPool;
-        this.executor = new QueryExecutor();
     }
 
     public void setUserClassNames(Set<String> userClassNames) {
         this.userClassNames = userClassNames;
-    }
-
-    public void setMaxMethodsToRun(int max) {
-        this.maxMethodsToRun = max;
-    }
-
-    public void setSeedsPerMethod(int seeds) {
-        this.seedsPerMethod = seeds;
     }
 
     public void setTimeBudgetMs(long ms) {
@@ -62,259 +61,158 @@ public class QueryBatchRunner {
         cancelled.set(false);
         long startTime = System.currentTimeMillis();
 
-        StaticFilter filter = plan.staticFilter();
+        StaticFilter scopeFilter = plan.staticFilter();
+        Target target = plan.originalQuery().target();
+        Condition condition = plan.originalQuery().condition();
+        ConditionEvaluator evaluator = new ConditionEvaluator(REGISTRY);
 
-        Stream<ClassFile> classStream = classPool.getClasses().stream();
-        if (userClassNames != null && !userClassNames.isEmpty()) {
-            classStream = classStream.filter(cf -> userClassNames.contains(cf.getClassName()));
-        }
+        List<ClassFile> classes = classPool.getClasses().stream()
+                .filter(cf -> userClassNames == null || userClassNames.isEmpty()
+                        || userClassNames.contains(cf.getClassName()))
+                .collect(Collectors.toList());
 
-        Stream<MethodEntry> allMethods = classStream.flatMap(cf -> cf.getMethods().stream());
+        List<ResultRow> rows = new ArrayList<>();
+        int candidateCount;
 
-        Set<MethodEntry> candidateMethods = filter.filterMethods(allMethods);
-
-        if (listener != null) {
-            listener.onPhaseStart("Filtering", candidateMethods.size());
-        }
-
-        Predicate predicate = plan.originalQuery().predicate();
-        boolean predicateStatic = predicate != null && predicate.isStaticallyResolvable();
-        boolean hasXref = plan.hasXrefBackedFilter();
-        boolean isStaticOnly = predicateStatic && hasXref;
-
-        XrefMethodFilter.setStaticMode(isStaticOnly);
-
-        if (isStaticOnly) {
-            List<ResultRow> matchingRows = new ArrayList<>();
-            Map<String, List<Xref>> xrefsByMethod =
-                XrefMethodFilter.getLastXrefsByMethod();
-
-            int count = 0;
-            int totalCallSites = 0;
-            for (MethodEntry method : candidateMethods) {
-                String className = method.getOwnerName();
-                String methodName = method.getName();
-                String desc = method.getDesc();
-                String signature = className + "." + methodName + desc;
-
-                List<Xref> xrefs = xrefsByMethod.getOrDefault(signature, Collections.emptyList());
-                totalCallSites += xrefs.size();
-
-                List<ResultRow> children = new ArrayList<>();
-                for (Xref xref : xrefs) {
-                    int pc = xref.getInstructionIndex();
-                    int line = xref.getLineNumber();
-                    String childLabel = (line > 0 ? "line " + line : "pc " + pc) +
-                        " -> " + xref.getTargetDisplay();
-
-                    ClickTarget childTarget = new ClickTarget.PCTarget(className, methodName, desc, pc);
-                    Map<String, Object> childColumns = new LinkedHashMap<>();
-                    childColumns.put("line", line > 0 ? line : "-");
-                    childColumns.put("pc", pc);
-                    childColumns.put("target", xref.getTargetDisplay());
-
-                    ResultRow child = ResultRow.builder(childLabel)
-                        .target(childTarget)
-                        .column("line", line > 0 ? line : "-")
-                        .column("pc", pc)
-                        .column("target", xref.getTargetDisplay())
-                        .asChild()
-                        .build();
-                    children.add(child);
-                }
-
-                ClickTarget target = new ClickTarget.MethodTarget(className, methodName, desc);
-                String displayLabel = signature + " (" + xrefs.size() + " call site" +
-                    (xrefs.size() != 1 ? "s" : "") + ")";
-
-                ResultRow row = ResultRow.builder(displayLabel)
-                    .target(target)
-                    .column("class", className)
-                    .column("method", methodName)
-                    .column("sites", xrefs.size())
-                    .children(children)
-                    .build();
-                matchingRows.add(row);
-
-                count++;
-                if (listener != null && count % 10 == 0) {
-                    listener.onProgress(count, candidateMethods.size(),
-                        "Found " + count + " methods, " + totalCallSites + " call sites (static)");
-                }
-            }
-
+        if (target == Target.CLASSES) {
+            Set<ClassFile> candidates = scopeFilter.filterClasses(classes.stream());
+            candidateCount = candidates.size();
             if (listener != null) {
-                listener.onComplete(matchingRows.size());
+                listener.onPhaseStart("Evaluating", candidateCount);
             }
-
-            long elapsed = System.currentTimeMillis() - startTime;
-            return new QueryBatchResult(
-                Collections.emptyList(),
-                matchingRows,
-                candidateMethods.size(),
-                0,
-                totalCallSites,
-                elapsed,
-                false
-            );
-        }
-
-        List<MethodEntry> methodsToRun = new ArrayList<>();
-        for (MethodEntry method : candidateMethods) {
-            if (isExecutable(method)) {
-                methodsToRun.add(method);
-                if (methodsToRun.size() >= maxMethodsToRun) {
-                    break;
+            for (ClassFile cf : candidates) {
+                if (cancelled.get() || overBudget(startTime)) break;
+                EvalContext ctx = new EvalContext(cf, null, new EvidenceCollector());
+                if (condition == null || evaluator.eval(condition, new Subject.ClassSubject(cf, ctx))) {
+                    rows.add(classRow(cf));
                 }
             }
-        }
-
-        List<QueryExecutor.QueryExecutionResult> allResults = new ArrayList<>();
-        List<ResultRow> matchingRows = new ArrayList<>();
-
-        AtomicInteger completed = new AtomicInteger(0);
-        int totalToRun = methodsToRun.size();
-
-        if (listener != null) {
-            listener.onPhaseStart("Executing", totalToRun);
-        }
-
-        for (MethodEntry method : methodsToRun) {
-            if (cancelled.get()) {
-                break;
-            }
-
-            long elapsed = System.currentTimeMillis() - startTime;
-            if (elapsed > timeBudgetMs) {
-                break;
-            }
-
-            List<Object[]> inputSets = generateInputs(method);
-
-            for (Object[] inputs : inputSets) {
-                if (cancelled.get()) break;
-
-                QueryExecutor.QueryExecutionResult result = executor.execute(plan, method, inputs);
-                allResults.add(result);
-
-                if (result.isMatch()) {
-                    List<ResultRow> rows = plan.projector().project(result.probeResult());
-                    matchingRows.addAll(rows);
-                }
-            }
-
-            int done = completed.incrementAndGet();
+        } else {
+            Stream<MethodEntry> allMethods = classes.stream().flatMap(cf -> cf.getMethods().stream());
+            Set<MethodEntry> candidates = scopeFilter.filterMethods(allMethods);
+            candidateCount = candidates.size();
             if (listener != null) {
-                listener.onProgress(done, totalToRun,
-                    "Executed " + done + "/" + totalToRun + " methods");
+                listener.onPhaseStart("Evaluating", candidateCount);
+            }
+            int scanned = 0;
+            for (ClassFile cf : classes) {
+                if (cancelled.get() || overBudget(startTime)) break;
+                for (MethodEntry method : cf.getMethods()) {
+                    if (!candidates.contains(method)) continue;
+                    EvidenceCollector evidence = new EvidenceCollector();
+                    EvalContext ctx = new EvalContext(cf, method, evidence);
+                    if (condition == null || evaluator.eval(condition, new Subject.MethodSubject(method, ctx))) {
+                        rows.add(methodRow(method, evidence));
+                    }
+                    if (listener != null && ++scanned % 200 == 0) {
+                        listener.onProgress(scanned, candidateCount, "Matched " + rows.size());
+                    }
+                }
             }
         }
 
-        long endTime = System.currentTimeMillis();
+        rows = applyOrderingAndLimit(rows, plan.originalQuery());
 
         if (listener != null) {
-            listener.onComplete(matchingRows.size());
+            listener.onComplete(rows.size());
         }
 
-        return new QueryBatchResult(
-            allResults,
-            matchingRows,
-            candidateMethods.size(),
-            methodsToRun.size(),
-            allResults.size(),
-            endTime - startTime,
-            cancelled.get()
-        );
+        return new QueryBatchResult(rows, cancelled.get());
     }
 
-    private boolean isExecutable(MethodEntry method) {
-        int access = method.getAccess();
-
-        if ((access & 0x0400) != 0) return false;
-        if ((access & 0x0100) != 0) return false;
-
-        return method.getCodeAttribute() != null;
+    /** Applies the query's {@code ORDER BY} (sort by a result column) then {@code LIMIT} (truncate). */
+    private static List<ResultRow> applyOrderingAndLimit(List<ResultRow> rows, Query query) {
+        OrderBy orderBy = query.orderBy();
+        if (orderBy != null) {
+            Comparator<ResultRow> cmp = (a, b) ->
+                    compareValues(a.getColumn(orderBy.key()), b.getColumn(orderBy.key()));
+            rows.sort(orderBy.ascending() ? cmp : cmp.reversed());
+        }
+        Integer limit = query.limit();
+        if (limit != null && limit >= 0 && rows.size() > limit) {
+            return new ArrayList<>(rows.subList(0, limit));
+        }
+        return rows;
     }
 
-    private List<Object[]> generateInputs(MethodEntry method) {
+    /** Orders two column values numerically when both look numeric, else case-insensitively by text. */
+    private static int compareValues(Object a, Object b) {
+        if (a == null && b == null) return 0;
+        if (a == null) return -1;
+        if (b == null) return 1;
+        Double na = toNumber(a);
+        Double nb = toNumber(b);
+        if (na != null && nb != null) {
+            return Double.compare(na, nb);
+        }
+        return a.toString().compareToIgnoreCase(b.toString());
+    }
+
+    private static Double toNumber(Object o) {
+        if (o instanceof Number) {
+            return ((Number) o).doubleValue();
+        }
+        try {
+            return Double.parseDouble(o.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private boolean overBudget(long startTime) {
+        return System.currentTimeMillis() - startTime > timeBudgetMs;
+    }
+
+    private ResultRow methodRow(MethodEntry method, EvidenceCollector evidence) {
         String className = method.getOwnerName();
         String methodName = method.getName();
-        String descriptor = method.getDesc();
+        String desc = method.getDesc();
 
-        MethodFuzzer.FuzzConfig config = new MethodFuzzer.FuzzConfig();
-        config.setIterationsPerType(2);
-        config.setIncludeEdgeCases(true);
-        config.setIncludeNulls(true);
-        config.setIncludeRandom(true);
-
-        try {
-            MethodFuzzer fuzzer = new MethodFuzzer(className, methodName, descriptor, config);
-            List<Object[]> allInputs = fuzzer.generateInputSets();
-
-            if (allInputs.size() > seedsPerMethod) {
-                return selectDiverse(allInputs, seedsPerMethod);
-            }
-            return allInputs;
-
-        } catch (Exception e) {
-            List<Object[]> fallback = new ArrayList<>();
-            fallback.add(new Object[0]);
-            return fallback;
+        List<ResultRow> children = new ArrayList<>();
+        for (EvidenceCollector.Hit hit : evidence.hits()) {
+            ClickTarget childTarget = new ClickTarget.PCTarget(hit.className(), hit.methodName(), hit.descriptor(), hit.pc());
+            children.add(ResultRow.builder(hit.label())
+                    .target(childTarget)
+                    .column("pc", hit.pc())
+                    .asChild()
+                    .build());
         }
+
+        String signature = className + "." + methodName + desc;
+        String label = children.isEmpty() ? signature
+                : signature + " (" + children.size() + " match" + (children.size() != 1 ? "es" : "") + ")";
+
+        return ResultRow.builder(label)
+                .target(new ClickTarget.MethodTarget(className, methodName, desc))
+                .column("class", className)
+                .column("method", methodName)
+                .column("matches", children.size())
+                .children(children)
+                .build();
     }
 
-    private List<Object[]> selectDiverse(List<Object[]> inputs, int max) {
-        if (inputs.size() <= max) {
-            return inputs;
-        }
-
-        List<Object[]> selected = new ArrayList<>();
-        int step = inputs.size() / max;
-
-        for (int i = 0; i < max && i * step < inputs.size(); i++) {
-            selected.add(inputs.get(i * step));
-        }
-
-        return selected;
+    private ResultRow classRow(ClassFile cf) {
+        return ResultRow.builder(cf.getClassName())
+                .target(new ClickTarget.ClassTarget(cf.getClassName()))
+                .column("class", cf.getClassName())
+                .build();
     }
 
     public static final class QueryBatchResult {
-        private final List<QueryExecutor.QueryExecutionResult> allExecutions;
         private final List<ResultRow> matchingRows;
-        private final int candidateMethodCount;
-        private final int executedMethodCount;
-        private final int totalExecutions;
-        private final long totalTimeMs;
         private final boolean wasCancelled;
 
-        public QueryBatchResult(List<QueryExecutor.QueryExecutionResult> allExecutions,
-                                List<ResultRow> matchingRows, int candidateMethodCount,
-                                int executedMethodCount, int totalExecutions,
-                                long totalTimeMs, boolean wasCancelled) {
-            this.allExecutions = allExecutions;
+        public QueryBatchResult(List<ResultRow> matchingRows, boolean wasCancelled) {
             this.matchingRows = matchingRows;
-            this.candidateMethodCount = candidateMethodCount;
-            this.executedMethodCount = executedMethodCount;
-            this.totalExecutions = totalExecutions;
-            this.totalTimeMs = totalTimeMs;
             this.wasCancelled = wasCancelled;
         }
 
-        public List<QueryExecutor.QueryExecutionResult> allExecutions() { return allExecutions; }
-        public List<ResultRow> matchingRows() { return matchingRows; }
-        public int candidateMethodCount() { return candidateMethodCount; }
-        public int executedMethodCount() { return executedMethodCount; }
-        public int totalExecutions() { return totalExecutions; }
-        public long totalTimeMs() { return totalTimeMs; }
-        public boolean wasCancelled() { return wasCancelled; }
-
-        public int matchCount() {
-            return matchingRows.size();
+        public List<ResultRow> matchingRows() {
+            return matchingRows;
         }
 
-        public double matchRate() {
-            if (totalExecutions == 0) return 0.0;
-            return (double) matchCount() / totalExecutions;
+        public boolean wasCancelled() {
+            return wasCancelled;
         }
     }
 

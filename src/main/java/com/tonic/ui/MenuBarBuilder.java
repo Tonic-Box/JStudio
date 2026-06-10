@@ -226,18 +226,17 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Query Explorer...", KeyEvent.VK_Q, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                Icons.getIcon("search"), e -> mainFrame.showQueryExplorer()));
+        menu.add(createMenuItem("Similarity", 0, 0,
+                Icons.getIcon("analyze"), e -> mainFrame.showSimilarityAnalysis()));
 
-        menu.addSeparator();
+        menu.add(createMenuItem("Search", 0, 0,
+                Icons.getIcon("search"), e -> mainFrame.showSearchAnalysis()));
 
-        menu.add(createMenuItem("Show Dependencies", 0, 0,
-                Icons.getIcon("dependency"), e -> mainFrame.showDependencies()));
+        menu.add(createMenuItem("Strings", 0, 0,
+                Icons.getIcon("analyze"), e -> mainFrame.showStringsAnalysis()));
 
-        menu.addSeparator();
-
-        menu.add(createMenuItem("Simulation Analysis", KeyEvent.VK_F10, 0,
-                Icons.getIcon("analyze"), e -> mainFrame.runSimulationAnalysis()));
+        menu.add(createMenuItem("Code Analysis", KeyEvent.VK_F10, 0,
+                Icons.getIcon("analyze"), e -> mainFrame.runCodeAnalysis()));
 
         return menu;
     }

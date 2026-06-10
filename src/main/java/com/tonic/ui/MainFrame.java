@@ -118,7 +118,8 @@ public class MainFrame extends JFrame {
     private com.tonic.ui.vm.heap.HeapForensicsPanel heapForensicsPanel;
     private JDialog deobfuscationDialog;
     private DeobfuscationPanel deobfuscationPanel;
-    private com.tonic.ui.query.QueryDialog queryDialog;
+    private com.tonic.ui.query.QueryExplorerPanel queryExplorerPanel;
+    private com.tonic.ui.core.component.ToolWindowPane rightToolWindow;
 
     // Bottom panel with tabbed results
     private BottomPanel sidePanel;
@@ -231,6 +232,12 @@ public class MainFrame extends JFrame {
         consolePanel = new ConsolePanel();
         statusBar = new StatusBar();
 
+        // Right-edge tool windows: Inspector (default) over a vertical tab stripe, plus Query Explorer
+        queryExplorerPanel = new com.tonic.ui.query.QueryExplorerPanel(this);
+        rightToolWindow = new com.tonic.ui.core.component.ToolWindowPane();
+        rightToolWindow.addTool("Inspector", propertiesPanel);
+        rightToolWindow.addTool("Query", queryExplorerPanel);
+
         // Bottom panel with tabbed results (Find Usages, Bookmarks, Comments)
         sidePanel = new BottomPanel();
         sidePanel.setEditorPanel(editorPanel);
@@ -280,7 +287,7 @@ public class MainFrame extends JFrame {
 
         // Right side vertical split (Properties over Console)
         rightVerticalSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                propertiesPanel, consolePanel);
+                rightToolWindow, consolePanel);
         rightVerticalSplit.setResizeWeight(0.7);
         rightVerticalSplit.setDividerSize(4);
         rightVerticalSplit.setBorder(null);
@@ -653,7 +660,9 @@ public class MainFrame extends JFrame {
                     if (lastSlash > 0) {
                         String packageDir = className.substring(0, lastSlash);
                         targetDir = new File(outputDir, packageDir);
-                        targetDir.mkdirs();
+                        if (!targetDir.mkdirs() && !targetDir.isDirectory()) {
+                            throw new IOException("Could not create directory: " + targetDir);
+                        }
                     }
 
                     String simpleName = lastSlash > 0 ? className.substring(lastSlash + 1) : className;
@@ -886,6 +895,7 @@ public class MainFrame extends JFrame {
         saveSettings();
 
         statusBar.dispose();
+        queryExplorerPanel.shutdown();
         dispose();
         System.exit(0);
     }
@@ -973,24 +983,8 @@ public class MainFrame extends JFrame {
         switchToView(ViewMode.IR);
     }
 
-    public void switchToASTView() {
-        switchToView(ViewMode.AST);
-    }
-
     public void switchToHexView() {
         switchToView(ViewMode.HEX);
-    }
-
-    public void switchToPDGView() {
-        switchToView(ViewMode.PDG);
-    }
-
-    public void switchToSDGView() {
-        switchToView(ViewMode.SDG);
-    }
-
-    public void switchToCPGView() {
-        switchToView(ViewMode.CPG);
     }
 
     public void setOmitAnnotations(boolean omit) {
@@ -1011,13 +1005,13 @@ public class MainFrame extends JFrame {
     }
 
     public void togglePropertiesPanel() {
-        if (propertiesPanel.isVisible()) {
+        if (rightToolWindow.isVisible()) {
             savedPropertiesDivider = leftRightSplit.getDividerLocation();
-            propertiesPanel.setVisible(false);
+            rightToolWindow.setVisible(false);
             rightVerticalSplit.setDividerLocation(rightVerticalSplit.getHeight());
             leftRightSplit.setDividerLocation(leftRightSplit.getWidth());
         } else {
-            propertiesPanel.setVisible(true);
+            rightToolWindow.setVisible(true);
             if (savedPropertiesDivider > 0) {
                 leftRightSplit.setDividerLocation(savedPropertiesDivider);
             } else {
@@ -1260,40 +1254,31 @@ public class MainFrame extends JFrame {
         analysisDialog.toFront();
     }
 
-    public void showDependencies() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        showAnalysisDialog();
-        analysisPanel.showDependencies();
-
-        // Build dependencies if not already built
-        analysisPanel.getDependencyPanel().buildDependencyGraph();
-
-        // If a class is selected, focus on it
-        ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass != null) {
-            analysisPanel.getDependencyPanel().focusOnClass(currentClass.getClassName());
+    public void showSimilarityAnalysis() {
+        if (openAnalysisDialog()) {
+            analysisPanel.showSimilarity();
         }
     }
 
-    public void showDependenciesForClass(String className) {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+    public void showSearchAnalysis() {
+        if (openAnalysisDialog()) {
+            analysisPanel.showSearch();
+        }
+    }
+
+    public void showStringsAnalysis() {
+        if (openAnalysisDialog()) {
+            analysisPanel.showStrings();
+        }
+    }
+
+    private boolean openAnalysisDialog() {
+        if (ProjectService.getInstance().getCurrentProject() == null) {
             showWarning("No project loaded.");
-            return;
+            return false;
         }
-
         showAnalysisDialog();
-        analysisPanel.showDependencies();
-        analysisPanel.getDependencyPanel().buildDependencyGraph();
-
-        if (className != null) {
-            analysisPanel.getDependencyPanel().focusOnClass(className);
-        }
+        return true;
     }
 
     // === Transform Operations ===
@@ -1576,15 +1561,6 @@ public class MainFrame extends JFrame {
         worker.execute();
     }
 
-    // === Search Operations ===
-
-    public void searchClasses(String query) {
-        if (query == null || query.trim().isEmpty()) {
-            return;
-        }
-        navigatorPanel.filterByName(query.trim());
-    }
-
     // === Help Operations ===
 
     public void showKeyboardShortcuts() {
@@ -1631,7 +1607,6 @@ public class MainFrame extends JFrame {
                 "Analysis:\n" +
                 "  F9             Run Analysis\n" +
                 "  F10            Simulation Analysis\n" +
-                "  " + mod + "+Shift+Q   Query Explorer\n" +
                 "  " + mod + "+Shift+G   Call Graph\n\n" +
                 "Transform:\n" +
                 "  " + mod + "+Shift+T   Apply Transforms\n" +
@@ -1688,7 +1663,7 @@ public class MainFrame extends JFrame {
     /**
      * Run simulation analysis on the current method or class.
      */
-    public void runSimulationAnalysis() {
+    public void runCodeAnalysis() {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project == null) {
             showWarning("No project loaded.");
@@ -1842,23 +1817,6 @@ public class MainFrame extends JFrame {
             heapForensicsDialog.add(heapForensicsPanel);
         }
         heapForensicsDialog.setVisible(true);
-    }
-
-    public void showQueryExplorer() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded. Load a JAR or class file first.");
-            return;
-        }
-
-        if (queryDialog == null) {
-            queryDialog = new com.tonic.ui.query.QueryDialog(
-                    this,
-                    project.getClassPool(),
-                    project::getXrefDatabase
-            );
-        }
-        queryDialog.setVisible(true);
     }
 
     /**

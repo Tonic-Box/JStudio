@@ -31,10 +31,6 @@ public final class DuringScope implements Scope {
         return classFilter;
     }
 
-    public static DuringScope clinit() {
-        return new DuringScope("<clinit>", true, null);
-    }
-
     public static DuringScope clinitOf(ClassScope classFilter) {
         return new DuringScope("<clinit>", true, classFilter);
     }

@@ -9,6 +9,4 @@ public interface ScopeVisitor<T> {
     T visitMethod(MethodScope scope);
 
     T visitDuring(DuringScope scope);
-
-    T visitBetween(BetweenScope scope);
 }

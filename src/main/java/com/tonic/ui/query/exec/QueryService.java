@@ -1,6 +1,5 @@
 package com.tonic.ui.query.exec;
 
-import com.tonic.analysis.xref.XrefDatabase;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.query.ast.Query;
 import com.tonic.ui.query.parser.ParseException;
@@ -19,23 +18,17 @@ import java.util.concurrent.Executors;
 public class QueryService {
 
     private final ClassPool classPool;
-    private final java.util.function.Supplier<XrefDatabase> xrefDatabaseSupplier;
     private final QueryParser parser;
     private final ExecutorService executorService;
 
     private QueryBatchRunner currentRunner;
     private Set<String> userClassNames;
 
-    public QueryService(ClassPool classPool, XrefDatabase xrefDatabase) {
-        this(classPool, () -> xrefDatabase);
-    }
-
-    public QueryService(ClassPool classPool, java.util.function.Supplier<XrefDatabase> xrefDatabaseSupplier) {
+    public QueryService(ClassPool classPool) {
         this.classPool = classPool;
-        this.xrefDatabaseSupplier = xrefDatabaseSupplier;
         this.parser = new QueryParser();
         this.executorService = Executors.newSingleThreadExecutor(r -> {
-            Thread t = new Thread(r, "QueryExecutor");
+            Thread t = new Thread(r, "QueryRunner");
             t.setDaemon(true);
             return t;
         });
@@ -50,7 +43,7 @@ public class QueryService {
     }
 
     public ProbePlan plan(Query query) {
-        QueryPlanner planner = new QueryPlanner(xrefDatabaseSupplier.get());
+        QueryPlanner planner = new QueryPlanner();
         return planner.plan(query);
     }
 
@@ -89,8 +82,6 @@ public class QueryService {
         }
 
         if (config != null) {
-            runner.setMaxMethodsToRun(config.maxMethods());
-            runner.setSeedsPerMethod(config.seedsPerMethod());
             runner.setTimeBudgetMs(config.timeBudgetMs());
         }
 
@@ -141,9 +132,7 @@ public class QueryService {
             this.error = error;
         }
 
-        public String queryText() { return queryText; }
         public Query query() { return query; }
-        public ProbePlan plan() { return plan; }
         public List<ResultRow> results() { return results; }
         public long executionTimeMs() { return executionTimeMs; }
         public boolean completed() { return completed; }
@@ -177,26 +166,16 @@ public class QueryService {
         }
     }
 
+    /** Runtime knobs for a query run. Currently just the wall-clock budget that aborts long scans. */
     public static final class QueryConfig {
-        private final int maxMethods;
-        private final int seedsPerMethod;
         private final long timeBudgetMs;
-        private final int maxInstructionsPerRun;
 
-        public QueryConfig(int maxMethods, int seedsPerMethod, long timeBudgetMs, int maxInstructionsPerRun) {
-            this.maxMethods = maxMethods;
-            this.seedsPerMethod = seedsPerMethod;
+        public QueryConfig(long timeBudgetMs) {
             this.timeBudgetMs = timeBudgetMs;
-            this.maxInstructionsPerRun = maxInstructionsPerRun;
         }
 
-        public int maxMethods() { return maxMethods; }
-        public int seedsPerMethod() { return seedsPerMethod; }
-        public long timeBudgetMs() { return timeBudgetMs; }
-        public int maxInstructionsPerRun() { return maxInstructionsPerRun; }
-
-        public static QueryConfig defaultConfig() {
-            return new QueryConfig(100, 5, 60_000, 100_000);
+        public long timeBudgetMs() {
+            return timeBudgetMs;
         }
 
         public static Builder builder() {
@@ -207,46 +186,24 @@ public class QueryService {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (!(o instanceof QueryConfig)) return false;
-            QueryConfig that = (QueryConfig) o;
-            return maxMethods == that.maxMethods &&
-                   seedsPerMethod == that.seedsPerMethod &&
-                   timeBudgetMs == that.timeBudgetMs &&
-                   maxInstructionsPerRun == that.maxInstructionsPerRun;
+            return timeBudgetMs == ((QueryConfig) o).timeBudgetMs;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(maxMethods, seedsPerMethod, timeBudgetMs, maxInstructionsPerRun);
+            return Objects.hash(timeBudgetMs);
         }
 
         public static class Builder {
-            private int maxMethods = 100;
-            private int seedsPerMethod = 5;
             private long timeBudgetMs = 60_000;
-            private int maxInstructionsPerRun = 100_000;
-
-            public Builder maxMethods(int max) {
-                this.maxMethods = max;
-                return this;
-            }
-
-            public Builder seedsPerMethod(int seeds) {
-                this.seedsPerMethod = seeds;
-                return this;
-            }
 
             public Builder timeBudgetMs(long ms) {
                 this.timeBudgetMs = ms;
                 return this;
             }
 
-            public Builder maxInstructionsPerRun(int max) {
-                this.maxInstructionsPerRun = max;
-                return this;
-            }
-
             public QueryConfig build() {
-                return new QueryConfig(maxMethods, seedsPerMethod, timeBudgetMs, maxInstructionsPerRun);
+                return new QueryConfig(timeBudgetMs);
             }
         }
     }

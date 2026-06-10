@@ -29,13 +29,6 @@ public class PatternFilter implements StaticFilter {
         return new PatternFilter(null, Pattern.compile(regex));
     }
 
-    public static PatternFilter classAndMethod(String classRegex, String methodRegex) {
-        return new PatternFilter(
-            classRegex != null ? Pattern.compile(classRegex) : null,
-            methodRegex != null ? Pattern.compile(methodRegex) : null
-        );
-    }
-
     public static PatternFilter clinitMethods() {
         return methodMatching(".*\\.<clinit>\\(\\)V");
     }

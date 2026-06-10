@@ -2,97 +2,15 @@ package com.tonic.ui.query.util;
 
 import com.tonic.analysis.CodeWriter;
 import com.tonic.analysis.instruction.*;
-import com.tonic.analysis.xref.Xref;
-import com.tonic.parser.MethodEntry;
 import com.tonic.ui.query.ast.ArgumentType;
 
-import java.util.ArrayList;
-import java.util.List;
-
+/**
+ * Static helpers for classifying invoke-instruction arguments by how they are produced; backs the
+ * {@code arg(n).type}/{@code arg(n).kind} attributes via {@link com.tonic.ui.query.eval.ArgValueResolver}.
+ */
 public class ArgumentTypeAnalyzer {
 
-    public static ArgumentType analyzeFirstArgument(MethodEntry sourceMethod, Xref xref) {
-        if (sourceMethod == null || sourceMethod.getCodeAttribute() == null) {
-            return ArgumentType.ANY;
-        }
-
-        try {
-            CodeWriter codeWriter = new CodeWriter(sourceMethod);
-            int targetIndex = xref.getInstructionIndex();
-            if (targetIndex < 0) {
-                return ArgumentType.ANY;
-            }
-
-            Instruction invokeInstr = codeWriter.getInstructionAt(targetIndex);
-            if (!isInvokeInstruction(invokeInstr)) {
-                return ArgumentType.ANY;
-            }
-
-            int argCount = getArgumentCount(invokeInstr);
-            if (argCount == 0) {
-                return ArgumentType.ANY;
-            }
-
-            Instruction argInstr = findArgumentProducer(codeWriter, targetIndex, 0, argCount, invokeInstr);
-            if (argInstr == null) {
-                return ArgumentType.ANY;
-            }
-
-            return classifyInstruction(argInstr);
-        } catch (Exception e) {
-            return ArgumentType.ANY;
-        }
-    }
-
-    public static List<ArgumentType> analyzeAllArguments(MethodEntry sourceMethod, Xref xref) {
-        List<ArgumentType> result = new ArrayList<>();
-        if (sourceMethod == null || sourceMethod.getCodeAttribute() == null) {
-            return result;
-        }
-
-        try {
-            CodeWriter codeWriter = new CodeWriter(sourceMethod);
-            int targetIndex = xref.getInstructionIndex();
-            if (targetIndex < 0) {
-                return result;
-            }
-
-            Instruction invokeInstr = codeWriter.getInstructionAt(targetIndex);
-            if (!isInvokeInstruction(invokeInstr)) {
-                return result;
-            }
-
-            int argCount = getArgumentCount(invokeInstr);
-            for (int i = 0; i < argCount; i++) {
-                Instruction argInstr = findArgumentProducer(codeWriter, targetIndex, i, argCount, invokeInstr);
-                if (argInstr == null) {
-                    result.add(ArgumentType.ANY);
-                } else {
-                    result.add(classifyInstruction(argInstr));
-                }
-            }
-
-            return result;
-        } catch (Exception e) {
-            return result;
-        }
-    }
-
-    public static boolean hasArgumentOfType(MethodEntry sourceMethod, Xref xref, ArgumentType targetType) {
-        if (targetType == ArgumentType.ANY) {
-            return true;
-        }
-
-        List<ArgumentType> argTypes = analyzeAllArguments(sourceMethod, xref);
-        for (ArgumentType actual : argTypes) {
-            if (targetType.matches(actual)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean isInvokeInstruction(Instruction instr) {
+    public static boolean isInvokeInstruction(Instruction instr) {
         return instr instanceof InvokeVirtualInstruction
             || instr instanceof InvokeStaticInstruction
             || instr instanceof InvokeSpecialInstruction
@@ -100,7 +18,7 @@ public class ArgumentTypeAnalyzer {
             || instr instanceof InvokeDynamicInstruction;
     }
 
-    private static int getArgumentCount(Instruction invokeInstr) {
+    public static int getArgumentCount(Instruction invokeInstr) {
         String desc = getDescriptor(invokeInstr);
         if (desc == null) {
             return 0;
@@ -108,7 +26,7 @@ public class ArgumentTypeAnalyzer {
         return countDescriptorArguments(desc);
     }
 
-    private static int countDescriptorArguments(String desc) {
+    public static int countDescriptorArguments(String desc) {
         if (desc == null || !desc.startsWith("(")) {
             return 0;
         }
@@ -136,11 +54,7 @@ public class ArgumentTypeAnalyzer {
         return count;
     }
 
-    private static Instruction findArgumentProducer(CodeWriter codeWriter, int invokeIndex,
-                                                    int argIndex, int totalArgs, Instruction invokeInstr) {
-        boolean isInstanceCall = !(invokeInstr instanceof InvokeStaticInstruction)
-                              && !(invokeInstr instanceof InvokeDynamicInstruction);
-
+    public static Instruction findArgumentProducer(CodeWriter codeWriter, int invokeIndex, int argIndex, int totalArgs, Instruction invokeInstr) {
         int slotsToSkip = 0;
         String desc = getDescriptor(invokeInstr);
         if (desc != null) {
@@ -173,7 +87,7 @@ public class ArgumentTypeAnalyzer {
         return null;
     }
 
-    private static String getDescriptor(Instruction invokeInstr) {
+    public static String getDescriptor(Instruction invokeInstr) {
         if (invokeInstr instanceof InvokeVirtualInstruction) {
             return ((InvokeVirtualInstruction) invokeInstr).getMethodDescriptor();
         } else if (invokeInstr instanceof InvokeStaticInstruction) {
@@ -234,7 +148,7 @@ public class ArgumentTypeAnalyzer {
             || instr instanceof ATHROWInstruction;
     }
 
-    private static ArgumentType classifyInstruction(Instruction instr) {
+    public static ArgumentType classifyInstruction(Instruction instr) {
         if (instr instanceof LdcInstruction
             || instr instanceof LdcWInstruction
             || instr instanceof Ldc2WInstruction

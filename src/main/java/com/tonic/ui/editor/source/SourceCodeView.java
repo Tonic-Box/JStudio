@@ -404,10 +404,10 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
         menu.addSeparator();
 
-        // Run Simulation Analysis
-        JMenuItem simulationItem = createMenuItem("Run Simulation Analysis", Icons.getIcon("analyze"));
-        simulationItem.addActionListener(ev -> runSimulationAnalysis());
-        menu.add(simulationItem);
+        // Run Code Analysis
+        JMenuItem codeAnalysisItem = createMenuItem("Run Code Analysis", Icons.getIcon("analyze"));
+        codeAnalysisItem.addActionListener(ev -> runCodeAnalysis());
+        menu.add(codeAnalysisItem);
 
         menu.addSeparator();
 
@@ -500,13 +500,13 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         }
     }
 
-    private void runSimulationAnalysis() {
+    private void runCodeAnalysis() {
         java.awt.Container parent = getParent();
         while (parent != null && !(parent instanceof MainFrame)) {
             parent = parent.getParent();
         }
         if (parent != null) {
-            ((MainFrame) parent).runSimulationAnalysis();
+            ((MainFrame) parent).runCodeAnalysis();
         }
     }
 
@@ -1446,7 +1446,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private static final java.util.regex.Pattern METHOD_DECL_PATTERN = java.util.regex.Pattern.compile(
         "^\\s*(?:public|private|protected|static|final|abstract|synchronized|native|strictfp|\\s)*" +
         "(?:<[^>]+>\\s*)?" +
-        "\\w+(?:<[^>]*>)?(?:\\[\\])*\\s+" +
+        "\\w+(?:<[^>]*>)?(?:\\[])*\\s+" +
         "(\\w+)\\s*\\("
     );
 
@@ -1476,7 +1476,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
     private static final java.util.regex.Pattern FIELD_DECL_PATTERN = java.util.regex.Pattern.compile(
         "^\\s*(?:public|private|protected|static|final|volatile|transient|\\s)*" +
-        "\\w+(?:<[^>]*>)?(?:\\[\\])*\\s+" +
+        "\\w+(?:<[^>]*>)?(?:\\[])*\\s+" +
         "(\\w+)\\s*[;=]"
     );
 

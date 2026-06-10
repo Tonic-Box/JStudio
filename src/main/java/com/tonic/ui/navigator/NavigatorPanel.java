@@ -370,10 +370,6 @@ public class NavigatorPanel extends ThemedJPanel {
         contentWrapper.repaint();
     }
 
-    public void filterByName(String name) {
-        searchField.setText(name);
-    }
-
     public void focusSearchField() {
         searchField.requestFocus();
         searchField.selectAll();
@@ -523,8 +519,6 @@ public class NavigatorPanel extends ThemedJPanel {
         ClassEntryModel classEntry = node.getClassEntry();
 
         addMenuItem(menu, "Open in Editor", () -> EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry)));
-
-        addMenuItem(menu, "View Dependencies", () -> mainFrame.showDependenciesForClass(classEntry.getClassName()));
 
         addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
             FindUsagesEvent.forClass(this, classEntry.getClassName())));

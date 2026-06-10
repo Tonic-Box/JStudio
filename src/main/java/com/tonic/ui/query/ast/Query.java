@@ -6,7 +6,7 @@ package com.tonic.ui.query.ast;
 public interface Query {
     Target target();
     Scope scope();
-    Predicate predicate();
+    Condition condition();
     RunSpec runSpec();
     Integer limit();
     OrderBy orderBy();

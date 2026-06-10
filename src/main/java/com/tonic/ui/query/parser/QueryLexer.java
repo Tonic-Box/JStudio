@@ -16,7 +16,6 @@ public class QueryLexer {
             Map.entry("where", Token.TokenType.WHERE),
             Map.entry("in", Token.TokenType.IN),
             Map.entry("during", Token.TokenType.DURING),
-            Map.entry("between", Token.TokenType.BETWEEN),
             Map.entry("and", Token.TokenType.AND),
             Map.entry("or", Token.TokenType.OR),
             Map.entry("not", Token.TokenType.NOT),
@@ -99,6 +98,18 @@ public class QueryLexer {
                 tokens.add(new Token(Token.TokenType.LPAREN, "(", position++));
             } else if (c == ')') {
                 tokens.add(new Token(Token.TokenType.RPAREN, ")", position++));
+            } else if (c == '[') {
+                tokens.add(new Token(Token.TokenType.LBRACKET, "[", position++));
+            } else if (c == ']') {
+                tokens.add(new Token(Token.TokenType.RBRACKET, "]", position++));
+            } else if (c == '{') {
+                tokens.add(new Token(Token.TokenType.LBRACE, "{", position++));
+            } else if (c == '}') {
+                tokens.add(new Token(Token.TokenType.RBRACE, "}", position++));
+            } else if (c == '*') {
+                tokens.add(new Token(Token.TokenType.STAR, "*", position++));
+            } else if (c == '+') {
+                tokens.add(new Token(Token.TokenType.PLUS, "+", position++));
             } else if (c == ',') {
                 tokens.add(new Token(Token.TokenType.COMMA, ",", position++));
             } else if (c == '.') {
@@ -108,7 +119,7 @@ public class QueryLexer {
             } else if (c == '>') {
                 tokens.add(readComparison());
             } else if (c == '<') {
-                if (position + 6 < input.length() &&
+                if (position + 8 <= input.length() &&
                     input.substring(position, position + 8).equalsIgnoreCase("<clinit>")) {
                     tokens.add(new Token(Token.TokenType.CLINIT, "<clinit>", position));
                     position += 8;

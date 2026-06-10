@@ -10,23 +10,19 @@ public final class ShowQuery implements Query {
 
     private final Target target;
     private final Scope scope;
-    private final Predicate predicate;
+    private final Condition condition;
     private final RunSpec runSpec;
     private final Integer limit;
     private final OrderBy orderBy;
 
-    public ShowQuery(Target target, Scope scope, Predicate predicate,
+    public ShowQuery(Target target, Scope scope, Condition condition,
                      RunSpec runSpec, Integer limit, OrderBy orderBy) {
         this.target = target;
         this.scope = scope;
-        this.predicate = predicate;
+        this.condition = condition;
         this.runSpec = runSpec;
         this.limit = limit;
         this.orderBy = orderBy;
-    }
-
-    public ShowQuery(Target target) {
-        this(target, AllScope.INSTANCE, null, null, null, null);
     }
 
     @Override
@@ -40,8 +36,8 @@ public final class ShowQuery implements Query {
     }
 
     @Override
-    public Predicate predicate() {
-        return predicate;
+    public Condition condition() {
+        return condition;
     }
 
     @Override
@@ -59,25 +55,6 @@ public final class ShowQuery implements Query {
         return orderBy;
     }
 
-    public ShowQuery withScope(Scope scope) {
-        return new ShowQuery(target, scope, predicate, runSpec, limit, orderBy);
-    }
-
-    public ShowQuery withPredicate(Predicate predicate) {
-        return new ShowQuery(target, scope, predicate, runSpec, limit, orderBy);
-    }
-
-    public ShowQuery withRunSpec(RunSpec runSpec) {
-        return new ShowQuery(target, scope, predicate, runSpec, limit, orderBy);
-    }
-
-    public ShowQuery withLimit(Integer limit) {
-        return new ShowQuery(target, scope, predicate, runSpec, limit, orderBy);
-    }
-
-    public ShowQuery withOrderBy(OrderBy orderBy) {
-        return new ShowQuery(target, scope, predicate, runSpec, limit, orderBy);
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -86,7 +63,7 @@ public final class ShowQuery implements Query {
         ShowQuery that = (ShowQuery) o;
         return Objects.equals(target, that.target) &&
                Objects.equals(scope, that.scope) &&
-               Objects.equals(predicate, that.predicate) &&
+               Objects.equals(condition, that.condition) &&
                Objects.equals(runSpec, that.runSpec) &&
                Objects.equals(limit, that.limit) &&
                Objects.equals(orderBy, that.orderBy);
@@ -94,12 +71,12 @@ public final class ShowQuery implements Query {
 
     @Override
     public int hashCode() {
-        return Objects.hash(target, scope, predicate, runSpec, limit, orderBy);
+        return Objects.hash(target, scope, condition, runSpec, limit, orderBy);
     }
 
     @Override
     public String toString() {
         return "ShowQuery{target=" + target + ", scope=" + scope +
-               ", predicate=" + predicate + ", limit=" + limit + "}";
+               ", condition=" + condition + ", limit=" + limit + "}";
     }
 }

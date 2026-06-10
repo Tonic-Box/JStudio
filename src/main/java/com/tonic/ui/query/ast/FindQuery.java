@@ -4,29 +4,25 @@ import java.util.Objects;
 
 /**
  * FIND query - returns matching entities with evidence.
- * Example: FIND methods WHERE calls("Cipher.init")
+ * Example: FIND methods WHERE has call where (name == "init")
  */
 public final class FindQuery implements Query {
 
     private final Target target;
     private final Scope scope;
-    private final Predicate predicate;
+    private final Condition condition;
     private final RunSpec runSpec;
     private final Integer limit;
     private final OrderBy orderBy;
 
-    public FindQuery(Target target, Scope scope, Predicate predicate,
+    public FindQuery(Target target, Scope scope, Condition condition,
                      RunSpec runSpec, Integer limit, OrderBy orderBy) {
         this.target = target;
         this.scope = scope;
-        this.predicate = predicate;
+        this.condition = condition;
         this.runSpec = runSpec;
         this.limit = limit;
         this.orderBy = orderBy;
-    }
-
-    public FindQuery(Target target) {
-        this(target, AllScope.INSTANCE, null, null, null, null);
     }
 
     @Override
@@ -40,8 +36,8 @@ public final class FindQuery implements Query {
     }
 
     @Override
-    public Predicate predicate() {
-        return predicate;
+    public Condition condition() {
+        return condition;
     }
 
     @Override
@@ -59,25 +55,6 @@ public final class FindQuery implements Query {
         return orderBy;
     }
 
-    public FindQuery withScope(Scope scope) {
-        return new FindQuery(target, scope, predicate, runSpec, limit, orderBy);
-    }
-
-    public FindQuery withPredicate(Predicate predicate) {
-        return new FindQuery(target, scope, predicate, runSpec, limit, orderBy);
-    }
-
-    public FindQuery withRunSpec(RunSpec runSpec) {
-        return new FindQuery(target, scope, predicate, runSpec, limit, orderBy);
-    }
-
-    public FindQuery withLimit(Integer limit) {
-        return new FindQuery(target, scope, predicate, runSpec, limit, orderBy);
-    }
-
-    public FindQuery withOrderBy(OrderBy orderBy) {
-        return new FindQuery(target, scope, predicate, runSpec, limit, orderBy);
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -86,7 +63,7 @@ public final class FindQuery implements Query {
         FindQuery that = (FindQuery) o;
         return Objects.equals(target, that.target) &&
                Objects.equals(scope, that.scope) &&
-               Objects.equals(predicate, that.predicate) &&
+               Objects.equals(condition, that.condition) &&
                Objects.equals(runSpec, that.runSpec) &&
                Objects.equals(limit, that.limit) &&
                Objects.equals(orderBy, that.orderBy);
@@ -94,12 +71,12 @@ public final class FindQuery implements Query {
 
     @Override
     public int hashCode() {
-        return Objects.hash(target, scope, predicate, runSpec, limit, orderBy);
+        return Objects.hash(target, scope, condition, runSpec, limit, orderBy);
     }
 
     @Override
     public String toString() {
         return "FindQuery{target=" + target + ", scope=" + scope +
-               ", predicate=" + predicate + ", limit=" + limit + "}";
+               ", condition=" + condition + ", limit=" + limit + "}";
     }
 }

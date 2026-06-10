@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A single row in query results.
- * Contains a primary target, computed columns, and evidence list.
+ * A single row in query results: a primary target, computed columns, and optional child rows.
  */
 public class ResultRow {
 
@@ -19,23 +18,14 @@ public class ResultRow {
     private final ClickTarget primaryTarget;
     private final Map<String, Object> columns;
     @Getter
-    private final List<Evidence> evidence;
-    @Getter
     private final List<ResultRow> children;
     private final boolean isChild;
 
     public ResultRow(String primaryLabel, ClickTarget primaryTarget,
-                     Map<String, Object> columns, List<Evidence> evidence) {
-        this(primaryLabel, primaryTarget, columns, evidence, Collections.emptyList(), false);
-    }
-
-    public ResultRow(String primaryLabel, ClickTarget primaryTarget,
-                     Map<String, Object> columns, List<Evidence> evidence,
-                     List<ResultRow> children, boolean isChild) {
+                     Map<String, Object> columns, List<ResultRow> children, boolean isChild) {
         this.primaryLabel = primaryLabel;
         this.primaryTarget = primaryTarget;
         this.columns = columns != null ? new LinkedHashMap<>(columns) : new LinkedHashMap<>();
-        this.evidence = evidence != null ? List.copyOf(evidence) : List.of();
         this.children = children != null ? List.copyOf(children) : List.of();
         this.isChild = isChild;
     }
@@ -64,7 +54,6 @@ public class ResultRow {
         private final String primaryLabel;
         private ClickTarget primaryTarget;
         private final Map<String, Object> columns = new LinkedHashMap<>();
-        private List<Evidence> evidence = List.of();
         private List<ResultRow> children = List.of();
         private boolean isChild = false;
 
@@ -82,11 +71,6 @@ public class ResultRow {
             return this;
         }
 
-        public Builder evidence(List<Evidence> evidence) {
-            this.evidence = evidence;
-            return this;
-        }
-
         public Builder children(List<ResultRow> children) {
             this.children = children;
             return this;
@@ -98,7 +82,7 @@ public class ResultRow {
         }
 
         public ResultRow build() {
-            return new ResultRow(primaryLabel, primaryTarget, columns, evidence, children, isChild);
+            return new ResultRow(primaryLabel, primaryTarget, columns, children, isChild);
         }
     }
 }

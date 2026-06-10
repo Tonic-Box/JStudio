@@ -7,7 +7,98 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Undid update check throttling" />
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);&#10;- Cleaned up a LOT of dead/old code">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/WrapLayout.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryTokenMaker.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Accessor.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Condition.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Operand.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Step.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/eval/ArgValueResolver.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/eval/AttributeRegistry.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/eval/ConditionEvaluator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/eval/DataFlowAnalysis.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/eval/DefaultAttributes.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/eval/EvalContext.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/eval/EvidenceCollector.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/eval/Subject.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/eval/SubjectKind.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/ConditionParser.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/value/Operator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/value/TypeNames.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/value/Value.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/value/ValueKind.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/DataFlowQueryTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/HelpExamplesTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/LimitOrderQueryTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/QueryPipelineTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/QueryTokenMakerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/SequenceQueryTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/SsaQueryTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/eval/FlagshipQueryTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/AnalysisPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/AnalysisPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DataFlowPanel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/DependencyPanel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryBuilderPanel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryExplorerPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AfterPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AllocCountPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/AndPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/BeforePredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/BetweenScope.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/CallsPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ContainsStringPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/CoveragePredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/DuringScope.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/DuringScope.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/FieldBecomesPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/FindQuery.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/FindQuery.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/InstructionCountPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/NotPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/OrPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Predicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/PredicateVisitor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Query.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/Query.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ReadsFieldPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ScopeVisitor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ScopeVisitor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ShowQuery.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ShowQuery.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/ThrowsPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/ast/WritesFieldPredicate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/exec/QueryBatchRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/exec/QueryBatchRunner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/exec/QueryExecutor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/exec/QueryProbeListener.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/exec/QueryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/exec/QueryService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/QueryLexer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/QueryLexer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/QueryParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/QueryParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/Token.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/Token.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/Evidence.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/PostFilter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/ProbePlan.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/ProbePlan.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/QueryPlanner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/QueryPlanner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/ResultProjector.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/ResultRow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/ResultRow.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/filter/ConstPoolFilter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/filter/PatternFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/filter/PatternFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/filter/StaticFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/filter/StaticFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/filter/XrefMethodFilter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/probe/ProbeResult.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/probe/ProbeSet.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/probe/ProbeSpec.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/PostFilterBuildingVisitor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/ProbeCollectingVisitor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/ScopeFilterVisitor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/ScopeFilterVisitor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/ScopeProbeVisitor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/planner/visitor/StaticFilterBuildingVisitor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/util/ArgumentTypeAnalyzer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/util/ArgumentTypeAnalyzer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/QueryPlannerTest.java" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -68,14 +159,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/zacke/IdeaProjects/JStudio/src/main/resources&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "C:/Users/zacke/IdeaProjects/JStudio/src/main/resources",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "run.code.analysis.last.selected.profile": "pProject Default"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\zacke\IdeaProjects\JStudio\src\main\resources" />
@@ -87,7 +181,7 @@
       <recent name="com.tonic.ui.theme" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.JStudio [build]">
+  <component name="RunManager" selected="Gradle.JStudio [run]">
     <configuration name="JStudio [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -176,7 +270,7 @@
       <RunAsTest>false</RunAsTest>
       <method v="2" />
     </configuration>
-    <configuration name="JStudio [shadowJar]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="JStudio [test]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -187,7 +281,7 @@
         </option>
         <option name="taskNames">
           <list>
-            <option value="shadowJar" />
+            <option value="test" />
           </list>
         </option>
         <option name="vmOptions" />
@@ -200,11 +294,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.JStudio [build]" />
         <item itemvalue="Gradle.JStudio [run]" />
+        <item itemvalue="Gradle.JStudio [test]" />
+        <item itemvalue="Gradle.JStudio [build]" />
         <item itemvalue="Gradle.JStudio [clean]" />
         <item itemvalue="Gradle.JStudio [refreshDependencies]" />
-        <item itemvalue="Gradle.JStudio [shadowJar]" />
       </list>
     </recent_temporary>
   </component>
@@ -216,14 +310,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00027" summary="- Heap analysis: cleanup">
-      <option name="closed" value="true" />
-      <created>1766852147233</created>
-      <option name="number" value="00027" />
-      <option name="presentableId" value="LOCAL-00027" />
-      <option name="project" value="LOCAL" />
-      <updated>1766852147233</updated>
     </task>
     <task id="LOCAL-00028" summary="-Debugger">
       <option name="closed" value="true" />
@@ -609,7 +695,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781075026811</updated>
     </task>
-    <option name="localTasksCounter" value="76" />
+    <task id="LOCAL-00076" summary="- Bump version to 11">
+      <option name="closed" value="true" />
+      <created>1781075115402</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1781075115402</updated>
+    </task>
+    <option name="localTasksCounter" value="77" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -624,10 +718,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- ConstPool view" />
-    <MESSAGE value="- Compilation functionality&#10;- Jar export" />
-    <MESSAGE value="- Control Flow view&#10;- Cleanup" />
-    <MESSAGE value="- Cleanup" />
     <MESSAGE value="- Restructured graphing views to reuse the same component&#10;- Made the graphing views draggable and zoomable via mouse wheel" />
     <MESSAGE value="- Update readme" />
     <MESSAGE value="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui" />
@@ -649,7 +739,11 @@
     <MESSAGE value="- Improved bytecode view&#10;- fixed highlight bug in bytecode view&#10;- Auto update checking now" />
     <MESSAGE value="- Small tweak to self-update/update check" />
     <MESSAGE value="- Undid update check throttling" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Undid update check throttling" />
+    <MESSAGE value="- Bump version to 11" />
+    <MESSAGE value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST and planner visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) query tiers&#10;- Add syntax highlighting to the DSL editor via a dedicated QueryTokenMaker&#10;- Rebuild the query help popup as themed HTML with per-example syntax-highlighted boxes&#10;- Rewrite the visual query builder to emit composable DSL instead of the removed predicate syntax&#10;- Add query tests covering the parse→plan→run pipeline, SSA/data-flow, and the builder/help syntax contracts&#10;- Remove the standalone Dependencies and Data Flow analysis panels&#10;- Restructure the Analysis menu (rename Simulation to Code Analysis; add Similarity, Search, and Strings entries)" />
+    <MESSAGE value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);" />
+    <MESSAGE value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);&#10;- Cleaned up a LOT of dead/old code" />
+    <option name="LAST_COMMIT_MESSAGE" value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);&#10;- Cleaned up a LOT of dead/old code" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
