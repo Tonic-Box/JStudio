@@ -99,7 +99,7 @@ public final class UpdateManager {
         if (info.getVersion() <= current) {
             if (manual) {
                 JOptionPane.showMessageDialog(parent,
-                        "You're up to date (v" + current + ").",
+                        "You're up to date (version " + current + ").",
                         "Check for Updates", JOptionPane.INFORMATION_MESSAGE);
             }
             return;
@@ -113,7 +113,7 @@ public final class UpdateManager {
     private void promptUpdate(UpdateInfo info, int current) {
         String[] options = {"Update now", "Skip this version", "Later"};
         int choice = JOptionPane.showOptionDialog(parent,
-                info.getTag() + " is available (you have v" + current + ").\n\n"
+                "Version " + info.getTag() + " is available (you have version " + current + ").\n\n"
                         + "Update now? JStudio will download it, then restart to apply.",
                 "Update available", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
                 null, options, options[0]);
