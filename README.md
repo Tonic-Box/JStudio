@@ -39,7 +39,7 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 - **Similarity** - Detect duplicate and renamed methods
 - **Simulation** - Find opaque predicates, dead code, decryption patterns
 - **Strings** - Extract and search constant pool strings
-- **Query Explorer** - Flexible query builder for code searches
+- **Query Explorer** - Composable query language for code searches — see the [Query DSL reference](docs/query-dsl.md)
 - **Cross-References** - Bidirectional symbol reference tracking
 
 ### Bytecode Debugger
@@ -177,8 +177,7 @@ java -jar build/libs/JStudio.jar --cli     # Launch CLI
 | Action | Shortcut |
 |--------|----------|
 | Run Analysis | F9 |
-| Simulation Analysis | F10 |
-| Query Explorer | Ctrl+Shift+Q |
+| Code Analysis | F10 |
 | Call Graph | Ctrl+Shift+G |
 
 **Transform**
