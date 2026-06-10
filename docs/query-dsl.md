@@ -162,3 +162,61 @@ Biggest methods first:
 ```
 FIND methods WHERE COUNT(insn) > 50 ORDER BY matches DESC LIMIT 20
 ```
+
+## Advanced examples
+
+Computed (non-constant) command passed to `Runtime.exec` — nested quantifiers; inside the call body
+`arg`'s atoms refer to that argument:
+```
+FIND methods WHERE HAS call WHERE (owner == "java/lang/Runtime" AND name == "exec" AND HAS arg WHERE (kind != literal))
+```
+
+A parameter flowing into a call's first argument (taint-style data-flow inside a quantifier body):
+```
+FIND methods WHERE HAS call WHERE (name == "exec" AND arg(0) flowsFrom param(0))
+```
+
+XOR-decryption loop shape — an `ixor` and an array store both inside a loop:
+```
+FIND methods WHERE HAS insn WHERE (opcode == "ixor" AND inLoop) AND HAS insn WHERE (opcode matches /[bcis]astore/ AND inLoop)
+```
+
+Switch-based dispatcher inside a loop (control-flow-flattening smell) — set membership over opcodes:
+```
+FIND methods WHERE HAS insn WHERE (opcode IN [tableswitch, lookupswitch] AND inLoop)
+```
+
+Field round-trip with a bounded gap — read a field, then write one within four instructions:
+```
+FIND methods WHERE SEQUENCE [ getfield, _{0,4}, putfield ]
+```
+
+Load, 1–3 chained invokes, then a field write — predicate steps with repetition:
+```
+FIND methods WHERE SEQUENCE [ (opcode matches /^aload/), (opcode matches /^invoke/){1,3}, putfield ]
+```
+
+Static factory shape — a static method that allocates, constructs, and returns the object:
+```
+FIND methods WHERE method.modifiers contains static AND SEQUENCE [ new, dup, .., invokespecial, .., areturn ]
+```
+
+Trivial getters by whole-method opcode signature (anchored `opcodes` regex):
+```
+FIND methods WHERE opcodes matches /^aload.* getfield areturn$/
+```
+
+Calls `exec` but never anything that looks like validation:
+```
+FIND methods WHERE HAS call WHERE (name == "exec") AND NONE call WHERE (name matches /sanitize|validate|check/i)
+```
+
+Heavy string building inside loops, worst first — filtered COUNT mixed with SSA and sorting:
+```
+FIND methods WHERE COUNT(call WHERE (owner == "java/lang/StringBuilder" AND name == "append" AND inLoop)) >= 3 ORDER BY matches DESC LIMIT 15
+```
+
+Unary recursive identity-ish methods — recursion, data-flow, and arity combined:
+```
+FIND methods WHERE recursive AND method.arity == 1 AND param(0) flowsTo return
+```

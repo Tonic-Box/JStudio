@@ -33,11 +33,9 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 ### Analysis Tools
 
 - **Call Graph** - Method call hierarchy visualization
-- **Dependencies** - Class dependency graphs with cycle detection
-- **Data Flow** - Forward/backward flow analysis with taint tracking
 - **Pattern Search** - Find method calls, field access, allocations, type casts
 - **Similarity** - Detect duplicate and renamed methods
-- **Simulation** - Find opaque predicates, dead code, decryption patterns
+- **Code Analysis** - Find opaque predicates, dead code, decryption patterns
 - **Strings** - Extract and search constant pool strings
 - **Query Explorer** - Composable query language for code searches — see the [Query DSL reference](docs/query-dsl.md)
 - **Cross-References** - Bidirectional symbol reference tracking
@@ -103,7 +101,7 @@ java -jar build/libs/JStudio.jar --cli     # Launch CLI
 1. **Open**: File -> Open (Ctrl+O) to load JAR, directory, or class file
 2. **Navigate**: Browse packages and classes in the tree
 3. **View**: Switch views using the dropdown or View menu
-4. **Analyze**: Use Analysis menu for graphs, dependencies, searches
+4. **Analyze**: Use the Analysis menu for graphs and searches, or the Query tab for [DSL queries](docs/query-dsl.md)
 5. **Debug**: Right-click method -> Debug Method
 6. **Execute**: Right-click method -> Execute Method
 7. **Transform**: Use Transform menu for scripts and optimizations

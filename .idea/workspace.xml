@@ -7,8 +7,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);&#10;- Cleaned up a LOT of dead/old code&#10;- bumped version to 13">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Query DSL md docs">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/query-dsl.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/query-dsl.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/ConditionParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/parser/ConditionParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/HelpExamplesTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/query/HelpExamplesTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -221,14 +225,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00029" summary="-Debugger">
-      <option name="closed" value="true" />
-      <created>1766858539957</created>
-      <option name="number" value="00029" />
-      <option name="presentableId" value="LOCAL-00029" />
-      <option name="project" value="LOCAL" />
-      <updated>1766858539957</updated>
     </task>
     <task id="LOCAL-00030" summary="-Debugger">
       <option name="closed" value="true" />
@@ -614,7 +610,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781131047377</updated>
     </task>
-    <option name="localTasksCounter" value="78" />
+    <task id="LOCAL-00078" summary="- Query DSL md docs">
+      <option name="closed" value="true" />
+      <created>1781132556994</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1781132556994</updated>
+    </task>
+    <option name="localTasksCounter" value="79" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -629,7 +633,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Update readme" />
     <MESSAGE value="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui" />
     <MESSAGE value="- Stats view&#10;- Attribute view&#10;- updated README.md" />
     <MESSAGE value="- Updated README.md&#10;- Updated shortcuts dialogue&#10;- cleanup" />
@@ -654,7 +657,8 @@
     <MESSAGE value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);" />
     <MESSAGE value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);&#10;- Cleaned up a LOT of dead/old code" />
     <MESSAGE value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);&#10;- Cleaned up a LOT of dead/old code&#10;- bumped version to 13" />
-    <option name="LAST_COMMIT_MESSAGE" value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);&#10;- Cleaned up a LOT of dead/old code&#10;- bumped version to 13" />
+    <MESSAGE value="- Query DSL md docs" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Query DSL md docs" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

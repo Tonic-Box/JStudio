@@ -294,9 +294,33 @@ public final class ConditionParser {
             case NUMBER:
                 advance();
                 return Operand.literal(number(t.value()));
+            case LBRACKET:
+                return parseSetOperand();
             default:
                 return identifierOperand();
         }
+    }
+
+    /** A set literal {@code [a, b, c]} of scalar operands, for membership tests via {@code IN}. */
+    private Operand parseSetOperand() throws ParseException {
+        advance(); // [
+        List<Value> members = new ArrayList<>();
+        if (peek().type() != Token.TokenType.RBRACKET) {
+            members.add(literalValue(parseOperand()));
+            while (peek().type() == Token.TokenType.COMMA) {
+                advance();
+                members.add(literalValue(parseOperand()));
+            }
+        }
+        expect(Token.TokenType.RBRACKET);
+        return Operand.literal(Value.ofSet(members));
+    }
+
+    private Value literalValue(Operand operand) throws ParseException {
+        if (!(operand instanceof Operand.Literal)) {
+            throw new ParseException("Set members must be literal values", peek().position());
+        }
+        return ((Operand.Literal) operand).value();
     }
 
     private Operand identifierOperand() throws ParseException {
