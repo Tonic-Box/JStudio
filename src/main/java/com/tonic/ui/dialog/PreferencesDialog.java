@@ -43,11 +43,13 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
     private JScrollPane previewScrollPane;
     private JComboBox<Theme> themeComboBox;
     private JCheckBox loadJdkClassesBox;
+    private JCheckBox updateCheckBox;
 
     private final JPanel mainPanel;
     private final JPanel editorPanel;
     private final JPanel appearancePanel;
     private final JPanel executionPanel;
+    private final JPanel updatesPanel;
     private final JPanel previewPanel;
     private final JPanel buttonPanel;
 
@@ -68,6 +70,7 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         editorPanel = createEditorSection();
         appearancePanel = createAppearanceSection();
         executionPanel = createExecutionSection();
+        updatesPanel = createUpdatesSection();
         previewPanel = createPreviewSection();
         buttonPanel = createButtonPanel();
 
@@ -76,6 +79,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         mainPanel.add(appearancePanel);
         mainPanel.add(Box.createVerticalStrut(16));
         mainPanel.add(executionPanel);
+        mainPanel.add(Box.createVerticalStrut(16));
+        mainPanel.add(updatesPanel);
         mainPanel.add(Box.createVerticalStrut(16));
         mainPanel.add(previewPanel);
         mainPanel.add(Box.createVerticalGlue());
@@ -100,6 +105,7 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         updatePanelTheme(editorPanel, "Editor Font");
         updatePanelTheme(appearancePanel, "Appearance");
         updatePanelTheme(executionPanel, "Execution");
+        updatePanelTheme(updatesPanel, "Updates");
         updatePanelTheme(previewPanel, "Preview");
 
         buttonPanel.setBackground(JStudioTheme.getBgSecondary());
@@ -108,6 +114,11 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         if (loadJdkClassesBox != null) {
             loadJdkClassesBox.setBackground(JStudioTheme.getBgSecondary());
             loadJdkClassesBox.setForeground(JStudioTheme.getTextPrimary());
+        }
+
+        if (updateCheckBox != null) {
+            updateCheckBox.setBackground(JStudioTheme.getBgSecondary());
+            updateCheckBox.setForeground(JStudioTheme.getTextPrimary());
         }
 
         if (fontComboBox != null) {
@@ -319,6 +330,33 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         return panel;
     }
 
+    private JPanel createUpdatesSection() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(JStudioTheme.getBgSecondary());
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
+            "Updates",
+            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+            javax.swing.border.TitledBorder.DEFAULT_POSITION,
+            JStudioTheme.getUIFont(12),
+            JStudioTheme.getTextPrimary()
+        ));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+
+        updateCheckBox = new JCheckBox("Check for updates on startup");
+        updateCheckBox.setBackground(JStudioTheme.getBgSecondary());
+        updateCheckBox.setForeground(JStudioTheme.getTextPrimary());
+        panel.add(updateCheckBox, gbc);
+
+        return panel;
+    }
+
     private JPanel createPreviewSection() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(JStudioTheme.getBgSecondary());
@@ -382,6 +420,7 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         themeComboBox.setSelectedItem(currentTheme);
 
         loadJdkClassesBox.setSelected(settings.isLoadJdkClassesEnabled());
+        updateCheckBox.setSelected(settings.isUpdateCheckEnabled());
     }
 
     private void updatePreview() {
@@ -487,6 +526,7 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         }
 
         settings.setLoadJdkClassesEnabled(loadJdkClassesBox.isSelected());
+        settings.setUpdateCheckEnabled(updateCheckBox.isSelected());
 
         if (onApply != null) {
             SwingUtilities.invokeLater(onApply);

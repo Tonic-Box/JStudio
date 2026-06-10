@@ -86,7 +86,7 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 - 8 built-in themes
 
 ## Building & Running
-
+When running from IDE use the `-dev` flag to disable update checks
 ```bash
 ./gradlew run              # Run directly
 ./gradlew build            # Compile + test + create JAR

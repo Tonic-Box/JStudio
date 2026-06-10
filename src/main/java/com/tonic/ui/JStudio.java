@@ -3,6 +3,7 @@ package com.tonic.ui;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.tonic.cli.HeadlessRunner;
 import com.tonic.ui.theme.ThemeManager;
+import com.tonic.ui.update.UpdateManager;
 import com.tonic.ui.util.KeyboardShortcuts;
 import com.tonic.ui.util.Settings;
 import java.awt.EventQueue;
@@ -29,6 +30,11 @@ public class JStudio {
         System.setProperty("awt.useSystemAAFontSettings", "on");
         System.setProperty("swing.aatext", "true");
 
+        if (hasFlag(args, "-dev")) {
+            UpdateManager.disableStartupCheck();
+        }
+        String[] appArgs = stripFlag(args, "-dev");
+
         EventQueue.invokeLater(() -> {
             try {
                 FlatDarkLaf.setup();
@@ -42,8 +48,8 @@ public class JStudio {
 
                 frame.setVisible(true);
 
-                if (args.length > 0) {
-                    frame.openFile(args[0]);
+                if (appArgs.length > 0) {
+                    frame.openFile(appArgs[0]);
                 }
 
             } catch (Exception e) {
@@ -64,8 +70,21 @@ public class JStudio {
     }
 
     private static String[] stripCliFlag(String[] args) {
+        return stripFlag(args, "--cli");
+    }
+
+    private static boolean hasFlag(String[] args, String flag) {
+        for (String arg : args) {
+            if (flag.equals(arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String[] stripFlag(String[] args, String flag) {
         return Arrays.stream(args)
-            .filter(arg -> !"--cli".equals(arg))
+            .filter(arg -> !flag.equals(arg))
             .toArray(String[]::new);
     }
 }

@@ -1,13 +1,16 @@
 package com.tonic.ui.editor.bytecode;
 
+import com.tonic.analysis.DisassemblyOptions;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
-import com.tonic.parser.attribute.table.ExceptionTableEntry;
 import lombok.Getter;
 
 /**
  * Formats bytecode for display in the UI.
- * Uses the existing CodePrinter but formats output for styled display.
+ *
+ * <p>All disassembly (header, line numbers, local-variable and stack-frame markers, exception table,
+ * resolved invokedynamic bootstraps) is produced by YABR's {@link CodeAttribute#prettyPrintCode(
+ * DisassemblyOptions)} verbose profile; this class only applies the UI indentation.
  */
 @Getter
 public class BytecodeFormatter {
@@ -24,7 +27,7 @@ public class BytecodeFormatter {
 
     /**
      * Format the method's bytecode for display.
-     * Returns a string with format "offset: opcode operands" per line.
+     * Returns a string with format "offset: opcode operands" per line, plus verbose comment lines.
      */
     public String format() {
         CodeAttribute code = method.getCodeAttribute();
@@ -33,37 +36,12 @@ public class BytecodeFormatter {
         }
 
         StringBuilder sb = new StringBuilder();
-
-        // Method info header
-        sb.append("  // max_stack=").append(code.getMaxStack());
-        sb.append(", max_locals=").append(code.getMaxLocals());
-        sb.append(", code_length=").append(code.getCode().length).append("\n");
-
-        // Exception table if present
-        if (!code.getExceptionTable().isEmpty()) {
-            sb.append("  // Exception table:\n");
-            for (ExceptionTableEntry entry : code.getExceptionTable()) {
-                sb.append("  //   from=").append(entry.getStartPc());
-                sb.append(" to=").append(entry.getEndPc());
-                sb.append(" target=").append(entry.getHandlerPc());
-                sb.append(" type=").append(entry.getCatchType()).append("\n");
-            }
-        }
-
-        // Use existing CodePrinter but reformat for our display
-        String rawDisasm = code.prettyPrintCode();
-
-        // The CodePrinter outputs format: "0000: opcode          operands"
-        // We want: "offset: opcode operands"
-        String[] lines = rawDisasm.split("\n");
-        for (String line : lines) {
-            if (line.trim().isEmpty()) {
+        for (String line : code.prettyPrintCode(DisassemblyOptions.verbose()).split("\n")) {
+            if (line.isEmpty()) {
                 continue;
             }
-            // Clean up the line - CodePrinter already formats as "offset: opcode operands"
-            sb.append("  ").append(line.trim()).append("\n");
+            sb.append("  ").append(line.stripTrailing()).append("\n");
         }
-
         return sb.toString();
     }
 

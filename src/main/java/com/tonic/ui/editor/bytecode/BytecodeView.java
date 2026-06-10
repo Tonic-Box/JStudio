@@ -25,8 +25,8 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BytecodeView extends JPanel implements ThemeChangeListener {
 
@@ -48,7 +48,7 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     private boolean loaded = false;
     private SwingWorker<String, Void> currentWorker;
 
-    private final Set<Integer> highlightedLines = new HashSet<>();
+    private final Map<Integer, Object> highlightedLines = new HashMap<>();
     private int lastClickedLine = -1;
 
     public BytecodeView(ClassEntryModel classEntry) {
@@ -108,7 +108,6 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
                         highlightRange(lastClickedLine, lineNum);
                     } else {
                         clearHighlights();
-                        addHighlight(lineNum);
                     }
                     lastClickedLine = lineNum;
                 } catch (Exception ex) {
@@ -408,9 +407,9 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     }
 
     public void clearHighlights() {
-        for (int lineNum : highlightedLines) {
+        for (Object tag : highlightedLines.values()) {
             try {
-                textArea.removeLineHighlight(lineNum);
+                textArea.removeLineHighlight(tag);
             } catch (Exception e) {
                 // Ignore
             }
@@ -419,11 +418,12 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     }
 
     public void addHighlight(int lineNumber) {
-        if (highlightedLines.add(lineNumber)) {
+        if (!highlightedLines.containsKey(lineNumber)) {
             try {
                 Color highlightColor = JStudioTheme.getAccentSecondary();
                 Color bgColor = new Color(highlightColor.getRed(), highlightColor.getGreen(), highlightColor.getBlue(), 100);
-                textArea.addLineHighlight(lineNumber, bgColor);
+                Object tag = textArea.addLineHighlight(lineNumber, bgColor);
+                highlightedLines.put(lineNumber, tag);
             } catch (Exception e) {
                 // Ignore
             }
@@ -431,9 +431,10 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     }
 
     public void removeHighlight(int lineNumber) {
-        if (highlightedLines.remove(lineNumber)) {
+        Object tag = highlightedLines.remove(lineNumber);
+        if (tag != null) {
             try {
-                textArea.removeLineHighlight(lineNumber);
+                textArea.removeLineHighlight(tag);
             } catch (Exception e) {
                 // Ignore
             }
@@ -441,7 +442,7 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     }
 
     public void toggleHighlight(int lineNumber) {
-        if (highlightedLines.contains(lineNumber)) {
+        if (highlightedLines.containsKey(lineNumber)) {
             removeHighlight(lineNumber);
         } else {
             addHighlight(lineNumber);

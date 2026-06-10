@@ -28,6 +28,7 @@ import com.tonic.ui.transform.TransformPanel;
 import com.tonic.ui.deobfuscation.DeobfuscationPanel;
 import com.tonic.ui.script.ScriptEditorDialog;
 import com.tonic.ui.util.RecentFilesManager;
+import com.tonic.ui.update.UpdateManager;
 import com.tonic.ui.util.Settings;
 import com.tonic.ui.vm.VMConsolePanel;
 import com.tonic.ui.vm.VMExecutionService;
@@ -108,6 +109,7 @@ public class MainFrame extends JFrame {
     private FindInFilesDialog findInFilesDialog;
     private ScriptEditorDialog scriptEditorDialog;
     private PreferencesDialog preferencesDialog;
+    private final UpdateManager updateManager;
     private JDialog vmConsoleDialog;
     private VMConsolePanel vmConsolePanel;
     private JDialog debuggerDialog;
@@ -156,6 +158,16 @@ public class MainFrame extends JFrame {
         initializeComponents();
         initializeLayout();
         initializeEventHandlers();
+
+        updateManager = new UpdateManager(this);
+        SwingUtilities.invokeLater(updateManager::checkOnStartup);
+    }
+
+    /**
+     * Manually checks for a newer release (Help menu), reporting the result either way.
+     */
+    public void checkForUpdates() {
+        updateManager.checkNow();
     }
 
     private void initializeFrame() {

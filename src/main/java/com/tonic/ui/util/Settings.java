@@ -27,6 +27,10 @@ public class Settings {
     private static final String PREF_THEME = "appearance.theme";
     private static final String PREF_LOAD_JDK_CLASSES = "classpool.loadJdk";
 
+    private static final String PREF_UPDATE_CHECK = "update.checkOnStartup";
+    private static final String PREF_UPDATE_LAST_CHECK = "update.lastCheckEpoch";
+    private static final String PREF_UPDATE_SKIPPED = "update.skippedVersion";
+
     private static Settings instance;
     private final Preferences prefs;
 
@@ -115,4 +119,14 @@ public class Settings {
     // Execution settings
     public boolean isLoadJdkClassesEnabled() { return prefs.getBoolean(PREF_LOAD_JDK_CLASSES, true); }
     public void setLoadJdkClassesEnabled(boolean enabled) { prefs.putBoolean(PREF_LOAD_JDK_CLASSES, enabled); }
+
+    // Update checks
+    public boolean isUpdateCheckEnabled() { return prefs.getBoolean(PREF_UPDATE_CHECK, true); }
+    public void setUpdateCheckEnabled(boolean enabled) { prefs.putBoolean(PREF_UPDATE_CHECK, enabled); }
+
+    public long getLastUpdateCheck() { return prefs.getLong(PREF_UPDATE_LAST_CHECK, 0L); }
+    public void setLastUpdateCheck(long epochMillis) { prefs.putLong(PREF_UPDATE_LAST_CHECK, epochMillis); }
+
+    public String getSkippedVersion() { return prefs.get(PREF_UPDATE_SKIPPED, ""); }
+    public void setSkippedVersion(String version) { prefs.put(PREF_UPDATE_SKIPPED, version != null ? version : ""); }
 }

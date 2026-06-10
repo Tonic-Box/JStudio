@@ -1,3 +1,5 @@
+import java.security.MessageDigest
+
 plugins {
     id("java")
     application
@@ -5,7 +7,7 @@ plugins {
 }
 
 group = "com.tonic.ui"
-version = "9.0-SNAPSHOT"
+version = "10.0-SNAPSHOT"
 
 application {
     mainClass.set("com.tonic.ui.JStudio")
@@ -64,6 +66,7 @@ tasks.test {
 tasks.jar {
     manifest {
         attributes["Main-Class"] = "com.tonic.ui.JStudio"
+        attributes["Implementation-Version"] = project.version.toString()
     }
 }
 
@@ -73,7 +76,37 @@ tasks.shadowJar {
     archiveVersion.set("")
     manifest {
         attributes["Main-Class"] = "com.tonic.ui.JStudio"
+        attributes["Implementation-Version"] = project.version.toString()
     }
+}
+
+// Emits build/libs/JStudio.jar.sha256 (sha256sum format) next to the shadow jar, for the
+// self-update integrity check. Upload both files as release assets.
+val shadowJarChecksum by tasks.registering {
+    val shadowJar = tasks.shadowJar
+    dependsOn(shadowJar)
+    val jarFile = shadowJar.flatMap { it.archiveFile }
+    val checksumFile = layout.buildDirectory.file("libs/JStudio.jar.sha256")
+    inputs.file(jarFile)
+    outputs.file(checksumFile)
+    doLast {
+        val jar = jarFile.get().asFile
+        val digest = MessageDigest.getInstance("SHA-256")
+        jar.inputStream().use { input ->
+            val buffer = ByteArray(16384)
+            while (true) {
+                val read = input.read(buffer)
+                if (read < 0) break
+                digest.update(buffer, 0, read)
+            }
+        }
+        val hex = digest.digest().joinToString("") { byte -> "%02x".format(byte) }
+        checksumFile.get().asFile.writeText("$hex  ${jar.name}\n")
+    }
+}
+
+tasks.shadowJar {
+    finalizedBy(shadowJarChecksum)
 }
 
 tasks.build {

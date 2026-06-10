@@ -318,6 +318,9 @@ public class MenuBarBuilder {
         menu.add(createMenuItem("Keyboard Shortcuts", KeyEvent.VK_F1, 0,
                 null, e -> mainFrame.showKeyboardShortcuts()));
 
+        menu.add(createMenuItem("Check for Updates", 0, 0,
+                null, e -> mainFrame.checkForUpdates()));
+
         menu.addSeparator();
 
         menu.add(createMenuItem("About JStudio", 0, 0,
