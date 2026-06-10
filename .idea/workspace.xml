@@ -7,7 +7,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Small tweak to self-update/update check" />
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Undid update check throttling" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -216,14 +216,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00026" summary="- Heap analysis: argument fix">
-      <option name="closed" value="true" />
-      <created>1766851284504</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1766851284504</updated>
     </task>
     <task id="LOCAL-00027" summary="- Heap analysis: cleanup">
       <option name="closed" value="true" />
@@ -609,7 +601,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781074187001</updated>
     </task>
-    <option name="localTasksCounter" value="75" />
+    <task id="LOCAL-00075" summary="- Undid update check throttling">
+      <option name="closed" value="true" />
+      <created>1781075026811</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1781075026811</updated>
+    </task>
+    <option name="localTasksCounter" value="76" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -624,7 +624,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Context options" />
     <MESSAGE value="- ConstPool view" />
     <MESSAGE value="- Compilation functionality&#10;- Jar export" />
     <MESSAGE value="- Control Flow view&#10;- Cleanup" />
@@ -649,7 +648,8 @@
     <MESSAGE value="- Improved bytecode view&#10;- fixed highlight bug in bytecode view" />
     <MESSAGE value="- Improved bytecode view&#10;- fixed highlight bug in bytecode view&#10;- Auto update checking now" />
     <MESSAGE value="- Small tweak to self-update/update check" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Small tweak to self-update/update check" />
+    <MESSAGE value="- Undid update check throttling" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Undid update check throttling" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
