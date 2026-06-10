@@ -18,8 +18,6 @@ import java.nio.file.Path;
  */
 public final class UpdateManager {
 
-    private static final long THROTTLE_MS = 24L * 60 * 60 * 1000;
-
     private static volatile boolean startupCheckDisabled = false;
 
     private final JFrame parent;
@@ -39,14 +37,11 @@ public final class UpdateManager {
     }
 
     /**
-     * Startup check: silently does nothing in a dev run, when disabled, or within the throttle window,
-     * and only prompts for a newer, non-skipped release.
+     * Startup check: silently does nothing in a dev run or when disabled, and only prompts for a
+     * newer, non-skipped release. Runs on every launch.
      */
     public void checkOnStartup() {
         if (startupCheckDisabled || !AppVersion.isPackaged() || !Settings.getInstance().isUpdateCheckEnabled()) {
-            return;
-        }
-        if (System.currentTimeMillis() - Settings.getInstance().getLastUpdateCheck() < THROTTLE_MS) {
             return;
         }
         runCheck(false);
@@ -74,7 +69,6 @@ public final class UpdateManager {
 
             @Override
             protected void done() {
-                Settings.getInstance().setLastUpdateCheck(System.currentTimeMillis());
                 UpdateInfo info;
                 try {
                     info = get();
