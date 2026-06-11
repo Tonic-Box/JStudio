@@ -5,10 +5,10 @@ import com.tonic.analysis.xref.XrefDatabase;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.MainFrame;
 import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.query.exec.QueryBatchRunner;
-import com.tonic.ui.query.exec.QueryService;
-import com.tonic.ui.query.planner.ClickTarget;
-import com.tonic.ui.query.planner.ResultRow;
+import com.tonic.analysis.query.exec.QueryBatchRunner;
+import com.tonic.analysis.query.exec.QueryService;
+import com.tonic.analysis.query.planner.QueryMatch;
+import com.tonic.analysis.query.planner.QueryTarget;
 import com.tonic.ui.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.SyntaxColors;
@@ -139,15 +139,15 @@ public class QueryExplorerPanel extends JPanel {
             public Component getTableCellRendererComponent(JTable table, Object value,
                     boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                ResultRow result = tableModel.getResultAt(row);
-                boolean isChildRow = result != null && result.isChild();
+                QueryMatch result = tableModel.getResultAt(row);
+                boolean isChildRow = tableModel.isChildRow(row);
                 setBackground(isSelected ? selection : bgSurface);
                 if (isChildRow) {
                     setForeground(isSelected ? textPrimary : textSecondary);
                     setFont(getFont().deriveFont(Font.PLAIN));
                 } else {
                     setForeground(isSelected ? textPrimary : accent);
-                    setFont(getFont().deriveFont(result != null && result.hasChildren() ? Font.BOLD : Font.PLAIN));
+                    setFont(getFont().deriveFont(result != null && result.hasEvidence() ? Font.BOLD : Font.PLAIN));
                 }
                 return this;
             }
@@ -327,8 +327,8 @@ public class QueryExplorerPanel extends JPanel {
                 int col = resultsTable.columnAtPoint(e.getPoint());
 
                 if (row >= 0 && col == 0) {
-                    ResultRow result = tableModel.getResultAt(row);
-                    if (result != null && result.hasChildren() && !result.isChild()) {
+                    QueryMatch result = tableModel.getResultAt(row);
+                    if (result != null && result.hasEvidence() && !tableModel.isChildRow(row)) {
                         tableModel.toggleExpand(row);
                         return;
                     }
@@ -487,7 +487,7 @@ public class QueryExplorerPanel extends JPanel {
                 tableModel.setResults(result.results());
                 int methodCount = result.resultCount();
                 int siteCount = result.results().stream()
-                    .mapToInt(r -> r.hasChildren() ? r.getChildren().size() : 0)
+                    .mapToInt(r -> r.hasEvidence() ? r.getEvidence().size() : 0)
                     .sum();
                 String statusText = siteCount > 0
                     ? "Found " + methodCount + " methods with " + siteCount + " call sites in " +
@@ -519,12 +519,13 @@ public class QueryExplorerPanel extends JPanel {
         int row = resultsTable.getSelectedRow();
         if (row < 0) return;
 
-        ResultRow result = tableModel.getResultAt(row);
+        QueryMatch result = tableModel.getResultAt(row);
         if (result == null) return;
 
-        ClickTarget target = result.getPrimaryTarget();
+        QueryTarget target = result.getTarget();
+        String name = displayName(result);
         if (target == null) {
-            statusLabel.setText("No navigation target for: " + result.getPrimaryLabel());
+            statusLabel.setText("No navigation target for: " + name);
             statusLabel.setForeground(JStudioTheme.getWarning());
             return;
         }
@@ -532,16 +533,32 @@ public class QueryExplorerPanel extends JPanel {
         if (mainFrame != null) {
             boolean success = mainFrame.navigateToTarget(target);
             if (success) {
-                statusLabel.setText("Navigated to: " + result.getPrimaryLabel());
+                statusLabel.setText("Navigated to: " + name);
                 statusLabel.setForeground(JStudioTheme.getSuccess());
             } else {
-                statusLabel.setText("Failed to navigate to: " + result.getPrimaryLabel());
+                statusLabel.setText("Failed to navigate to: " + name);
                 statusLabel.setForeground(JStudioTheme.getError());
             }
         } else {
-            statusLabel.setText("Navigate to: " + result.getPrimaryLabel());
+            statusLabel.setText("Navigate to: " + name);
             statusLabel.setForeground(JStudioTheme.getInfo());
         }
+    }
+
+    /** The display name for a match: a method/PC signature or class name, derived from its target. */
+    private static String displayName(QueryMatch match) {
+        QueryTarget target = match.getTarget();
+        if (target instanceof QueryTarget.MethodTarget) {
+            return ((QueryTarget.MethodTarget) target).getSignature();
+        }
+        if (target instanceof QueryTarget.PCTarget) {
+            return ((QueryTarget.PCTarget) target).getSignature();
+        }
+        if (target instanceof QueryTarget.ClassTarget) {
+            return ((QueryTarget.ClassTarget) target).className();
+        }
+        Object cls = match.getAttribute("class");
+        return cls != null ? cls.toString() : "(match)";
     }
 
     private void showHelp() {
@@ -734,11 +751,11 @@ public class QueryExplorerPanel extends JPanel {
     }
 
     private static class TreeResultTableModel extends AbstractTableModel {
-        private List<ResultRow> rootResults = new ArrayList<>();
-        private final List<ResultRow> flatRows = new ArrayList<>();
-        private final Set<ResultRow> expandedRows = new HashSet<>();
+        private List<QueryMatch> rootResults = new ArrayList<>();
+        private final List<FlatRow> flatRows = new ArrayList<>();
+        private final Set<QueryMatch> expandedRows = new HashSet<>();
 
-        public void setResults(List<ResultRow> results) {
+        public void setResults(List<QueryMatch> results) {
             this.rootResults = results != null ? new ArrayList<>(results) : new ArrayList<>();
             this.expandedRows.clear();
             rebuildFlatList();
@@ -753,10 +770,12 @@ public class QueryExplorerPanel extends JPanel {
 
         private void rebuildFlatList() {
             flatRows.clear();
-            for (ResultRow root : rootResults) {
-                flatRows.add(root);
-                if (expandedRows.contains(root) && root.hasChildren()) {
-                    flatRows.addAll(root.getChildren());
+            for (QueryMatch root : rootResults) {
+                flatRows.add(new FlatRow(root, false));
+                if (expandedRows.contains(root) && root.hasEvidence()) {
+                    for (QueryMatch child : root.getEvidence()) {
+                        flatRows.add(new FlatRow(child, true));
+                    }
                 }
             }
             fireTableDataChanged();
@@ -764,26 +783,30 @@ public class QueryExplorerPanel extends JPanel {
 
         public void toggleExpand(int row) {
             if (row < 0 || row >= flatRows.size()) return;
-            ResultRow result = flatRows.get(row);
-            if (result.isChild() || !result.hasChildren()) return;
+            FlatRow flat = flatRows.get(row);
+            if (flat.child || !flat.match.hasEvidence()) return;
 
-            if (expandedRows.contains(result)) {
-                expandedRows.remove(result);
+            if (expandedRows.contains(flat.match)) {
+                expandedRows.remove(flat.match);
             } else {
-                expandedRows.add(result);
+                expandedRows.add(flat.match);
             }
             rebuildFlatList();
         }
 
-        public boolean isExpanded(ResultRow row) {
-            return expandedRows.contains(row);
+        public boolean isExpanded(QueryMatch match) {
+            return expandedRows.contains(match);
         }
 
-        public ResultRow getResultAt(int row) {
+        public QueryMatch getResultAt(int row) {
             if (row >= 0 && row < flatRows.size()) {
-                return flatRows.get(row);
+                return flatRows.get(row).match;
             }
             return null;
+        }
+
+        public boolean isChildRow(int row) {
+            return row >= 0 && row < flatRows.size() && flatRows.get(row).child;
         }
 
         @Override
@@ -808,40 +831,66 @@ public class QueryExplorerPanel extends JPanel {
 
         @Override
         public Object getValueAt(int row, int column) {
-            ResultRow result = flatRows.get(row);
+            FlatRow flat = flatRows.get(row);
+            QueryMatch result = flat.match;
             switch (column) {
                 case 0:
                     String prefix = "";
-                    if (result.isChild()) {
+                    if (flat.child) {
                         prefix = "    ";
-                    } else if (result.hasChildren()) {
+                    } else if (result.hasEvidence()) {
                         prefix = isExpanded(result) ? "[-] " : "[+] ";
                     }
-                    return prefix + result.getPrimaryLabel();
+                    return prefix + rowLabel(result, flat.child);
                 case 1:
-                    return formatColumns(result.getColumns());
+                    return formatAttributes(result.getAttributes());
                 case 2:
-                    if (result.isChild()) {
-                        Object pc = result.getColumn("pc");
-                        return pc != null ? "pc=" + pc : "";
+                    if (flat.child) {
+                        QueryTarget t = result.getTarget();
+                        return t instanceof QueryTarget.PCTarget
+                                ? "pc=" + ((QueryTarget.PCTarget) t).pc() : "";
                     }
-                    return result.hasChildren() ? result.getChildren().size() + " sites" : "";
+                    return result.hasEvidence() ? result.getEvidence().size() + " sites" : "";
                 default:
                     return "";
             }
         }
 
-        private String formatColumns(Map<String, Object> columns) {
-            if (columns == null || columns.isEmpty()) return "";
+        /** Builds the display label UI-side (the engine no longer carries a presentation label). */
+        private static String rowLabel(QueryMatch match, boolean child) {
+            if (child) {
+                Object detail = match.getAttribute("detail");
+                return detail != null ? detail.toString() : displayName(match);
+            }
+            String base = displayName(match);
+            if (match.hasEvidence()) {
+                int n = match.getEvidence().size();
+                return base + " (" + n + " match" + (n != 1 ? "es" : "") + ")";
+            }
+            return base;
+        }
+
+        private String formatAttributes(Map<String, Object> attributes) {
+            if (attributes == null || attributes.isEmpty()) return "";
             StringBuilder sb = new StringBuilder();
-            for (Map.Entry<String, Object> entry : columns.entrySet()) {
+            for (Map.Entry<String, Object> entry : attributes.entrySet()) {
                 String key = entry.getKey();
-                if (key.equals("class") || key.equals("method") || key.equals("sites") || key.equals("pc")) continue;
+                if (key.equals("class") || key.equals("method") || key.equals("matches")
+                        || key.equals("pc") || key.equals("detail")) continue;
                 if (sb.length() > 0) sb.append(", ");
                 sb.append(key).append("=").append(entry.getValue());
             }
             return sb.toString();
         }
 
+        private static final class FlatRow {
+            final QueryMatch match;
+            final boolean child;
+
+            FlatRow(QueryMatch match, boolean child) {
+                this.match = match;
+                this.child = child;
+            }
+        }
     }
 }

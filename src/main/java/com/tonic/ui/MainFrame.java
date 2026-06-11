@@ -1891,25 +1891,21 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * Navigate using a ClickTarget from query results.
+     * Navigate using a QueryTarget from query results.
      */
-    public boolean navigateToTarget(com.tonic.ui.query.planner.ClickTarget target) {
-        if (target instanceof com.tonic.ui.query.planner.ClickTarget.ClassTarget) {
-            com.tonic.ui.query.planner.ClickTarget.ClassTarget ct =
-                (com.tonic.ui.query.planner.ClickTarget.ClassTarget) target;
+    public boolean navigateToTarget(com.tonic.analysis.query.planner.QueryTarget target) {
+        if (target instanceof com.tonic.analysis.query.planner.QueryTarget.ClassTarget) {
+            com.tonic.analysis.query.planner.QueryTarget.ClassTarget ct =
+                (com.tonic.analysis.query.planner.QueryTarget.ClassTarget) target;
             return navigateToClass(ct.className());
-        } else if (target instanceof com.tonic.ui.query.planner.ClickTarget.MethodTarget) {
-            com.tonic.ui.query.planner.ClickTarget.MethodTarget mt =
-                (com.tonic.ui.query.planner.ClickTarget.MethodTarget) target;
+        } else if (target instanceof com.tonic.analysis.query.planner.QueryTarget.MethodTarget) {
+            com.tonic.analysis.query.planner.QueryTarget.MethodTarget mt =
+                (com.tonic.analysis.query.planner.QueryTarget.MethodTarget) target;
             return navigateToMethod(mt.className(), mt.methodName(), mt.descriptor());
-        } else if (target instanceof com.tonic.ui.query.planner.ClickTarget.PCTarget) {
-            com.tonic.ui.query.planner.ClickTarget.PCTarget pt =
-                (com.tonic.ui.query.planner.ClickTarget.PCTarget) target;
+        } else if (target instanceof com.tonic.analysis.query.planner.QueryTarget.PCTarget) {
+            com.tonic.analysis.query.planner.QueryTarget.PCTarget pt =
+                (com.tonic.analysis.query.planner.QueryTarget.PCTarget) target;
             return navigateToPC(pt.className(), pt.methodName(), pt.descriptor(), pt.pc());
-        } else if (target instanceof com.tonic.ui.query.planner.ClickTarget.FieldTarget) {
-            com.tonic.ui.query.planner.ClickTarget.FieldTarget ft =
-                (com.tonic.ui.query.planner.ClickTarget.FieldTarget) target;
-            return navigateToClass(ft.className());
         }
         return false;
     }

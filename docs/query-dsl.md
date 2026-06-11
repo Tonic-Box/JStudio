@@ -5,6 +5,10 @@ composable query language. Keywords are case-insensitive; quoted strings and typ
 written. Double-clicking a result navigates to it (matched call/instruction sites navigate to the
 exact bytecode offset).
 
+The query engine itself lives in YABR (`com.tonic.analysis.query`); this page is the in-app language
+reference. For the programmatic API (running queries from code, result/target types), see YABR's
+[Query API](https://github.com/Tonic-Box/YABR/blob/main/docs/query-api.md).
+
 ## Structure
 
 ```
