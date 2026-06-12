@@ -20,6 +20,7 @@ public class Settings {
     private static final String PREF_FONT_SIZE = "editor.fontSize";
     private static final String PREF_FONT_FAMILY = "editor.fontFamily";
     private static final String PREF_WORD_WRAP = "editor.wordWrap";
+    private static final String PREF_USAGE_LENS = "editor.usageLens";
     private static final String PREF_LAST_DIR = "file.lastDirectory";
 
     private static final String PREF_RESTORE_SESSION = "session.restore";
@@ -79,6 +80,9 @@ public class Settings {
 
     public boolean isWordWrapEnabled() { return prefs.getBoolean(PREF_WORD_WRAP, false); }
     public void setWordWrapEnabled(boolean enabled) { prefs.putBoolean(PREF_WORD_WRAP, enabled); }
+
+    public boolean isUsageLensEnabled() { return prefs.getBoolean(PREF_USAGE_LENS, true); }
+    public void setUsageLensEnabled(boolean enabled) { prefs.putBoolean(PREF_USAGE_LENS, enabled); }
 
     // File chooser
     public String getLastDirectory() { return prefs.get(PREF_LAST_DIR, System.getProperty("user.home")); }

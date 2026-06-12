@@ -1,9 +1,8 @@
 package com.tonic.ui.analysis;
 
 import com.tonic.analysis.xref.Xref;
-import com.tonic.analysis.xref.XrefBuilder;
-import com.tonic.analysis.xref.XrefDatabase;
 import com.tonic.analysis.xref.XrefType;
+import com.tonic.service.XrefQueryService;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.editor.EditorPanel;
 import com.tonic.event.EventBus;
@@ -16,7 +15,6 @@ import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
-import com.tonic.ui.util.JdkClassFilter;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -106,9 +104,10 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
         SwingWorker<Map<XrefType, List<Xref>>, String> worker = new SwingWorker<>() {
             @Override
             protected Map<XrefType, List<Xref>> doInBackground() {
-                ensureXrefDatabase();
+                XrefQueryService.ensureDatabase(project);
                 publish("Querying database...");
-                List<Xref> results = queryXrefs(event);
+                List<Xref> results = XrefQueryService.getUsages(project, event.getTargetType(),
+                        event.getClassName(), event.getMemberName(), event.getMemberDescriptor());
                 return groupByType(results);
             }
 
@@ -140,44 +139,6 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
         setVisible(true);
     }
 
-    private void ensureXrefDatabase() {
-        if (project.getXrefDatabase() == null || project.getXrefDatabase().isEmpty()) {
-            XrefBuilder builder = new XrefBuilder(project.getClassPool());
-            XrefDatabase db = builder.build();
-            project.setXrefDatabase(db);
-        }
-    }
-
-    private List<Xref> queryXrefs(FindUsagesEvent event) {
-        XrefDatabase db = project.getXrefDatabase();
-        if (db == null) {
-            return Collections.emptyList();
-        }
-
-        List<Xref> results;
-        switch (event.getTargetType()) {
-            case METHOD:
-                results = db.getRefsToMethod(event.getClassName(), event.getMemberName(), event.getMemberDescriptor());
-                break;
-            case FIELD:
-                results = db.getRefsToField(event.getClassName(), event.getMemberName(), event.getMemberDescriptor());
-                break;
-            case CLASS:
-            default:
-                results = db.getRefsToClass(event.getClassName());
-                break;
-        }
-
-        List<Xref> filtered = new ArrayList<>();
-        for (Xref xref : results) {
-            if (!JdkClassFilter.isJdkClass(xref.getSourceClass())
-                && xref.getSourceMethod() != null) {
-                filtered.add(xref);
-            }
-        }
-        return filtered;
-    }
-
     private Map<XrefType, List<Xref>> groupByType(List<Xref> results) {
         Map<XrefType, List<Xref>> grouped = new LinkedHashMap<>();
         for (Xref xref : results) {
@@ -203,6 +164,17 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
 
             rootNode.add(typeNode);
         }
+    }
+
+    /** The simple (innermost) name of an internal or qualified class name, for token selection. */
+    private static String simpleName(String className) {
+        if (className == null) {
+            return null;
+        }
+        int sep = Math.max(className.lastIndexOf('/'), className.lastIndexOf('.'));
+        String simple = sep >= 0 ? className.substring(sep + 1) : className;
+        int dollar = simple.lastIndexOf('$');
+        return dollar >= 0 ? simple.substring(dollar + 1) : simple;
     }
 
     private void expandAll() {
@@ -231,7 +203,9 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
                         int pc = xref.getBytecodeOffset();
                         String methodName = xref.getSourceMethod();
                         String methodDesc = xref.getSourceMethodDesc();
-                        String token = xref.getTargetMember();
+                        // Class-level refs have no target member; select the class's simple name instead.
+                        String targetMember = xref.getTargetMember();
+                        String token = targetMember != null ? targetMember : simpleName(xref.getTargetClass());
 
                         SwingUtilities.invokeLater(() -> {
                             boolean navigated = methodName != null && pc >= 0

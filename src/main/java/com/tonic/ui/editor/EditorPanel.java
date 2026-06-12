@@ -479,6 +479,15 @@ public class EditorPanel extends ThemedJPanel {
     }
 
     /**
+     * Enable or disable usage-count lenses in all open tabs.
+     */
+    public void setUsageLensEnabled(boolean enabled) {
+        for (EditorTab tab : openTabs.values()) {
+            tab.setUsageLensEnabled(enabled);
+        }
+    }
+
+    /**
      * Refresh the current tab.
      */
     public void refreshCurrentTab() {

@@ -105,6 +105,10 @@ public class DualView extends JPanel {
         sourceView.setProjectModel(projectModel);
     }
 
+    public void setUsageLensEnabled(boolean enabled) {
+        sourceView.setUsageLensEnabled(enabled);
+    }
+
     private boolean isBytecodeFocused() {
         Component owner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
         return owner != null && SwingUtilities.isDescendingFrom(owner, bytecodeView);

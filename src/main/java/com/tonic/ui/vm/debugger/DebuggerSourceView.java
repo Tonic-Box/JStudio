@@ -316,7 +316,7 @@ public class DebuggerSourceView extends JPanel {
                 try {
                     DecompileResult result = get();
                     target.setDecompilationCache(result.getSource(), result.getLineMaps(),
-                            result.getMethodSpans());
+                            result.getMethodSpans(), result.getFieldSpans(), result.getClassSpan());
                     applySource(ownerName, methodKey, result.getSource(), result.getLineMaps(),
                             result.getMethodSpans());
                     status(" ");

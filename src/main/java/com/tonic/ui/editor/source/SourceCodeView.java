@@ -21,7 +21,10 @@ import com.tonic.model.Comment;
 import com.tonic.model.FieldEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
+import com.tonic.event.events.StatusMessageEvent;
 import com.tonic.service.ProjectDatabaseService;
+import com.tonic.service.XrefQueryService;
+import com.tonic.util.Settings;
 import com.tonic.ui.theme.*;
 
 import lombok.Getter;
@@ -93,6 +96,10 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private Runnable pendingNavigation;
     private IntConsumer onLineActivated;
 
+    private final UsageLensOverlay lensOverlay = new UsageLensOverlay();
+    private boolean usageLensEnabled = Settings.getInstance().isUsageLensEnabled();
+    private int lensGeneration;
+
     private final FloatingCompileToolbar compileToolbar;
     private final SourceCompilerParser compilerParser;
     private String originalSource;
@@ -108,7 +115,13 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         setLayout(new BorderLayout());
         setBackground(JStudioTheme.getBgTertiary());
 
-        textArea = new RSyntaxTextArea();
+        textArea = new RSyntaxTextArea() {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                lensOverlay.paint((java.awt.Graphics2D) g, this);
+            }
+        };
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
         textArea.setAntiAliasingEnabled(true);
         textArea.setEditable(true);
@@ -165,6 +178,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         // Setup right-click context menu
         setupContextMenu();
 
+        // Setup clickable usage-count lenses
+        setupUsageLensMouseHandling();
+
         // Listen for comment changes to update gutter icons
         ProjectDatabaseService.getInstance().addListener((db, dirty) -> SwingUtilities.invokeLater(this::updateCommentGutterIcons));
 
@@ -203,9 +219,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             if (dirty) {
                 compilerParser.setEnabled(true);
                 compileToolbar.showModified();
+                lensOverlay.clear();
             } else {
                 compilerParser.setEnabled(false);
                 compileToolbar.hideToolbar();
+                scheduleUsageLensUpdate();
             }
         }
 
@@ -247,6 +265,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                         classEntry.updateClassFile(result.getCompiledClass());
                         classEntry.setDecompilationCache(source);
                         compilerParser.setOriginalClass(result.getCompiledClass());
+                        if (projectModel != null) {
+                            projectModel.setXrefDatabase(null);
+                        }
                         originalSource = source;
                         dirty = false;
                         if (onRecompiled != null) {
@@ -364,6 +385,133 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                 }
             }
         });
+    }
+
+    private void setupUsageLensMouseHandling() {
+        textArea.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() != 1
+                        || (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0) {
+                    return;
+                }
+                UsageLens.LensEntry lens = lensOverlay.hitTest(e.getPoint());
+                if (lens != null) {
+                    postFindUsages(lens);
+                }
+            }
+        });
+        textArea.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                if ((e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0) {
+                    return;
+                }
+                boolean overLens = lensOverlay.hitTest(e.getPoint()) != null;
+                textArea.setCursor(Cursor.getPredefinedCursor(
+                        overLens ? Cursor.HAND_CURSOR : Cursor.TEXT_CURSOR));
+            }
+        });
+    }
+
+    /**
+     * Recomputes the usage-count lenses on a background worker: ensures the xref database exists
+     * (built once per project, the same database Find Usages uses), counts usages for each emitted
+     * method, field, and the class with the identical filtered query, then places entries from the
+     * decompiler's member spans. Cleared instead when lenses are disabled, annotations are filtered
+     * (line numbers shift), the source has been edited, or span data is unavailable.
+     */
+    private void scheduleUsageLensUpdate() {
+        int generation = ++lensGeneration;
+        Map<String, DecompileResult.MethodSpan> methodSpans = classEntry.getMethodSpans();
+        Map<String, DecompileResult.MemberSpan> fieldSpans = classEntry.getFieldSpans();
+        DecompileResult.MemberSpan classSpan = classEntry.getClassSpan();
+        if (!usageLensEnabled || omitAnnotations || dirty || projectModel == null || methodSpans == null) {
+            lensOverlay.clear();
+            textArea.repaint();
+            return;
+        }
+        String className = classEntry.getClassName();
+        ProjectModel project = projectModel;
+        List<MethodEntryModel> methods = classEntry.getMethods();
+        List<FieldEntryModel> fields = classEntry.getFields();
+        new SwingWorker<List<UsageLens.LensTarget>, Void>() {
+            @Override
+            protected List<UsageLens.LensTarget> doInBackground() {
+                if (project.getXrefDatabase() == null || project.getXrefDatabase().isEmpty()) {
+                    EventBus.getInstance().post(new StatusMessageEvent(this, "Building cross-reference database..."));
+                    XrefQueryService.ensureDatabase(project);
+                    EventBus.getInstance().post(new StatusMessageEvent(this, "Cross-reference database ready."));
+                }
+                List<UsageLens.LensTarget> targets = new ArrayList<>();
+                for (MethodEntryModel method : methods) {
+                    DecompileResult.MemberSpan span = methodSpans.get(method.getName() + method.getDescriptor());
+                    if (span != null) {
+                        int count = XrefQueryService.getUsages(project, FindUsagesEvent.TargetType.METHOD,
+                                className, method.getName(), method.getDescriptor()).size();
+                        targets.add(new UsageLens.LensTarget(FindUsagesEvent.TargetType.METHOD,
+                                method.getName(), method.getDescriptor(), span, count));
+                    }
+                }
+                if (fieldSpans != null) {
+                    for (FieldEntryModel field : fields) {
+                        DecompileResult.MemberSpan span = fieldSpans.get(field.getName() + field.getDescriptor());
+                        if (span != null) {
+                            int count = XrefQueryService.getUsages(project, FindUsagesEvent.TargetType.FIELD,
+                                    className, field.getName(), field.getDescriptor()).size();
+                            targets.add(new UsageLens.LensTarget(FindUsagesEvent.TargetType.FIELD,
+                                    field.getName(), field.getDescriptor(), span, count));
+                        }
+                    }
+                }
+                if (classSpan != null) {
+                    int count = XrefQueryService.getUsages(project, FindUsagesEvent.TargetType.CLASS,
+                            className, null, null).size();
+                    targets.add(new UsageLens.LensTarget(FindUsagesEvent.TargetType.CLASS,
+                            className, null, classSpan, count));
+                }
+                return targets;
+            }
+
+            @Override
+            protected void done() {
+                if (generation != lensGeneration || dirty) {
+                    return;
+                }
+                try {
+                    List<UsageLens.LensTarget> targets = get();
+                    String[] lines = textArea.getText().split("\n", -1);
+                    lensOverlay.setEntries(UsageLens.compute(lines, targets));
+                    textArea.repaint();
+                } catch (Exception e) {
+                    // Leave existing lenses untouched
+                }
+            }
+        }.execute();
+    }
+
+    /** Opens Find Usages for the member a lens belongs to — the same event the navigator posts. */
+    private void postFindUsages(UsageLens.LensEntry lens) {
+        String className = classEntry.getClassName();
+        switch (lens.targetType) {
+            case METHOD:
+                EventBus.getInstance().post(FindUsagesEvent.forMethod(
+                        this, className, lens.memberName, lens.memberDescriptor));
+                break;
+            case FIELD:
+                EventBus.getInstance().post(FindUsagesEvent.forField(
+                        this, className, lens.memberName, lens.memberDescriptor));
+                break;
+            case CLASS:
+                EventBus.getInstance().post(FindUsagesEvent.forClass(this, className));
+                break;
+        }
+    }
+
+    /** Enables or disables the usage-count lenses, recomputing or clearing them immediately. */
+    public void setUsageLensEnabled(boolean enabled) {
+        this.usageLensEnabled = enabled;
+        scheduleUsageLensUpdate();
     }
 
     private void showContextMenu(MouseEvent e) {
@@ -680,6 +828,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
      * Uses descriptor to match correct overload.
      */
     private void scrollToMethodDefinition(String methodName, String methodDesc) {
+        if (!omitAnnotations && methodDesc != null && classEntry.getMethodSpans() != null) {
+            DecompileResult.MethodSpan span = classEntry.getMethodSpans().get(methodName + methodDesc);
+            if (span != null) {
+                highlightAndScrollToLine(span.getStartLine() - 1);
+                return;
+            }
+        }
+
         String text = textArea.getText();
         String[] lines = text.split("\n");
 
@@ -766,6 +922,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
      * Looks for field declarations with type annotations.
      */
     private void scrollToFieldDefinition(String fieldName) {
+        if (!omitAnnotations && classEntry.getFieldSpans() != null) {
+            DecompileResult.MemberSpan span = fieldSpanByName(fieldName);
+            if (span != null) {
+                highlightAndScrollToLine(span.getStartLine() - 1);
+                return;
+            }
+        }
+
         String text = textArea.getText();
         String[] lines = text.split("\n");
 
@@ -1038,6 +1202,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             applyTextToEditor(textToSet);
             loaded = true;
             updateCommentGutterIcons();
+            scheduleUsageLensUpdate();
             return;
         }
 
@@ -1075,7 +1240,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                     String source = get();
                     if (decompileResult != null) {
                         classEntry.setDecompilationCache(source, decompileResult.getLineMaps(),
-                                decompileResult.getMethodSpans());
+                                decompileResult.getMethodSpans(), decompileResult.getFieldSpans(),
+                                decompileResult.getClassSpan());
                     } else {
                         classEntry.setDecompilationCache(source);
                     }
@@ -1084,6 +1250,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                     loaded = true;
                     loadingOverlay.hideLoading();
                     updateCommentGutterIcons();
+                    scheduleUsageLensUpdate();
                     Runnable navigation = pendingNavigation;
                     pendingNavigation = null;
                     if (navigation != null) {
@@ -1195,10 +1362,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             int start = textArea.getLineStartOffset(zeroBasedLine);
             int end = textArea.getLineEndOffset(zeroBasedLine);
             String text = textArea.getText(start, end - start);
-            int idx = text.indexOf(token + "(");
-            if (idx < 0) {
-                idx = text.indexOf(token);
-            }
+            int idx = bestTokenIndex(text, token);
             if (idx >= 0) {
                 textArea.select(start + idx, start + idx + token.length());
                 textArea.getCaret().setSelectionVisible(true);
@@ -1207,6 +1371,54 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         } catch (BadLocationException e) {
             // Leave the line highlight as the navigation result
         }
+    }
+
+    /**
+     * The index of the token occurrence to select on a line, preferring a real code reference over an
+     * incidental match inside a string/char literal (e.g. the {@code "IDK_LOL: "} in
+     * {@code println("IDK_LOL: " + obj.IDK_LOL)}). Occurrences inside literals are skipped; a member
+     * access ({@code .token}) or call ({@code token(}) wins; otherwise the first non-literal whole-word
+     * match; finally the first raw match so a token that only appears in a literal still selects.
+     */
+    private static int bestTokenIndex(String text, String token) {
+        int firstWord = -1;
+        for (int i = text.indexOf(token); i >= 0; i = text.indexOf(token, i + 1)) {
+            if (isInsideLiteral(text, i)) {
+                continue;
+            }
+            char before = i > 0 ? text.charAt(i - 1) : '\0';
+            int afterPos = i + token.length();
+            char after = afterPos < text.length() ? text.charAt(afterPos) : '\0';
+            if (Character.isJavaIdentifierPart(before) || Character.isJavaIdentifierPart(after)) {
+                continue;
+            }
+            if (before == '.' || after == '(') {
+                return i;
+            }
+            if (firstWord < 0) {
+                firstWord = i;
+            }
+        }
+        return firstWord >= 0 ? firstWord : text.indexOf(token);
+    }
+
+    /** Whether index {@code i} in the line falls inside a double- or single-quoted literal. */
+    private static boolean isInsideLiteral(String text, int i) {
+        boolean inString = false;
+        boolean inChar = false;
+        for (int j = 0; j < i && j < text.length(); j++) {
+            char c = text.charAt(j);
+            if ((inString || inChar) && c == '\\') {
+                j++;
+                continue;
+            }
+            if (c == '"' && !inChar) {
+                inString = !inString;
+            } else if (c == '\'' && !inString) {
+                inChar = !inChar;
+            }
+        }
+        return inString || inChar;
     }
 
     private void cancelCurrentWorker() {
@@ -1218,6 +1430,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
     private void applyTextToEditor(String text) {
         ignoreDocumentChanges = true;
+        lensOverlay.clear();
         textArea.setCodeFoldingEnabled(false);
         textArea.setBracketMatchingEnabled(false);
         textArea.setText(text);
@@ -1252,6 +1465,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             dirty = false;
             compileToolbar.hideToolbar();
             ignoreDocumentChanges = false;
+            scheduleUsageLensUpdate();
         }
     }
 
@@ -1570,6 +1784,10 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     }
 
     private DeclarationInfo getDeclarationAtLine(int lineNumber) {
+        DeclarationInfo fromSpans = declarationFromSpans(lineNumber);
+        if (fromSpans != null) {
+            return fromSpans;
+        }
         try {
             int startOffset = textArea.getLineStartOffset(lineNumber - 1);
             int endOffset = textArea.getLineEndOffset(lineNumber - 1);
@@ -1596,6 +1814,55 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             }
         } catch (BadLocationException e) {
             // ignore
+        }
+        return null;
+    }
+
+    /**
+     * Resolves the declaration on a 1-based line from the decompiler's member spans (a line belongs
+     * to the member whose span contains it; class/method/field spans are disjoint). Returns null when
+     * spans are unavailable or annotations are filtered — both shift or remove line data — so callers
+     * fall back to the regex extractors.
+     */
+    private DeclarationInfo declarationFromSpans(int lineNumber) {
+        if (omitAnnotations) {
+            return null;
+        }
+        DecompileResult.MemberSpan classSpan = classEntry.getClassSpan();
+        if (classSpan != null && classSpan.contains(lineNumber)) {
+            return new DeclarationInfo(DeclarationType.CLASS, classEntry.getSimpleName());
+        }
+        Map<String, DecompileResult.MethodSpan> methodSpans = classEntry.getMethodSpans();
+        if (methodSpans != null) {
+            for (MethodEntryModel method : classEntry.getMethods()) {
+                DecompileResult.MethodSpan span = methodSpans.get(method.getName() + method.getDescriptor());
+                if (span != null && span.contains(lineNumber)) {
+                    return new DeclarationInfo(DeclarationType.METHOD, method.getName(), method.getDescriptor());
+                }
+            }
+        }
+        Map<String, DecompileResult.MemberSpan> fieldSpans = classEntry.getFieldSpans();
+        if (fieldSpans != null) {
+            for (FieldEntryModel field : classEntry.getFields()) {
+                DecompileResult.MemberSpan span = fieldSpans.get(field.getName() + field.getDescriptor());
+                if (span != null && span.contains(lineNumber)) {
+                    return new DeclarationInfo(DeclarationType.FIELD, field.getName(), field.getDescriptor());
+                }
+            }
+        }
+        return null;
+    }
+
+    /** The field span for a field by its (class-unique) name, or null. */
+    private DecompileResult.MemberSpan fieldSpanByName(String fieldName) {
+        Map<String, DecompileResult.MemberSpan> fieldSpans = classEntry.getFieldSpans();
+        if (fieldSpans == null) {
+            return null;
+        }
+        for (FieldEntryModel field : classEntry.getFields()) {
+            if (field.getName().equals(fieldName)) {
+                return fieldSpans.get(field.getName() + field.getDescriptor());
+            }
         }
         return null;
     }

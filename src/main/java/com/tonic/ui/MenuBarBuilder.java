@@ -3,6 +3,7 @@ package com.tonic.ui;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.RecentFilesManager;
+import com.tonic.util.Settings;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
@@ -187,6 +188,12 @@ public class MenuBarBuilder {
         wordWrapItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.ALT_DOWN_MASK));
         wordWrapItem.addActionListener(e -> mainFrame.toggleWordWrap(wordWrapItem.isSelected()));
         menu.add(wordWrapItem);
+
+        // Usage-count lens toggle
+        JCheckBoxMenuItem usageLensItem = new JCheckBoxMenuItem("Usage Counts");
+        usageLensItem.setSelected(Settings.getInstance().isUsageLensEnabled());
+        usageLensItem.addActionListener(e -> mainFrame.toggleUsageLens(usageLensItem.isSelected()));
+        menu.add(usageLensItem);
 
         menu.addSeparator();
 

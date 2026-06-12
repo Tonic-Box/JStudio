@@ -1110,6 +1110,12 @@ public class MainFrame extends JFrame {
         statusBar.setMessage("Word wrap " + (enabled ? "enabled" : "disabled"));
     }
 
+    public void toggleUsageLens(boolean enabled) {
+        Settings.getInstance().setUsageLensEnabled(enabled);
+        editorPanel.setUsageLensEnabled(enabled);
+        statusBar.setMessage("Usage counts " + (enabled ? "enabled" : "disabled"));
+    }
+
     // === Edit Operations ===
 
     public void copySelection() {

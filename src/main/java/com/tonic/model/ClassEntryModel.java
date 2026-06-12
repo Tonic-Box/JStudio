@@ -44,6 +44,8 @@ public class ClassEntryModel {
     private long decompilationTimestamp;
     private Map<String, NavigableMap<Integer, Integer>> sourceLineMaps;
     private Map<String, DecompileResult.MethodSpan> methodSpans;
+    private Map<String, DecompileResult.MemberSpan> fieldSpans;
+    private DecompileResult.MemberSpan classSpan;
 
     public ClassEntryModel(ClassFile classFile) {
         this.classFile = classFile;
@@ -182,18 +184,25 @@ public class ClassEntryModel {
         this.decompilationTimestamp = System.currentTimeMillis();
         this.sourceLineMaps = null;
         this.methodSpans = null;
+        this.fieldSpans = null;
+        this.classSpan = null;
     }
 
     /**
-     * Caches decompiled source together with its per-method bytecode-offset-to-line maps, so PC
-     * navigation can resolve exact source lines. The maps are invalidated with the source.
+     * Caches decompiled source together with its per-member spans and per-method offset-to-line maps,
+     * so PC navigation and declaration lenses can resolve exact source lines. All are invalidated with
+     * the source.
      */
     public void setDecompilationCache(String decompilationCache,
                                       Map<String, NavigableMap<Integer, Integer>> sourceLineMaps,
-                                      Map<String, DecompileResult.MethodSpan> methodSpans) {
+                                      Map<String, DecompileResult.MethodSpan> methodSpans,
+                                      Map<String, DecompileResult.MemberSpan> fieldSpans,
+                                      DecompileResult.MemberSpan classSpan) {
         setDecompilationCache(decompilationCache);
         this.sourceLineMaps = sourceLineMaps;
         this.methodSpans = methodSpans;
+        this.fieldSpans = fieldSpans;
+        this.classSpan = classSpan;
     }
 
     public void invalidateDecompilationCache() {
@@ -201,6 +210,8 @@ public class ClassEntryModel {
         this.decompilationTimestamp = 0;
         this.sourceLineMaps = null;
         this.methodSpans = null;
+        this.fieldSpans = null;
+        this.classSpan = null;
     }
 
     public void updateClassFile(ClassFile newClassFile) {

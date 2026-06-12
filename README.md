@@ -12,6 +12,7 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 **Code Views**
 - **Source** - Decompiled Java with syntax highlighting
 - **Bytecode** - JVM instructions with color-coded opcodes
+- **Dual** - Source and bytecode side-by-side, linked by double-click
 
 **IR Views**
 - **SSA IR** - Static Single Assignment intermediate representation
@@ -39,6 +40,7 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 - **Strings** - Extract and search constant pool strings
 - **Query Explorer** - Composable query language for code searches — see the [Query DSL reference](docs/query-dsl.md)
 - **Cross-References** - Bidirectional symbol reference tracking
+- **Usage Lenses** - Clickable "N usages" counts on class, method, and field declarations in the source view that open Find Usages (toggle: View ▸ Usage Counts)
 
 ### Bytecode Debugger
 

@@ -312,6 +312,16 @@ public class EditorTab extends JPanel {
         sourceView.setOmitAnnotations(omit);
     }
 
+    /**
+     * Enable or disable usage-count lenses in the source view (and the dual view's source pane).
+     */
+    public void setUsageLensEnabled(boolean enabled) {
+        sourceView.setUsageLensEnabled(enabled);
+        if (dualView != null) {
+            dualView.setUsageLensEnabled(enabled);
+        }
+    }
+
     public void refresh() {
         if (isViewReady(currentMode)) {
             refreshView(currentMode);
