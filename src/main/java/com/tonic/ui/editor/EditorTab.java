@@ -583,6 +583,11 @@ public class EditorTab extends JPanel {
         return bytecodeView.highlightPC(methodName, methodDesc, pc);
     }
 
+    public boolean navigateToSourceOffset(String methodName, String methodDesc, int pc, String selectToken) {
+        setViewMode(ViewMode.SOURCE);
+        return sourceView.scrollToSourceOffset(methodName, methodDesc, pc, selectToken);
+    }
+
     public boolean navigateToMethod(String methodName, String methodDesc) {
         switch (currentMode) {
             case BYTECODE: return bytecodeView.scrollToMethod(methodName, methodDesc);

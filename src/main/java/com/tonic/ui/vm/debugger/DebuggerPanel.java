@@ -58,6 +58,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
 
     private MethodEntry currentMethod;
     private MethodEntry displayedMethod;
+    private final DebuggerSourceView sourceView;
     private final JScrollPane bytecodeScroll;
     private final ArgumentConfigPanel argumentConfigPanel;
     private boolean recursiveExecution = true;
@@ -95,6 +96,9 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         bytecodeModel = new BytecodeTableModel();
         bytecodeTable = new JTable(bytecodeModel);
         setupBytecodeTable();
+
+        sourceView = new DebuggerSourceView();
+        sourceView.setBreakpointToggler(this::toggleBreakpointAtPc);
 
         bytecodeScroll = new JScrollPane(bytecodeTable);
         updateBytecodeTitle(null);
@@ -145,7 +149,12 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         rightSplit.setBackground(JStudioTheme.getBgPrimary());
         rightSplit.setPreferredSize(new Dimension(280, 0));
 
-        JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, bytecodeScroll, rightSplit);
+        JTabbedPane viewTabs = new JTabbedPane();
+        viewTabs.setBackground(JStudioTheme.getBgPrimary());
+        viewTabs.addTab("Bytecode", bytecodeScroll);
+        viewTabs.addTab("Source", sourceView);
+
+        JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, viewTabs, rightSplit);
         centerSplit.setDividerLocation(450);
         centerSplit.setResizeWeight(0.6);
         centerSplit.setBackground(JStudioTheme.getBgPrimary());
@@ -262,6 +271,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         }
 
         bytecodeModel.setInstructions(instructions);
+        sourceView.showMethod(method, breakpoints);
     }
 
     private InstructionCategory categorizeOpcode(Opcode opcode) {
@@ -829,6 +839,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         }
 
         bytecodeModel.setInstructions(instructions);
+        sourceView.showMethod(method, breakpoints);
     }
 
     private Map<Integer, Integer> buildLineNumberTable(CodeAttribute code) {
@@ -1138,12 +1149,22 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         if (row < 0) return;
 
         InstructionEntry entry = bytecodeModel.getEntryAt(row);
-        if (entry == null || currentMethod == null) return;
+        if (entry == null) return;
 
-        int pc = entry.offset;
-        String className = currentMethod.getOwnerName();
-        String methodName = currentMethod.getName();
-        String desc = currentMethod.getDesc();
+        toggleBreakpointAtPc(entry.offset);
+    }
+
+    /**
+     * Toggles a breakpoint at a PC of the DISPLAYED method (which differs from the entry method
+     * while stepping through callees in recursive mode) and syncs both the bytecode table and the
+     * source tab's gutter dots.
+     */
+    private void toggleBreakpointAtPc(int pc) {
+        if (displayedMethod == null) return;
+
+        String className = displayedMethod.getOwnerName();
+        String methodName = displayedMethod.getName();
+        String desc = displayedMethod.getDesc();
 
         if (breakpoints.contains(pc)) {
             breakpoints.remove(pc);
@@ -1155,6 +1176,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             appendOutput("Breakpoint set at PC " + pc);
         }
         bytecodeModel.fireTableDataChanged();
+        sourceView.refreshBreakpoints(breakpoints);
     }
 
     private void runToCursorAtSelectedRow() {
@@ -1202,6 +1224,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             entry.current = false;
         }
         bytecodeModel.fireTableDataChanged();
+        sourceView.clearExecutionHighlight();
     }
 
     private void navigateToFrame(FrameEntry frame) {
@@ -1283,6 +1306,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             }
 
             highlightInstruction(state.getInstructionIndex());
+            sourceView.showExecutionPoint(displayedMethod, state.getInstructionIndex(), breakpoints);
             stackPanel.updateStack(state.getOperandStack());
             localsPanel.updateLocals(state.getLocalVariables());
             callStackPanel.updateCallStack(state.getCallStack());

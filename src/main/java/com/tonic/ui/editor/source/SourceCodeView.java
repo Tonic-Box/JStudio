@@ -1,6 +1,7 @@
 package com.tonic.ui.editor.source;
 
 import com.tonic.analysis.source.decompile.ClassDecompiler;
+import com.tonic.analysis.source.decompile.DecompileResult;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
@@ -62,6 +63,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 import javax.swing.SwingUtilities;
 
@@ -87,6 +89,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private Object currentLineHighlight;
     private final LoadingOverlay loadingOverlay;
     private SwingWorker<String, Void> currentWorker;
+    private Runnable pendingNavigation;
 
     private final FloatingCompileToolbar compileToolbar;
     private final SourceCompilerParser compilerParser;
@@ -1004,11 +1007,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         loadingOverlay.showLoading("Decompiling " + classEntry.getSimpleName() + "...");
 
         currentWorker = new SwingWorker<>() {
+            private DecompileResult decompileResult;
+
             @Override
             protected String doInBackground() {
                 try {
-                    ClassDecompiler decompiler = new ClassDecompiler(classEntry.getClassFile());
-                    return decompiler.decompile();
+                    DecompileResult result = new ClassDecompiler(classEntry.getClassFile()).decompileWithLineMap();
+                    decompileResult = result;
+                    return result.getSource();
                 } catch (Exception e) {
                     return "// Decompilation failed: " + e.getMessage() + "\n\n" +
                             "// Class: " + classEntry.getClassName() + "\n" +
@@ -1024,13 +1030,24 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                 }
                 try {
                     String source = get();
-                    classEntry.setDecompilationCache(source);
+                    if (decompileResult != null) {
+                        classEntry.setDecompilationCache(source, decompileResult.getLineMaps(),
+                                decompileResult.getMethodSpans());
+                    } else {
+                        classEntry.setDecompilationCache(source);
+                    }
                     String textToSet = omitAnnotations ? filterAnnotations(source) : source;
                     applyTextToEditor(textToSet);
                     loaded = true;
                     loadingOverlay.hideLoading();
                     updateCommentGutterIcons();
+                    Runnable navigation = pendingNavigation;
+                    pendingNavigation = null;
+                    if (navigation != null) {
+                        navigation.run();
+                    }
                 } catch (Exception e) {
+                    pendingNavigation = null;
                     loadingOverlay.hideLoading();
                     textArea.setText("// Failed to decompile: " + e.getMessage());
                 }
@@ -1038,6 +1055,115 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         };
 
         currentWorker.execute();
+    }
+
+    /**
+     * Scrolls to the source line containing the statement at the given bytecode offset and selects
+     * the referenced token on it. Resolution uses the decompiler's per-method offset-to-line map:
+     * the ceiling entry is preferred (inlined expressions are emitted by a later-offset consumer
+     * statement) with the floor entry second, verified by token presence; the lines between the two
+     * candidates are scanned when neither matches. If a decompile is in flight the navigation is
+     * deferred until its text lands. Returns false when no line map is available (plain cached
+     * source, annotation filtering active) so callers can fall back to method-level navigation.
+     */
+    public boolean scrollToSourceOffset(String methodName, String methodDesc, int pc, String selectToken) {
+        if (!loaded) {
+            refresh();
+        }
+        if (currentWorker != null && !currentWorker.isDone()) {
+            pendingNavigation = () -> applyScrollToSourceOffset(methodName, methodDesc, pc, selectToken);
+            return true;
+        }
+        return applyScrollToSourceOffset(methodName, methodDesc, pc, selectToken);
+    }
+
+    private boolean applyScrollToSourceOffset(String methodName, String methodDesc, int pc, String selectToken) {
+        if (omitAnnotations || pc < 0) {
+            return false;
+        }
+        Map<String, NavigableMap<Integer, Integer>> maps = classEntry.getSourceLineMaps();
+        if (maps == null) {
+            return false;
+        }
+        NavigableMap<Integer, Integer> lineMap = maps.get(methodName + methodDesc);
+        if (lineMap == null || lineMap.isEmpty()) {
+            return false;
+        }
+        Map.Entry<Integer, Integer> ceiling = lineMap.ceilingEntry(pc);
+        Map.Entry<Integer, Integer> floor = lineMap.floorEntry(pc);
+        int primary = ceiling != null ? ceiling.getValue() : floor.getValue();
+        int secondary = floor != null ? floor.getValue() : primary;
+
+        int line = pickLineContaining(selectToken, primary, secondary);
+        if (line < 0) {
+            line = primary;
+        }
+        highlightAndScrollToLine(line - 1);
+        selectTokenOnLine(line - 1, selectToken);
+        return true;
+    }
+
+    /**
+     * Picks, from the two candidate lines and the span between them, the first 1-based line whose
+     * text contains the token (call form {@code token(} preferred), or -1 when none does.
+     */
+    private int pickLineContaining(String token, int primary, int secondary) {
+        if (token == null || token.isEmpty()) {
+            return -1;
+        }
+        String callForm = token + "(";
+        if (lineContains(primary, callForm)) return primary;
+        if (lineContains(secondary, callForm)) return secondary;
+        if (lineContains(primary, token)) return primary;
+        if (lineContains(secondary, token)) return secondary;
+        int from = Math.min(primary, secondary);
+        int to = Math.max(primary, secondary);
+        for (int l = from; l <= to; l++) {
+            if (lineContains(l, callForm) || lineContains(l, token)) {
+                return l;
+            }
+        }
+        return -1;
+    }
+
+    private boolean lineContains(int oneBasedLine, String token) {
+        return lineText(oneBasedLine).contains(token);
+    }
+
+    private String lineText(int oneBasedLine) {
+        try {
+            int line = oneBasedLine - 1;
+            if (line < 0 || line >= textArea.getLineCount()) {
+                return "";
+            }
+            int start = textArea.getLineStartOffset(line);
+            int end = textArea.getLineEndOffset(line);
+            return textArea.getText(start, end - start);
+        } catch (BadLocationException e) {
+            return "";
+        }
+    }
+
+    private void selectTokenOnLine(int zeroBasedLine, String token) {
+        if (token == null || token.isEmpty()) {
+            return;
+        }
+        try {
+            int start = textArea.getLineStartOffset(zeroBasedLine);
+            int end = textArea.getLineEndOffset(zeroBasedLine);
+            String text = textArea.getText(start, end - start);
+            int idx = text.indexOf(token + "(");
+            if (idx < 0) {
+                idx = text.indexOf(token);
+            }
+            if (idx >= 0) {
+                textArea.select(start + idx, start + idx + token.length());
+                textArea.getCaret().setSelectionVisible(true);
+                textArea.requestFocusInWindow();
+            }
+        } catch (BadLocationException e) {
+            // Leave the line highlight as the navigation result
+        }
     }
 
     private void cancelCurrentWorker() {

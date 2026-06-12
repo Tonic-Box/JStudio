@@ -641,6 +641,21 @@ public class EditorPanel extends ThemedJPanel {
     }
 
     /**
+     * Navigate the source view to the statement at a bytecode offset, selecting the given token
+     * (e.g. the referenced method or field name) on the resolved line.
+     */
+    public boolean navigateToSourceOffset(ClassEntryModel classEntry, String methodName,
+                                          String methodDesc, int pc, String selectToken) {
+        openClass(classEntry, ViewMode.SOURCE);
+
+        EditorTab tab = openTabs.get(classEntry.getClassName());
+        if (tab != null) {
+            return tab.navigateToSourceOffset(methodName, methodDesc, pc, selectToken);
+        }
+        return false;
+    }
+
+    /**
      * Navigate to a specific method in a class.
      * Opens the class if not already open and scrolls to the method.
      * @param classEntry the class containing the method

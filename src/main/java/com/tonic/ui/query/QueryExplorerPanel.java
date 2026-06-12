@@ -1,7 +1,5 @@
 package com.tonic.ui.query;
 
-import com.tonic.analysis.xref.XrefBuilder;
-import com.tonic.analysis.xref.XrefDatabase;
 import com.tonic.event.EventBus;
 import com.tonic.event.events.ProjectLoadedEvent;
 import com.tonic.parser.ClassPool;
@@ -397,57 +395,7 @@ public class QueryExplorerPanel extends JPanel {
         }
         queryService.setUserClassNames(project.getUserClassNames());
 
-        if (project.getXrefDatabase() == null) {
-            buildXrefsAndRun(project, queryText);
-            return;
-        }
-
         executeQuery(queryText);
-    }
-
-    private void buildXrefsAndRun(ProjectModel project, String queryText) {
-        running = true;
-        runButton.setEnabled(false);
-        stopButton.setEnabled(true);
-        progressBar.setVisible(true);
-        progressBar.setIndeterminate(true);
-        statusLabel.setText("Building cross-reference database...");
-        tableModel.clear();
-
-        SwingWorker<XrefDatabase, String> worker = new SwingWorker<>() {
-            @Override
-            protected XrefDatabase doInBackground() {
-                XrefBuilder builder = new XrefBuilder(project.getClassPool());
-                builder.setProgressCallback(this::publish);
-                return builder.build();
-            }
-
-            @Override
-            protected void process(List<String> chunks) {
-                if (!chunks.isEmpty()) {
-                    statusLabel.setText("Building xrefs: " + chunks.get(chunks.size() - 1));
-                }
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    XrefDatabase xrefDb = get();
-                    project.setXrefDatabase(xrefDb);
-                    progressBar.setIndeterminate(false);
-                    executeQuery(queryText);
-                } catch (Exception e) {
-                    running = false;
-                    runButton.setEnabled(true);
-                    stopButton.setEnabled(false);
-                    progressBar.setVisible(false);
-                    statusLabel.setText("Error building xrefs: " + e.getMessage());
-                    statusLabel.setForeground(JStudioTheme.getError());
-                }
-            }
-        };
-
-        worker.execute();
     }
 
     private void executeQuery(String queryText) {

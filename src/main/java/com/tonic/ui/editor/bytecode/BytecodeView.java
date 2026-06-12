@@ -47,6 +47,7 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
 
     private boolean loaded = false;
     private SwingWorker<String, Void> currentWorker;
+    private Runnable pendingHighlight;
 
     private final Map<Integer, Object> highlightedLines = new HashMap<>();
     private int lastClickedLine = -1;
@@ -189,7 +190,13 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
                     textArea.setText(bytecodeText);
                     textArea.setCaretPosition(0);
                     loaded = true;
+                    Runnable highlight = pendingHighlight;
+                    pendingHighlight = null;
+                    if (highlight != null) {
+                        highlight.run();
+                    }
                 } catch (Exception e) {
+                    pendingHighlight = null;
                     textArea.setText("// Error displaying bytecode: " + e.getMessage());
                 }
             }
@@ -313,11 +320,23 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         textArea.setWrapStyleWord(enabled);
     }
 
+    /**
+     * Highlights the instruction at the given PC. Loading is asynchronous: if a refresh worker is
+     * in flight, its completion replaces the document and resets the caret, which would wipe a
+     * highlight applied now — so the highlight is deferred and applied when that load finishes.
+     */
     public boolean highlightPC(String methodName, String methodDesc, int pc) {
         if (!loaded) {
             refresh();
         }
+        if (currentWorker != null && !currentWorker.isDone()) {
+            pendingHighlight = () -> applyHighlightPC(methodName, methodDesc, pc);
+            return true;
+        }
+        return applyHighlightPC(methodName, methodDesc, pc);
+    }
 
+    private boolean applyHighlightPC(String methodName, String methodDesc, int pc) {
         String text = textArea.getText();
         String methodSignature = methodName + methodDesc;
         int methodStart = text.indexOf(methodSignature);
@@ -345,6 +364,13 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
                 clearHighlights();
                 addHighlight(lineNum);
                 lastClickedLine = lineNum;
+
+                int lineStart = textArea.getLineStartOffset(lineNum);
+                int lineEnd = textArea.getLineEndOffset(lineNum);
+                if (lineEnd > lineStart && text.charAt(lineEnd - 1) == '\n') {
+                    lineEnd--;
+                }
+                textArea.select(lineStart, lineEnd);
             } catch (Exception e) {
                 // Ignore
             }

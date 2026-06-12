@@ -1,5 +1,6 @@
 package com.tonic.model;
 
+import com.tonic.analysis.source.decompile.DecompileResult;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 
 @Getter
 public class ClassEntryModel {
@@ -40,6 +42,8 @@ public class ClassEntryModel {
     // Decompilation cache
     private String decompilationCache;
     private long decompilationTimestamp;
+    private Map<String, NavigableMap<Integer, Integer>> sourceLineMaps;
+    private Map<String, DecompileResult.MethodSpan> methodSpans;
 
     public ClassEntryModel(ClassFile classFile) {
         this.classFile = classFile;
@@ -176,11 +180,27 @@ public class ClassEntryModel {
     public void setDecompilationCache(String decompilationCache) {
         this.decompilationCache = decompilationCache;
         this.decompilationTimestamp = System.currentTimeMillis();
+        this.sourceLineMaps = null;
+        this.methodSpans = null;
+    }
+
+    /**
+     * Caches decompiled source together with its per-method bytecode-offset-to-line maps, so PC
+     * navigation can resolve exact source lines. The maps are invalidated with the source.
+     */
+    public void setDecompilationCache(String decompilationCache,
+                                      Map<String, NavigableMap<Integer, Integer>> sourceLineMaps,
+                                      Map<String, DecompileResult.MethodSpan> methodSpans) {
+        setDecompilationCache(decompilationCache);
+        this.sourceLineMaps = sourceLineMaps;
+        this.methodSpans = methodSpans;
     }
 
     public void invalidateDecompilationCache() {
         this.decompilationCache = null;
         this.decompilationTimestamp = 0;
+        this.sourceLineMaps = null;
+        this.methodSpans = null;
     }
 
     public void updateClassFile(ClassFile newClassFile) {

@@ -112,7 +112,7 @@ public class MainFrame extends JFrame {
     private final UpdateManager updateManager;
     private JDialog vmConsoleDialog;
     private VMConsolePanel vmConsolePanel;
-    private JDialog debuggerDialog;
+    private JFrame debuggerFrame;
     private DebuggerPanel debuggerPanel;
     private JDialog heapForensicsDialog;
     private com.tonic.ui.vm.heap.HeapForensicsPanel heapForensicsPanel;
@@ -1715,12 +1715,15 @@ public class MainFrame extends JFrame {
             return;
         }
 
-        if (debuggerDialog == null || debuggerPanel == null) {
+        if (debuggerFrame == null || debuggerPanel == null) {
             debuggerPanel = new DebuggerPanel();
-            debuggerDialog = new JDialog(this, "Bytecode Debugger", false);
-            debuggerDialog.setSize(1100, 700);
-            debuggerDialog.setLocationRelativeTo(this);
-            debuggerDialog.add(debuggerPanel);
+            // A JFrame (unlike a JDialog) gets native minimize/maximize window controls.
+            debuggerFrame = new JFrame("Bytecode Debugger");
+            debuggerFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+            debuggerFrame.setIconImages(getIconImages());
+            debuggerFrame.setSize(1100, 700);
+            debuggerFrame.setLocationRelativeTo(this);
+            debuggerFrame.add(debuggerPanel);
         }
 
         MethodEntryModel currentMethod = editorPanel.getCurrentMethod();
@@ -1731,8 +1734,8 @@ public class MainFrame extends JFrame {
             consolePanel.log("Bytecode Debugger: Opened - select a method to debug");
         }
 
-        debuggerDialog.setVisible(true);
-        debuggerDialog.toFront();
+        debuggerFrame.setVisible(true);
+        debuggerFrame.toFront();
         statusBar.setMessage("Bytecode Debugger opened");
     }
 
@@ -1881,11 +1884,11 @@ public class MainFrame extends JFrame {
             classEntry = project.findClassByName(className);
         }
         if (classEntry != null) {
-            boolean result = editorPanel.navigateToPC(classEntry, methodName, methodDesc, pc);
-            if (result) {
-                switchToBytecodeView();
-            }
-            return result;
+            // Switch the view (and toolbar/status) to bytecode FIRST, so the highlight applied by
+            // navigateToPC is the last operation — otherwise a follow-up setViewMode refresh would
+            // rebuild the view and clear the just-selected instruction line.
+            switchToBytecodeView();
+            return editorPanel.navigateToPC(classEntry, methodName, methodDesc, pc);
         }
         return false;
     }

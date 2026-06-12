@@ -228,14 +228,15 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
                     EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
 
                     if (editorPanel != null) {
-                        int lineNumber = xref.getLineNumber();
+                        int pc = xref.getBytecodeOffset();
                         String methodName = xref.getSourceMethod();
                         String methodDesc = xref.getSourceMethodDesc();
+                        String token = xref.getTargetMember();
 
                         SwingUtilities.invokeLater(() -> {
-                            if (lineNumber > 0) {
-                                editorPanel.goToLineAndHighlight(lineNumber);
-                            } else if (methodName != null && !methodName.isEmpty()) {
+                            boolean navigated = methodName != null && pc >= 0
+                                    && editorPanel.navigateToSourceOffset(classEntry, methodName, methodDesc, pc, token);
+                            if (!navigated && methodName != null && !methodName.isEmpty()) {
                                 MethodEntryModel method = classEntry.getMethod(methodName, methodDesc);
                                 if (method != null) {
                                     editorPanel.scrollToMethod(method);
