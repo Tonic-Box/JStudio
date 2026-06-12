@@ -7,20 +7,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Version bump 17.0&#10;- Add Dual view: linked bytecode/source panes">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/ClassEntryModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/ClassEntryModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/FindUsagesResultsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/FindUsagesResultsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/dual/DualView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/dual/DualView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerSourceView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerSourceView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/util/Settings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/util/Settings.java" afterDir="false" />
-    </list>
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Cleanup" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -232,22 +219,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00037" summary="- Cleanup">
-      <option name="closed" value="true" />
-      <created>1767148247369</created>
-      <option name="number" value="00037" />
-      <option name="presentableId" value="LOCAL-00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1767148247369</updated>
-    </task>
-    <task id="LOCAL-00038" summary="- Cleanup p4">
-      <option name="closed" value="true" />
-      <created>1767176217429</created>
-      <option name="number" value="00038" />
-      <option name="presentableId" value="LOCAL-00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1767176217429</updated>
     </task>
     <task id="LOCAL-00039" summary="- Cleanup p5">
       <option name="closed" value="true" />
@@ -625,7 +596,23 @@
       <option name="project" value="LOCAL" />
       <updated>1781289631550</updated>
     </task>
-    <option name="localTasksCounter" value="86" />
+    <task id="LOCAL-00086" summary="Add usage-count lenses (class/method/field) + span-based navigation&#10;- Clickable &quot;N usages&quot; lenses on class, method, and field declarations; open Find Usages (View ▸ Usage Counts toggle)&#10;- Shared XrefQueryService (one xref build + filter for lenses and Find Usages); class usages scoped to type references, not member accesses&#10;- Navigate/locate declarations via decompiler spans; regex kept only as Hide-Annotations fallback&#10;- Find Usages selection skips string/char literals and prefers the real member-access/call token&#10;- Recompiling a class invalidates the xref database">
+      <option name="closed" value="true" />
+      <created>1781304917435</created>
+      <option name="number" value="00086" />
+      <option name="presentableId" value="LOCAL-00086" />
+      <option name="project" value="LOCAL" />
+      <updated>1781304917435</updated>
+    </task>
+    <task id="LOCAL-00087" summary="- Cleanup">
+      <option name="closed" value="true" />
+      <created>1781304974913</created>
+      <option name="number" value="00087" />
+      <option name="presentableId" value="LOCAL-00087" />
+      <option name="project" value="LOCAL" />
+      <updated>1781304974913</updated>
+    </task>
+    <option name="localTasksCounter" value="88" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -640,8 +627,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion" />
-    <MESSAGE value="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion&#10;- fixed a caching bug in decompilation" />
     <MESSAGE value="- Added refresh button to the bytecode debugger" />
     <MESSAGE value="- cleanup" />
     <MESSAGE value="- cleanup &amp; bump" />
@@ -665,7 +650,9 @@
     <MESSAGE value="- Version bump 15.0" />
     <MESSAGE value="- Version bump 16.0&#10;- Fix NPE scrolling the debugger source tab before the window is laid out" />
     <MESSAGE value="- Version bump 17.0&#10;- Add Dual view: linked bytecode/source panes" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Version bump 17.0&#10;- Add Dual view: linked bytecode/source panes" />
+    <MESSAGE value="Add usage-count lenses (class/method/field) + span-based navigation&#10;- Clickable &quot;N usages&quot; lenses on class, method, and field declarations; open Find Usages (View ▸ Usage Counts toggle)&#10;- Shared XrefQueryService (one xref build + filter for lenses and Find Usages); class usages scoped to type references, not member accesses&#10;- Navigate/locate declarations via decompiler spans; regex kept only as Hide-Annotations fallback&#10;- Find Usages selection skips string/char literals and prefers the real member-access/call token&#10;- Recompiling a class invalidates the xref database" />
+    <MESSAGE value="- Cleanup" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Cleanup" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
