@@ -1,6 +1,6 @@
 package com.tonic.ui.update;
 
-import com.tonic.ui.util.Settings;
+import com.tonic.util.Settings;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;

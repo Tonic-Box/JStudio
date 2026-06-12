@@ -4,10 +4,10 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
 import com.tonic.plugin.api.ProjectApi;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.FieldEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.FieldEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.model.ProjectModel;
 
 import java.util.ArrayList;
 import java.util.List;

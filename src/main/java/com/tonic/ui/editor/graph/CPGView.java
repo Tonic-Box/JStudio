@@ -9,7 +9,7 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.editor.graph.render.CPGVertexRenderer;
 import com.tonic.ui.editor.graph.render.GraphVertex;
-import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.model.ClassEntryModel;
 
 import java.util.HashMap;
 import java.util.Map;

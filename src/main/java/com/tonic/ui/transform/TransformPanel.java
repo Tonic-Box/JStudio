@@ -6,9 +6,9 @@ import com.tonic.analysis.ssa.IRPrinter;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.BorderFactory;

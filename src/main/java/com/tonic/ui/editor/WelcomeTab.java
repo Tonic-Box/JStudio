@@ -2,9 +2,9 @@ package com.tonic.ui.editor;
 
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.MainFrame;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.model.ProjectModel;
 import com.tonic.ui.theme.*;
 
 import javax.swing.BorderFactory;
@@ -582,7 +582,7 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener {
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Class icon
-        JLabel iconLabel = new JLabel(info.classEntry.getIcon());
+        JLabel iconLabel = new JLabel(Icons.getIcon(info.classEntry.getIconKey()));
         panel.add(iconLabel);
 
         // Clickable class name

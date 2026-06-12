@@ -1,8 +1,8 @@
 package com.tonic.ui.dialog;
 
 import com.tonic.ui.core.component.ThemedJDialog;
-import com.tonic.ui.service.ClassCreationService.ClassCreationParams;
-import com.tonic.ui.service.ClassCreationService.ClassType;
+import com.tonic.service.ClassCreationService.ClassCreationParams;
+import com.tonic.service.ClassCreationService.ClassType;
 import com.tonic.ui.theme.JStudioTheme;
 import lombok.Getter;
 

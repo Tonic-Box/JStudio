@@ -4,7 +4,7 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
-import com.tonic.ui.service.ProjectService;
+import com.tonic.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
 import com.tonic.ui.vm.model.ExecutionResult;

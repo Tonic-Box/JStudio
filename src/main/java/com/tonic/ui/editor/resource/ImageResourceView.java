@@ -1,6 +1,6 @@
 package com.tonic.ui.editor.resource;
 
-import com.tonic.ui.model.ResourceEntryModel;
+import com.tonic.model.ResourceEntryModel;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;

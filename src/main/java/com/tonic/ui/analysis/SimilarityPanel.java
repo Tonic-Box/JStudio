@@ -9,7 +9,7 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.ui.editor.bytecode.BytecodeFormatter;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
 

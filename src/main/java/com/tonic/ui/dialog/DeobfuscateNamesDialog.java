@@ -7,8 +7,8 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.renamer.Renamer;
 import com.tonic.renamer.exception.RenameException;
 import com.tonic.ui.core.component.ThemedJDialog;
-import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.service.ProjectService;
+import com.tonic.model.ProjectModel;
+import com.tonic.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.*;

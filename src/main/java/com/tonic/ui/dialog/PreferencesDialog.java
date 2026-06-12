@@ -1,7 +1,7 @@
 package com.tonic.ui.dialog;
 
 import com.tonic.ui.theme.*;
-import com.tonic.ui.util.Settings;
+import com.tonic.util.Settings;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;

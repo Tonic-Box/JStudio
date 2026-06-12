@@ -1,12 +1,12 @@
 package com.tonic.ui.analysis;
 
 import com.tonic.ui.core.component.ThemedJPanel;
-import com.tonic.ui.event.EventBus;
-import com.tonic.ui.event.events.ClassSelectedEvent;
-import com.tonic.ui.model.Bookmark;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.service.ProjectDatabaseService;
+import com.tonic.event.EventBus;
+import com.tonic.event.events.ClassSelectedEvent;
+import com.tonic.model.Bookmark;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.ProjectModel;
+import com.tonic.service.ProjectDatabaseService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 

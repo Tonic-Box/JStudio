@@ -1,4 +1,5 @@
 package com.tonic.ui.console;
+import com.tonic.service.LogLevel;
 
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;

@@ -1,6 +1,6 @@
 package com.tonic.ui.theme;
 
-import com.tonic.ui.util.Settings;
+import com.tonic.util.Settings;
 import lombok.Getter;
 
 import javax.swing.BorderFactory;

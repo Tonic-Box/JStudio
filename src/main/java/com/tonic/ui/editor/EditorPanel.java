@@ -4,11 +4,11 @@ import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.editor.resource.ResourceEditorTab;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.FieldEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.model.ResourceEntryModel;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.FieldEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.model.ProjectModel;
+import com.tonic.model.ResourceEntryModel;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 
@@ -123,7 +123,7 @@ public class EditorPanel extends ThemedJPanel {
         openTabs.put(key, tab);
 
         // Add tab with close button
-        tabbedPane.addTab(tab.getTitle(), classEntry.getIcon(), tab, tab.getTooltip());
+        tabbedPane.addTab(tab.getTitle(), Icons.getIcon(classEntry.getIconKey()), tab, tab.getTooltip());
         int index = tabbedPane.getTabCount() - 1;
         tabbedPane.setTabComponentAt(index, createTabComponent(tab));
         tabbedPane.setSelectedIndex(index);
@@ -144,7 +144,7 @@ public class EditorPanel extends ThemedJPanel {
         ResourceEditorTab tab = new ResourceEditorTab(resource);
         openResourceTabs.put(key, tab);
 
-        tabbedPane.addTab(tab.getTitle(), resource.getIcon(), tab, tab.getTooltip());
+        tabbedPane.addTab(tab.getTitle(), Icons.getIcon(resource.getIconKey()), tab, tab.getTooltip());
         int index = tabbedPane.getTabCount() - 1;
         tabbedPane.setTabComponentAt(index, createResourceTabComponent(tab));
         tabbedPane.setSelectedIndex(index);
@@ -175,7 +175,7 @@ public class EditorPanel extends ThemedJPanel {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 0));
         panel.setOpaque(false);
 
-        JLabel iconLabel = new JLabel(tab.getResource().getIcon());
+        JLabel iconLabel = new JLabel(Icons.getIcon(tab.getResource().getIconKey()));
         panel.add(iconLabel);
 
         JLabel titleLabel = new JLabel(tab.getTitle());
@@ -223,7 +223,7 @@ public class EditorPanel extends ThemedJPanel {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 0));
         panel.setOpaque(false);
 
-        JLabel iconLabel = new JLabel(tab.getClassEntry().getIcon());
+        JLabel iconLabel = new JLabel(Icons.getIcon(tab.getClassEntry().getIconKey()));
         panel.add(iconLabel);
 
         JLabel titleLabel = new JLabel(tab.getTitle());

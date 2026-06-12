@@ -10,8 +10,8 @@ import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.editor.graph.render.GraphVertex;
 import com.tonic.ui.editor.graph.render.PDGVertexRenderer;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
 
 import java.util.HashMap;
 import java.util.Map;

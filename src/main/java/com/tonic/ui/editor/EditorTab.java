@@ -14,10 +14,10 @@ import com.tonic.ui.editor.hex.HexView;
 import com.tonic.ui.editor.ir.IRView;
 import com.tonic.ui.editor.llvm.LLVMView;
 import com.tonic.ui.editor.source.SourceCodeView;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.FieldEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.FieldEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 import lombok.Getter;
 

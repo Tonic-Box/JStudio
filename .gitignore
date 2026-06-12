@@ -43,3 +43,4 @@ bin/
 /.claude/
 /data/
 /nul
+/warnings.txt

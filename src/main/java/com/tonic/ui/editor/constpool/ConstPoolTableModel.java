@@ -2,7 +2,7 @@ package com.tonic.ui.editor.constpool;
 
 import com.tonic.parser.ConstPool;
 import com.tonic.parser.constpool.*;
-import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.model.ClassEntryModel;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;

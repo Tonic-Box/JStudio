@@ -2,8 +2,8 @@ package com.tonic.ui.editor.bytecode;
 
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.core.component.LoadingOverlay;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
 import com.tonic.ui.theme.*;
 
 import com.tonic.ui.editor.SearchPanel;

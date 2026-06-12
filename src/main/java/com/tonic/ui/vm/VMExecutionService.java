@@ -16,11 +16,11 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
 import com.tonic.analysis.instruction.Instruction;
-import com.tonic.ui.event.EventBus;
-import com.tonic.ui.event.events.ProjectLoadedEvent;
-import com.tonic.ui.event.events.StatusMessageEvent;
-import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.service.ProjectService;
+import com.tonic.event.EventBus;
+import com.tonic.event.events.ProjectLoadedEvent;
+import com.tonic.event.events.StatusMessageEvent;
+import com.tonic.model.ProjectModel;
+import com.tonic.service.ProjectService;
 import com.tonic.ui.vm.model.ExecutionResult;
 import com.tonic.ui.vm.model.MethodCall;
 

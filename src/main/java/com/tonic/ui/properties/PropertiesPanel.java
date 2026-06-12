@@ -6,10 +6,10 @@ import com.tonic.ui.MainFrame;
 import com.tonic.parser.attribute.CodeAttribute;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.FieldEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.simulation.metrics.ComplexityMetrics;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.FieldEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.simulation.metrics.ComplexityMetrics;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.BorderFactory;

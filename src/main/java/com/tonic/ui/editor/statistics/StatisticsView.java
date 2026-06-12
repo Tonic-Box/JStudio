@@ -5,7 +5,7 @@ import com.tonic.ui.editor.statistics.charts.BarChart;
 import com.tonic.ui.editor.statistics.charts.PieChart;
 import com.tonic.ui.editor.statistics.charts.StatCard;
 import com.tonic.ui.editor.statistics.charts.StatTable;
-import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.model.ClassEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;

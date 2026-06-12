@@ -1,7 +1,7 @@
 package com.tonic.ui.vm.dialog;
 
 import com.tonic.parser.MethodEntry;
-import com.tonic.ui.model.MethodEntryModel;
+import com.tonic.model.MethodEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.CommandParser;
 import com.tonic.ui.vm.MethodSelectorPanel;

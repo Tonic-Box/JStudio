@@ -1,7 +1,7 @@
 package com.tonic.ui.editor.constpool;
 
 import com.tonic.ui.core.component.LoadingOverlay;
-import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.model.ClassEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
@@ -279,7 +279,7 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         sb.append("=".repeat(60)).append("\n\n");
 
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            sb.append(String.format("#%-4d  %-15s  %s%n",
+            sb.append(String.format("#%-4s  %-15s  %s%n",
                     tableModel.getValueAt(i, 0),
                     tableModel.getValueAt(i, 1),
                     tableModel.getValueAt(i, 2)));
@@ -293,7 +293,7 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
 
         StringBuilder sb = new StringBuilder();
         for (int row : rows) {
-            sb.append(String.format("#%-4d  %-15s  %s%n",
+            sb.append(String.format("#%-4s  %-15s  %s%n",
                     tableModel.getValueAt(row, 0),
                     tableModel.getValueAt(row, 1),
                     tableModel.getValueAt(row, 2)));

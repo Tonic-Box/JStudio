@@ -7,9 +7,9 @@ import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.simulation.metrics.ComplexityMetrics;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.simulation.metrics.ComplexityMetrics;
 
 import java.util.*;
 

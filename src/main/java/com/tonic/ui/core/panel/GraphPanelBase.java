@@ -4,8 +4,8 @@ import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.util.mxCellRenderer;
 import com.mxgraph.view.mxGraph;
 import com.mxgraph.view.mxStylesheet;
-import com.tonic.ui.core.util.ErrorHandler;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.util.ErrorHandler;
+import com.tonic.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.imageio.ImageIO;

@@ -2,9 +2,9 @@ package com.tonic.ui.core.panel;
 
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.component.ThemedJTextArea;
-import com.tonic.ui.core.util.ErrorHandler;
+import com.tonic.util.ErrorHandler;
 import com.tonic.ui.core.util.LayoutHelper;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ProjectModel;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;

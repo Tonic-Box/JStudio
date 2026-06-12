@@ -1,10 +1,10 @@
 package com.tonic.ui.navigator;
 
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.FieldEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.model.ResourceEntryModel;
-import com.tonic.ui.simulation.metrics.ComplexityMetrics;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.FieldEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.model.ResourceEntryModel;
+import com.tonic.simulation.metrics.ComplexityMetrics;
 import com.tonic.ui.theme.Icons;
 import lombok.Getter;
 
@@ -133,7 +133,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
 
         @Override
         public Icon getIcon() {
-            return classEntry.getIcon();
+            return Icons.getIcon(classEntry.getIconKey());
         }
 
         @Override
@@ -161,7 +161,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
 
         @Override
         public Icon getIcon() {
-            return methodEntry.getIcon();
+            return Icons.getIcon(methodEntry.getIconKey());
         }
 
         @Override
@@ -196,7 +196,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
 
         @Override
         public Icon getIcon() {
-            return fieldEntry.getIcon();
+            return Icons.getIcon(fieldEntry.getIconKey());
         }
 
         @Override
@@ -303,7 +303,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
 
         @Override
         public Icon getIcon() {
-            return resource.getIcon();
+            return Icons.getIcon(resource.getIconKey());
         }
 
         @Override

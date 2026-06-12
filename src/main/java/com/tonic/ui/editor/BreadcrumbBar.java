@@ -1,6 +1,6 @@
 package com.tonic.ui.editor;
 
-import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.model.ClassEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.BorderFactory;

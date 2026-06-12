@@ -2,14 +2,16 @@ package com.tonic.ui.query;
 
 import com.tonic.analysis.xref.XrefBuilder;
 import com.tonic.analysis.xref.XrefDatabase;
+import com.tonic.event.EventBus;
+import com.tonic.event.events.ProjectLoadedEvent;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.MainFrame;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ProjectModel;
 import com.tonic.analysis.query.exec.QueryBatchRunner;
 import com.tonic.analysis.query.exec.QueryService;
 import com.tonic.analysis.query.planner.QueryMatch;
 import com.tonic.analysis.query.planner.QueryTarget;
-import com.tonic.ui.service.ProjectService;
+import com.tonic.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.SyntaxColors;
 import com.tonic.ui.theme.ThemeManager;
@@ -63,6 +65,15 @@ public class QueryExplorerPanel extends JPanel {
         // scroll panes absorb any shortfall, so the split stays freely resizable.
         setMinimumSize(new Dimension(0, 0));
         ThemeManager.getInstance().addThemeChangeListener(t -> SwingUtilities.invokeLater(this::applyTheme));
+        // Loading a new project replaces the class pool, so prior results no longer apply — clear them.
+        EventBus.getInstance().register(ProjectLoadedEvent.class, e -> clearResults());
+    }
+
+    /** Clears stale query results when a new project replaces the current one. */
+    private void clearResults() {
+        tableModel.clear();
+        statusLabel.setText("Enter a query and click Run");
+        statusLabel.setForeground(JStudioTheme.getTextSecondary());
     }
 
     /**

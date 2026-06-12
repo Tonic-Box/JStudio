@@ -2,13 +2,11 @@ package com.tonic.ui.editor.cfg;
 
 import com.tonic.ui.core.component.FilterableComboBox;
 import com.tonic.ui.editor.graph.BaseGraphView;
-import com.tonic.ui.event.Event;
-import com.tonic.ui.event.EventBus;
-import com.tonic.ui.event.events.CFGBlockSelectedEvent;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
+import com.tonic.event.EventBus;
+
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
-import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -167,11 +165,6 @@ public class ControlFlowView extends BaseGraphView {
         }
     }
 
-    private void navigateToBytecode(int offset) {
-        EventBus.getInstance().post(new NavigateToBytecodeRequest(
-                classEntry, currentMethod, offset));
-    }
-
     @Override
     protected String generateDOT() {
         if (currentBlocks == null || currentBlocks.isEmpty()) {
@@ -192,20 +185,6 @@ public class ControlFlowView extends BaseGraphView {
             cfgMethodSelector.setSelectedIndex(0);
         } else {
             super.refresh();
-        }
-    }
-
-    @Getter
-    public static class NavigateToBytecodeRequest extends Event {
-        private final ClassEntryModel classEntry;
-        private final MethodEntryModel method;
-        private final int offset;
-
-        public NavigateToBytecodeRequest(ClassEntryModel classEntry, MethodEntryModel method, int offset) {
-            super(classEntry);
-            this.classEntry = classEntry;
-            this.method = method;
-            this.offset = offset;
         }
     }
 }

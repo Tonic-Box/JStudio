@@ -10,8 +10,8 @@ import com.tonic.parser.attribute.table.LineNumberTableEntry;
 import com.tonic.parser.constpool.*;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.service.ProjectService;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.MethodSelectorPanel;
 import com.tonic.ui.vm.VMExecutionService;
@@ -60,7 +60,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
     private MethodEntry displayedMethod;
     private final JScrollPane bytecodeScroll;
     private final ArgumentConfigPanel argumentConfigPanel;
-    private boolean recursiveExecution = false;
+    private boolean recursiveExecution = true;
     private final List<InstructionEntry> instructions;
     private final Map<Integer, Integer> pcToRowMap;
     private final Set<Integer> breakpoints = new HashSet<>();
@@ -608,7 +608,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         });
 
         recursiveCheckbox = new JCheckBox("Recursive Calls");
-        recursiveCheckbox.setSelected(false);
+        recursiveCheckbox.setSelected(true);
         recursiveCheckbox.setBackground(JStudioTheme.getBgPrimary());
         recursiveCheckbox.setForeground(JStudioTheme.getTextPrimary());
         recursiveCheckbox.setToolTipText("Execute called methods recursively (vs stub with defaults)");

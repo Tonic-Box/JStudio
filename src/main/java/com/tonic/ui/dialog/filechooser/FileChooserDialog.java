@@ -1,7 +1,7 @@
 package com.tonic.ui.dialog.filechooser;
 
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.util.Settings;
+import com.tonic.util.Settings;
 import lombok.Getter;
 
 import javax.swing.JDialog;

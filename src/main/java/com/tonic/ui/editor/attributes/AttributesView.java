@@ -6,7 +6,7 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.*;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.ui.core.component.LoadingOverlay;
-import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.model.ClassEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;

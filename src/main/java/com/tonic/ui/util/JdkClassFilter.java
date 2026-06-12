@@ -1,7 +1,7 @@
 package com.tonic.ui.util;
 
-import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.service.ProjectService;
+import com.tonic.model.ProjectModel;
+import com.tonic.service.ProjectService;
 
 public class JdkClassFilter {
 

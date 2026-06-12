@@ -5,7 +5,7 @@ import com.tonic.cli.HeadlessRunner;
 import com.tonic.ui.theme.ThemeManager;
 import com.tonic.ui.update.UpdateManager;
 import com.tonic.ui.util.KeyboardShortcuts;
-import com.tonic.ui.util.Settings;
+import com.tonic.util.Settings;
 import java.awt.EventQueue;
 import java.util.Arrays;
 

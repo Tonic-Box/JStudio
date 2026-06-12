@@ -7,11 +7,11 @@ import com.tonic.analysis.callgraph.CallGraphNode;
 import com.tonic.analysis.common.MethodReference;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
-import com.tonic.ui.event.EventBus;
-import com.tonic.ui.event.events.ClassSelectedEvent;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.event.EventBus;
+import com.tonic.event.events.ClassSelectedEvent;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.model.ProjectModel;
 import com.tonic.ui.util.JdkClassFilter;
 
 import javax.swing.JComboBox;

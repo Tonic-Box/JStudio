@@ -2,8 +2,8 @@ package com.tonic.ui;
 
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
-import com.tonic.ui.event.EventBus;
-import com.tonic.ui.event.events.StatusMessageEvent;
+import com.tonic.event.EventBus;
+import com.tonic.event.events.StatusMessageEvent;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.BorderFactory;

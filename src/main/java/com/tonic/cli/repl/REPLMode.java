@@ -1,10 +1,10 @@
 package com.tonic.cli.repl;
 
 import com.tonic.plugin.context.PluginContextImpl;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.service.ProjectService;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.model.ProjectModel;
+import com.tonic.service.ProjectService;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.jline.reader.LineReader;

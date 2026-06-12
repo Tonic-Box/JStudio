@@ -1,7 +1,7 @@
 package com.tonic.ui.editor.resource;
 
-import com.tonic.ui.model.ResourceEntryModel;
-import com.tonic.ui.model.ResourceType;
+import com.tonic.model.ResourceEntryModel;
+import com.tonic.model.ResourceType;
 import lombok.Getter;
 
 import javax.swing.JPanel;

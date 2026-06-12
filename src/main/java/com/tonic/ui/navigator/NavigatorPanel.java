@@ -11,21 +11,21 @@ import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.dialog.NewClassDialog;
 import com.tonic.ui.dialog.RenameClassDialog;
 import com.tonic.ui.editor.ViewMode;
-import com.tonic.ui.event.EventBus;
-import com.tonic.ui.event.events.ClassSelectedEvent;
-import com.tonic.ui.event.events.FindUsagesEvent;
-import com.tonic.ui.event.events.MethodSelectedEvent;
-import com.tonic.ui.event.events.ProjectLoadedEvent;
-import com.tonic.ui.event.events.ProjectUpdatedEvent;
-import com.tonic.ui.event.events.ResourceSelectedEvent;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.FieldEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.model.ResourceEntryModel;
-import com.tonic.ui.service.ClassCreationService;
-import com.tonic.ui.service.ClassCreationService.ClassCreationParams;
-import com.tonic.ui.service.ProjectService;
+import com.tonic.event.EventBus;
+import com.tonic.event.events.ClassSelectedEvent;
+import com.tonic.event.events.FindUsagesEvent;
+import com.tonic.event.events.MethodSelectedEvent;
+import com.tonic.event.events.ProjectLoadedEvent;
+import com.tonic.event.events.ProjectUpdatedEvent;
+import com.tonic.event.events.ResourceSelectedEvent;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.FieldEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.model.ProjectModel;
+import com.tonic.model.ResourceEntryModel;
+import com.tonic.service.ClassCreationService;
+import com.tonic.service.ClassCreationService.ClassCreationParams;
+import com.tonic.service.ProjectService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
@@ -358,7 +358,7 @@ public class NavigatorPanel extends ThemedJPanel {
     }
 
     public void refresh() {
-        ProjectModel project = com.tonic.ui.service.ProjectService.getInstance().getCurrentProject();
+        ProjectModel project = com.tonic.service.ProjectService.getInstance().getCurrentProject();
         if (project != null) {
             treeModel.loadProject(project);
         }

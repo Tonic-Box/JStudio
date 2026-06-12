@@ -1,10 +1,10 @@
 package com.tonic.ui.dialog;
 
 import com.tonic.analysis.source.decompile.ClassDecompiler;
-import com.tonic.ui.event.EventBus;
-import com.tonic.ui.event.events.ClassSelectedEvent;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.event.EventBus;
+import com.tonic.event.events.ClassSelectedEvent;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.*;

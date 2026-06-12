@@ -1,7 +1,7 @@
 package com.tonic.ui.analysis;
 
 import com.tonic.ui.core.component.ThemedJPanel;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 import lombok.Getter;
 

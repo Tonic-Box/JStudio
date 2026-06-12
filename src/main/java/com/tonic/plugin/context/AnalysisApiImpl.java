@@ -12,8 +12,8 @@ import com.tonic.parser.constpool.Item;
 import com.tonic.parser.constpool.StringRefItem;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.plugin.api.AnalysisApi;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.ProjectModel;
 
 import java.util.*;
 import java.util.regex.Pattern;

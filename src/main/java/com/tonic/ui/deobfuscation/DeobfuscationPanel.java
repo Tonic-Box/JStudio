@@ -1,16 +1,17 @@
 package com.tonic.ui.deobfuscation;
+import com.tonic.deobfuscation.DeobfuscationService;
 
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
-import com.tonic.ui.deobfuscation.detection.DecryptorDetector;
-import com.tonic.ui.deobfuscation.detection.EncryptedStringDetector;
-import com.tonic.ui.deobfuscation.model.DecryptorCandidate;
-import com.tonic.ui.deobfuscation.model.DeobfuscationResult;
-import com.tonic.ui.deobfuscation.model.SuspiciousString;
-import com.tonic.ui.deobfuscation.patch.ConstantPoolPatcher;
+import com.tonic.deobfuscation.detection.DecryptorDetector;
+import com.tonic.deobfuscation.detection.EncryptedStringDetector;
+import com.tonic.deobfuscation.model.DecryptorCandidate;
+import com.tonic.deobfuscation.model.DeobfuscationResult;
+import com.tonic.deobfuscation.model.SuspiciousString;
+import com.tonic.deobfuscation.patch.ConstantPoolPatcher;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.*;

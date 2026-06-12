@@ -1,10 +1,10 @@
 package com.tonic.ui.navigator;
 
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.FieldEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
-import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.model.ResourceEntryModel;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.FieldEntryModel;
+import com.tonic.model.MethodEntryModel;
+import com.tonic.model.ProjectModel;
+import com.tonic.model.ResourceEntryModel;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.util.JdkClassFilter;
 

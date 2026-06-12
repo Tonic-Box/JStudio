@@ -5,9 +5,9 @@ import com.tonic.plugin.api.AnalyzerPlugin;
 import com.tonic.plugin.api.TransformerPlugin;
 import com.tonic.plugin.context.PluginContextImpl;
 import com.tonic.plugin.result.Finding;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.ProjectModel;
-import com.tonic.ui.service.ProjectService;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.ProjectModel;
+import com.tonic.service.ProjectService;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -125,8 +125,8 @@ public class ExecutionEngine {
     }
 
     private void exportClasses(ProjectModel project, File exportDir) throws Exception {
-        if (!exportDir.exists()) {
-            exportDir.mkdirs();
+        if (!exportDir.exists() && !exportDir.mkdirs()) {
+            throw new java.io.IOException("Failed to create export directory: " + exportDir);
         }
 
         for (ClassEntryModel classEntry : project.getUserClasses()) {
@@ -137,7 +137,9 @@ public class ExecutionEngine {
             if (lastSlash > 0) {
                 String packageDir = className.substring(0, lastSlash);
                 targetDir = new File(exportDir, packageDir);
-                targetDir.mkdirs();
+                if (!targetDir.mkdirs() && !targetDir.exists()) {
+                    throw new java.io.IOException("Failed to create package directory: " + targetDir);
+                }
             }
 
             String simpleName = lastSlash > 0 ? className.substring(lastSlash + 1) : className;

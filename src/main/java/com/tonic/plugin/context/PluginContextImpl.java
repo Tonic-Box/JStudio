@@ -2,7 +2,7 @@ package com.tonic.plugin.context;
 
 import com.tonic.plugin.api.*;
 import com.tonic.plugin.result.ResultCollector;
-import com.tonic.ui.model.ProjectModel;
+import com.tonic.model.ProjectModel;
 
 import java.io.File;
 import java.util.HashMap;

@@ -2,7 +2,7 @@ package com.tonic.ui.editor.hex;
 
 import com.tonic.parser.ClassFile;
 import com.tonic.ui.core.component.LoadingOverlay;
-import com.tonic.ui.model.ClassEntryModel;
+import com.tonic.model.ClassEntryModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
@@ -187,8 +187,6 @@ public class HexView extends JPanel implements ThemeChangeListener {
         StyledDocument doc = textPane.getStyledDocument();
 
         try {
-            StringBuilder sb = new StringBuilder();
-
             for (int offset = 0; offset < bytes.length; offset += BYTES_PER_LINE) {
                 // Offset column
                 String offsetStr = String.format("%08X  ", offset);

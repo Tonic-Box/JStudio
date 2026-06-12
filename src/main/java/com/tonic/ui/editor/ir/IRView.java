@@ -3,8 +3,8 @@ package com.tonic.ui.editor.ir;
 import com.tonic.analysis.ssa.SSA;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.core.component.LoadingOverlay;
-import com.tonic.ui.model.ClassEntryModel;
-import com.tonic.ui.model.MethodEntryModel;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
 import com.tonic.ui.theme.*;
 
 import lombok.Getter;
