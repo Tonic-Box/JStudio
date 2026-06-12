@@ -77,6 +77,15 @@ public class JStudioTheme {
         return ThemeManager.getInstance().getCurrentTheme().getLineHighlight();
     }
 
+    /**
+     * A clearly visible, accent-tinted line-highlight color for the dual view's cross-pane linking —
+     * distinct from the subtle current-line highlight so a linked line stands out from the caret line.
+     */
+    public static Color getLinkHighlight() {
+        Color c = getAccent();
+        return new Color(c.getRed(), c.getGreen(), c.getBlue(), 130);
+    }
+
     public static Color getBorder() {
         return ThemeManager.getInstance().getCurrentTheme().getBorder();
     }

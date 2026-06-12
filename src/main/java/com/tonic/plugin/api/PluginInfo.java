@@ -1,5 +1,6 @@
 package com.tonic.plugin.api;
 
+import com.tonic.ui.JStudio;
 import lombok.Getter;
 
 import java.util.Collections;
@@ -32,7 +33,7 @@ public class PluginInfo {
     public static class Builder {
         private String id;
         private String name;
-        private String version = "1.0.0";
+        private String version = JStudio.APP_VERSION;
         private String description = "";
         private String author = "";
         private Map<String, String> metadata;

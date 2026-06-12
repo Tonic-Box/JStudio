@@ -4,6 +4,8 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.MethodEntryModel;
+import com.tonic.ui.editor.dual.BcLocation;
+import com.tonic.ui.editor.dual.BytecodeLineIndex;
 import com.tonic.ui.theme.*;
 
 import com.tonic.ui.editor.SearchPanel;
@@ -26,7 +28,9 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.IntConsumer;
 
 public class BytecodeView extends JPanel implements ThemeChangeListener {
 
@@ -51,6 +55,9 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
 
     private final Map<Integer, Object> highlightedLines = new HashMap<>();
     private int lastClickedLine = -1;
+
+    private IntConsumer onLineActivated;
+    private BytecodeLineIndex lineIndex;
 
     public BytecodeView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
@@ -102,6 +109,12 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
                     int offset = textArea.viewToModel2D(e.getPoint());
                     int lineNum = textArea.getLineOfOffset(offset);
                     if (lineNum < 0) return;
+
+                    if (e.getClickCount() == 2 && onLineActivated != null) {
+                        lastClickedLine = lineNum;
+                        onLineActivated.accept(lineNum);
+                        return;
+                    }
 
                     if (e.isControlDown()) {
                         toggleHighlight(lineNum);
@@ -171,6 +184,7 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
 
     public void refresh() {
         cancelCurrentWorker();
+        lineIndex = null;
         loadingOverlay.showLoading("Loading bytecode...");
 
         currentWorker = new SwingWorker<>() {
@@ -189,6 +203,7 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
                     String bytecodeText = get();
                     textArea.setText(bytecodeText);
                     textArea.setCaretPosition(0);
+                    lineIndex = null;
                     loaded = true;
                     Runnable highlight = pendingHighlight;
                     pendingHighlight = null;
@@ -480,6 +495,59 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         int end = Math.max(fromLine, toLine);
         for (int i = start; i <= end; i++) {
             addHighlight(i);
+        }
+    }
+
+    /**
+     * Registers a listener fired with the 0-based display line on a double-click, used by the dual
+     * view to drive cross-pane highlighting. Single/ctrl/shift-click behavior is unchanged.
+     */
+    public void setOnLineActivated(IntConsumer onLineActivated) {
+        this.onLineActivated = onLineActivated;
+    }
+
+    /**
+     * The instruction location at a 0-based display line, or null when the line is not an instruction.
+     */
+    public BcLocation locationAtLine(int displayLine) {
+        return ensureLineIndex().locationAtLine(displayLine);
+    }
+
+    /**
+     * Clears existing highlights, highlights every instruction line whose offset is in {@code [pcLo, pcHi]}
+     * for the given {@code name+desc} method, scrolls the first into view, and returns whether any matched.
+     */
+    public boolean highlightPcSpan(String methodKey, int pcLo, int pcHi) {
+        List<Integer> displayLines = ensureLineIndex().displayLinesForPcRange(methodKey, pcLo, pcHi);
+        if (displayLines.isEmpty()) {
+            return false;
+        }
+        clearHighlights();
+        for (int line : displayLines) {
+            addHighlight(line);
+        }
+        scrollToDisplayLine(displayLines.get(0));
+        return true;
+    }
+
+    private BytecodeLineIndex ensureLineIndex() {
+        if (lineIndex == null) {
+            lineIndex = BytecodeLineIndex.parse(textArea.getText());
+        }
+        return lineIndex;
+    }
+
+    private void scrollToDisplayLine(int zeroBasedLine) {
+        try {
+            int offset = textArea.getLineStartOffset(zeroBasedLine);
+            java.awt.geom.Rectangle2D view = textArea.modelToView2D(offset);
+            if (view != null) {
+                java.awt.Rectangle rect = view.getBounds();
+                rect.height = textArea.getHeight() / 3;
+                textArea.scrollRectToVisible(rect);
+            }
+        } catch (Exception e) {
+            // Line out of range
         }
     }
 

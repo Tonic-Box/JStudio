@@ -28,6 +28,7 @@ public class ViewModeComboBox extends JComboBox<Object> {
         addItem(HEADER_PREFIX + "Code");
         addItem(ViewMode.SOURCE);
         addItem(ViewMode.BYTECODE);
+        addItem(ViewMode.DUAL);
 
         addItem(HEADER_PREFIX + "IR");
         addItem(ViewMode.IR);

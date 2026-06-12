@@ -7,6 +7,7 @@ import com.tonic.ui.editor.callgraph.CallGraphView;
 import com.tonic.ui.editor.statistics.StatisticsView;
 import com.tonic.ui.editor.cfg.ControlFlowView;
 import com.tonic.ui.editor.constpool.ConstPoolView;
+import com.tonic.ui.editor.dual.DualView;
 import com.tonic.ui.editor.graph.CPGView;
 import com.tonic.ui.editor.graph.PDGView;
 import com.tonic.ui.editor.graph.SDGView;
@@ -71,6 +72,7 @@ public class EditorTab extends JPanel {
     private volatile CallGraphView callGraphView;
     private volatile AttributesView attributesView;
     private volatile StatisticsView statisticsView;
+    private volatile DualView dualView;
 
     private int fontSize = 12;
     private boolean wordWrap = false;
@@ -144,6 +146,8 @@ public class EditorTab extends JPanel {
                 return attributesView != null;
             case STATISTICS:
                 return statisticsView != null;
+            case DUAL:
+                return dualView != null;
             default:
                 return false;
         }
@@ -213,6 +217,9 @@ public class EditorTab extends JPanel {
         } else if (view instanceof StatisticsView) {
             ((StatisticsView) view).setFontSize(fontSize);
             ((StatisticsView) view).setWordWrap(wordWrap);
+        } else if (view instanceof DualView) {
+            ((DualView) view).setFontSize(fontSize);
+            ((DualView) view).setWordWrap(wordWrap);
         }
     }
 
@@ -251,6 +258,12 @@ public class EditorTab extends JPanel {
             case STATISTICS:
                 if (statisticsView == null) loadViewInBackground(mode, () -> new StatisticsView(classEntry), v -> statisticsView = v);
                 break;
+            case DUAL:
+                if (dualView == null) loadViewInBackground(mode, () -> new DualView(classEntry), v -> {
+                    dualView = v;
+                    if (projectModel != null) v.setProjectModel(projectModel);
+                });
+                break;
             default:
                 break;
         }
@@ -272,6 +285,7 @@ public class EditorTab extends JPanel {
             case CALLGRAPH: if (callGraphView != null) callGraphView.refresh(); break;
             case ATTRIBUTES: if (attributesView != null) attributesView.refresh(); break;
             case STATISTICS: if (statisticsView != null) statisticsView.refresh(); break;
+            case DUAL: if (dualView != null) dualView.refresh(); break;
         }
     }
 
@@ -324,6 +338,7 @@ public class EditorTab extends JPanel {
         if (callGraphView != null) callGraphView.refresh();
         if (attributesView != null) attributesView.refresh();
         if (statisticsView != null) statisticsView.refresh();
+        if (dualView != null) dualView.refresh();
     }
 
     /**
@@ -364,6 +379,7 @@ public class EditorTab extends JPanel {
             case CALLGRAPH: if (callGraphView != null) callGraphView.copySelection(); break;
             case ATTRIBUTES: if (attributesView != null) attributesView.copySelection(); break;
             case STATISTICS: if (statisticsView != null) statisticsView.copySelection(); break;
+            case DUAL: if (dualView != null) dualView.copySelection(); break;
         }
     }
 
@@ -383,6 +399,7 @@ public class EditorTab extends JPanel {
             case CALLGRAPH: return callGraphView != null ? callGraphView.getText() : "";
             case ATTRIBUTES: return attributesView != null ? attributesView.getText() : "";
             case STATISTICS: return statisticsView != null ? statisticsView.getText() : "";
+            case DUAL: return dualView != null ? dualView.getText() : "";
             default: return "";
         }
     }
@@ -403,6 +420,7 @@ public class EditorTab extends JPanel {
             case CALLGRAPH: if (callGraphView != null) callGraphView.goToLine(line); break;
             case ATTRIBUTES: if (attributesView != null) attributesView.goToLine(line); break;
             case STATISTICS: if (statisticsView != null) statisticsView.goToLine(line); break;
+            case DUAL: if (dualView != null) dualView.goToLine(line); break;
         }
     }
 
@@ -419,6 +437,9 @@ public class EditorTab extends JPanel {
                 break;
             case CONSTPOOL:
                 constPoolView.highlightLine(line);
+                break;
+            case DUAL:
+                if (dualView != null) dualView.highlightLine(line);
                 break;
             default:
                 goToLine(line);
@@ -442,6 +463,7 @@ public class EditorTab extends JPanel {
             case CALLGRAPH: if (callGraphView != null) callGraphView.showFindDialog(); break;
             case ATTRIBUTES: if (attributesView != null) attributesView.showFindDialog(); break;
             case STATISTICS: if (statisticsView != null) statisticsView.showFindDialog(); break;
+            case DUAL: if (dualView != null) dualView.showFindDialog(); break;
         }
     }
 
@@ -474,6 +496,7 @@ public class EditorTab extends JPanel {
             case CALLGRAPH: return callGraphView != null ? callGraphView.getSelectedText() : null;
             case ATTRIBUTES: return attributesView != null ? attributesView.getSelectedText() : null;
             case STATISTICS: return statisticsView != null ? statisticsView.getSelectedText() : null;
+            case DUAL: return dualView != null ? dualView.getSelectedText() : null;
             default: return null;
         }
     }
@@ -496,6 +519,7 @@ public class EditorTab extends JPanel {
             case CALLGRAPH: if (callGraphView != null) callGraphView.scrollToText(methodName); break;
             case ATTRIBUTES: if (attributesView != null) attributesView.scrollToText(methodName); break;
             case STATISTICS: if (statisticsView != null) statisticsView.scrollToText(methodName); break;
+            case DUAL: if (dualView != null) dualView.scrollToMethod(methodName, methodDesc); break;
         }
     }
 
@@ -537,6 +561,7 @@ public class EditorTab extends JPanel {
         if (callGraphView != null) callGraphView.setFontSize(size);
         if (attributesView != null) attributesView.setFontSize(size);
         if (statisticsView != null) statisticsView.setFontSize(size);
+        if (dualView != null) dualView.setFontSize(size);
     }
 
     /**
@@ -557,6 +582,7 @@ public class EditorTab extends JPanel {
         if (callGraphView != null) callGraphView.setWordWrap(enabled);
         if (attributesView != null) attributesView.setWordWrap(enabled);
         if (statisticsView != null) statisticsView.setWordWrap(enabled);
+        if (dualView != null) dualView.setWordWrap(enabled);
     }
 
     /**
@@ -567,6 +593,9 @@ public class EditorTab extends JPanel {
         sourceView.setProjectModel(projectModel);
         if (callGraphView != null) {
             callGraphView.setProjectModel(projectModel);
+        }
+        if (dualView != null) {
+            dualView.setProjectModel(projectModel);
         }
     }
 
@@ -604,6 +633,7 @@ public class EditorTab extends JPanel {
             case CALLGRAPH: if (callGraphView != null) { callGraphView.scrollToText(methodName); return true; } return false;
             case ATTRIBUTES: if (attributesView != null) { attributesView.scrollToText(methodName); return true; } return false;
             case STATISTICS: if (statisticsView != null) { statisticsView.scrollToText(methodName); return true; } return false;
+            case DUAL: if (dualView != null) { dualView.scrollToMethod(methodName, methodDesc); return true; } return false;
             default: return false;
         }
     }

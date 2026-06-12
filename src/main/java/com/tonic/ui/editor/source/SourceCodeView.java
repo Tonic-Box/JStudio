@@ -65,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
+import java.util.function.IntConsumer;
 import javax.swing.SwingUtilities;
 
 /**
@@ -90,6 +91,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private final LoadingOverlay loadingOverlay;
     private SwingWorker<String, Void> currentWorker;
     private Runnable pendingNavigation;
+    private IntConsumer onLineActivated;
 
     private final FloatingCompileToolbar compileToolbar;
     private final SourceCompilerParser compilerParser;
@@ -320,6 +322,27 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             public void mouseClicked(MouseEvent e) {
                 if ((e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0) {
                     navigateToDefinition(e);
+                }
+            }
+        });
+
+        // Handle double-click line activation (dual view cross-pane linking)
+        textArea.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() != 2
+                        || (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0
+                        || onLineActivated == null) {
+                    return;
+                }
+                try {
+                    int offset = textArea.viewToModel2D(e.getPoint());
+                    int line = textArea.getLineOfOffset(offset);
+                    if (line >= 0) {
+                        onLineActivated.accept(line);
+                    }
+                } catch (Exception ex) {
+                    // Ignore
                 }
             }
         });
@@ -783,9 +806,13 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
      * Places caret on line below so the highlighted line is clearly visible.
      */
     private void highlightAndScrollToLine(int lineNumber) {
+        highlightAndScrollToLine(lineNumber, JStudioTheme.getLineHighlight());
+    }
+
+    private void highlightAndScrollToLine(int lineNumber, Color highlightColor) {
         clearHighlight();
         try {
-            currentLineHighlight = textArea.addLineHighlight(lineNumber, JStudioTheme.getLineHighlight());
+            currentLineHighlight = textArea.addLineHighlight(lineNumber, highlightColor);
 
             int caretLine = Math.max(lineNumber - 1, 0);
             int caretOffset = textArea.getLineStartOffset(caretLine);
@@ -811,6 +838,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     }
 
     /**
+     * Highlight a 0-based line with the dual view's visible link color, used for cross-pane linking
+     * so the linked line stands out from the faint current-line highlight on the adjacent caret line.
+     */
+    public void highlightLinkedLine(int lineNumber) {
+        highlightAndScrollToLine(lineNumber, JStudioTheme.getLinkHighlight());
+    }
+
+    /**
      * Clear the current line highlight.
      */
     public void clearHighlight() {
@@ -818,6 +853,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             textArea.removeLineHighlight(currentLineHighlight);
             currentLineHighlight = null;
         }
+    }
+
+    /**
+     * Registers a listener fired with the 0-based line on a plain double-click, used by the dual view
+     * to drive cross-pane highlighting. Ctrl+Click navigation and the context menu are unaffected.
+     */
+    public void setOnLineActivated(IntConsumer onLineActivated) {
+        this.onLineActivated = onLineActivated;
     }
 
     /**
