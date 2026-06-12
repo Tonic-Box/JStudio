@@ -238,7 +238,14 @@ public class DebuggerSourceView extends JPanel {
         try {
             int offset = textArea.getLineStartOffset(Math.max(0, zeroBasedLine));
             textArea.setCaretPosition(offset);
-            Rectangle rect = textArea.modelToView2D(offset).getBounds();
+            // Before the text area has been laid out (e.g. the debugger window isn't visible yet)
+            // modelToView2D returns null; defer the scroll to the EDT once geometry exists.
+            java.awt.geom.Rectangle2D view = textArea.modelToView2D(offset);
+            if (view == null) {
+                SwingUtilities.invokeLater(() -> scrollToLine(zeroBasedLine));
+                return;
+            }
+            Rectangle rect = view.getBounds();
             rect.height = Math.max(rect.height, textArea.getVisibleRect().height / 3);
             textArea.scrollRectToVisible(rect);
         } catch (BadLocationException ignored) {

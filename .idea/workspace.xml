@@ -7,18 +7,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Find Usages now jumps to the exact call site in source and selects the referenced name&#10;- Bytecode debugger: tabbed Bytecode/Source view; source tab tracks the executing line and supports breakpoints (gutter click or context menu)&#10;- Debugger source tab shows only the current method (exact decompiler spans, editor-matching line numbers)&#10;- Debugger opens in a frame with minimize/maximize&#10;- Fix breakpoints binding to the wrong method when viewing callees in recursive mode">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerSourceView.java" afterDir="false" />
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Version bump 15.0">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/ClassEntryModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/ClassEntryModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/FindUsagesResultsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/FindUsagesResultsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryExplorerPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryExplorerPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerSourceView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerSourceView.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,7 +94,7 @@
       <recent name="com.tonic.ui.theme" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.JStudio [run]">
+  <component name="RunManager" selected="Gradle.JStudio [build]">
     <configuration name="JStudio [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -215,8 +207,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.JStudio [run]" />
         <item itemvalue="Gradle.JStudio [build]" />
+        <item itemvalue="Gradle.JStudio [run]" />
         <item itemvalue="Gradle.JStudio [test]" />
         <item itemvalue="Gradle.JStudio [clean]" />
         <item itemvalue="Gradle.JStudio [refreshDependencies]" />
@@ -231,22 +223,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00033" summary="- Query System">
-      <option name="closed" value="true" />
-      <created>1767057722649</created>
-      <option name="number" value="00033" />
-      <option name="presentableId" value="LOCAL-00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1767057722649</updated>
-    </task>
-    <task id="LOCAL-00034" summary="- Cleanup pt 1">
-      <option name="closed" value="true" />
-      <created>1767108484568</created>
-      <option name="number" value="00034" />
-      <option name="presentableId" value="LOCAL-00034" />
-      <option name="project" value="LOCAL" />
-      <updated>1767108484568</updated>
     </task>
     <task id="LOCAL-00035" summary="- Cleanup pt 2">
       <option name="closed" value="true" />
@@ -624,7 +600,23 @@
       <option name="project" value="LOCAL" />
       <updated>1781226430682</updated>
     </task>
-    <option name="localTasksCounter" value="82" />
+    <task id="LOCAL-00082" summary="- Find Usages now jumps to the exact call site in source and selects the referenced name&#10;- Bytecode debugger: tabbed Bytecode/Source view; source tab tracks the executing line and supports breakpoints (gutter click or context menu)&#10;- Debugger source tab shows only the current method (exact decompiler spans, editor-matching line numbers)&#10;- Debugger opens in a frame with minimize/maximize&#10;- Fix breakpoints binding to the wrong method when viewing callees in recursive mode">
+      <option name="closed" value="true" />
+      <created>1781245618105</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1781245618105</updated>
+    </task>
+    <task id="LOCAL-00083" summary="- Version bump 15.0">
+      <option name="closed" value="true" />
+      <created>1781245749883</created>
+      <option name="number" value="00083" />
+      <option name="presentableId" value="LOCAL-00083" />
+      <option name="project" value="LOCAL" />
+      <updated>1781245749883</updated>
+    </task>
+    <option name="localTasksCounter" value="84" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -639,7 +631,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- ui cleanup and improvements" />
     <MESSAGE value="- ui cleanup and improvements&#10;- xref fix for overloads" />
     <MESSAGE value="- ui cleanup and improvements&#10;- xref fix for overloads&#10;- xref fix for bootstrap handles and nested bootstraps&#10;- other various bug fixes" />
     <MESSAGE value="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion" />
@@ -664,7 +655,8 @@
     <MESSAGE value="- Migrated Query Engine over to YABR" />
     <MESSAGE value="- Extract non-UI logic out of com.tonic.ui into sibling packages (util/model/event/service/deobfuscation/script/simulation); cli/plugin now depend on those, not ui&#10;- Decouple entry-model icons to string keys resolved UI-side&#10;- Migrate query UI to YABR's com.tonic.analysis.query engine (QueryMatch/QueryTarget); build result labels UI-side&#10;- Clear query results when a new project loads&#10;- Default the bytecode debugger's &quot;Recursive Calls&quot; checkbox to on&#10;- Migrated Query Engine over to YABR" />
     <MESSAGE value="- Find Usages now jumps to the exact call site in source and selects the referenced name&#10;- Bytecode debugger: tabbed Bytecode/Source view; source tab tracks the executing line and supports breakpoints (gutter click or context menu)&#10;- Debugger source tab shows only the current method (exact decompiler spans, editor-matching line numbers)&#10;- Debugger opens in a frame with minimize/maximize&#10;- Fix breakpoints binding to the wrong method when viewing callees in recursive mode" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Find Usages now jumps to the exact call site in source and selects the referenced name&#10;- Bytecode debugger: tabbed Bytecode/Source view; source tab tracks the executing line and supports breakpoints (gutter click or context menu)&#10;- Debugger source tab shows only the current method (exact decompiler spans, editor-matching line numbers)&#10;- Debugger opens in a frame with minimize/maximize&#10;- Fix breakpoints binding to the wrong method when viewing callees in recursive mode" />
+    <MESSAGE value="- Version bump 15.0" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Version bump 15.0" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
