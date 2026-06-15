@@ -8,21 +8,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Fixed concurrency issue with fetching of live classes&#10;- Live profiler side tab">
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/MetricsSnapshot.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/profiler/LiveProfilerPanel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/profiler/MetricChart.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/FEATURES.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/FEATURES.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/live-debugging.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/live-debugging.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JavaAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JavaAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveAgentClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveAgentClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveSession.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveProtocol.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveProtocol.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -235,14 +221,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00045" summary="PDG/SDG/CPG views/analysis">
-      <option name="closed" value="true" />
-      <created>1767730307798</created>
-      <option name="number" value="00045" />
-      <option name="presentableId" value="LOCAL-00045" />
-      <option name="project" value="LOCAL" />
-      <updated>1767730307798</updated>
     </task>
     <task id="LOCAL-00046" summary="- renaming capabilities">
       <option name="closed" value="true" />
@@ -628,7 +606,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781503119954</updated>
     </task>
-    <option name="localTasksCounter" value="94" />
+    <task id="LOCAL-00094" summary="- Fixed concurrency issue with fetching of live classes&#10;- Live profiler side tab">
+      <option name="closed" value="true" />
+      <created>1781506108974</created>
+      <option name="number" value="00094" />
+      <option name="presentableId" value="LOCAL-00094" />
+      <option name="project" value="LOCAL" />
+      <updated>1781506108974</updated>
+    </task>
+    <option name="localTasksCounter" value="95" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
