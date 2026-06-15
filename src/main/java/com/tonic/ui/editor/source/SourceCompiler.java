@@ -12,8 +12,10 @@ import com.tonic.analysis.source.ast.expr.VarRefExpr;
 import com.tonic.analysis.source.ast.stmt.BlockStmt;
 import com.tonic.analysis.source.ast.stmt.ExprStmt;
 import com.tonic.analysis.source.ast.stmt.Statement;
+import com.tonic.analysis.source.ast.type.SourceType;
 import com.tonic.analysis.source.ast.type.VoidSourceType;
 import com.tonic.analysis.source.lower.ASTLowerer;
+import com.tonic.analysis.source.lower.TypeResolver;
 import com.tonic.analysis.source.lower.LoweringException;
 import com.tonic.analysis.source.lower.SyntheticArrayConstructor;
 import com.tonic.analysis.source.lower.SyntheticLambdaMethod;
@@ -123,6 +125,7 @@ public class SourceCompiler {
 
         ClassDecl classDecl = (ClassDecl) primaryType;
         String ownerClass = original.getClassName();
+        TypeResolver typeResolver = descriptorResolver(classPool, ownerClass, classDecl, cu);
 
         ASTLowerer lowerer = new ASTLowerer(original.getConstPool(), classPool);
         lowerer.setCurrentClassDecl(classDecl);
@@ -137,7 +140,7 @@ public class SourceCompiler {
             }
 
             String methodName = methodDecl.getName();
-            String descriptor = buildDescriptor(methodDecl);
+            String descriptor = buildDescriptor(methodDecl, typeResolver);
 
             MethodEntry targetMethod = findMethod(original, methodName, descriptor);
             boolean isNew = targetMethod == null;
@@ -178,7 +181,7 @@ public class SourceCompiler {
 
         emitPendingSynthetics(lowerer, ssa, original, ownerClass, warnings);
 
-        removeDeletedMethods(classDecl, original);
+        removeDeletedMethods(classDecl, original, typeResolver);
 
         try {
             original.rebuild();
@@ -249,13 +252,13 @@ public class SourceCompiler {
      * {@code access$} / {@code $deserializeLambda$} names) are never removed, since the decompiled
      * source represents them implicitly and removing them would break their call sites.
      */
-    private void removeDeletedMethods(ClassDecl classDecl, ClassFile original) {
+    private void removeDeletedMethods(ClassDecl classDecl, ClassFile original, TypeResolver typeResolver) {
         Set<String> sourceMethods = new HashSet<>();
         for (MethodDecl methodDecl : classDecl.getMethods()) {
             if (methodDecl.getBody() == null) {
                 continue;
             }
-            sourceMethods.add(methodDecl.getName() + buildDescriptor(methodDecl));
+            sourceMethods.add(methodDecl.getName() + buildDescriptor(methodDecl, typeResolver));
         }
 
         List<MethodEntry> toRemove = new ArrayList<>();
@@ -388,14 +391,36 @@ public class SourceCompiler {
         return null;
     }
 
-    private String buildDescriptor(MethodDecl methodDecl) {
+    /**
+     * Builds a method's JVM descriptor, resolving reference types through {@code resolver} so imports are
+     * applied ({@code Frame} -> {@code Ljava/awt/Frame;}) and nested classes use {@code $} - without which the
+     * descriptor would not match the original method and the method would be wrongly treated as added/removed.
+     * Falls back to the unresolved descriptor when no resolver (i.e. no class pool) is available.
+     */
+    private String buildDescriptor(MethodDecl methodDecl, TypeResolver resolver) {
         StringBuilder sb = new StringBuilder("(");
         for (var param : methodDecl.getParameters()) {
-            sb.append(param.getType().toIRType().getDescriptor());
+            sb.append(typeDescriptor(param.getType(), resolver));
         }
         sb.append(")");
-        sb.append(methodDecl.getReturnType().toIRType().getDescriptor());
+        sb.append(typeDescriptor(methodDecl.getReturnType(), resolver));
         return sb.toString();
+    }
+
+    private String typeDescriptor(SourceType type, TypeResolver resolver) {
+        return resolver != null ? resolver.descriptorOf(type) : type.toIRType().getDescriptor();
+    }
+
+    /** A type resolver for descriptor building, or null when there is no class pool to resolve against. */
+    private TypeResolver descriptorResolver(ClassPool classPool, String ownerClass, ClassDecl classDecl,
+                                            CompilationUnit cu) {
+        if (classPool == null) {
+            return null;
+        }
+        TypeResolver resolver = new TypeResolver(classPool, ownerClass);
+        resolver.setImports(cu.getImports());
+        resolver.setCurrentClassDecl(classDecl);
+        return resolver;
     }
 
     private void collectParseErrors(ParseErrorListener.CollectingErrorListener listener,

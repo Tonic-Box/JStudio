@@ -51,6 +51,9 @@ dependencies {
 
     // JSON parsing for theme configuration
     implementation("com.google.code.gson:gson:2.10.1")
+
+    // Live JVM debugging client (attach + protocol to the pure-Java agent)
+    implementation(project(":live-client"))
 }
 
 java {
@@ -62,6 +65,28 @@ java {
 tasks.test {
     useJUnitPlatform()
 }
+
+
+
+// ============================================================================
+// JStudio Live agent (pure-Java java.lang.instrument): an arch-independent jar bundled in JStudio.jar and
+// loaded into a target JVM via attach. Built by the :live-agent module and staged here for packaging.
+// ============================================================================
+sourceSets["main"].resources.srcDir(layout.buildDirectory.dir("native-resources"))
+
+// Bundle the Java agent jar at agent/live-agent.bin (non-.jar name so the shadow plugin doesn't unpack it).
+// JStudio extracts and loads it via java.lang.instrument at attach time.
+val stageJavaAgent by tasks.registering(Copy::class) {
+    group = "build"
+    description = "Stages the pure-Java fallback Live agent jar for bundling."
+    from(project(":live-agent").tasks.named("jar"))
+    into(layout.buildDirectory.dir("native-resources/agent"))
+    // Bundle under a non-.jar extension: the shadow plugin unpacks nested *.jar resources when merging.
+    // JStudio extracts this back to a real .jar at runtime.
+    rename { "live-agent.bin" }
+}
+
+tasks.named("processResources") { dependsOn(stageJavaAgent) }
 
 tasks.jar {
     manifest {

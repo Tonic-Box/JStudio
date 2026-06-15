@@ -9,6 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/live-agent" />
+            <option value="$PROJECT_DIR$/live-client" />
           </set>
         </option>
       </GradleProjectSettings>

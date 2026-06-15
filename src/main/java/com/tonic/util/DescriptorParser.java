@@ -1,8 +1,37 @@
 package com.tonic.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DescriptorParser {
 
     private DescriptorParser() {
+    }
+
+    /** Parses a method descriptor's parameters into a list of readable type names (e.g. {@code [int, String]}). */
+    public static List<String> parseParameterTypes(String methodDescriptor) {
+        List<String> out = new ArrayList<>();
+        if (methodDescriptor == null) {
+            return out;
+        }
+        int i = methodDescriptor.indexOf('(') + 1;
+        int end = methodDescriptor.indexOf(')');
+        if (i <= 0 || end < 0) {
+            return out;
+        }
+        while (i < end) {
+            int start = i;
+            while (i < end && methodDescriptor.charAt(i) == '[') {
+                i++;
+            }
+            if (i < end && methodDescriptor.charAt(i) == 'L') {
+                i = methodDescriptor.indexOf(';', i) + 1;
+            } else {
+                i++;
+            }
+            out.add(formatFieldDescriptor(methodDescriptor.substring(start, i)));
+        }
+        return out;
     }
 
     public static String formatFieldDescriptor(String desc) {

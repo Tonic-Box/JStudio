@@ -18,12 +18,6 @@ public class BridgeRegistry {
     private Consumer<String> logCallback;
 
     @Getter
-    private ASTBridge astBridge;
-    @Getter
-    private IRBridge irBridge;
-    @Getter
-    private AnnotationBridge annotationBridge;
-    @Getter
     private ResultsBridge resultsBridge;
     @Getter
     private ProjectBridge projectBridge;
@@ -45,6 +39,8 @@ public class BridgeRegistry {
     private StringBridge stringBridge;
     @Getter
     private ScriptPipeline scriptPipeline;
+    @Getter
+    private LiveBridge liveBridge;
 
     public BridgeRegistry(ScriptInterpreter interpreter, ProjectModel projectModel) {
         this.interpreter = interpreter;
@@ -69,28 +65,15 @@ public class BridgeRegistry {
         registerPipeline();
     }
 
-    public void registerASTBridge() {
-        astBridge = new ASTBridge(interpreter);
-        if (logCallback != null) {
-            astBridge.setLogCallback(logCallback);
+    /** Registers the {@code live} binding for the attached JVM. Call only when a session exists. */
+    public void registerLiveBridge(com.tonic.live.LiveSession session) {
+        if (session != null) {
+            liveBridge = new LiveBridge(interpreter, session);
+            if (logCallback != null) {
+                liveBridge.setLogCallback(logCallback);
+            }
+            interpreter.getGlobalContext().defineConstant("live", liveBridge.createBridgeObject());
         }
-        interpreter.getGlobalContext().defineConstant("ast", astBridge.createAstObject());
-    }
-
-    public void registerIRBridge() {
-        irBridge = new IRBridge(interpreter);
-        if (logCallback != null) {
-            irBridge.setLogCallback(logCallback);
-        }
-        interpreter.getGlobalContext().defineConstant("ir", irBridge.createIRObject());
-    }
-
-    public void registerAnnotationBridge() {
-        annotationBridge = new AnnotationBridge(interpreter);
-        if (logCallback != null) {
-            annotationBridge.setLogCallback(logCallback);
-        }
-        interpreter.getGlobalContext().defineConstant("annotations", annotationBridge.createAnnotationObject());
     }
 
     public void registerResultsBridge() {

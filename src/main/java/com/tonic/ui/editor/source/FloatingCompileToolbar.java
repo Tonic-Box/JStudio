@@ -215,6 +215,42 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
+    /**
+     * Switches the compile button between plain recompile and recompile + live-patch (used while attached to a
+     * running JVM, where a recompile on its own has no effect on the target).
+     */
+    public void setLivePatchMode(boolean on) {
+        compileButton.setText(on ? "Recompile & Patch" : "Recompile");
+        compileButton.setToolTipText(on ? "Recompile and live-patch the attached JVM" : null);
+    }
+
+    public void showPatching() {
+        statusLabel.setText("Patching live JVM...");
+        statusLabel.setForeground(JStudioTheme.getInfo());
+        compileButton.setEnabled(false);
+        discardButton.setEnabled(false);
+        revalidate();
+        repaint();
+    }
+
+    public void showPatched() {
+        statusLabel.setText("Compiled & patched live");
+        statusLabel.setForeground(JStudioTheme.getSuccess());
+        compileButton.setEnabled(true);
+        discardButton.setEnabled(true);
+        revalidate();
+        repaint();
+    }
+
+    public void showPatchFailed(String message) {
+        statusLabel.setText("Live patch failed: " + message);
+        statusLabel.setForeground(JStudioTheme.getError());
+        compileButton.setEnabled(true);
+        discardButton.setEnabled(true);
+        revalidate();
+        repaint();
+    }
+
     public void showSuccess(long timeMs) {
         statusLabel.setText("Compiled successfully (" + timeMs + "ms)");
         statusLabel.setForeground(JStudioTheme.getSuccess());

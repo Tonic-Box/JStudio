@@ -7,7 +7,62 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Cleanup" />
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring.">
+      <change afterPath="$PROJECT_DIR$/docs/FEATURES.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/live-debugging.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-agent/build.gradle.kts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JavaAgent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/build.gradle.kts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/AttachLauncher.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/Deadlocks.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveAgentClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveSession.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/AgentInfo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/ContentionEdge.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveProtocol.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LoadedClass.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/StackFrame.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/StaticField.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/StaticMethod.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/ThreadInfo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/ThreadStack.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/event/events/LiveSessionEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/LiveBridge.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/SwingWorkers.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/LiveAttachDialog.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/LiveAttachService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/LiveCaptureService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/LiveHeapService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/LivePatch.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/MethodBodyDiff.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/heap/HprofSnapshot.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/heap/LiveInstancesView.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/statics/LiveStaticsView.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/threads/LiveThreadsPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/BridgeRegistry.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/BridgeRegistry.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewModeComboBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewModeComboBox.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/FloatingCompileToolbar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/FloatingCompileToolbar.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompiler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompiler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/util/DescriptorParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/util/DescriptorParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/util/Settings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/util/Settings.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -90,7 +145,7 @@
       <recent name="com.tonic.ui.theme" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.JStudio [build]">
+  <component name="RunManager" selected="Gradle.JStudio [run]">
     <configuration name="JStudio [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -203,10 +258,10 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.JStudio [build]" />
         <item itemvalue="Gradle.JStudio [run]" />
-        <item itemvalue="Gradle.JStudio [test]" />
+        <item itemvalue="Gradle.JStudio [build]" />
         <item itemvalue="Gradle.JStudio [clean]" />
+        <item itemvalue="Gradle.JStudio [test]" />
         <item itemvalue="Gradle.JStudio [refreshDependencies]" />
       </list>
     </recent_temporary>
@@ -219,14 +274,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00039" summary="- Cleanup p5">
-      <option name="closed" value="true" />
-      <created>1767220048199</created>
-      <option name="number" value="00039" />
-      <option name="presentableId" value="LOCAL-00039" />
-      <option name="project" value="LOCAL" />
-      <updated>1767220048199</updated>
     </task>
     <task id="LOCAL-00040" summary="- Updated api usage for YABR SSA IR changes">
       <option name="closed" value="true" />
@@ -612,7 +659,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781304974913</updated>
     </task>
-    <option name="localTasksCounter" value="88" />
+    <task id="LOCAL-00088" summary="- Update ReadMe">
+      <option name="closed" value="true" />
+      <created>1781305556381</created>
+      <option name="number" value="00088" />
+      <option name="presentableId" value="LOCAL-00088" />
+      <option name="project" value="LOCAL" />
+      <updated>1781305556381</updated>
+    </task>
+    <option name="localTasksCounter" value="89" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -627,8 +682,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Added refresh button to the bytecode debugger" />
-    <MESSAGE value="- cleanup" />
     <MESSAGE value="- cleanup &amp; bump" />
     <MESSAGE value="Fix recompiled changes not persisting to bytecode/export and surface results in the editor:&#10;- Per-method resilience: a method that can't lower keeps its original bytecode and reports a warning instead of aborting the whole class&#10;- Refresh all open views (bytecode, const-pool, hex, IR, AST, ...) after a successful recompile&#10;- Add new methods/fields and regenerate &lt;clinit&gt; from static initializers&#10;- Remove methods dropped from source (constructors/synthetics guarded)&#10;- Materialize synthetic lambdas (rolls back on failure)&#10;&#10;LLVM Support:&#10;- View support for LLVM IR as a View" />
     <MESSAGE value="- support for changing class level of created classes" />
@@ -652,7 +705,9 @@
     <MESSAGE value="- Version bump 17.0&#10;- Add Dual view: linked bytecode/source panes" />
     <MESSAGE value="Add usage-count lenses (class/method/field) + span-based navigation&#10;- Clickable &quot;N usages&quot; lenses on class, method, and field declarations; open Find Usages (View ▸ Usage Counts toggle)&#10;- Shared XrefQueryService (one xref build + filter for lenses and Find Usages); class usages scoped to type references, not member accesses&#10;- Navigate/locate declarations via decompiler spans; regex kept only as Hide-Annotations fallback&#10;- Find Usages selection skips string/char literals and prefers the real member-access/call token&#10;- Recompiling a class invalidates the xref database" />
     <MESSAGE value="- Cleanup" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Cleanup" />
+    <MESSAGE value="- Update ReadMe" />
+    <MESSAGE value="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring." />
+    <option name="LAST_COMMIT_MESSAGE" value="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring." />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

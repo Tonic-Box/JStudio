@@ -59,6 +59,36 @@ public class ViewModeComboBox extends JComboBox<Object> {
         });
     }
 
+    private static final String LIVE_HEADER = HEADER_PREFIX + "Live";
+
+    /**
+     * Shows or hides the Live view modes ({@link ViewMode#LIVE_INSTANCES}, {@link ViewMode#LIVE_STATICS}) under
+     * a "Live" header at the top of the list. Only meaningful while attached to a live JVM. Removing them while
+     * one is selected resets the selection to {@link ViewMode#SOURCE}.
+     */
+    public void setLiveViewsAvailable(boolean available) {
+        boolean present = false;
+        for (int i = 0; i < getItemCount(); i++) {
+            if (getItemAt(i) == ViewMode.LIVE_INSTANCES) {
+                present = true;
+                break;
+            }
+        }
+        if (available && !present) {
+            insertItemAt(LIVE_HEADER, 0);
+            insertItemAt(ViewMode.LIVE_INSTANCES, 1);
+            insertItemAt(ViewMode.LIVE_STATICS, 2);
+        } else if (!available && present) {
+            Object selected = getSelectedItem();
+            if (selected == ViewMode.LIVE_INSTANCES || selected == ViewMode.LIVE_STATICS) {
+                setSelectedItem(ViewMode.SOURCE);
+            }
+            removeItem(ViewMode.LIVE_STATICS);
+            removeItem(ViewMode.LIVE_INSTANCES);
+            removeItem(LIVE_HEADER);
+        }
+    }
+
     public ViewMode getSelectedViewMode() {
         Object selected = getSelectedItem();
         if (selected instanceof ViewMode) {

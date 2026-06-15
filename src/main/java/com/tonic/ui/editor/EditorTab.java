@@ -15,6 +15,8 @@ import com.tonic.ui.editor.hex.HexView;
 import com.tonic.ui.editor.ir.IRView;
 import com.tonic.ui.editor.llvm.LLVMView;
 import com.tonic.ui.editor.source.SourceCodeView;
+import com.tonic.ui.live.heap.LiveInstancesView;
+import com.tonic.ui.live.statics.LiveStaticsView;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.FieldEntryModel;
 import com.tonic.model.MethodEntryModel;
@@ -73,6 +75,8 @@ public class EditorTab extends JPanel {
     private volatile AttributesView attributesView;
     private volatile StatisticsView statisticsView;
     private volatile DualView dualView;
+    private volatile LiveInstancesView liveInstancesView;
+    private volatile LiveStaticsView liveStaticsView;
 
     private int fontSize = 12;
     private boolean wordWrap = false;
@@ -148,6 +152,10 @@ public class EditorTab extends JPanel {
                 return statisticsView != null;
             case DUAL:
                 return dualView != null;
+            case LIVE_INSTANCES:
+                return liveInstancesView != null;
+            case LIVE_STATICS:
+                return liveStaticsView != null;
             default:
                 return false;
         }
@@ -264,6 +272,12 @@ public class EditorTab extends JPanel {
                     if (projectModel != null) v.setProjectModel(projectModel);
                 });
                 break;
+            case LIVE_INSTANCES:
+                if (liveInstancesView == null) loadViewInBackground(mode, () -> new LiveInstancesView(classEntry), v -> liveInstancesView = v);
+                break;
+            case LIVE_STATICS:
+                if (liveStaticsView == null) loadViewInBackground(mode, () -> new LiveStaticsView(classEntry), v -> liveStaticsView = v);
+                break;
             default:
                 break;
         }
@@ -286,6 +300,8 @@ public class EditorTab extends JPanel {
             case ATTRIBUTES: if (attributesView != null) attributesView.refresh(); break;
             case STATISTICS: if (statisticsView != null) statisticsView.refresh(); break;
             case DUAL: if (dualView != null) dualView.refresh(); break;
+            case LIVE_INSTANCES: if (liveInstancesView != null) liveInstancesView.refresh(); break;
+            case LIVE_STATICS: if (liveStaticsView != null) liveStaticsView.refresh(); break;
         }
     }
 

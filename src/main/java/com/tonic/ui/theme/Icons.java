@@ -150,6 +150,14 @@ public class Icons {
                 return new CompileIcon(size);
             case "undo":
                 return new UndoIcon(size);
+            case "live_attach":
+                return new LiveAttachIcon(size);
+            case "live_detach":
+                return new LiveDetachIcon(size);
+            case "live_deadlock":
+                return new LiveDeadlockIcon(size);
+            case "live_patch":
+                return new LivePatchIcon(size);
             default:
                 return new PlaceholderIcon(size);
         }
@@ -1121,6 +1129,76 @@ public class Icons {
             g2.drawArc(4, 4, 10, 10, 45, 270);
             g2.drawLine(4, 4, 4, 8);
             g2.drawLine(4, 4, 8, 4);
+        }
+    }
+
+    /** A plug being inserted - attach to a live JVM. */
+    private static class LiveAttachIcon extends BaseIcon {
+        LiveAttachIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getAccent());
+            g2.setStroke(getStroke());
+            g2.drawLine(6, 2, 6, 5);
+            g2.drawLine(10, 2, 10, 5);
+            g2.drawRoundRect(5, 5, 6, 4, 2, 2);
+            g2.drawLine(8, 9, 8, 14);
+        }
+    }
+
+    /** A plug pulled away (gap) - detach. */
+    private static class LiveDetachIcon extends BaseIcon {
+        LiveDetachIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getTextSecondary());
+            g2.setStroke(getStroke());
+            g2.drawLine(6, 1, 6, 4);
+            g2.drawLine(10, 1, 10, 4);
+            g2.drawRoundRect(5, 4, 6, 3, 2, 2);
+            g2.drawRoundRect(5, 10, 6, 4, 2, 2);
+            g2.drawLine(8, 14, 8, 15);
+        }
+    }
+
+    /** A wait-for cycle with an arrowhead - find deadlocks. */
+    private static class LiveDeadlockIcon extends BaseIcon {
+        LiveDeadlockIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getError());
+            g2.setStroke(getStroke());
+            g2.drawArc(3, 3, 10, 10, 30, 300);
+            g2.drawLine(12, 4, 13, 7);
+            g2.drawLine(12, 4, 9, 5);
+        }
+    }
+
+    /** A bandage - live patch. */
+    private static class LivePatchIcon extends BaseIcon {
+        LivePatchIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getSuccess());
+            g2.setStroke(getStroke());
+            java.awt.geom.AffineTransform old = g2.getTransform();
+            g2.rotate(Math.toRadians(45), size / 2.0, size / 2.0);
+            g2.drawRoundRect(3, 6, size - 6, 4, 3, 3);
+            g2.setTransform(old);
+            g2.fillOval(7, 6, 2, 2);
+            g2.fillOval(8, 9, 2, 2);
         }
     }
 }

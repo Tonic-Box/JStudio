@@ -394,6 +394,143 @@ public class ProjectService {
     }
 
     /**
+     * Build a fresh project from a live JVM session, pulling each loaded class's current bytecode
+     * (eager, with progress). Replaces any current project. Bootstrap/JDK classes can be excluded to
+     * keep the navigator manageable; pass {@code includeJdk=true} to pull everything.
+     */
+    public ProjectModel loadLiveProject(com.tonic.live.LiveSession session, boolean includeJdk,
+                                        ProgressCallback progress) throws IOException {
+        closeProject();
+        String name = "live:" + session.getPid();
+        EventBus.getInstance().post(new StatusMessageEvent(this, "Enumerating classes in " + name + "..."));
+
+        List<com.tonic.live.protocol.LoadedClass> all = session.enumerateClasses();
+        List<com.tonic.live.protocol.LoadedClass> wanted = new ArrayList<>();
+        for (com.tonic.live.protocol.LoadedClass lc : all) {
+            if (isHiddenClass(lc.getInternalName())) {
+                continue;
+            }
+            if (includeJdk || !isBootstrapName(lc.getInternalName())) {
+                wanted.add(lc);
+            }
+        }
+
+        ProjectModel project = new ProjectModel();
+        project.setProjectName(name);
+        project.setClassPool(createClassPoolWithJdk());
+
+        int total = wanted.size();
+        int current = 0;
+        int loaded = 0;
+        for (com.tonic.live.protocol.LoadedClass lc : wanted) {
+            try {
+                byte[] data = session.fetchClassBytes(lc.getInternalName());
+                project.addClass(new ClassFile(new ByteArrayInputStream(data)));
+                loaded++;
+            } catch (Exception e) {
+                System.err.println("Failed to pull live class " + lc.getInternalName() + ": " + e.getMessage());
+            }
+            current++;
+            if (progress != null) {
+                progress.onProgress(current, total, "Pulling " + lc.getBinaryName());
+            }
+        }
+
+        this.currentProject = project;
+        EventBus.getInstance().post(new StatusMessageEvent(this,
+                "Attached to " + name + " - pulled " + loaded + "/" + total + " classes"));
+        EventBus.getInstance().post(new ProjectLoadedEvent(this, project));
+        return project;
+    }
+
+    /**
+     * Add classes newly loaded in the target since the project was built (on-demand refresh). Returns
+     * the number added.
+     */
+    public int refreshLiveProject(com.tonic.live.LiveSession session, boolean includeJdk,
+                                  ProgressCallback progress) throws IOException {
+        if (currentProject == null) {
+            return 0;
+        }
+        List<com.tonic.live.protocol.LoadedClass> all = session.enumerateClasses();
+        List<com.tonic.live.protocol.LoadedClass> missing = new ArrayList<>();
+        for (com.tonic.live.protocol.LoadedClass lc : all) {
+            if (isHiddenClass(lc.getInternalName())) {
+                continue;
+            }
+            if (!includeJdk && isBootstrapName(lc.getInternalName())) {
+                continue;
+            }
+            if (currentProject.getClass(lc.getInternalName()) == null) {
+                missing.add(lc);
+            }
+        }
+        int total = missing.size();
+        int current = 0;
+        int added = 0;
+        for (com.tonic.live.protocol.LoadedClass lc : missing) {
+            try {
+                byte[] data = session.fetchClassBytes(lc.getInternalName());
+                currentProject.addClass(new ClassFile(new ByteArrayInputStream(data)));
+                added++;
+            } catch (Exception e) {
+                System.err.println("Failed to refresh live class " + lc.getInternalName() + ": " + e.getMessage());
+            }
+            current++;
+            if (progress != null) {
+                progress.onProgress(current, total, "Pulling " + lc.getBinaryName());
+            }
+        }
+        if (added > 0) {
+            EventBus.getInstance().post(new ProjectUpdatedEvent(this, currentProject, added));
+        }
+        return added;
+    }
+
+    /**
+     * Adds a runtime-captured class (streamed via a CLASS_LOADED event) into the current live project.
+     * No-op if there is no project or the class is already present. Returns the added entry, or null.
+     */
+    public ClassEntryModel addCapturedLiveClass(String internalName, byte[] classBytes) {
+        if (currentProject == null || classBytes == null || classBytes.length == 0) {
+            return null;
+        }
+        // Skip JVM-internal noise (e.g. jdk/internal/reflect/GeneratedMethodAccessor* synthesized when a
+        // static is invoked reflectively through the agent, and hidden lambda/proxy bodies); only application
+        // classes belong in the tree.
+        if (isBootstrapName(internalName) || isHiddenClass(internalName)) {
+            return null;
+        }
+        if (currentProject.getClass(internalName) != null) {
+            return null;
+        }
+        try {
+            ClassEntryModel entry = currentProject.addClass(new ClassFile(new ByteArrayInputStream(classBytes)));
+            EventBus.getInstance().post(new ProjectUpdatedEvent(this, currentProject, 1));
+            return entry;
+        } catch (IOException e) {
+            System.err.println("Failed to add captured class " + internalName + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    private static boolean isBootstrapName(String internalName) {
+        return internalName.startsWith("java/") || internalName.startsWith("javax/")
+                || internalName.startsWith("jdk/") || internalName.startsWith("sun/")
+                || internalName.startsWith("com/sun/") || internalName.startsWith("jakarta/")
+                || internalName.startsWith("[");
+    }
+
+    /**
+     * A JVM hidden class (lambda/proxy body), whose name carries a {@code /0x<address>} suffix. These cannot
+     * be fetched by name (the agent looks classes up by binary name, which a hidden class has no usable form
+     * of), so enumerating them only yields "class not loaded" noise; they are skipped everywhere.
+     */
+    private static boolean isHiddenClass(String internalName) {
+        return internalName.contains("/0x");
+    }
+
+    /**
      * Close the current project.
      */
     public void closeProject() {

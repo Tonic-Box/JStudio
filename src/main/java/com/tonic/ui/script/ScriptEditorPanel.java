@@ -461,6 +461,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
             BridgeRegistry registry = new BridgeRegistry(interpreter, projectModel);
             registry.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
             registry.registerAll();
+            registry.registerLiveBridge(com.tonic.ui.live.LiveAttachService.getInstance().getSession());
         }
 
         // Parse script
@@ -579,6 +580,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
                 BridgeRegistry registry = new BridgeRegistry(interpreter, projectModel);
                 registry.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
                 registry.registerAll();
+                registry.registerLiveBridge(com.tonic.ui.live.LiveAttachService.getInstance().getSession());
             }
 
             // Create annotation bridge

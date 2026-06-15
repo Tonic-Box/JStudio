@@ -9,7 +9,10 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -42,6 +45,7 @@ public class MenuBarBuilder {
         menuBar.add(buildAnalysisMenu());
         menuBar.add(buildTransformMenu());
         menuBar.add(buildVMMenu());
+        menuBar.add(buildAttachMenu());
         menuBar.add(buildHelpMenu());
 
         // Listen for recent files changes
@@ -314,6 +318,59 @@ public class MenuBarBuilder {
         menu.add(createMenuItem("VM Status", 0, 0,
                 Icons.getIcon("info"), e -> mainFrame.showVMStatus()));
 
+        return menu;
+    }
+
+    /**
+     * Live-JVM menu (pure-Java {@code java.lang.instrument} agent). Attach to a running JVM to browse its
+     * classes, live-patch method bodies, capture runtime-generated classes, and detect deadlocks. The
+     * feature items appear only while attached (recomputed each time the menu opens).
+     */
+    private JMenu buildAttachMenu() {
+        JMenu menu = new JMenu("Attach");
+        menu.setMnemonic(KeyEvent.VK_A);
+
+        JMenuItem attach = createMenuItem("Attach to Live JVM...", 0, 0,
+                Icons.getIcon("live_attach"), e -> mainFrame.showLiveAttachDialog());
+        JMenuItem detach = createMenuItem("Detach", 0, 0,
+                Icons.getIcon("live_detach"), e -> mainFrame.detachLive());
+        JPopupMenu.Separator sep = new JPopupMenu.Separator();
+
+        JMenuItem deadlocks = createMenuItem("Find Deadlocks", 0, 0,
+                Icons.getIcon("live_deadlock"), e -> mainFrame.findLiveDeadlocks());
+        JMenuItem patch = createMenuItem("Patch Live Class", 0, 0,
+                Icons.getIcon("live_patch"), e -> mainFrame.patchLiveClass());
+        JCheckBoxMenuItem capture = new JCheckBoxMenuItem("Capture Runtime Classes");
+        capture.setToolTipText("Stream classes defined at runtime (packers, defineHiddenClass, ASM) into the project");
+        capture.addActionListener(e -> mainFrame.setLiveCaptureEnabled(capture.isSelected()));
+
+        menu.add(attach);
+        menu.add(detach);
+        menu.add(sep);
+        menu.add(deadlocks);
+        menu.add(patch);
+        menu.add(capture);
+
+        menu.addMenuListener(new MenuListener() {
+            @Override
+            public void menuSelected(MenuEvent e) {
+                boolean connected = com.tonic.ui.live.LiveAttachService.getInstance().isAttached();
+                detach.setVisible(connected);
+                sep.setVisible(connected);
+                deadlocks.setVisible(connected);
+                patch.setVisible(connected);
+                capture.setVisible(connected);
+                capture.setSelected(connected && mainFrame.isLiveCaptureEnabled());
+            }
+
+            @Override
+            public void menuDeselected(MenuEvent e) {
+            }
+
+            @Override
+            public void menuCanceled(MenuEvent e) {
+            }
+        });
         return menu;
     }
 

@@ -4,11 +4,15 @@ import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
+import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * IntelliJ-style tool-window container: a vertical stripe of rotated toggle buttons along the right
@@ -47,7 +51,11 @@ public class ToolWindowPane extends JPanel implements ThemeChangeListener {
     private final JPanel stripe = new JPanel();
     private final JPanel stripeWrapper = new JPanel(new BorderLayout());
     private final List<StripeButton> buttons = new ArrayList<>();
+    private final Map<String, JComponent> tools = new LinkedHashMap<>();
     private String selected;
+    @Getter
+    private boolean collapsed = true;
+    private Consumer<Boolean> collapseListener;
 
     public ToolWindowPane() {
         super(new BorderLayout());
@@ -55,30 +63,113 @@ public class ToolWindowPane extends JPanel implements ThemeChangeListener {
         stripeWrapper.add(stripe, BorderLayout.NORTH);
         add(content, BorderLayout.CENTER);
         add(stripeWrapper, BorderLayout.EAST);
+        content.setVisible(false);
         applyThemeColors();
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
-    /** Registers a tool under a stripe button; the first registered tool becomes the active one. */
+    /** Notified (with the new collapsed state) whenever the content area collapses or expands. */
+    public void setCollapseListener(Consumer<Boolean> listener) {
+        this.collapseListener = listener;
+    }
+
+    /** Width of the always-visible stripe column (so the container can leave room for it when collapsed). */
+    public int getStripeWidth() {
+        return stripeWrapper.getPreferredSize().width;
+    }
+
+    /** Collapses (hides) or expands the content area; the stripe stays visible either way. */
+    public void setCollapsed(boolean value) {
+        if (collapsed == value) {
+            updateButtonStates();
+            return;
+        }
+        collapsed = value;
+        content.setVisible(!value);
+        updateButtonStates();
+        if (collapseListener != null) {
+            collapseListener.accept(value);
+        }
+        revalidate();
+        repaint();
+    }
+
+    private void onStripeClick(String name) {
+        if (!collapsed && name.equals(selected)) {
+            setCollapsed(true);
+        } else {
+            selected = name;
+            cards.show(content, name);
+            setCollapsed(false);
+            updateButtonStates();
+        }
+    }
+
+    private void updateButtonStates() {
+        for (StripeButton button : buttons) {
+            button.setSelected(!collapsed && button.toolName().equals(selected));
+        }
+    }
+
+    /** Registers a tool under a stripe button; the first registered tool becomes the active one. No-op if the name already exists. */
     public void addTool(String name, JComponent component) {
+        if (tools.containsKey(name)) {
+            return;
+        }
+        tools.put(name, component);
         content.add(component, name);
         StripeButton button = new StripeButton(name);
-        button.addActionListener(e -> select(name));
+        button.addActionListener(e -> onStripeClick(name));
         buttons.add(button);
         stripe.add(button);
         stripe.add(Box.createVerticalStrut(3));
         if (selected == null) {
-            select(name);
+            selected = name;
+            cards.show(content, name);
+            updateButtonStates();
         }
     }
 
-    /** Activates the named tool, updating the card view and the stripe selection state. */
+    public boolean hasTool(String name) {
+        return tools.containsKey(name);
+    }
+
+    /** Removes a registered tool (and its stripe button). If it was active, activates the first remaining tool. */
+    public void removeTool(String name) {
+        JComponent component = tools.remove(name);
+        if (component == null) {
+            return;
+        }
+        content.remove(component);
+        for (int i = 0; i < buttons.size(); i++) {
+            if (buttons.get(i).toolName().equals(name)) {
+                int stripeIndex = stripe.getComponentZOrder(buttons.get(i));
+                stripe.remove(buttons.get(i));
+                if (stripeIndex >= 0 && stripeIndex < stripe.getComponentCount()) {
+                    stripe.remove(stripeIndex); // the trailing strut
+                }
+                buttons.remove(i);
+                break;
+            }
+        }
+        if (name.equals(selected)) {
+            selected = null;
+            if (!tools.isEmpty()) {
+                selected = tools.keySet().iterator().next();
+                cards.show(content, selected);
+            }
+            updateButtonStates();
+        }
+        revalidate();
+        repaint();
+    }
+
+    /** Activates the named tool (expanding the content area if collapsed) and shows its card. */
     public void select(String name) {
         selected = name;
         cards.show(content, name);
-        for (StripeButton button : buttons) {
-            button.setSelected(button.toolName().equals(name));
-        }
+        setCollapsed(false);
+        updateButtonStates();
     }
 
     @Override

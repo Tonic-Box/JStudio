@@ -21,7 +21,9 @@ public enum ViewMode {
     CFG("Control Flow", "Control Flow Graph"),
     HEX("Hex", "Raw class file bytes"),
     ATTRIBUTES("Attributes", "Class, field, and method attributes"),
-    STATISTICS("Statistics", "Class statistics and metrics");
+    STATISTICS("Statistics", "Class statistics and metrics"),
+    LIVE_INSTANCES("Live Instances", "Object instances of this class in the attached JVM"),
+    LIVE_STATICS("Live Statics", "Static fields and methods of this class in the attached JVM");
 
     private final String displayName;
     private final String description;

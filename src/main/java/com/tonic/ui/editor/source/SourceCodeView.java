@@ -188,6 +188,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     }
 
     private void setupDocumentListener() {
+        textArea.addPropertyChangeListener(RSyntaxTextArea.PARSER_NOTICES_PROPERTY, evt -> {
+            if (dirty) {
+                updateToolbarState();
+            }
+        });
         textArea.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -219,6 +224,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             if (dirty) {
                 compilerParser.setEnabled(true);
                 compileToolbar.showModified();
+                compileToolbar.setLivePatchMode(com.tonic.ui.live.LiveAttachService.getInstance().isAttached());
                 lensOverlay.clear();
             } else {
                 compilerParser.setEnabled(false);
@@ -249,6 +255,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         }
 
         String source = textArea.getText();
+        // The source as it was before this edit - captured now because a successful recompile overwrites
+        // originalSource below; the live patch diffs against it to graft only the methods that changed.
+        final String baselineSource = originalSource;
         compileToolbar.showCompiling();
 
         SwingWorker<CompilationResult, Void> worker = new SwingWorker<>() {
@@ -279,13 +288,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                             compileToolbar.showSuccess(result.getCompilationTimeMs());
                         }
 
-                        javax.swing.Timer hideTimer = new javax.swing.Timer(1500, evt -> {
-                            if (!SourceCodeView.this.dirty) {
-                                compileToolbar.hideToolbar();
-                            }
-                        });
-                        hideTimer.setRepeats(false);
-                        hideTimer.start();
+                        if (com.tonic.ui.live.LiveAttachService.getInstance().isAttached()) {
+                            livePatch(baselineSource, source);
+                        } else {
+                            scheduleToolbarHide(1500);
+                        }
                     } else {
                         compileToolbar.showWithErrors(result.getErrorCount(), result.getWarningCount(), result.getErrors());
                     }
@@ -298,6 +305,66 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         };
 
         worker.execute();
+    }
+
+    /**
+     * Pushes the just-recompiled class to the attached JVM. Only the method bodies that changed since
+     * {@code baselineSource} are grafted onto the running class (see {@link com.tonic.ui.live.LivePatch}), so
+     * untouched methods and synthetic members keep the running class's exact bytes and the redefine is accepted
+     * even when a decompile/recompile round-trip would have perturbed synthetics. After a successful patch the
+     * in-memory model is synced to the running class. Runs the fetch/graft/redefine off the EDT.
+     */
+    private void livePatch(String baselineSource, String editedSource) {
+        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        if (!svc.isAttached()) {
+            scheduleToolbarHide(1500);
+            return;
+        }
+        final com.tonic.live.LiveSession session = svc.getSession();
+        final String internalName = classEntry.getClassName();
+        final com.tonic.parser.ClassFile edited = classEntry.getClassFile();
+        final com.tonic.parser.ClassPool classPool = projectModel != null ? projectModel.getClassPool() : null;
+        final java.util.Set<String> changedMethods = com.tonic.ui.live.MethodBodyDiff.changedMethods(
+                baselineSource, editedSource, classPool, internalName);
+        compileToolbar.showPatching();
+        com.tonic.ui.core.SwingWorkers.run(
+                () -> {
+                    byte[] bytes = changedMethods.isEmpty()
+                            ? com.tonic.ui.live.LivePatch.buildRedefineBytes(session, internalName, edited)
+                            : com.tonic.ui.live.LivePatch.buildGraftedRedefineBytes(
+                                    session, internalName, edited, changedMethods);
+                    session.redefineClass(internalName, bytes);
+                    return bytes;
+                },
+                runningBytes -> {
+                    syncModelToRunningClass(runningBytes);
+                    compileToolbar.showPatched();
+                    scheduleToolbarHide(2000);
+                },
+                err -> compileToolbar.showPatchFailed(err.getMessage()));
+    }
+
+    /**
+     * Replaces the in-memory class model with exactly what is now running in the JVM after a patch, so the
+     * bytecode view and the next recompile baseline stay identical to the live class. A refresh failure must
+     * not fail an already-applied patch, so it is swallowed.
+     */
+    private void syncModelToRunningClass(byte[] runningBytes) {
+        try {
+            classEntry.updateClassFile(new com.tonic.parser.ClassFile(new java.io.ByteArrayInputStream(runningBytes)));
+        } catch (Exception ignored) {
+            // The patch already succeeded; keeping the stale model is acceptable.
+        }
+    }
+
+    private void scheduleToolbarHide(int delayMs) {
+        javax.swing.Timer hideTimer = new javax.swing.Timer(delayMs, evt -> {
+            if (!SourceCodeView.this.dirty) {
+                compileToolbar.hideToolbar();
+            }
+        });
+        hideTimer.setRepeats(false);
+        hideTimer.start();
     }
 
     private void discardChanges() {
@@ -490,7 +557,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         }.execute();
     }
 
-    /** Opens Find Usages for the member a lens belongs to — the same event the navigator posts. */
+    /** Opens Find Usages for the member a lens belongs to - the same event the navigator posts. */
     private void postFindUsages(UsageLens.LensEntry lens) {
         String className = classEntry.getClassName();
         switch (lens.targetType) {
@@ -1821,7 +1888,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     /**
      * Resolves the declaration on a 1-based line from the decompiler's member spans (a line belongs
      * to the member whose span contains it; class/method/field spans are disjoint). Returns null when
-     * spans are unavailable or annotations are filtered — both shift or remove line data — so callers
+     * spans are unavailable or annotations are filtered - both shift or remove line data - so callers
      * fall back to the regex extractors.
      */
     private DeclarationInfo declarationFromSpans(int lineNumber) {

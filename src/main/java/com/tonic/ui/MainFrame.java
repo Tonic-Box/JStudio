@@ -238,6 +238,18 @@ public class MainFrame extends JFrame {
         rightToolWindow.addTool("Inspector", propertiesPanel);
         rightToolWindow.addTool("Query", queryExplorerPanel);
 
+        // The live "Threads" tool is only present while attached to a running JVM.
+        com.tonic.event.EventBus.getInstance().register(com.tonic.event.events.LiveSessionEvent.class, e -> {
+            if (e.isAttached()) {
+                if (liveThreadsPanel == null) {
+                    liveThreadsPanel = new com.tonic.ui.live.threads.LiveThreadsPanel(this);
+                }
+                rightToolWindow.addTool("Threads", liveThreadsPanel);
+            } else {
+                rightToolWindow.removeTool("Threads");
+            }
+        });
+
         // Bottom panel with tabbed results (Find Usages, Bookmarks, Comments)
         sidePanel = new BottomPanel();
         sidePanel.setEditorPanel(editorPanel);
@@ -321,6 +333,26 @@ public class MainFrame extends JFrame {
         leftRightSplit.setDividerSize(4);
         leftRightSplit.setBorder(null);
         leftRightSplit.setContinuousLayout(true);
+
+        // The right tool window starts collapsed (stripe only); clicking a stripe tab opens/closes it.
+        rightToolWindow.setCollapseListener(this::applyRightPanelCollapsed);
+        leftRightSplit.addComponentListener(new java.awt.event.ComponentAdapter() {
+            private boolean applied = false;
+
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                if (leftRightSplit.getWidth() <= 0) {
+                    return;
+                }
+                if (!applied) {
+                    applied = true;
+                    applyRightPanelCollapsed(rightToolWindow.isCollapsed());
+                } else if (rightToolWindow.isCollapsed()) {
+                    int stripe = rightToolWindow.getStripeWidth() + leftRightSplit.getDividerSize();
+                    leftRightSplit.setDividerLocation(Math.max(0, leftRightSplit.getWidth() - stripe));
+                }
+            }
+        });
 
         // Navigator + (Center + Right) horizontal split
         mainHorizontalSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
@@ -1005,19 +1037,31 @@ public class MainFrame extends JFrame {
     }
 
     public void togglePropertiesPanel() {
-        if (rightToolWindow.isVisible()) {
-            savedPropertiesDivider = leftRightSplit.getDividerLocation();
-            rightToolWindow.setVisible(false);
+        rightToolWindow.setCollapsed(!rightToolWindow.isCollapsed());
+        leftRightSplit.revalidate();
+        rightVerticalSplit.revalidate();
+    }
+
+    /**
+     * Reacts to the right tool window collapsing/expanding: when collapsed, the right column shrinks to just
+     * the stripe (and the console below it folds away); when expanded, the saved layout is restored.
+     */
+    private void applyRightPanelCollapsed(boolean collapsed) {
+        if (collapsed) {
+            int loc = leftRightSplit.getDividerLocation();
+            if (loc > 0 && loc < leftRightSplit.getWidth()) {
+                savedPropertiesDivider = loc;
+            }
             rightVerticalSplit.setDividerLocation(rightVerticalSplit.getHeight());
-            leftRightSplit.setDividerLocation(leftRightSplit.getWidth());
+            int stripe = rightToolWindow.getStripeWidth() + leftRightSplit.getDividerSize();
+            leftRightSplit.setDividerLocation(Math.max(0, leftRightSplit.getWidth() - stripe));
         } else {
-            rightToolWindow.setVisible(true);
             if (savedPropertiesDivider > 0) {
                 leftRightSplit.setDividerLocation(savedPropertiesDivider);
             } else {
-                leftRightSplit.setDividerLocation((int)(leftRightSplit.getWidth() * 0.75));
+                leftRightSplit.setDividerLocation((int) (leftRightSplit.getWidth() * 0.75));
             }
-            rightVerticalSplit.setDividerLocation((int)(rightVerticalSplit.getHeight() * 0.7));
+            rightVerticalSplit.setDividerLocation((int) (rightVerticalSplit.getHeight() * 0.7));
         }
         leftRightSplit.revalidate();
         rightVerticalSplit.revalidate();
@@ -1694,6 +1738,159 @@ public class MainFrame extends JFrame {
 
     // === VM Operations ===
 
+    /**
+     * Opens the "Attach to Live JVM" dialog. Attaching loads the Java agent into the chosen
+     * process and replaces the current project with one built from that JVM's loaded classes.
+     */
+    public void showLiveAttachDialog() {
+        new com.tonic.ui.live.LiveAttachDialog(this).setVisible(true);
+    }
+
+    /** Detaches from the live JVM (closes the session); the pulled classes remain for offline browsing. */
+    public void detachLive() {
+        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        if (!svc.isAttached()) {
+            return;
+        }
+        svc.detach();
+        com.tonic.ui.live.LiveHeapService.get().clear();
+        consolePanel.log("Detached from live JVM.");
+    }
+
+    private com.tonic.ui.live.LiveCaptureService liveCaptureService;
+    private com.tonic.live.LiveSession liveCaptureSession;
+    private com.tonic.ui.live.threads.LiveThreadsPanel liveThreadsPanel;
+
+    /**
+     * Arms or disarms runtime class-load capture on the active live session. Captured classes (packers,
+     * defineHiddenClass, ASM glue) stream into the project as they load. No-op without an attach session.
+     */
+    public void setLiveCaptureEnabled(boolean enabled) {
+        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        if (!svc.isAttached()) {
+            if (enabled) {
+                showWarning("Attach to a live JVM first (VM -> Attach to Live JVM).");
+            }
+            return;
+        }
+        com.tonic.live.LiveSession session = svc.getSession();
+        if (liveCaptureService != null && liveCaptureSession != session) {
+            liveCaptureService.dispose();
+            liveCaptureService = null;
+        }
+        try {
+            if (enabled) {
+                if (liveCaptureService == null) {
+                    liveCaptureService = new com.tonic.ui.live.LiveCaptureService(session);
+                    liveCaptureSession = session;
+                }
+                liveCaptureService.arm();
+            } else if (liveCaptureService != null) {
+                liveCaptureService.disarm();
+            }
+        } catch (Exception e) {
+            showWarning("Live capture toggle failed: " + e.getMessage());
+        }
+    }
+
+    /** Whether runtime class-load capture is currently armed on the active session. */
+    public boolean isLiveCaptureEnabled() {
+        return liveCaptureService != null && liveCaptureService.isArmed();
+    }
+
+    /**
+     * Opens the decompiled source for a thread-stack frame: resolves the declaring class in the current
+     * project and navigates to the method. Navigation is method-level (a stack frame carries no descriptor).
+     */
+    public void openLiveFrame(String internalName, String methodName, int line) {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            return;
+        }
+        ClassEntryModel entry = project.getClass(internalName);
+        if (entry == null) {
+            consolePanel.log("Class not in project (not pulled from the target): " + internalName);
+            return;
+        }
+        editorPanel.navigateToMethod(entry, methodName, "", ViewMode.SOURCE);
+    }
+
+    /** Snapshots the attached JVM's wait-for graph and reports any deadlock cycles. */
+    public void findLiveDeadlocks() {
+        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        if (!svc.isAttached()) {
+            showWarning("Attach to a live JVM first (VM -> Attach to Live JVM).");
+            return;
+        }
+        com.tonic.live.LiveSession session = svc.getSession();
+        new javax.swing.SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() {
+                try {
+                    java.util.List<com.tonic.live.protocol.ContentionEdge> edges = session.getContention();
+                    java.util.List<java.util.List<com.tonic.live.protocol.ContentionEdge>> cycles =
+                            com.tonic.live.Deadlocks.find(edges);
+                    if (cycles.isEmpty()) {
+                        return "No deadlocks. " + edges.size() + " thread(s) currently blocked on a monitor.";
+                    }
+                    StringBuilder sb = new StringBuilder(cycles.size() + " deadlock(s) detected:\n");
+                    int n = 1;
+                    for (java.util.List<com.tonic.live.protocol.ContentionEdge> cycle : cycles) {
+                        sb.append("\nDeadlock ").append(n++).append(":\n");
+                        for (com.tonic.live.protocol.ContentionEdge e : cycle) {
+                            sb.append("  ").append(e).append('\n');
+                        }
+                    }
+                    return sb.toString();
+                } catch (Exception e) {
+                    return "Deadlock scan failed: " + e.getMessage();
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    showInfo(get());
+                } catch (Exception ignored) {
+                }
+            }
+        }.execute();
+    }
+
+    /**
+     * Pushes the currently-open class's bytecode to the attached JVM via live redefinition ("patch &
+     * continue"). Method-body-only changes apply immediately; structural changes (add/remove fields or
+     * methods, hierarchy) are rejected by the JVM and surfaced as an error.
+     */
+    public void patchLiveClass() {
+        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        if (!svc.isAttached()) {
+            showWarning("Attach to a live JVM first (VM -> Attach to Live JVM).");
+            return;
+        }
+        ClassEntryModel currentClass = editorPanel.getCurrentClass();
+        if (currentClass == null) {
+            showWarning("No class selected to patch.");
+            return;
+        }
+        final String internalName = currentClass.getClassName();
+        final com.tonic.parser.ClassFile edited = currentClass.getClassFile();
+        final com.tonic.live.LiveSession session = svc.getSession();
+        consolePanel.log("Patching live class " + internalName + "...");
+        com.tonic.ui.core.SwingWorkers.run(
+                () -> {
+                    byte[] bytes = com.tonic.ui.live.LivePatch.buildRedefineBytes(session, internalName, edited);
+                    session.redefineClass(internalName, bytes);
+                    return null;
+                },
+                ignored -> consolePanel.log("Live patch applied to " + internalName + "."),
+                err -> {
+                    consolePanel.log("Live patch failed: " + err.getMessage());
+                    showWarning("Live patch failed: " + err.getMessage()
+                            + "\n(Only method-body changes are supported; structural changes are rejected.)");
+                });
+    }
+
     public void showVMConsole() {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project == null) {
@@ -1891,7 +2088,7 @@ public class MainFrame extends JFrame {
         }
         if (classEntry != null) {
             // Switch the view (and toolbar/status) to bytecode FIRST, so the highlight applied by
-            // navigateToPC is the last operation — otherwise a follow-up setViewMode refresh would
+            // navigateToPC is the last operation - otherwise a follow-up setViewMode refresh would
             // rebuild the view and clear the just-selected instruction line.
             switchToBytecodeView();
             return editorPanel.navigateToPC(classEntry, methodName, methodDesc, pc);

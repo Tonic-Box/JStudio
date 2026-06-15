@@ -1,7 +1,10 @@
 package com.tonic.ui;
 
+import com.tonic.event.EventBus;
+import com.tonic.event.events.LiveSessionEvent;
 import com.tonic.ui.editor.ViewMode;
 import com.tonic.ui.editor.ViewModeComboBox;
+import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.theme.*;
 
 import javax.swing.BorderFactory;
@@ -61,6 +64,9 @@ public class ToolbarBuilder implements ThemeChangeListener {
             ViewMode mode = viewModeCombo.getSelectedViewMode();
             mainFrame.switchToView(mode);
         });
+        viewModeCombo.setLiveViewsAvailable(LiveAttachService.getInstance().isAttached());
+        EventBus.getInstance().register(LiveSessionEvent.class,
+                e -> viewModeCombo.setLiveViewsAvailable(e.isAttached()));
         toolbar.add(viewModeCombo);
         toolbar.addSeparator();
 

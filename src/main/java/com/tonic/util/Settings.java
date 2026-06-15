@@ -21,6 +21,7 @@ public class Settings {
     private static final String PREF_FONT_FAMILY = "editor.fontFamily";
     private static final String PREF_WORD_WRAP = "editor.wordWrap";
     private static final String PREF_USAGE_LENS = "editor.usageLens";
+    private static final String PREF_LIVE_AGENT_PATH = "live.agentPath";
     private static final String PREF_LAST_DIR = "file.lastDirectory";
 
     private static final String PREF_RESTORE_SESSION = "session.restore";
@@ -83,6 +84,9 @@ public class Settings {
 
     public boolean isUsageLensEnabled() { return prefs.getBoolean(PREF_USAGE_LENS, true); }
     public void setUsageLensEnabled(boolean enabled) { prefs.putBoolean(PREF_USAGE_LENS, enabled); }
+
+    public String getLiveAgentPath() { return prefs.get(PREF_LIVE_AGENT_PATH, ""); }
+    public void setLiveAgentPath(String path) { prefs.put(PREF_LIVE_AGENT_PATH, path != null ? path : ""); }
 
     // File chooser
     public String getLastDirectory() { return prefs.get(PREF_LAST_DIR, System.getProperty("user.home")); }
