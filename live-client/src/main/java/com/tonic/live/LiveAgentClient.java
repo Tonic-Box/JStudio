@@ -3,6 +3,7 @@ package com.tonic.live;
 import com.tonic.live.protocol.AgentInfo;
 import com.tonic.live.protocol.ContentionEdge;
 import com.tonic.live.protocol.LiveEvent;
+import com.tonic.live.protocol.MetricsSnapshot;
 import com.tonic.live.protocol.LiveProtocol;
 import com.tonic.live.protocol.LoadedClass;
 import com.tonic.live.protocol.StackFrame;
@@ -208,6 +209,34 @@ public final class LiveAgentClient implements Closeable {
         }));
         skipType(r, LiveProtocol.MSG_INVOKE_STATIC);
         return readString(r);
+    }
+
+    /** Reads a snapshot of the target JVM's runtime metrics (memory, GC, CPU, threads, classes). */
+    public MetricsSnapshot getMetrics() throws IOException {
+        DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_GET_METRICS});
+        skipType(r, LiveProtocol.MSG_GET_METRICS);
+        long uptime = r.readLong();
+        long heapUsed = r.readLong(), heapCommitted = r.readLong(), heapMax = r.readLong();
+        long nhUsed = r.readLong(), nhCommitted = r.readLong(), nhMax = r.readLong();
+        double procCpu = r.readDouble(), sysCpu = r.readDouble();
+        int procs = r.readInt();
+        int threads = r.readInt(), daemon = r.readInt(), peak = r.readInt();
+        long totalStarted = r.readLong();
+        int loaded = r.readInt();
+        long totalLoaded = r.readLong(), unloaded = r.readLong();
+
+        int poolCount = r.readInt();
+        List<MetricsSnapshot.MemoryPool> pools = new ArrayList<>(Math.max(0, poolCount));
+        for (int i = 0; i < poolCount; i++) {
+            pools.add(new MetricsSnapshot.MemoryPool(readString(r), r.readLong(), r.readLong(), r.readLong()));
+        }
+        int gcCount = r.readInt();
+        List<MetricsSnapshot.GcStat> gcs = new ArrayList<>(Math.max(0, gcCount));
+        for (int i = 0; i < gcCount; i++) {
+            gcs.add(new MetricsSnapshot.GcStat(readString(r), r.readLong(), r.readLong()));
+        }
+        return new MetricsSnapshot(uptime, heapUsed, heapCommitted, heapMax, nhUsed, nhCommitted, nhMax,
+                procCpu, sysCpu, procs, threads, daemon, peak, totalStarted, loaded, totalLoaded, unloaded, pools, gcs);
     }
 
     /** Snapshots all threads with their current stacks (up to {@code maxDepth} frames each). */

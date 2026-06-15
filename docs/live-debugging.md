@@ -13,6 +13,7 @@ OS/arch with no native build or toolchain.
 | Live method-body patch ("patch & continue") | a source edit grafts only the **changed** method bodies onto the running class (so untouched methods and synthetic members keep their exact bytes); the bytecode editor sends the whole class. Either way -> `redefineClasses` | Recompile in the source view, or Attach -> Patch Live Class |
 | Live heap snapshot | on-demand HPROF heap dump, parsed and browsed by class/instance with field/array inspection | per-class **Live** view (Instances) |
 | Live statics | read (and inline-edit primitive/String) a class's static fields; list and invoke its static methods | per-class **Live** view (Statics) |
+| Live profiler | per-second snapshot of CPU, heap, metaspace, GC, threads, and loaded classes (JMX MXBeans) rendered as live graphs | **Profiler** right-dock tool |
 | Runtime-generated class capture (packers, defineHiddenClass, ASM) | a `ClassFileTransformer` streams non-bootstrap loads with real bytes | Attach -> Capture Runtime Classes |
 | Deadlock detection | `ThreadMXBean` wait-for graph -> cycle find (`Deadlocks`) | Attach -> Find Deadlocks |
 | Thread list | `ThreadMXBean` | per-class **Live** view (Threads), scripting (`live.threads()`) |
@@ -31,6 +32,8 @@ Scriptable via the `live` binding: `live.threads()`, `live.deadlocks()`, `live.c
 4. While attached, an open class gains a **Live** section in its view dropdown - **Instances** (from a heap
    snapshot), **Statics** (view/edit static fields, invoke static methods), and **Threads**. Editing in the
    source view and recompiling live-patches the running class (see the patch row above).
+5. The **Profiler** right-dock tool shows live graphs (CPU, heap, metaspace, GC, threads, loaded classes),
+   sampled once a second; it pauses while its tab is hidden.
 
 ## Building & bundling
 

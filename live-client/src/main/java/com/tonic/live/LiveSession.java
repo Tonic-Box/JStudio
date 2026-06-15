@@ -4,6 +4,7 @@ import com.tonic.live.protocol.AgentInfo;
 import com.tonic.live.protocol.ContentionEdge;
 import com.tonic.live.protocol.LiveEvent;
 import com.tonic.live.protocol.LoadedClass;
+import com.tonic.live.protocol.MetricsSnapshot;
 import com.tonic.live.protocol.StaticField;
 import com.tonic.live.protocol.StaticMethod;
 import com.tonic.live.protocol.ThreadInfo;
@@ -123,6 +124,11 @@ public final class LiveSession implements Closeable {
     /** Snapshots all threads with their current stacks. */
     public List<ThreadStack> getThreadStacks(int maxDepth) throws IOException {
         return client.getThreadStacks(maxDepth);
+    }
+
+    /** Reads a snapshot of the target JVM's runtime metrics (memory, GC, CPU, threads, classes). */
+    public MetricsSnapshot getMetrics() throws IOException {
+        return client.getMetrics();
     }
 
     @Override

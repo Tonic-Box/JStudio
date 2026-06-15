@@ -245,8 +245,13 @@ public class MainFrame extends JFrame {
                     liveThreadsPanel = new com.tonic.ui.live.threads.LiveThreadsPanel(this);
                 }
                 rightToolWindow.addTool("Threads", liveThreadsPanel);
+                if (liveProfilerPanel == null) {
+                    liveProfilerPanel = new com.tonic.ui.live.profiler.LiveProfilerPanel();
+                }
+                rightToolWindow.addTool("Profiler", liveProfilerPanel);
             } else {
                 rightToolWindow.removeTool("Threads");
+                rightToolWindow.removeTool("Profiler");
             }
         });
 
@@ -1760,6 +1765,7 @@ public class MainFrame extends JFrame {
     private com.tonic.ui.live.LiveCaptureService liveCaptureService;
     private com.tonic.live.LiveSession liveCaptureSession;
     private com.tonic.ui.live.threads.LiveThreadsPanel liveThreadsPanel;
+    private com.tonic.ui.live.profiler.LiveProfilerPanel liveProfilerPanel;
 
     /**
      * Arms or disarms runtime class-load capture on the active live session. Captured classes (packers,

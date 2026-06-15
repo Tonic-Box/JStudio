@@ -7,10 +7,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Version bump">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Fixed concurrency issue with fetching of live classes&#10;- Live profiler side tab">
+      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/MetricsSnapshot.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/profiler/LiveProfilerPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/profiler/MetricChart.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/live-client/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/FEATURES.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/FEATURES.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/live-debugging.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/live-debugging.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JavaAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JavaAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveAgentClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveAgentClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveSession.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveProtocol.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveProtocol.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,7 +106,7 @@
       <recent name="com.tonic.ui.theme" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.JStudio [build]">
+  <component name="RunManager" selected="Gradle.JStudio [run]">
     <configuration name="JStudio [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -207,8 +219,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.JStudio [build]" />
         <item itemvalue="Gradle.JStudio [run]" />
+        <item itemvalue="Gradle.JStudio [build]" />
         <item itemvalue="Gradle.JStudio [clean]" />
         <item itemvalue="Gradle.JStudio [test]" />
         <item itemvalue="Gradle.JStudio [refreshDependencies]" />
@@ -223,14 +235,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00044" summary="AST view">
-      <option name="closed" value="true" />
-      <created>1767577122168</created>
-      <option name="number" value="00044" />
-      <option name="presentableId" value="LOCAL-00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1767577122168</updated>
     </task>
     <task id="LOCAL-00045" summary="PDG/SDG/CPG views/analysis">
       <option name="closed" value="true" />
@@ -616,7 +620,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781502819520</updated>
     </task>
-    <option name="localTasksCounter" value="93" />
+    <task id="LOCAL-00093" summary="- Gradle cleanup">
+      <option name="closed" value="true" />
+      <created>1781503119954</created>
+      <option name="number" value="00093" />
+      <option name="presentableId" value="LOCAL-00093" />
+      <option name="project" value="LOCAL" />
+      <updated>1781503119954</updated>
+    </task>
+    <option name="localTasksCounter" value="94" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -631,8 +643,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Fix recompiled changes not persisting to bytecode/export and surface results in the editor:&#10;- Per-method resilience: a method that can't lower keeps its original bytecode and reports a warning instead of aborting the whole class&#10;- Refresh all open views (bytecode, const-pool, hex, IR, AST, ...) after a successful recompile&#10;- Add new methods/fields and regenerate &lt;clinit&gt; from static initializers&#10;- Remove methods dropped from source (constructors/synthetics guarded)&#10;- Materialize synthetic lambdas (rolls back on failure)&#10;&#10;LLVM Support:&#10;- View support for LLVM IR as a View" />
-    <MESSAGE value="- support for changing class level of created classes" />
     <MESSAGE value="- Can create new classes from blank project now" />
     <MESSAGE value="- Improved bytecode view&#10;- fixed highlight bug in bytecode view" />
     <MESSAGE value="- Improved bytecode view&#10;- fixed highlight bug in bytecode view&#10;- Auto update checking now" />
@@ -656,7 +666,9 @@
     <MESSAGE value="- Update ReadMe" />
     <MESSAGE value="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring." />
     <MESSAGE value="- Version bump" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Version bump" />
+    <MESSAGE value="- Gradle cleanup" />
+    <MESSAGE value="- Fixed concurrency issue with fetching of live classes&#10;- Live profiler side tab" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Fixed concurrency issue with fetching of live classes&#10;- Live profiler side tab" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

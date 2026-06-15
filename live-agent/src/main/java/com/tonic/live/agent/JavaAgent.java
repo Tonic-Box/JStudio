@@ -10,7 +10,14 @@ import java.io.IOException;
 import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
+import java.lang.management.ClassLoadingMXBean;
+import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryUsage;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.lang.reflect.Field;
@@ -22,6 +29,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.ProtectionDomain;
+import java.util.List;
 
 /**
  * The JStudio Live agent, built on {@link java.lang.instrument} - pure Java, so it works on any OS/arch
@@ -156,6 +164,8 @@ public final class JavaAgent {
                 return handleInvokeStatic(in);
             case LiveProtocol.MSG_GET_THREAD_STACKS:
                 return handleGetThreadStacks(in);
+            case LiveProtocol.MSG_GET_METRICS:
+                return handleGetMetrics();
             default:
                 return error("operation not supported by the JStudio Live agent");
         }
@@ -167,6 +177,67 @@ public final class JavaAgent {
         b.u32(0); // version marker (unused)
         b.u32(LiveProtocol.CAP_REDEFINE | LiveProtocol.CAP_RETRANSFORM | LiveProtocol.CAP_BYTECODES);
         b.u32(inst.getAllLoadedClasses().length);
+        return b.toBytes();
+    }
+
+    private static byte[] handleGetMetrics() throws IOException {
+        Buf b = new Buf();
+        b.u8(LiveProtocol.MSG_GET_METRICS);
+
+        RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
+        MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
+        ThreadMXBean threads = ManagementFactory.getThreadMXBean();
+        ClassLoadingMXBean classes = ManagementFactory.getClassLoadingMXBean();
+        OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+        MemoryUsage heap = memory.getHeapMemoryUsage();
+        MemoryUsage nonHeap = memory.getNonHeapMemoryUsage();
+
+        b.u64(runtime.getUptime());
+        b.u64(heap.getUsed());
+        b.u64(heap.getCommitted());
+        b.u64(heap.getMax());
+        b.u64(nonHeap.getUsed());
+        b.u64(nonHeap.getCommitted());
+        b.u64(nonHeap.getMax());
+
+        // getProcessCpuLoad/getSystemCpuLoad are on the HotSpot/OpenJDK extension bean; -1 when unavailable.
+        double processCpu = -1;
+        double systemCpu = -1;
+        if (os instanceof com.sun.management.OperatingSystemMXBean) {
+            com.sun.management.OperatingSystemMXBean ext = (com.sun.management.OperatingSystemMXBean) os;
+            processCpu = ext.getProcessCpuLoad();
+            systemCpu = ext.getSystemCpuLoad();
+        }
+        b.f64(processCpu);
+        b.f64(systemCpu);
+        b.u32(os.getAvailableProcessors());
+
+        b.u32(threads.getThreadCount());
+        b.u32(threads.getDaemonThreadCount());
+        b.u32(threads.getPeakThreadCount());
+        b.u64(threads.getTotalStartedThreadCount());
+
+        b.u32(classes.getLoadedClassCount());
+        b.u64(classes.getTotalLoadedClassCount());
+        b.u64(classes.getUnloadedClassCount());
+
+        List<MemoryPoolMXBean> pools = ManagementFactory.getMemoryPoolMXBeans();
+        b.u32(pools.size());
+        for (MemoryPoolMXBean pool : pools) {
+            MemoryUsage usage = pool.getUsage();
+            b.str(pool.getName());
+            b.u64(usage != null ? usage.getUsed() : -1);
+            b.u64(usage != null ? usage.getCommitted() : -1);
+            b.u64(usage != null ? usage.getMax() : -1);
+        }
+
+        List<GarbageCollectorMXBean> collectors = ManagementFactory.getGarbageCollectorMXBeans();
+        b.u32(collectors.size());
+        for (GarbageCollectorMXBean gc : collectors) {
+            b.str(gc.getName());
+            b.u64(gc.getCollectionCount());
+            b.u64(gc.getCollectionTime());
+        }
         return b.toBytes();
     }
 
@@ -716,6 +787,14 @@ public final class JavaAgent {
 
         void u32(int v) throws IOException {
             d.writeInt(v);
+        }
+
+        void u64(long v) throws IOException {
+            d.writeLong(v);
+        }
+
+        void f64(double v) throws IOException {
+            d.writeDouble(v);
         }
 
         void str(String s) throws IOException {

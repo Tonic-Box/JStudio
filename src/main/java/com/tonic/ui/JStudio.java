@@ -19,7 +19,7 @@ import java.util.Arrays;
 public class JStudio {
 
     public static final String APP_NAME = "JStudio";
-    public static final String APP_VERSION = "18.0.0";
+    public static final String APP_VERSION = "19.0.0";
 
     public static void main(String[] args) {
         if (hasCliFlag(args)) {

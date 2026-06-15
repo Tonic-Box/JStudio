@@ -26,6 +26,7 @@ public final class LiveProtocol {
     public static final int MSG_LIST_STATIC_METHODS = 0x1A; // req: str class; resp: u32 count, [str name, str desc]*
     public static final int MSG_INVOKE_STATIC = 0x1B;    // req: str class, str name, str desc, u32 argc, [str arg]*; resp: str result
     public static final int MSG_GET_THREAD_STACKS = 0x1C;// req: u32 maxDepth; resp: u32 count, [u64 tid, str name, u32 state, u32 frames, [str cls, str method, str file, i32 line]*]*
+    public static final int MSG_GET_METRICS = 0x1D;      // req: empty; resp: VM metrics snapshot (see MetricsSnapshot)
     public static final int MSG_ERROR = 0x7F;            // resp only: string message
 
     // MSG_GET_STATICS field kinds: how the UI may edit the value.

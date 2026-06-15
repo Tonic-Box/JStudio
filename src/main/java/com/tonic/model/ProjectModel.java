@@ -11,12 +11,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -33,8 +32,10 @@ public class ProjectModel {
     private ClassPool classPool;
     @Getter
     private XrefDatabase xrefDatabase;
-    private final Map<String, ClassEntryModel> classEntries = new HashMap<>();
-    private final Set<String> userClassNames = new HashSet<>();
+    // Concurrent: live capture/attach pulls classes in on a background thread while the EDT iterates them
+    // (navigator rebuild, etc.). Weakly-consistent iteration avoids ConcurrentModificationException.
+    private final Map<String, ClassEntryModel> classEntries = new ConcurrentHashMap<>();
+    private final Set<String> userClassNames = ConcurrentHashMap.newKeySet();
     private final Map<String, ResourceEntryModel> resources = new LinkedHashMap<>();
     @Getter
     private boolean dirty;
@@ -120,7 +121,7 @@ public class ProjectModel {
      * Get a class entry by internal name.
      */
     public ClassEntryModel getClass(String internalName) {
-        return classEntries.get(internalName);
+        return internalName == null ? null : classEntries.get(internalName);
     }
 
     /**
@@ -143,7 +144,7 @@ public class ProjectModel {
      * Check if a class name is a user class (not JDK/library).
      */
     public boolean isUserClass(String className) {
-        return userClassNames.contains(className);
+        return className != null && userClassNames.contains(className);
     }
 
     /**

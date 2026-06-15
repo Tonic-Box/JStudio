@@ -76,6 +76,7 @@ Attach to an external running JVM (JDK 11+) via a `java.lang.instrument` agent. 
 - **Patch & Continue** - recompile the open class and live-redefine it; a source edit grafts only the changed method bodies onto the running class, so untouched methods and synthetic members are preserved.
 - **Live heap** - take an HPROF snapshot of the target and browse instances by class with field/array inspection.
 - **Live statics** - view and inline-edit a class's static fields, and invoke its static methods.
+- **Live profiler** - per-second live graphs of CPU, heap, metaspace, GC, threads, and loaded classes.
 - **Live threads & deadlocks** - list threads and detect deadlock cycles from the wait-for graph.
 - **Runtime class capture** - stream classes defined at runtime (packers, `defineHiddenClass`, ASM) into the project.
 
