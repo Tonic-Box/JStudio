@@ -7,62 +7,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring.">
-      <change afterPath="$PROJECT_DIR$/docs/FEATURES.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/live-debugging.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-agent/build.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JavaAgent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/build.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/AttachLauncher.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/Deadlocks.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveAgentClient.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveSession.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/AgentInfo.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/ContentionEdge.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveProtocol.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LoadedClass.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/StackFrame.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/StaticField.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/StaticMethod.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/ThreadInfo.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/ThreadStack.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/event/events/LiveSessionEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/LiveBridge.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/SwingWorkers.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/LiveAttachDialog.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/LiveAttachService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/LiveCaptureService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/LiveHeapService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/LivePatch.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/MethodBodyDiff.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/heap/HprofSnapshot.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/heap/LiveInstancesView.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/statics/LiveStaticsView.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/threads/LiveThreadsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/BridgeRegistry.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/BridgeRegistry.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewMode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewModeComboBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ViewModeComboBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/FloatingCompileToolbar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/FloatingCompileToolbar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompiler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompiler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/util/DescriptorParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/util/DescriptorParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/util/Settings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/util/Settings.java" afterDir="false" />
-    </list>
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -274,22 +219,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00040" summary="- Updated api usage for YABR SSA IR changes">
-      <option name="closed" value="true" />
-      <created>1767395328842</created>
-      <option name="number" value="00040" />
-      <option name="presentableId" value="LOCAL-00040" />
-      <option name="project" value="LOCAL" />
-      <updated>1767395328842</updated>
-    </task>
-    <task id="LOCAL-00041" summary="- Updated api usage for YABR Expr/Stmt IR changes&#10;- vm service now correctly shuts down when closing current workspace">
-      <option name="closed" value="true" />
-      <created>1767509592149</created>
-      <option name="number" value="00041" />
-      <option name="presentableId" value="LOCAL-00041" />
-      <option name="project" value="LOCAL" />
-      <updated>1767509592149</updated>
     </task>
     <task id="LOCAL-00042" summary="AST view">
       <option name="closed" value="true" />
@@ -667,7 +596,23 @@
       <option name="project" value="LOCAL" />
       <updated>1781305556381</updated>
     </task>
-    <option name="localTasksCounter" value="89" />
+    <task id="LOCAL-00089" summary="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring.">
+      <option name="closed" value="true" />
+      <created>1781502454693</created>
+      <option name="number" value="00089" />
+      <option name="presentableId" value="LOCAL-00089" />
+      <option name="project" value="LOCAL" />
+      <updated>1781502454693</updated>
+    </task>
+    <task id="LOCAL-00090" summary="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring.">
+      <option name="closed" value="true" />
+      <created>1781502486042</created>
+      <option name="number" value="00090" />
+      <option name="presentableId" value="LOCAL-00090" />
+      <option name="project" value="LOCAL" />
+      <updated>1781502486042</updated>
+    </task>
+    <option name="localTasksCounter" value="91" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
