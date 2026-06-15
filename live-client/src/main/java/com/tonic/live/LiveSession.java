@@ -102,6 +102,26 @@ public final class LiveSession implements Closeable {
         return client.heapDump();
     }
 
+    /** Whether the target's agent can drive Flight Recorder (JFR present on the target runtime). */
+    public boolean supportsJfr() {
+        return (info.getCapabilities() & com.tonic.live.protocol.LiveProtocol.CAP_JFR) != 0;
+    }
+
+    /** Starts a JFR recording (base {@code profile} plus category bits; {@code maxSizeMb} 0 = unbounded). */
+    public void startRecording(String profile, int categoryMask, int maxSizeMb) throws IOException {
+        client.jfrStart(profile, categoryMask, maxSizeMb);
+    }
+
+    /** Stops the active JFR recording and returns the local {@code .jfr} path. */
+    public String stopRecording() throws IOException {
+        return client.jfrStop();
+    }
+
+    /** Dumps the in-progress recording without stopping it; returns the local {@code .jfr} path. */
+    public String snapshotRecording() throws IOException {
+        return client.jfrSnapshot();
+    }
+
     /** Reads the live static fields of a class. */
     public List<StaticField> getStatics(String internalName) throws IOException {
         return client.getStatics(internalName);

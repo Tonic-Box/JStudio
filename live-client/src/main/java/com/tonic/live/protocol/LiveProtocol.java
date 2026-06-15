@@ -28,6 +28,9 @@ public final class LiveProtocol {
     public static final int MSG_GET_THREAD_STACKS = 0x1C;// req: u32 maxDepth; resp: u32 count, [u64 tid, str name, u32 state, u32 frames, [str cls, str method, str file, i32 line]*]*
     public static final int MSG_GET_METRICS = 0x1D;      // req: empty; resp: VM metrics snapshot (see MetricsSnapshot)
     public static final int MSG_EVAL = 0x1E;             // req: u32 classCount, [str name, u32 len, bytes]*, str mainName, str contextClass; resp: str output
+    public static final int MSG_JFR_START = 0x1F;        // req: str profile, u32 categoryMask, u32 maxSizeMb; resp: u8 ok
+    public static final int MSG_JFR_STOP = 0x20;         // req: empty; resp: str localJfrPath (stops + clears the active recording)
+    public static final int MSG_JFR_SNAPSHOT = 0x21;     // req: empty; resp: str localJfrPath (recording keeps running)
     public static final int MSG_ERROR = 0x7F;            // resp only: string message
 
     // MSG_GET_STATICS field kinds: how the UI may edit the value.
@@ -42,4 +45,11 @@ public final class LiveProtocol {
     public static final int CAP_REDEFINE = 1;
     public static final int CAP_RETRANSFORM = 1 << 1;
     public static final int CAP_BYTECODES = 1 << 2;
+    public static final int CAP_JFR = 1 << 3;            // agent can drive Flight Recorder (MSG_JFR_*)
+
+    // MSG_JFR_START event-category bits: which JFR event families to record (on top of the base profile).
+    public static final int JFR_CAT_CPU = 1;             // execution sampling
+    public static final int JFR_CAT_ALLOC = 1 << 1;      // object allocation
+    public static final int JFR_CAT_LOCKS = 1 << 2;      // monitor/park contention
+    public static final int JFR_CAT_EXCEPTIONS = 1 << 3; // thrown exceptions/errors
 }

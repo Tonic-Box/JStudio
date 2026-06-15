@@ -7,26 +7,24 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add Live Java Scratch Pad: eval arbitrary Java in the attached JVM&#10;- MSG_EVAL wire op + agent class-defining/output-teeing&#10;- SnippetCompiler: default-package wrapper, optional return, auto-imports&#10;- Completion: keywords, project + JDK classes, JDK member chains&#10;- Bump version">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/JavaEditorFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/JdkClassIndex.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/LiveScratchPadDialog.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/ProjectClasspath.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/ScratchCompletionProvider.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/SnippetCompiler.java" afterDir="false" />
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source.">
+      <change afterPath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JfrController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/LiveRecorderPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/BarTableCellRenderer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/CallTreeNode.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/FlameGraphPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/FrameKey.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/JfrAnalysisWindow.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/JfrFormat.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/JfrRecording.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/live-debugging.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/live-debugging.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JavaAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JavaAgent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveAgentClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveAgentClient.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveSession.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveProtocol.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveProtocol.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -182,7 +180,7 @@
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
+        <option name="scriptParameters" value="--offline" />
         <option name="taskDescriptions">
           <list />
         </option>
@@ -246,14 +244,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00048" summary="- Context options">
-      <option name="closed" value="true" />
-      <created>1767999223381</created>
-      <option name="number" value="00048" />
-      <option name="presentableId" value="LOCAL-00048" />
-      <option name="project" value="LOCAL" />
-      <updated>1767999223381</updated>
     </task>
     <task id="LOCAL-00049" summary="- cleanup">
       <option name="closed" value="true" />
@@ -639,7 +629,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781508871869</updated>
     </task>
-    <option name="localTasksCounter" value="97" />
+    <task id="LOCAL-00097" summary="Add Live Java Scratch Pad: eval arbitrary Java in the attached JVM&#10;- MSG_EVAL wire op + agent class-defining/output-teeing&#10;- SnippetCompiler: default-package wrapper, optional return, auto-imports&#10;- Completion: keywords, project + JDK classes, JDK member chains&#10;- Bump version">
+      <option name="closed" value="true" />
+      <created>1781540341195</created>
+      <option name="number" value="00097" />
+      <option name="presentableId" value="LOCAL-00097" />
+      <option name="project" value="LOCAL" />
+      <updated>1781540341195</updated>
+    </task>
+    <option name="localTasksCounter" value="98" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -654,7 +652,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Small tweak to self-update/update check" />
     <MESSAGE value="- Undid update check throttling" />
     <MESSAGE value="- Bump version to 11" />
     <MESSAGE value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST and planner visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) query tiers&#10;- Add syntax highlighting to the DSL editor via a dedicated QueryTokenMaker&#10;- Rebuild the query help popup as themed HTML with per-example syntax-highlighted boxes&#10;- Rewrite the visual query builder to emit composable DSL instead of the removed predicate syntax&#10;- Add query tests covering the parse→plan→run pipeline, SSA/data-flow, and the builder/help syntax contracts&#10;- Remove the standalone Dependencies and Data Flow analysis panels&#10;- Restructure the Analysis menu (rename Simulation to Code Analysis; add Similarity, Search, and Strings entries)" />
@@ -679,7 +676,8 @@
     <MESSAGE value="- Update readme image" />
     <MESSAGE value="- Update readme" />
     <MESSAGE value="Add Live Java Scratch Pad: eval arbitrary Java in the attached JVM&#10;- MSG_EVAL wire op + agent class-defining/output-teeing&#10;- SnippetCompiler: default-package wrapper, optional return, auto-imports&#10;- Completion: keywords, project + JDK classes, JDK member chains&#10;- Bump version" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add Live Java Scratch Pad: eval arbitrary Java in the attached JVM&#10;- MSG_EVAL wire op + agent class-defining/output-teeing&#10;- SnippetCompiler: default-package wrapper, optional return, auto-imports&#10;- Completion: keywords, project + JDK classes, JDK member chains&#10;- Bump version" />
+    <MESSAGE value="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source." />
+    <option name="LAST_COMMIT_MESSAGE" value="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source." />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

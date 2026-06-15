@@ -249,9 +249,17 @@ public class MainFrame extends JFrame {
                     liveProfilerPanel = new com.tonic.ui.live.profiler.LiveProfilerPanel();
                 }
                 rightToolWindow.addTool("Profiler", liveProfilerPanel);
+                com.tonic.live.LiveSession session = com.tonic.ui.live.LiveAttachService.getInstance().getSession();
+                if (session != null && session.supportsJfr()) {
+                    if (liveRecorderPanel == null) {
+                        liveRecorderPanel = new com.tonic.ui.live.recorder.LiveRecorderPanel(this);
+                    }
+                    rightToolWindow.addTool("Recorder", liveRecorderPanel);
+                }
             } else {
                 rightToolWindow.removeTool("Threads");
                 rightToolWindow.removeTool("Profiler");
+                rightToolWindow.removeTool("Recorder");
             }
         });
 
@@ -1751,6 +1759,16 @@ public class MainFrame extends JFrame {
         new com.tonic.ui.live.LiveAttachDialog(this).setVisible(true);
     }
 
+    /** Opens (reusing one window) the JFR analysis view for a captured {@code .jfr} recording. */
+    public void showJfrAnalysis(java.io.File jfr) {
+        if (jfrAnalysisWindow == null) {
+            jfrAnalysisWindow = new com.tonic.ui.live.recorder.jfr.JfrAnalysisWindow(this);
+        }
+        jfrAnalysisWindow.load(jfr);
+        jfrAnalysisWindow.setVisible(true);
+        jfrAnalysisWindow.toFront();
+    }
+
     /**
      * Opens the live Java scratch pad: compile-and-run arbitrary Java inside the attached JVM. Requires an
      * active attach session and a loaded project (the target's pulled classes). Holds one non-modal dialog.
@@ -1790,6 +1808,8 @@ public class MainFrame extends JFrame {
     }
 
     private com.tonic.ui.live.eval.LiveScratchPadDialog liveScratchPadDialog;
+    private com.tonic.ui.live.recorder.LiveRecorderPanel liveRecorderPanel;
+    private com.tonic.ui.live.recorder.jfr.JfrAnalysisWindow jfrAnalysisWindow;
     private com.tonic.ui.live.LiveCaptureService liveCaptureService;
     private com.tonic.live.LiveSession liveCaptureSession;
     private com.tonic.ui.live.threads.LiveThreadsPanel liveThreadsPanel;

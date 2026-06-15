@@ -58,6 +58,7 @@ public final class JavaAgent {
     private static volatile boolean captureLoadsArmed;
     private static final java.util.concurrent.atomic.AtomicInteger heapDumpCounter =
             new java.util.concurrent.atomic.AtomicInteger();
+    private static final JfrController jfr = new JfrController();
 
     private JavaAgent() {
     }
@@ -115,6 +116,7 @@ public final class JavaAgent {
                     // peer closed
                 } finally {
                     client = null;
+                    jfr.discard();
                 }
             }
         } catch (IOException e) {
@@ -175,6 +177,12 @@ public final class JavaAgent {
                 return handleGetMetrics();
             case LiveProtocol.MSG_EVAL:
                 return handleEval(in);
+            case LiveProtocol.MSG_JFR_START:
+                return handleJfrStart(in);
+            case LiveProtocol.MSG_JFR_STOP:
+                return handleJfrStop();
+            case LiveProtocol.MSG_JFR_SNAPSHOT:
+                return handleJfrSnapshot();
             default:
                 return error("operation not supported by the JStudio Live agent");
         }
@@ -184,7 +192,11 @@ public final class JavaAgent {
         Buf b = new Buf();
         b.u8(LiveProtocol.MSG_HELLO);
         b.u32(0); // version marker (unused)
-        b.u32(LiveProtocol.CAP_REDEFINE | LiveProtocol.CAP_RETRANSFORM | LiveProtocol.CAP_BYTECODES);
+        int caps = LiveProtocol.CAP_REDEFINE | LiveProtocol.CAP_RETRANSFORM | LiveProtocol.CAP_BYTECODES;
+        if (JfrController.isAvailable()) {
+            caps |= LiveProtocol.CAP_JFR;
+        }
+        b.u32(caps);
         b.u32(inst.getAllLoadedClasses().length);
         return b.toBytes();
     }
@@ -762,6 +774,36 @@ public final class JavaAgent {
             return strResp(LiveProtocol.MSG_EVAL, invokeCapturing(run));
         } catch (Throwable t) {
             return strResp(LiveProtocol.MSG_EVAL, "eval setup failed: " + t);
+        }
+    }
+
+    // ---- JFR recorder -------------------------------------------------------------------------------
+
+    private static byte[] handleJfrStart(DataInputStream in) throws IOException {
+        String profile = readString(in);
+        int categoryMask = in.readInt();
+        int maxSizeMb = in.readInt();
+        try {
+            jfr.start(profile, categoryMask, maxSizeMb);
+            return resp(LiveProtocol.MSG_JFR_START, 1);
+        } catch (Throwable t) {
+            return error("JFR start failed: " + describe(t));
+        }
+    }
+
+    private static byte[] handleJfrStop() throws IOException {
+        try {
+            return strResp(LiveProtocol.MSG_JFR_STOP, jfr.stop());
+        } catch (Throwable t) {
+            return error("JFR stop failed: " + describe(t));
+        }
+    }
+
+    private static byte[] handleJfrSnapshot() throws IOException {
+        try {
+            return strResp(LiveProtocol.MSG_JFR_SNAPSHOT, jfr.snapshot());
+        } catch (Throwable t) {
+            return error("JFR snapshot failed: " + describe(t));
         }
     }
 

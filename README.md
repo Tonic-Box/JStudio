@@ -57,6 +57,7 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 - **Patch & Continue** - Recompile a class and live-redefine it, grafting only the changed method bodies onto the running class
 - **Live heap & statics** - Browse instances from an HPROF snapshot; view/edit static fields and invoke static methods
 - **Live profiler** - Per-second live graphs of CPU, heap, metaspace, GC, threads, and loaded classes
+- **JFR recorder** - Capture Flight Recorder recordings (CPU/allocation/lock/exception events) from the target, then analyze them in-app (flame graphs, hot methods, allocations, locks, exceptions) with frame-to-source navigation, or export the `.jfr`
 - **Threads & Deadlocks** - List threads and detect deadlock cycles from the live wait-for graph
 - **Java scratch pad** - Write Java, compile it against the target's classes, and run it inside the attached JVM (stdout/result/exceptions returned)
 - **Capture Runtime Classes** - Stream classes defined at runtime (packers, defineHiddenClass, ASM) into the project

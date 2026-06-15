@@ -161,6 +161,30 @@ public final class LiveAgentClient implements Closeable {
         return readString(r);
     }
 
+    /** Starts a JFR recording (base {@code profile} plus category bits; {@code maxSizeMb} 0 = unbounded). */
+    public void jfrStart(String profile, int categoryMask, int maxSizeMb) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_JFR_START, b -> {
+            writeString(b, profile);
+            b.writeInt(categoryMask);
+            b.writeInt(maxSizeMb);
+        }));
+        skipType(r, LiveProtocol.MSG_JFR_START);
+    }
+
+    /** Stops the active JFR recording, dumping it; returns the local {@code .jfr} path. */
+    public String jfrStop() throws IOException {
+        DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_JFR_STOP});
+        skipType(r, LiveProtocol.MSG_JFR_STOP);
+        return readString(r);
+    }
+
+    /** Dumps the in-progress recording's buffer without stopping it; returns the local {@code .jfr} path. */
+    public String jfrSnapshot() throws IOException {
+        DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_JFR_SNAPSHOT});
+        skipType(r, LiveProtocol.MSG_JFR_SNAPSHOT);
+        return readString(r);
+    }
+
     /** Reads the live static fields of a class (name, type descriptor, current value, edit kind). */
     public List<StaticField> getStatics(String internalName) throws IOException {
         DataInputStream r = request(payload(LiveProtocol.MSG_GET_STATICS, b -> writeString(b, internalName)));

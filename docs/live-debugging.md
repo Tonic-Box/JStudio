@@ -13,6 +13,7 @@ deadlocks.
 | Live heap snapshot | on-demand HPROF heap dump, parsed and browsed by class/instance with field/array inspection | per-class **Live** view (Instances) |
 | Live statics | read (and inline-edit primitive/String) a class's static fields; list and invoke its static methods | per-class **Live** view (Statics) |
 | Live profiler | per-second snapshot of CPU, heap, metaspace, GC, threads, and loaded classes (JMX MXBeans) rendered as live graphs | **Profiler** right-dock tool |
+| JFR recorder | start/stop a Flight Recorder recording in the target (built-in profile + CPU/alloc/locks/exceptions toggles), snapshot the in-progress buffer, export the `.jfr`, and analyze it in-app (flame graphs, hot methods, allocations, locks, exceptions) with frame-to-source navigation | **Recorder** right-dock tool (shown when the target supports JFR); double-click a capture to analyze |
 | Runtime-generated class capture (packers, defineHiddenClass, ASM) | a `ClassFileTransformer` streams non-bootstrap loads with real bytes | Attach -> Capture Runtime Classes |
 | Deadlock detection | `ThreadMXBean` wait-for graph -> cycle find (`Deadlocks`) | Attach -> Find Deadlocks |
 | Thread list | `ThreadMXBean` | per-class **Live** view (Threads), scripting (`live.threads()`) |
@@ -35,7 +36,14 @@ Scriptable via the `live` binding: `live.threads()`, `live.deadlocks()`, `live.c
    source view and recompiling live-patches the running class (see the patch row above).
 5. The **Profiler** right-dock tool shows live graphs (CPU, heap, metaspace, GC, threads, loaded classes),
    sampled once a second; it pauses while its tab is hidden.
-6. **Attach -> Java Scratch Pad...** opens a non-modal pad: write Java statements (an optional trailing
+6. The **Recorder** right-dock tool (shown when the target JVM supports JFR) records a Flight Recorder
+   session: pick a profile (low-overhead or detailed) and event categories (CPU, allocations, locks,
+   exceptions), **Start**, **Snapshot** the in-progress buffer at any time, then **Stop**. Captured `.jfr`
+   files are listed; **Save As...** exports one (open it in JDK Mission Control), and **double-click** a
+   capture (or **Analyze**) to open the in-app analysis window: an Overview plus CPU (flame graph + hot
+   methods), Allocations, Locks, and Exceptions tabs (shown only for recorded categories). Double-click a
+   flame-graph frame or a hot-method row to open that method's decompiled source.
+7. **Attach -> Java Scratch Pad...** opens a non-modal pad: write Java statements (an optional trailing
    `return <expr>;` becomes the result, `import` lines at the top are supported), pick a context class, and
    **Run** (Ctrl+Enter). The snippet compiles against the target's pulled classes and runs inside it; stdout,
    the returned value, and any exception come back to the console. Completion (as you type, or Ctrl+Space)
