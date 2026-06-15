@@ -32,7 +32,7 @@ dependencies {
     implementation("com.fifesoft:rsyntaxtextarea:3.3.4")
     implementation("org.tinyjee.jgraphx:jgraphx:3.4.1.3")
 
-    implementation("org.projectlombok:lombok:1.18.30")
+    compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
 
     implementation("com.github.javaparser:javaparser-core:3.25.5")
