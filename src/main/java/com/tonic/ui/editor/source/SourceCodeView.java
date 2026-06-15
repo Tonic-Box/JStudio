@@ -31,8 +31,6 @@ import lombok.Getter;
 import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
-import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.GutterIconInfo;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -1193,70 +1191,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
     private void applyTheme() {
         setBackground(JStudioTheme.getBgTertiary());
-
-        textArea.setBackground(JStudioTheme.getBgTertiary());
-        textArea.setForeground(JStudioTheme.getTextPrimary());
-        textArea.setCaretColor(JStudioTheme.getTextPrimary());
-        textArea.setSelectionColor(JStudioTheme.getSelection());
-        textArea.setCurrentLineHighlightColor(JStudioTheme.getLineHighlight());
-        textArea.setFadeCurrentLineHighlight(true);
-        textArea.setMatchedBracketBGColor(JStudioTheme.getSelection());
-        textArea.setMatchedBracketBorderColor(JStudioTheme.getAccent());
-
-        scrollPane.getGutter().setBackground(JStudioTheme.getBgSecondary());
-        scrollPane.getGutter().setLineNumberColor(JStudioTheme.getTextSecondary());
-        scrollPane.getGutter().setBorderColor(JStudioTheme.getBorder());
-
-        // Apply syntax colors
-        SyntaxScheme scheme = textArea.getSyntaxScheme();
-
-        // Keywords (if, for, class, etc.)
-        setTokenStyle(scheme, Token.RESERVED_WORD, SyntaxColors.getJavaKeyword());
-        setTokenStyle(scheme, Token.RESERVED_WORD_2, SyntaxColors.getJavaKeyword());
-
-        // Data types (int, String, etc.)
-        setTokenStyle(scheme, Token.DATA_TYPE, SyntaxColors.getJavaType());
-
-        // Strings
-        setTokenStyle(scheme, Token.LITERAL_STRING_DOUBLE_QUOTE, SyntaxColors.getJavaString());
-        setTokenStyle(scheme, Token.LITERAL_CHAR, SyntaxColors.getJavaString());
-
-        // Numbers
-        setTokenStyle(scheme, Token.LITERAL_NUMBER_DECIMAL_INT, SyntaxColors.getJavaNumber());
-        setTokenStyle(scheme, Token.LITERAL_NUMBER_FLOAT, SyntaxColors.getJavaNumber());
-        setTokenStyle(scheme, Token.LITERAL_NUMBER_HEXADECIMAL, SyntaxColors.getJavaNumber());
-
-        // Comments
-        setTokenStyle(scheme, Token.COMMENT_EOL, SyntaxColors.getJavaComment());
-        setTokenStyle(scheme, Token.COMMENT_MULTILINE, SyntaxColors.getJavaComment());
-        setTokenStyle(scheme, Token.COMMENT_DOCUMENTATION, SyntaxColors.getJavaComment());
-        setTokenStyle(scheme, Token.COMMENT_KEYWORD, SyntaxColors.getJavaAnnotation());
-
-        // Functions/methods
-        setTokenStyle(scheme, Token.FUNCTION, SyntaxColors.getJavaMethod());
-
-        // Operators
-        setTokenStyle(scheme, Token.OPERATOR, SyntaxColors.getJavaOperator());
-
-        // Annotations
-        setTokenStyle(scheme, Token.ANNOTATION, SyntaxColors.getJavaAnnotation());
-
-        // Identifiers
-        setTokenStyle(scheme, Token.IDENTIFIER, JStudioTheme.getTextPrimary());
-
-        // Literals (null, true, false)
-        setTokenStyle(scheme, Token.LITERAL_BOOLEAN, SyntaxColors.getJavaConstant());
-
-        // Separators (braces, parens, etc.)
-        setTokenStyle(scheme, Token.SEPARATOR, JStudioTheme.getTextPrimary());
-
+        JavaEditorFactory.applyTheme(textArea, scrollPane);
         repaint();
-    }
-
-    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color) {
-        if (scheme.getStyle(tokenType) != null) {
-            scheme.getStyle(tokenType).foreground = color;
-        }
     }
 
     /**

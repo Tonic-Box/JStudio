@@ -24,6 +24,7 @@ public class ToolbarBuilder implements ThemeChangeListener {
     private JToolBar toolbar;
     private ViewModeComboBox viewModeCombo;
     private JToggleButton omitAnnotationsButton;
+    private JButton scratchPadButton;
 
     public ToolbarBuilder(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
@@ -65,8 +66,12 @@ public class ToolbarBuilder implements ThemeChangeListener {
             mainFrame.switchToView(mode);
         });
         viewModeCombo.setLiveViewsAvailable(LiveAttachService.getInstance().isAttached());
-        EventBus.getInstance().register(LiveSessionEvent.class,
-                e -> viewModeCombo.setLiveViewsAvailable(e.isAttached()));
+        EventBus.getInstance().register(LiveSessionEvent.class, e -> {
+            viewModeCombo.setLiveViewsAvailable(e.isAttached());
+            if (scratchPadButton != null) {
+                scratchPadButton.setVisible(e.isAttached());
+            }
+        });
         toolbar.add(viewModeCombo);
         toolbar.addSeparator();
 
@@ -90,6 +95,10 @@ public class ToolbarBuilder implements ThemeChangeListener {
         toolbar.add(createButton(Icons.getIcon("analyze"), "Run Analysis (F9)", e -> mainFrame.runAnalysis()));
         toolbar.add(createButton(Icons.getIcon("transform"), "Apply Transforms (Ctrl+Shift+T)", e -> mainFrame.showTransformDialog()));
         toolbar.add(createButton(Icons.getIcon("debug"), "Bytecode Debugger (F11)", e -> mainFrame.showBytecodeDebugger()));
+        scratchPadButton = createButton(Icons.getIcon("console"), "Java Scratch Pad (run code in the attached JVM)",
+                e -> mainFrame.showLiveScratchPad());
+        scratchPadButton.setVisible(LiveAttachService.getInstance().isAttached());
+        toolbar.add(scratchPadButton);
         toolbar.addSeparator();
 
         // Refresh

@@ -16,6 +16,7 @@ deadlocks.
 | Runtime-generated class capture (packers, defineHiddenClass, ASM) | a `ClassFileTransformer` streams non-bootstrap loads with real bytes | Attach -> Capture Runtime Classes |
 | Deadlock detection | `ThreadMXBean` wait-for graph -> cycle find (`Deadlocks`) | Attach -> Find Deadlocks |
 | Thread list | `ThreadMXBean` | per-class **Live** view (Threads), scripting (`live.threads()`) |
+| Java scratch pad (eval) | snippet compiled in-memory with `javac` against the target's pulled classes, shipped to the agent, and run via a throwaway child of a chosen context class's loader; stdout/result/exceptions returned | Attach -> Java Scratch Pad... |
 
 Scriptable via the `live` binding: `live.threads()`, `live.deadlocks()`, `live.captureLoads(bool)`,
 `live.redefineFromProject("com/foo/Bar")`.
@@ -27,12 +28,20 @@ Scriptable via the `live` binding: `live.threads()`, `live.deadlocks()`, `live.c
    tree), Attach. This replaces the current project with one built from the target's live classes and
    shows a progress bar.
 3. Browse classes in the navigator (open one to decompile via YABR). Use **Attach -> Patch Live Class**,
-   **Find Deadlocks**, **Capture Runtime Classes**, and **Detach**. These items appear only while attached.
+   **Find Deadlocks**, **Java Scratch Pad...**, **Capture Runtime Classes**, and **Detach**. These items
+   appear only while attached.
 4. While attached, an open class gains a **Live** section in its view dropdown - **Instances** (from a heap
    snapshot), **Statics** (view/edit static fields, invoke static methods), and **Threads**. Editing in the
    source view and recompiling live-patches the running class (see the patch row above).
 5. The **Profiler** right-dock tool shows live graphs (CPU, heap, metaspace, GC, threads, loaded classes),
    sampled once a second; it pauses while its tab is hidden.
+6. **Attach -> Java Scratch Pad...** opens a non-modal pad: write Java statements (an optional trailing
+   `return <expr>;` becomes the result, `import` lines at the top are supported), pick a context class, and
+   **Run** (Ctrl+Enter). The snippet compiles against the target's pulled classes and runs inside it; stdout,
+   the returned value, and any exception come back to the console. Completion (as you type, or Ctrl+Space)
+   covers keywords, the project's classes, and common JDK types (`java.lang`/`util`/`io`/`time`/`nio.file`/
+   ...); a JDK or named-package class used by simple name is auto-imported. The first run per session asks for
+   confirmation.
 
 ## Building & bundling
 
@@ -46,3 +55,8 @@ native toolchain involved. Manifest sets `Agent-Class`/`Premain-Class` and `Can-
 
 - `redefineClasses` is **method-body only** - add/remove fields or methods, or hierarchy changes, are
   rejected by the JVM (surfaced as an error).
+- The scratch pad runs **fresh** code (not paused-frame eval): it reaches the target's statics/singletons via
+  public APIs. Each run is stateless (a new class in the default package): default-package classes are
+  referenceable directly, named-package classes by simple name are auto-imported (or use a fully-qualified
+  name), and only **public** members of named-package classes are reachable. The eval runs on the live
+  connection thread - a blocking or looping snippet stalls the connection until it returns (no cancel).

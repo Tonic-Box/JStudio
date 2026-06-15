@@ -5,9 +5,8 @@ plugins {
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
-
 group = "com.tonic.ui"
-version = "19.0-SNAPSHOT"
+version = "20.0-SNAPSHOT"
 
 application {
     mainClass.set("com.tonic.ui.JStudio")
@@ -30,6 +29,7 @@ dependencies {
 
     implementation("com.formdev:flatlaf:3.2.5")
     implementation("com.fifesoft:rsyntaxtextarea:3.3.4")
+    implementation("com.fifesoft:autocomplete:3.3.1")
     implementation("org.tinyjee.jgraphx:jgraphx:3.4.1.3")
 
     compileOnly("org.projectlombok:lombok:1.18.30")
@@ -37,7 +37,6 @@ dependencies {
 
     implementation("com.github.javaparser:javaparser-core:3.25.5")
 
-    // Use local YABR with debug prints for call graph debugging
     //implementation("com.tonic:YABR:1.0.1")
     implementation("com.github.Tonic-Box:YABR:main-SNAPSHOT")
 

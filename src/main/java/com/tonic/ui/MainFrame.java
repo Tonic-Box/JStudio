@@ -1751,6 +1751,33 @@ public class MainFrame extends JFrame {
         new com.tonic.ui.live.LiveAttachDialog(this).setVisible(true);
     }
 
+    /**
+     * Opens the live Java scratch pad: compile-and-run arbitrary Java inside the attached JVM. Requires an
+     * active attach session and a loaded project (the target's pulled classes). Holds one non-modal dialog.
+     */
+    public void showLiveScratchPad() {
+        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        if (!svc.isAttached()) {
+            showWarning("Attach to a live JVM first (Attach -> Attach to Live JVM).");
+            return;
+        }
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+        if (liveScratchPadDialog == null) {
+            liveScratchPadDialog = new com.tonic.ui.live.eval.LiveScratchPadDialog(this);
+        }
+        liveScratchPadDialog.setProject(project);
+        ClassEntryModel currentClass = editorPanel.getCurrentClass();
+        if (currentClass != null && project.isUserClass(currentClass.getClassName())) {
+            liveScratchPadDialog.setContextClass(currentClass.getClassName());
+        }
+        liveScratchPadDialog.setVisible(true);
+        liveScratchPadDialog.toFront();
+    }
+
     /** Detaches from the live JVM (closes the session); the pulled classes remain for offline browsing. */
     public void detachLive() {
         com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
@@ -1762,6 +1789,7 @@ public class MainFrame extends JFrame {
         consolePanel.log("Detached from live JVM.");
     }
 
+    private com.tonic.ui.live.eval.LiveScratchPadDialog liveScratchPadDialog;
     private com.tonic.ui.live.LiveCaptureService liveCaptureService;
     private com.tonic.live.LiveSession liveCaptureSession;
     private com.tonic.ui.live.threads.LiveThreadsPanel liveThreadsPanel;

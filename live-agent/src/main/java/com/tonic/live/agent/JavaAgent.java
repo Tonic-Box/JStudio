@@ -24,12 +24,19 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.security.ProtectionDomain;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The JStudio Live agent, built on {@link java.lang.instrument} - pure Java, so it works on any OS/arch
@@ -166,6 +173,8 @@ public final class JavaAgent {
                 return handleGetThreadStacks(in);
             case LiveProtocol.MSG_GET_METRICS:
                 return handleGetMetrics();
+            case LiveProtocol.MSG_EVAL:
+                return handleEval(in);
             default:
                 return error("operation not supported by the JStudio Live agent");
         }
@@ -714,6 +723,96 @@ public final class JavaAgent {
     private static boolean isAgentClass(String internalName) {
         return internalName.startsWith("com/tonic/live/agent/")
                 || internalName.startsWith("com/tonic/live/protocol/");
+    }
+
+    /**
+     * Defines a freshly-compiled snippet class in the target and invokes its {@code static Object run()}. The
+     * class is defined in a throwaway loader whose parent is the chosen context class's loader, so it links
+     * against exactly what that class sees, and is discarded after the call (no class accumulation, and each
+     * run gets its own namespace - re-running the same name never collides).
+     */
+    private static byte[] handleEval(DataInputStream in) throws IOException {
+        int classCount = in.readInt();
+        Map<String, byte[]> classes = new LinkedHashMap<>();
+        for (int i = 0; i < classCount; i++) {
+            String name = readString(in);
+            byte[] bytes = new byte[in.readInt()];
+            in.readFully(bytes);
+            classes.put(name, bytes);
+        }
+        String mainBinaryName = readString(in);
+        String contextClassInternal = readString(in);
+        // Define all of the snippet's classes (the wrapper plus any anonymous/local classes) into one
+        // throwaway loader so cross-references between them resolve, then invoke the wrapper's run(). The
+        // loader is closed once run() has returned (its result already stringified) - already-defined classes
+        // remain usable, this just releases the loader's resource handles.
+        try (ScratchLoader loader = new ScratchLoader(resolveContextLoader(contextClassInternal))) {
+            Class<?> main = null;
+            for (Map.Entry<String, byte[]> entry : classes.entrySet()) {
+                Class<?> defined = loader.define(entry.getKey(), entry.getValue());
+                if (entry.getKey().equals(mainBinaryName)) {
+                    main = defined;
+                }
+            }
+            if (main == null) {
+                return strResp(LiveProtocol.MSG_EVAL, "eval setup failed: main class " + mainBinaryName + " missing");
+            }
+            Method run = main.getDeclaredMethod("run");
+            run.setAccessible(true);
+            return strResp(LiveProtocol.MSG_EVAL, invokeCapturing(run));
+        } catch (Throwable t) {
+            return strResp(LiveProtocol.MSG_EVAL, "eval setup failed: " + t);
+        }
+    }
+
+    /** The classloader of the chosen context class (so the snippet sees what it sees); system loader otherwise. */
+    private static ClassLoader resolveContextLoader(String contextClassInternal) {
+        if (contextClassInternal != null && !contextClassInternal.isEmpty()) {
+            Class<?> ctx = findLoaded(contextClassInternal);
+            if (ctx != null && ctx.getClassLoader() != null) {
+                return ctx.getClassLoader();
+            }
+        }
+        return ClassLoader.getSystemClassLoader();
+    }
+
+    /** Invokes {@code run()}, teeing stdout/stderr into a buffer, and returns the output plus result or trace. */
+    private static String invokeCapturing(Method run) {
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        PrintStream tee = new PrintStream(captured, true, StandardCharsets.UTF_8);
+        PrintStream prevOut = System.out;
+        PrintStream prevErr = System.err;
+        System.setOut(tee);
+        System.setErr(tee);
+        try {
+            Object ret = run.invoke(null);
+            tee.flush();
+            return captured.toString(StandardCharsets.UTF_8) + "=> " + ret;
+        } catch (Throwable t) {
+            tee.flush();
+            Throwable cause = (t instanceof InvocationTargetException && t.getCause() != null) ? t.getCause() : t;
+            StringWriter sw = new StringWriter();
+            cause.printStackTrace(new PrintWriter(sw));
+            return captured.toString(StandardCharsets.UTF_8) + "threw " + sw;
+        } finally {
+            System.setOut(prevOut);
+            System.setErr(prevErr);
+        }
+    }
+
+    /**
+     * A throwaway classloader for one eval: defines the snippet class with full visibility into the context
+     * loader (its parent). As an agent-loaded subclass it can call the protected {@code defineClass} directly,
+     * so no JDK-internal reflection / {@code --add-opens} is needed.
+     */
+    private static final class ScratchLoader extends URLClassLoader {
+        ScratchLoader(ClassLoader parent) {
+            super(new URL[0], parent);
+        }
+
+        Class<?> define(String binaryName, byte[] bytes) {
+            return defineClass(binaryName, bytes, 0, bytes.length);
+        }
     }
 
     private static Class<?> findLoaded(String internalName) {

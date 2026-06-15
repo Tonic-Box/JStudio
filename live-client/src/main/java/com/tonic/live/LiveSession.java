@@ -15,6 +15,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -119,6 +120,14 @@ public final class LiveSession implements Closeable {
     /** Invokes a static method (args marshalled from strings); returns the formatted result. */
     public String invokeStatic(String className, String name, String desc, List<String> args) throws IOException {
         return client.invokeStatic(className, name, desc, args);
+    }
+
+    /**
+     * Compiles-then-runs: defines a snippet class (its {@code static Object run()}) in the target, in a
+     * throwaway child of {@code contextClass}'s classloader, and returns the captured output + result.
+     */
+    public String eval(Map<String, byte[]> classes, String mainBinaryName, String contextClass) throws IOException {
+        return client.eval(classes, mainBinaryName, contextClass);
     }
 
     /** Snapshots all threads with their current stacks. */

@@ -58,6 +58,7 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 - **Live heap & statics** - Browse instances from an HPROF snapshot; view/edit static fields and invoke static methods
 - **Live profiler** - Per-second live graphs of CPU, heap, metaspace, GC, threads, and loaded classes
 - **Threads & Deadlocks** - List threads and detect deadlock cycles from the live wait-for graph
+- **Java scratch pad** - Write Java, compile it against the target's classes, and run it inside the attached JVM (stdout/result/exceptions returned)
 - **Capture Runtime Classes** - Stream classes defined at runtime (packers, defineHiddenClass, ASM) into the project
 
 See the [Live Debugging reference](docs/live-debugging.md).

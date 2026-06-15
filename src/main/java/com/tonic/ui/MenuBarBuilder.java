@@ -340,6 +340,8 @@ public class MenuBarBuilder {
                 Icons.getIcon("live_deadlock"), e -> mainFrame.findLiveDeadlocks());
         JMenuItem patch = createMenuItem("Patch Live Class", 0, 0,
                 Icons.getIcon("live_patch"), e -> mainFrame.patchLiveClass());
+        JMenuItem scratchPad = createMenuItem("Java Scratch Pad...", 0, 0,
+                Icons.getIcon("source"), e -> mainFrame.showLiveScratchPad());
         JCheckBoxMenuItem capture = new JCheckBoxMenuItem("Capture Runtime Classes");
         capture.setToolTipText("Stream classes defined at runtime (packers, defineHiddenClass, ASM) into the project");
         capture.addActionListener(e -> mainFrame.setLiveCaptureEnabled(capture.isSelected()));
@@ -349,6 +351,7 @@ public class MenuBarBuilder {
         menu.add(sep);
         menu.add(deadlocks);
         menu.add(patch);
+        menu.add(scratchPad);
         menu.add(capture);
 
         menu.addMenuListener(new MenuListener() {
@@ -359,6 +362,7 @@ public class MenuBarBuilder {
                 sep.setVisible(connected);
                 deadlocks.setVisible(connected);
                 patch.setVisible(connected);
+                scratchPad.setVisible(connected);
                 capture.setVisible(connected);
                 capture.setSelected(connected && mainFrame.isLiveCaptureEnabled());
             }

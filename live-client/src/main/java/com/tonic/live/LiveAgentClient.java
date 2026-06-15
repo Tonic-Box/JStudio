@@ -24,6 +24,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.SynchronousQueue;
 import java.util.function.Consumer;
@@ -194,6 +195,30 @@ public final class LiveAgentClient implements Closeable {
             methods.add(new StaticMethod(readString(r), readString(r)));
         }
         return methods;
+    }
+
+    /**
+     * Defines a freshly-compiled snippet (its wrapper class plus any anonymous/local classes) in the target,
+     * in a throwaway child of {@code contextClass}'s classloader, invokes the wrapper's {@code static Object
+     * run()}, and returns the captured output + result/exception.
+     *
+     * @param classes        all compiled classes, by binary name (e.g. {@code jstudio.scratch.Scratch_3})
+     * @param mainBinaryName the wrapper class to invoke {@code run()} on
+     * @param contextClass   internal name of the class whose loader scopes runtime visibility (may be empty)
+     */
+    public String eval(Map<String, byte[]> classes, String mainBinaryName, String contextClass) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_EVAL, b -> {
+            b.writeInt(classes.size());
+            for (Map.Entry<String, byte[]> e : classes.entrySet()) {
+                writeString(b, e.getKey());
+                b.writeInt(e.getValue().length);
+                b.write(e.getValue());
+            }
+            writeString(b, mainBinaryName);
+            writeString(b, contextClass);
+        }));
+        skipType(r, LiveProtocol.MSG_EVAL);
+        return readString(r);
     }
 
     /** Invokes a static method (args marshalled from strings); returns the formatted result. */
