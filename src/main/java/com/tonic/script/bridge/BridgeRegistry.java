@@ -18,6 +18,12 @@ public class BridgeRegistry {
     private Consumer<String> logCallback;
 
     @Getter
+    private ASTBridge astBridge;
+    @Getter
+    private IRBridge irBridge;
+    @Getter
+    private AnnotationBridge annotationBridge;
+    @Getter
     private ResultsBridge resultsBridge;
     @Getter
     private ProjectBridge projectBridge;
@@ -74,6 +80,30 @@ public class BridgeRegistry {
             }
             interpreter.getGlobalContext().defineConstant("live", liveBridge.createBridgeObject());
         }
+    }
+
+    public void registerASTBridge() {
+        astBridge = new ASTBridge(interpreter);
+        if (logCallback != null) {
+            astBridge.setLogCallback(logCallback);
+        }
+        interpreter.getGlobalContext().defineConstant("ast", astBridge.createAstObject());
+    }
+
+    public void registerIRBridge() {
+        irBridge = new IRBridge(interpreter);
+        if (logCallback != null) {
+            irBridge.setLogCallback(logCallback);
+        }
+        interpreter.getGlobalContext().defineConstant("ir", irBridge.createIRObject());
+    }
+
+    public void registerAnnotationBridge() {
+        annotationBridge = new AnnotationBridge(interpreter);
+        if (logCallback != null) {
+            annotationBridge.setLogCallback(logCallback);
+        }
+        interpreter.getGlobalContext().defineConstant("annotations", annotationBridge.createAnnotationObject());
     }
 
     public void registerResultsBridge() {
