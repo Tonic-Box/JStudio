@@ -53,8 +53,6 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 
 ### Live Debugging (attach to a running JVM)
 
-A pure-Java (`java.lang.instrument`) agent - no native code, works on any OS/arch with no native build:
-
 - **Attach** - Attach to an external running JVM (JDK 11+) and browse its loaded classes via YABR
 - **Patch & Continue** - Recompile a class and live-redefine it, grafting only the changed method bodies onto the running class
 - **Live heap & statics** - Browse instances from an HPROF snapshot; view/edit static fields and invoke static methods

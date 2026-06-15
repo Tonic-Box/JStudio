@@ -7,8 +7,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Fixed concurrency issue with fetching of live classes&#10;- Live profiler side tab">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Update readme image">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/live-debugging.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/live-debugging.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -221,14 +223,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00046" summary="- renaming capabilities">
-      <option name="closed" value="true" />
-      <created>1767954322392</created>
-      <option name="number" value="00046" />
-      <option name="presentableId" value="LOCAL-00046" />
-      <option name="project" value="LOCAL" />
-      <updated>1767954322392</updated>
     </task>
     <task id="LOCAL-00047" summary="- renaming capabilities">
       <option name="closed" value="true" />
@@ -614,7 +608,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781506108974</updated>
     </task>
-    <option name="localTasksCounter" value="95" />
+    <task id="LOCAL-00095" summary="- Update readme image">
+      <option name="closed" value="true" />
+      <created>1781506803395</created>
+      <option name="number" value="00095" />
+      <option name="presentableId" value="LOCAL-00095" />
+      <option name="project" value="LOCAL" />
+      <updated>1781506803395</updated>
+    </task>
+    <option name="localTasksCounter" value="96" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -629,7 +631,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Can create new classes from blank project now" />
     <MESSAGE value="- Improved bytecode view&#10;- fixed highlight bug in bytecode view" />
     <MESSAGE value="- Improved bytecode view&#10;- fixed highlight bug in bytecode view&#10;- Auto update checking now" />
     <MESSAGE value="- Small tweak to self-update/update check" />
@@ -654,7 +655,8 @@
     <MESSAGE value="- Version bump" />
     <MESSAGE value="- Gradle cleanup" />
     <MESSAGE value="- Fixed concurrency issue with fetching of live classes&#10;- Live profiler side tab" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Fixed concurrency issue with fetching of live classes&#10;- Live profiler side tab" />
+    <MESSAGE value="- Update readme image" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Update readme image" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

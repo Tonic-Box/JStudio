@@ -2,8 +2,7 @@
 
 JStudio Live attaches to an external running JVM (JDK 11+) and lets you browse its loaded classes through
 YABR, live-patch method bodies ("patch & continue"), capture runtime-generated classes, and detect
-deadlocks. It uses a **pure-Java `java.lang.instrument` agent** - no native code, so it works on any
-OS/arch with no native build or toolchain.
+deadlocks.
 
 ## Capabilities
 
