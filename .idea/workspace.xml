@@ -7,25 +7,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source.">
-      <change afterPath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JfrController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/LiveRecorderPanel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/BarTableCellRenderer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/CallTreeNode.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/FlameGraphPanel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/FrameKey.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/JfrAnalysisWindow.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/JfrFormat.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/recorder/jfr/JfrRecording.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/live-debugging.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/live-debugging.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JavaAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-agent/src/main/java/com/tonic/live/agent/JavaAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveAgentClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveAgentClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/LiveSession.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveProtocol.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-client/src/main/java/com/tonic/live/protocol/LiveProtocol.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-    </list>
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -180,7 +162,7 @@
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="--offline" />
+        <option name="scriptParameters" value="" />
         <option name="taskDescriptions">
           <list />
         </option>
@@ -244,14 +226,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00049" summary="- cleanup">
-      <option name="closed" value="true" />
-      <created>1768026744603</created>
-      <option name="number" value="00049" />
-      <option name="presentableId" value="LOCAL-00049" />
-      <option name="project" value="LOCAL" />
-      <updated>1768026744603</updated>
     </task>
     <task id="LOCAL-00050" summary="- cleanup">
       <option name="closed" value="true" />
@@ -637,7 +611,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781540341195</updated>
     </task>
-    <option name="localTasksCounter" value="98" />
+    <task id="LOCAL-00098" summary="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source.">
+      <option name="closed" value="true" />
+      <created>1781547708196</created>
+      <option name="number" value="00098" />
+      <option name="presentableId" value="LOCAL-00098" />
+      <option name="project" value="LOCAL" />
+      <updated>1781547708196</updated>
+    </task>
+    <option name="localTasksCounter" value="99" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
