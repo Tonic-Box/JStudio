@@ -7,7 +7,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring." />
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Version bump">
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -219,14 +221,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00042" summary="AST view">
-      <option name="closed" value="true" />
-      <created>1767573032173</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1767573032173</updated>
     </task>
     <task id="LOCAL-00043" summary="AST view">
       <option name="closed" value="true" />
@@ -612,7 +606,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781502486042</updated>
     </task>
-    <option name="localTasksCounter" value="91" />
+    <task id="LOCAL-00091" summary="- Version bump">
+      <option name="closed" value="true" />
+      <created>1781502795948</created>
+      <option name="number" value="00091" />
+      <option name="presentableId" value="LOCAL-00091" />
+      <option name="project" value="LOCAL" />
+      <updated>1781502795948</updated>
+    </task>
+    <option name="localTasksCounter" value="92" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -627,7 +629,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- cleanup &amp; bump" />
     <MESSAGE value="Fix recompiled changes not persisting to bytecode/export and surface results in the editor:&#10;- Per-method resilience: a method that can't lower keeps its original bytecode and reports a warning instead of aborting the whole class&#10;- Refresh all open views (bytecode, const-pool, hex, IR, AST, ...) after a successful recompile&#10;- Add new methods/fields and regenerate &lt;clinit&gt; from static initializers&#10;- Remove methods dropped from source (constructors/synthetics guarded)&#10;- Materialize synthetic lambdas (rolls back on failure)&#10;&#10;LLVM Support:&#10;- View support for LLVM IR as a View" />
     <MESSAGE value="- support for changing class level of created classes" />
     <MESSAGE value="- Can create new classes from blank project now" />
@@ -652,7 +653,8 @@
     <MESSAGE value="- Cleanup" />
     <MESSAGE value="- Update ReadMe" />
     <MESSAGE value="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring." />
-    <option name="LAST_COMMIT_MESSAGE" value="Add JStudio Live: attach to a running JVM&#10;New :live-agent and :live-client subprojects&#10;- Attach to a running JVM and browse its loaded classes&#10;- Patch &amp; Continue: recompile the current class and live-redefine it, grafting only the edited method bodies so the member set is preserved&#10;- Capture runtime-defined classes into the project&#10;- Heap instances, static fields, and thread/deadlock views&#10;&#10;Also: live class enumeration/capture in ProjectService (filtering JVM-internal classes), a scripting bridge, and Live menu/toolbar wiring." />
+    <MESSAGE value="- Version bump" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Version bump" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
