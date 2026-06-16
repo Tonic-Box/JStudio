@@ -520,6 +520,10 @@ public class NavigatorPanel extends ThemedJPanel {
 
         addMenuItem(menu, "Open in Editor", () -> EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry)));
 
+        if (classEntry.hasMainMethod() && !com.tonic.ui.live.LiveAttachService.getInstance().isAttached()) {
+            addMenuItem(menu, "Run " + classEntry.getSimpleName() + ".main()", () -> mainFrame.runMainClass(classEntry));
+        }
+
         addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
             FindUsagesEvent.forClass(this, classEntry.getClassName())));
 

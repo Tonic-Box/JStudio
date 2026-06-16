@@ -35,6 +35,7 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
     private BookmarksPanel bookmarksPanel;
     private CommentsPanel commentsPanel;
     private CFGBlockDetailPanel cfgBlockDetailPanel;
+    private com.tonic.ui.run.RunConsolePanel runConsolePanel;
 
     private Runnable onAllTabsClosed;
     private Runnable onTabOpened;
@@ -89,6 +90,19 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
         tabbedPane.setSelectedComponent(panel);
 
         notifyExpanded();
+    }
+
+    /** Opens (or reveals) the single Run output tab and returns its panel. */
+    public com.tonic.ui.run.RunConsolePanel openRunConsole() {
+        if (runConsolePanel == null) {
+            runConsolePanel = new com.tonic.ui.run.RunConsolePanel();
+        }
+        if (!isTabOpen(runConsolePanel)) {
+            addClosableTab("Run", runConsolePanel);
+        }
+        tabbedPane.setSelectedComponent(runConsolePanel);
+        notifyExpanded();
+        return runConsolePanel;
     }
 
     public void toggleBookmarksTab() {

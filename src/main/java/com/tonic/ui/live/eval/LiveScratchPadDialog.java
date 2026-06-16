@@ -136,7 +136,7 @@ public final class LiveScratchPadDialog extends JDialog {
     /** Binds the dialog to {@code project}: rebuilds the compiler, completion, and context list. */
     public void setProject(ProjectModel project) {
         this.project = project;
-        this.compiler = new SnippetCompiler(new ProjectClasspath(project));
+        this.compiler = new SnippetCompiler(new ProjectClasspath(project), targetRelease(project));
 
         if (autoCompletion != null) {
             autoCompletion.uninstall();
@@ -165,6 +165,22 @@ public final class LiveScratchPadDialog extends JDialog {
         if (internalName != null) {
             contextSelector.setSelectedItem(internalName);
         }
+    }
+
+    /**
+     * The Java release to compile snippets for: derived from the highest class-file version among the target's
+     * pulled classes (which is at most the target JVM's runtime version), so a compiled snippet can always be
+     * defined by the attached JVM even when it is older than the JDK running JStudio.
+     */
+    private static int targetRelease(ProjectModel project) {
+        int maxMajor = 0;
+        for (com.tonic.model.ClassEntryModel entry : project.getAllClasses()) {
+            int major = entry.getClassFile().getMajorVersion();
+            if (major > maxMajor) {
+                maxMajor = major;
+            }
+        }
+        return SnippetCompiler.releaseForMajorVersion(maxMajor);
     }
 
     private void runSnippet() {

@@ -88,6 +88,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private boolean loaded = false;
     private boolean omitAnnotations = false;
     private final List<GutterIconInfo> commentIcons = new ArrayList<>();
+    private final List<GutterIconInfo> runIcons = new ArrayList<>();
+    private final java.util.Set<Integer> runLines = new java.util.HashSet<>();
     private Object currentLineHighlight;
     private final LoadingOverlay loadingOverlay;
     private SwingWorker<String, Void> currentWorker;
@@ -135,6 +137,25 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         scrollPane.setLineNumbersEnabled(true);
         scrollPane.setIconRowHeaderEnabled(true);
         scrollPane.setBorder(null);
+
+        scrollPane.getGutter().addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (runLines.isEmpty()) {
+                    return;
+                }
+                int offset = textArea.viewToModel2D(new java.awt.Point(0, e.getY()));
+                if (offset < 0) {
+                    return;
+                }
+                try {
+                    if (runLines.contains(textArea.getLineOfOffset(offset) + 1)) {
+                        runMainViaMainFrame();
+                    }
+                } catch (BadLocationException ignored) {
+                }
+            }
+        });
 
         loadingOverlay = new LoadingOverlay();
 
@@ -808,6 +829,44 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    /**
+     * Adds a clickable green Run icon to the gutter on the {@code main} method's line (static-analysis mode
+     * only - hidden while attached, and when annotations are omitted since that shifts source lines).
+     */
+    private void updateRunGutterIcons() {
+        Gutter gutter = scrollPane.getGutter();
+        for (GutterIconInfo info : runIcons) {
+            gutter.removeTrackingIcon(info);
+        }
+        runIcons.clear();
+        runLines.clear();
+
+        if (omitAnnotations || classEntry.getMethodSpans() == null || !classEntry.hasMainMethod()
+                || com.tonic.ui.live.LiveAttachService.getInstance().isAttached()) {
+            return;
+        }
+        DecompileResult.MethodSpan span = classEntry.getMethodSpans().get("main([Ljava/lang/String;)V");
+        if (span == null) {
+            return;
+        }
+        int line = span.getStartLine();
+        try {
+            runIcons.add(gutter.addLineTrackingIcon(line - 1, Icons.getIcon("run"), "Run main()"));
+            runLines.add(line);
+        } catch (BadLocationException ignored) {
+        }
+    }
+
+    private void runMainViaMainFrame() {
+        java.awt.Container parent = getParent();
+        while (parent != null && !(parent instanceof MainFrame)) {
+            parent = parent.getParent();
+        }
+        if (parent != null) {
+            ((MainFrame) parent).runMainClass(classEntry);
+        }
+    }
+
     private String escapeHtml(String text) {
         return text.replace("&", "&amp;")
                    .replace("<", "&lt;")
@@ -1205,6 +1264,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             applyTextToEditor(textToSet);
             loaded = true;
             updateCommentGutterIcons();
+            updateRunGutterIcons();
             scheduleUsageLensUpdate();
             return;
         }

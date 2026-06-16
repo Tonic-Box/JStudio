@@ -133,7 +133,9 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
 
         @Override
         public Icon getIcon() {
-            return Icons.getIcon(classEntry.getIconKey());
+            Icon icon = Icons.getIcon(classEntry.getIconKey());
+            return classEntry.hasMainMethod()
+                    ? new com.tonic.ui.theme.RunnableOverlayIcon(icon) : icon;
         }
 
         @Override

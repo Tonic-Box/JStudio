@@ -88,10 +88,25 @@ public final class SnippetCompiler {
     }
 
     private final Classpath classpath;
+    private final int targetRelease;
     private int counter;
 
     public SnippetCompiler(Classpath classpath) {
+        this(classpath, 0);
+    }
+
+    /**
+     * @param targetRelease the Java feature version to compile for (e.g. 11), so the snippet's bytecode can be
+     *                      defined by an older target JVM; 0 = use the running JDK's default.
+     */
+    public SnippetCompiler(Classpath classpath, int targetRelease) {
         this.classpath = classpath;
+        this.targetRelease = targetRelease;
+    }
+
+    /** Maps a class-file major version (e.g. 55) to its Java feature release (e.g. 11); 0 if too old/unknown. */
+    public static int releaseForMajorVersion(int majorVersion) {
+        return majorVersion >= 52 ? majorVersion - 44 : 0;
     }
 
     /** Compiles {@code snippet} (a sequence of statements, optionally preceded by {@code import} lines). */
@@ -111,7 +126,7 @@ public final class SnippetCompiler {
         try (PoolFileManager fileManager = new PoolFileManager(standard, classpath, outputs)) {
             JavaFileObject source = new SourceObject(binaryName, wrapped.source);
             boolean ok = javac.getTask(null, fileManager, diagnostics,
-                    List.of("-proc:none"), null, List.of(source)).call();
+                    compilerOptions(), null, List.of(source)).call();
             List<String> messages = formatDiagnostics(diagnostics, wrapped.preambleLines);
             if (!ok || !outputs.containsKey(binaryName)) {
                 return new Result(false, Map.of(), null, messages);
@@ -120,6 +135,22 @@ public final class SnippetCompiler {
         } catch (IOException e) {
             return new Result(false, Map.of(), null, List.of("Compile failed: " + e.getMessage()));
         }
+    }
+
+    /**
+     * javac options: no annotation processing, and {@code --release N} when the target JVM is older than the
+     * running JDK (so the snippet's bytecode version is one the target can define). When the target is the same
+     * or newer, the default produces a version the target already accepts, so no down-targeting is needed.
+     */
+    private List<String> compilerOptions() {
+        List<String> options = new ArrayList<>();
+        options.add("-proc:none");
+        int jdkFeature = Runtime.version().feature();
+        if (targetRelease >= 8 && targetRelease < jdkFeature) {
+            options.add("--release");
+            options.add(String.valueOf(targetRelease));
+        }
+        return options;
     }
 
     /** Splits leading {@code import} lines from the body, auto-imports referenced classes, and assembles the source. */

@@ -31,6 +31,10 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 - **Statistics** - Class metrics dashboard with charts (method sizes, complexity, opcode distribution)
 - **Hex** - Raw class file bytes
 
+### Run
+
+- **Run main()** - Classes with a `public static void main(String[])` show a green play badge (navigator + editor gutter); Run launches the app from that entry point in a separate JVM (so its `System.exit`/crash can't affect JStudio), with program args / VM options / working dir, streamed output, Terminate, and exit code. Static-analysis mode only (hidden while attached to a live JVM). Runs the current edited state; standalone classpath (no external deps), JStudio's own JDK.
+
 ### Analysis Tools
 
 - **Call Graph** - Method call hierarchy visualization

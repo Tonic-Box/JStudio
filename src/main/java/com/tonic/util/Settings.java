@@ -36,6 +36,10 @@ public class Settings {
     private static final String PREF_DEADCODE_KEEP = "deadcode.keepList";
     private static final String PREF_DEADCODE_SKIP = "deadcode.skipList";
 
+    private static final String PREF_RUN_ARGS = "run.programArgs";
+    private static final String PREF_RUN_VMOPTS = "run.vmOptions";
+    private static final String PREF_RUN_WORKDIR = "run.workingDir";
+
     private static Settings instance;
     private final Preferences prefs;
 
@@ -103,6 +107,14 @@ public class Settings {
     public void setDeadCodeKeepList(String v) { prefs.put(PREF_DEADCODE_KEEP, v != null ? v : ""); }
     public String getDeadCodeSkipList() { return prefs.get(PREF_DEADCODE_SKIP, ""); }
     public void setDeadCodeSkipList(String v) { prefs.put(PREF_DEADCODE_SKIP, v != null ? v : ""); }
+
+    // Run configuration
+    public String getRunProgramArgs() { return prefs.get(PREF_RUN_ARGS, ""); }
+    public void setRunProgramArgs(String v) { prefs.put(PREF_RUN_ARGS, v != null ? v : ""); }
+    public String getRunVmOptions() { return prefs.get(PREF_RUN_VMOPTS, ""); }
+    public void setRunVmOptions(String v) { prefs.put(PREF_RUN_VMOPTS, v != null ? v : ""); }
+    public String getRunWorkingDir() { return prefs.get(PREF_RUN_WORKDIR, ""); }
+    public void setRunWorkingDir(String v) { prefs.put(PREF_RUN_WORKDIR, v != null ? v : ""); }
 
     // Session restore
     public boolean isRestoreSessionEnabled() { return prefs.getBoolean(PREF_RESTORE_SESSION, false); }

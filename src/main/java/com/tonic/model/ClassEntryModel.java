@@ -171,6 +171,17 @@ public class ClassEntryModel {
         return constructors;
     }
 
+    /** The {@code public static void main(String[])} entry point of this class, or null if it has none. */
+    public MethodEntryModel getMainMethod() {
+        MethodEntryModel main = methods.get("main([Ljava/lang/String;)V");
+        return main != null && main.isPublic() && main.isStatic() ? main : null;
+    }
+
+    /** Whether this class has a runnable {@code public static void main(String[])} entry point. */
+    public boolean hasMainMethod() {
+        return getMainMethod() != null;
+    }
+
     public FieldEntryModel getField(String name, String descriptor) {
         return fields.get(name + descriptor);
     }

@@ -74,12 +74,9 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarOutputStream;
 
 /**
  * Main application window for JStudio.
@@ -758,49 +755,42 @@ public class MainFrame extends JFrame {
 
         File outputFile = result.getSelectedFile();
 
-        try (JarOutputStream jar = new JarOutputStream(new FileOutputStream(outputFile))) {
-            writeManifest(jar, project);
-
-            for (ClassEntryModel classEntry : classes) {
-                String entryPath = classEntry.getClassName() + ".class";
-                jar.putNextEntry(new JarEntry(entryPath));
-                jar.write(classEntry.getClassFile().write());
-                jar.closeEntry();
-            }
-
-            int resourceCount = 0;
-            for (ResourceEntryModel resource : resources) {
-                if (resource.getPath().equals("META-INF/MANIFEST.MF")) {
-                    continue;
-                }
-                jar.putNextEntry(new JarEntry(resource.getPath()));
-                jar.write(resource.getData());
-                jar.closeEntry();
-                resourceCount++;
-            }
-
+        try {
+            com.tonic.service.run.ProjectJarExporter.export(project, outputFile);
             consolePanel.log("Exported " + classes.size() + " classes and " +
-                    resourceCount + " resources to " + outputFile.getName());
+                    resources.size() + " resources to " + outputFile.getName());
             showInfo("Successfully exported to " + outputFile.getName());
-
         } catch (IOException e) {
             consolePanel.logError("Failed to export JAR: " + e.getMessage());
             showError("Export failed: " + e.getMessage());
         }
     }
 
-    private void writeManifest(JarOutputStream jar, ProjectModel project) throws IOException {
-        jar.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"));
-
-        ResourceEntryModel existingManifest = project.getResource("META-INF/MANIFEST.MF");
-        if (existingManifest != null) {
-            jar.write(existingManifest.getData());
-        } else {
-            String manifest = "Manifest-Version: 1.0\r\n\r\n";
-            jar.write(manifest.getBytes(StandardCharsets.UTF_8));
+    /**
+     * Launches the given class's {@code main} in a separate JVM (so its System.exit/crash can't affect JStudio),
+     * streaming output into the Run panel. Unavailable while attached to a live JVM.
+     */
+    public void runMainClass(ClassEntryModel classEntry) {
+        if (com.tonic.ui.live.LiveAttachService.getInstance().isAttached()) {
+            showWarning("Run is unavailable while attached to a live JVM.");
+            return;
         }
-
-        jar.closeEntry();
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null || classEntry == null || !classEntry.hasMainMethod()) {
+            return;
+        }
+        File defaultDir = project.getSourceFile() != null ? project.getSourceFile().getParentFile() : null;
+        com.tonic.ui.run.RunConfigDialog.RunConfig config =
+                com.tonic.ui.run.RunConfigDialog.show(this, classEntry.getSimpleName(), defaultDir);
+        if (config == null) {
+            return;
+        }
+        String internalName = classEntry.getClassName();
+        com.tonic.ui.run.RunConsolePanel panel = sidePanel.openRunConsole();
+        Runnable launch = () -> panel.setProcess(com.tonic.service.run.RunService.run(
+                project, internalName, config.programArgs, config.vmOptions, config.workingDir, panel));
+        panel.setRerunAction(launch);
+        launch.run();
     }
 
     public void closeProject() {
