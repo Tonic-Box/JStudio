@@ -53,6 +53,11 @@ public class ProjectModel {
         this.classPool = classPool;
     }
 
+    /** Marks the project as having unsaved changes (so close prompts to save). */
+    public void markDirty() {
+        this.dirty = true;
+    }
+
     /**
      * Add a user class to the project.
      */

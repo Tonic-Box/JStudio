@@ -88,6 +88,7 @@ See the [Live Debugging reference](docs/live-debugging.md).
 
 - **Script Editor** - Custom scripting language for AST/bytecode/IR manipulation
 - **Optimizations** - Constant folding, copy propagation, dead code elimination, strength reduction
+- **Remove Dead Members** - Whole-project reachability analysis removes unused methods, fields, and classes; inheritance-aware (keeps overrides of JDK/library types) with a preview tree, keep/skip lists, and write-only field removal
 - **Stack Frames** - Recompute stack map frames
 
 ### UI

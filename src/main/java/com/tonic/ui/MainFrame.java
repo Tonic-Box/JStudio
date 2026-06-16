@@ -490,6 +490,12 @@ public class MainFrame extends JFrame {
             return;
         }
 
+        // Opening a file replaces the current workspace; if attached to a live JVM, drop that session first
+        // (a no-op when not attached) so the live project doesn't linger under the newly-loaded one.
+        if (com.tonic.ui.live.LiveAttachService.getInstance().isAttached()) {
+            detachLive();
+        }
+
         statusBar.showProgress("Loading " + file.getName() + "...");
 
         SwingWorker<ProjectModel, Void> worker = new SwingWorker<>() {
@@ -1345,6 +1351,34 @@ public class MainFrame extends JFrame {
     }
 
     // === Transform Operations ===
+
+    private com.tonic.ui.deadcode.RemoveDeadCodeDialog removeDeadCodeDialog;
+
+    /** Opens (reusing one instance) the Remove Dead Code analysis dialog. */
+    public void showRemoveDeadCodeDialog() {
+        if (ProjectService.getInstance().getCurrentProject() == null) {
+            showWarning("No project loaded.");
+            return;
+        }
+        if (removeDeadCodeDialog == null) {
+            removeDeadCodeDialog = new com.tonic.ui.deadcode.RemoveDeadCodeDialog(this);
+        }
+        removeDeadCodeDialog.setVisible(true);
+        removeDeadCodeDialog.toFront();
+    }
+
+    /** After dead-code removal: close tabs of removed classes and reload the navigator/editor. */
+    public void refreshAfterDeadCodeRemoval(java.util.Collection<String> removedClassesInternal) {
+        for (String internal : removedClassesInternal) {
+            editorPanel.closeTabForClass(internal);
+        }
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project != null) {
+            com.tonic.event.EventBus.getInstance().post(
+                    new com.tonic.event.events.ProjectUpdatedEvent(this, project, -removedClassesInternal.size()));
+        }
+        refreshCurrentView();
+    }
 
     public void showTransformDialog() {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();

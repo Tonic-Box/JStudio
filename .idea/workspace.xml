@@ -7,7 +7,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source." />
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- cleanup">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/util/Settings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/util/Settings.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -226,14 +233,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00050" summary="- cleanup">
-      <option name="closed" value="true" />
-      <created>1768041408372</created>
-      <option name="number" value="00050" />
-      <option name="presentableId" value="LOCAL-00050" />
-      <option name="project" value="LOCAL" />
-      <updated>1768041408372</updated>
     </task>
     <task id="LOCAL-00051" summary="- ConstPool view">
       <option name="closed" value="true" />
@@ -619,7 +618,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781547708196</updated>
     </task>
-    <option name="localTasksCounter" value="99" />
+    <task id="LOCAL-00099" summary="- cleanup">
+      <option name="closed" value="true" />
+      <created>1781547740693</created>
+      <option name="number" value="00099" />
+      <option name="presentableId" value="LOCAL-00099" />
+      <option name="project" value="LOCAL" />
+      <updated>1781547740693</updated>
+    </task>
+    <option name="localTasksCounter" value="100" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -634,7 +641,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Undid update check throttling" />
     <MESSAGE value="- Bump version to 11" />
     <MESSAGE value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST and planner visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) query tiers&#10;- Add syntax highlighting to the DSL editor via a dedicated QueryTokenMaker&#10;- Rebuild the query help popup as themed HTML with per-example syntax-highlighted boxes&#10;- Rewrite the visual query builder to emit composable DSL instead of the removed predicate syntax&#10;- Add query tests covering the parse→plan→run pipeline, SSA/data-flow, and the builder/help syntax contracts&#10;- Remove the standalone Dependencies and Data Flow analysis panels&#10;- Restructure the Analysis menu (rename Simulation to Code Analysis; add Similarity, Search, and Strings entries)" />
     <MESSAGE value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);" />
@@ -659,7 +665,8 @@
     <MESSAGE value="- Update readme" />
     <MESSAGE value="Add Live Java Scratch Pad: eval arbitrary Java in the attached JVM&#10;- MSG_EVAL wire op + agent class-defining/output-teeing&#10;- SnippetCompiler: default-package wrapper, optional return, auto-imports&#10;- Completion: keywords, project + JDK classes, JDK member chains&#10;- Bump version" />
     <MESSAGE value="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source." />
-    <option name="LAST_COMMIT_MESSAGE" value="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source." />
+    <MESSAGE value="- cleanup" />
+    <option name="LAST_COMMIT_MESSAGE" value="- cleanup" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

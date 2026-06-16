@@ -270,6 +270,9 @@ public class MenuBarBuilder {
         menu.add(createMenuItem("Deobfuscate Names...", 0, 0,
                 null, e -> mainFrame.showDeobfuscateNamesDialog()));
 
+        menu.add(createMenuItem("Remove Dead Members...", 0, 0,
+                null, e -> mainFrame.showRemoveDeadCodeDialog()));
+
         menu.addSeparator();
 
         JMenu optimizeMenu = new JMenu("Optimize");

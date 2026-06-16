@@ -32,6 +32,10 @@ public class Settings {
     private static final String PREF_UPDATE_CHECK = "update.checkOnStartup";
     private static final String PREF_UPDATE_SKIPPED = "update.skippedVersion";
 
+    private static final String PREF_DEADCODE_PUBLIC = "deadcode.publicEntryPoints";
+    private static final String PREF_DEADCODE_KEEP = "deadcode.keepList";
+    private static final String PREF_DEADCODE_SKIP = "deadcode.skipList";
+
     private static Settings instance;
     private final Preferences prefs;
 
@@ -91,6 +95,14 @@ public class Settings {
     // File chooser
     public String getLastDirectory() { return prefs.get(PREF_LAST_DIR, System.getProperty("user.home")); }
     public void setLastDirectory(String dir) { prefs.put(PREF_LAST_DIR, dir); }
+
+    // Remove Dead Code
+    public boolean isDeadCodePublicEntryPoints() { return prefs.getBoolean(PREF_DEADCODE_PUBLIC, false); }
+    public void setDeadCodePublicEntryPoints(boolean v) { prefs.putBoolean(PREF_DEADCODE_PUBLIC, v); }
+    public String getDeadCodeKeepList() { return prefs.get(PREF_DEADCODE_KEEP, ""); }
+    public void setDeadCodeKeepList(String v) { prefs.put(PREF_DEADCODE_KEEP, v != null ? v : ""); }
+    public String getDeadCodeSkipList() { return prefs.get(PREF_DEADCODE_SKIP, ""); }
+    public void setDeadCodeSkipList(String v) { prefs.put(PREF_DEADCODE_SKIP, v != null ? v : ""); }
 
     // Session restore
     public boolean isRestoreSessionEnabled() { return prefs.getBoolean(PREF_RESTORE_SESSION, false); }
