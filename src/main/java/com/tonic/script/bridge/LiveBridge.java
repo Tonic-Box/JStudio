@@ -1,5 +1,6 @@
 package com.tonic.script.bridge;
 
+import com.tonic.live.Deadlocks;
 import com.tonic.live.LiveSession;
 import com.tonic.live.protocol.ContentionEdge;
 import com.tonic.live.protocol.ThreadInfo;
@@ -62,7 +63,7 @@ public final class LiveBridge extends AbstractBridge {
     private ScriptValue deadlocks() {
         try {
             List<ContentionEdge> edges = session.getContention();
-            List<List<ContentionEdge>> cycles = com.tonic.live.Deadlocks.find(edges);
+            List<List<ContentionEdge>> cycles = Deadlocks.find(edges);
             List<ScriptValue> out = new ArrayList<>();
             for (List<ContentionEdge> cycle : cycles) {
                 List<ScriptValue> ring = new ArrayList<>();

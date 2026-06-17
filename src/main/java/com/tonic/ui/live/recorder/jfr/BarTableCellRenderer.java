@@ -8,6 +8,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -46,7 +47,7 @@ final class BarTableCellRenderer extends DefaultTableCellRenderer {
             table.getColumnModel().getColumn(col).setCellRenderer(new BarTableCellRenderer(kinds[col], max));
         }
         table.setShowGrid(false);
-        table.setIntercellSpacing(new java.awt.Dimension(0, 0));
+        table.setIntercellSpacing(new Dimension(0, 0));
         table.setRowHeight(24);
     }
 

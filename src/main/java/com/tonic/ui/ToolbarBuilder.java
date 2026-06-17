@@ -6,14 +6,18 @@ import com.tonic.ui.editor.ViewMode;
 import com.tonic.ui.editor.ViewModeComboBox;
 import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.theme.*;
+import lombok.Getter;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Builds the main toolbar for JStudio.
@@ -21,6 +25,12 @@ import java.awt.event.ActionListener;
 public class ToolbarBuilder implements ThemeChangeListener {
 
     private final MainFrame mainFrame;
+    /**
+     * -- GETTER --
+     * The built toolbar (null until
+     *  has run).
+     */
+    @Getter
     private JToolBar toolbar;
     private ViewModeComboBox viewModeCombo;
     private JToggleButton omitAnnotationsButton;
@@ -40,6 +50,15 @@ public class ToolbarBuilder implements ThemeChangeListener {
         if (toolbar != null) {
             toolbar.setBackground(JStudioTheme.getBgPrimary());
             toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
+        }
+        themeViewModeCombo();
+    }
+
+    /** Themes the view dropdown explicitly so it isn't the L&F default on first show (and follows theme switches). */
+    private void themeViewModeCombo() {
+        if (viewModeCombo != null) {
+            viewModeCombo.setBackground(JStudioTheme.getBgTertiary());
+            viewModeCombo.setForeground(JStudioTheme.getTextPrimary());
         }
     }
 
@@ -61,6 +80,7 @@ public class ToolbarBuilder implements ThemeChangeListener {
 
         // View mode dropdown
         viewModeCombo = new ViewModeComboBox();
+        themeViewModeCombo();
         viewModeCombo.addActionListener(e -> {
             ViewMode mode = viewModeCombo.getSelectedViewMode();
             mainFrame.switchToView(mode);
@@ -107,7 +127,7 @@ public class ToolbarBuilder implements ThemeChangeListener {
         return toolbar;
     }
 
-    private JButton createButton(javax.swing.Icon icon, String tooltip, ActionListener action) {
+    private JButton createButton(Icon icon, String tooltip, ActionListener action) {
         JButton button = new JButton(icon);
         button.setToolTipText(tooltip);
         button.setFocusable(false);
@@ -117,15 +137,15 @@ public class ToolbarBuilder implements ThemeChangeListener {
         button.addActionListener(action);
 
         // Add hover effect
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
+        button.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
+            public void mouseEntered(MouseEvent e) {
                 button.setContentAreaFilled(true);
                 button.setBackground(JStudioTheme.getHover());
             }
 
             @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
+            public void mouseExited(MouseEvent e) {
                 button.setContentAreaFilled(false);
             }
         });
@@ -135,5 +155,24 @@ public class ToolbarBuilder implements ThemeChangeListener {
 
     public void setViewMode(ViewMode mode) {
         viewModeCombo.setSelectedViewMode(mode);
+    }
+
+    /**
+     * Appends a plugin-contributed button to the toolbar, styled like the built-in buttons. Returns the button so
+     * it can later be passed to {@link #removePluginButton(JButton)}.
+     */
+    public JButton addPluginButton(Icon icon, String tooltip, ActionListener action) {
+        JButton button = createButton(icon, tooltip, action);
+        toolbar.add(button);
+        toolbar.revalidate();
+        toolbar.repaint();
+        return button;
+    }
+
+    /** Removes a plugin button previously added with {@link #addPluginButton}. */
+    public void removePluginButton(JButton button) {
+        toolbar.remove(button);
+        toolbar.revalidate();
+        toolbar.repaint();
     }
 }

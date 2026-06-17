@@ -9,6 +9,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
+import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
@@ -372,7 +373,7 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
             textLabel.setText(value.name);
 
             if (value.file != null) {
-                javax.swing.Icon icon = FileSystemWorker.getSystemIcon(value.file);
+                Icon icon = FileSystemWorker.getSystemIcon(value.file);
                 iconLabel.setIcon(icon);
             } else {
                 iconLabel.setIcon(null);

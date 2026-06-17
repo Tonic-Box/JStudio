@@ -21,6 +21,7 @@ import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -240,7 +241,7 @@ public class DebuggerSourceView extends JPanel {
             textArea.setCaretPosition(offset);
             // Before the text area has been laid out (e.g. the debugger window isn't visible yet)
             // modelToView2D returns null; defer the scroll to the EDT once geometry exists.
-            java.awt.geom.Rectangle2D view = textArea.modelToView2D(offset);
+            Rectangle2D view = textArea.modelToView2D(offset);
             if (view == null) {
                 SwingUtilities.invokeLater(() -> scrollToLine(zeroBasedLine));
                 return;

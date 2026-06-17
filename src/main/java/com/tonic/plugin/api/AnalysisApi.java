@@ -19,6 +19,14 @@ public interface AnalysisApi {
 
     StringApi getStrings();
 
+    DecompileApi getDecompile();
+
+    XrefApi getXrefs();
+
+    QueryApi getQuery();
+
+    DeadCodeApi getDeadCode();
+
     interface CallGraphApi {
 
         void build();
@@ -36,6 +44,49 @@ public interface AnalysisApi {
         boolean canReach(String fromClass, String fromMethod, String toClass, String toMethod);
 
         int getCallCount(String className, String methodName);
+
+        /** Transitive callers up to {@code depth} edges, bounded to {@code maxNodes} results. */
+        List<CallNode> getCallersToDepth(String className, String methodName, String descriptor, int depth, int maxNodes);
+
+        /** Transitive callees up to {@code depth} edges, bounded to {@code maxNodes} results. */
+        List<CallNode> getCalleesToDepth(String className, String methodName, String descriptor, int depth, int maxNodes);
+    }
+
+    /** Decompiled Java source access, backed by the per-class decompilation cache. Call off the EDT. */
+    interface DecompileApi {
+
+        /** Full decompiled source for a class, or empty if it cannot be resolved/decompiled. */
+        Optional<String> getSource(String className);
+
+        /** Per-method source line spans (1-based, inclusive) for a class. */
+        List<MethodSourceInfo> getMethodSpans(String className);
+
+        /** The source span for one method (descriptor required to disambiguate overloads). */
+        Optional<MethodSourceInfo> getMethodSpan(String className, String methodName, String descriptor);
+    }
+
+    /** Cross-reference / "find usages" over user code. Call {@link #ensureBuilt()} (off the EDT) first. */
+    interface XrefApi {
+
+        enum TargetKind { CLASS, METHOD, FIELD }
+
+        /** Builds the xref database for the current project if needed (expensive; call off the EDT). */
+        void ensureBuilt();
+
+        /** Usages of a class/method/field. {@code memberName}/{@code descriptor} are ignored for CLASS. */
+        List<UsageInfo> findUsages(TargetKind kind, String className, String memberName, String descriptor);
+    }
+
+    /** Runs a JStudio bytecode Query DSL query. Owns the query executor lifecycle. Call off the EDT. */
+    interface QueryApi {
+
+        QueryResult run(String dsl, long timeBudgetMs, int limit);
+    }
+
+    /** Whole-project dead-code (reachability) analysis. Call off the EDT. */
+    interface DeadCodeApi {
+
+        DeadCodeResult analyze(boolean publicAsEntryPoints);
     }
 
     interface DataFlowApi {
@@ -209,5 +260,106 @@ public interface AnalysisApi {
     @FunctionalInterface
     interface PatternMatcher {
         List<PatternMatch> match(ProjectApi.ClassInfo classInfo);
+    }
+
+    @Getter
+    final class CallNode {
+        private final String owner;
+        private final String name;
+        private final String descriptor;
+        private final int depth;
+
+        public CallNode(String owner, String name, String descriptor, int depth) {
+            this.owner = owner;
+            this.name = name;
+            this.descriptor = descriptor;
+            this.depth = depth;
+        }
+    }
+
+    @Getter
+    final class MethodSourceInfo {
+        private final String className;
+        private final String methodName;
+        private final String descriptor;
+        private final int startLine;
+        private final int endLine;
+
+        public MethodSourceInfo(String className, String methodName, String descriptor, int startLine, int endLine) {
+            this.className = className;
+            this.methodName = methodName;
+            this.descriptor = descriptor;
+            this.startLine = startLine;
+            this.endLine = endLine;
+        }
+    }
+
+    @Getter
+    final class UsageInfo {
+        private final String sourceClass;
+        private final String sourceMethod;
+        private final String sourceMethodDesc;
+        private final String type;
+        private final String targetMember;
+
+        public UsageInfo(String sourceClass, String sourceMethod, String sourceMethodDesc,
+                         String type, String targetMember) {
+            this.sourceClass = sourceClass;
+            this.sourceMethod = sourceMethod;
+            this.sourceMethodDesc = sourceMethodDesc;
+            this.type = type;
+            this.targetMember = targetMember;
+        }
+    }
+
+    @Getter
+    final class QueryResult {
+        private final boolean error;
+        private final String errorMessage;
+        private final List<String> matchLabels;
+        private final int totalCount;
+        private final long executionMs;
+        private final boolean truncated;
+
+        public QueryResult(boolean error, String errorMessage, List<String> matchLabels,
+                           int totalCount, long executionMs, boolean truncated) {
+            this.error = error;
+            this.errorMessage = errorMessage;
+            this.matchLabels = matchLabels;
+            this.totalCount = totalCount;
+            this.executionMs = executionMs;
+            this.truncated = truncated;
+        }
+    }
+
+    @Getter
+    final class DeadCodeResult {
+        private final int deadClassCount;
+        private final int deadMethodCount;
+        private final int deadFieldCount;
+        private final List<DeadItemInfo> deadClasses;
+        private final List<DeadItemInfo> deadMethods;
+        private final List<DeadItemInfo> deadFields;
+
+        public DeadCodeResult(List<DeadItemInfo> deadClasses, List<DeadItemInfo> deadMethods,
+                              List<DeadItemInfo> deadFields) {
+            this.deadClasses = deadClasses;
+            this.deadMethods = deadMethods;
+            this.deadFields = deadFields;
+            this.deadClassCount = deadClasses.size();
+            this.deadMethodCount = deadMethods.size();
+            this.deadFieldCount = deadFields.size();
+        }
+    }
+
+    @Getter
+    final class DeadItemInfo {
+        private final String owner;
+        private final String displayLabel;
+
+        public DeadItemInfo(String owner, String displayLabel) {
+            this.owner = owner;
+            this.displayLabel = displayLabel;
+        }
     }
 }

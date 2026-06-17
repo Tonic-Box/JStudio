@@ -9,6 +9,7 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
+import com.tonic.ui.live.LiveAttachService;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
@@ -30,7 +31,9 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.List;
 
@@ -461,7 +464,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
             BridgeRegistry registry = new BridgeRegistry(interpreter, projectModel);
             registry.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
             registry.registerAll();
-            registry.registerLiveBridge(com.tonic.ui.live.LiveAttachService.getInstance().getSession());
+            registry.registerLiveBridge(LiveAttachService.getInstance().getSession());
         }
 
         // Parse script
@@ -580,7 +583,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
                 BridgeRegistry registry = new BridgeRegistry(interpreter, projectModel);
                 registry.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
                 registry.registerAll();
-                registry.registerLiveBridge(com.tonic.ui.live.LiveAttachService.getInstance().getSession());
+                registry.registerLiveBridge(LiveAttachService.getInstance().getSession());
             }
 
             // Create annotation bridge
@@ -731,7 +734,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
     private void loadScript() {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Load Script");
-        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+        chooser.setFileFilter(new FileNameExtensionFilter(
             "JStudio Scripts", "jstudio-script", "js"));
 
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -761,7 +764,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         consoleOutput.setCaretPosition(consoleOutput.getDocument().getLength());
     }
 
-    private JButton createToolbarButton(String text, Icon icon, java.awt.event.ActionListener listener) {
+    private JButton createToolbarButton(String text, Icon icon, ActionListener listener) {
         JButton button = new JButton(text, icon);
         button.setBackground(JStudioTheme.getBgTertiary());
         button.setForeground(JStudioTheme.getTextPrimary());

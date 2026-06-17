@@ -10,7 +10,6 @@ import javax.swing.SwingConstants;
 import com.tonic.analysis.callgraph.CallGraphNode;
 import com.tonic.analysis.callgraph.CallSite;
 import com.tonic.analysis.common.MethodReference;
-import com.tonic.ui.theme.JStudioTheme;
 import lombok.Getter;
 
 import java.awt.Color;
@@ -189,13 +188,11 @@ public class CallGraphRenderer {
             }
         }
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(mxConstants.STYLE_STROKECOLOR).append("=").append(strokeColor).append(";");
-        sb.append(mxConstants.STYLE_STROKEWIDTH).append("=3;"); // thicker for visibility
-        sb.append(mxConstants.STYLE_ENDARROW).append("=").append(mxConstants.ARROW_CLASSIC).append(";");
-        sb.append(mxConstants.STYLE_ROUNDED).append("=1;");
-        sb.append(mxConstants.STYLE_EDGE).append("=").append(mxConstants.EDGESTYLE_ORTHOGONAL).append(";");
-        return sb.toString();
+        return mxConstants.STYLE_STROKECOLOR + "=" + strokeColor + ";" +
+                mxConstants.STYLE_STROKEWIDTH + "=3;" + // thicker for visibility
+                mxConstants.STYLE_ENDARROW + "=" + mxConstants.ARROW_CLASSIC + ";" +
+                mxConstants.STYLE_ROUNDED + "=1;" +
+                mxConstants.STYLE_EDGE + "=" + mxConstants.EDGESTYLE_ORTHOGONAL + ";";
     }
 
     private static String toHex(Color c) {

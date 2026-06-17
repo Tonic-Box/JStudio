@@ -5,6 +5,8 @@ import com.tonic.live.protocol.LiveEvent;
 import com.tonic.service.ProjectService;
 import lombok.Getter;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
@@ -20,8 +22,8 @@ public final class LiveCaptureService {
 
     private final LiveSession session;
     private final Consumer<LiveEvent> hook = this::onEvent;
-    private final java.util.concurrent.ExecutorService worker =
-            java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+    private final ExecutorService worker =
+            Executors.newSingleThreadExecutor(r -> {
                 Thread t = new Thread(r, "live-capture");
                 t.setDaemon(true);
                 return t;

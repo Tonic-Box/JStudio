@@ -8,6 +8,7 @@ import com.tonic.analysis.execution.result.BytecodeResult;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.analysis.instruction.Instruction;
 import com.tonic.parser.MethodEntry;
+import com.tonic.parser.attribute.LineNumberTableAttribute;
 import com.tonic.ui.vm.heap.model.AllocationEvent;
 import com.tonic.ui.vm.heap.model.MutationEvent;
 import com.tonic.ui.vm.heap.model.ProvenanceInfo;
@@ -234,8 +235,8 @@ public class HeapForensicsListener implements BytecodeListener {
             var codeAttr = method.getCodeAttribute();
             if (codeAttr != null) {
                 for (var attr : codeAttr.getAttributes()) {
-                    if (attr instanceof com.tonic.parser.attribute.LineNumberTableAttribute) {
-                        var lnt = (com.tonic.parser.attribute.LineNumberTableAttribute) attr;
+                    if (attr instanceof LineNumberTableAttribute) {
+                        var lnt = (LineNumberTableAttribute) attr;
                         var entries = lnt.getLineNumberTable();
                         if (entries == null || entries.isEmpty()) return -1;
 

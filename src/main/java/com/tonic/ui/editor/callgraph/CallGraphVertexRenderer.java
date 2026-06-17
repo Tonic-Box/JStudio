@@ -5,6 +5,8 @@ import com.tonic.analysis.common.MethodReference;
 import com.tonic.ui.editor.graph.render.GraphVertexRenderer;
 import com.tonic.ui.theme.JStudioTheme;
 
+import java.awt.Color;
+
 public class CallGraphVertexRenderer implements GraphVertexRenderer<MethodReference> {
 
     private final CallGraph callGraph;
@@ -71,7 +73,7 @@ public class CallGraphVertexRenderer implements GraphVertexRenderer<MethodRefere
         return text.substring(0, maxLength - 3) + "...";
     }
 
-    private static String toHex(java.awt.Color c) {
+    private static String toHex(Color c) {
         return String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
     }
 

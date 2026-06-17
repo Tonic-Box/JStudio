@@ -1,6 +1,10 @@
 package com.tonic.util;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 /**
  * Application settings using Java Preferences API.
@@ -39,6 +43,9 @@ public class Settings {
     private static final String PREF_RUN_ARGS = "run.programArgs";
     private static final String PREF_RUN_VMOPTS = "run.vmOptions";
     private static final String PREF_RUN_WORKDIR = "run.workingDir";
+    private static final String PREF_RUN_JDK = "run.jdkHome";
+
+    private static final String PREF_PLUGINS_DISABLED = "plugins.disabled";
 
     private static Settings instance;
     private final Preferences prefs;
@@ -108,6 +115,22 @@ public class Settings {
     public String getDeadCodeSkipList() { return prefs.get(PREF_DEADCODE_SKIP, ""); }
     public void setDeadCodeSkipList(String v) { prefs.put(PREF_DEADCODE_SKIP, v != null ? v : ""); }
 
+    /** Ids of GUI plugins the user has disabled (newline-separated in prefs). */
+    public Set<String> getDisabledPlugins() {
+        String raw = prefs.get(PREF_PLUGINS_DISABLED, "");
+        if (raw.isEmpty()) {
+            return new LinkedHashSet<>();
+        }
+        return Arrays.stream(raw.split("\n"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    public void setDisabledPlugins(Set<String> ids) {
+        prefs.put(PREF_PLUGINS_DISABLED, ids == null ? "" : String.join("\n", ids));
+    }
+
     // Run configuration
     public String getRunProgramArgs() { return prefs.get(PREF_RUN_ARGS, ""); }
     public void setRunProgramArgs(String v) { prefs.put(PREF_RUN_ARGS, v != null ? v : ""); }
@@ -115,6 +138,8 @@ public class Settings {
     public void setRunVmOptions(String v) { prefs.put(PREF_RUN_VMOPTS, v != null ? v : ""); }
     public String getRunWorkingDir() { return prefs.get(PREF_RUN_WORKDIR, ""); }
     public void setRunWorkingDir(String v) { prefs.put(PREF_RUN_WORKDIR, v != null ? v : ""); }
+    public String getRunJdkHome() { return prefs.get(PREF_RUN_JDK, ""); }
+    public void setRunJdkHome(String v) { prefs.put(PREF_RUN_JDK, v != null ? v : ""); }
 
     // Session restore
     public boolean isRestoreSessionEnabled() { return prefs.getBoolean(PREF_RESTORE_SESSION, false); }

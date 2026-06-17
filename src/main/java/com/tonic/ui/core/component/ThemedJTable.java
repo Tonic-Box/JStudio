@@ -6,6 +6,7 @@ import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
 
+import java.awt.Dimension;
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
@@ -36,7 +37,7 @@ public class ThemedJTable extends JTable implements ThemeChangeListener {
         applyTheme();
         setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         setShowGrid(false);
-        setIntercellSpacing(new java.awt.Dimension(0, 0));
+        setIntercellSpacing(new Dimension(0, 0));
         setFillsViewportHeight(true);
         ThemeManager.getInstance().addThemeChangeListener(this);
     }

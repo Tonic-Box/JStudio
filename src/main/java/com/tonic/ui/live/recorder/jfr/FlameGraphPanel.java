@@ -17,6 +17,8 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -41,7 +43,6 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
 
     private final CallTreeNode trueRoot;
     private final LongFunction<String> weightFormat;
-    private final Consumer<FrameKey> onActivate;
     private final List<Box> boxes = new ArrayList<>();
     private final List<CallTreeNode> path = new ArrayList<>();
     private final Timer clickTimer;
@@ -53,7 +54,6 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
     public FlameGraphPanel(CallTreeNode root, LongFunction<String> weightFormat, Consumer<FrameKey> onActivate) {
         this.trueRoot = root;
         this.weightFormat = weightFormat;
-        this.onActivate = onActivate;
         this.path.add(root);
         setFont(JStudioTheme.getUIFont(11));
         ToolTipManager.sharedInstance().registerComponent(this);
@@ -107,9 +107,9 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
         };
         addMouseListener(mouse);
         addMouseMotionListener(mouse);
-        addComponentListener(new java.awt.event.ComponentAdapter() {
+        addComponentListener(new ComponentAdapter() {
             @Override
-            public void componentResized(java.awt.event.ComponentEvent e) {
+            public void componentResized(ComponentEvent e) {
                 updatePreferredHeight();
                 revalidate();
             }

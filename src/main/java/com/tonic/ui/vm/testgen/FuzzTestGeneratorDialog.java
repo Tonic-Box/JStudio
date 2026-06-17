@@ -8,6 +8,8 @@ import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
 import com.tonic.ui.vm.testgen.objectspec.ValueMode;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
@@ -191,10 +193,10 @@ public class FuzzTestGeneratorDialog extends JDialog {
         previewConfig.add(Box.createHorizontalStrut(20));
         previewConfig.add(new JLabel("Test Class:"));
         classNameField = new JTextField(20);
-        classNameField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { updatePreview(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { updatePreview(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { updatePreview(); }
+        classNameField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { updatePreview(); }
+            public void removeUpdate(DocumentEvent e) { updatePreview(); }
+            public void changedUpdate(DocumentEvent e) { updatePreview(); }
         });
         previewConfig.add(classNameField);
 

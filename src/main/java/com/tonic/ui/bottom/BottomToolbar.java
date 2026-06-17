@@ -12,15 +12,23 @@ import java.awt.*;
 
 public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
 
+    private final JButton consoleButton;
     private final JButton bookmarksButton;
     private final JButton commentsButton;
 
+    private Runnable onConsoleClicked;
     private Runnable onBookmarksClicked;
     private Runnable onCommentsClicked;
 
     public BottomToolbar() {
         super(BackgroundStyle.SECONDARY, new FlowLayout(FlowLayout.RIGHT, 4, 2));
         setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
+
+        consoleButton = createButton("Console", "console");
+        consoleButton.addActionListener(e -> {
+            if (onConsoleClicked != null) onConsoleClicked.run();
+        });
+        add(consoleButton);
 
         bookmarksButton = createButton("Bookmarks", "bookmark");
         bookmarksButton.addActionListener(e -> {
@@ -50,6 +58,10 @@ public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
         return button;
     }
 
+    public void setOnConsoleClicked(Runnable callback) {
+        this.onConsoleClicked = callback;
+    }
+
     public void setOnBookmarksClicked(Runnable callback) {
         this.onBookmarksClicked = callback;
     }
@@ -67,6 +79,7 @@ public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
         setBackground(JStudioTheme.getBgSecondary());
         setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
 
+        applyButtonTheme(consoleButton);
         applyButtonTheme(bookmarksButton);
         applyButtonTheme(commentsButton);
     }

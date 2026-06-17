@@ -4,6 +4,7 @@ import com.tonic.util.Settings;
 
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
+import java.awt.font.FontRenderContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,10 +60,10 @@ public abstract class AbstractTheme implements Theme {
     private static boolean isMonospaceFont(String fontName) {
         Font font = new Font(fontName, Font.PLAIN, 12);
         int iWidth = font.canDisplay('i') ? font.createGlyphVector(
-            new java.awt.font.FontRenderContext(null, true, true), "i")
+            new FontRenderContext(null, true, true), "i")
             .getPixelBounds(null, 0, 0).width : 0;
         int mWidth = font.canDisplay('m') ? font.createGlyphVector(
-            new java.awt.font.FontRenderContext(null, true, true), "m")
+            new FontRenderContext(null, true, true), "m")
             .getPixelBounds(null, 0, 0).width : 0;
 
         return iWidth > 0 && iWidth == mWidth;

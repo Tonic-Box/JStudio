@@ -1,5 +1,6 @@
 package com.tonic.script.bridge;
 
+import com.tonic.live.LiveSession;
 import com.tonic.model.ProjectModel;
 import com.tonic.script.engine.ScriptInterpreter;
 import com.tonic.script.pipeline.ScriptPipeline;
@@ -72,7 +73,7 @@ public class BridgeRegistry {
     }
 
     /** Registers the {@code live} binding for the attached JVM. Call only when a session exists. */
-    public void registerLiveBridge(com.tonic.live.LiveSession session) {
+    public void registerLiveBridge(LiveSession session) {
         if (session != null) {
             liveBridge = new LiveBridge(interpreter, session);
             if (logCallback != null) {

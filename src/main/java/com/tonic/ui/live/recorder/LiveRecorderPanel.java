@@ -23,6 +23,8 @@ import javax.swing.Timer;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -99,9 +101,9 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         saveAsButton.addActionListener(e -> saveSelectedAs());
         clearButton.addActionListener(e -> clearCaptured());
         capturedList.addListSelectionListener(e -> updateButtons());
-        capturedList.addMouseListener(new java.awt.event.MouseAdapter() {
+        capturedList.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
+            public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
                     analyzeSelected();
                 }

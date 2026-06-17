@@ -4,6 +4,7 @@ import lombok.Getter;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Runtime values for the script interpreter.
@@ -242,7 +243,7 @@ public class ScriptValue {
     public static boolean equals(ScriptValue left, ScriptValue right) {
         if (left.type != right.type) return false;
         if (left.isNull()) return right.isNull();
-        return java.util.Objects.equals(left.value, right.value);
+        return Objects.equals(left.value, right.value);
     }
 
     public static int compare(ScriptValue left, ScriptValue right) {
@@ -264,6 +265,6 @@ public class ScriptValue {
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(type, value);
+        return Objects.hash(type, value);
     }
 }

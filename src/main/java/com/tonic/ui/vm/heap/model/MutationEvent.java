@@ -65,8 +65,8 @@ public class MutationEvent {
             return "null";
         }
         if (value instanceof ArrayInstance) {
-            com.tonic.analysis.execution.heap.ArrayInstance arr =
-                    (com.tonic.analysis.execution.heap.ArrayInstance) value;
+            ArrayInstance arr =
+                    (ArrayInstance) value;
             return arr.getComponentType() + "[" + arr.getLength() + "] #" + arr.getId();
         }
         if (value instanceof ObjectInstance) {

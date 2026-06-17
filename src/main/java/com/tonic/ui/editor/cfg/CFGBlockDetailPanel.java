@@ -23,6 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Font;
 
 public class CFGBlockDetailPanel extends ThemedJPanel {
 
@@ -46,7 +47,7 @@ public class CFGBlockDetailPanel extends ThemedJPanel {
 
         headerLabel = new JLabel();
         headerLabel.setForeground(JStudioTheme.getTextPrimary());
-        headerLabel.setFont(JStudioTheme.getUIFont(12).deriveFont(java.awt.Font.BOLD));
+        headerLabel.setFont(JStudioTheme.getUIFont(12).deriveFont(Font.BOLD));
         headerLabel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         add(headerLabel, BorderLayout.NORTH);
 

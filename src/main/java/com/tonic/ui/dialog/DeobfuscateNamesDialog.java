@@ -6,6 +6,7 @@ import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 import com.tonic.renamer.Renamer;
 import com.tonic.renamer.exception.RenameException;
+import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJDialog;
 import com.tonic.model.ProjectModel;
 import com.tonic.service.ProjectService;
@@ -19,6 +20,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,13 +33,13 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
     private final JTextArea logArea;
     private final JButton applyButton;
     private final JButton closeButton;
-    private final com.tonic.ui.MainFrame mainFrame;
+    private final MainFrame mainFrame;
 
     private int classCounter = 1;
     private int methodCounter = 1;
     private int fieldCounter = 1;
 
-    public DeobfuscateNamesDialog(com.tonic.ui.MainFrame mainFrame) {
+    public DeobfuscateNamesDialog(MainFrame mainFrame) {
         super(mainFrame, "Deobfuscate Names", ModalityType.APPLICATION_MODAL);
         this.mainFrame = mainFrame;
 
@@ -140,7 +142,7 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
             private int classesRenamed = 0;
             private int methodsRenamed = 0;
             private int fieldsRenamed = 0;
-            private Set<String> renamedOldClassNames = new HashSet<>();
+            private final Set<String> renamedOldClassNames = new HashSet<>();
             private boolean success = false;
 
             @Override
@@ -234,7 +236,7 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
             }
 
             @Override
-            protected void process(java.util.List<String> chunks) {
+            protected void process(List<String> chunks) {
                 for (String msg : chunks) {
                     log(msg);
                 }
@@ -243,10 +245,10 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
             @Override
             protected void done() {
                 applyButton.setEnabled(true);
-                if (success && mainFrame != null) {
+                if (success) {
                     int total = classesRenamed + methodsRenamed + fieldsRenamed;
                     mainFrame.refreshAfterBulkRename(renamedOldClassNames, total);
-                } else if (mainFrame != null) {
+                } else {
                     mainFrame.setNavigatorLoading(false);
                 }
             }

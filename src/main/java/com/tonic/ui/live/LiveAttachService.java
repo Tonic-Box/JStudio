@@ -7,6 +7,9 @@ import com.tonic.service.ProjectService;
 import lombok.Getter;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 
 /**
  * Orchestrates a live JVM session for the UI: resolves the bundled pure-Java agent jar, attaches it to a
@@ -19,6 +22,12 @@ public final class LiveAttachService {
     private static final LiveAttachService INSTANCE = new LiveAttachService();
 
     private LiveSession session;
+    /**
+     * -- GETTER --
+     * Whether the active session is one auto-attached to a process launched by the Run feature.
+     */
+    @Getter
+    private boolean runSession;
 
     private LiveAttachService() {
     }
@@ -32,12 +41,24 @@ public final class LiveAttachService {
     }
 
     /**
+     * Adopts an already-connected session for a JVM launched by the Run feature: holds it and lights up the
+     * live features, but does NOT pull/replace the project (the running app is the current project). Call on
+     * the EDT - it posts {@link LiveSessionEvent}, which toggles Swing docks.
+     */
+    public void adoptRunSession(LiveSession adopted) {
+        detach();
+        this.session = adopted;
+        this.runSession = true;
+        EventBus.getInstance().post(new LiveSessionEvent(this, true));
+    }
+
+    /**
      * Extracts the bundled Java agent ({@code agent/live-agent.bin}) from the classpath to a temp file (the
      * attach API needs a real path) and returns it. Reuses an already-extracted copy of the same size.
      * Falls back to the dev-tree jar. Returns null if not found.
      */
     public File resolveAgentJar() {
-        try (java.io.InputStream in = LiveAttachService.class.getResourceAsStream("/agent/live-agent.bin")) {
+        try (InputStream in = LiveAttachService.class.getResourceAsStream("/agent/live-agent.bin")) {
             if (in == null) {
                 File dev = new File("live-agent/build/libs/live-agent.jar").getAbsoluteFile();
                 return dev.isFile() ? dev : null;
@@ -47,10 +68,10 @@ public final class LiveAttachService {
             dir.mkdirs();
             File out = new File(dir, "live-agent.jar");
             if (!out.isFile() || out.length() != data.length) {
-                java.nio.file.Files.write(out.toPath(), data);
+                Files.write(out.toPath(), data);
             }
             return out.isFile() ? out : null;
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             return null;
         }
     }
@@ -94,6 +115,7 @@ public final class LiveAttachService {
             } catch (Exception ignored) {
             }
             session = null;
+            runSession = false;
             EventBus.getInstance().post(new LiveSessionEvent(this, false));
         }
     }

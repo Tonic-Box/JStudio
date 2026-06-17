@@ -11,10 +11,14 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
+import com.tonic.renamer.hierarchy.ClassHierarchy;
+import com.tonic.renamer.hierarchy.ClassNode;
 import com.tonic.service.XrefQueryService;
 import com.tonic.util.AccessFlags;
 
+import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Whole-project reachability analysis that finds unused methods, fields, and entire classes (inheritance-aware,
@@ -35,7 +39,7 @@ public final class DeadCodeAnalyzer {
     private final Set<String> userClasses;
     private final Set<String> skip;
     private final Map<String, ExternalInfo> externalSignatureCache = new HashMap<>();
-    private java.util.function.Consumer<String> progress = m -> {
+    private Consumer<String> progress = m -> {
     };
 
     public DeadCodeAnalyzer(ProjectModel project, DeadCodeConfig config) {
@@ -47,7 +51,7 @@ public final class DeadCodeAnalyzer {
     }
 
     /** Sets a listener notified of each analysis phase (fired off the EDT; marshal to the EDT to display). */
-    public void setProgressListener(java.util.function.Consumer<String> listener) {
+    public void setProgressListener(Consumer<String> listener) {
         this.progress = listener != null ? listener : m -> {
         };
     }
@@ -170,13 +174,13 @@ public final class DeadCodeAnalyzer {
         }
         // A live class needs its (user) supertypes kept too, or the hierarchy breaks.
         Deque<String> worklist = new ArrayDeque<>(live);
-        com.tonic.renamer.hierarchy.ClassHierarchy hierarchy = callGraph.getHierarchy();
+        ClassHierarchy hierarchy = callGraph.getHierarchy();
         while (!worklist.isEmpty()) {
-            com.tonic.renamer.hierarchy.ClassNode node = hierarchy.getNode(worklist.poll());
+            ClassNode node = hierarchy.getNode(worklist.poll());
             if (node == null) {
                 continue;
             }
-            for (com.tonic.renamer.hierarchy.ClassNode ancestor : node.getAllAncestors()) {
+            for (ClassNode ancestor : node.getAllAncestors()) {
                 String an = ancestor.getName();
                 if (userClasses.contains(an) && !skip.contains(an) && live.add(an)) {
                     worklist.add(an);
@@ -254,7 +258,7 @@ public final class DeadCodeAnalyzer {
                 if (!visited.add(k)) {
                     continue;
                 }
-                for (java.lang.reflect.Method m : k.getDeclaredMethods()) {
+                for (Method m : k.getDeclaredMethods()) {
                     signatures.add(m.getName() + ' ' + methodDescriptor(m));
                 }
                 if (k.getSuperclass() != null) {
@@ -268,7 +272,7 @@ public final class DeadCodeAnalyzer {
         }
     }
 
-    private static String methodDescriptor(java.lang.reflect.Method m) {
+    private static String methodDescriptor(Method m) {
         StringBuilder sb = new StringBuilder("(");
         for (Class<?> p : m.getParameterTypes()) {
             sb.append(typeDescriptor(p));

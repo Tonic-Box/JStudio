@@ -2,6 +2,8 @@ package com.tonic.service;
 
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
+import com.tonic.live.LiveSession;
+import com.tonic.live.protocol.LoadedClass;
 import com.tonic.event.EventBus;
 import com.tonic.util.Settings;
 import com.tonic.event.events.ProjectLoadedEvent;
@@ -398,15 +400,15 @@ public class ProjectService {
      * (eager, with progress). Replaces any current project. Bootstrap/JDK classes can be excluded to
      * keep the navigator manageable; pass {@code includeJdk=true} to pull everything.
      */
-    public ProjectModel loadLiveProject(com.tonic.live.LiveSession session, boolean includeJdk,
+    public ProjectModel loadLiveProject(LiveSession session, boolean includeJdk,
                                         ProgressCallback progress) throws IOException {
         closeProject();
         String name = "live:" + session.getPid();
         EventBus.getInstance().post(new StatusMessageEvent(this, "Enumerating classes in " + name + "..."));
 
-        List<com.tonic.live.protocol.LoadedClass> all = session.enumerateClasses();
-        List<com.tonic.live.protocol.LoadedClass> wanted = new ArrayList<>();
-        for (com.tonic.live.protocol.LoadedClass lc : all) {
+        List<LoadedClass> all = session.enumerateClasses();
+        List<LoadedClass> wanted = new ArrayList<>();
+        for (LoadedClass lc : all) {
             if (isHiddenClass(lc.getInternalName())) {
                 continue;
             }
@@ -422,7 +424,7 @@ public class ProjectService {
         int total = wanted.size();
         int current = 0;
         int loaded = 0;
-        for (com.tonic.live.protocol.LoadedClass lc : wanted) {
+        for (LoadedClass lc : wanted) {
             try {
                 byte[] data = session.fetchClassBytes(lc.getInternalName());
                 project.addClass(new ClassFile(new ByteArrayInputStream(data)));
@@ -447,14 +449,14 @@ public class ProjectService {
      * Add classes newly loaded in the target since the project was built (on-demand refresh). Returns
      * the number added.
      */
-    public int refreshLiveProject(com.tonic.live.LiveSession session, boolean includeJdk,
+    public int refreshLiveProject(LiveSession session, boolean includeJdk,
                                   ProgressCallback progress) throws IOException {
         if (currentProject == null) {
             return 0;
         }
-        List<com.tonic.live.protocol.LoadedClass> all = session.enumerateClasses();
-        List<com.tonic.live.protocol.LoadedClass> missing = new ArrayList<>();
-        for (com.tonic.live.protocol.LoadedClass lc : all) {
+        List<LoadedClass> all = session.enumerateClasses();
+        List<LoadedClass> missing = new ArrayList<>();
+        for (LoadedClass lc : all) {
             if (isHiddenClass(lc.getInternalName())) {
                 continue;
             }
@@ -468,7 +470,7 @@ public class ProjectService {
         int total = missing.size();
         int current = 0;
         int added = 0;
-        for (com.tonic.live.protocol.LoadedClass lc : missing) {
+        for (LoadedClass lc : missing) {
             try {
                 byte[] data = session.fetchClassBytes(lc.getInternalName());
                 currentProject.addClass(new ClassFile(new ByteArrayInputStream(data)));

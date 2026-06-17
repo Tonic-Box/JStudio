@@ -4,13 +4,12 @@ import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
+import lombok.Getter;
 
 import javax.swing.JPanel;
 import javax.swing.Timer;
-import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -26,7 +25,8 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
 
     private String message = "Loading...";
     private int rotation = 0;
-    private Timer animationTimer;
+    private final Timer animationTimer;
+    @Getter
     private boolean loading = false;
 
     public LoadingOverlay() {
@@ -53,10 +53,6 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
         this.loading = false;
         animationTimer.stop();
         setVisible(false);
-    }
-
-    public boolean isLoading() {
-        return loading;
     }
 
     @Override

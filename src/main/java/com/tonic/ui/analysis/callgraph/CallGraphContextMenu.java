@@ -8,6 +8,7 @@ import com.tonic.ui.theme.JStudioTheme;
 import javax.swing.BorderFactory;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import java.awt.Component;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -117,7 +118,7 @@ public class CallGraphContextMenu {
         return cell != null ? model.getMethodForCell(cell) : null;
     }
 
-    public void show(java.awt.Component invoker, int x, int y) {
+    public void show(Component invoker, int x, int y) {
         menu.show(invoker, x, y);
     }
 }

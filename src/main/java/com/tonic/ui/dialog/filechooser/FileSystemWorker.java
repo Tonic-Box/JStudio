@@ -1,5 +1,6 @@
 package com.tonic.ui.dialog.filechooser;
 
+import javax.swing.Icon;
 import javax.swing.SwingWorker;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
@@ -165,7 +166,7 @@ public class FileSystemWorker {
     /**
      * Get system icon for a file.
      */
-    public static javax.swing.Icon getSystemIcon(File file) {
+    public static Icon getSystemIcon(File file) {
         return fsv.getSystemIcon(file);
     }
 

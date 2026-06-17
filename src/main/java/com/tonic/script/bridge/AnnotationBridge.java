@@ -6,6 +6,7 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.Attribute;
 import com.tonic.parser.attribute.RuntimeVisibleAnnotationsAttribute;
 import com.tonic.parser.attribute.anotation.Annotation;
+import com.tonic.parser.attribute.anotation.ElementValue;
 import com.tonic.parser.attribute.anotation.ElementValuePair;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.model.ClassEntryModel;
@@ -13,6 +14,7 @@ import com.tonic.script.engine.ScriptFunction;
 import com.tonic.script.engine.ScriptInterpreter;
 import com.tonic.script.engine.ScriptValue;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -124,7 +126,7 @@ public class AnnotationBridge {
     private List<Attribute> getClassAttributes(ClassFile classFile) {
         // Use reflection to access classAttributes since there's no getter
         try {
-            java.lang.reflect.Field field = ClassFile.class.getDeclaredField("classAttributes");
+            Field field = ClassFile.class.getDeclaredField("classAttributes");
             field.setAccessible(true);
             @SuppressWarnings("unchecked")
             List<Attribute> attrs = (List<Attribute>) field.get(classFile);
@@ -241,7 +243,7 @@ public class AnnotationBridge {
         return ScriptValue.object(props);
     }
 
-    private ScriptValue convertElementValue(com.tonic.parser.attribute.anotation.ElementValue ev, ClassFile classFile) {
+    private ScriptValue convertElementValue(ElementValue ev, ClassFile classFile) {
         if (ev == null) {
             return ScriptValue.NULL;
         }

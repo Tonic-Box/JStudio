@@ -12,6 +12,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -445,7 +446,7 @@ public class SearchPanel extends ThemedJPanel {
         }
     }
 
-    private JButton makeButton(javax.swing.Icon icon, String tooltip) {
+    private JButton makeButton(Icon icon, String tooltip) {
         JButton btn = new JButton(icon);
         btn.setToolTipText(tooltip);
         btn.setFocusable(false);

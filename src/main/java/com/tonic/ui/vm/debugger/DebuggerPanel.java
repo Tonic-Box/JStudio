@@ -25,6 +25,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -709,7 +710,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         }
     }
 
-    private JButton createToolButton(String text, String shortcut, java.awt.event.ActionListener action) {
+    private JButton createToolButton(String text, String shortcut, ActionListener action) {
         JButton button = new JButton(text);
         button.setBackground(JStudioTheme.getBgSecondary());
         button.setForeground(JStudioTheme.getTextPrimary());

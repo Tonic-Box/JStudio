@@ -1,23 +1,19 @@
 package com.tonic.cli.engine;
 
-import com.tonic.plugin.annotations.JStudioPlugin;
 import com.tonic.plugin.api.Plugin;
+import com.tonic.plugin.api.PluginContext;
 import com.tonic.plugin.api.PluginInfo;
+import com.tonic.plugin.loader.JarPluginScanner;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 public class PluginLoader {
 
@@ -65,38 +61,14 @@ public class PluginLoader {
     }
 
     private Plugin loadJarPlugin(File jarFile) {
-        try (JarFile jar = new JarFile(jarFile)) {
-            URLClassLoader loader = new URLClassLoader(
-                new URL[]{jarFile.toURI().toURL()},
-                getClass().getClassLoader()
-            );
-
-            Enumeration<JarEntry> entries = jar.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
-                if (entry.getName().endsWith(".class")) {
-                    String className = entry.getName()
-                        .replace('/', '.')
-                        .replace(".class", "");
-
-                    try {
-                        Class<?> clazz = loader.loadClass(className);
-                        if (Plugin.class.isAssignableFrom(clazz)) {
-                            JStudioPlugin anno = clazz.getAnnotation(JStudioPlugin.class);
-                            if (anno != null) {
-                                return instantiatePlugin(clazz);
-                            }
-                        }
-                    } catch (ClassNotFoundException | NoClassDefFoundError e) {
-                        // Skip
-                    }
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load JAR plugin: " + e.getMessage(), e);
+        // The loader must outlive this method (the plugin loads its classes lazily through it), so ownership is
+        // handed to the returned JarPlugin, which closes it on dispose. On any non-success path we close it here.
+        JarPluginScanner.ScanResult result = JarPluginScanner.scan(jarFile, getClass().getClassLoader());
+        if (result.plugins.isEmpty()) {
+            JarPluginScanner.closeQuietly(result.loader);
+            throw new RuntimeException("No plugin found in JAR: " + jarFile);
         }
-
-        throw new RuntimeException("No plugin found in JAR: " + jarFile);
+        return new JarPlugin(result.plugins.get(0), result.loader);
     }
 
     private Plugin loadGroovyScript(File scriptFile) {
@@ -115,16 +87,6 @@ public class PluginLoader {
 
     private Plugin loadJavaSource(File sourceFile) {
         throw new UnsupportedOperationException("Java source compilation not yet implemented. Use pre-compiled JARs.");
-    }
-
-    private Plugin instantiatePlugin(Class<?> clazz) {
-        try {
-            Constructor<?> constructor = clazz.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            return (Plugin) constructor.newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to instantiate plugin: " + e.getMessage(), e);
-        }
     }
 
     private static class GroovyScriptPlugin implements Plugin {
@@ -149,7 +111,7 @@ public class PluginLoader {
         }
 
         @Override
-        public void init(com.tonic.plugin.api.PluginContext context) {
+        public void init(PluginContext context) {
             binding.setVariable("context", context);
             binding.setVariable("project", context.getProject());
             binding.setVariable("analysis", context.getAnalysis());
@@ -185,7 +147,7 @@ public class PluginLoader {
         }
 
         @Override
-        public void init(com.tonic.plugin.api.PluginContext context) {
+        public void init(PluginContext context) {
             for (Plugin plugin : plugins) {
                 plugin.init(context);
             }
@@ -202,6 +164,41 @@ public class PluginLoader {
         public void dispose() {
             for (Plugin plugin : plugins) {
                 plugin.dispose();
+            }
+        }
+    }
+
+    /** Wraps a JAR-loaded plugin, owning its {@link URLClassLoader} so it is closed when the plugin is disposed. */
+    private static class JarPlugin implements Plugin {
+        private final Plugin delegate;
+        private final URLClassLoader loader;
+
+        JarPlugin(Plugin delegate, URLClassLoader loader) {
+            this.delegate = delegate;
+            this.loader = loader;
+        }
+
+        @Override
+        public PluginInfo getInfo() {
+            return delegate.getInfo();
+        }
+
+        @Override
+        public void init(PluginContext context) {
+            delegate.init(context);
+        }
+
+        @Override
+        public void execute() {
+            delegate.execute();
+        }
+
+        @Override
+        public void dispose() {
+            try {
+                delegate.dispose();
+            } finally {
+                JarPluginScanner.closeQuietly(loader);
             }
         }
     }

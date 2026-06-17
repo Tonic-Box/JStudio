@@ -33,7 +33,7 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 
 ### Run
 
-- **Run main()** - Classes with a `public static void main(String[])` show a green play badge (navigator + editor gutter); Run launches the app from that entry point in a separate JVM (so its `System.exit`/crash can't affect JStudio), with program args / VM options / working dir, streamed output, Terminate, and exit code. Static-analysis mode only (hidden while attached to a live JVM). Runs the current edited state; standalone classpath (no external deps), JStudio's own JDK.
+- **Run main()** - Classes with a `public static void main(String[])` show a green play badge (navigator + editor gutter); Run launches the app from that entry point in a separate JVM (so its `System.exit`/crash can't affect JStudio), with program args / VM options / working dir, streamed output, Terminate, and exit code. Static-analysis mode only (hidden while attached to a live JVM). Runs the current edited state; standalone classpath (no external deps), JStudio's own JDK. **Auto-attaches live debugging** to the launched process (Threads/Profiler/Recorder, scratch pad, patch-live) - removed when it exits or you detach (detach leaves it running).
 
 ### Analysis Tools
 
@@ -45,6 +45,7 @@ Powered by [YABR](https://github.com/Tonic-Box/YABR)
 - **Query Explorer** - Composable query language for code searches — see the [Query DSL reference](docs/query-dsl.md)
 - **Cross-References** - Bidirectional symbol reference tracking
 - **Usage Lenses** - Clickable "N usages" counts on class, method, and field declarations in the source view that open Find Usages (toggle: View ▸ Usage Counts)
+- **AI Chat** - A right-dock assistant (Claude or OpenAI) that answers questions about the loaded project
 
 ### Bytecode Debugger
 

@@ -2,6 +2,7 @@ package com.tonic.ui.vm.debugger;
 
 import com.tonic.analysis.execution.core.BytecodeResult;
 import com.tonic.analysis.execution.debug.*;
+import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.analysis.execution.state.ValueTag;
 import com.tonic.parser.MethodEntry;
@@ -384,7 +385,7 @@ public class VMDebugSession {
         }
     }
 
-    public boolean setObjectFieldValue(com.tonic.analysis.execution.heap.ObjectInstance obj,
+    public boolean setObjectFieldValue(ObjectInstance obj,
                                         String owner, String name, String desc, Object value) {
         if (!isPaused()) {
             notifyError("Cannot edit field: debugger not paused");
@@ -683,7 +684,7 @@ public class VMDebugSession {
         }
 
         @Override
-        public void onException(DebugSession session, com.tonic.analysis.execution.heap.ObjectInstance exception) {
+        public void onException(DebugSession session, ObjectInstance exception) {
             notifyError("Exception: " + exception.toString());
         }
 

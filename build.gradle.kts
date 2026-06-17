@@ -4,9 +4,21 @@ plugins {
     id("java")
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("maven-publish")
 }
 group = "com.tonic.ui"
 version = "20.0-SNAPSHOT"
+
+// Publish the regular (thin) jar to Maven Local so external plugins (e.g. JSAIPlugin) can compile against the
+// JStudio API. NOT the shadow fat jar - plugins get com.tonic.* classes only; the host supplies deps at runtime.
+publishing {
+    publications {
+        create<MavenPublication>("jstudio") {
+            // Just the regular thin jar (the shadow fat jar shares the null classifier and would collide).
+            artifact(tasks.named("jar"))
+        }
+    }
+}
 
 application {
     mainClass.set("com.tonic.ui.JStudio")
@@ -85,7 +97,9 @@ val stageJavaAgent by tasks.registering(Copy::class) {
     rename { "live-agent.bin" }
 }
 
-tasks.named("processResources") { dependsOn(stageJavaAgent) }
+tasks.named<Copy>("processResources") {
+    dependsOn(stageJavaAgent)
+}
 
 tasks.jar {
     manifest {

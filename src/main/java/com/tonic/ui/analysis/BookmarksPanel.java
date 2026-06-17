@@ -27,6 +27,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -102,7 +103,7 @@ public class BookmarksPanel extends ThemedJPanel {
         return toolbar;
     }
 
-    private JButton createToolButton(String tooltip, String iconName, java.awt.event.ActionListener action) {
+    private JButton createToolButton(String tooltip, String iconName, ActionListener action) {
         JButton button = new JButton();
         button.setIcon(Icons.getIcon(iconName));
         button.setToolTipText(tooltip);

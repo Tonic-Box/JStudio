@@ -6,6 +6,7 @@ import com.tonic.analysis.callgraph.CallGraph;
 import com.tonic.analysis.callgraph.CallGraphNode;
 import com.tonic.analysis.callgraph.CallSite;
 import com.tonic.analysis.common.MethodReference;
+import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.core.component.FilterableComboBox;
 import com.tonic.ui.editor.graph.BaseGraphView;
@@ -125,7 +126,7 @@ public class CallGraphView extends BaseGraphView {
         if (callGraph == null) {
             ClassPool pool = new ClassPool(true);
             if (projectModel != null && projectModel.getClassPool() != null) {
-                for (com.tonic.parser.ClassFile cf : projectModel.getClassPool().getClasses()) {
+                for (ClassFile cf : projectModel.getClassPool().getClasses()) {
                     if (projectModel.isUserClass(cf.getClassName())) {
                         pool.put(cf);
                     }

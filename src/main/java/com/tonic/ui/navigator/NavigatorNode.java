@@ -6,6 +6,7 @@ import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ResourceEntryModel;
 import com.tonic.simulation.metrics.ComplexityMetrics;
 import com.tonic.ui.theme.Icons;
+import com.tonic.ui.theme.RunnableOverlayIcon;
 import lombok.Getter;
 
 import javax.swing.Icon;
@@ -135,7 +136,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode {
         public Icon getIcon() {
             Icon icon = Icons.getIcon(classEntry.getIconKey());
             return classEntry.hasMainMethod()
-                    ? new com.tonic.ui.theme.RunnableOverlayIcon(icon) : icon;
+                    ? new RunnableOverlayIcon(icon) : icon;
         }
 
         @Override

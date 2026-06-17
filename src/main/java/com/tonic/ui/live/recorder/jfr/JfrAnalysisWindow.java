@@ -26,6 +26,7 @@ import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -453,7 +454,7 @@ public final class JfrAnalysisWindow extends JFrame {
         private final List<Map.Entry<String, Long>> rows;
 
         EventCountTableModel(Map<String, Long> counts) {
-            this.rows = new java.util.ArrayList<>(counts.entrySet());
+            this.rows = new ArrayList<>(counts.entrySet());
         }
 
         @Override

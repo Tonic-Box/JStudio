@@ -54,11 +54,24 @@ A bare accessor is truthy (e.g. `WHERE recursive`). Quantifier bodies rebind the
 | `arg(n)` | `value` `type` `kind` `index` |
 | `field` | `name` `owner` `descriptor` `kind` |
 | `insn` | `opcode` `index` `line` |
+| `indy` / `condy` | `name` `descriptor` `site` `kind` `category` `recipe` `bsmOwner` `bsmName` `bsmDescriptor` `bsmKind` `line` |
+| `bsmArg` | `kind` `value` (a condy-valued arg has `kind == "condy"` and also exposes the `indy`/`condy` atoms) |
 | SSA / CFG | `recursive` &nbsp; `method.loops` &nbsp; `method.blocks` &nbsp; `(call\|insn).inLoop` &nbsp; `(call\|insn).loopDepth` |
 
 ## Selectors
 
-`call` &nbsp; `arg` &nbsp; `insn` &nbsp; `field` — quantify over these with `HAS`/`ANY`/`ALL`/`NONE`/`COUNT`.
+`call` &nbsp; `arg` &nbsp; `insn` &nbsp; `field` &nbsp; `indy` &nbsp; `condy` &nbsp; `bsmArg` — quantify over
+these with `HAS`/`ANY`/`ALL`/`NONE`/`COUNT`.
+
+## Invokedynamic & dynamic constants
+
+`indy` selects each `invokedynamic` call site; `condy` selects each `ldc` of a dynamic constant
+(`CONSTANT_Dynamic`). Both expose their bootstrap method (`bsmOwner`/`bsmName`/`bsmDescriptor`/`bsmKind`) and a
+high-level `category`: `stringconcat` · `lambda` · `switch` · `record` · `other`. For a `StringConcatFactory`
+site, `recipe` is the readable recipe (literal text with `{arg}` for each dynamic value and `{const}` for each
+constant). `bsmArg` quantifies over the bootstrap's static arguments (`kind` is one of
+`int`/`long`/`float`/`double`/`string`/`class`/`methodType`/`methodHandle`/`condy`, with `value`); a `condy`
+argument recursively exposes its own `bsmName`/`category`/`bsmArg`, so nested bootstraps are reachable.
 
 ## Operators
 
@@ -160,6 +173,26 @@ FIND methods WHERE SEQUENCE [ new, dup, .., invokespecial ]
 Opcode shape via regex:
 ```
 FIND methods WHERE opcodes matches /new dup .* invokespecial/
+```
+
+String concat whose literal text mentions a secret:
+```
+FIND methods WHERE HAS indy WHERE (category == "stringconcat" AND recipe contains "password")
+```
+
+Lambda creation sites:
+```
+FIND methods WHERE HAS indy WHERE (category == "lambda")
+```
+
+Dynamic constants bootstrapped by `ConstantBootstraps`:
+```
+FIND methods WHERE HAS condy WHERE (bsmOwner == "java/lang/invoke/ConstantBootstraps")
+```
+
+A concat with a nested dynamic-constant bootstrap argument:
+```
+FIND methods WHERE HAS indy WHERE (name == "makeConcatWithConstants" AND HAS bsmArg WHERE (kind == "condy"))
 ```
 
 Biggest methods first:

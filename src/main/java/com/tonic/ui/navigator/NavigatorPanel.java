@@ -11,6 +11,7 @@ import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.dialog.NewClassDialog;
 import com.tonic.ui.dialog.RenameClassDialog;
 import com.tonic.ui.editor.ViewMode;
+import com.tonic.ui.live.LiveAttachService;
 import com.tonic.event.EventBus;
 import com.tonic.event.events.ClassSelectedEvent;
 import com.tonic.event.events.FindUsagesEvent;
@@ -23,6 +24,9 @@ import com.tonic.model.FieldEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.model.ResourceEntryModel;
+import com.tonic.plugin.api.ui.NavigatorAction;
+import com.tonic.plugin.api.ui.NavigatorActionProvider;
+import com.tonic.plugin.api.ui.NavigatorContext;
 import com.tonic.service.ClassCreationService;
 import com.tonic.service.ClassCreationService.ClassCreationParams;
 import com.tonic.service.ProjectService;
@@ -54,6 +58,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyAdapter;
@@ -62,6 +67,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NavigatorPanel extends ThemedJPanel {
 
@@ -73,6 +82,8 @@ public class NavigatorPanel extends ThemedJPanel {
     private final JScrollPane scrollPane;
     private final JPanel loadingOverlay;
     private final JPanel contentWrapper;
+    /** Plugin-contributed context-menu providers, consulted each time the tree's popup opens. */
+    private final List<NavigatorActionProvider> actionProviders = new CopyOnWriteArrayList<>();
 
     public NavigatorPanel(MainFrame mainFrame) {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -161,7 +172,7 @@ public class NavigatorPanel extends ThemedJPanel {
     private JPanel createLoadingOverlay() {
         JPanel overlay = new JPanel(new BorderLayout()) {
             @Override
-            protected void paintComponent(java.awt.Graphics g) {
+            protected void paintComponent(Graphics g) {
                 g.setColor(new Color(0, 0, 0, 120));
                 g.fillRect(0, 0, getWidth(), getHeight());
                 super.paintComponent(g);
@@ -358,7 +369,7 @@ public class NavigatorPanel extends ThemedJPanel {
     }
 
     public void refresh() {
-        ProjectModel project = com.tonic.service.ProjectService.getInstance().getCurrentProject();
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project != null) {
             treeModel.loadProject(project);
         }
@@ -446,9 +457,83 @@ public class NavigatorPanel extends ThemedJPanel {
             buildResourceMenu(menu, (NavigatorNode.ResourceNode) node);
         }
 
+        appendPluginActions(menu, node);
+
         if (menu.getComponentCount() > 0) {
             menu.show(tree, e.getX(), e.getY());
         }
+    }
+
+    /**
+     * Registers a plugin context-menu provider. Returns nothing; callers track removal via
+     * {@link #removeActionProvider(NavigatorActionProvider)}.
+     */
+    public void addActionProvider(NavigatorActionProvider provider) {
+        actionProviders.add(provider);
+    }
+
+    public void removeActionProvider(NavigatorActionProvider provider) {
+        actionProviders.remove(provider);
+    }
+
+    /** Appends plugin-contributed entries (if any) for the right-clicked node, after the built-in items. */
+    private void appendPluginActions(JPopupMenu menu, Object node) {
+        if (actionProviders.isEmpty()) {
+            return;
+        }
+        NavigatorContext context = buildNavigatorContext(node);
+        List<NavigatorAction> actions = new ArrayList<>();
+        for (NavigatorActionProvider provider : actionProviders) {
+            try {
+                List<NavigatorAction> contributed = provider.actionsFor(context);
+                if (contributed != null) {
+                    actions.addAll(contributed);
+                }
+            } catch (Exception ex) {
+                // A misbehaving provider must not break the native context menu.
+            }
+        }
+        if (actions.isEmpty()) {
+            return;
+        }
+        if (menu.getComponentCount() > 0) {
+            menu.addSeparator();
+        }
+        for (NavigatorAction action : actions) {
+            addMenuItem(menu, action.label(), action.action());
+        }
+    }
+
+    private NavigatorContext buildNavigatorContext(Object node) {
+        final ClassEntryModel cls = node instanceof NavigatorNode.ClassNode
+                ? ((NavigatorNode.ClassNode) node).getClassEntry() : null;
+        final MethodEntryModel method = node instanceof NavigatorNode.MethodNode
+                ? ((NavigatorNode.MethodNode) node).getMethodEntry() : null;
+        final FieldEntryModel field = node instanceof NavigatorNode.FieldNode
+                ? ((NavigatorNode.FieldNode) node).getFieldEntry() : null;
+        final ResourceEntryModel resource = node instanceof NavigatorNode.ResourceNode
+                ? ((NavigatorNode.ResourceNode) node).getResource() : null;
+        return new NavigatorContext() {
+            @Override
+            public Optional<ClassEntryModel> selectedClass() {
+                return Optional.ofNullable(cls);
+            }
+
+            @Override
+            public Optional<MethodEntryModel> selectedMethod() {
+                return Optional.ofNullable(method);
+            }
+
+            @Override
+            public Optional<FieldEntryModel> selectedField() {
+                return Optional.ofNullable(field);
+            }
+
+            @Override
+            public Optional<ResourceEntryModel> selectedResource() {
+                return Optional.ofNullable(resource);
+            }
+        };
     }
 
     private void buildMethodMenu(JPopupMenu menu, NavigatorNode.MethodNode node) {
@@ -520,7 +605,7 @@ public class NavigatorPanel extends ThemedJPanel {
 
         addMenuItem(menu, "Open in Editor", () -> EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry)));
 
-        if (classEntry.hasMainMethod() && !com.tonic.ui.live.LiveAttachService.getInstance().isAttached()) {
+        if (classEntry.hasMainMethod() && !LiveAttachService.getInstance().isAttached()) {
             addMenuItem(menu, "Run " + classEntry.getSimpleName() + ".main()", () -> mainFrame.runMainClass(classEntry));
         }
 

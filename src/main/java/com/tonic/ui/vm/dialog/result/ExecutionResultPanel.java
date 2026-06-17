@@ -8,6 +8,7 @@ import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
 import com.tonic.ui.vm.testgen.TestGeneratorDialog;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 
 public class ExecutionResultPanel extends ThemedJPanel {
@@ -71,8 +72,8 @@ public class ExecutionResultPanel extends ThemedJPanel {
         detailsTabs.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Details",
-            javax.swing.border.TitledBorder.LEFT,
-            javax.swing.border.TitledBorder.TOP,
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
             JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE).deriveFont(Font.BOLD),
             JStudioTheme.getTextPrimary()
         ));

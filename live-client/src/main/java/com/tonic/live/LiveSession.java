@@ -46,6 +46,14 @@ public final class LiveSession implements Closeable {
     public static LiveSession attach(String pid, String agentJarPath) throws Exception {
         int port = freePort();
         AttachLauncher.loadAgent(pid, agentJarPath, port);
+        return connect(pid, port);
+    }
+
+    /**
+     * Connects to an agent that is already loaded (e.g. via {@code -javaagent:agent.jar=port=N} in a JVM we
+     * launched) and listening on {@code port}. Skips the attach/loadAgent step; the connect is retry-safe.
+     */
+    public static LiveSession connect(String pid, int port) throws Exception {
         LiveAgentClient client = LiveAgentClient.connect("127.0.0.1", port, 10_000);
         try {
             AgentInfo info = client.hello();

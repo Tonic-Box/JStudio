@@ -6,6 +6,8 @@ import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.heap.model.HeapSnapshot;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
@@ -30,10 +32,10 @@ public class ClassSummaryPanel extends ThemedJPanel {
         filterField = new JTextField();
         filterField.putClientProperty("JTextField.placeholderText", "Filter classes...");
         filterField.addActionListener(e -> applyFilter());
-        filterField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
+        filterField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { applyFilter(); }
+            public void removeUpdate(DocumentEvent e) { applyFilter(); }
+            public void changedUpdate(DocumentEvent e) { applyFilter(); }
         });
         add(filterField, BorderLayout.NORTH);
 

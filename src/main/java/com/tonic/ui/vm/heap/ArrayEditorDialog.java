@@ -4,6 +4,7 @@ import com.tonic.ui.theme.JStudioTheme;
 import lombok.Getter;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
@@ -173,7 +174,7 @@ public class ArrayEditorDialog extends JDialog {
     }
 
     private TableCellRenderer createCellRenderer() {
-        return new javax.swing.table.DefaultTableCellRenderer() {
+        return new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                     boolean isSelected, boolean hasFocus, int row, int column) {

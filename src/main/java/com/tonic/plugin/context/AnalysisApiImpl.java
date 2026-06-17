@@ -5,6 +5,14 @@ import com.tonic.analysis.callgraph.CallGraphNode;
 import com.tonic.analysis.common.MethodReference;
 import com.tonic.analysis.pattern.PatternSearch;
 import com.tonic.analysis.pattern.SearchResult;
+import com.tonic.analysis.query.exec.QueryBatchRunner;
+import com.tonic.analysis.query.exec.QueryService;
+import com.tonic.analysis.query.planner.QueryMatch;
+import com.tonic.analysis.query.planner.QueryTarget;
+import com.tonic.analysis.source.decompile.ClassDecompiler;
+import com.tonic.analysis.source.decompile.DecompileResult;
+import com.tonic.analysis.xref.Xref;
+import com.tonic.event.events.FindUsagesEvent;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.ConstPool;
@@ -12,8 +20,14 @@ import com.tonic.parser.constpool.Item;
 import com.tonic.parser.constpool.StringRefItem;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.plugin.api.AnalysisApi;
+import com.tonic.plugin.api.ProjectApi;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.ProjectModel;
+import com.tonic.service.XrefQueryService;
+import com.tonic.service.deadcode.DeadCodeAnalyzer;
+import com.tonic.service.deadcode.DeadCodeConfig;
+import com.tonic.service.deadcode.DeadCodeReport;
+import com.tonic.service.deadcode.DeadItem;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -27,6 +41,10 @@ public class AnalysisApiImpl implements AnalysisApi {
     private final PatternApiImpl patternApi;
     private final TypeApiImpl typeApi;
     private final StringApiImpl stringApi;
+    private final DecompileApiImpl decompileApi;
+    private final XrefApiImpl xrefApi;
+    private final QueryApiImpl queryApi;
+    private final DeadCodeApiImpl deadCodeApi;
 
     public AnalysisApiImpl(ProjectModel projectModel) {
         this.projectModel = projectModel;
@@ -35,6 +53,10 @@ public class AnalysisApiImpl implements AnalysisApi {
         this.patternApi = new PatternApiImpl();
         this.typeApi = new TypeApiImpl();
         this.stringApi = new StringApiImpl();
+        this.decompileApi = new DecompileApiImpl();
+        this.xrefApi = new XrefApiImpl();
+        this.queryApi = new QueryApiImpl();
+        this.deadCodeApi = new DeadCodeApiImpl();
     }
 
     @Override
@@ -60,6 +82,26 @@ public class AnalysisApiImpl implements AnalysisApi {
     @Override
     public StringApi getStrings() {
         return stringApi;
+    }
+
+    @Override
+    public DecompileApi getDecompile() {
+        return decompileApi;
+    }
+
+    @Override
+    public XrefApi getXrefs() {
+        return xrefApi;
+    }
+
+    @Override
+    public QueryApi getQuery() {
+        return queryApi;
+    }
+
+    @Override
+    public DeadCodeApi getDeadCode() {
+        return deadCodeApi;
     }
 
     private class CallGraphApiImpl implements CallGraphApi {
@@ -169,6 +211,55 @@ public class AnalysisApiImpl implements AnalysisApi {
         @Override
         public int getCallCount(String className, String methodName) {
             return getCallersOf(className, methodName).size();
+        }
+
+        @Override
+        public List<CallNode> getCallersToDepth(String className, String methodName, String descriptor,
+                                                int depth, int maxNodes) {
+            return walk(className, methodName, descriptor, depth, maxNodes, true);
+        }
+
+        @Override
+        public List<CallNode> getCalleesToDepth(String className, String methodName, String descriptor,
+                                                int depth, int maxNodes) {
+            return walk(className, methodName, descriptor, depth, maxNodes, false);
+        }
+
+        /** Depth-bounded BFS over caller/callee edges from a focus method, capped at {@code maxNodes} results. */
+        private List<CallNode> walk(String className, String methodName, String descriptor,
+                                    int depth, int maxNodes, boolean callers) {
+            if (callGraph == null) {
+                build();
+            }
+            if (callGraph == null) {
+                return Collections.emptyList();
+            }
+            MethodReference focus = new MethodReference(className.replace('.', '/'), methodName, descriptor);
+            Map<MethodReference, Integer> seen = new LinkedHashMap<>();
+            Set<MethodReference> frontier = new LinkedHashSet<>();
+            frontier.add(focus);
+            for (int d = 0; d < depth && !frontier.isEmpty(); d++) {
+                Set<MethodReference> next = new LinkedHashSet<>();
+                for (MethodReference ref : frontier) {
+                    Set<MethodReference> edges = callers ? callGraph.getCallers(ref) : callGraph.getCallees(ref);
+                    for (MethodReference edge : edges) {
+                        if (!seen.containsKey(edge) && seen.size() < maxNodes) {
+                            seen.put(edge, d + 1);
+                            next.add(edge);
+                        }
+                    }
+                }
+                if (seen.size() >= maxNodes) {
+                    break;
+                }
+                frontier = next;
+            }
+            List<CallNode> result = new ArrayList<>(seen.size());
+            for (Map.Entry<MethodReference, Integer> entry : seen.entrySet()) {
+                MethodReference ref = entry.getKey();
+                result.add(new CallNode(ref.getOwner(), ref.getName(), ref.getDescriptor(), entry.getValue()));
+            }
+            return result;
         }
 
         private MethodReference findMethod(String className, String methodName) {
@@ -316,7 +407,7 @@ public class AnalysisApiImpl implements AnalysisApi {
             customPatterns.put(name, matcher);
         }
 
-        private class ClassInfoImpl implements com.tonic.plugin.api.ProjectApi.ClassInfo {
+        private class ClassInfoImpl implements ProjectApi.ClassInfo {
             private final ClassEntryModel entry;
 
             ClassInfoImpl(ClassEntryModel entry) {
@@ -349,12 +440,12 @@ public class AnalysisApiImpl implements AnalysisApi {
             }
 
             @Override
-            public List<com.tonic.plugin.api.ProjectApi.MethodInfo> getMethods() {
+            public List<ProjectApi.MethodInfo> getMethods() {
                 return Collections.emptyList();
             }
 
             @Override
-            public List<com.tonic.plugin.api.ProjectApi.FieldInfo> getFields() {
+            public List<ProjectApi.FieldInfo> getFields() {
                 return Collections.emptyList();
             }
 
@@ -545,4 +636,185 @@ public class AnalysisApiImpl implements AnalysisApi {
             return findStrings("(?i)(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\\s+");
         }
     }
+
+    private class DecompileApiImpl implements DecompileApi {
+
+        @Override
+        public Optional<String> getSource(String className) {
+            ClassEntryModel cls = projectModel.findClassByName(className);
+            return cls != null ? Optional.of(decompiledSource(cls)) : Optional.empty();
+        }
+
+        @Override
+        public List<MethodSourceInfo> getMethodSpans(String className) {
+            ClassEntryModel cls = projectModel.findClassByName(className);
+            if (cls == null) {
+                return Collections.emptyList();
+            }
+            decompiledSource(cls);
+            Map<String, DecompileResult.MethodSpan> spans = cls.getMethodSpans();
+            if (spans == null) {
+                return Collections.emptyList();
+            }
+            List<MethodSourceInfo> result = new ArrayList<>(spans.size());
+            for (Map.Entry<String, DecompileResult.MethodSpan> entry : spans.entrySet()) {
+                String key = entry.getKey();
+                int paren = key.indexOf('(');
+                String name = paren >= 0 ? key.substring(0, paren) : key;
+                String desc = paren >= 0 ? key.substring(paren) : "";
+                DecompileResult.MethodSpan span = entry.getValue();
+                result.add(new MethodSourceInfo(cls.getClassName(), name, desc,
+                        span.getStartLine(), span.getEndLine()));
+            }
+            return result;
+        }
+
+        @Override
+        public Optional<MethodSourceInfo> getMethodSpan(String className, String methodName, String descriptor) {
+            ClassEntryModel cls = projectModel.findClassByName(className);
+            if (cls == null) {
+                return Optional.empty();
+            }
+            decompiledSource(cls);
+            Map<String, DecompileResult.MethodSpan> spans = cls.getMethodSpans();
+            DecompileResult.MethodSpan span = spans != null ? spans.get(methodName + descriptor) : null;
+            if (span == null) {
+                return Optional.empty();
+            }
+            return Optional.of(new MethodSourceInfo(cls.getClassName(), methodName, descriptor,
+                    span.getStartLine(), span.getEndLine()));
+        }
+    }
+
+    private class XrefApiImpl implements XrefApi {
+
+        @Override
+        public void ensureBuilt() {
+            XrefQueryService.ensureDatabase(projectModel);
+        }
+
+        @Override
+        public List<UsageInfo> findUsages(TargetKind kind, String className, String memberName, String descriptor) {
+            ensureBuilt();
+            FindUsagesEvent.TargetType type;
+            switch (kind) {
+                case METHOD:
+                    type = FindUsagesEvent.TargetType.METHOD;
+                    break;
+                case FIELD:
+                    type = FindUsagesEvent.TargetType.FIELD;
+                    break;
+                default:
+                    type = FindUsagesEvent.TargetType.CLASS;
+                    memberName = null;
+                    descriptor = null;
+                    break;
+            }
+            String internal = internalName(className);
+            List<Xref> all = XrefQueryService.getUsages(projectModel, type, internal, memberName, descriptor);
+            List<UsageInfo> result = new ArrayList<>(all.size());
+            for (Xref xref : all) {
+                result.add(new UsageInfo(xref.getSourceClass(), xref.getSourceMethod(),
+                        xref.getSourceMethodDesc(), xref.getType().name(), xref.getTargetMember()));
+            }
+            return result;
+        }
+    }
+
+    private class QueryApiImpl implements QueryApi {
+
+        @Override
+        public QueryResult run(String dsl, long timeBudgetMs, int limit) {
+            QueryService service = new QueryService(projectModel.getClassPool());
+            service.setUserClassNames(projectModel.getUserClassNames());
+            QueryService.QueryConfig config = QueryService.QueryConfig.builder().timeBudgetMs(timeBudgetMs).build();
+            try {
+                var result = service.executeAsync(dsl, config, NOOP_PROGRESS).get();
+                if (result.hasError()) {
+                    return new QueryResult(true, result.error(), Collections.emptyList(), 0, 0L, false);
+                }
+                List<QueryMatch> matches = result.results();
+                List<String> labels = new ArrayList<>();
+                int count = 0;
+                for (QueryMatch match : matches) {
+                    if (count++ >= limit) {
+                        break;
+                    }
+                    labels.add(matchLabel(match));
+                }
+                return new QueryResult(false, null, labels, result.resultCount(),
+                        result.executionTimeMs(), matches.size() > limit);
+            } catch (Exception e) {
+                return new QueryResult(true, e.getMessage(), Collections.emptyList(), 0, 0L, false);
+            } finally {
+                service.shutdown();
+            }
+        }
+    }
+
+    private class DeadCodeApiImpl implements DeadCodeApi {
+
+        @Override
+        public DeadCodeResult analyze(boolean publicAsEntryPoints) {
+            DeadCodeConfig config = new DeadCodeConfig(publicAsEntryPoints,
+                    Collections.emptySet(), Collections.emptySet());
+            DeadCodeReport report = new DeadCodeAnalyzer(projectModel, config).analyze();
+            return new DeadCodeResult(mapDead(report.getDeadClasses()), mapDead(report.getDeadMethods()),
+                    mapDead(report.getDeadFields()));
+        }
+
+        private List<DeadItemInfo> mapDead(List<DeadItem> items) {
+            List<DeadItemInfo> out = new ArrayList<>(items.size());
+            for (DeadItem item : items) {
+                out.add(new DeadItemInfo(item.getOwner(), item.displayLabel()));
+            }
+            return out;
+        }
+    }
+
+    private String internalName(String className) {
+        ClassEntryModel cls = projectModel.findClassByName(className);
+        return cls != null ? cls.getClassName() : className.replace('.', '/');
+    }
+
+    /** Decompiled source for a class, reusing/populating the per-class decompilation cache (incl. method spans). */
+    private String decompiledSource(ClassEntryModel cls) {
+        String cached = cls.getDecompilationCache();
+        if (cached != null && cls.getMethodSpans() != null) {
+            return cached;
+        }
+        DecompileResult result = new ClassDecompiler(cls.getClassFile()).decompileWithLineMap();
+        cls.setDecompilationCache(result.getSource(), result.getLineMaps(), result.getMethodSpans(),
+                result.getFieldSpans(), result.getClassSpan());
+        return result.getSource();
+    }
+
+    private static String matchLabel(QueryMatch match) {
+        QueryTarget target = match.getTarget();
+        if (target instanceof QueryTarget.MethodTarget) {
+            return ((QueryTarget.MethodTarget) target).getSignature();
+        }
+        if (target instanceof QueryTarget.PCTarget) {
+            return ((QueryTarget.PCTarget) target).getSignature();
+        }
+        if (target instanceof QueryTarget.ClassTarget) {
+            return ((QueryTarget.ClassTarget) target).className();
+        }
+        Object cls = match.getAttribute("class");
+        return cls != null ? cls.toString() : "(match)";
+    }
+
+    private static final QueryBatchRunner.ProgressListener NOOP_PROGRESS = new QueryBatchRunner.ProgressListener() {
+        @Override
+        public void onPhaseStart(String phase, int total) {
+        }
+
+        @Override
+        public void onProgress(int current, int total, String message) {
+        }
+
+        @Override
+        public void onComplete(int matchCount) {
+        }
+    };
 }

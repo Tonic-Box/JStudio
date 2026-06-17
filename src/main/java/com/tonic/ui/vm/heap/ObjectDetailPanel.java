@@ -1,11 +1,13 @@
 package com.tonic.ui.vm.heap;
 
+import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.heap.model.*;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -47,8 +49,8 @@ public class ObjectDetailPanel extends ThemedJPanel {
         provenanceArea.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Provenance",
-            javax.swing.border.TitledBorder.LEFT,
-            javax.swing.border.TitledBorder.TOP,
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
             null,
             JStudioTheme.getTextSecondary()
         ));
@@ -66,8 +68,8 @@ public class ObjectDetailPanel extends ThemedJPanel {
         fieldsScroll.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Fields",
-            javax.swing.border.TitledBorder.LEFT,
-            javax.swing.border.TitledBorder.TOP,
+            TitledBorder.LEFT,
+            TitledBorder.TOP,
             null,
             JStudioTheme.getTextSecondary()
         ));
@@ -203,9 +205,9 @@ public class ObjectDetailPanel extends ThemedJPanel {
 
     private String formatValue(Object value) {
         if (value == null) return "null";
-        if (value instanceof com.tonic.analysis.execution.heap.ObjectInstance) {
-            com.tonic.analysis.execution.heap.ObjectInstance obj =
-                (com.tonic.analysis.execution.heap.ObjectInstance) value;
+        if (value instanceof ObjectInstance) {
+            ObjectInstance obj =
+                (ObjectInstance) value;
             return obj.getClassName() + " #" + obj.getId();
         }
         return String.valueOf(value);

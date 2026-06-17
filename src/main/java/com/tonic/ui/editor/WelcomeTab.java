@@ -10,6 +10,7 @@ import com.tonic.ui.theme.*;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -396,7 +397,7 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener {
         return panel;
     }
 
-    private JButton createActionButton(String text, javax.swing.Icon icon, Runnable action) {
+    private JButton createActionButton(String text, Icon icon, Runnable action) {
         JButton button = new JButton(text, icon);
         button.setBackground(JStudioTheme.getBgSecondary());
         button.setForeground(JStudioTheme.getTextPrimary());

@@ -32,6 +32,7 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -161,7 +162,7 @@ public class EditorTab extends JPanel {
         }
     }
 
-    private <T extends JPanel> void loadViewInBackground(ViewMode mode, Supplier<T> viewFactory, java.util.function.Consumer<T> viewSetter) {
+    private <T extends JPanel> void loadViewInBackground(ViewMode mode, Supplier<T> viewFactory, Consumer<T> viewSetter) {
         if (loadingViews.contains(mode)) {
             return;
         }

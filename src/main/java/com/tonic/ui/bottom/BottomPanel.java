@@ -10,6 +10,8 @@ import com.tonic.event.EventBus;
 import com.tonic.ui.editor.cfg.CFGBlockSelectedEvent;
 import com.tonic.event.events.FindUsagesEvent;
 import com.tonic.model.ProjectModel;
+import com.tonic.ui.console.ConsolePanel;
+import com.tonic.ui.run.RunConsolePanel;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
@@ -35,7 +37,9 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
     private BookmarksPanel bookmarksPanel;
     private CommentsPanel commentsPanel;
     private CFGBlockDetailPanel cfgBlockDetailPanel;
-    private com.tonic.ui.run.RunConsolePanel runConsolePanel;
+    private RunConsolePanel runConsolePanel;
+    @Setter
+    private ConsolePanel consolePanel;
 
     private Runnable onAllTabsClosed;
     private Runnable onTabOpened;
@@ -92,10 +96,30 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
         notifyExpanded();
     }
 
+    /**
+     * Adds (or reveals) a plugin-contributed closable tab showing {@code content}. Pass the same component to
+     * {@link #removePluginTab(JComponent)} to close it.
+     */
+    public void addPluginTab(String title, JComponent content) {
+        if (isTabOpen(content)) {
+            tabbedPane.setSelectedComponent(content);
+            notifyExpanded();
+            return;
+        }
+        addClosableTab(title, content);
+        tabbedPane.setSelectedComponent(content);
+        notifyExpanded();
+    }
+
+    /** Removes a plugin tab previously added with {@link #addPluginTab}. No-op if not open. */
+    public void removePluginTab(JComponent content) {
+        closeTab(content);
+    }
+
     /** Opens (or reveals) the single Run output tab and returns its panel. */
-    public com.tonic.ui.run.RunConsolePanel openRunConsole() {
+    public RunConsolePanel openRunConsole() {
         if (runConsolePanel == null) {
-            runConsolePanel = new com.tonic.ui.run.RunConsolePanel();
+            runConsolePanel = new RunConsolePanel();
         }
         if (!isTabOpen(runConsolePanel)) {
             addClosableTab("Run", runConsolePanel);
@@ -103,6 +127,20 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
         tabbedPane.setSelectedComponent(runConsolePanel);
         notifyExpanded();
         return runConsolePanel;
+    }
+
+    /** Toggles the Console tab. The panel instance is owned by MainFrame (so logging persists when closed). */
+    public void toggleConsoleTab() {
+        if (consolePanel == null) {
+            return;
+        }
+        if (isTabOpen(consolePanel)) {
+            closeTab(consolePanel);
+        } else {
+            addClosableTab("Console", consolePanel);
+            tabbedPane.setSelectedComponent(consolePanel);
+            notifyExpanded();
+        }
     }
 
     public void toggleBookmarksTab() {

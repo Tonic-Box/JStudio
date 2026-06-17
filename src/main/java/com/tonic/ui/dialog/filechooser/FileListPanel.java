@@ -17,6 +17,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -79,7 +80,7 @@ public class FileListPanel extends ThemedJPanel {
     private void setupTable() {
         table.setRowSorter(sorter);
         table.setShowGrid(false);
-        table.setIntercellSpacing(new java.awt.Dimension(0, 0));
+        table.setIntercellSpacing(new Dimension(0, 0));
         table.setRowHeight(UIConstants.TABLE_ROW_HEIGHT + 4);
         table.setBackground(JStudioTheme.getBgTertiary());
         table.setForeground(JStudioTheme.getTextPrimary());

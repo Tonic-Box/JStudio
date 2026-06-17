@@ -3,6 +3,7 @@ package com.tonic.ui.editor.source;
 import com.tonic.analysis.source.decompile.ClassDecompiler;
 import com.tonic.analysis.source.decompile.DecompileResult;
 import com.tonic.parser.ClassFile;
+import com.tonic.parser.ClassPool;
 import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.Attribute;
@@ -24,6 +25,11 @@ import com.tonic.model.ProjectModel;
 import com.tonic.event.events.StatusMessageEvent;
 import com.tonic.service.ProjectDatabaseService;
 import com.tonic.service.XrefQueryService;
+import com.tonic.live.LiveSession;
+import com.tonic.ui.core.SwingWorkers;
+import com.tonic.ui.live.LiveAttachService;
+import com.tonic.ui.live.LivePatch;
+import com.tonic.ui.live.MethodBodyDiff;
 import com.tonic.util.Settings;
 import com.tonic.ui.theme.*;
 
@@ -38,6 +44,7 @@ import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -49,24 +56,19 @@ import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.io.ByteArrayInputStream;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.Set;
 import java.util.function.IntConsumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.SwingUtilities;
 
 /**
@@ -89,7 +91,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private boolean omitAnnotations = false;
     private final List<GutterIconInfo> commentIcons = new ArrayList<>();
     private final List<GutterIconInfo> runIcons = new ArrayList<>();
-    private final java.util.Set<Integer> runLines = new java.util.HashSet<>();
+    private final Set<Integer> runLines = new HashSet<>();
+    private final MouseAdapter runGutterMouse;
+    private final Set<Component> wiredGutter = new HashSet<>();
     private Object currentLineHighlight;
     private final LoadingOverlay loadingOverlay;
     private SwingWorker<String, Void> currentWorker;
@@ -117,9 +121,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
         textArea = new RSyntaxTextArea() {
             @Override
-            protected void paintComponent(java.awt.Graphics g) {
+            protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                lensOverlay.paint((java.awt.Graphics2D) g, this);
+                lensOverlay.paint((Graphics2D) g, this);
             }
         };
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
@@ -138,24 +142,30 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         scrollPane.setIconRowHeaderEnabled(true);
         scrollPane.setBorder(null);
 
-        scrollPane.getGutter().addMouseListener(new java.awt.event.MouseAdapter() {
+        // Make the Run gutter icon clickable + show a hand cursor over it. The icon lives on the gutter's
+        // IconRowHeader child, so the listener must be on the children (AWT dispatches to the deepest
+        // component, not the parent gutter); convertPoint maps the click into the text area (corrects scroll).
+        runGutterMouse = new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (runLines.isEmpty()) {
-                    return;
-                }
-                int offset = textArea.viewToModel2D(new java.awt.Point(0, e.getY()));
-                if (offset < 0) {
-                    return;
-                }
-                try {
-                    if (runLines.contains(textArea.getLineOfOffset(offset) + 1)) {
-                        runMainViaMainFrame();
-                    }
-                } catch (BadLocationException ignored) {
+            public void mouseClicked(MouseEvent e) {
+                if (lineAtRunIcon(e) > 0) {
+                    runMainViaMainFrame();
                 }
             }
-        });
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                Component src = (Component) e.getSource();
+                src.setCursor(Cursor.getPredefinedCursor(
+                        lineAtRunIcon(e) > 0 ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                ((Component) e.getSource()).setCursor(Cursor.getDefaultCursor());
+            }
+        };
+        wireGutterMouse();
 
         loadingOverlay = new LoadingOverlay();
 
@@ -243,7 +253,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             if (dirty) {
                 compilerParser.setEnabled(true);
                 compileToolbar.showModified();
-                compileToolbar.setLivePatchMode(com.tonic.ui.live.LiveAttachService.getInstance().isAttached());
+                compileToolbar.setLivePatchMode(LiveAttachService.getInstance().isAttached());
                 lensOverlay.clear();
             } else {
                 compilerParser.setEnabled(false);
@@ -307,7 +317,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                             compileToolbar.showSuccess(result.getCompilationTimeMs());
                         }
 
-                        if (com.tonic.ui.live.LiveAttachService.getInstance().isAttached()) {
+                        if (LiveAttachService.getInstance().isAttached()) {
                             livePatch(baselineSource, source);
                         } else {
                             scheduleToolbarHide(1500);
@@ -316,7 +326,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                         compileToolbar.showWithErrors(result.getErrorCount(), result.getWarningCount(), result.getErrors());
                     }
                 } catch (Exception e) {
-                    compileToolbar.showWithErrors(1, 0, java.util.Collections.singletonList(
+                    compileToolbar.showWithErrors(1, 0, Collections.singletonList(
                             CompilationError.error(1, 1, 0, 1, "Compilation failed: " + e.getMessage())
                     ));
                 }
@@ -334,23 +344,23 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
      * in-memory model is synced to the running class. Runs the fetch/graft/redefine off the EDT.
      */
     private void livePatch(String baselineSource, String editedSource) {
-        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        LiveAttachService svc = LiveAttachService.getInstance();
         if (!svc.isAttached()) {
             scheduleToolbarHide(1500);
             return;
         }
-        final com.tonic.live.LiveSession session = svc.getSession();
+        final LiveSession session = svc.getSession();
         final String internalName = classEntry.getClassName();
-        final com.tonic.parser.ClassFile edited = classEntry.getClassFile();
-        final com.tonic.parser.ClassPool classPool = projectModel != null ? projectModel.getClassPool() : null;
-        final java.util.Set<String> changedMethods = com.tonic.ui.live.MethodBodyDiff.changedMethods(
+        final ClassFile edited = classEntry.getClassFile();
+        final ClassPool classPool = projectModel != null ? projectModel.getClassPool() : null;
+        final Set<String> changedMethods = MethodBodyDiff.changedMethods(
                 baselineSource, editedSource, classPool, internalName);
         compileToolbar.showPatching();
-        com.tonic.ui.core.SwingWorkers.run(
+        SwingWorkers.run(
                 () -> {
                     byte[] bytes = changedMethods.isEmpty()
-                            ? com.tonic.ui.live.LivePatch.buildRedefineBytes(session, internalName, edited)
-                            : com.tonic.ui.live.LivePatch.buildGraftedRedefineBytes(
+                            ? LivePatch.buildRedefineBytes(session, internalName, edited)
+                            : LivePatch.buildGraftedRedefineBytes(
                                     session, internalName, edited, changedMethods);
                     session.redefineClass(internalName, bytes);
                     return bytes;
@@ -370,7 +380,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
      */
     private void syncModelToRunningClass(byte[] runningBytes) {
         try {
-            classEntry.updateClassFile(new com.tonic.parser.ClassFile(new java.io.ByteArrayInputStream(runningBytes)));
+            classEntry.updateClassFile(new ClassFile(new ByteArrayInputStream(runningBytes)));
         } catch (Exception ignored) {
             // The patch already succeeded; keeping the stale model is acceptable.
         }
@@ -679,7 +689,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         menu.show(textArea, e.getX(), e.getY());
     }
 
-    private JMenuItem createMenuItem(String text, javax.swing.Icon icon) {
+    private JMenuItem createMenuItem(String text, Icon icon) {
         JMenuItem item = new JMenuItem(text);
         item.setBackground(JStudioTheme.getBgSecondary());
         item.setForeground(JStudioTheme.getTextPrimary());
@@ -761,7 +771,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     }
 
     private void runCodeAnalysis() {
-        java.awt.Container parent = getParent();
+        Container parent = getParent();
         while (parent != null && !(parent instanceof MainFrame)) {
             parent = parent.getParent();
         }
@@ -801,7 +811,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         }
 
         // Add gutter icons for each line with comments
-        javax.swing.Icon commentIcon = Icons.getIcon("comment");
+        Icon commentIcon = Icons.getIcon("comment");
         for (Map.Entry<Integer, List<Comment>> entry : commentsByLine.entrySet()) {
             int lineNumber = entry.getKey();
             List<Comment> lineComments = entry.getValue();
@@ -829,11 +839,23 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         }
     }
 
-    /**
-     * Adds a clickable green Run icon to the gutter on the {@code main} method's line (static-analysis mode
-     * only - hidden while attached, and when annotations are omitted since that shifts source lines).
-     */
+    /** Attaches the run click/cursor adapter to the gutter and any child components not yet wired (idempotent). */
+    private void wireGutterMouse() {
+        Gutter gutter = scrollPane.getGutter();
+        if (wiredGutter.add(gutter)) {
+            gutter.addMouseListener(runGutterMouse);
+            gutter.addMouseMotionListener(runGutterMouse);
+        }
+        for (Component child : gutter.getComponents()) {
+            if (wiredGutter.add(child)) {
+                child.addMouseListener(runGutterMouse);
+                child.addMouseMotionListener(runGutterMouse);
+            }
+        }
+    }
+
     private void updateRunGutterIcons() {
+        wireGutterMouse();
         Gutter gutter = scrollPane.getGutter();
         for (GutterIconInfo info : runIcons) {
             gutter.removeTrackingIcon(info);
@@ -842,7 +864,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         runLines.clear();
 
         if (omitAnnotations || classEntry.getMethodSpans() == null || !classEntry.hasMainMethod()
-                || com.tonic.ui.live.LiveAttachService.getInstance().isAttached()) {
+                || LiveAttachService.getInstance().isAttached()) {
             return;
         }
         DecompileResult.MethodSpan span = classEntry.getMethodSpans().get("main([Ljava/lang/String;)V");
@@ -857,8 +879,27 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    /** Resolves the run-method source line under a gutter mouse event, or -1 if the cursor isn't on a run icon. */
+    private int lineAtRunIcon(MouseEvent e) {
+        if (runLines.isEmpty()) {
+            return -1;
+        }
+        Point inText = SwingUtilities.convertPoint(
+                (Component) e.getSource(), e.getPoint(), textArea);
+        int offset = textArea.viewToModel2D(inText);
+        if (offset < 0) {
+            return -1;
+        }
+        try {
+            int line = textArea.getLineOfOffset(offset) + 1;
+            return runLines.contains(line) ? line : -1;
+        } catch (BadLocationException ex) {
+            return -1;
+        }
+    }
+
     private void runMainViaMainFrame() {
-        java.awt.Container parent = getParent();
+        Container parent = getParent();
         while (parent != null && !(parent instanceof MainFrame)) {
             parent = parent.getParent();
         }
@@ -967,12 +1008,12 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         String dotMethod = "." + methodName;
         String thisMethod = "this." + methodName;
 
-        String quotedName = java.util.regex.Pattern.quote(methodName);
-        java.util.regex.Pattern declarationPattern = java.util.regex.Pattern.compile(
+        String quotedName = Pattern.quote(methodName);
+        Pattern declarationPattern = Pattern.compile(
             "^\\s*(public|private|protected|static|final|abstract|synchronized|native|strictfp|\\s)+.*\\s+" +
             quotedName + "\\s*\\("
         );
-        java.util.regex.Pattern simplePattern = java.util.regex.Pattern.compile(
+        Pattern simplePattern = Pattern.compile(
             "^\\s+\\w+.*\\s+" + quotedName + "\\s*\\("
         );
 
@@ -1059,12 +1100,12 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
 
         String dotField = "." + fieldName;
 
-        String quotedName = java.util.regex.Pattern.quote(fieldName);
-        java.util.regex.Pattern declarationPattern = java.util.regex.Pattern.compile(
+        String quotedName = Pattern.quote(fieldName);
+        Pattern declarationPattern = Pattern.compile(
             "^\\s*(public|private|protected|static|final|volatile|transient|\\s)+.*\\s+" +
             quotedName + "\\s*[;=]"
         );
-        java.util.regex.Pattern simplePattern = java.util.regex.Pattern.compile(
+        Pattern simplePattern = Pattern.compile(
             "^\\s+\\w+.*\\s+" + quotedName + "\\s*[;=]"
         );
 
@@ -1108,7 +1149,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             textArea.getCaret().setVisible(true);
 
             int highlightOffset = textArea.getLineStartOffset(lineNumber);
-            java.awt.Rectangle rect = textArea.modelToView2D(highlightOffset).getBounds();
+            Rectangle rect = textArea.modelToView2D(highlightOffset).getBounds();
             if (rect != null) {
                 rect.height = textArea.getHeight() / 3;
                 textArea.scrollRectToVisible(rect);
@@ -1313,6 +1354,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                     loaded = true;
                     loadingOverlay.hideLoading();
                     updateCommentGutterIcons();
+                    updateRunGutterIcons();
                     scheduleUsageLensUpdate();
                     Runnable navigation = pendingNavigation;
                     pendingNavigation = null;
@@ -1930,19 +1972,19 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         return null;
     }
 
-    private static final java.util.regex.Pattern CLASS_DECL_PATTERN = java.util.regex.Pattern.compile(
+    private static final Pattern CLASS_DECL_PATTERN = Pattern.compile(
         "^\\s*(?:public|private|protected|abstract|final|static|strictfp|\\s)*\\s*(?:class|interface|enum|@interface)\\s+(\\w+)"
     );
 
     private String extractClassDeclaration(String line) {
-        java.util.regex.Matcher m = CLASS_DECL_PATTERN.matcher(line);
+        Matcher m = CLASS_DECL_PATTERN.matcher(line);
         if (m.find()) {
             return m.group(1);
         }
         return null;
     }
 
-    private static final java.util.regex.Pattern METHOD_DECL_PATTERN = java.util.regex.Pattern.compile(
+    private static final Pattern METHOD_DECL_PATTERN = Pattern.compile(
         "^\\s*(?:public|private|protected|static|final|abstract|synchronized|native|strictfp|\\s)*" +
         "(?:<[^>]+>\\s*)?" +
         "\\w+(?:<[^>]*>)?(?:\\[])*\\s+" +
@@ -1962,7 +2004,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             return null;
         }
 
-        java.util.regex.Matcher m = METHOD_DECL_PATTERN.matcher(line);
+        Matcher m = METHOD_DECL_PATTERN.matcher(line);
         if (m.find()) {
             String name = m.group(1);
             if (!name.equals("if") && !name.equals("while") && !name.equals("for") &&
@@ -1973,7 +2015,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         return null;
     }
 
-    private static final java.util.regex.Pattern FIELD_DECL_PATTERN = java.util.regex.Pattern.compile(
+    private static final Pattern FIELD_DECL_PATTERN = Pattern.compile(
         "^\\s*(?:public|private|protected|static|final|volatile|transient|\\s)*" +
         "\\w+(?:<[^>]*>)?(?:\\[])*\\s+" +
         "(\\w+)\\s*[;=]"
@@ -1987,7 +2029,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             return null;
         }
 
-        java.util.regex.Matcher m = FIELD_DECL_PATTERN.matcher(line);
+        Matcher m = FIELD_DECL_PATTERN.matcher(line);
         if (m.find()) {
             return m.group(1);
         }
@@ -2182,7 +2224,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             return;
         }
 
-        java.awt.Window window = javax.swing.SwingUtilities.getWindowAncestor(this);
+        Window window = SwingUtilities.getWindowAncestor(this);
         if (!(window instanceof MainFrame)) {
             return;
         }

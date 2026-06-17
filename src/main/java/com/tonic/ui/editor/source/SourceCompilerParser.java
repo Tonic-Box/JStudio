@@ -10,7 +10,6 @@ import org.fife.ui.rsyntaxtextarea.parser.DefaultParserNotice;
 import org.fife.ui.rsyntaxtextarea.parser.ParseResult;
 import org.fife.ui.rsyntaxtextarea.parser.ParserNotice;
 
-import javax.swing.text.BadLocationException;
 import java.util.Collections;
 import java.util.List;
 

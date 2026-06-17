@@ -3,7 +3,9 @@ package com.tonic.script.engine;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Represents a callable function in the script runtime.
@@ -72,7 +74,7 @@ public abstract class ScriptFunction {
     /**
      * Creates a native function with 0 arguments.
      */
-    public static ScriptFunction native0(String name, java.util.function.Supplier<ScriptValue> fn) {
+    public static ScriptFunction native0(String name, Supplier<ScriptValue> fn) {
         return new NativeFunction(name, args -> fn.get());
     }
 
@@ -89,7 +91,7 @@ public abstract class ScriptFunction {
     /**
      * Creates a native function with 2 arguments.
      */
-    public static ScriptFunction native2(String name, java.util.function.BiFunction<ScriptValue, ScriptValue, ScriptValue> fn) {
+    public static ScriptFunction native2(String name, BiFunction<ScriptValue, ScriptValue, ScriptValue> fn) {
         return new NativeFunction(name, args -> {
             ScriptValue arg1 = !args.isEmpty() ? args.get(0) : ScriptValue.NULL;
             ScriptValue arg2 = args.size() > 1 ? args.get(1) : ScriptValue.NULL;

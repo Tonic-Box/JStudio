@@ -30,8 +30,8 @@ public class FieldValue {
         if (val == null) {
             return -1;
         }
-        if (val instanceof com.tonic.analysis.execution.heap.ObjectInstance) {
-            return ((com.tonic.analysis.execution.heap.ObjectInstance) val).getId();
+        if (val instanceof ObjectInstance) {
+            return ((ObjectInstance) val).getId();
         }
         return -1;
     }

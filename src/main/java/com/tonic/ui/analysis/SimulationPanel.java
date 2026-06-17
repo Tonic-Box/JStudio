@@ -21,10 +21,12 @@ import com.tonic.ui.theme.JStudioTheme;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -389,7 +391,7 @@ public class SimulationPanel extends ThemedJPanel {
 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Export Findings");
-        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+        chooser.setFileFilter(new FileNameExtensionFilter(
                 "JSON or HTML files", "json", "html"));
 
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -411,7 +413,7 @@ public class SimulationPanel extends ThemedJPanel {
                     FindingsExporter.exportToJson(findings, path);
                 }
                 statusLabel.setText("Exported " + findings.size() + " findings to " + file.getName());
-            } catch (java.io.IOException ex) {
+            } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this, "Export failed: " + ex.getMessage(),
                         "Export Error", JOptionPane.ERROR_MESSAGE);
             }

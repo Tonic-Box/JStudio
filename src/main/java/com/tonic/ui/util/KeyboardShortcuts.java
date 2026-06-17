@@ -10,6 +10,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.util.function.Consumer;
 
 /**
  * Registers global keyboard shortcuts for JStudio.
@@ -116,7 +117,7 @@ public class KeyboardShortcuts {
     }
 
     private static void registerAction(JRootPane rootPane, int condition, KeyStroke keyStroke,
-                                        String actionName, java.util.function.Consumer<ActionEvent> action) {
+                                        String actionName, Consumer<ActionEvent> action) {
         rootPane.getInputMap(condition).put(keyStroke, actionName);
         rootPane.getActionMap().put(actionName, new AbstractAction() {
             @Override

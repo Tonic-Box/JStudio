@@ -20,6 +20,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JProgressBar;
 import javax.swing.JSplitPane;
+import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
@@ -252,7 +253,7 @@ public final class LiveInstancesView extends ThemedJPanel {
     }
 
     /** Renders an instance id as its snapshot label (Class@hex, or the text for a String). */
-    private final class InstanceCellRenderer extends DefaultListCellRenderer {
+    private static final class InstanceCellRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                                                       boolean isSelected, boolean cellHasFocus) {
@@ -275,7 +276,7 @@ public final class LiveInstancesView extends ThemedJPanel {
     /** Colours field values: references accent + underlined, strings green, null muted, primitives plain. */
     private static final class ValueCellRenderer extends DefaultTableCellRenderer {
         @Override
-        public Component getTableCellRendererComponent(javax.swing.JTable table, Object value, boolean isSelected,
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
                                                        boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             Color fg = JStudioTheme.getTextPrimary();

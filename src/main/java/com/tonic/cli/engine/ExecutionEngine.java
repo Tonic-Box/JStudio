@@ -11,6 +11,7 @@ import com.tonic.service.ProjectService;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 public class ExecutionEngine {
@@ -126,7 +127,7 @@ public class ExecutionEngine {
 
     private void exportClasses(ProjectModel project, File exportDir) throws Exception {
         if (!exportDir.exists() && !exportDir.mkdirs()) {
-            throw new java.io.IOException("Failed to create export directory: " + exportDir);
+            throw new IOException("Failed to create export directory: " + exportDir);
         }
 
         for (ClassEntryModel classEntry : project.getUserClasses()) {
@@ -138,7 +139,7 @@ public class ExecutionEngine {
                 String packageDir = className.substring(0, lastSlash);
                 targetDir = new File(exportDir, packageDir);
                 if (!targetDir.mkdirs() && !targetDir.exists()) {
-                    throw new java.io.IOException("Failed to create package directory: " + targetDir);
+                    throw new IOException("Failed to create package directory: " + targetDir);
                 }
             }
 

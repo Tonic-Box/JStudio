@@ -6,7 +6,10 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.util.function.Supplier;
 
@@ -216,8 +219,8 @@ public class Icons {
             g2.setStroke(getStroke());
             g2.drawRoundRect(inset, inset, rectSize, rectSize, 4, 4);
 
-            g2.setFont(JStudioTheme.getUIFont(size - 4).deriveFont(java.awt.Font.BOLD));
-            java.awt.FontMetrics fm = g2.getFontMetrics();
+            g2.setFont(JStudioTheme.getUIFont(size - 4).deriveFont(Font.BOLD));
+            FontMetrics fm = g2.getFontMetrics();
             int textX = (size - fm.stringWidth(letter)) / 2;
             int textY = (size + fm.getAscent() - fm.getDescent()) / 2;
             g2.drawString(letter, textX, textY);
@@ -561,7 +564,7 @@ public class Icons {
             path.closePath();
             g2.fill(path);
             g2.setColor(JStudioTheme.getBgPrimary());
-            g2.setFont(JStudioTheme.getUIFont(10).deriveFont(java.awt.Font.BOLD));
+            g2.setFont(JStudioTheme.getUIFont(10).deriveFont(Font.BOLD));
             g2.drawString("!", 6, 12);
         }
     }
@@ -592,7 +595,7 @@ public class Icons {
             g2.setColor(JStudioTheme.getInfo());
             g2.fillOval(2, 2, 12, 12);
             g2.setColor(JStudioTheme.getBgPrimary());
-            g2.setFont(JStudioTheme.getUIFont(10).deriveFont(java.awt.Font.BOLD));
+            g2.setFont(JStudioTheme.getUIFont(10).deriveFont(Font.BOLD));
             g2.drawString("i", 7, 12);
         }
     }
@@ -1093,7 +1096,7 @@ public class Icons {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawRect(4, 4, 8, 8);
-            g2.setFont(JStudioTheme.getCodeFont(7).deriveFont(java.awt.Font.BOLD));
+            g2.setFont(JStudioTheme.getCodeFont(7).deriveFont(Font.BOLD));
             g2.drawString("1:1", 5, 10);
         }
     }
@@ -1193,7 +1196,7 @@ public class Icons {
         protected void paintIconContent(Graphics2D g2) {
             g2.setColor(JStudioTheme.getSuccess());
             g2.setStroke(getStroke());
-            java.awt.geom.AffineTransform old = g2.getTransform();
+            AffineTransform old = g2.getTransform();
             g2.rotate(Math.toRadians(45), size / 2.0, size / 2.0);
             g2.drawRoundRect(3, 6, size - 6, 4, 3, 3);
             g2.setTransform(old);

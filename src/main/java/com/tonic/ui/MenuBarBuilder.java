@@ -1,10 +1,14 @@
 package com.tonic.ui;
 
+import com.tonic.plugin.gui.GuiPluginManager;
+import com.tonic.plugin.gui.PluginManagerDialog;
+import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.RecentFilesManager;
 import com.tonic.util.Settings;
 
+import javax.swing.Icon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -13,6 +17,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+import java.awt.Desktop;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -46,6 +51,7 @@ public class MenuBarBuilder {
         menuBar.add(buildTransformMenu());
         menuBar.add(buildVMMenu());
         menuBar.add(buildAttachMenu());
+        menuBar.add(buildPluginsMenu());
         menuBar.add(buildHelpMenu());
 
         // Listen for recent files changes
@@ -360,7 +366,7 @@ public class MenuBarBuilder {
         menu.addMenuListener(new MenuListener() {
             @Override
             public void menuSelected(MenuEvent e) {
-                boolean connected = com.tonic.ui.live.LiveAttachService.getInstance().isAttached();
+                boolean connected = LiveAttachService.getInstance().isAttached();
                 detach.setVisible(connected);
                 sep.setVisible(connected);
                 deadlocks.setVisible(connected);
@@ -379,6 +385,34 @@ public class MenuBarBuilder {
             }
         });
         return menu;
+    }
+
+    /**
+     * Plugins menu: open the manager, reveal the plugins folder, or reload all plugins from disk. Plugin-contributed
+     * items live in whatever menus the plugins choose (added at runtime), not here.
+     */
+    private JMenu buildPluginsMenu() {
+        JMenu menu = new JMenu("Plugins");
+
+        menu.add(createMenuItem("Manage Plugins...", 0, 0,
+                null, e -> new PluginManagerDialog(mainFrame).setVisible(true)));
+
+        menu.add(createMenuItem("Open Plugins Folder", 0, 0,
+                null, e -> openPluginsFolder()));
+
+        menu.addSeparator();
+
+        menu.add(createMenuItem("Reload All Plugins", 0, 0,
+                null, e -> GuiPluginManager.getInstance().reloadAll()));
+
+        return menu;
+    }
+
+    private void openPluginsFolder() {
+        try {
+            Desktop.getDesktop().open(GuiPluginManager.getInstance().pluginsDir());
+        } catch (Exception ignored) {
+        }
     }
 
     private JMenu buildHelpMenu() {
@@ -400,7 +434,7 @@ public class MenuBarBuilder {
     }
 
     private JMenuItem createMenuItem(String text, int keyCode, int modifiers,
-                                     javax.swing.Icon icon, ActionListener action) {
+                                     Icon icon, ActionListener action) {
         JMenuItem item = new JMenuItem(text);
         if (icon != null) {
             item.setIcon(icon);

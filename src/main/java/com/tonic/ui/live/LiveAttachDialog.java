@@ -2,6 +2,7 @@ package com.tonic.ui.live;
 
 import com.tonic.live.AttachLauncher;
 import com.tonic.service.ProjectService;
+import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJDialog;
 import com.tonic.ui.core.component.ThemedJScrollPane;
 
@@ -18,6 +19,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
+import java.awt.Window;
+import java.lang.management.ManagementFactory;
 import java.util.List;
 
 /**
@@ -84,7 +87,7 @@ public final class LiveAttachDialog extends ThemedJDialog {
     }
 
     private static String currentPid() {
-        String name = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+        String name = ManagementFactory.getRuntimeMXBean().getName();
         int at = name.indexOf('@');
         return at > 0 ? name.substring(0, at) : "";
     }
@@ -124,9 +127,9 @@ public final class LiveAttachDialog extends ThemedJDialog {
                 try {
                     get();
                     status.setText("Attached.");
-                    java.awt.Window owner = getOwner();
-                    if (owner instanceof com.tonic.ui.MainFrame) {
-                        ((com.tonic.ui.MainFrame) owner).setLiveCaptureEnabled(true);
+                    Window owner = getOwner();
+                    if (owner instanceof MainFrame) {
+                        ((MainFrame) owner).setLiveCaptureEnabled(true);
                     }
                     dispose();
                 } catch (Exception e) {

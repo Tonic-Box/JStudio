@@ -41,7 +41,7 @@ public final class RunService {
      * {@link Process} (for {@link #terminate}), or null if staging/launch failed (reported via {@code out}).
      */
     public static Process run(ProjectModel project, String mainClassInternal, List<String> programArgs,
-                              List<String> vmOptions, File workingDir, RunOutput out) {
+                              List<String> vmOptions, File workingDir, File javaHome, RunOutput out) {
         File tempJar;
         try {
             tempJar = Files.createTempFile("jstudio-run-", ".jar").toFile();
@@ -52,7 +52,7 @@ public final class RunService {
         }
 
         List<String> command = new ArrayList<>();
-        command.add(javaBinary());
+        command.add(javaBinary(javaHome));
         command.addAll(vmOptions);
         command.add("-cp");
         command.add(tempJar.getAbsolutePath());
@@ -106,9 +106,9 @@ public final class RunService {
         thread.start();
     }
 
-    private static String javaBinary() {
-        String home = System.getProperty("java.home");
+    private static String javaBinary(File javaHome) {
+        File home = (javaHome != null && javaHome.isDirectory()) ? javaHome : new File(System.getProperty("java.home"));
         boolean windows = System.getProperty("os.name", "").toLowerCase().contains("win");
-        return home + File.separator + "bin" + File.separator + (windows ? "java.exe" : "java");
+        return new File(home, "bin" + File.separator + (windows ? "java.exe" : "java")).getAbsolutePath();
     }
 }

@@ -19,6 +19,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTextPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
+import javax.swing.border.TitledBorder;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -26,6 +27,7 @@ import javax.swing.text.StyledDocument;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -142,8 +144,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
             panel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(JStudioTheme.getBorder()),
                 title,
-                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-                javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                TitledBorder.DEFAULT_JUSTIFICATION,
+                TitledBorder.DEFAULT_POSITION,
                 JStudioTheme.getUIFont(12),
                 JStudioTheme.getTextPrimary()
             ));
@@ -161,8 +163,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
                     label.setForeground(JStudioTheme.getTextPrimary());
                 }
             }
-        } else if (component instanceof java.awt.Container) {
-            for (Component child : ((java.awt.Container) component).getComponents()) {
+        } else if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
                 applyThemeToLabels(child);
             }
         }
@@ -185,8 +187,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         panel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Editor Font",
-            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-            javax.swing.border.TitledBorder.DEFAULT_POSITION,
+            TitledBorder.DEFAULT_JUSTIFICATION,
+            TitledBorder.DEFAULT_POSITION,
             JStudioTheme.getUIFont(12),
             JStudioTheme.getTextPrimary()
         ));
@@ -252,8 +254,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         panel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Appearance",
-            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-            javax.swing.border.TitledBorder.DEFAULT_POSITION,
+            TitledBorder.DEFAULT_JUSTIFICATION,
+            TitledBorder.DEFAULT_POSITION,
             JStudioTheme.getUIFont(12),
             JStudioTheme.getTextPrimary()
         ));
@@ -303,8 +305,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         panel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Execution",
-            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-            javax.swing.border.TitledBorder.DEFAULT_POSITION,
+            TitledBorder.DEFAULT_JUSTIFICATION,
+            TitledBorder.DEFAULT_POSITION,
             JStudioTheme.getUIFont(12),
             JStudioTheme.getTextPrimary()
         ));
@@ -336,8 +338,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         panel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Updates",
-            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-            javax.swing.border.TitledBorder.DEFAULT_POSITION,
+            TitledBorder.DEFAULT_JUSTIFICATION,
+            TitledBorder.DEFAULT_POSITION,
             JStudioTheme.getUIFont(12),
             JStudioTheme.getTextPrimary()
         ));
@@ -363,8 +365,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         panel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(JStudioTheme.getBorder()),
             "Preview",
-            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-            javax.swing.border.TitledBorder.DEFAULT_POSITION,
+            TitledBorder.DEFAULT_JUSTIFICATION,
+            TitledBorder.DEFAULT_POSITION,
             JStudioTheme.getUIFont(12),
             JStudioTheme.getTextPrimary()
         ));

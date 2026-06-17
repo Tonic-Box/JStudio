@@ -21,6 +21,7 @@ import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.ui.navigator.NavigatorPanel;
 import com.tonic.ui.properties.PropertiesPanel;
+import com.tonic.plugin.gui.GuiPluginManager;
 import com.tonic.service.ProjectDatabaseService;
 import com.tonic.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
@@ -50,8 +51,32 @@ import com.tonic.ui.dialog.filechooser.ExtensionFileFilter;
 import com.tonic.ui.dialog.filechooser.FileChooserDialog;
 import com.tonic.ui.dialog.filechooser.FileChooserResult;
 import com.tonic.ui.vm.heap.HeapForensicsPanel;
+import com.tonic.ui.query.QueryExplorerPanel;
+import com.tonic.ui.core.component.ToolWindowPane;
+import com.tonic.event.events.LiveSessionEvent;
+import com.tonic.ui.live.threads.LiveThreadsPanel;
+import com.tonic.ui.live.profiler.LiveProfilerPanel;
+import com.tonic.live.LiveSession;
+import com.tonic.ui.live.LiveAttachService;
+import com.tonic.ui.live.recorder.LiveRecorderPanel;
+import com.tonic.service.run.ProjectJarExporter;
+import com.tonic.ui.run.RunConfigDialog;
+import com.tonic.ui.run.RunConsolePanel;
+import com.tonic.service.run.RunService;
+import com.tonic.ui.core.SwingWorkers;
+import com.tonic.ui.deadcode.RemoveDeadCodeDialog;
+import com.tonic.ui.live.LiveAttachDialog;
+import com.tonic.ui.live.recorder.jfr.JfrAnalysisWindow;
+import com.tonic.ui.live.eval.LiveScratchPadDialog;
+import com.tonic.ui.live.LiveHeapService;
+import com.tonic.ui.live.LiveCaptureService;
+import com.tonic.live.protocol.ContentionEdge;
+import com.tonic.live.Deadlocks;
+import com.tonic.ui.live.LivePatch;
+import com.tonic.analysis.query.planner.QueryTarget;
 import lombok.Getter;
 
+import javax.imageio.ImageIO;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -69,14 +94,19 @@ import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetAdapter;
 import java.awt.dnd.DropTargetDropEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Main application window for JStudio.
@@ -94,6 +124,7 @@ public class MainFrame extends JFrame {
     private ConsolePanel consolePanel;
     @Getter
     private StatusBar statusBar;
+    @Getter
     private ToolbarBuilder toolbarBuilder;
 
     // Analysis and transform dialogs
@@ -112,13 +143,15 @@ public class MainFrame extends JFrame {
     private JFrame debuggerFrame;
     private DebuggerPanel debuggerPanel;
     private JDialog heapForensicsDialog;
-    private com.tonic.ui.vm.heap.HeapForensicsPanel heapForensicsPanel;
+    private HeapForensicsPanel heapForensicsPanel;
     private JDialog deobfuscationDialog;
     private DeobfuscationPanel deobfuscationPanel;
-    private com.tonic.ui.query.QueryExplorerPanel queryExplorerPanel;
-    private com.tonic.ui.core.component.ToolWindowPane rightToolWindow;
+    private QueryExplorerPanel queryExplorerPanel;
+    @Getter
+    private ToolWindowPane rightToolWindow;
 
     // Bottom panel with tabbed results
+    @Getter
     private BottomPanel sidePanel;
     private BottomToolbar bottomToolbar;
     private JSplitPane editorBottomSplit;
@@ -126,7 +159,6 @@ public class MainFrame extends JFrame {
 
     // Split panes for layout
     private JSplitPane mainHorizontalSplit;
-    private JSplitPane rightVerticalSplit;
     private JSplitPane leftRightSplit;
 
     // Navigation history
@@ -148,7 +180,6 @@ public class MainFrame extends JFrame {
     // Panel visibility state - saved divider positions for restore
     private int savedNavigatorDivider = 250;
     private int savedPropertiesDivider = -1;
-    private int savedConsoleDivider = -1;
 
     public MainFrame() {
         super(JStudio.APP_NAME + " " + JStudio.APP_VERSION);
@@ -159,6 +190,9 @@ public class MainFrame extends JFrame {
 
         updateManager = new UpdateManager(this);
         SwingUtilities.invokeLater(updateManager::checkOnStartup);
+
+        // Load GUI plugins once the window is fully constructed.
+        SwingUtilities.invokeLater(() -> GuiPluginManager.getInstance().bootstrap(this));
     }
 
     /**
@@ -174,9 +208,9 @@ public class MainFrame extends JFrame {
 
         // Set window icon
         try {
-            java.net.URL iconUrl = getClass().getResource("/com/tonic/ui/icon.png");
+            URL iconUrl = getClass().getResource("/com/tonic/ui/icon.png");
             if (iconUrl != null) {
-                setIconImage(javax.imageio.ImageIO.read(iconUrl));
+                setIconImage(ImageIO.read(iconUrl));
             }
         } catch (Exception e) {
             // Ignore - use default icon
@@ -230,26 +264,26 @@ public class MainFrame extends JFrame {
         statusBar = new StatusBar();
 
         // Right-edge tool windows: Inspector (default) over a vertical tab stripe, plus Query Explorer
-        queryExplorerPanel = new com.tonic.ui.query.QueryExplorerPanel(this);
-        rightToolWindow = new com.tonic.ui.core.component.ToolWindowPane();
+        queryExplorerPanel = new QueryExplorerPanel(this);
+        rightToolWindow = new ToolWindowPane();
         rightToolWindow.addTool("Inspector", propertiesPanel);
         rightToolWindow.addTool("Query", queryExplorerPanel);
 
         // The live "Threads" tool is only present while attached to a running JVM.
-        com.tonic.event.EventBus.getInstance().register(com.tonic.event.events.LiveSessionEvent.class, e -> {
+        EventBus.getInstance().register(LiveSessionEvent.class, e -> {
             if (e.isAttached()) {
                 if (liveThreadsPanel == null) {
-                    liveThreadsPanel = new com.tonic.ui.live.threads.LiveThreadsPanel(this);
+                    liveThreadsPanel = new LiveThreadsPanel(this);
                 }
                 rightToolWindow.addTool("Threads", liveThreadsPanel);
                 if (liveProfilerPanel == null) {
-                    liveProfilerPanel = new com.tonic.ui.live.profiler.LiveProfilerPanel();
+                    liveProfilerPanel = new LiveProfilerPanel();
                 }
                 rightToolWindow.addTool("Profiler", liveProfilerPanel);
-                com.tonic.live.LiveSession session = com.tonic.ui.live.LiveAttachService.getInstance().getSession();
+                LiveSession session = LiveAttachService.getInstance().getSession();
                 if (session != null && session.supportsJfr()) {
                     if (liveRecorderPanel == null) {
-                        liveRecorderPanel = new com.tonic.ui.live.recorder.LiveRecorderPanel(this);
+                        liveRecorderPanel = new LiveRecorderPanel(this);
                     }
                     rightToolWindow.addTool("Recorder", liveRecorderPanel);
                 }
@@ -260,9 +294,10 @@ public class MainFrame extends JFrame {
             }
         });
 
-        // Bottom panel with tabbed results (Find Usages, Bookmarks, Comments)
+        // Bottom panel with tabbed results (Find Usages, Console, Bookmarks, Comments)
         sidePanel = new BottomPanel();
         sidePanel.setEditorPanel(editorPanel);
+        sidePanel.setConsolePanel(consolePanel);
         sidePanel.setOnAllTabsClosed(() -> {
             bottomPanelCollapsed = true;
             editorBottomSplit.setDividerLocation(editorBottomSplit.getHeight());
@@ -277,6 +312,7 @@ public class MainFrame extends JFrame {
 
         // Bottom toolbar (always visible, outside split pane)
         bottomToolbar = new BottomToolbar();
+        bottomToolbar.setOnConsoleClicked(() -> sidePanel.toggleConsoleTab());
         bottomToolbar.setOnBookmarksClicked(() -> {
             ProjectModel project = ProjectService.getInstance().getCurrentProject();
             sidePanel.setProject(project);
@@ -304,16 +340,8 @@ public class MainFrame extends JFrame {
         // Main content area with split panes
         // Left: Navigator
         // Center: Editor
-        // Right: Properties
-        // Bottom: Console
-
-        // Right side vertical split (Properties over Console)
-        rightVerticalSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                rightToolWindow, consolePanel);
-        rightVerticalSplit.setResizeWeight(0.7);
-        rightVerticalSplit.setDividerSize(4);
-        rightVerticalSplit.setBorder(null);
-        rightVerticalSplit.setContinuousLayout(true);
+        // Right: tool windows (Inspector / Query / AI Chat)
+        // Bottom (editor area): tabbed results incl. Console
 
         // Editor + side panel vertical split
         editorBottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, editorPanel, sidePanel);
@@ -322,9 +350,9 @@ public class MainFrame extends JFrame {
         editorBottomSplit.setBorder(null);
         editorBottomSplit.setContinuousLayout(true);
         // Keep bottom panel collapsed on resize if it has no tabs
-        editorBottomSplit.addComponentListener(new java.awt.event.ComponentAdapter() {
+        editorBottomSplit.addComponentListener(new ComponentAdapter() {
             @Override
-            public void componentResized(java.awt.event.ComponentEvent e) {
+            public void componentResized(ComponentEvent e) {
                 if (bottomPanelCollapsed && editorBottomSplit.getHeight() > 0) {
                     editorBottomSplit.setDividerLocation(editorBottomSplit.getHeight());
                 }
@@ -338,7 +366,7 @@ public class MainFrame extends JFrame {
 
         // Center + Right horizontal split
         leftRightSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                editorAreaWrapper, rightVerticalSplit);
+                editorAreaWrapper, rightToolWindow);
         leftRightSplit.setResizeWeight(0.75);
         leftRightSplit.setDividerSize(4);
         leftRightSplit.setBorder(null);
@@ -346,11 +374,11 @@ public class MainFrame extends JFrame {
 
         // The right tool window starts collapsed (stripe only); clicking a stripe tab opens/closes it.
         rightToolWindow.setCollapseListener(this::applyRightPanelCollapsed);
-        leftRightSplit.addComponentListener(new java.awt.event.ComponentAdapter() {
+        leftRightSplit.addComponentListener(new ComponentAdapter() {
             private boolean applied = false;
 
             @Override
-            public void componentResized(java.awt.event.ComponentEvent e) {
+            public void componentResized(ComponentEvent e) {
                 if (leftRightSplit.getWidth() <= 0) {
                     return;
                 }
@@ -489,7 +517,7 @@ public class MainFrame extends JFrame {
 
         // Opening a file replaces the current workspace; if attached to a live JVM, drop that session first
         // (a no-op when not attached) so the live project doesn't linger under the newly-loaded one.
-        if (com.tonic.ui.live.LiveAttachService.getInstance().isAttached()) {
+        if (LiveAttachService.getInstance().isAttached()) {
             detachLive();
         }
 
@@ -756,7 +784,7 @@ public class MainFrame extends JFrame {
         File outputFile = result.getSelectedFile();
 
         try {
-            com.tonic.service.run.ProjectJarExporter.export(project, outputFile);
+            ProjectJarExporter.export(project, outputFile);
             consolePanel.log("Exported " + classes.size() + " classes and " +
                     resources.size() + " resources to " + outputFile.getName());
             showInfo("Successfully exported to " + outputFile.getName());
@@ -771,7 +799,7 @@ public class MainFrame extends JFrame {
      * streaming output into the Run panel. Unavailable while attached to a live JVM.
      */
     public void runMainClass(ClassEntryModel classEntry) {
-        if (com.tonic.ui.live.LiveAttachService.getInstance().isAttached()) {
+        if (LiveAttachService.getInstance().isAttached()) {
             showWarning("Run is unavailable while attached to a live JVM.");
             return;
         }
@@ -780,17 +808,64 @@ public class MainFrame extends JFrame {
             return;
         }
         File defaultDir = project.getSourceFile() != null ? project.getSourceFile().getParentFile() : null;
-        com.tonic.ui.run.RunConfigDialog.RunConfig config =
-                com.tonic.ui.run.RunConfigDialog.show(this, classEntry.getSimpleName(), defaultDir);
+        RunConfigDialog.RunConfig config =
+                RunConfigDialog.show(this, classEntry.getSimpleName(), defaultDir);
         if (config == null) {
             return;
         }
         String internalName = classEntry.getClassName();
-        com.tonic.ui.run.RunConsolePanel panel = sidePanel.openRunConsole();
-        Runnable launch = () -> panel.setProcess(com.tonic.service.run.RunService.run(
-                project, internalName, config.programArgs, config.vmOptions, config.workingDir, panel));
+        RunConsolePanel panel = sidePanel.openRunConsole();
+        Runnable launch = () -> launchWithLiveDebug(project, internalName, config, panel);
         panel.setRerunAction(launch);
         launch.run();
+    }
+
+    /**
+     * Launches the run, loading the JStudio agent (premain) and auto-attaching a live session to the child JVM
+     * so the live features apply to the running app. Degrades gracefully if the agent jar is unavailable.
+     */
+    private void launchWithLiveDebug(ProjectModel project, String internalName,
+                                     RunConfigDialog.RunConfig config,
+                                     RunConsolePanel panel) {
+        List<String> vmOptions = new ArrayList<>(config.vmOptions);
+        int port = -1;
+        File agentJar = LiveAttachService.getInstance().resolveAgentJar();
+        if (agentJar == null) {
+            consolePanel.log("Live debugging unavailable (agent jar not found); running without it.");
+        } else if (config.javaFeature > 0 && config.javaFeature < 11) {
+            consolePanel.log("Live debugging needs Java 11+ on the selected JDK; running without it.");
+        } else {
+            try (ServerSocket probe = new ServerSocket(0)) {
+                port = probe.getLocalPort();
+            } catch (IOException ignored) {
+            }
+            if (port > 0) {
+                vmOptions.add(0, "-javaagent:" + agentJar.getAbsolutePath() + "=port=" + port);
+            }
+        }
+
+        Process process = RunService.run(
+                project, internalName, config.programArgs, vmOptions, config.workingDir, config.javaHome, panel);
+        panel.setProcess(process);
+        if (process == null || port <= 0) {
+            return;
+        }
+
+        int agentPort = port;
+        String pid = String.valueOf(process.pid());
+        SwingWorkers.run(
+                () -> LiveSession.connect(pid, agentPort),
+                LiveAttachService.getInstance()::adoptRunSession,
+                err -> consolePanel.log("Live debugging not attached: " + err.getMessage()));
+        process.onExit().thenAccept(p -> SwingUtilities.invokeLater(this::onRunProcessExited));
+    }
+
+    /** When a launched run process exits, drop its auto-attached live session (if it is still the active one). */
+    private void onRunProcessExited() {
+        LiveAttachService svc = LiveAttachService.getInstance();
+        if (svc.isRunSession()) {
+            detachLive();
+        }
     }
 
     public void closeProject() {
@@ -935,6 +1010,7 @@ public class MainFrame extends JFrame {
         // Save settings before exit
         saveSettings();
 
+        GuiPluginManager.getInstance().shutdown();
         statusBar.dispose();
         queryExplorerPanel.shutdown();
         dispose();
@@ -952,11 +1028,11 @@ public class MainFrame extends JFrame {
             settings.saveWindowBounds(getX(), getY(), getWidth(), getHeight(), false);
         }
 
-        // Save divider positions
+        // Save divider positions (console is no longer a separate split; preserve its stored height)
         settings.saveDividerPositions(
                 mainHorizontalSplit.getDividerLocation(),
                 leftRightSplit.getWidth() - leftRightSplit.getDividerLocation(),
-                rightVerticalSplit.getHeight() - rightVerticalSplit.getDividerLocation()
+                settings.getConsoleHeight()
         );
 
         // Save editor settings
@@ -1048,12 +1124,11 @@ public class MainFrame extends JFrame {
     public void togglePropertiesPanel() {
         rightToolWindow.setCollapsed(!rightToolWindow.isCollapsed());
         leftRightSplit.revalidate();
-        rightVerticalSplit.revalidate();
     }
 
     /**
      * Reacts to the right tool window collapsing/expanding: when collapsed, the right column shrinks to just
-     * the stripe (and the console below it folds away); when expanded, the saved layout is restored.
+     * the stripe; when expanded, the saved layout is restored.
      */
     private void applyRightPanelCollapsed(boolean collapsed) {
         if (collapsed) {
@@ -1061,7 +1136,6 @@ public class MainFrame extends JFrame {
             if (loc > 0 && loc < leftRightSplit.getWidth()) {
                 savedPropertiesDivider = loc;
             }
-            rightVerticalSplit.setDividerLocation(rightVerticalSplit.getHeight());
             int stripe = rightToolWindow.getStripeWidth() + leftRightSplit.getDividerSize();
             leftRightSplit.setDividerLocation(Math.max(0, leftRightSplit.getWidth() - stripe));
         } else {
@@ -1070,26 +1144,13 @@ public class MainFrame extends JFrame {
             } else {
                 leftRightSplit.setDividerLocation((int) (leftRightSplit.getWidth() * 0.75));
             }
-            rightVerticalSplit.setDividerLocation((int) (rightVerticalSplit.getHeight() * 0.7));
         }
         leftRightSplit.revalidate();
-        rightVerticalSplit.revalidate();
     }
 
+    /** Opens or closes the Console tab in the bottom panel (View menu / keyboard shortcut). */
     public void toggleConsolePanel() {
-        if (consolePanel.isVisible()) {
-            savedConsoleDivider = rightVerticalSplit.getDividerLocation();
-            consolePanel.setVisible(false);
-            rightVerticalSplit.setDividerLocation(rightVerticalSplit.getHeight());
-        } else {
-            consolePanel.setVisible(true);
-            if (savedConsoleDivider > 0) {
-                rightVerticalSplit.setDividerLocation(savedConsoleDivider);
-            } else {
-                rightVerticalSplit.setDividerLocation((int)(rightVerticalSplit.getHeight() * 0.7));
-            }
-        }
-        rightVerticalSplit.revalidate();
+        sidePanel.toggleConsoleTab();
     }
 
     public void refreshCurrentView() {
@@ -1117,7 +1178,7 @@ public class MainFrame extends JFrame {
         editorPanel.closeTabForResource(path);
     }
 
-    public void refreshAfterBulkRename(java.util.Set<String> oldClassNames, int totalRenamed) {
+    public void refreshAfterBulkRename(Set<String> oldClassNames, int totalRenamed) {
         for (String oldName : oldClassNames) {
             editorPanel.closeTabForClass(oldName);
         }
@@ -1342,7 +1403,7 @@ public class MainFrame extends JFrame {
 
     // === Transform Operations ===
 
-    private com.tonic.ui.deadcode.RemoveDeadCodeDialog removeDeadCodeDialog;
+    private RemoveDeadCodeDialog removeDeadCodeDialog;
 
     /** Opens (reusing one instance) the Remove Dead Code analysis dialog. */
     public void showRemoveDeadCodeDialog() {
@@ -1351,21 +1412,21 @@ public class MainFrame extends JFrame {
             return;
         }
         if (removeDeadCodeDialog == null) {
-            removeDeadCodeDialog = new com.tonic.ui.deadcode.RemoveDeadCodeDialog(this);
+            removeDeadCodeDialog = new RemoveDeadCodeDialog(this);
         }
         removeDeadCodeDialog.setVisible(true);
         removeDeadCodeDialog.toFront();
     }
 
     /** After dead-code removal: close tabs of removed classes and reload the navigator/editor. */
-    public void refreshAfterDeadCodeRemoval(java.util.Collection<String> removedClassesInternal) {
+    public void refreshAfterDeadCodeRemoval(Collection<String> removedClassesInternal) {
         for (String internal : removedClassesInternal) {
             editorPanel.closeTabForClass(internal);
         }
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project != null) {
-            com.tonic.event.EventBus.getInstance().post(
-                    new com.tonic.event.events.ProjectUpdatedEvent(this, project, -removedClassesInternal.size()));
+            EventBus.getInstance().post(
+                    new ProjectUpdatedEvent(this, project, -removedClassesInternal.size()));
         }
         refreshCurrentView();
     }
@@ -1780,13 +1841,13 @@ public class MainFrame extends JFrame {
      * process and replaces the current project with one built from that JVM's loaded classes.
      */
     public void showLiveAttachDialog() {
-        new com.tonic.ui.live.LiveAttachDialog(this).setVisible(true);
+        new LiveAttachDialog(this).setVisible(true);
     }
 
     /** Opens (reusing one window) the JFR analysis view for a captured {@code .jfr} recording. */
-    public void showJfrAnalysis(java.io.File jfr) {
+    public void showJfrAnalysis(File jfr) {
         if (jfrAnalysisWindow == null) {
-            jfrAnalysisWindow = new com.tonic.ui.live.recorder.jfr.JfrAnalysisWindow(this);
+            jfrAnalysisWindow = new JfrAnalysisWindow(this);
         }
         jfrAnalysisWindow.load(jfr);
         jfrAnalysisWindow.setVisible(true);
@@ -1798,7 +1859,7 @@ public class MainFrame extends JFrame {
      * active attach session and a loaded project (the target's pulled classes). Holds one non-modal dialog.
      */
     public void showLiveScratchPad() {
-        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        LiveAttachService svc = LiveAttachService.getInstance();
         if (!svc.isAttached()) {
             showWarning("Attach to a live JVM first (Attach -> Attach to Live JVM).");
             return;
@@ -1809,7 +1870,7 @@ public class MainFrame extends JFrame {
             return;
         }
         if (liveScratchPadDialog == null) {
-            liveScratchPadDialog = new com.tonic.ui.live.eval.LiveScratchPadDialog(this);
+            liveScratchPadDialog = new LiveScratchPadDialog(this);
         }
         liveScratchPadDialog.setProject(project);
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
@@ -1822,36 +1883,36 @@ public class MainFrame extends JFrame {
 
     /** Detaches from the live JVM (closes the session); the pulled classes remain for offline browsing. */
     public void detachLive() {
-        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        LiveAttachService svc = LiveAttachService.getInstance();
         if (!svc.isAttached()) {
             return;
         }
         svc.detach();
-        com.tonic.ui.live.LiveHeapService.get().clear();
+        LiveHeapService.get().clear();
         consolePanel.log("Detached from live JVM.");
     }
 
-    private com.tonic.ui.live.eval.LiveScratchPadDialog liveScratchPadDialog;
-    private com.tonic.ui.live.recorder.LiveRecorderPanel liveRecorderPanel;
-    private com.tonic.ui.live.recorder.jfr.JfrAnalysisWindow jfrAnalysisWindow;
-    private com.tonic.ui.live.LiveCaptureService liveCaptureService;
-    private com.tonic.live.LiveSession liveCaptureSession;
-    private com.tonic.ui.live.threads.LiveThreadsPanel liveThreadsPanel;
-    private com.tonic.ui.live.profiler.LiveProfilerPanel liveProfilerPanel;
+    private LiveScratchPadDialog liveScratchPadDialog;
+    private LiveRecorderPanel liveRecorderPanel;
+    private JfrAnalysisWindow jfrAnalysisWindow;
+    private LiveCaptureService liveCaptureService;
+    private LiveSession liveCaptureSession;
+    private LiveThreadsPanel liveThreadsPanel;
+    private LiveProfilerPanel liveProfilerPanel;
 
     /**
      * Arms or disarms runtime class-load capture on the active live session. Captured classes (packers,
      * defineHiddenClass, ASM glue) stream into the project as they load. No-op without an attach session.
      */
     public void setLiveCaptureEnabled(boolean enabled) {
-        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        LiveAttachService svc = LiveAttachService.getInstance();
         if (!svc.isAttached()) {
             if (enabled) {
                 showWarning("Attach to a live JVM first (VM -> Attach to Live JVM).");
             }
             return;
         }
-        com.tonic.live.LiveSession session = svc.getSession();
+        LiveSession session = svc.getSession();
         if (liveCaptureService != null && liveCaptureSession != session) {
             liveCaptureService.dispose();
             liveCaptureService = null;
@@ -1859,7 +1920,7 @@ public class MainFrame extends JFrame {
         try {
             if (enabled) {
                 if (liveCaptureService == null) {
-                    liveCaptureService = new com.tonic.ui.live.LiveCaptureService(session);
+                    liveCaptureService = new LiveCaptureService(session);
                     liveCaptureSession = session;
                 }
                 liveCaptureService.arm();
@@ -1895,27 +1956,27 @@ public class MainFrame extends JFrame {
 
     /** Snapshots the attached JVM's wait-for graph and reports any deadlock cycles. */
     public void findLiveDeadlocks() {
-        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        LiveAttachService svc = LiveAttachService.getInstance();
         if (!svc.isAttached()) {
             showWarning("Attach to a live JVM first (VM -> Attach to Live JVM).");
             return;
         }
-        com.tonic.live.LiveSession session = svc.getSession();
-        new javax.swing.SwingWorker<String, Void>() {
+        LiveSession session = svc.getSession();
+        new SwingWorker<String, Void>() {
             @Override
             protected String doInBackground() {
                 try {
-                    java.util.List<com.tonic.live.protocol.ContentionEdge> edges = session.getContention();
-                    java.util.List<java.util.List<com.tonic.live.protocol.ContentionEdge>> cycles =
-                            com.tonic.live.Deadlocks.find(edges);
+                    List<ContentionEdge> edges = session.getContention();
+                    List<List<ContentionEdge>> cycles =
+                            Deadlocks.find(edges);
                     if (cycles.isEmpty()) {
                         return "No deadlocks. " + edges.size() + " thread(s) currently blocked on a monitor.";
                     }
                     StringBuilder sb = new StringBuilder(cycles.size() + " deadlock(s) detected:\n");
                     int n = 1;
-                    for (java.util.List<com.tonic.live.protocol.ContentionEdge> cycle : cycles) {
+                    for (List<ContentionEdge> cycle : cycles) {
                         sb.append("\nDeadlock ").append(n++).append(":\n");
-                        for (com.tonic.live.protocol.ContentionEdge e : cycle) {
+                        for (ContentionEdge e : cycle) {
                             sb.append("  ").append(e).append('\n');
                         }
                     }
@@ -1941,7 +2002,7 @@ public class MainFrame extends JFrame {
      * methods, hierarchy) are rejected by the JVM and surfaced as an error.
      */
     public void patchLiveClass() {
-        com.tonic.ui.live.LiveAttachService svc = com.tonic.ui.live.LiveAttachService.getInstance();
+        LiveAttachService svc = LiveAttachService.getInstance();
         if (!svc.isAttached()) {
             showWarning("Attach to a live JVM first (VM -> Attach to Live JVM).");
             return;
@@ -1952,12 +2013,12 @@ public class MainFrame extends JFrame {
             return;
         }
         final String internalName = currentClass.getClassName();
-        final com.tonic.parser.ClassFile edited = currentClass.getClassFile();
-        final com.tonic.live.LiveSession session = svc.getSession();
+        final ClassFile edited = currentClass.getClassFile();
+        final LiveSession session = svc.getSession();
         consolePanel.log("Patching live class " + internalName + "...");
-        com.tonic.ui.core.SwingWorkers.run(
+        SwingWorkers.run(
                 () -> {
-                    byte[] bytes = com.tonic.ui.live.LivePatch.buildRedefineBytes(session, internalName, edited);
+                    byte[] bytes = LivePatch.buildRedefineBytes(session, internalName, edited);
                     session.redefineClass(internalName, bytes);
                     return null;
                 },
@@ -2177,18 +2238,18 @@ public class MainFrame extends JFrame {
     /**
      * Navigate using a QueryTarget from query results.
      */
-    public boolean navigateToTarget(com.tonic.analysis.query.planner.QueryTarget target) {
-        if (target instanceof com.tonic.analysis.query.planner.QueryTarget.ClassTarget) {
-            com.tonic.analysis.query.planner.QueryTarget.ClassTarget ct =
-                (com.tonic.analysis.query.planner.QueryTarget.ClassTarget) target;
+    public boolean navigateToTarget(QueryTarget target) {
+        if (target instanceof QueryTarget.ClassTarget) {
+            QueryTarget.ClassTarget ct =
+                (QueryTarget.ClassTarget) target;
             return navigateToClass(ct.className());
-        } else if (target instanceof com.tonic.analysis.query.planner.QueryTarget.MethodTarget) {
-            com.tonic.analysis.query.planner.QueryTarget.MethodTarget mt =
-                (com.tonic.analysis.query.planner.QueryTarget.MethodTarget) target;
+        } else if (target instanceof QueryTarget.MethodTarget) {
+            QueryTarget.MethodTarget mt =
+                (QueryTarget.MethodTarget) target;
             return navigateToMethod(mt.className(), mt.methodName(), mt.descriptor());
-        } else if (target instanceof com.tonic.analysis.query.planner.QueryTarget.PCTarget) {
-            com.tonic.analysis.query.planner.QueryTarget.PCTarget pt =
-                (com.tonic.analysis.query.planner.QueryTarget.PCTarget) target;
+        } else if (target instanceof QueryTarget.PCTarget) {
+            QueryTarget.PCTarget pt =
+                (QueryTarget.PCTarget) target;
             return navigateToPC(pt.className(), pt.methodName(), pt.descriptor(), pt.pc());
         }
         return false;

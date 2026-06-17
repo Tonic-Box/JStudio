@@ -10,6 +10,7 @@ import com.tonic.analysis.query.exec.QueryService;
 import com.tonic.analysis.query.planner.QueryMatch;
 import com.tonic.analysis.query.planner.QueryTarget;
 import com.tonic.service.ProjectService;
+import com.tonic.ui.core.component.WrapLayout;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.SyntaxColors;
 import com.tonic.ui.theme.ThemeManager;
@@ -27,6 +28,8 @@ import javax.swing.table.JTableHeader;
 import javax.swing.text.Segment;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
@@ -287,7 +290,7 @@ public class QueryExplorerPanel extends JPanel {
         queryInput.setHighlightCurrentLine(true);
         panel.add(new JScrollPane(queryInput), BorderLayout.CENTER);
 
-        JPanel configPanel = new JPanel(new com.tonic.ui.core.component.WrapLayout(FlowLayout.LEFT, 10, 5));
+        JPanel configPanel = new JPanel(new WrapLayout(FlowLayout.LEFT, 10, 5));
 
         configPanel.add(new JLabel("Time budget (s):"));
         timeBudgetSpinner = new JSpinner(new SpinnerNumberModel(30, 5, 300, 10));
@@ -329,9 +332,9 @@ public class QueryExplorerPanel extends JPanel {
         resultsTable.getColumnModel().getColumn(1).setPreferredWidth(200);
         resultsTable.getColumnModel().getColumn(2).setPreferredWidth(100);
 
-        resultsTable.addMouseListener(new java.awt.event.MouseAdapter() {
+        resultsTable.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
+            public void mouseClicked(MouseEvent e) {
                 int row = resultsTable.rowAtPoint(e.getPoint());
                 int col = resultsTable.columnAtPoint(e.getPoint());
 

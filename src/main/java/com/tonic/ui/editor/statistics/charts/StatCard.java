@@ -7,6 +7,8 @@ import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 
 public class StatCard extends JPanel implements ThemeChangeListener {
@@ -27,15 +29,15 @@ public class StatCard extends JPanel implements ThemeChangeListener {
         setPreferredSize(new Dimension(140, 80));
         setMinimumSize(new Dimension(120, 70));
 
-        addMouseListener(new java.awt.event.MouseAdapter() {
+        addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
+            public void mouseEntered(MouseEvent e) {
                 hovered = true;
                 repaint();
             }
 
             @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
+            public void mouseExited(MouseEvent e) {
                 hovered = false;
                 repaint();
             }

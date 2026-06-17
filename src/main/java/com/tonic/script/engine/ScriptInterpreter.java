@@ -3,10 +3,12 @@ package com.tonic.script.engine;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 /**
  * Interpreter for JStudio script language.
@@ -310,7 +312,7 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
             case "split":
                 return ScriptValue.function(ScriptFunction.native1("split",
                     arg -> {
-                        String[] parts = s.split(java.util.regex.Pattern.quote(arg.asString()));
+                        String[] parts = s.split(Pattern.quote(arg.asString()));
                         List<ScriptValue> list = new ArrayList<>();
                         for (String part : parts) {
                             list.add(ScriptValue.string(part));
@@ -414,7 +416,7 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue> {
 
             case "reverse":
                 return ScriptValue.function(ScriptFunction.native0("reverse", () -> {
-                    java.util.Collections.reverse(arr);
+                    Collections.reverse(arr);
                     return arrVal;
                 }));
 

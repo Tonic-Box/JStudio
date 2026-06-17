@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.List;
 
 public class ConstPoolView extends JPanel implements ThemeChangeListener {
 
@@ -229,9 +230,9 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
 
         loadingOverlay.showLoading("Loading constant pool...");
 
-        currentWorker = new SwingWorker<java.util.List<ConstPoolEntry>, Void>() {
+        currentWorker = new SwingWorker<List<ConstPoolEntry>, Void>() {
             @Override
-            protected java.util.List<ConstPoolEntry> doInBackground() {
+            protected List<ConstPoolEntry> doInBackground() {
                 return ConstPoolTableModel.buildEntries(classEntry);
             }
 
@@ -242,7 +243,7 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
                     return;
                 }
                 try {
-                    java.util.List<ConstPoolEntry> entries = get();
+                    List<ConstPoolEntry> entries = get();
                     tableModel.setEntries(entries);
                     updateStatus();
                 } catch (Exception e) {

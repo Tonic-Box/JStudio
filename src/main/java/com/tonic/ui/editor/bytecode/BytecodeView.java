@@ -23,10 +23,12 @@ import javax.swing.SwingWorker;
 import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -307,7 +309,7 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
             textArea.setCaretPosition(caretOffset);
 
             int highlightOffset = textArea.getLineStartOffset(line - 1);
-            java.awt.Rectangle rect = textArea.modelToView2D(highlightOffset).getBounds();
+            Rectangle rect = textArea.modelToView2D(highlightOffset).getBounds();
             if (rect != null) {
                 rect.height = textArea.getHeight() / 3;
                 textArea.scrollRectToVisible(rect);
@@ -540,9 +542,9 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     private void scrollToDisplayLine(int zeroBasedLine) {
         try {
             int offset = textArea.getLineStartOffset(zeroBasedLine);
-            java.awt.geom.Rectangle2D view = textArea.modelToView2D(offset);
+            Rectangle2D view = textArea.modelToView2D(offset);
             if (view != null) {
-                java.awt.Rectangle rect = view.getBounds();
+                Rectangle rect = view.getBounds();
                 rect.height = textArea.getHeight() / 3;
                 textArea.scrollRectToVisible(rect);
             }

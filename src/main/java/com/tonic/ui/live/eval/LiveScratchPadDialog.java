@@ -1,6 +1,7 @@
 package com.tonic.ui.live.eval;
 
 import com.tonic.live.LiveSession;
+import com.tonic.model.ClassEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.ui.core.SwingWorkers;
 import com.tonic.ui.editor.source.JavaEditorFactory;
@@ -174,7 +175,7 @@ public final class LiveScratchPadDialog extends JDialog {
      */
     private static int targetRelease(ProjectModel project) {
         int maxMajor = 0;
-        for (com.tonic.model.ClassEntryModel entry : project.getAllClasses()) {
+        for (ClassEntryModel entry : project.getAllClasses()) {
             int major = entry.getClassFile().getMajorVersion();
             if (major > maxMajor) {
                 maxMajor = major;

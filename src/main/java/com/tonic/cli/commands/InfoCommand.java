@@ -1,6 +1,8 @@
 package com.tonic.cli.commands;
 
 import com.tonic.model.ClassEntryModel;
+import com.tonic.model.FieldEntryModel;
+import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.service.ProjectService;
 import picocli.CommandLine.Command;
@@ -162,12 +164,12 @@ public class InfoCommand implements Callable<Integer> {
         return sb.toString().trim();
     }
 
-    private String formatField(com.tonic.model.FieldEntryModel field) {
+    private String formatField(FieldEntryModel field) {
         return formatAccess(field.getAccessFlags()) + " " +
                formatType(field.getDescriptor()) + " " + field.getName();
     }
 
-    private String formatMethod(com.tonic.model.MethodEntryModel method) {
+    private String formatMethod(MethodEntryModel method) {
         return formatAccess(method.getAccessFlags()) + " " + method.getDisplaySignature();
     }
 

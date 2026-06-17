@@ -492,8 +492,8 @@ public class VMExecutionService {
             .heapManager(heapManager)
             .classResolver(classResolver)
             .mode(recursive ?
-                com.tonic.analysis.execution.core.ExecutionMode.RECURSIVE :
-                com.tonic.analysis.execution.core.ExecutionMode.DELEGATED)
+                ExecutionMode.RECURSIVE :
+                ExecutionMode.DELEGATED)
             .maxCallDepth(maxCallDepth)
             .maxInstructions(maxInstructions)
             .build();

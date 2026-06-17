@@ -14,9 +14,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -218,7 +220,7 @@ public final class JfrRecording {
             }
             List<RecordedFrame> frames = stack.getFrames();
             boolean selfAssigned = false;
-            java.util.Set<String> seen = new java.util.HashSet<>();
+            Set<String> seen = new HashSet<>();
             for (RecordedFrame frame : frames) {
                 FrameKey key = frameKey(frame);
                 if (key == null) {
@@ -245,9 +247,6 @@ public final class JfrRecording {
                 return null;
             }
             String dotted = method.getType().getName();
-            if (dotted == null) {
-                return null;
-            }
             return new FrameKey(dotted.replace('.', '/'), method.getName(), frame.getLineNumber());
         }
 

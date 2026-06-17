@@ -71,7 +71,7 @@ public class YabrAccessImpl implements YabrAccess {
         if (method == null || method.getCodeAttribute() == null) return null;
 
         try {
-            SSA ssa = new com.tonic.analysis.ssa.SSA(
+            SSA ssa = new SSA(
                 classEntry.getClassFile().getConstPool());
             IRMethod irMethod = ssa.lift(method);
             if (irMethod == null || irMethod.getEntryBlock() == null) return null;
