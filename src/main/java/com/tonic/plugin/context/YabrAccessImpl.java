@@ -1,12 +1,18 @@
 package com.tonic.plugin.context;
 
+import com.tonic.analysis.DisassemblyOptions;
 import com.tonic.analysis.callgraph.CallGraph;
 import com.tonic.analysis.dataflow.DataFlowGraph;
+import com.tonic.analysis.source.ast.ASTPrinter;
+import com.tonic.analysis.source.ast.stmt.BlockStmt;
+import com.tonic.analysis.source.recovery.MethodRecoverer;
 import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
+import com.tonic.parser.attribute.CodeAttribute;
 import com.tonic.plugin.api.YabrAccess;
+import com.tonic.ui.editor.ir.IRFormatter;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
@@ -90,6 +96,64 @@ public class YabrAccessImpl implements YabrAccess {
         ClassEntryModel classEntry = projectModel.findClassByName(className);
         if (classEntry == null) return null;
 
+        MethodEntryModel methodModel = classEntry.getMethod(methodName, descriptor);
+        return methodModel != null ? methodModel.getMethodEntry() : null;
+    }
+
+    @Override
+    public Optional<String> disassembleMethod(String className, String methodName, String descriptor, boolean verbose) {
+        MethodEntry method = resolveMethod(className, methodName, descriptor);
+        if (method == null) {
+            return Optional.empty();
+        }
+        CodeAttribute code = method.getCodeAttribute();
+        if (code == null) {
+            return Optional.empty();
+        }
+        DisassemblyOptions options = verbose ? DisassemblyOptions.verbose() : DisassemblyOptions.terse();
+        return Optional.of(code.prettyPrintCode(options));
+    }
+
+    @Override
+    public Optional<String> methodSsaIr(String className, String methodName, String descriptor) {
+        ClassEntryModel classEntry = projectModel.findClassByName(className);
+        if (classEntry == null) {
+            return Optional.empty();
+        }
+        MethodEntryModel methodModel = classEntry.getMethod(methodName, descriptor);
+        if (methodModel == null || methodModel.getMethodEntry() == null) {
+            return Optional.empty();
+        }
+        SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
+        return Optional.of(new IRFormatter(methodModel.getMethodEntry(), ssa).format());
+    }
+
+    @Override
+    public Optional<String> methodAst(String className, String methodName, String descriptor) {
+        ClassEntryModel classEntry = projectModel.findClassByName(className);
+        if (classEntry == null) {
+            return Optional.empty();
+        }
+        MethodEntryModel methodModel = classEntry.getMethod(methodName, descriptor);
+        if (methodModel == null || methodModel.getMethodEntry() == null
+                || methodModel.getMethodEntry().getCodeAttribute() == null) {
+            return Optional.empty();
+        }
+        try {
+            SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
+            IRMethod ir = ssa.lift(methodModel.getMethodEntry());
+            BlockStmt body = MethodRecoverer.recoverMethod(ir, methodModel.getMethodEntry());
+            return body != null ? Optional.of(ASTPrinter.format(body)) : Optional.empty();
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    private MethodEntry resolveMethod(String className, String methodName, String descriptor) {
+        ClassEntryModel classEntry = projectModel.findClassByName(className);
+        if (classEntry == null) {
+            return null;
+        }
         MethodEntryModel methodModel = classEntry.getMethod(methodName, descriptor);
         return methodModel != null ? methodModel.getMethodEntry() : null;
     }

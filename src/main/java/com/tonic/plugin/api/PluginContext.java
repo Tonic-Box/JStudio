@@ -18,6 +18,8 @@ public interface PluginContext {
 
     YabrAccess getYabr();
 
+    VmDebugApi getVmDebug();
+
     ResultCollector getResults();
 
     Optional<Object> getService(String name);

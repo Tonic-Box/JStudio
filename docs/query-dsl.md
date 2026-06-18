@@ -49,19 +49,28 @@ A bare accessor is truthy (e.g. `WHERE recursive`). Quantifier bodies rebind the
 | Subject | Atoms |
 |---|---|
 | `method` | `name` `owner` `descriptor` `arity` `modifiers` `line` `opcodes` |
-| `class` | `name` `modifiers` |
+| `class` | `name` `modifiers` `super` `interfaces` |
 | `call` | `name` `owner` `descriptor` `arity` `kind` `opcode` `target` |
 | `arg(n)` | `value` `type` `kind` `index` |
+| `param(n)` | `type` `index` |
 | `field` | `name` `owner` `descriptor` `kind` |
 | `insn` | `opcode` `index` `line` |
 | `indy` / `condy` | `name` `descriptor` `site` `kind` `category` `recipe` `bsmOwner` `bsmName` `bsmDescriptor` `bsmKind` `line` |
 | `bsmArg` | `kind` `value` (a condy-valued arg has `kind == "condy"` and also exposes the `indy`/`condy` atoms) |
 | SSA / CFG | `recursive` &nbsp; `method.loops` &nbsp; `method.blocks` &nbsp; `(call\|insn).inLoop` &nbsp; `(call\|insn).loopDepth` |
 
+`class.super` and `class.interfaces` are type values (`class.super == java.lang.Object`,
+`class.interfaces contains java.lang.Comparable`). `class.modifiers` is a set that includes the access
+keywords plus type kinds — `enum`, `interface`, `annotation`, `abstract`, and `record` — so
+`class.modifiers contains record` works. **`class.*` is reachable inside a `FIND methods` query**, resolving
+against the method's declaring class (e.g. `class.super == java.lang.Applet`). `param(n)` gives a method
+parameter's declared type by position (`param(0).type == int`), distinct from `arg(n)` (a call's argument).
+
 ## Selectors
 
 `call` &nbsp; `arg` &nbsp; `insn` &nbsp; `field` &nbsp; `indy` &nbsp; `condy` &nbsp; `bsmArg` — quantify over
-these with `HAS`/`ANY`/`ALL`/`NONE`/`COUNT`.
+these with `HAS`/`ANY`/`ALL`/`NONE`/`COUNT`. A `class` query can also quantify over its declared `method`s
+(`FIND classes WHERE HAS method WHERE (…)`).
 
 ## Invokedynamic & dynamic constants
 
@@ -77,7 +86,13 @@ argument recursively exposes its own `bsmName`/`category`/`bsmArg`, so nested bo
 
 ```
 ==  !=  <  <=  >  >=    matches /re/    contains "s"    startsWith    endsWith    IN [a,b,c]
+isSubtypeOf <type>
 ```
+
+**`isSubtypeOf`:** `class isSubtypeOf java.lang.Applet` is true when the class is the type or a transitive
+subtype (superclass chain **or** interfaces — `extends`/`implements` at any depth). It walks the loaded class
+hierarchy, so unresolved (not-loaded) ancestors stop the walk. `class.super == X` is the exact one-level
+superclass check.
 
 **Data-flow:** `flowsTo` / `flowsFrom` — the right side is an accessor, evaluated over the method's
 SSA form (forward def-use reachability). Endpoints:
@@ -138,6 +153,23 @@ FIND methods WHERE method.name matches /^get/ AND method.modifiers contains publ
 Test classes:
 ```
 FIND classes WHERE class.name endsWith "Test"
+```
+
+Abstract subtypes of a base (transitive), excluding interfaces:
+```
+FIND classes WHERE class isSubtypeOf java.lang.Applet AND class.modifiers contains abstract AND NOT class.modifiers contains interface
+```
+
+A static method `(int, int, String, ?)` in an abstract `Applet` subtype — class + method + param predicates together:
+```
+FIND methods WHERE method.modifiers contains static AND method.arity == 4
+  AND param(0).type == int AND param(1).type == int AND param(2).type == java.lang.String
+  AND class.modifiers contains abstract AND class isSubtypeOf java.lang.Applet
+```
+
+Records implementing an interface:
+```
+FIND classes WHERE class.modifiers contains record AND class.interfaces contains java.lang.Comparable
 ```
 
 Crypto calls:

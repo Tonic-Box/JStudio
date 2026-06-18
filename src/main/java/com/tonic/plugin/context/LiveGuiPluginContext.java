@@ -6,6 +6,7 @@ import com.tonic.plugin.api.PluginConfig;
 import com.tonic.plugin.api.PluginContext;
 import com.tonic.plugin.api.PluginLogger;
 import com.tonic.plugin.api.ProjectApi;
+import com.tonic.plugin.api.VmDebugApi;
 import com.tonic.plugin.api.YabrAccess;
 import com.tonic.plugin.result.ResultCollector;
 import com.tonic.service.ProjectService;
@@ -79,6 +80,11 @@ public class LiveGuiPluginContext implements PluginContext {
     @Override
     public YabrAccess getYabr() {
         return new YabrAccessImpl(project());
+    }
+
+    @Override
+    public VmDebugApi getVmDebug() {
+        return new VmDebugApiImpl();
     }
 
     @Override

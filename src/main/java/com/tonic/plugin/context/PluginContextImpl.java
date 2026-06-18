@@ -17,6 +17,7 @@ public class PluginContextImpl implements PluginContext {
     private final ProjectApiImpl projectApi;
     private final AnalysisApiImpl analysisApi;
     private final YabrAccessImpl yabrAccess;
+    private final VmDebugApiImpl vmDebugApi;
     private final ResultCollector results;
     private final Map<String, Object> services = new ConcurrentHashMap<>();
     private final Map<String, Object> environment = new ConcurrentHashMap<>();
@@ -28,6 +29,7 @@ public class PluginContextImpl implements PluginContext {
         this.projectApi = new ProjectApiImpl(projectModel);
         this.analysisApi = new AnalysisApiImpl(projectModel);
         this.yabrAccess = new YabrAccessImpl(projectModel);
+        this.vmDebugApi = new VmDebugApiImpl();
         this.results = new ResultCollector(pluginName);
     }
 
@@ -60,6 +62,11 @@ public class PluginContextImpl implements PluginContext {
     @Override
     public YabrAccess getYabr() {
         return yabrAccess;
+    }
+
+    @Override
+    public VmDebugApi getVmDebug() {
+        return vmDebugApi;
     }
 
     @Override
