@@ -45,6 +45,15 @@ public interface LiveApi {
     /** Records for {@code seconds} (categories from the {@code JFR_*} bits) and returns a compact text summary. */
     String jfr(int seconds, int categoryMask);
 
+    /**
+     * Enumerates live instances of {@code className} from a heap snapshot (paginated). {@code refresh} takes a
+     * fresh heap dump (expensive); otherwise the cached snapshot is reused (or taken once if none exists).
+     */
+    Instances instances(String className, int offset, int limit, boolean refresh);
+
+    /** Inspects one instance's fields by its object id (from {@link #instances}), using the cached snapshot. */
+    InstanceInfo instance(String id);
+
     // ---- execute / mutate -------------------------------------------------
 
     /** Compiles and runs Java in the attached JVM (the Scratch Pad); {@code contextClass} is the load context. */
@@ -188,6 +197,59 @@ public interface LiveApi {
         public EvalResult(boolean success, String output) {
             this.success = success;
             this.output = output;
+        }
+    }
+
+    @Getter
+    final class Instances {
+        private final String className;
+        private final int total;
+        private final List<InstanceRef> page;
+
+        public Instances(String className, int total, List<InstanceRef> page) {
+            this.className = className;
+            this.total = total;
+            this.page = page;
+        }
+    }
+
+    @Getter
+    final class InstanceRef {
+        private final String id;
+        private final String label;
+
+        public InstanceRef(String id, String label) {
+            this.id = id;
+            this.label = label;
+        }
+    }
+
+    @Getter
+    final class InstanceInfo {
+        private final String id;
+        private final String className;
+        private final List<Field> fields;
+
+        public InstanceInfo(String id, String className, List<Field> fields) {
+            this.id = id;
+            this.className = className;
+            this.fields = fields;
+        }
+    }
+
+    @Getter
+    final class Field {
+        private final String name;
+        private final String type;
+        private final String value;
+        /** Object id of the referenced instance when {@code type == "ref"} (drill in via {@link #instance}), else null. */
+        private final String refId;
+
+        public Field(String name, String type, String value, String refId) {
+            this.name = name;
+            this.type = type;
+            this.value = value;
+            this.refId = refId;
         }
     }
 }

@@ -15,6 +15,8 @@ import com.tonic.ui.editor.SearchPanel;
 import com.tonic.event.EventBus;
 import com.tonic.event.events.ClassSelectedEvent;
 import com.tonic.event.events.FindUsagesEvent;
+import com.tonic.event.events.LiveSessionEvent;
+import com.tonic.event.events.RunStateEvent;
 import com.tonic.ui.MainFrame;
 import com.tonic.model.Bookmark;
 import com.tonic.model.ClassEntryModel;
@@ -25,6 +27,7 @@ import com.tonic.model.ProjectModel;
 import com.tonic.event.events.StatusMessageEvent;
 import com.tonic.service.ProjectDatabaseService;
 import com.tonic.service.XrefQueryService;
+import com.tonic.service.run.RunStateService;
 import com.tonic.live.LiveSession;
 import com.tonic.ui.core.SwingWorkers;
 import com.tonic.ui.live.LiveAttachService;
@@ -93,6 +96,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     private final List<GutterIconInfo> runIcons = new ArrayList<>();
     private final Set<Integer> runLines = new HashSet<>();
     private final MouseAdapter runGutterMouse;
+    private final EventBus.EventHandler<RunStateEvent> runStateHandler = e -> refreshRunGutter();
+    private final EventBus.EventHandler<LiveSessionEvent> liveSessionHandler = e -> refreshRunGutter();
     private final Set<Component> wiredGutter = new HashSet<>();
     private Object currentLineHighlight;
     private final LoadingOverlay loadingOverlay;
@@ -149,7 +154,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (lineAtRunIcon(e) > 0) {
-                    runMainViaMainFrame();
+                    if (RunStateService.getInstance().isRunning()) {
+                        RunStateService.getInstance().terminate();
+                    } else {
+                        runMainViaMainFrame();
+                    }
                 }
             }
 
@@ -854,6 +863,26 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        EventBus.getInstance().register(RunStateEvent.class, runStateHandler);
+        EventBus.getInstance().register(LiveSessionEvent.class, liveSessionHandler);
+        updateRunGutterIcons();
+    }
+
+    @Override
+    public void removeNotify() {
+        EventBus.getInstance().unregister(RunStateEvent.class, runStateHandler);
+        EventBus.getInstance().unregister(LiveSessionEvent.class, liveSessionHandler);
+        super.removeNotify();
+    }
+
+    /** Refreshes the gutter run/stop badge when run or live-attach state changes (marshals to the EDT). */
+    private void refreshRunGutter() {
+        SwingUtilities.invokeLater(this::updateRunGutterIcons);
+    }
+
     private void updateRunGutterIcons() {
         wireGutterMouse();
         Gutter gutter = scrollPane.getGutter();
@@ -863,8 +892,12 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         runIcons.clear();
         runLines.clear();
 
-        if (omitAnnotations || classEntry.getMethodSpans() == null || !classEntry.hasMainMethod()
-                || LiveAttachService.getInstance().isAttached()) {
+        // While a run is active it auto-attaches a live (run) session, so allow the badge through when running;
+        // only a manual (non-run) attachment hides it. A running badge becomes a stop/terminate affordance.
+        boolean running = RunStateService.getInstance().isRunning();
+        if (omitAnnotations || classEntry == null || classEntry.getMethodSpans() == null
+                || !classEntry.hasMainMethod()
+                || (LiveAttachService.getInstance().isAttached() && !running)) {
             return;
         }
         DecompileResult.MethodSpan span = classEntry.getMethodSpans().get("main([Ljava/lang/String;)V");
@@ -873,7 +906,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         }
         int line = span.getStartLine();
         try {
-            runIcons.add(gutter.addLineTrackingIcon(line - 1, Icons.getIcon("run"), "Run main()"));
+            runIcons.add(gutter.addLineTrackingIcon(line - 1,
+                    Icons.getIcon(running ? "stop" : "run"), running ? "Terminate" : "Run main()"));
             runLines.add(line);
         } catch (BadLocationException ignored) {
         }

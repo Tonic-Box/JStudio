@@ -87,6 +87,9 @@ public class Icons {
             case "play":
             case "run":
                 return new PlayIcon(size);
+            case "stop":
+            case "terminate":
+                return new StopIcon(size);
             case "console":
                 return new ConsoleIcon(size);
             case "debug":
@@ -477,6 +480,19 @@ public class Icons {
             path.lineTo(13, 8);
             path.closePath();
             g2.fill(path);
+        }
+    }
+
+    private static class StopIcon extends BaseIcon {
+        StopIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getError());
+            int inset = 4;
+            g2.fillRect(inset, inset, size - 2 * inset, size - 2 * inset);
         }
     }
 

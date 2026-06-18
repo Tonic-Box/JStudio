@@ -11,8 +11,10 @@ import com.tonic.model.ProjectModel;
 import com.tonic.plugin.api.LiveApi;
 import com.tonic.service.ProjectService;
 import com.tonic.ui.live.LiveAttachService;
+import com.tonic.ui.live.LiveHeapService;
 import com.tonic.ui.live.eval.ProjectClasspath;
 import com.tonic.ui.live.eval.SnippetCompiler;
+import com.tonic.ui.live.heap.HprofSnapshot;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -137,6 +139,61 @@ public class LiveApiImpl implements LiveApi {
             return JfrSummary.summarize(s.stopRecording());
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Instances instances(String className, int offset, int limit, boolean refresh) {
+        LiveSession s = session();
+        try {
+            HprofSnapshot snap = refresh
+                    ? LiveHeapService.get().snapshot(s) : LiveHeapService.get().ensureSnapshot(s);
+            List<Long> ids = snap.instancesOf(className.replace('.', '/'));
+            List<InstanceRef> page = new ArrayList<>();
+            for (int i = Math.max(0, offset); i < Math.min(ids.size(), offset + limit); i++) {
+                long id = ids.get(i);
+                page.add(new InstanceRef(hex(id), snap.labelFor(id)));
+            }
+            return new Instances(className.replace('.', '/'), ids.size(), page);
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public InstanceInfo instance(String id) {
+        session();
+        HprofSnapshot snap = LiveHeapService.get().getSnapshot();
+        if (snap == null) {
+            throw new IllegalStateException("No heap snapshot yet - enumerate a class with live_instances first.");
+        }
+        long objId = parseHex(id);
+        try {
+            HprofSnapshot.InstanceData data = snap.decode(objId);
+            List<Field> fields = new ArrayList<>();
+            for (HprofSnapshot.FieldValue f : data.fields) {
+                String refId = "ref".equals(f.type) && f.refId != 0 ? hex(f.refId) : null;
+                fields.add(new Field(f.name, f.type, f.display, refId));
+            }
+            return new InstanceInfo(hex(objId), data.className, fields);
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private static String hex(long id) {
+        return "0x" + Long.toHexString(id);
+    }
+
+    private static long parseHex(String id) {
+        String s = id.trim();
+        if (s.startsWith("0x") || s.startsWith("0X")) {
+            s = s.substring(2);
+        }
+        try {
+            return Long.parseUnsignedLong(s, 16);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Not a valid instance id: " + id);
         }
     }
 

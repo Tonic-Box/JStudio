@@ -63,6 +63,7 @@ import com.tonic.service.run.ProjectJarExporter;
 import com.tonic.ui.run.RunConfigDialog;
 import com.tonic.ui.run.RunConsolePanel;
 import com.tonic.service.run.RunService;
+import com.tonic.service.run.RunStateService;
 import com.tonic.ui.core.SwingWorkers;
 import com.tonic.ui.deadcode.RemoveDeadCodeDialog;
 import com.tonic.ui.live.LiveAttachDialog;
@@ -847,6 +848,10 @@ public class MainFrame extends JFrame {
         Process process = RunService.run(
                 project, internalName, config.programArgs, vmOptions, config.workingDir, config.javaHome, panel);
         panel.setProcess(process);
+        if (process != null) {
+            RunStateService.getInstance().setProcess(process);
+            process.onExit().thenAccept(p -> RunStateService.getInstance().clearIf(process));
+        }
         if (process == null || port <= 0) {
             return;
         }
