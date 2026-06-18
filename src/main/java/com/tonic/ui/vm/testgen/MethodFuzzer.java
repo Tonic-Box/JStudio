@@ -3,7 +3,6 @@ package com.tonic.ui.vm.testgen;
 import com.tonic.ui.vm.VMExecutionService;
 import com.tonic.ui.vm.model.ExecutionResult;
 import com.tonic.ui.vm.testgen.objectspec.ObjectFactory;
-import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
 import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
 import com.tonic.ui.vm.testgen.objectspec.ValueMode;
 import lombok.Getter;
@@ -153,9 +152,6 @@ public class MethodFuzzer {
 
     public void setParameterSpecs(List<ParamSpec> specs) {
         this.paramSpecs = specs;
-    }
-
-    public void setThisSpec(ObjectSpec thisSpec) {
     }
 
     public List<String> getParamTypes() {

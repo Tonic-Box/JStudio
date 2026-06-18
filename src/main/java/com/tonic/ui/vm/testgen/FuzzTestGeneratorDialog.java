@@ -3,7 +3,6 @@ package com.tonic.ui.vm.testgen;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.testgen.MethodFuzzer.FuzzConfig;
 import com.tonic.ui.vm.testgen.MethodFuzzer.FuzzResult;
-import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
 import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
 import com.tonic.ui.vm.testgen.objectspec.ValueMode;
 
@@ -49,7 +48,6 @@ public class FuzzTestGeneratorDialog extends JDialog {
 
     private List<FuzzResult> fuzzResults = new ArrayList<>();
     private List<ParamSpec> paramSpecs = new ArrayList<>();
-    private final ObjectSpec thisSpec = null;
 
     public FuzzTestGeneratorDialog(Window owner) {
         super(owner, "Fuzz & Generate Tests", ModalityType.APPLICATION_MODAL);
@@ -297,9 +295,6 @@ public class FuzzTestGeneratorDialog extends JDialog {
         MethodFuzzer fuzzer = new MethodFuzzer(className, methodName, descriptor, config);
         if (!paramSpecs.isEmpty()) {
             fuzzer.setParameterSpecs(paramSpecs);
-        }
-        if (thisSpec != null) {
-            fuzzer.setThisSpec(thisSpec);
         }
 
         runFuzzButton.setEnabled(false);

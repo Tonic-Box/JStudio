@@ -20,6 +20,8 @@ public interface PluginContext {
 
     VmDebugApi getVmDebug();
 
+    LiveApi getLive();
+
     ResultCollector getResults();
 
     Optional<Object> getService(String name);

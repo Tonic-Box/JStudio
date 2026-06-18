@@ -2,6 +2,7 @@ package com.tonic.plugin.context;
 
 import com.tonic.model.ProjectModel;
 import com.tonic.plugin.api.AnalysisApi;
+import com.tonic.plugin.api.LiveApi;
 import com.tonic.plugin.api.PluginConfig;
 import com.tonic.plugin.api.PluginContext;
 import com.tonic.plugin.api.PluginLogger;
@@ -85,6 +86,11 @@ public class LiveGuiPluginContext implements PluginContext {
     @Override
     public VmDebugApi getVmDebug() {
         return new VmDebugApiImpl();
+    }
+
+    @Override
+    public LiveApi getLive() {
+        return new LiveApiImpl();
     }
 
     @Override

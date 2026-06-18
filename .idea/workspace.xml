@@ -7,14 +7,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Version bump">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Added plugin API surface for live attach tooling">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/LiveApi.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/JfrSummary.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/LiveApiImpl.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/query-dsl.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/query-dsl.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/PluginContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/PluginContext.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/YabrAccess.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/YabrAccess.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/LiveGuiPluginContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/LiveGuiPluginContext.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/PluginContextImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/PluginContextImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/YabrAccessImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/YabrAccessImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/FuzzTestGeneratorDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/FuzzTestGeneratorDialog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/MethodFuzzer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/testgen/MethodFuzzer.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -234,14 +236,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00055" summary="- Restructured graphing views to reuse the same component&#10;- Made the graphing views draggable and zoomable via mouse wheel">
-      <option name="closed" value="true" />
-      <created>1768519677588</created>
-      <option name="number" value="00055" />
-      <option name="presentableId" value="LOCAL-00055" />
-      <option name="project" value="LOCAL" />
-      <updated>1768519677588</updated>
     </task>
     <task id="LOCAL-00056" summary="- Update readme">
       <option name="closed" value="true" />
@@ -627,7 +621,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781734705413</updated>
     </task>
-    <option name="localTasksCounter" value="104" />
+    <task id="LOCAL-00104" summary="- VM Debugging exposed to Plugins API surface&#10;- DOT Graph parsing API">
+      <option name="closed" value="true" />
+      <created>1781767154841</created>
+      <option name="number" value="00104" />
+      <option name="presentableId" value="LOCAL-00104" />
+      <option name="project" value="LOCAL" />
+      <updated>1781767154841</updated>
+    </task>
+    <option name="localTasksCounter" value="105" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -642,8 +644,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);&#10;- Cleaned up a LOT of dead/old code&#10;- bumped version to 13" />
-    <MESSAGE value="- Query DSL md docs" />
     <MESSAGE value="- Fixed a bug with query DSLs `IN` sets&#10;- Updated some stale data in README" />
     <MESSAGE value="- Migrated Query Engine over to YABR" />
     <MESSAGE value="- Extract non-UI logic out of com.tonic.ui into sibling packages (util/model/event/service/deobfuscation/script/simulation); cli/plugin now depend on those, not ui&#10;- Decouple entry-model icons to string keys resolved UI-side&#10;- Migrate query UI to YABR's com.tonic.analysis.query engine (QueryMatch/QueryTarget); build result labels UI-side&#10;- Clear query results when a new project loads&#10;- Default the bytecode debugger's &quot;Recursive Calls&quot; checkbox to on&#10;- Migrated Query Engine over to YABR" />
@@ -667,7 +667,9 @@
     <MESSAGE value="- Implemented built-in AI integration and chat side-tab (claude/GPT)&#10;- Moved JStudio console to a bottom tab&#10;- Fixed some theming issues&#10;- Run main() classes from inside JStudio now with automatic attach for live analysis&#10;- Cleaned up codebase" />
     <MESSAGE value="- Overhauled plugin API surface&#10;- Moved JStudio console to a bottom tab&#10;- Fixed some theming issues&#10;- Run main() classes from inside JStudio now with automatic attach for live analysis&#10;- Cleaned up codebase" />
     <MESSAGE value="- Version bump" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Version bump" />
+    <MESSAGE value="- VM Debugging exposed to Plugins API surface&#10;- DOT Graph parsing API" />
+    <MESSAGE value="- Added plugin API surface for live attach tooling" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Added plugin API surface for live attach tooling" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
