@@ -38,6 +38,7 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
     private CommentsPanel commentsPanel;
     private CFGBlockDetailPanel cfgBlockDetailPanel;
     private RunConsolePanel runConsolePanel;
+    private ScriptConsolePanel scriptConsolePanel;
     @Setter
     private ConsolePanel consolePanel;
 
@@ -127,6 +128,19 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
         tabbedPane.setSelectedComponent(runConsolePanel);
         notifyExpanded();
         return runConsolePanel;
+    }
+
+    /** Opens (or reveals) the single Script Console output tab and returns its panel. */
+    public ScriptConsolePanel openScriptConsole() {
+        if (scriptConsolePanel == null) {
+            scriptConsolePanel = new ScriptConsolePanel();
+        }
+        if (!isTabOpen(scriptConsolePanel)) {
+            addClosableTab("Script Console", scriptConsolePanel);
+        }
+        tabbedPane.setSelectedComponent(scriptConsolePanel);
+        notifyExpanded();
+        return scriptConsolePanel;
     }
 
     /** Toggles the Console tab. The panel instance is owned by MainFrame (so logging persists when closed). */

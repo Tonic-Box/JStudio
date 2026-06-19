@@ -16,6 +16,9 @@ import java.util.function.Consumer;
  */
 public class IRBridge {
 
+    /** The unique marker returned by {@code ir.remove()}; the only value that deletes an instruction. */
+    private static final Object REMOVE_SENTINEL = new Object();
+
     private final ScriptInterpreter interpreter;
     private final List<HandlerRegistration> handlers = new ArrayList<>();
     private Consumer<String> logCallback;
@@ -33,6 +36,12 @@ public class IRBridge {
      */
     public ScriptValue createIRObject() {
         Map<String, ScriptValue> props = new HashMap<>();
+
+        // Removal sentinel: a handler must return ir.remove() to delete an instruction. Returning null / nothing /
+        // the original keeps it (so forgetting to return never deletes).
+        props.put("remove", ScriptValue.function(
+            ScriptFunction.native0("remove", () -> ScriptValue.native_(REMOVE_SENTINEL))
+        ));
 
         // Handler registration methods
         props.put("onBinaryOp", ScriptValue.function(
@@ -315,17 +324,13 @@ public class IRBridge {
     }
 
     private int processResult(ScriptValue result, IRInstruction original, IRBlock block) {
-        if (result == null) {
-            return 0; // No change (undefined return)
-        }
-
-        if (result.isNull()) {
-            // null explicitly returned means remove
+        if (isRemoveSentinel(result)) {
+            // Only ir.remove() deletes; null / nothing / the original keeps it.
             block.removeInstruction(original);
             return 1;
         }
 
-        if (result.isNative()) {
+        if (result != null && result.isNative()) {
             Object obj = result.unwrap();
 
             // If it's a Constant, create a ConstantInstruction
@@ -354,6 +359,11 @@ public class IRBridge {
         }
 
         return 0;
+    }
+
+    /** True only when a handler returned the explicit {@code ir.remove()} sentinel. */
+    private static boolean isRemoveSentinel(ScriptValue result) {
+        return result != null && result.isNative() && result.unwrap() == REMOVE_SENTINEL;
     }
 
     /**

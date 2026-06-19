@@ -74,6 +74,9 @@ public class ScriptDocumentation {
                 "</table>\n" +
                 "<div class='note'>\n" +
                 "<b>Quick Start:</b> Try the example scripts in the Script Library panel to see the language in action.\n" +
+                "</div>\n" +
+                "<div class='note'>\n" +
+                "<b>How transforms apply:</b> <code>ast</code>/<code>ir</code> handlers run PER METHOD (the script body re-executes for each target method), so a top-level counter can't aggregate across methods - log inside the handler or use the <code>project</code> bridge. When a transform changes a method, JStudio lowers it back to bytecode; a method the decompiler can't round-trip losslessly is left UNCHANGED with a \"Skipped\" notice rather than corrupted. Analysis-only scripts (just <code>log</code>/<code>results</code>) report 0 modifications - that is expected.\n" +
                 "</div>\n";
     }
 
@@ -471,6 +474,13 @@ public class ScriptDocumentation {
                 "});\n" +
                 "\n" +
                 "<span class='cmt'>// Other handlers: onFieldAccess, onUnaryExpr, onIf, onReturn</span></pre>\n" +
+                "<h2>Handler Return Values</h2>\n" +
+                "<pre><span class='cmt'>// replacement node -> rewrite | ast.remove() -> DELETE | null/nothing/the node -> KEEP</span>\n" +
+                "ast.<span class='fn'>onMethodCall</span>((call) => {\n" +
+                "    <span class='kw'>if</span> (call.owner == <span class='str'>\"java/io/PrintStream\"</span> && call.name == <span class='str'>\"println\"</span>)\n" +
+                "        <span class='kw'>return</span> ast.<span class='fn'>remove</span>();  <span class='cmt'>// only remove() deletes; a bare null KEEPS</span>\n" +
+                "});</pre>\n" +
+                "<div class='note'><b>Node properties:</b> <code>call.name</code> is the method name; <code>call.owner</code> is its owner class as an INTERNAL name (e.g. <code>java/io/PrintStream</code>); <code>node.type</code> is the AST node KIND (e.g. <code>MethodCallExpr</code>), NOT a Java type. The <code>ir</code> and <code>annotations</code> handlers follow the same rule - return <code>ir.remove()</code> / <code>annotations.remove()</code> to delete.</div>\n" +
                 "<h2>Factory Methods</h2>\n" +
                 "<pre><span class='cmt'>// Literals</span>\n" +
                 "ast.factory.<span class='fn'>intLit</span>(<span class='num'>42</span>);\n" +

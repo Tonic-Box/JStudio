@@ -7,6 +7,7 @@ import com.tonic.plugin.api.PluginConfig;
 import com.tonic.plugin.api.PluginContext;
 import com.tonic.plugin.api.PluginLogger;
 import com.tonic.plugin.api.ProjectApi;
+import com.tonic.plugin.api.ScriptApi;
 import com.tonic.plugin.api.VmDebugApi;
 import com.tonic.plugin.api.YabrAccess;
 import com.tonic.plugin.result.ResultCollector;
@@ -91,6 +92,11 @@ public class LiveGuiPluginContext implements PluginContext {
     @Override
     public LiveApi getLive() {
         return new LiveApiImpl();
+    }
+
+    @Override
+    public ScriptApi getScript() {
+        return new ScriptApiImpl();
     }
 
     @Override

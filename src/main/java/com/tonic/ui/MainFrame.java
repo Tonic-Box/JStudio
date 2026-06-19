@@ -10,6 +10,8 @@ import com.tonic.event.events.ClassSelectedEvent;
 import com.tonic.event.events.FindUsagesEvent;
 import com.tonic.event.events.MethodSelectedEvent;
 import com.tonic.event.events.ProjectLoadedEvent;
+import com.tonic.event.events.ScriptConsoleEvent;
+import com.tonic.event.events.ScriptWrittenEvent;
 import com.tonic.event.events.ProjectUpdatedEvent;
 import com.tonic.event.events.ResourceSelectedEvent;
 import com.tonic.ui.bottom.BottomPanel;
@@ -442,6 +444,19 @@ public class MainFrame extends JFrame {
             ProjectDatabaseService.getInstance().initializeForProject(project);
             updateTitleBar();
         });
+
+        // AI assistant wrote a script: refresh the Script Editor's list and open to it.
+        EventBus.getInstance().register(ScriptWrittenEvent.class, event ->
+            SwingUtilities.invokeLater(() -> {
+                showScriptEditor();
+                if (scriptEditorDialog != null) {
+                    scriptEditorDialog.getEditorPanel().selectScriptByName(event.getScriptName());
+                }
+            }));
+
+        // AI assistant ran a script: stream its console output into the bottom Script Console tab.
+        EventBus.getInstance().register(ScriptConsoleEvent.class, event ->
+            SwingUtilities.invokeLater(() -> sidePanel.openScriptConsole().handle(event)));
 
         // Handle project updated (classes appended)
         EventBus.getInstance().register(ProjectUpdatedEvent.class, event -> {

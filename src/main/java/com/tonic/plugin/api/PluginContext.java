@@ -22,6 +22,8 @@ public interface PluginContext {
 
     LiveApi getLive();
 
+    ScriptApi getScript();
+
     ResultCollector getResults();
 
     Optional<Object> getService(String name);

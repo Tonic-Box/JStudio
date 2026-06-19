@@ -24,6 +24,9 @@ import java.util.function.Consumer;
  */
 public class ASTBridge {
 
+    /** The unique marker returned by {@code ast.remove()}; the only value that deletes a node. */
+    private static final Object REMOVE_SENTINEL = new Object();
+
     private final ScriptInterpreter interpreter;
     private final List<HandlerRegistration> handlers = new ArrayList<>();
     private Consumer<String> logCallback;
@@ -41,6 +44,15 @@ public class ASTBridge {
      */
     public ScriptValue createAstObject() {
         Map<String, ScriptValue> props = new HashMap<>();
+
+        // Removal sentinel: a handler must return ast.remove() to delete a node. Returning null / nothing /
+        // the original node keeps it (so forgetting to return never deletes).
+        props.put("remove", ScriptValue.function(
+            ScriptFunction.native0("remove", () -> ScriptValue.native_(REMOVE_SENTINEL))
+        ));
+        props.put("keep", ScriptValue.function(
+            ScriptFunction.native0("keep", () -> ScriptValue.NULL)
+        ));
 
         // Handler registration methods
         props.put("onMethodCall", ScriptValue.function(
@@ -107,6 +119,7 @@ public class ASTBridge {
         return ScriptValue.object(props);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     private ScriptValue createFactoryObject() {
         Map<String, ScriptValue> props = new HashMap<>();
 
@@ -535,12 +548,11 @@ public class ASTBridge {
     }
 
     private Replacement processResult(ScriptValue result, Expression original, int[] modCount) {
-        if (result == null || result.isNull()) {
-            // null means remove
+        if (isRemoveSentinel(result)) {
             modCount[0]++;
             return Replacement.remove();
         }
-        if (result.isNative()) {
+        if (result != null && result.isNative()) {
             Object obj = result.unwrap();
             if (obj instanceof ASTNodeWrapper) {
                 Object node = ((ASTNodeWrapper) obj).unwrap();
@@ -550,18 +562,16 @@ public class ASTBridge {
                 }
             }
         }
-        if (result.isObject()) {
-            // Could reconstruct expression from object properties
-        }
+        // null / nothing returned / the original node / anything else = keep (no accidental removals).
         return Replacement.keep();
     }
 
     private Replacement processStmtResult(ScriptValue result, Statement original, int[] modCount) {
-        if (result == null || result.isNull()) {
+        if (isRemoveSentinel(result)) {
             modCount[0]++;
             return Replacement.remove();
         }
-        if (result.isNative()) {
+        if (result != null && result.isNative()) {
             Object obj = result.unwrap();
             if (obj instanceof ASTNodeWrapper) {
                 Object node = ((ASTNodeWrapper) obj).unwrap();
@@ -572,6 +582,11 @@ public class ASTBridge {
             }
         }
         return Replacement.keep();
+    }
+
+    /** True only when a handler returned the explicit {@code ast.remove()} sentinel. */
+    private static boolean isRemoveSentinel(ScriptValue result) {
+        return result != null && result.isNative() && result.unwrap() == REMOVE_SENTINEL;
     }
 
     /**

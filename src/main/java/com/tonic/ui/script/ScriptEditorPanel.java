@@ -1,11 +1,6 @@
 package com.tonic.ui.script;
 
-import com.tonic.analysis.source.ast.stmt.BlockStmt;
-import com.tonic.analysis.source.editor.ASTEditor;
-import com.tonic.analysis.source.recovery.MethodRecoverer;
-import com.tonic.analysis.ssa.SSA;
-import com.tonic.analysis.ssa.cfg.IRMethod;
-import com.tonic.parser.MethodEntry;
+import com.tonic.live.LiveSession;
 import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
@@ -14,11 +9,6 @@ import com.tonic.model.ClassEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.service.ProjectService;
-import com.tonic.script.bridge.AnnotationBridge;
-import com.tonic.script.bridge.ASTBridge;
-import com.tonic.script.bridge.BridgeRegistry;
-import com.tonic.script.bridge.CommonAPI;
-import com.tonic.script.bridge.IRBridge;
 import com.tonic.script.engine.*;
 import com.tonic.script.store.ScriptStore;
 import com.tonic.ui.theme.*;
@@ -35,7 +25,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.List;
 
 public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListener {
 
@@ -351,66 +340,30 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         appendToConsole("Running script in " + mode + " mode...\n");
         statusLabel.setText("Running...");
 
-        SwingWorker<Integer, String> worker = new SwingWorker<>() {
+        ScriptRunner.Scope scope;
+        ClassEntryModel targetClass = null;
+        MethodEntryModel targetMethod = null;
+        if ("All Classes".equals(target)) {
+            scope = ScriptRunner.Scope.ALL;
+        } else if ("Current Class".equals(target)) {
+            scope = ScriptRunner.Scope.CLASS;
+            targetClass = (ClassEntryModel) classComboBox.getSelectedItem();
+        } else {
+            scope = ScriptRunner.Scope.METHOD;
+            targetClass = (ClassEntryModel) classComboBox.getSelectedItem();
+            targetMethod = (MethodEntryModel) methodComboBox.getSelectedItem();
+        }
+        final ScriptRunner.Scope fScope = scope;
+        final ClassEntryModel fClass = targetClass;
+        final MethodEntryModel fMethod = targetMethod;
+
+        SwingWorker<Integer, Void> worker = new SwingWorker<>() {
             @Override
             protected Integer doInBackground() {
-                try {
-                    int count = 0;
-
-                    if ("All Classes".equals(target)) {
-                        if (projectModel == null) {
-                            publish("ERROR: No project loaded");
-                            return 0;
-                        }
-                        for (ClassEntryModel classEntry : projectModel.getAllClasses()) {
-                            // Run annotation handlers (once per class)
-                            count += runAnnotationsOnClass(code, classEntry);
-                            // Run method-level handlers
-                            for (MethodEntryModel methodModel : classEntry.getMethods()) {
-                                count += runOnMethod(code, mode, classEntry, methodModel);
-                            }
-                            // Clear decompilation cache
-                            classEntry.setDecompilationCache(null);
-                        }
-                    } else if ("Current Class".equals(target)) {
-                        ClassEntryModel classEntry = (ClassEntryModel) classComboBox.getSelectedItem();
-                        if (classEntry == null) {
-                            publish("ERROR: No class selected");
-                            return 0;
-                        }
-                        // Run annotation handlers (once per class)
-                        count += runAnnotationsOnClass(code, classEntry);
-                        // Run method-level handlers
-                        for (MethodEntryModel methodModel : classEntry.getMethods()) {
-                            count += runOnMethod(code, mode, classEntry, methodModel);
-                        }
-                        classEntry.setDecompilationCache(null);
-                    } else {
-                        ClassEntryModel classEntry = (ClassEntryModel) classComboBox.getSelectedItem();
-                        MethodEntryModel methodModel = (MethodEntryModel) methodComboBox.getSelectedItem();
-                        if (classEntry == null || methodModel == null) {
-                            publish("ERROR: No method selected");
-                            return 0;
-                        }
-                        // Run annotation handlers (once per class)
-                        count += runAnnotationsOnClass(code, classEntry);
-                        count += runOnMethod(code, mode, classEntry, methodModel);
-                        classEntry.setDecompilationCache(null);
-                    }
-
-                    return count;
-                } catch (Exception e) {
-                    publish("ERROR: " + e.getMessage());
-                    e.printStackTrace();
-                    return 0;
-                }
-            }
-
-            @Override
-            protected void process(List<String> chunks) {
-                for (String msg : chunks) {
-                    appendToConsole(msg + "\n");
-                }
+                ProjectModel project = ProjectService.getInstance().getCurrentProject();
+                LiveSession live = LiveAttachService.getInstance().getSession();
+                return ScriptRunner.run(code, mode, project, live, fScope, fClass, fMethod,
+                    msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg)));
             }
 
             @Override
@@ -434,193 +387,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         worker.execute();
     }
 
-    private int runOnMethod(String code, Script.Mode mode, ClassEntryModel classEntry, MethodEntryModel methodModel) {
-        MethodEntry method = methodModel.getMethodEntry();
-        if (method.getCodeAttribute() == null) return 0;
-        if (method.getName().startsWith("<")) return 0;
-
-        int count = 0;
-
-        // Create interpreter
-        ScriptInterpreter interpreter = new ScriptInterpreter();
-
-        // Setup common API
-        CommonAPI commonAPI = new CommonAPI();
-        commonAPI.setContext(
-            classEntry.getClassName(),
-            method.getName(),
-            method.getDesc()
-        );
-        commonAPI.setCallbacks(
-            msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")),
-            msg -> SwingUtilities.invokeLater(() -> appendToConsole("WARN: " + msg + "\n")),
-            msg -> SwingUtilities.invokeLater(() -> appendToConsole("ERROR: " + msg + "\n"))
-        );
-        commonAPI.registerIn(interpreter);
-
-        // Register all project-wide bridges
-        ProjectModel projectModel = ProjectService.getInstance().getCurrentProject();
-        if (projectModel != null) {
-            BridgeRegistry registry = new BridgeRegistry(interpreter, projectModel);
-            registry.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
-            registry.registerAll();
-            registry.registerLiveBridge(LiveAttachService.getInstance().getSession());
-        }
-
-        // Parse script
-        ScriptLexer lexer = new ScriptLexer(code);
-        List<ScriptToken> tokens = lexer.tokenize();
-        if (!lexer.getErrors().isEmpty()) {
-            for (String err : lexer.getErrors()) {
-                appendToConsole("Lexer error: " + err + "\n");
-            }
-            return 0;
-        }
-
-        ScriptParser parser = new ScriptParser(tokens);
-        List<ScriptAST> statements = parser.parse();
-        if (!parser.getErrors().isEmpty()) {
-            for (String err : parser.getErrors()) {
-                appendToConsole("Parser error: " + err + "\n");
-            }
-            return 0;
-        }
-
-        // Run based on mode
-        if (mode == Script.Mode.AST || mode == Script.Mode.BOTH) {
-            count += runASTMode(interpreter, statements, classEntry, method);
-        }
-
-        if (mode == Script.Mode.IR || mode == Script.Mode.BOTH) {
-            count += runIRMode(interpreter, statements, method, methodModel, classEntry);
-        }
-
-        return count;
-    }
-
-    private int runASTMode(ScriptInterpreter interpreter, List<ScriptAST> statements,
-                           ClassEntryModel classEntry, MethodEntry method) {
-        try {
-            // Lift method to IR then recover AST
-            SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
-            IRMethod irMethod = ssa.lift(method);
-            if (irMethod == null || irMethod.getEntryBlock() == null) return 0;
-
-            BlockStmt methodBody = MethodRecoverer.recoverMethod(irMethod, method);
-            if (methodBody == null) return 0;
-
-            // Create AST bridge
-            ASTBridge astBridge = new ASTBridge(interpreter);
-            astBridge.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
-
-            // Register ast object
-            interpreter.getGlobalContext().defineConstant("ast", astBridge.createAstObject());
-
-            // Execute script to register handlers
-            interpreter.execute(statements);
-
-            // Apply handlers to AST
-            ASTEditor editor = new ASTEditor(methodBody, method.getName(), method.getDesc(),
-                classEntry.getClassName());
-            return astBridge.applyTo(editor);
-
-        } catch (Exception e) {
-            appendToConsole("AST mode error: " + e.getMessage() + "\n");
-            return 0;
-        }
-    }
-
-    private int runIRMode(ScriptInterpreter interpreter, List<ScriptAST> statements,
-                          MethodEntry method, MethodEntryModel methodModel, ClassEntryModel classEntry) {
-        try {
-            // Build SSA
-            SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
-            IRMethod irMethod = ssa.lift(method);
-            if (irMethod == null || irMethod.getEntryBlock() == null) return 0;
-
-            // Create IR bridge
-            IRBridge irBridge = new IRBridge(interpreter);
-            irBridge.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
-
-            // Register ir object
-            interpreter.getGlobalContext().defineConstant("ir", irBridge.createIRObject());
-
-            // Execute script to register handlers
-            interpreter.execute(statements);
-
-            // Apply handlers to IR
-            int count = irBridge.applyTo(irMethod);
-
-            // Clear cached IR
-            methodModel.setIrCache(null);
-
-            return count;
-
-        } catch (Exception e) {
-            appendToConsole("IR mode error: " + e.getMessage() + "\n");
-            return 0;
-        }
-    }
-
-    private int runAnnotationsOnClass(String code, ClassEntryModel classEntry) {
-        try {
-            // Create interpreter
-            ScriptInterpreter interpreter = new ScriptInterpreter();
-
-            // Setup common API with class context
-            CommonAPI commonAPI = new CommonAPI();
-            commonAPI.setContext(classEntry.getClassName(), "", "");
-            commonAPI.setCallbacks(
-                msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")),
-                msg -> SwingUtilities.invokeLater(() -> appendToConsole("WARN: " + msg + "\n")),
-                msg -> SwingUtilities.invokeLater(() -> appendToConsole("ERROR: " + msg + "\n"))
-            );
-            commonAPI.registerIn(interpreter);
-
-            // Register all project-wide bridges
-            ProjectModel projectModel = ProjectService.getInstance().getCurrentProject();
-            if (projectModel != null) {
-                BridgeRegistry registry = new BridgeRegistry(interpreter, projectModel);
-                registry.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
-                registry.registerAll();
-                registry.registerLiveBridge(LiveAttachService.getInstance().getSession());
-            }
-
-            // Create annotation bridge
-            AnnotationBridge annotationBridge = new AnnotationBridge(interpreter);
-            annotationBridge.setLogCallback(msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg + "\n")));
-
-            // Register annotations object
-            interpreter.getGlobalContext().defineConstant("annotations", annotationBridge.createAnnotationObject());
-
-            // Parse and execute script to register handlers
-            ScriptLexer lexer = new ScriptLexer(code);
-            List<ScriptToken> tokens = lexer.tokenize();
-            if (!lexer.getErrors().isEmpty()) {
-                return 0;
-            }
-
-            ScriptParser parser = new ScriptParser(tokens);
-            List<ScriptAST> statements = parser.parse();
-            if (!parser.getErrors().isEmpty()) {
-                return 0;
-            }
-
-            interpreter.execute(statements);
-
-            // Apply annotation handlers if any were registered
-            if (annotationBridge.hasHandlers()) {
-                return annotationBridge.applyToClass(classEntry);
-            }
-
-            return 0;
-
-        } catch (Exception e) {
-            appendToConsole("Annotation processing error: " + e.getMessage() + "\n");
-            return 0;
-        }
-    }
-
     // ==================== Script Management ====================
 
     private void loadBuiltInScripts() {
@@ -628,23 +394,23 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         Script example1 = new Script("Remove Debug Prints", Script.Mode.AST,
             "// @mode: ast\n// @name: Remove Debug Prints\n\n" +
             "ast.onMethodCall((call) => {\n" +
-            "    if (call.receiver?.type == \"java.io.PrintStream\") {\n" +
-            "        if (call.name == \"println\" || call.name == \"print\") {\n" +
-            "            log(\"Removing: \" + call.name);\n" +
-            "            return null;\n" +
-            "        }\n" +
+            "    if (call.owner == \"java/io/PrintStream\"\n" +
+            "        && (call.name == \"println\" || call.name == \"print\")) {\n" +
+            "        log(\"Removing: \" + call.name);\n" +
+            "        return ast.remove();\n" +
             "    }\n" +
+            "    // return nothing / the call to keep it\n" +
             "});\n");
         example1.setBuiltIn(true);
 
         Script example2 = new Script("Log Method Calls", Script.Mode.AST,
             "// @mode: ast\n// @name: Log Method Calls\n\n" +
-            "let count = 0;\n" +
+            "// Analysis only - logs every call, makes no changes (0 modifications is expected).\n" +
+            "// NOTE: handlers run per-method, so a top-level running total can't aggregate across methods;\n" +
+            "// log inside the handler instead.\n" +
             "ast.onMethodCall((call) => {\n" +
-            "    log(\"Method: \" + call.name + \" on \" + (call.owner || \"unknown\"));\n" +
-            "    count++;\n" +
-            "});\n" +
-            "log(\"Total: \" + count + \" method calls\");\n");
+            "    log((call.owner || \"?\") + \".\" + call.name);\n" +
+            "});\n");
         example2.setBuiltIn(true);
 
         Script example3 = new Script("Constant Folding (IR)", Script.Mode.IR,
@@ -666,7 +432,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
             "annotations.onClassAnnotation((anno) => {\n" +
             "    if (anno.simpleName == \"Named\") {\n" +
             "        log(\"Removing @Named from class\");\n" +
-            "        return null;\n" +
+            "        return annotations.remove();\n" +
             "    }\n" +
             "    return anno;\n" +
             "});\n\n" +
@@ -674,7 +440,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
             "annotations.onMethodAnnotation((anno) => {\n" +
             "    if (anno.simpleName == \"Named\") {\n" +
             "        log(\"Removing @Named from \" + anno.target);\n" +
-            "        return null;\n" +
+            "        return annotations.remove();\n" +
             "    }\n" +
             "    return anno;\n" +
             "});\n\n" +
@@ -682,7 +448,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
             "annotations.onFieldAnnotation((anno) => {\n" +
             "    if (anno.simpleName == \"Named\") {\n" +
             "        log(\"Removing @Named from \" + anno.target);\n" +
-            "        return null;\n" +
+            "        return annotations.remove();\n" +
             "    }\n" +
             "    return anno;\n" +
             "});\n");
@@ -702,6 +468,28 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         codeEditor.setText(script.getContent());
         modeComboBox.setSelectedItem(script.getMode());
         statusLabel.setText("Loaded: " + script.getName());
+    }
+
+    /** Rebuilds the list from the built-ins + the (possibly just-changed) user scripts directory. */
+    public void reloadUserScripts() {
+        scriptListModel.clear();
+        loadBuiltInScripts();
+    }
+
+    /** Reloads the list and selects/opens the user script with this name (e.g. one the AI just wrote). */
+    public void selectScriptByName(String name) {
+        reloadUserScripts();
+        if (name == null) {
+            return;
+        }
+        for (int i = 0; i < scriptListModel.size(); i++) {
+            Script script = scriptListModel.get(i);
+            if (!script.isBuiltIn() && name.equals(script.getName())) {
+                scriptList.setSelectedValue(script, true);
+                loadScriptToEditor(script);
+                return;
+            }
+        }
     }
 
     private void createNewScript() {

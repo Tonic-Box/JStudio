@@ -24,6 +24,9 @@ import java.util.function.Consumer;
 
 public class AnnotationBridge {
 
+    /** The unique marker returned by {@code annotations.remove()}; the only value that deletes an annotation. */
+    private static final Object REMOVE_SENTINEL = new Object();
+
     private final ScriptInterpreter interpreter;
     private final List<AnnotationHandler> classAnnotationHandlers = new ArrayList<>();
     private final List<AnnotationHandler> methodAnnotationHandlers = new ArrayList<>();
@@ -40,6 +43,12 @@ public class AnnotationBridge {
 
     public ScriptValue createAnnotationObject() {
         Map<String, ScriptValue> props = new HashMap<>();
+
+        // Removal sentinel: a handler must return annotations.remove() to delete an annotation. Returning null /
+        // nothing / the annotation keeps it (so forgetting to return never deletes).
+        props.put("remove", ScriptValue.function(
+            ScriptFunction.native0("remove", () -> ScriptValue.native_(REMOVE_SENTINEL))
+        ));
 
         props.put("onClassAnnotation", ScriptValue.function(
             ScriptFunction.native1("onClassAnnotation", this::registerClassAnnotationHandler)
@@ -165,7 +174,7 @@ public class AnnotationBridge {
                     args.add(wrapped);
                     ScriptValue result = handler.function.call(interpreter, args);
 
-                    if (result == null || result.isNull()) {
+                    if (result != null && result.isNative() && result.unwrap() == REMOVE_SENTINEL) {
                         iter.remove();
                         modCount++;
                         String typeName = resolveAnnotationType(anno, classFile);
