@@ -353,10 +353,10 @@ public class EditorTab extends JPanel {
     public void reload() {
         classEntry.invalidateDecompilationCache();
         breadcrumbBar.setClass(classEntry);
-        if (sourceView != null) sourceView.refresh();
+        if (sourceView != null) sourceView.reload();
         if (bytecodeView != null) bytecodeView.refresh();
         if (constPoolView != null) constPoolView.refresh();
-        if (hexView != null) hexView.refresh();
+        if (hexView != null) hexView.reload();
         if (irView != null) irView.refresh();
         if (llvmView != null) llvmView.refresh();
         if (astView != null) astView.refresh();

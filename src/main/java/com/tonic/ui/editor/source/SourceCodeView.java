@@ -1330,8 +1330,17 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
     }
 
     /**
-     * Refresh/reload the source view.
+     * Forces a fresh decompile from the current bytecode, discarding any loaded/cached or edited source. Plain
+     * {@link #refresh()} no-ops once the view has loaded (and re-displays the cache when present), so it cannot show
+     * a class that was mutated externally (an AI rename, a script transform). Use this to rebuild the source view.
      */
+    public void reload() {
+        classEntry.invalidateDecompilationCache();
+        loaded = false;
+        dirty = false;
+        refresh();
+    }
+
     public void refresh() {
         String cachedSource = classEntry.getDecompilationCache();
         if (cachedSource != null) {

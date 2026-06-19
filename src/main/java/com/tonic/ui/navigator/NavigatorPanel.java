@@ -68,7 +68,10 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -370,9 +373,72 @@ public class NavigatorPanel extends ThemedJPanel {
 
     public void refresh() {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
-            treeModel.loadProject(project);
+        if (project == null) {
+            return;
         }
+        // Preserve which nodes are open + the selection across the rebuild (loadProject discards them), matching by
+        // each node's name-path so it survives the new node objects. Best-effort: a renamed node's key changes, so
+        // only that node loses its state.
+        Set<String> expandedKeys = captureExpandedKeys();
+        TreePath selectionPath = tree.getSelectionPath();
+        String selectedKey = selectionPath != null ? pathKey(selectionPath) : null;
+
+        treeModel.loadProject(project);
+
+        restoreTreeState(expandedKeys, selectedKey);
+    }
+
+    /** Name-path keys of every currently-expanded node, so expansion can be restored after a tree rebuild. */
+    private Set<String> captureExpandedKeys() {
+        Set<String> keys = new HashSet<>();
+        Object root = treeModel.getRoot();
+        if (root == null) {
+            return keys;
+        }
+        Enumeration<TreePath> expanded = tree.getExpandedDescendants(new TreePath(root));
+        if (expanded != null) {
+            while (expanded.hasMoreElements()) {
+                keys.add(pathKey(expanded.nextElement()));
+            }
+        }
+        return keys;
+    }
+
+    /** Re-expands the nodes that were open and re-selects the previously selected node, by matching name-paths. */
+    private void restoreTreeState(Set<String> expandedKeys, String selectedKey) {
+        Object root = treeModel.getRoot();
+        if (root instanceof NavigatorNode) {
+            restoreNode((NavigatorNode) root, new TreePath(root), expandedKeys, selectedKey, true);
+        }
+    }
+
+    private void restoreNode(NavigatorNode node, TreePath path, Set<String> expandedKeys,
+                             String selectedKey, boolean isRoot) {
+        String key = pathKey(path);
+        if (selectedKey != null && selectedKey.equals(key)) {
+            tree.setSelectionPath(path);
+            tree.scrollPathToVisible(path);
+        }
+        // A collapsed node had no expanded descendants, so prune the walk there (keeps it bounded to the open subtree).
+        if (!isRoot && !expandedKeys.contains(key)) {
+            return;
+        }
+        tree.expandPath(path);
+        for (int i = 0; i < node.getChildCount(); i++) {
+            Object child = node.getChildAt(i);
+            if (child instanceof NavigatorNode) {
+                restoreNode((NavigatorNode) child, path.pathByAddingChild(child), expandedKeys, selectedKey, false);
+            }
+        }
+    }
+
+    /** A rebuild-stable key for a tree path: its nodes' display texts joined (newline-separated, absent from names). */
+    private static String pathKey(TreePath path) {
+        StringBuilder sb = new StringBuilder();
+        for (Object node : path.getPath()) {
+            sb.append('\n').append(node);
+        }
+        return sb.toString();
     }
 
     public void setLoading(boolean loading) {

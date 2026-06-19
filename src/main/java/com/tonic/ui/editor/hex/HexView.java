@@ -126,6 +126,12 @@ public class HexView extends JPanel implements ThemeChangeListener {
         StyleConstants.setForeground(highlightStyle, JStudioTheme.getWarning());
     }
 
+    /** Forces a fresh hex dump from current bytecode; plain {@link #refresh()} no-ops once loaded. */
+    public void reload() {
+        loaded = false;
+        refresh();
+    }
+
     public void refresh() {
         if (loaded) {
             return;

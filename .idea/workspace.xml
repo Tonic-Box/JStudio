@@ -7,15 +7,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Script Editor: AI script API + engine fixes&#10;&#10;Host-side ScriptApi (write/list/read/run) on PluginContext with a bottom-tab Script Console (ScriptConsolePanel + events) so the AI plugin can author and run scripts. Extract the run loop into ScriptRunner.&#10;&#10;Engine fixes:&#10;- explicit ast/ir/annotations.remove() sentinel (a bare null/no-return now KEEPS a node instead of deleting it)&#10;- cement AST/IR transforms to bytecode, with a verify-and-restore guard that skips methods the decompiler can't round-trip losslessly&#10;- register the full bridge set per pass (no &quot;Cannot call non-function&quot; spam) and invalidate decompile/IR caches after a change&#10;&#10;Fix built-in examples (match by call.owner; use *.remove()) and document the return-value convention + per-method/cementing behavior.">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Add host rename API + full decompile/tab refresh after mutations">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/PluginContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/PluginContext.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/LiveGuiPluginContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/LiveGuiPluginContext.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/PluginContextImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/PluginContextImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/hex/HexView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/hex/HexView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -235,14 +232,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00059" summary="- Stats view&#10;- Attribute view&#10;- updated README.md">
-      <option name="closed" value="true" />
-      <created>1768557171513</created>
-      <option name="number" value="00059" />
-      <option name="presentableId" value="LOCAL-00059" />
-      <option name="project" value="LOCAL" />
-      <updated>1768557171513</updated>
     </task>
     <task id="LOCAL-00060" summary="- Updated README.md&#10;- Updated shortcuts dialogue&#10;- cleanup">
       <option name="closed" value="true" />
@@ -628,7 +617,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781840891387</updated>
     </task>
-    <option name="localTasksCounter" value="108" />
+    <task id="LOCAL-00108" summary="- Add host rename API + full decompile/tab refresh after mutations">
+      <option name="closed" value="true" />
+      <created>1781865389333</created>
+      <option name="number" value="00108" />
+      <option name="presentableId" value="LOCAL-00108" />
+      <option name="project" value="LOCAL" />
+      <updated>1781865389333</updated>
+    </task>
+    <option name="localTasksCounter" value="109" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -643,7 +640,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Extract non-UI logic out of com.tonic.ui into sibling packages (util/model/event/service/deobfuscation/script/simulation); cli/plugin now depend on those, not ui&#10;- Decouple entry-model icons to string keys resolved UI-side&#10;- Migrate query UI to YABR's com.tonic.analysis.query engine (QueryMatch/QueryTarget); build result labels UI-side&#10;- Clear query results when a new project loads&#10;- Default the bytecode debugger's &quot;Recursive Calls&quot; checkbox to on&#10;- Migrated Query Engine over to YABR" />
     <MESSAGE value="- Find Usages now jumps to the exact call site in source and selects the referenced name&#10;- Bytecode debugger: tabbed Bytecode/Source view; source tab tracks the executing line and supports breakpoints (gutter click or context menu)&#10;- Debugger source tab shows only the current method (exact decompiler spans, editor-matching line numbers)&#10;- Debugger opens in a frame with minimize/maximize&#10;- Fix breakpoints binding to the wrong method when viewing callees in recursive mode" />
     <MESSAGE value="- Version bump 15.0" />
     <MESSAGE value="- Version bump 16.0&#10;- Fix NPE scrolling the debugger source tab before the window is laid out" />
@@ -668,7 +664,8 @@
     <MESSAGE value="- Added plugin API surface for live attach tooling" />
     <MESSAGE value="- gutter run icon next to main methods turns into stop button when running" />
     <MESSAGE value="Script Editor: AI script API + engine fixes&#10;&#10;Host-side ScriptApi (write/list/read/run) on PluginContext with a bottom-tab Script Console (ScriptConsolePanel + events) so the AI plugin can author and run scripts. Extract the run loop into ScriptRunner.&#10;&#10;Engine fixes:&#10;- explicit ast/ir/annotations.remove() sentinel (a bare null/no-return now KEEPS a node instead of deleting it)&#10;- cement AST/IR transforms to bytecode, with a verify-and-restore guard that skips methods the decompiler can't round-trip losslessly&#10;- register the full bridge set per pass (no &quot;Cannot call non-function&quot; spam) and invalidate decompile/IR caches after a change&#10;&#10;Fix built-in examples (match by call.owner; use *.remove()) and document the return-value convention + per-method/cementing behavior." />
-    <option name="LAST_COMMIT_MESSAGE" value="Script Editor: AI script API + engine fixes&#10;&#10;Host-side ScriptApi (write/list/read/run) on PluginContext with a bottom-tab Script Console (ScriptConsolePanel + events) so the AI plugin can author and run scripts. Extract the run loop into ScriptRunner.&#10;&#10;Engine fixes:&#10;- explicit ast/ir/annotations.remove() sentinel (a bare null/no-return now KEEPS a node instead of deleting it)&#10;- cement AST/IR transforms to bytecode, with a verify-and-restore guard that skips methods the decompiler can't round-trip losslessly&#10;- register the full bridge set per pass (no &quot;Cannot call non-function&quot; spam) and invalidate decompile/IR caches after a change&#10;&#10;Fix built-in examples (match by call.owner; use *.remove()) and document the return-value convention + per-method/cementing behavior." />
+    <MESSAGE value="- Add host rename API + full decompile/tab refresh after mutations" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Add host rename API + full decompile/tab refresh after mutations" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
