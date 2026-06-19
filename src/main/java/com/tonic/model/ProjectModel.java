@@ -137,6 +137,17 @@ public class ProjectModel {
     }
 
     /**
+     * Drops every class's cached decompilation. A project mutation (rename, script transform) can change references
+     * in any class, so a cache scoped to the mutated class alone leaves other classes showing stale source; clearing
+     * all of them forces a fresh decompile from current bytecode the next time each is viewed.
+     */
+    public void invalidateAllDecompilationCaches() {
+        for (ClassEntryModel entry : classEntries.values()) {
+            entry.invalidateDecompilationCache();
+        }
+    }
+
+    /**
      * Get user classes only (classes explicitly loaded by user).
      */
     public List<ClassEntryModel> getUserClasses() {

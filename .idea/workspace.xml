@@ -8,24 +8,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Script Editor: AI script API + engine fixes&#10;&#10;Host-side ScriptApi (write/list/read/run) on PluginContext with a bottom-tab Script Console (ScriptConsolePanel + events) so the AI plugin can author and run scripts. Extract the run loop into ScriptRunner.&#10;&#10;Engine fixes:&#10;- explicit ast/ir/annotations.remove() sentinel (a bare null/no-return now KEEPS a node instead of deleting it)&#10;- cement AST/IR transforms to bytecode, with a verify-and-restore guard that skips methods the decompiler can't round-trip losslessly&#10;- register the full bridge set per pass (no &quot;Cannot call non-function&quot; spam) and invalidate decompile/IR caches after a change&#10;&#10;Fix built-in examples (match by call.owner; use *.remove()) and document the return-value convention + per-method/cementing behavior.">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/event/events/ScriptConsoleEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/event/events/ScriptWrittenEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/ScriptApi.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/ScriptApiImpl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/engine/ScriptRunner.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/ScriptConsolePanel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/script/ScriptPrintlnDiagnosticTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/PluginContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/PluginContext.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/LiveGuiPluginContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/LiveGuiPluginContext.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/PluginContextImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/PluginContextImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/ASTBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/ASTBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/AnnotationBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/AnnotationBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/IRBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/IRBridge.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptDocumentation.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptDocumentation.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,17 +77,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/zacke/IdeaProjects/JStudio/src/main/resources&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "C:/Users/zacke/IdeaProjects/runelite-5435243534",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "run.code.analysis.last.selected.profile": "pProject Default"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\zacke\IdeaProjects\JStudio\src\main\resources" />
@@ -245,14 +235,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00058" summary="- Cleanup and a bit of restructuring&#10;- Optimizations to how things load&#10;- Rework of some ui">
-      <option name="closed" value="true" />
-      <created>1768555615500</created>
-      <option name="number" value="00058" />
-      <option name="presentableId" value="LOCAL-00058" />
-      <option name="project" value="LOCAL" />
-      <updated>1768555615500</updated>
     </task>
     <task id="LOCAL-00059" summary="- Stats view&#10;- Attribute view&#10;- updated README.md">
       <option name="closed" value="true" />
@@ -638,7 +620,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781789006284</updated>
     </task>
-    <option name="localTasksCounter" value="107" />
+    <task id="LOCAL-00107" summary="Script Editor: AI script API + engine fixes&#10;&#10;Host-side ScriptApi (write/list/read/run) on PluginContext with a bottom-tab Script Console (ScriptConsolePanel + events) so the AI plugin can author and run scripts. Extract the run loop into ScriptRunner.&#10;&#10;Engine fixes:&#10;- explicit ast/ir/annotations.remove() sentinel (a bare null/no-return now KEEPS a node instead of deleting it)&#10;- cement AST/IR transforms to bytecode, with a verify-and-restore guard that skips methods the decompiler can't round-trip losslessly&#10;- register the full bridge set per pass (no &quot;Cannot call non-function&quot; spam) and invalidate decompile/IR caches after a change&#10;&#10;Fix built-in examples (match by call.owner; use *.remove()) and document the return-value convention + per-method/cementing behavior.">
+      <option name="closed" value="true" />
+      <created>1781840891387</created>
+      <option name="number" value="00107" />
+      <option name="presentableId" value="LOCAL-00107" />
+      <option name="project" value="LOCAL" />
+      <updated>1781840891387</updated>
+    </task>
+    <option name="localTasksCounter" value="108" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

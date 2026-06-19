@@ -346,11 +346,30 @@ public class EditorTab extends JPanel {
     }
 
     /**
-     * Called after the source view successfully recompiles the class (which mutates {@code classEntry}
-     * in place). Every other instantiated view reads from {@code classEntry}, so refreshing them makes
-     * the bytecode/IR/constpool/hex/etc. views reflect the recompiled class immediately instead of
-     * showing stale output until the next tab switch.
+     * Forces a full reload after the underlying class was mutated externally (e.g. an AI rename or script run):
+     * drops the decompilation cache and refreshes every instantiated view - including the source view, whose
+     * {@code refresh()} otherwise re-displays the now-stale cached source - so nothing keeps showing old output.
      */
+    public void reload() {
+        classEntry.invalidateDecompilationCache();
+        breadcrumbBar.setClass(classEntry);
+        if (sourceView != null) sourceView.refresh();
+        if (bytecodeView != null) bytecodeView.refresh();
+        if (constPoolView != null) constPoolView.refresh();
+        if (hexView != null) hexView.refresh();
+        if (irView != null) irView.refresh();
+        if (llvmView != null) llvmView.refresh();
+        if (astView != null) astView.refresh();
+        if (pdgView != null) pdgView.refresh();
+        if (sdgView != null) sdgView.refresh();
+        if (cpgView != null) cpgView.refresh();
+        if (controlFlowView != null) controlFlowView.refresh();
+        if (callGraphView != null) callGraphView.refresh();
+        if (attributesView != null) attributesView.refresh();
+        if (statisticsView != null) statisticsView.refresh();
+        if (dualView != null) dualView.refresh();
+    }
+
     private void onClassRecompiled() {
         breadcrumbBar.setClass(classEntry);
         if (bytecodeView != null) bytecodeView.refresh();

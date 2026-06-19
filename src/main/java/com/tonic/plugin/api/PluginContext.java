@@ -24,6 +24,8 @@ public interface PluginContext {
 
     ScriptApi getScript();
 
+    RefactorApi getRefactor();
+
     ResultCollector getResults();
 
     Optional<Object> getService(String name);

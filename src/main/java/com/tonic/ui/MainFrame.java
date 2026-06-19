@@ -10,6 +10,7 @@ import com.tonic.event.events.ClassSelectedEvent;
 import com.tonic.event.events.FindUsagesEvent;
 import com.tonic.event.events.MethodSelectedEvent;
 import com.tonic.event.events.ProjectLoadedEvent;
+import com.tonic.event.events.ProjectRenamedEvent;
 import com.tonic.event.events.ScriptConsoleEvent;
 import com.tonic.event.events.ScriptWrittenEvent;
 import com.tonic.event.events.ProjectUpdatedEvent;
@@ -457,6 +458,16 @@ public class MainFrame extends JFrame {
         // AI assistant ran a script: stream its console output into the bottom Script Console tab.
         EventBus.getInstance().register(ScriptConsoleEvent.class, event ->
             SwingUtilities.invokeLater(() -> sidePanel.openScriptConsole().handle(event)));
+
+        // AI assistant renamed a class/method/field: refresh the navigator + open editors to the new names.
+        EventBus.getInstance().register(ProjectRenamedEvent.class, event ->
+            SwingUtilities.invokeLater(() -> {
+                if (event.getKind() == ProjectRenamedEvent.Kind.CLASS) {
+                    refreshAfterRename(event.getOldClass(), event.getNewClass());
+                } else {
+                    refreshAfterProjectChange();
+                }
+            }));
 
         // Handle project updated (classes appended)
         EventBus.getInstance().register(ProjectUpdatedEvent.class, event -> {
@@ -1178,16 +1189,26 @@ public class MainFrame extends JFrame {
     }
 
     public void refreshAfterRename(String oldClassName, String newClassName) {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) return;
-
         editorPanel.closeTabForClass(oldClassName);
+        refreshAfterProjectChange();
+        statusBar.setMessage("Renamed: " + oldClassName.replace('/', '.') +
+                " -> " + newClassName.replace('/', '.'));
+    }
+
+    /**
+     * Full UI refresh after the project's bytecode was mutated (rename, script transform, ...): drops every class's
+     * decompilation cache and reloads all open editor tabs from current bytecode, so no view keeps showing stale
+     * source, then rebuilds the navigator. Use this for any change that can affect references across classes.
+     */
+    public void refreshAfterProjectChange() {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project != null) {
+            project.invalidateAllDecompilationCaches();
+        }
+        editorPanel.reloadAllTabs();
         navigatorPanel.refresh();
         navigatorPanel.setLoading(false);
         editorPanel.refreshWelcomeTab();
-
-        statusBar.setMessage("Renamed: " + oldClassName.replace('/', '.') +
-                " -> " + newClassName.replace('/', '.'));
     }
 
     public void closeEditorForClass(String className) {
@@ -1616,10 +1637,7 @@ public class MainFrame extends JFrame {
             try {
                 Renamer renamer = new Renamer(classPool);
                 renamer.mapMethod(className, oldName, desc, newName).apply();
-                classEntry.invalidateDecompilationCache();
-                navigatorPanel.refresh();
-                editorPanel.refreshCurrentTab();
-                setNavigatorLoading(false);
+                refreshAfterProjectChange();
                 consolePanel.log("Renamed method: " + oldName + " -> " + newName + " in " + classEntry.getSimpleName());
                 statusBar.setMessage("Renamed method: " + oldName + " -> " + newName);
             } catch (RenameException e) {
@@ -1665,10 +1683,7 @@ public class MainFrame extends JFrame {
             try {
                 Renamer renamer = new Renamer(classPool);
                 renamer.mapField(className, oldName, desc, newName).apply();
-                classEntry.invalidateDecompilationCache();
-                navigatorPanel.refresh();
-                editorPanel.refreshCurrentTab();
-                setNavigatorLoading(false);
+                refreshAfterProjectChange();
                 consolePanel.log("Renamed field: " + oldName + " -> " + newName + " in " + classEntry.getSimpleName());
                 statusBar.setMessage("Renamed field: " + oldName + " -> " + newName);
             } catch (RenameException e) {

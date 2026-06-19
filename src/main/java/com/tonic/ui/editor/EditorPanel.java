@@ -595,6 +595,13 @@ public class EditorPanel extends ThemedJPanel {
         }
     }
 
+    /** Reloads every open class tab from current bytecode, dropping stale decompilation - after a project mutation. */
+    public void reloadAllTabs() {
+        for (EditorTab tab : openTabs.values()) {
+            tab.reload();
+        }
+    }
+
     /**
      * Copy selection from current tab.
      */

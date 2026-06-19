@@ -20,6 +20,7 @@ public class PluginContextImpl implements PluginContext {
     private final VmDebugApiImpl vmDebugApi;
     private final LiveApiImpl liveApi;
     private final ScriptApiImpl scriptApi;
+    private final RefactorApiImpl refactorApi;
     private final ResultCollector results;
     private final Map<String, Object> services = new ConcurrentHashMap<>();
     private final Map<String, Object> environment = new ConcurrentHashMap<>();
@@ -34,6 +35,7 @@ public class PluginContextImpl implements PluginContext {
         this.vmDebugApi = new VmDebugApiImpl();
         this.liveApi = new LiveApiImpl();
         this.scriptApi = new ScriptApiImpl();
+        this.refactorApi = new RefactorApiImpl();
         this.results = new ResultCollector(pluginName);
     }
 
@@ -81,6 +83,11 @@ public class PluginContextImpl implements PluginContext {
     @Override
     public ScriptApi getScript() {
         return scriptApi;
+    }
+
+    @Override
+    public RefactorApi getRefactor() {
+        return refactorApi;
     }
 
     @Override
