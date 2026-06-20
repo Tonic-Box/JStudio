@@ -189,7 +189,7 @@ public class ProjectDatabaseService {
                         save();
                         EventBus.getInstance().post(new StatusMessageEvent(this, "Auto-saved project"));
                     } catch (IOException ex) {
-                        System.err.println("Auto-save failed: " + ex.getMessage());
+                        ConsoleLogService.getInstance().warn("Auto-save failed: " + ex.getMessage());
                     }
                 }
             });
@@ -214,7 +214,7 @@ public class ProjectDatabaseService {
             try {
                 open(defaultDbFile);
             } catch (IOException e) {
-                System.err.println("Failed to load existing project database: " + e.getMessage());
+                ConsoleLogService.getInstance().warn("Failed to load existing project database: " + e.getMessage());
                 create(sourceFile);
             }
         } else {

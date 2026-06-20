@@ -14,6 +14,7 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.deobfuscation.model.DecryptorCandidate;
 import com.tonic.deobfuscation.model.DeobfuscationResult;
 import com.tonic.model.ProjectModel;
+import com.tonic.service.ConsoleLogService;
 import com.tonic.service.ProjectService;
 import lombok.Getter;
 
@@ -201,7 +202,7 @@ public class DeobfuscationService {
             BytecodeResult result = engine.execute(clinit);
 
             if (!result.isSuccess()) {
-                System.out.println("[DeobfuscationService] <clinit> execution failed: " + result.getException());
+                ConsoleLogService.getInstance().error("[DeobfuscationService] <clinit> execution failed: " + result.getException());
                 return new HashMap<>();
             }
 
@@ -230,8 +231,7 @@ public class DeobfuscationService {
             return capturedFields;
 
         } catch (Exception e) {
-            System.out.println("[DeobfuscationService] Error executing <clinit>: " + e.getMessage());
-            e.printStackTrace();
+            ConsoleLogService.getInstance().error("[DeobfuscationService] Error executing <clinit>", e);
             return new HashMap<>();
         }
     }

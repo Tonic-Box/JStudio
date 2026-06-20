@@ -229,7 +229,7 @@ public class MenuBarBuilder {
         menu.addSeparator();
 
         menu.add(createMenuItem("Refresh", KeyEvent.VK_F5, MENU_SHORTCUT_MASK,
-                Icons.getIcon("refresh"), e -> mainFrame.refreshCurrentView()));
+                Icons.getIcon("refresh"), e -> mainFrame.fullRefresh()));
 
         return menu;
     }

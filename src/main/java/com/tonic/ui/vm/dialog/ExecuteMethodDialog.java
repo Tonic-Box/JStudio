@@ -2,6 +2,7 @@ package com.tonic.ui.vm.dialog;
 
 import com.tonic.parser.MethodEntry;
 import com.tonic.model.MethodEntryModel;
+import com.tonic.service.ConsoleLogService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.vm.CommandParser;
 import com.tonic.ui.vm.MethodSelectorPanel;
@@ -447,13 +448,11 @@ public class ExecuteMethodDialog extends JDialog {
                         } else {
                             statusLabel.setText("Execution failed: " + (result.getException() != null ? result.getException().getMessage() : "Unknown error"));
                             if (result.getException() != null) {
-                                System.out.println("[ExecuteMethodDialog] Execution failed:");
-                                result.getException().printStackTrace();
+                                ConsoleLogService.getInstance().error("[ExecuteMethodDialog] Execution failed", result.getException());
                             }
                         }
                     } catch (Exception e) {
-                        System.out.println("[ExecuteMethodDialog] Error in done():");
-                        e.printStackTrace();
+                        ConsoleLogService.getInstance().error("[ExecuteMethodDialog] Error in done()", e);
                         displayError(e.getMessage());
                         statusLabel.setText("Execution failed: " + e.getMessage());
                     }
@@ -463,8 +462,7 @@ public class ExecuteMethodDialog extends JDialog {
             worker.execute();
 
         } catch (Exception e) {
-            System.out.println("[ExecuteMethodDialog] Failed to parse arguments:");
-            e.printStackTrace();
+            ConsoleLogService.getInstance().error("[ExecuteMethodDialog] Failed to parse arguments", e);
             displayError("Failed to parse arguments: " + e.getMessage());
             statusLabel.setText("Error: " + e.getMessage());
         }

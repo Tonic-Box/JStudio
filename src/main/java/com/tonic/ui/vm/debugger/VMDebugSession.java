@@ -6,6 +6,7 @@ import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.analysis.execution.state.ValueTag;
 import com.tonic.parser.MethodEntry;
+import com.tonic.service.ConsoleLogService;
 import com.tonic.ui.vm.VMExecutionService;
 import lombok.Getter;
 
@@ -308,7 +309,7 @@ public class VMDebugSession {
         if (error != null) {
             details.append("\n  Error: ").append(error.getClass().getSimpleName())
                    .append(": ").append(error.getMessage());
-            error.printStackTrace();
+            ConsoleLogService.getInstance().error("Execution error in debug session", error);
         }
 
         started = false;
@@ -610,7 +611,7 @@ public class VMDebugSession {
             try {
                 listener.onStateChanged(state);
             } catch (Exception e) {
-                System.err.println("[DEBUG] Listener exception in onStateChanged: " + e.getMessage());
+                ConsoleLogService.getInstance().warn("Listener exception in onStateChanged: " + e.getMessage());
             }
         }
     }
@@ -620,7 +621,7 @@ public class VMDebugSession {
             try {
                 listener.onSessionStarted();
             } catch (Exception e) {
-                System.err.println("[DEBUG] Listener exception in onSessionStarted: " + e.getMessage());
+                ConsoleLogService.getInstance().warn("Listener exception in onSessionStarted: " + e.getMessage());
             }
         }
     }
@@ -630,7 +631,7 @@ public class VMDebugSession {
             try {
                 listener.onSessionStopped(reason);
             } catch (Exception e) {
-                System.err.println("[DEBUG] Listener exception in onSessionStopped: " + e.getMessage());
+                ConsoleLogService.getInstance().warn("Listener exception in onSessionStopped: " + e.getMessage());
             }
         }
     }
@@ -640,7 +641,7 @@ public class VMDebugSession {
             try {
                 listener.onBreakpointHit(location);
             } catch (Exception e) {
-                System.err.println("[DEBUG] Listener exception in onBreakpointHit: " + e.getMessage());
+                ConsoleLogService.getInstance().warn("Listener exception in onBreakpointHit: " + e.getMessage());
             }
         }
     }
@@ -650,7 +651,7 @@ public class VMDebugSession {
             try {
                 listener.onError(message);
             } catch (Exception e) {
-                System.err.println("[DEBUG] Listener exception in onError: " + e.getMessage());
+                ConsoleLogService.getInstance().warn("Listener exception in onError: " + e.getMessage());
             }
         }
     }

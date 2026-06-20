@@ -9,6 +9,7 @@ import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
+import com.tonic.service.ConsoleLogService;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.BorderFactory;
@@ -514,9 +515,7 @@ public class TransformPanel extends ThemedJPanel {
                         methodModel.setIrCache(null);
                         count++;
                     } catch (Exception ex) {
-                        // Log but continue with other methods
-                        System.err.println("Failed to transform " + selectedClass.getClassName() + "." + method.getName() + ": " + ex.getMessage());
-                        ex.printStackTrace();
+                        ConsoleLogService.getInstance().error("Failed to transform " + selectedClass.getClassName() + "." + method.getName(), ex);
                     }
                 }
                 return count;
@@ -564,9 +563,7 @@ public class TransformPanel extends ThemedJPanel {
                             totalMethods++;
                             classModified = true;
                         } catch (Exception ex) {
-                            // Log but continue with other methods
-                            System.err.println("Failed to transform " + classEntry.getClassName() + "." + method.getName() + ": " + ex.getMessage());
-                            ex.printStackTrace();
+                            ConsoleLogService.getInstance().error("Failed to transform " + classEntry.getClassName() + "." + method.getName(), ex);
                         }
                     }
                     if (classModified) {
@@ -592,7 +589,7 @@ public class TransformPanel extends ThemedJPanel {
                     statusLabel.setText("Transforms applied to " + result[0] + " methods across " + result[1] + " classes");
                     notifyTransformComplete();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    ConsoleLogService.getInstance().error("Failed to apply transforms to all classes", e);
                     Throwable cause = e.getCause();
                     String msg = cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : e.getMessage();
                     statusLabel.setText("Transform failed: " + msg);

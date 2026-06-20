@@ -9,6 +9,7 @@ import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.analysis.instruction.Instruction;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.LineNumberTableAttribute;
+import com.tonic.service.ConsoleLogService;
 import com.tonic.ui.vm.heap.model.AllocationEvent;
 import com.tonic.ui.vm.heap.model.MutationEvent;
 import com.tonic.ui.vm.heap.model.ProvenanceInfo;
@@ -49,7 +50,7 @@ public class HeapForensicsListener implements BytecodeListener {
     @Override
     public void onExecutionStart(MethodEntry entryPoint) {
         callStackFrames.clear();
-        System.out.println("[HeapForensics] === START: " +
+        ConsoleLogService.getInstance().debug("[HeapForensics] === START: " +
             (entryPoint != null ? entryPoint.getOwnerName() + "." + entryPoint.getName() : "null") + " ===");
         instructionCount = 0;
         tracker.onExecutionStart();
@@ -57,12 +58,11 @@ public class HeapForensicsListener implements BytecodeListener {
 
     @Override
     public void onExecutionEnd(BytecodeResult result) {
-        System.out.println("[HeapForensics] === END: instructions=" + instructionCount +
+        ConsoleLogService.getInstance().debug("[HeapForensics] === END: instructions=" + instructionCount +
             ", allocations=" + tracker.getTotalAllocationCount() +
             ", result=" + (result != null ? result : "null") + " ===");
         if (result != null && result.getException() != null) {
-            System.out.println("[HeapForensics] EXCEPTION: " + result.getException());
-            result.getException().printStackTrace();
+            ConsoleLogService.getInstance().error("[HeapForensics] EXCEPTION", result.getException());
         }
         tracker.onExecutionEnd(instructionCount);
     }
@@ -80,7 +80,7 @@ public class HeapForensicsListener implements BytecodeListener {
 
     @Override
     public void onObjectAllocation(ObjectInstance instance) {
-        System.out.println("[HeapForensics] OBJECT ALLOC: " + instance.getClassName() +
+        ConsoleLogService.getInstance().debug("[HeapForensics] OBJECT ALLOC: " + instance.getClassName() +
             " id=" + instance.getId() + " at instruction " + instructionCount);
 
         ProvenanceInfo provenance = captureProvenance();
@@ -98,7 +98,7 @@ public class HeapForensicsListener implements BytecodeListener {
 
     @Override
     public void onArrayAllocation(ArrayInstance array) {
-        System.out.println("[HeapForensics] ARRAY ALLOC: " + array.getComponentType() + "[] " +
+        ConsoleLogService.getInstance().debug("[HeapForensics] ARRAY ALLOC: " + array.getComponentType() + "[] " +
             "length=" + array.getLength() + " id=" + array.getId() + " at instruction " + instructionCount);
 
         ProvenanceInfo provenance = captureProvenance();

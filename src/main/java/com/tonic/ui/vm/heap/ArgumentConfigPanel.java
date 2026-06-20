@@ -9,6 +9,7 @@ import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
+import com.tonic.service.ConsoleLogService;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
@@ -298,7 +299,7 @@ public class ArgumentConfigPanel extends ThemedJPanel {
                 }
             }
         } catch (Exception e) {
-            System.out.println("[HeapForensics] Failed to load constructors: " + e.getMessage());
+            ConsoleLogService.getInstance().error("[HeapForensics] Failed to load constructors: " + e.getMessage());
         }
 
         if (constructorCombo.getItemCount() == 0) {
@@ -547,7 +548,7 @@ public class ArgumentConfigPanel extends ThemedJPanel {
 
         MethodEntry ctor = (MethodEntry) (constructorCombo != null ? constructorCombo.getSelectedItem() : null);
         if (ctor == null || classResolver == null) {
-            System.out.println("[HeapForensics] No constructor selected, returning uninitialized receiver");
+            ConsoleLogService.getInstance().debug("[HeapForensics] No constructor selected, returning uninitialized receiver");
             return receiver;
         }
 
@@ -564,17 +565,16 @@ public class ArgumentConfigPanel extends ThemedJPanel {
                 .classResolver(classResolver)
                 .build();
             BytecodeEngine engine = new BytecodeEngine(ctx);
-            System.out.println("[HeapForensics] Executing constructor: " + ctor.getOwnerName() + "." + ctor.getName() + ctor.getDesc());
+            ConsoleLogService.getInstance().debug("[HeapForensics] Executing constructor: " + ctor.getOwnerName() + "." + ctor.getName() + ctor.getDesc());
             BytecodeResult result = engine.execute(ctor, frameArgs);
 
             if (result.hasException()) {
-                System.out.println("[HeapForensics] Constructor threw exception: " + result.getException());
+                ConsoleLogService.getInstance().error("[HeapForensics] Constructor threw exception: " + result.getException());
             } else {
-                System.out.println("[HeapForensics] Constructor executed successfully");
+                ConsoleLogService.getInstance().debug("[HeapForensics] Constructor executed successfully");
             }
         } catch (Exception e) {
-            System.out.println("[HeapForensics] Failed to execute constructor: " + e.getMessage());
-            e.printStackTrace();
+            ConsoleLogService.getInstance().error("[HeapForensics] Failed to execute constructor", e);
         }
 
         return receiver;

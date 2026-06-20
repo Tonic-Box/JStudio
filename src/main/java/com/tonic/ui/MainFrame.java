@@ -1211,6 +1211,17 @@ public class MainFrame extends JFrame {
         editorPanel.refreshWelcomeTab();
     }
 
+    /**
+     * User-invoked Refresh (toolbar / menu / Ctrl+F5): the FULL refresh - drop every class's decompilation cache and
+     * force-re-decompile all open tabs from current bytecode, identical to what happens after the AI rename tools (or
+     * any project mutation). Use this instead of {@link #refreshCurrentView()} when stale decompiled output needs to
+     * be regenerated.
+     */
+    public void fullRefresh() {
+        refreshAfterProjectChange();
+        statusBar.setMessage("Refreshed - re-decompiled all classes from current bytecode");
+    }
+
     public void closeEditorForClass(String className) {
         editorPanel.closeTabForClass(className);
     }

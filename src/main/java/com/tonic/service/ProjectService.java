@@ -98,7 +98,7 @@ public class ProjectService {
                     ClassFile cf = new ClassFile(is);
                     classes.add(cf);
                 } catch (Exception e) {
-                    System.err.println("Failed to load class: " + entry.getName() + " - " + e.getMessage());
+                    ConsoleLogService.getInstance().error("Failed to load class: " + entry.getName() + " - " + e.getMessage());
                 }
                 current++;
                 if (progress != null) {
@@ -111,7 +111,7 @@ public class ProjectService {
                     byte[] data = is.readAllBytes();
                     resources.add(new ResourceEntryModel(entry.getName(), data));
                 } catch (Exception e) {
-                    System.err.println("Failed to load resource: " + entry.getName() + " - " + e.getMessage());
+                    ConsoleLogService.getInstance().error("Failed to load resource: " + entry.getName() + " - " + e.getMessage());
                 }
                 current++;
                 if (progress != null) {
@@ -204,7 +204,7 @@ public class ProjectService {
                 ClassFile cf = new ClassFile(new ByteArrayInputStream(data));
                 classes.add(cf);
             } catch (Exception e) {
-                System.err.println("Failed to load class: " + path + " - " + e.getMessage());
+                ConsoleLogService.getInstance().error("Failed to load class: " + path + " - " + e.getMessage());
             }
 
             current++;
@@ -289,7 +289,7 @@ public class ProjectService {
                     currentProject.addClass(cf);
                     addedClassCount++;
                 } catch (Exception e) {
-                    System.err.println("Failed to load class: " + entry.getName() + " - " + e.getMessage());
+                    ConsoleLogService.getInstance().error("Failed to load class: " + entry.getName() + " - " + e.getMessage());
                 }
                 current++;
                 if (progress != null) {
@@ -303,7 +303,7 @@ public class ProjectService {
                     currentProject.addResource(new ResourceEntryModel(entry.getName(), data));
                     addedResourceCount++;
                 } catch (Exception e) {
-                    System.err.println("Failed to load resource: " + entry.getName() + " - " + e.getMessage());
+                    ConsoleLogService.getInstance().error("Failed to load resource: " + entry.getName() + " - " + e.getMessage());
                 }
                 current++;
                 if (progress != null) {
@@ -379,7 +379,7 @@ public class ProjectService {
                 currentProject.addClass(cf);
                 addedCount++;
             } catch (Exception e) {
-                System.err.println("Failed to load class: " + path + " - " + e.getMessage());
+                ConsoleLogService.getInstance().error("Failed to load class: " + path + " - " + e.getMessage());
             }
 
             current++;
@@ -430,7 +430,7 @@ public class ProjectService {
                 project.addClass(new ClassFile(new ByteArrayInputStream(data)));
                 loaded++;
             } catch (Exception e) {
-                System.err.println("Failed to pull live class " + lc.getInternalName() + ": " + e.getMessage());
+                ConsoleLogService.getInstance().error("Failed to pull live class " + lc.getInternalName() + ": " + e.getMessage());
             }
             current++;
             if (progress != null) {
@@ -476,7 +476,7 @@ public class ProjectService {
                 currentProject.addClass(new ClassFile(new ByteArrayInputStream(data)));
                 added++;
             } catch (Exception e) {
-                System.err.println("Failed to refresh live class " + lc.getInternalName() + ": " + e.getMessage());
+                ConsoleLogService.getInstance().error("Failed to refresh live class " + lc.getInternalName() + ": " + e.getMessage());
             }
             current++;
             if (progress != null) {
@@ -511,7 +511,7 @@ public class ProjectService {
             EventBus.getInstance().post(new ProjectUpdatedEvent(this, currentProject, 1));
             return entry;
         } catch (IOException e) {
-            System.err.println("Failed to add captured class " + internalName + ": " + e.getMessage());
+            ConsoleLogService.getInstance().error("Failed to add captured class " + internalName + ": " + e.getMessage());
             return null;
         }
     }
@@ -560,7 +560,7 @@ public class ProjectService {
         try {
             return new ClassPool();
         } catch (IOException e) {
-            System.err.println("Failed to load JDK classes, falling back to empty pool: " + e.getMessage());
+            ConsoleLogService.getInstance().warn("Failed to load JDK classes, falling back to empty pool: " + e.getMessage());
             return new ClassPool(true);
         }
     }

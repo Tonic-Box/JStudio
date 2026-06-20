@@ -6,6 +6,7 @@ import com.tonic.ui.editor.statistics.charts.PieChart;
 import com.tonic.ui.editor.statistics.charts.StatCard;
 import com.tonic.ui.editor.statistics.charts.StatTable;
 import com.tonic.model.ClassEntryModel;
+import com.tonic.service.ConsoleLogService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
@@ -252,7 +253,7 @@ public class StatisticsView extends JPanel implements ThemeChangeListener {
     }
 
     private void showError(String message) {
-        System.err.println(message);
+        ConsoleLogService.getInstance().error(message);
         methodCountCard.setValue("?");
         fieldCountCard.setValue("?");
         bytecodeCard.setValue("?");

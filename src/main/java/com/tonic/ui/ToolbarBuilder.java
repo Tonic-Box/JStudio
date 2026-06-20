@@ -80,6 +80,7 @@ public class ToolbarBuilder implements ThemeChangeListener {
 
         // View mode dropdown
         viewModeCombo = new ViewModeComboBox();
+        viewModeCombo.setToolTipText("View mode - how the selected class is shown (Decompiled, Bytecode, Hex, ...)");
         themeViewModeCombo();
         viewModeCombo.addActionListener(e -> {
             ViewMode mode = viewModeCombo.getSelectedViewMode();
@@ -121,8 +122,9 @@ public class ToolbarBuilder implements ThemeChangeListener {
         toolbar.add(scratchPadButton);
         toolbar.addSeparator();
 
-        // Refresh
-        toolbar.add(createButton(Icons.getIcon("refresh"), "Refresh (Ctrl+F5)", e -> mainFrame.refreshCurrentView()));
+        // Refresh - full: invalidate all decompilation caches + re-decompile every open tab (same as after AI rename)
+        toolbar.add(createButton(Icons.getIcon("refresh"),
+                "Refresh - re-decompile all & clear caches (Ctrl+F5)", e -> mainFrame.fullRefresh()));
 
         return toolbar;
     }

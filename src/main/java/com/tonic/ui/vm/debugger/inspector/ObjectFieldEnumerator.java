@@ -5,6 +5,7 @@ import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ValueTag;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.FieldEntry;
+import com.tonic.service.ConsoleLogService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,7 +92,7 @@ public class ObjectFieldEnumerator {
                 }
             }
         } catch (Exception e) {
-            System.err.println("[ObjectFieldEnumerator] Error enumerating " + className + ": " + e.getMessage());
+            ConsoleLogService.getInstance().error("[ObjectFieldEnumerator] Error enumerating " + className + ": " + e.getMessage());
         }
     }
 

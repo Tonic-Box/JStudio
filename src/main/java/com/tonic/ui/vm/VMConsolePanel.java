@@ -4,6 +4,7 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
+import com.tonic.service.ConsoleLogService;
 import com.tonic.service.ProjectService;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.util.JdkClassFilter;
@@ -423,7 +424,7 @@ public class VMConsolePanel extends ThemedJPanel {
             doc.insertString(doc.getLength(), text, style);
             outputPane.setCaretPosition(doc.getLength());
         } catch (BadLocationException e) {
-            e.printStackTrace();
+            ConsoleLogService.getInstance().error("Failed to append text to console output", e);
         }
     }
 

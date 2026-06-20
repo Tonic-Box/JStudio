@@ -1,6 +1,7 @@
 package com.tonic.script.store;
 
 import com.tonic.script.engine.Script;
+import com.tonic.service.ConsoleLogService;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -28,7 +29,7 @@ public class ScriptStore {
             try {
                 Files.createDirectories(dir);
             } catch (IOException e) {
-                System.err.println("Failed to create scripts directory: " + e.getMessage());
+                ConsoleLogService.getInstance().error("Failed to create scripts directory: " + e.getMessage());
             }
         }
         return dir;
@@ -100,11 +101,11 @@ public class ScriptStore {
                     Script script = loadScript(path.toFile());
                     scripts.add(script);
                 } catch (IOException e) {
-                    System.err.println("Failed to load script: " + path + " - " + e.getMessage());
+                    ConsoleLogService.getInstance().error("Failed to load script: " + path + " - " + e.getMessage());
                 }
             }
         } catch (IOException e) {
-            System.err.println("Failed to list scripts directory: " + e.getMessage());
+            ConsoleLogService.getInstance().error("Failed to list scripts directory: " + e.getMessage());
         }
 
         // Also load .js files
@@ -114,7 +115,7 @@ public class ScriptStore {
                     Script script = loadPlainScript(path.toFile());
                     scripts.add(script);
                 } catch (IOException e) {
-                    System.err.println("Failed to load script: " + path + " - " + e.getMessage());
+                    ConsoleLogService.getInstance().error("Failed to load script: " + path + " - " + e.getMessage());
                 }
             }
         } catch (IOException e) {
@@ -145,7 +146,7 @@ public class ScriptStore {
         try {
             return Files.deleteIfExists(file);
         } catch (IOException e) {
-            System.err.println("Failed to delete script: " + e.getMessage());
+            ConsoleLogService.getInstance().error("Failed to delete script: " + e.getMessage());
             return false;
         }
     }

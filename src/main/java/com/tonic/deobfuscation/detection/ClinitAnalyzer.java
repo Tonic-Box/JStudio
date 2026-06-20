@@ -5,6 +5,7 @@ import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
 import com.tonic.deobfuscation.DeobfuscationService;
+import com.tonic.service.ConsoleLogService;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -72,7 +73,7 @@ public class ClinitAnalyzer {
             }
 
         } catch (Exception e) {
-            System.out.println("[ClinitAnalyzer] Error analyzing bytecode: " + e.getMessage());
+            ConsoleLogService.getInstance().error("[ClinitAnalyzer] Error analyzing bytecode: " + e.getMessage());
         }
     }
 

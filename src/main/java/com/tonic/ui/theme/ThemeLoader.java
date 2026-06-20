@@ -3,6 +3,7 @@ package com.tonic.ui.theme;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.tonic.service.ConsoleLogService;
 
 import java.awt.Color;
 import java.io.InputStream;
@@ -59,7 +60,7 @@ public class ThemeLoader {
             themeCache.put(name, theme);
             return theme;
         } catch (Exception e) {
-            System.err.println("Failed to load theme: " + name + " - " + e.getMessage());
+            ConsoleLogService.getInstance().error("Failed to load theme: " + name + " - " + e.getMessage());
             return null;
         }
     }

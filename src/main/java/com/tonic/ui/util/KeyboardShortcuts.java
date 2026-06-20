@@ -63,7 +63,7 @@ public class KeyboardShortcuts {
                 "hexView", e -> mainFrame.switchToHexView());
 
         registerAction(rootPane, condition, KeyStroke.getKeyStroke(KeyEvent.VK_F5, MENU_SHORTCUT_MASK),
-                "refresh", e -> mainFrame.refreshCurrentView());
+                "refresh", e -> mainFrame.fullRefresh());
 
         // Edit shortcuts
         registerAction(rootPane, condition, KeyStroke.getKeyStroke(KeyEvent.VK_C, MENU_SHORTCUT_MASK),

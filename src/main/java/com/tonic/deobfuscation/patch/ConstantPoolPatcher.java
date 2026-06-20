@@ -6,6 +6,7 @@ import com.tonic.parser.constpool.Item;
 import com.tonic.parser.constpool.StringRefItem;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.deobfuscation.model.DeobfuscationResult;
+import com.tonic.service.ConsoleLogService;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ public class ConstantPoolPatcher {
                 result.setApplied(true);
                 applied++;
             } catch (Exception e) {
-                System.out.println("[ConstantPoolPatcher] Failed to apply patch at CP#" +
+                ConsoleLogService.getInstance().error("[ConstantPoolPatcher] Failed to apply patch at CP#" +
                     result.getConstantPoolIndex() + ": " + e.getMessage());
             }
         }

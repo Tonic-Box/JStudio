@@ -20,6 +20,7 @@ import com.tonic.event.EventBus;
 import com.tonic.event.events.ProjectLoadedEvent;
 import com.tonic.event.events.StatusMessageEvent;
 import com.tonic.model.ProjectModel;
+import com.tonic.service.ConsoleLogService;
 import com.tonic.service.ProjectService;
 import com.tonic.ui.vm.model.ExecutionResult;
 import com.tonic.ui.vm.model.MethodCall;
@@ -402,8 +403,7 @@ public class VMExecutionService {
                             lastStackDepth = currentDepth;
                         }
                     } catch (Exception e) {
-                        System.out.println("[VMExecutionService] Listener error in beforeInstruction: " + e.getMessage());
-                        e.printStackTrace();
+                        ConsoleLogService.getInstance().error("[VMExecutionService] Listener error in beforeInstruction", e);
                     }
                 }
 
@@ -425,8 +425,7 @@ public class VMExecutionService {
                             lastStackDepth = currentDepth;
                         }
                     } catch (Exception e) {
-                        System.out.println("[VMExecutionService] Listener error in afterInstruction: " + e.getMessage());
-                        e.printStackTrace();
+                        ConsoleLogService.getInstance().error("[VMExecutionService] Listener error in afterInstruction", e);
                     }
                 }
             });
@@ -446,8 +445,7 @@ public class VMExecutionService {
             return buildExecutionResult(result, endTime - startTime, methodCalls);
 
         } catch (Exception e) {
-            System.out.println("[VMExecutionService] traceStaticMethod error: " + e.getMessage());
-            e.printStackTrace();
+            ConsoleLogService.getInstance().error("[VMExecutionService] traceStaticMethod error", e);
             long endTime = System.currentTimeMillis();
             return ExecutionResult.builder()
                 .success(false)
