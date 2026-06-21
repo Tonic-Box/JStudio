@@ -8,10 +8,13 @@ import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -56,6 +59,12 @@ public class ToolWindowPane extends JPanel implements ThemeChangeListener {
     @Getter
     private boolean collapsed = true;
     private Consumer<Boolean> collapseListener;
+    private BiConsumer<String, MoveTarget> moveListener;
+    private boolean dragSuppressAction;
+    private static final int DRAG_THRESHOLD = 5;
+
+    /** Targets a stripe tool can be relocated to via its right-click menu. */
+    public enum MoveTarget { TAB, WINDOW }
 
     public ToolWindowPane() {
         super(new BorderLayout());
@@ -71,6 +80,60 @@ public class ToolWindowPane extends JPanel implements ThemeChangeListener {
     /** Notified (with the new collapsed state) whenever the content area collapses or expands. */
     public void setCollapseListener(Consumer<Boolean> listener) {
         this.collapseListener = listener;
+    }
+
+    /** Notified when the user right-click-requests relocating a tool out of the dock (to a center tab or a window). */
+    public void setMoveListener(BiConsumer<String, MoveTarget> listener) {
+        this.moveListener = listener;
+    }
+
+    private boolean maybeShowMoveMenu(MouseEvent e, String name) {
+        if (!e.isPopupTrigger() || moveListener == null) {
+            return false;
+        }
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem toTab = new JMenuItem("Move to Tab");
+        toTab.addActionListener(a -> moveListener.accept(name, MoveTarget.TAB));
+        JMenuItem toWindow = new JMenuItem("Move to Window");
+        toWindow.addActionListener(a -> moveListener.accept(name, MoveTarget.WINDOW));
+        menu.add(toTab);
+        menu.add(toWindow);
+        menu.show(e.getComponent(), e.getX(), e.getY());
+        return true;
+    }
+
+    /** The stripe slot a cursor at {@code y} (in stripe coords) falls into: # of buttons whose midpoint is above it. */
+    private int slotForY(int y) {
+        int slot = 0;
+        for (StripeButton b : buttons) {
+            if (y >= b.getY() + b.getHeight() / 2) {
+                slot++;
+            }
+        }
+        return Math.max(0, Math.min(slot, buttons.size() - 1));
+    }
+
+    /** Reorders the stripe button (and the tools map, to keep reselect/default-first consistent) from {@code from} to {@code to}. */
+    private void moveButton(int from, int to) {
+        int size = buttons.size();
+        to = Math.max(0, Math.min(to, size - 1));
+        if (from < 0 || from >= size || from == to) {
+            return;
+        }
+        StripeButton moved = buttons.remove(from);
+        buttons.add(to, moved);
+
+        stripe.removeAll();
+        Map<String, JComponent> reordered = new LinkedHashMap<>();
+        for (StripeButton b : buttons) {
+            stripe.add(b);
+            stripe.add(Box.createVerticalStrut(3));
+            reordered.put(b.toolName(), tools.get(b.toolName()));
+        }
+        tools.clear();
+        tools.putAll(reordered);
+        stripe.revalidate();
+        stripe.repaint();
     }
 
     /** Width of the always-visible stripe column (so the container can leave room for it when collapsed). */
@@ -119,7 +182,61 @@ public class ToolWindowPane extends JPanel implements ThemeChangeListener {
         tools.put(name, component);
         content.add(component, name);
         StripeButton button = new StripeButton(name);
-        button.addActionListener(e -> onStripeClick(name));
+        button.addActionListener(e -> {
+            if (dragSuppressAction) {
+                dragSuppressAction = false;   // this click ended a drag - don't toggle selection
+                return;
+            }
+            onStripeClick(name);
+        });
+        MouseAdapter handler = new MouseAdapter() {
+            private Point pressPoint;
+            private boolean dragging;
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (maybeShowMoveMenu(e, name) || !SwingUtilities.isLeftMouseButton(e)) {
+                    pressPoint = null;
+                    return;
+                }
+                pressPoint = e.getPoint();
+                dragging = false;
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (pressPoint == null) {
+                    return;
+                }
+                if (!dragging) {
+                    if (Math.abs(e.getX() - pressPoint.x) < DRAG_THRESHOLD
+                            && Math.abs(e.getY() - pressPoint.y) < DRAG_THRESHOLD) {
+                        return;
+                    }
+                    dragging = true;
+                    dragSuppressAction = true;
+                    button.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+                }
+                int from = buttons.indexOf(button);
+                Point inStripe = SwingUtilities.convertPoint(button, e.getPoint(), stripe);
+                int to = slotForY(inStripe.y);
+                if (from >= 0 && to != from) {
+                    moveButton(from, to);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                maybeShowMoveMenu(e, name);
+                pressPoint = null;
+                if (dragging) {
+                    dragging = false;
+                    button.setCursor(Cursor.getDefaultCursor());
+                }
+            }
+        };
+        button.addMouseListener(handler);
+        button.addMouseMotionListener(handler);
         buttons.add(button);
         stripe.add(button);
         stripe.add(Box.createVerticalStrut(3));
@@ -136,9 +253,30 @@ public class ToolWindowPane extends JPanel implements ThemeChangeListener {
 
     /** Removes a registered tool (and its stripe button). If it was active, activates the first remaining tool. */
     public void removeTool(String name) {
+        removeToolInternal(name);
+    }
+
+    /**
+     * Removes a tool and returns its component so it can be re-hosted elsewhere (a center tab or a window) and later
+     * restored via {@link #addTool}. Collapses the dock once it has no tools left. Returns null if no such tool.
+     */
+    public JComponent detachTool(String name) {
+        JComponent component = removeToolInternal(name);
+        if (component != null) {
+            // CardLayout leaves non-active cards visible=false; ensure it shows once re-hosted outside the dock.
+            component.setVisible(true);
+            if (tools.isEmpty()) {
+                setCollapsed(true);
+            }
+        }
+        return component;
+    }
+
+    /** Shared removal: drops the tool's card + stripe button, reselects the first remaining tool, returns the card. */
+    private JComponent removeToolInternal(String name) {
         JComponent component = tools.remove(name);
         if (component == null) {
-            return;
+            return null;
         }
         content.remove(component);
         for (int i = 0; i < buttons.size(); i++) {
@@ -162,6 +300,7 @@ public class ToolWindowPane extends JPanel implements ThemeChangeListener {
         }
         revalidate();
         repaint();
+        return component;
     }
 
     /** Activates the named tool (expanding the content area if collapsed) and shows its card. */

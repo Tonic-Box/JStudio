@@ -14,6 +14,7 @@ import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
+import javax.swing.SwingUtilities;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -24,6 +25,8 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Point;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
@@ -42,6 +45,9 @@ public class EditorPanel extends ThemedJPanel {
     private final Map<String, ResourceEditorTab> openResourceTabs = new HashMap<>();
     /** Plugin-contributed center tabs, keyed by the plugin-supplied view id. */
     private final Map<String, JComponent> customViews = new HashMap<>();
+    /** Optional per-id close hook for a custom view, run when it is closed (by the tab's close button or programmatically). */
+    private final Map<String, Runnable> customViewCloseHooks = new HashMap<>();
+    private static final int DRAG_THRESHOLD = 5;
     private ProjectModel projectModel;
     private final WelcomeTab welcomeTab;
 
@@ -180,6 +186,14 @@ public class EditorPanel extends ThemedJPanel {
      * re-focuses its tab. The {@code icon} may be null.
      */
     public void openCustomView(String id, String title, Icon icon, JComponent view) {
+        openCustomView(id, title, icon, view, null);
+    }
+
+    /**
+     * As {@link #openCustomView(String, String, Icon, JComponent)}, but {@code onClose} (nullable) runs when the view
+     * is closed - by the tab's close button, {@link #closeCustomView(String)}, or {@link #closeAllTabs()}.
+     */
+    public void openCustomView(String id, String title, Icon icon, JComponent view, Runnable onClose) {
         JComponent existing = customViews.get(id);
         if (existing != null) {
             int index = findComponentIndex(existing);
@@ -190,13 +204,16 @@ public class EditorPanel extends ThemedJPanel {
         }
 
         customViews.put(id, view);
+        if (onClose != null) {
+            customViewCloseHooks.put(id, onClose);
+        }
         tabbedPane.addTab(title, icon, view, title);
         int index = tabbedPane.getTabCount() - 1;
         tabbedPane.setTabComponentAt(index, createCustomTabComponent(id, title, icon));
         tabbedPane.setSelectedIndex(index);
     }
 
-    /** Closes a plugin-contributed center tab. No-op if {@code id} is not open (idempotent). */
+    /** Closes a plugin-contributed center tab (running its close hook, if any). No-op if {@code id} is not open. */
     public void closeCustomView(String id) {
         JComponent view = customViews.remove(id);
         if (view == null) {
@@ -208,6 +225,10 @@ public class EditorPanel extends ThemedJPanel {
             if (openTabs.isEmpty() && openResourceTabs.isEmpty() && customViews.isEmpty()) {
                 tabbedPane.setSelectedIndex(0);
             }
+        }
+        Runnable onClose = customViewCloseHooks.remove(id);
+        if (onClose != null) {
+            onClose.run();
         }
     }
 
@@ -265,6 +286,7 @@ public class EditorPanel extends ThemedJPanel {
         panel.addMouseListener(tabClickListener);
         titleLabel.addMouseListener(tabClickListener);
 
+        installTabDragHandler(panel, titleLabel);
         return panel;
     }
 
@@ -313,6 +335,7 @@ public class EditorPanel extends ThemedJPanel {
         iconLabel.addMouseListener(tabClickListener);
         titleLabel.addMouseListener(tabClickListener);
 
+        installTabDragHandler(panel, iconLabel, titleLabel);
         return panel;
     }
 
@@ -373,7 +396,79 @@ public class EditorPanel extends ThemedJPanel {
         iconLabel.addMouseListener(tabClickListener);
         titleLabel.addMouseListener(tabClickListener);
 
+        installTabDragHandler(panel, iconLabel, titleLabel);
         return panel;
+    }
+
+    /** Live drag-to-reorder for a tab header (and its child labels). The pinned Welcome tab (index 0) gets no handler. */
+    private void installTabDragHandler(JPanel header, JComponent... extraTargets) {
+        MouseAdapter drag = new MouseAdapter() {
+            private Point pressPoint;
+            private boolean dragging;
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger() || !SwingUtilities.isLeftMouseButton(e)) {
+                    pressPoint = null;
+                    return;
+                }
+                pressPoint = e.getPoint();
+                dragging = false;
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (pressPoint == null) {
+                    return;
+                }
+                if (!dragging) {
+                    if (Math.abs(e.getX() - pressPoint.x) < DRAG_THRESHOLD
+                            && Math.abs(e.getY() - pressPoint.y) < DRAG_THRESHOLD) {
+                        return;
+                    }
+                    dragging = true;
+                    header.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+                }
+                Point inPane = SwingUtilities.convertPoint(e.getComponent(), e.getPoint(), tabbedPane);
+                int to = tabbedPane.indexAtLocation(inPane.x, inPane.y);
+                int from = tabbedPane.indexOfTabComponent(header);
+                if (to >= 1 && from >= 1 && to != from) {
+                    moveTab(from, to);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                pressPoint = null;
+                if (dragging) {
+                    dragging = false;
+                    header.setCursor(Cursor.getDefaultCursor());
+                }
+            }
+        };
+        header.addMouseListener(drag);
+        header.addMouseMotionListener(drag);
+        for (JComponent target : extraTargets) {
+            target.addMouseListener(drag);
+            target.addMouseMotionListener(drag);
+        }
+    }
+
+    /** Moves the tab at {@code from} to {@code to}, preserving header/content/icon/tooltip. Tab 0 (Welcome) is pinned. */
+    private void moveTab(int from, int to) {
+        int count = tabbedPane.getTabCount();
+        if (from < 1 || to < 1 || from == to || from >= count || to >= count) {
+            return;
+        }
+        String title = tabbedPane.getTitleAt(from);
+        Icon icon = tabbedPane.getIconAt(from);
+        String tip = tabbedPane.getToolTipTextAt(from);
+        Component comp = tabbedPane.getComponentAt(from);
+        Component header = tabbedPane.getTabComponentAt(from);
+        tabbedPane.removeTabAt(from);
+        tabbedPane.insertTab(title, icon, comp, tip, to);
+        tabbedPane.setTabComponentAt(to, header);
+        tabbedPane.setSelectedIndex(to);
     }
 
     private void showTabContextMenu(EditorTab tab, MouseEvent e) {
@@ -467,8 +562,13 @@ public class EditorPanel extends ThemedJPanel {
         }
         openTabs.clear();
         openResourceTabs.clear();
+        java.util.List<Runnable> hooks = new java.util.ArrayList<>(customViewCloseHooks.values());
+        customViewCloseHooks.clear();
         customViews.clear();
         tabbedPane.setSelectedIndex(0); // Switch to Welcome tab
+        for (Runnable hook : hooks) {
+            hook.run();
+        }
     }
 
     /**

@@ -7,29 +7,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Fix gaps in refresh">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Expose DotGraph stuff to plugin api surface">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/DeobfuscationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/DeobfuscationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/detection/ClinitAnalyzer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/detection/ClinitAnalyzer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/patch/ConstantPoolPatcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/patch/ConstantPoolPatcher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/store/ScriptStore.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/store/ScriptStore.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectDatabaseService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectDatabaseService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/StatisticsView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/StatisticsView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/ThemeLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/ThemeLoader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/transform/TransformPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/transform/TransformPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/KeyboardShortcuts.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/util/KeyboardShortcuts.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMConsolePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMConsolePanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/VMDebugSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/VMDebugSession.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/inspector/ObjectFieldEnumerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/inspector/ObjectFieldEnumerator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/ExecuteMethodDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/dialog/ExecuteMethodDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ArgumentConfigPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/ArgumentConfigPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/HeapForensicsListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/heap/HeapForensicsListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,17 +74,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/zacke/IdeaProjects/runelite-5435243534&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "C:/Users/zacke/IdeaProjects/VityaHeadless",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "run.code.analysis.last.selected.profile": "pProject Default"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\zacke\IdeaProjects\JStudio\src\main\resources" />
@@ -249,38 +232,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00061" summary="- cleanup">
-      <option name="closed" value="true" />
-      <created>1768621352705</created>
-      <option name="number" value="00061" />
-      <option name="presentableId" value="LOCAL-00061" />
-      <option name="project" value="LOCAL" />
-      <updated>1768621352705</updated>
-    </task>
-    <task id="LOCAL-00062" summary="- cleanup&#10;- Call Graph view">
-      <option name="closed" value="true" />
-      <created>1768648422864</created>
-      <option name="number" value="00062" />
-      <option name="presentableId" value="LOCAL-00062" />
-      <option name="project" value="LOCAL" />
-      <updated>1768648422864</updated>
-    </task>
-    <task id="LOCAL-00063" summary="- ui cleanup and improvements">
-      <option name="closed" value="true" />
-      <created>1768695647682</created>
-      <option name="number" value="00063" />
-      <option name="presentableId" value="LOCAL-00063" />
-      <option name="project" value="LOCAL" />
-      <updated>1768695647682</updated>
-    </task>
-    <task id="LOCAL-00064" summary="- ui cleanup and improvements&#10;- xref fix for overloads&#10;- xref fix for bootstrap handles and nested bootstraps&#10;- other various bug fixes">
-      <option name="closed" value="true" />
-      <created>1768855055713</created>
-      <option name="number" value="00064" />
-      <option name="presentableId" value="LOCAL-00064" />
-      <option name="project" value="LOCAL" />
-      <updated>1768855055713</updated>
     </task>
     <task id="LOCAL-00065" summary="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion&#10;- fixed a caching bug in decompilation">
       <option name="closed" value="true" />
@@ -642,7 +593,39 @@
       <option name="project" value="LOCAL" />
       <updated>1781872056642</updated>
     </task>
-    <option name="localTasksCounter" value="110" />
+    <task id="LOCAL-00110" summary="- Fix gaps in refresh&#10;- Clean up logging">
+      <option name="closed" value="true" />
+      <created>1781996422816</created>
+      <option name="number" value="00110" />
+      <option name="presentableId" value="LOCAL-00110" />
+      <option name="project" value="LOCAL" />
+      <updated>1781996422816</updated>
+    </task>
+    <task id="LOCAL-00111" summary="- Fix gaps in refresh&#10;- Clean up logging">
+      <option name="closed" value="true" />
+      <created>1781996442820</created>
+      <option name="number" value="00111" />
+      <option name="presentableId" value="LOCAL-00111" />
+      <option name="project" value="LOCAL" />
+      <updated>1781996442820</updated>
+    </task>
+    <task id="LOCAL-00112" summary="- Expose DotGraph stuff to plugin api surface">
+      <option name="closed" value="true" />
+      <created>1782027204276</created>
+      <option name="number" value="00112" />
+      <option name="presentableId" value="LOCAL-00112" />
+      <option name="project" value="LOCAL" />
+      <updated>1782027204276</updated>
+    </task>
+    <task id="LOCAL-00113" summary="- Expose DotGraph stuff to plugin api surface">
+      <option name="closed" value="true" />
+      <created>1782027303386</created>
+      <option name="number" value="00113" />
+      <option name="presentableId" value="LOCAL-00113" />
+      <option name="project" value="LOCAL" />
+      <updated>1782027303386</updated>
+    </task>
+    <option name="localTasksCounter" value="114" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -657,8 +640,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Version bump 15.0" />
-    <MESSAGE value="- Version bump 16.0&#10;- Fix NPE scrolling the debugger source tab before the window is laid out" />
     <MESSAGE value="- Version bump 17.0&#10;- Add Dual view: linked bytecode/source panes" />
     <MESSAGE value="Add usage-count lenses (class/method/field) + span-based navigation&#10;- Clickable &quot;N usages&quot; lenses on class, method, and field declarations; open Find Usages (View ▸ Usage Counts toggle)&#10;- Shared XrefQueryService (one xref build + filter for lenses and Find Usages); class usages scoped to type references, not member accesses&#10;- Navigate/locate declarations via decompiler spans; regex kept only as Hide-Annotations fallback&#10;- Find Usages selection skips string/char literals and prefers the real member-access/call token&#10;- Recompiling a class invalidates the xref database" />
     <MESSAGE value="- Cleanup" />
@@ -682,7 +663,9 @@
     <MESSAGE value="Script Editor: AI script API + engine fixes&#10;&#10;Host-side ScriptApi (write/list/read/run) on PluginContext with a bottom-tab Script Console (ScriptConsolePanel + events) so the AI plugin can author and run scripts. Extract the run loop into ScriptRunner.&#10;&#10;Engine fixes:&#10;- explicit ast/ir/annotations.remove() sentinel (a bare null/no-return now KEEPS a node instead of deleting it)&#10;- cement AST/IR transforms to bytecode, with a verify-and-restore guard that skips methods the decompiler can't round-trip losslessly&#10;- register the full bridge set per pass (no &quot;Cannot call non-function&quot; spam) and invalidate decompile/IR caches after a change&#10;&#10;Fix built-in examples (match by call.owner; use *.remove()) and document the return-value convention + per-method/cementing behavior." />
     <MESSAGE value="- Add host rename API + full decompile/tab refresh after mutations" />
     <MESSAGE value="- Fix gaps in refresh" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Fix gaps in refresh" />
+    <MESSAGE value="- Fix gaps in refresh&#10;- Clean up logging" />
+    <MESSAGE value="- Expose DotGraph stuff to plugin api surface" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Expose DotGraph stuff to plugin api surface" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

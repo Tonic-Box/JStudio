@@ -153,6 +153,7 @@ public class MainFrame extends JFrame {
     private QueryExplorerPanel queryExplorerPanel;
     @Getter
     private ToolWindowPane rightToolWindow;
+    private ToolWindowMover toolWindowMover;
 
     // Bottom panel with tabbed results
     @Getter
@@ -272,6 +273,8 @@ public class MainFrame extends JFrame {
         rightToolWindow = new ToolWindowPane();
         rightToolWindow.addTool("Inspector", propertiesPanel);
         rightToolWindow.addTool("Query", queryExplorerPanel);
+        toolWindowMover = new ToolWindowMover(rightToolWindow, editorPanel, this);
+        rightToolWindow.setMoveListener(toolWindowMover::move);
 
         // The live "Threads" tool is only present while attached to a running JVM.
         EventBus.getInstance().register(LiveSessionEvent.class, e -> {
@@ -292,9 +295,12 @@ public class MainFrame extends JFrame {
                     rightToolWindow.addTool("Recorder", liveRecorderPanel);
                 }
             } else {
-                rightToolWindow.removeTool("Threads");
-                rightToolWindow.removeTool("Profiler");
-                rightToolWindow.removeTool("Recorder");
+                // A live tool may have been moved to a tab/window; tear that float down (the session is gone) before
+                // the dock removal, which is then a clean no-op.
+                for (String tool : new String[]{"Threads", "Profiler", "Recorder"}) {
+                    toolWindowMover.closeFloat(tool);
+                    rightToolWindow.removeTool(tool);
+                }
             }
         });
 
@@ -1044,6 +1050,9 @@ public class MainFrame extends JFrame {
         GuiPluginManager.getInstance().shutdown();
         statusBar.dispose();
         queryExplorerPanel.shutdown();
+        if (toolWindowMover != null) {
+            toolWindowMover.disposeAll();
+        }
         dispose();
         System.exit(0);
     }
