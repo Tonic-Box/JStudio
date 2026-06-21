@@ -265,7 +265,7 @@ public class MainFrame extends JFrame {
         // Create panels
         navigatorPanel = new NavigatorPanel(this);
         editorPanel = new EditorPanel(this);
-        propertiesPanel = new PropertiesPanel(this);
+        propertiesPanel = new PropertiesPanel();
         consolePanel = new ConsolePanel();
         statusBar = new StatusBar();
 
