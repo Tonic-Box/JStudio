@@ -25,6 +25,7 @@ import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.util.function.Consumer;
 
 /**
  * Renders a Graphviz DOT string as an inline, themed graph thumbnail scaled to the host's width; clicking opens an
@@ -38,27 +39,43 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener {
     private static final int PAD = 6;
     private static final double EXPORT_SCALE = 2.0;
 
-    /** Renders {@code dot} as an inline interactive graph, or a raw-source fallback if it can't be parsed. */
+    /** Renders {@code dot} as an inline interactive thumbnail (click opens a popup window), or a raw-source fallback. */
     public static JComponent render(String dot) {
+        return render(dot, null);
+    }
+
+    /**
+     * Renders {@code dot} as an inline thumbnail whose click is handled by {@code onOpen} (given the DOT source) - e.g.
+     * to open the diagram as an editor tab instead of a popup. When {@code onOpen} is null the click opens the default
+     * {@link DotGraphDialog} window. Returns a raw-source fallback panel if the DOT can't be parsed.
+     */
+    public static JComponent render(String dot, Consumer<String> onOpen) {
         try {
             DotGraph model = DotParser.parse(dot);
             if (model.isEmpty()) {
                 return fallback(dot);
             }
-            return new DotGraphView(dot, model);
+            return new DotGraphView(dot, model, onOpen);
         } catch (RuntimeException e) {
             return fallback(dot);
         }
     }
 
+    /** The full interactive (pan/zoom + toolbar) view of {@code dot}, for embedding as a tab/panel instead of a popup. */
+    public static JComponent interactiveComponent(String dot) {
+        return new DotGraphPanel(dot);
+    }
+
     private final String dotSource;
     private final DotGraph model;
+    private final Consumer<String> onOpen;
     private BufferedImage image;
     private int lastLayoutWidth = -1;
 
-    private DotGraphView(String dotSource, DotGraph model) {
+    private DotGraphView(String dotSource, DotGraph model, Consumer<String> onOpen) {
         this.dotSource = dotSource;
         this.model = model;
+        this.onOpen = onOpen;
         setOpaque(false);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         setToolTipText("Click to open the diagram");
@@ -67,7 +84,7 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                openDialog();
+                openDiagram();
             }
         });
     }
@@ -81,7 +98,11 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener {
         }
     }
 
-    private void openDialog() {
+    private void openDiagram() {
+        if (onOpen != null) {
+            onOpen.accept(dotSource);
+            return;
+        }
         Window owner = SwingUtilities.getWindowAncestor(this);
         new DotGraphDialog(owner, dotSource).setVisible(true);
     }
