@@ -637,15 +637,6 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         return String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
     }
 
-    protected static String escapeHtml(String text) {
-        if (text == null) return "";
-        return text
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\"", "&quot;");
-    }
-
     public String getText() {
         return currentDOT;
     }

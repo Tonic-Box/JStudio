@@ -5,7 +5,6 @@ import com.tonic.plugin.api.PluginLogger;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.function.Consumer;
 
 public class ConsolePluginLogger implements PluginLogger {
 
@@ -15,9 +14,6 @@ public class ConsolePluginLogger implements PluginLogger {
     private final PrintStream out;
     private final PrintStream err;
     private boolean debugEnabled = false;
-    private Consumer<String> infoCallback;
-    private Consumer<String> warnCallback;
-    private Consumer<String> errorCallback;
 
     public ConsolePluginLogger(String pluginName) {
         this.pluginName = pluginName;
@@ -35,25 +31,9 @@ public class ConsolePluginLogger implements PluginLogger {
         this.debugEnabled = enabled;
     }
 
-    public void setInfoCallback(Consumer<String> callback) {
-        this.infoCallback = callback;
-    }
-
-    public void setWarnCallback(Consumer<String> callback) {
-        this.warnCallback = callback;
-    }
-
-    public void setErrorCallback(Consumer<String> callback) {
-        this.errorCallback = callback;
-    }
-
     @Override
     public void info(String message) {
-        String formatted = format("INFO", message);
-        out.println(formatted);
-        if (infoCallback != null) {
-            infoCallback.accept(message);
-        }
+        out.println(format("INFO", message));
     }
 
     @Override
@@ -63,11 +43,7 @@ public class ConsolePluginLogger implements PluginLogger {
 
     @Override
     public void warn(String message) {
-        String formatted = format("WARN", message);
-        out.println(formatted);
-        if (warnCallback != null) {
-            warnCallback.accept(message);
-        }
+        out.println(format("WARN", message));
     }
 
     @Override
@@ -77,11 +53,7 @@ public class ConsolePluginLogger implements PluginLogger {
 
     @Override
     public void error(String message) {
-        String formatted = format("ERROR", message);
-        err.println(formatted);
-        if (errorCallback != null) {
-            errorCallback.accept(message);
-        }
+        err.println(format("ERROR", message));
     }
 
     @Override

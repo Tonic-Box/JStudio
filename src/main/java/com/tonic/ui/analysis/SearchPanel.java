@@ -270,14 +270,6 @@ public class SearchPanel extends ThemedJPanel {
     }
 
     /**
-     * Set focus to the search field.
-     */
-    public void focusSearch() {
-        searchField.requestFocus();
-        searchField.selectAll();
-    }
-
-    /**
      * Navigate to the selected search result.
      */
     private void navigateToSelectedResult() {

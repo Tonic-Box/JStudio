@@ -589,13 +589,6 @@ public class ASTBridge {
         return result != null && result.isNative() && result.unwrap() == REMOVE_SENTINEL;
     }
 
-    /**
-     * Clears all registered handlers.
-     */
-    public void clearHandlers() {
-        handlers.clear();
-    }
-
     // ==================== Validation Framework ====================
 
     private ScriptValue validateNode(ScriptValue nodeVal) {

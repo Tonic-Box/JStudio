@@ -50,15 +50,6 @@ public class FilterableComboBox<T> extends JComboBox<T> {
         }
     }
 
-    public void addAllItem(T item) {
-        allItems.add(item);
-    }
-
-    public void clearAllItems() {
-        allItems.clear();
-        ((DefaultComboBoxModel<T>) getModel()).removeAllElements();
-    }
-
     private void setupFilter() {
         JTextField editor = (JTextField) getEditor().getEditorComponent();
 
@@ -102,9 +93,9 @@ public class FilterableComboBox<T> extends JComboBox<T> {
                         setSelectedItem(lastSelectedItem);
                     }
                 } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    Object selected = getSelectedItem();
-                    if (selected != null && allItems.contains(selected)) {
-                        lastSelectedItem = (T) selected;
+                    T selected = findItem(getSelectedItem());
+                    if (selected != null) {
+                        lastSelectedItem = selected;
                         hidePopup();
                         editor.setText(textExtractor.apply(lastSelectedItem));
                     }
@@ -169,13 +160,27 @@ public class FilterableComboBox<T> extends JComboBox<T> {
         }
     }
 
+    /** Returns the {@code allItems} element equal to {@code candidate} (preserving its {@code T} type), or null. */
+    private T findItem(Object candidate) {
+        if (candidate == null) {
+            return null;
+        }
+        for (T item : allItems) {
+            if (item.equals(candidate)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
     @Override
     public void setSelectedItem(Object item) {
         selecting = true;
         try {
             super.setSelectedItem(item);
-            if (item != null && allItems.contains(item)) {
-                lastSelectedItem = (T) item;
+            T match = findItem(item);
+            if (match != null) {
+                lastSelectedItem = match;
                 JTextField editor = (JTextField) getEditor().getEditorComponent();
                 editor.setText(textExtractor.apply(lastSelectedItem));
             }

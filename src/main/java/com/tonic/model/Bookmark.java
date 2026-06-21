@@ -33,14 +33,6 @@ public class Bookmark {
         this.name = name;
     }
 
-    public Bookmark(String className, String memberName, int lineNumber, String name) {
-        this();
-        this.className = className;
-        this.memberName = memberName;
-        this.lineNumber = lineNumber;
-        this.name = name;
-    }
-
     public boolean hasSlot() {
         return slot >= 0 && slot <= 9;
     }

@@ -53,19 +53,6 @@ public class ScriptContext {
     }
 
     /**
-     * Checks if a variable exists in the scope chain.
-     */
-    public boolean has(String name) {
-        if (variables.containsKey(name)) {
-            return true;
-        }
-        if (parent != null) {
-            return parent.has(name);
-        }
-        return false;
-    }
-
-    /**
      * Sets a variable, searching up the scope chain.
      */
     public void set(String name, ScriptValue value) {
@@ -104,15 +91,4 @@ public class ScriptContext {
         return new ScriptContext(this);
     }
 
-    /**
-     * Dumps all variables (for debugging).
-     */
-    public Map<String, ScriptValue> dump() {
-        Map<String, ScriptValue> all = new HashMap<>();
-        if (parent != null) {
-            all.putAll(parent.dump());
-        }
-        all.putAll(variables);
-        return all;
-    }
 }

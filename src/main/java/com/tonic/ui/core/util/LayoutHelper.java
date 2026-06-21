@@ -10,13 +10,10 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.border.Border;
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -53,15 +50,6 @@ public final class LayoutHelper {
         return button;
     }
 
-    public static JTextField createTextField(int columns) {
-        JTextField field = new JTextField(columns);
-        field.setBackground(JStudioTheme.getBgTertiary());
-        field.setForeground(JStudioTheme.getTextPrimary());
-        field.setCaretColor(JStudioTheme.getTextPrimary());
-        field.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
-        return field;
-    }
-
     public static JScrollPane createScrollPane(Component view) {
         return new ThemedJScrollPane(view);
     }
@@ -81,23 +69,12 @@ public final class LayoutHelper {
         return label;
     }
 
-    public static JLabel createSecondaryLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setForeground(JStudioTheme.getTextSecondary());
-        label.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_SMALL));
-        return label;
-    }
-
     public static Border createBottomBorder() {
         return BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder());
     }
 
     public static Border createTopBorder() {
         return BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder());
-    }
-
-    public static Border createLineBorder() {
-        return BorderFactory.createLineBorder(JStudioTheme.getBorder());
     }
 
     public static Border createEmptyBorder() {
@@ -131,24 +108,6 @@ public final class LayoutHelper {
 
     public static Component createVerticalStrut(int height) {
         return Box.createRigidArea(new Dimension(0, height));
-    }
-
-    public static JPanel wrapInBorderLayout(JComponent center) {
-        ThemedJPanel panel = new ThemedJPanel(new BorderLayout());
-        panel.add(center, BorderLayout.CENTER);
-        return panel;
-    }
-
-    public static JPanel wrapInBorderLayout(JComponent north, JComponent center, JComponent south) {
-        ThemedJPanel panel = new ThemedJPanel(new BorderLayout());
-        if (north != null) {
-            panel.add(north, BorderLayout.NORTH);
-        }
-        panel.add(center, BorderLayout.CENTER);
-        if (south != null) {
-            panel.add(south, BorderLayout.SOUTH);
-        }
-        return panel;
     }
 
     public static JPanel createHorizontalBox(Component... components) {

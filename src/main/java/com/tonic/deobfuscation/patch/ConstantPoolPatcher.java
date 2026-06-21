@@ -7,12 +7,8 @@ import com.tonic.parser.constpool.StringRefItem;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.deobfuscation.model.DeobfuscationResult;
 import com.tonic.service.ConsoleLogService;
-import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ConstantPoolPatcher {
 
@@ -70,69 +66,4 @@ public class ConstantPoolPatcher {
         return applied;
     }
 
-    public Map<String, String> getStringMapping(ClassFile classFile) {
-        Map<String, String> mapping = new HashMap<>();
-        ConstPool cp = classFile.getConstPool();
-        List<Item<?>> items = cp.getItems();
-
-        for (int i = 1; i < items.size(); i++) {
-            Item<?> item = items.get(i);
-            if (item instanceof StringRefItem) {
-                StringRefItem stringRef = (StringRefItem) item;
-                int utf8Index = stringRef.getValue();
-                if (utf8Index > 0 && utf8Index < items.size()) {
-                    Item<?> utf8Item = items.get(utf8Index);
-
-                    if (utf8Item instanceof Utf8Item) {
-                        String value = ((Utf8Item) utf8Item).getValue();
-                        mapping.put(String.valueOf(i), value);
-                    }
-                }
-            }
-        }
-
-        return mapping;
-    }
-
-    public List<StringLocation> findStringLocations(ClassFile classFile, String value) {
-        List<StringLocation> locations = new ArrayList<>();
-        ConstPool cp = classFile.getConstPool();
-        List<Item<?>> items = cp.getItems();
-
-        for (int i = 1; i < items.size(); i++) {
-            Item<?> item = items.get(i);
-            if (item instanceof StringRefItem) {
-                StringRefItem stringRef = (StringRefItem) item;
-                int utf8Index = stringRef.getValue();
-                if (utf8Index > 0 && utf8Index < items.size()) {
-                    Item<?> utf8Item = items.get(utf8Index);
-
-                    if (utf8Item instanceof Utf8Item) {
-                        String currentValue = ((Utf8Item) utf8Item).getValue();
-                        if (value.equals(currentValue)) {
-                            locations.add(new StringLocation(classFile, i, utf8Index, currentValue));
-                        }
-                    }
-                }
-            }
-        }
-
-        return locations;
-    }
-
-    @Getter
-    public static class StringLocation {
-        private final ClassFile classFile;
-        private final int stringRefIndex;
-        private final int utf8Index;
-        private final String value;
-
-        public StringLocation(ClassFile classFile, int stringRefIndex, int utf8Index, String value) {
-            this.classFile = classFile;
-            this.stringRefIndex = stringRefIndex;
-            this.utf8Index = utf8Index;
-            this.value = value;
-        }
-
-    }
 }

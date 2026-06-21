@@ -87,19 +87,6 @@ public class ProjectDatabase {
         this.metadata = metadata != null ? metadata : new HashMap<>();
     }
 
-    public void setMetadataValue(String key, Object value) {
-        metadata.put(key, value);
-        touch();
-    }
-
-    public Object getMetadataValue(String key) {
-        return metadata.get(key);
-    }
-
-    public int getTotalAnnotationCount() {
-        return comments.getCommentCount() + bookmarks.getBookmarkCount();
-    }
-
     public String getTargetFileName() {
         if (targetPath == null) {
             return "Untitled";

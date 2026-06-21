@@ -8,13 +8,11 @@ import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.heap.SimpleHeapManager;
 import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ConcreteValue;
-import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
 import com.tonic.deobfuscation.model.DecryptorCandidate;
 import com.tonic.deobfuscation.model.DeobfuscationResult;
 import com.tonic.model.ProjectModel;
-import com.tonic.service.ConsoleLogService;
 import com.tonic.service.ProjectService;
 import lombok.Getter;
 
@@ -167,88 +165,6 @@ public class DeobfuscationService {
         } catch (Exception e) {
             return DeobfuscationResult.failure(className, cpIndex, encryptedValue, e.getMessage());
         }
-    }
-
-    public Map<String, Object> executeClinitAndCaptureFields(ClassFile classFile) {
-        if (!isInitialized()) {
-            initialize();
-        }
-
-        resetHeap();
-
-        BytecodeContext ctx = new BytecodeContext.Builder()
-            .heapManager(heapManager)
-            .classResolver(classResolver)
-            .mode(ExecutionMode.RECURSIVE)
-            .maxInstructions(maxInstructions)
-            .maxCallDepth(maxCallDepth)
-            .build();
-
-        BytecodeEngine engine = new BytecodeEngine(ctx);
-
-        MethodEntry clinit = null;
-        for (MethodEntry method : classFile.getMethods()) {
-            if ("<clinit>".equals(method.getName())) {
-                clinit = method;
-                break;
-            }
-        }
-
-        if (clinit == null) {
-            return new HashMap<>();
-        }
-
-        try {
-            BytecodeResult result = engine.execute(clinit);
-
-            if (!result.isSuccess()) {
-                ConsoleLogService.getInstance().error("[DeobfuscationService] <clinit> execution failed: " + result.getException());
-                return new HashMap<>();
-            }
-
-            Map<String, Object> capturedFields = new HashMap<>();
-            String className = classFile.getClassName();
-
-            for (var field : classFile.getFields()) {
-                String fieldName = field.getName();
-                String fieldDesc = field.getDesc();
-
-                if (heapManager.hasStaticField(className, fieldName, fieldDesc)) {
-                    Object value = heapManager.getStaticField(className, fieldName, fieldDesc);
-
-                    if (value instanceof ObjectInstance) {
-                        ObjectInstance obj = (ObjectInstance) value;
-                        String stringVal = heapManager.extractString(obj);
-                        if (stringVal != null) {
-                            value = stringVal;
-                        }
-                    }
-
-                    capturedFields.put(fieldName, value);
-                }
-            }
-
-            return capturedFields;
-
-        } catch (Exception e) {
-            ConsoleLogService.getInstance().error("[DeobfuscationService] Error executing <clinit>", e);
-            return new HashMap<>();
-        }
-    }
-
-    public List<DeobfuscationResult> batchDecrypt(List<String> encryptedStrings,
-                                                   Map<String, Integer> cpIndexMap,
-                                                   String className,
-                                                   DecryptorCandidate decryptor) {
-        List<DeobfuscationResult> results = new ArrayList<>();
-
-        for (String encrypted : encryptedStrings) {
-            int cpIndex = cpIndexMap.getOrDefault(encrypted, -1);
-            DeobfuscationResult result = decryptString(className, cpIndex, encrypted, decryptor);
-            results.add(result);
-        }
-
-        return results;
     }
 
 }

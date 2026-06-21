@@ -386,7 +386,4 @@ public class ResultsBridge {
                 .replace("\t", "\\t");
     }
 
-    public List<ScriptValue> getFindings() {
-        return new ArrayList<>(findings);
-    }
 }

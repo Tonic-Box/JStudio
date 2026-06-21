@@ -12,7 +12,6 @@ import com.tonic.analysis.callgraph.CallSite;
 import com.tonic.analysis.common.MethodReference;
 import lombok.Getter;
 
-import java.awt.Color;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -193,10 +192,6 @@ public class CallGraphRenderer {
                 mxConstants.STYLE_ENDARROW + "=" + mxConstants.ARROW_CLASSIC + ";" +
                 mxConstants.STYLE_ROUNDED + "=1;" +
                 mxConstants.STYLE_EDGE + "=" + mxConstants.EDGESTYLE_ORTHOGONAL + ";";
-    }
-
-    private static String toHex(Color c) {
-        return String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue());
     }
 
     private void applyLayout(Object parent) {

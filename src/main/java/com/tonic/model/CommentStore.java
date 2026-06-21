@@ -2,11 +2,9 @@ package com.tonic.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class CommentStore {
 
@@ -48,33 +46,9 @@ public class CommentStore {
         }
     }
 
-    public Comment getComment(String id) {
-        return commentsById.get(id);
-    }
-
     public List<Comment> getCommentsForClass(String className) {
         List<Comment> comments = commentsByClass.get(className);
         return comments != null ? new ArrayList<>(comments) : Collections.emptyList();
-    }
-
-    public List<Comment> getCommentsForMethod(String className, String methodName) {
-        List<Comment> classComments = commentsByClass.get(className);
-        if (classComments == null) {
-            return Collections.emptyList();
-        }
-        return classComments.stream()
-            .filter(c -> methodName.equals(c.getMemberName()))
-            .collect(Collectors.toList());
-    }
-
-    public List<Comment> getCommentsForLine(String className, int lineNumber) {
-        List<Comment> classComments = commentsByClass.get(className);
-        if (classComments == null) {
-            return Collections.emptyList();
-        }
-        return classComments.stream()
-            .filter(c -> c.getLineNumber() == lineNumber)
-            .collect(Collectors.toList());
     }
 
     public List<Comment> getAllComments() {
@@ -88,14 +62,6 @@ public class CommentStore {
     public void clear() {
         commentsByClass.clear();
         commentsById.clear();
-    }
-
-    public Map<String, List<Comment>> getCommentsByClass() {
-        Map<String, List<Comment>> result = new HashMap<>();
-        for (Map.Entry<String, List<Comment>> entry : commentsByClass.entrySet()) {
-            result.put(entry.getKey(), new ArrayList<>(entry.getValue()));
-        }
-        return result;
     }
 
     public void setComments(List<Comment> comments) {

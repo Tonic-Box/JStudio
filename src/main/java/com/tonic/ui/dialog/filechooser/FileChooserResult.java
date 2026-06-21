@@ -65,17 +65,4 @@ public class FileChooserResult {
         return selectedFiles.isEmpty() ? null : selectedFiles.get(0);
     }
 
-    /**
-     * Check if any files were selected.
-     */
-    public boolean hasSelection() {
-        return !selectedFiles.isEmpty();
-    }
-
-    /**
-     * Get the count of selected files.
-     */
-    public int getSelectionCount() {
-        return selectedFiles.size();
-    }
 }

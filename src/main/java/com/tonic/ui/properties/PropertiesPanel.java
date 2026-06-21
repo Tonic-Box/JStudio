@@ -35,7 +35,7 @@ public class PropertiesPanel extends ThemedJPanel {
     private MethodEntryModel currentMethod;
     private FieldEntryModel currentField;
 
-    public PropertiesPanel(MainFrame mainFrame) {
+    public PropertiesPanel() {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -289,10 +289,6 @@ public class PropertiesPanel extends ThemedJPanel {
                 .replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;");
-    }
-
-    private String formatAccessFlags(int flags) {
-        return formatAccessFlags(flags, AccessContext.METHOD);
     }
 
     private String formatAccessFlags(int flags, AccessContext context) {

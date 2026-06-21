@@ -24,10 +24,6 @@ public class IRNodeWrapper {
         this.node = node;
     }
 
-    public Object unwrap() {
-        return node;
-    }
-
     /**
      * Creates a ScriptValue representing this node.
      */

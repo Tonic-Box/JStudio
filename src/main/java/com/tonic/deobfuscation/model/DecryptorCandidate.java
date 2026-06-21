@@ -37,23 +37,11 @@ public class DecryptorCandidate {
         return method.getName();
     }
 
-    public String getDescriptor() {
-        return method.getDesc();
-    }
-
-    public String getSignature() {
-        return getClassName().replace('/', '.') + "." + getMethodName() + getDescriptor();
-    }
-
     public String getSimpleSignature() {
         String className = getClassName();
         int lastSlash = className.lastIndexOf('/');
         String simpleName = lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
         return simpleName + "." + getMethodName() + "()";
-    }
-
-    public boolean isStatic() {
-        return (method.getAccess() & 0x0008) != 0;
     }
 
     @Getter

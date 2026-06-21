@@ -27,8 +27,6 @@ import com.tonic.simulation.model.OpaquePredicate;
 import com.tonic.simulation.model.TaintFlow;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -44,63 +42,12 @@ public class SimulationService {
     private static final SimulationService INSTANCE = new SimulationService();
 
     private final Map<String, SimulationResultCache> resultCache = new ConcurrentHashMap<>();
-    private final List<SimulationServiceListener> listeners = new ArrayList<>();
 
     private SimulationService() {
     }
 
     public static SimulationService getInstance() {
         return INSTANCE;
-    }
-
-    public void addListener(SimulationServiceListener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(SimulationServiceListener listener) {
-        listeners.remove(listener);
-    }
-
-    /**
-     * Runs opaque predicate analysis on a single method.
-     */
-    public List<OpaquePredicate> analyzeOpaquePredicates(MethodEntryModel methodModel) {
-        if (methodModel == null) {
-            return Collections.emptyList();
-        }
-
-        ClassEntryModel classModel = methodModel.getOwner();
-        MethodEntry method = methodModel.getMethodEntry();
-
-        if (method.getCodeAttribute() == null) {
-            return Collections.emptyList();
-        }
-
-        try {
-            IRMethod irMethod = liftToIR(classModel.getClassFile(), method);
-            if (irMethod == null) {
-                return Collections.emptyList();
-            }
-
-            return runOpaquePredicateAnalysis(irMethod, classModel, methodModel);
-        } catch (Exception e) {
-            postStatus("Simulation error: " + e.getMessage());
-            return Collections.emptyList();
-        }
-    }
-
-    /**
-     * Runs opaque predicate analysis on all methods in a class.
-     */
-    public List<OpaquePredicate> analyzeOpaquePredicates(ClassEntryModel classModel) {
-        List<OpaquePredicate> allFindings = new ArrayList<>();
-
-        for (MethodEntryModel methodModel : classModel.getMethods()) {
-            List<OpaquePredicate> findings = analyzeOpaquePredicates(methodModel);
-            allFindings.addAll(findings);
-        }
-
-        return allFindings;
     }
 
     /**
@@ -133,86 +80,11 @@ public class SimulationService {
             SimulationAnalysisResult result = runFullAnalysis(irMethod, classModel, methodModel);
             resultCache.put(cacheKey, new SimulationResultCache(result));
 
-            notifyAnalysisComplete(methodModel, result);
             return result;
         } catch (Exception e) {
             postStatus("Analysis error: " + e.getMessage());
             return null;
         }
-    }
-
-    /**
-     * Runs analysis on all methods in the current project.
-     */
-    public Map<MethodEntryModel, SimulationAnalysisResult> analyzeProject(ProgressCallback callback) {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            return Collections.emptyMap();
-        }
-
-        Map<MethodEntryModel, SimulationAnalysisResult> results = new HashMap<>();
-        List<ClassEntryModel> classes = project.getAllClasses();
-
-        int total = classes.stream().mapToInt(c -> c.getMethods().size()).sum();
-        int current = 0;
-
-        for (ClassEntryModel classModel : classes) {
-            for (MethodEntryModel methodModel : classModel.getMethods()) {
-                SimulationAnalysisResult result = runAnalysis(methodModel);
-                if (result != null && result.hasFindings()) {
-                    results.put(methodModel, result);
-                }
-
-                current++;
-                if (callback != null) {
-                    callback.onProgress(current, total, methodModel.getDisplaySignature());
-                }
-            }
-        }
-
-        return results;
-    }
-
-    /**
-     * Gets dead code blocks for a method.
-     */
-    public Set<IRBlock> findDeadCode(MethodEntryModel methodModel) {
-        if (methodModel == null) {
-            return Collections.emptySet();
-        }
-
-        ClassEntryModel classModel = methodModel.getOwner();
-        MethodEntry method = methodModel.getMethodEntry();
-
-        if (method.getCodeAttribute() == null) {
-            return Collections.emptySet();
-        }
-
-        try {
-            IRMethod irMethod = liftToIR(classModel.getClassFile(), method);
-            if (irMethod == null) {
-                return Collections.emptySet();
-            }
-
-            return computeDeadCode(irMethod);
-        } catch (Exception e) {
-            return Collections.emptySet();
-        }
-    }
-
-    /**
-     * Clears the result cache.
-     */
-    public void clearCache() {
-        resultCache.clear();
-    }
-
-    /**
-     * Clears cached results for a specific class.
-     */
-    public void clearCache(ClassEntryModel classModel) {
-        String prefix = classModel.getClassName() + "#";
-        resultCache.keySet().removeIf(key -> key.startsWith(prefix));
     }
 
     private IRMethod liftToIR(ClassFile classFile, MethodEntry method) {
@@ -222,42 +94,6 @@ public class SimulationService {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private List<OpaquePredicate> runOpaquePredicateAnalysis(IRMethod irMethod,
-                                                             ClassEntryModel classModel,
-                                                             MethodEntryModel methodModel) {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        ClassPool pool = project != null ? project.getClassPool() : null;
-
-        SimulationContext ctx = SimulationContext.defaults()
-                .withClassPool(pool)
-                .withValueTracking(true);
-
-        SimulationEngine engine = new SimulationEngine(ctx);
-
-        OpaquePredicateListener opaqueListener = new OpaquePredicateListener();
-        engine.addListener(opaqueListener);
-
-        engine.simulate(irMethod);
-
-        List<OpaquePredicate> findings = new ArrayList<>();
-        for (OpaquePredicateListener.BranchAnalysis analysis : opaqueListener.getAnalyzedBranches()) {
-            if (analysis.isOpaque()) {
-                OpaquePredicate finding = new OpaquePredicate(
-                        classModel.getClassName(),
-                        methodModel.getMethodEntry().getName(),
-                        methodModel.getMethodEntry().getDesc(),
-                        analysis.getInstruction(),
-                        analysis.isAlwaysTrue(),
-                        analysis.getBlockId(),
-                        analysis.getBytecodeOffset()
-                );
-                findings.add(finding);
-            }
-        }
-
-        return findings;
     }
 
     private SimulationAnalysisResult runFullAnalysis(IRMethod irMethod,
@@ -349,23 +185,6 @@ public class SimulationService {
         );
     }
 
-    private Set<IRBlock> computeDeadCode(IRMethod irMethod) {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        ClassPool pool = project != null ? project.getClassPool() : null;
-
-        SimulationContext ctx = SimulationContext.defaults()
-                .withClassPool(pool);
-
-        SimulationEngine engine = new SimulationEngine(ctx);
-
-        ControlFlowListener cfListener = new ControlFlowListener();
-        engine.addListener(cfListener);
-
-        engine.simulate(irMethod);
-
-        return computeDeadCodeFromListener(irMethod, cfListener);
-    }
-
     private Set<IRBlock> computeDeadCodeFromListener(IRMethod irMethod, ControlFlowListener cfListener) {
         Set<IRBlock> deadBlocks = new HashSet<>();
 
@@ -397,27 +216,6 @@ public class SimulationService {
 
     private void postStatus(String message) {
         EventBus.getInstance().post(new StatusMessageEvent(this, message));
-    }
-
-    private void notifyAnalysisComplete(MethodEntryModel methodModel, SimulationAnalysisResult result) {
-        for (SimulationServiceListener listener : listeners) {
-            listener.onAnalysisComplete(methodModel, result);
-        }
-    }
-
-    /**
-     * Progress callback for batch analysis.
-     */
-    @FunctionalInterface
-    public interface ProgressCallback {
-        void onProgress(int current, int total, String currentMethod);
-    }
-
-    /**
-     * Listener for simulation service events.
-     */
-    public interface SimulationServiceListener {
-        void onAnalysisComplete(MethodEntryModel method, SimulationAnalysisResult result);
     }
 
     /**

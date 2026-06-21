@@ -30,14 +30,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * When no project is loaded the getters operate on an empty sentinel model rather than throwing, so a
  * background-polling plugin never sees an exception from a getter. {@code host.currentProject()} (nullable) is the
  * authoritative way to check whether a project is actually open. Per-plugin state (logger, config, results,
- * services, environment) is stable for the plugin's lifetime.
+ * environment) is stable for the plugin's lifetime.
  */
 public class LiveGuiPluginContext implements PluginContext {
 
     private final ConsolePluginLogger logger;
     private final MapPluginConfig config;
     private final ResultCollector results;
-    private final Map<String, Object> services = new ConcurrentHashMap<>();
     private final Map<String, Object> environment = new ConcurrentHashMap<>();
     private File exportDir;
     private ProjectModel emptyProject;
@@ -112,7 +111,7 @@ public class LiveGuiPluginContext implements PluginContext {
 
     @Override
     public Optional<Object> getService(String name) {
-        return Optional.ofNullable(services.get(name));
+        return Optional.empty();
     }
 
     @Override
@@ -123,14 +122,6 @@ public class LiveGuiPluginContext implements PluginContext {
     @Override
     public void setEnvironmentValue(String key, Object value) {
         environment.put(key, value);
-    }
-
-    public void registerService(String name, Object service) {
-        services.put(name, service);
-    }
-
-    public void setDebugEnabled(boolean enabled) {
-        logger.setDebugEnabled(enabled);
     }
 
     @Override

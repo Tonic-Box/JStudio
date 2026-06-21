@@ -19,12 +19,6 @@ public class BridgeRegistry {
     private Consumer<String> logCallback;
 
     @Getter
-    private ASTBridge astBridge;
-    @Getter
-    private IRBridge irBridge;
-    @Getter
-    private AnnotationBridge annotationBridge;
-    @Getter
     private ResultsBridge resultsBridge;
     @Getter
     private ProjectBridge projectBridge;
@@ -81,30 +75,6 @@ public class BridgeRegistry {
             }
             interpreter.getGlobalContext().defineConstant("live", liveBridge.createBridgeObject());
         }
-    }
-
-    public void registerASTBridge() {
-        astBridge = new ASTBridge(interpreter);
-        if (logCallback != null) {
-            astBridge.setLogCallback(logCallback);
-        }
-        interpreter.getGlobalContext().defineConstant("ast", astBridge.createAstObject());
-    }
-
-    public void registerIRBridge() {
-        irBridge = new IRBridge(interpreter);
-        if (logCallback != null) {
-            irBridge.setLogCallback(logCallback);
-        }
-        interpreter.getGlobalContext().defineConstant("ir", irBridge.createIRObject());
-    }
-
-    public void registerAnnotationBridge() {
-        annotationBridge = new AnnotationBridge(interpreter);
-        if (logCallback != null) {
-            annotationBridge.setLogCallback(logCallback);
-        }
-        interpreter.getGlobalContext().defineConstant("annotations", annotationBridge.createAnnotationObject());
     }
 
     public void registerResultsBridge() {
@@ -166,15 +136,8 @@ public class BridgeRegistry {
     }
 
     public void registerInstrumentationBridge() {
-        if (projectModel != null && irBridge != null) {
-            instrumentationBridge = new InstrumentationBridge(interpreter, projectModel, irBridge);
-            if (logCallback != null) {
-                instrumentationBridge.setLogCallback(logCallback);
-            }
-            interpreter.getGlobalContext().defineConstant("instrument", instrumentationBridge.createInstrumentObject());
-        } else if (projectModel != null) {
-            IRBridge tempIrBridge = new IRBridge(interpreter);
-            instrumentationBridge = new InstrumentationBridge(interpreter, projectModel, tempIrBridge);
+        if (projectModel != null) {
+            instrumentationBridge = new InstrumentationBridge(interpreter, projectModel);
             if (logCallback != null) {
                 instrumentationBridge.setLogCallback(logCallback);
             }

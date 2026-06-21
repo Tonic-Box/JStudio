@@ -39,15 +39,6 @@ public class Comment {
         this.text = text;
     }
 
-    public Comment(String className, String memberName, int lineNumber, String text, Type type) {
-        this();
-        this.className = className;
-        this.memberName = memberName;
-        this.lineNumber = lineNumber;
-        this.text = text;
-        this.type = type;
-    }
-
     public void setText(String text) {
         this.text = text;
         this.timestamp = System.currentTimeMillis();

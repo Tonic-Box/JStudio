@@ -73,26 +73,6 @@ public class EventBus {
     }
 
     /**
-     * Post an event asynchronously (always invokes handlers on EDT later).
-     */
-    @SuppressWarnings("unchecked")
-    public void postAsync(Event event) {
-        List<EventHandler<?>> list;
-        synchronized (handlers) {
-            list = handlers.get(event.getClass());
-            if (list == null || list.isEmpty()) {
-                return;
-            }
-            list = new ArrayList<>(list);
-        }
-
-        for (EventHandler<?> handler : list) {
-            EventHandler<Event> h = (EventHandler<Event>) handler;
-            SwingUtilities.invokeLater(() -> h.handle(event));
-        }
-    }
-
-    /**
      * Clear all handlers. Useful for testing.
      */
     public void clear() {

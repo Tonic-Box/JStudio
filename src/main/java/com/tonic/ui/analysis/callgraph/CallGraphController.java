@@ -199,12 +199,6 @@ public class CallGraphController {
         }
     }
 
-    public void refresh() {
-        if (model.hasCallGraph()) {
-            populateFocusCombo();
-        }
-    }
-
     public void onDepthChanged(int newDepth) {
         model.setMaxDepth(newDepth);
         if (model.hasFocusMethod()) {

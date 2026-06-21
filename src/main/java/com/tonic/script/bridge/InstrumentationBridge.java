@@ -28,7 +28,7 @@ public class InstrumentationBridge {
 
     private final List<InstrumentationRule> rules = new ArrayList<>();
 
-    public InstrumentationBridge(ScriptInterpreter interpreter, ProjectModel projectModel, IRBridge irBridge) {
+    public InstrumentationBridge(ScriptInterpreter interpreter, ProjectModel projectModel) {
         this.interpreter = interpreter;
         this.projectModel = projectModel;
     }

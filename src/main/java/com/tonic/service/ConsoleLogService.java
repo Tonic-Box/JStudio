@@ -2,9 +2,7 @@ package com.tonic.service;
 
 import lombok.Getter;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
@@ -15,10 +13,7 @@ public class ConsoleLogService {
 
     private final List<BiConsumer<LogLevel, String>> listeners = new CopyOnWriteArrayList<>();
     private final List<LogEntry> logHistory = new ArrayList<>();
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-    @Getter
-    private boolean showTimestamps = true;
-    private int maxHistory = 1000;
+    private final int maxHistory = 1000;
 
     private ConsoleLogService() {}
 
@@ -31,10 +26,6 @@ public class ConsoleLogService {
 
     public void addListener(BiConsumer<LogLevel, String> listener) {
         listeners.add(listener);
-    }
-
-    public void removeListener(BiConsumer<LogLevel, String> listener) {
-        listeners.remove(listener);
     }
 
     public void log(LogLevel level, String message) {
@@ -69,46 +60,6 @@ public class ConsoleLogService {
 
     public void debug(String message) {
         log(LogLevel.DEBUG, message);
-    }
-
-    public String formatWithTimestamp(String message) {
-        if (showTimestamps) {
-            return "[" + dateFormat.format(new Date()) + "] " + message;
-        }
-        return message;
-    }
-
-    public void setShowTimestamps(boolean show) {
-        this.showTimestamps = show;
-    }
-
-    public List<LogEntry> getHistory() {
-        synchronized (logHistory) {
-            return new ArrayList<>(logHistory);
-        }
-    }
-
-    public List<LogEntry> getHistory(LogLevel minLevel) {
-        List<LogEntry> filtered = new ArrayList<>();
-        synchronized (logHistory) {
-            for (LogEntry entry : logHistory) {
-                if (entry.getLevel().ordinal() >= minLevel.ordinal()) {
-                    filtered.add(entry);
-                }
-            }
-        }
-        return filtered;
-    }
-
-    public void clearHistory() {
-        synchronized (logHistory) {
-            logHistory.clear();
-        }
-    }
-
-    public void setMaxHistory(int max) {
-        this.maxHistory = max;
-        trimHistory();
     }
 
     private void addToHistory(LogEntry entry) {

@@ -91,10 +91,6 @@ public final class SnippetCompiler {
     private final int targetRelease;
     private int counter;
 
-    public SnippetCompiler(Classpath classpath) {
-        this(classpath, 0);
-    }
-
     /**
      * @param targetRelease the Java feature version to compile for (e.g. 11), so the snippet's bytecode can be
      *                      defined by an older target JVM; 0 = use the running JDK's default.

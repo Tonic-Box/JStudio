@@ -33,22 +33,6 @@ public class BookmarkStore {
         }
     }
 
-    public void updateBookmark(String id, String newName, String newNotes) {
-        Bookmark bookmark = bookmarksById.get(id);
-        if (bookmark != null) {
-            if (newName != null) {
-                bookmark.setName(newName);
-            }
-            if (newNotes != null) {
-                bookmark.setNotes(newNotes);
-            }
-        }
-    }
-
-    public Bookmark getBookmark(String id) {
-        return bookmarksById.get(id);
-    }
-
     public void setQuickSlot(int slot, Bookmark bookmark) {
         if (slot < 0 || slot > 9) {
             return;
@@ -85,10 +69,6 @@ public class BookmarkStore {
         return quickSlots[slot];
     }
 
-    public Bookmark[] getQuickSlots() {
-        return quickSlots.clone();
-    }
-
     public List<Bookmark> getAll() {
         List<Bookmark> list = new ArrayList<>(bookmarksById.values());
         list.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
@@ -100,19 +80,6 @@ public class BookmarkStore {
             .filter(b -> className.equals(b.getClassName()))
             .sorted(Comparator.comparingInt(Bookmark::getLineNumber))
             .collect(Collectors.toList());
-    }
-
-    public Bookmark findByLocation(String className, String memberName, int lineNumber) {
-        for (Bookmark b : bookmarksById.values()) {
-            if (className.equals(b.getClassName())) {
-                boolean memberMatch = (memberName == null && b.getMemberName() == null) ||
-                    (memberName != null && memberName.equals(b.getMemberName()));
-                if (memberMatch && b.getLineNumber() == lineNumber) {
-                    return b;
-                }
-            }
-        }
-        return null;
     }
 
     public int getBookmarkCount() {

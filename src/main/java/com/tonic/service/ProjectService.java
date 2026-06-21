@@ -234,18 +234,6 @@ public class ProjectService {
     }
 
     /**
-     * Add a class to the current project.
-     */
-    public ClassEntryModel addClass(byte[] classData) throws IOException {
-        if (currentProject == null) {
-            createProject("Untitled");
-        }
-
-        ClassFile cf = new ClassFile(new ByteArrayInputStream(classData));
-        return currentProject.addClass(cf);
-    }
-
-    /**
      * Append a JAR file to the current project.
      */
     public int appendJar(File jarFile, ProgressCallback progress) throws IOException {

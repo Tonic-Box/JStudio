@@ -145,23 +145,9 @@ public class ProjectDatabaseService {
         }
     }
 
-    public Bookmark getQuickSlot(int slot) {
-        if (currentDatabase != null) {
-            return currentDatabase.getBookmarks().getQuickSlot(slot);
-        }
-        return null;
-    }
-
     public List<Bookmark> getAllBookmarks() {
         if (currentDatabase != null) {
             return currentDatabase.getBookmarks().getAll();
-        }
-        return new ArrayList<>();
-    }
-
-    public List<Bookmark> getBookmarksForClass(String className) {
-        if (currentDatabase != null) {
-            return currentDatabase.getBookmarks().getForClass(className);
         }
         return new ArrayList<>();
     }
@@ -226,10 +212,6 @@ public class ProjectDatabaseService {
         if (!listeners.contains(listener)) {
             listeners.add(listener);
         }
-    }
-
-    public void removeListener(DatabaseChangeListener listener) {
-        listeners.remove(listener);
     }
 
     private void notifyListeners() {

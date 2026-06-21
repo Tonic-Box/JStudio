@@ -9,6 +9,7 @@ import com.tonic.model.ProjectModel;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
+import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.util.LinkedHashSet;
@@ -42,10 +43,7 @@ public final class DeadCodeRemover {
         private final int classesRemoved;
         private final int methodsRemoved;
         private final int fieldsRemoved;
-        /**
-         * -- GETTER --
-         * Internal names of classes that were mutated (members removed) but not deleted - invalidate their caches.
-         */
+        @Getter(AccessLevel.NONE)
         private final Set<String> touchedClasses;
         /**
          * -- GETTER --

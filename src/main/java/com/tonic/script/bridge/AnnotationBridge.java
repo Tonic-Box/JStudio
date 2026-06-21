@@ -299,12 +299,6 @@ public class AnnotationBridge {
         }
     }
 
-    public void clearHandlers() {
-        classAnnotationHandlers.clear();
-        methodAnnotationHandlers.clear();
-        fieldAnnotationHandlers.clear();
-    }
-
     public boolean hasHandlers() {
         return !classAnnotationHandlers.isEmpty() ||
                !methodAnnotationHandlers.isEmpty() ||

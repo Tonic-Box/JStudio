@@ -17,13 +17,13 @@ public class EncryptedStringDetector {
     private static final Pattern BASE64_PATTERN = Pattern.compile("^[A-Za-z0-9+/]{4,}={0,2}$");
     private static final Pattern HEX_PATTERN = Pattern.compile("^[0-9A-Fa-f]{8,}$");
 
-    private double entropyThreshold = 4.0;
-    private int minLength = 4;
-    private int maxLength = 1000;
-    private boolean detectBase64 = true;
-    private boolean detectHighEntropy = true;
-    private boolean detectNonPrintable = true;
-    private boolean detectHex = true;
+    private final double entropyThreshold = 4.0;
+    private final int minLength = 4;
+    private final int maxLength = 1000;
+    private final boolean detectBase64 = true;
+    private final boolean detectHighEntropy = true;
+    private final boolean detectNonPrintable = true;
+    private final boolean detectHex = true;
 
     public List<SuspiciousString> scan(ClassFile classFile) {
         List<SuspiciousString> suspicious = new ArrayList<>();
@@ -150,31 +150,4 @@ public class EncryptedStringDetector {
                 value.equals("Exceptions") || value.equals("Signature");
     }
 
-    public void setEntropyThreshold(double threshold) {
-        this.entropyThreshold = threshold;
-    }
-
-    public void setMinLength(int minLength) {
-        this.minLength = minLength;
-    }
-
-    public void setMaxLength(int maxLength) {
-        this.maxLength = maxLength;
-    }
-
-    public void setDetectBase64(boolean detect) {
-        this.detectBase64 = detect;
-    }
-
-    public void setDetectHighEntropy(boolean detect) {
-        this.detectHighEntropy = detect;
-    }
-
-    public void setDetectNonPrintable(boolean detect) {
-        this.detectNonPrintable = detect;
-    }
-
-    public void setDetectHex(boolean detect) {
-        this.detectHex = detect;
-    }
 }

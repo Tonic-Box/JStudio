@@ -22,7 +22,6 @@ public class PluginContextImpl implements PluginContext {
     private final ScriptApiImpl scriptApi;
     private final RefactorApiImpl refactorApi;
     private final ResultCollector results;
-    private final Map<String, Object> services = new ConcurrentHashMap<>();
     private final Map<String, Object> environment = new ConcurrentHashMap<>();
     private File exportDir;
 
@@ -97,7 +96,7 @@ public class PluginContextImpl implements PluginContext {
 
     @Override
     public Optional<Object> getService(String name) {
-        return Optional.ofNullable(services.get(name));
+        return Optional.empty();
     }
 
     @Override
@@ -108,22 +107,6 @@ public class PluginContextImpl implements PluginContext {
     @Override
     public void setEnvironmentValue(String key, Object value) {
         environment.put(key, value);
-    }
-
-    public void registerService(String name, Object service) {
-        services.put(name, service);
-    }
-
-    public void setDebugEnabled(boolean enabled) {
-        logger.setDebugEnabled(enabled);
-    }
-
-    public ConsolePluginLogger getLoggerImpl() {
-        return logger;
-    }
-
-    public MapPluginConfig getConfigImpl() {
-        return config;
     }
 
     @Override

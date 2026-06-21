@@ -3,7 +3,6 @@ package com.tonic.script.bridge;
 import com.tonic.analysis.ssa.cfg.IRBlock;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.analysis.ssa.ir.*;
-import com.tonic.analysis.ssa.transform.IRTransform;
 import com.tonic.analysis.ssa.value.*;
 import com.tonic.script.engine.*;
 
@@ -220,13 +219,6 @@ public class IRBridge {
     // ==================== Apply to IRMethod ====================
 
     /**
-     * Creates an IRTransform that applies all registered handlers.
-     */
-    public IRTransform createTransform(String name) {
-        return new ScriptedIRTransform(name, this);
-    }
-
-    /**
      * Runs all registered handlers on the given method.
      * Returns the number of modifications made.
      */
@@ -366,13 +358,6 @@ public class IRBridge {
         return result != null && result.isNative() && result.unwrap() == REMOVE_SENTINEL;
     }
 
-    /**
-     * Clears all registered handlers.
-     */
-    public void clearHandlers() {
-        handlers.clear();
-    }
-
     // ==================== Internal Classes ====================
 
     private enum HandlerType {
@@ -395,30 +380,6 @@ public class IRBridge {
         HandlerRegistration(HandlerType type, ScriptFunction function) {
             this.type = type;
             this.function = function;
-        }
-    }
-
-    /**
-     * IRTransform wrapper that runs the script handlers.
-     */
-    private static class ScriptedIRTransform implements IRTransform {
-        private final String name;
-        private final IRBridge bridge;
-
-        ScriptedIRTransform(String name, IRBridge bridge) {
-            this.name = name;
-            this.bridge = bridge;
-        }
-
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public boolean run(IRMethod method) {
-            int mods = bridge.applyTo(method);
-            return mods > 0;
         }
     }
 }

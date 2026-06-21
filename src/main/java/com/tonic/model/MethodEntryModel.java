@@ -1,6 +1,5 @@
 package com.tonic.model;
 
-import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.parser.MethodEntry;
 import com.tonic.simulation.metrics.ComplexityMetrics;
@@ -152,25 +151,6 @@ public class MethodEntryModel {
 
     public ComplexityMetrics getComplexityMetrics() {
         if (complexityMetrics == null && cachedIR != null) {
-            complexityMetrics = new ComplexityMetrics(cachedIR);
-        }
-        return complexityMetrics;
-    }
-
-    public ComplexityMetrics computeComplexityMetrics() {
-        if (complexityMetrics != null) {
-            return complexityMetrics;
-        }
-        if (cachedIR == null && methodEntry.getCodeAttribute() != null) {
-            try {
-                SSA ssa = new SSA(owner.getClassFile().getConstPool());
-                cachedIR = ssa.lift(methodEntry);
-                irCacheTimestamp = System.currentTimeMillis();
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        if (cachedIR != null) {
             complexityMetrics = new ComplexityMetrics(cachedIR);
         }
         return complexityMetrics;
