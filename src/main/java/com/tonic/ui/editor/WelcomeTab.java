@@ -582,9 +582,28 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener {
         panel.setBackground(JStudioTheme.getBgTertiary());
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Class icon
-        JLabel iconLabel = new JLabel(Icons.getIcon(info.classEntry.getIconKey()));
-        panel.add(iconLabel);
+        // Run button (left of the entry) - launches the class's main() in a separate JVM
+        JButton runButton = new JButton(Icons.getIcon("run", 14));
+        runButton.setToolTipText("Run main() in a separate JVM");
+        runButton.setBorderPainted(false);
+        runButton.setContentAreaFilled(false);
+        runButton.setFocusable(false);
+        runButton.setMargin(new java.awt.Insets(2, 4, 2, 4));
+        runButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        runButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                runButton.setContentAreaFilled(true);
+                runButton.setBackground(JStudioTheme.getHover());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                runButton.setContentAreaFilled(false);
+            }
+        });
+        runButton.addActionListener(e -> mainFrame.runMainClass(info.classEntry));
+        panel.add(runButton);
 
         // Clickable class name
         String safeClassName = sanitize(info.classEntry.getClassName());

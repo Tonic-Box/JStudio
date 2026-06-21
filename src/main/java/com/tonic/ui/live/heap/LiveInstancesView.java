@@ -28,8 +28,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayDeque;
@@ -121,6 +123,7 @@ public final class LiveInstancesView extends ThemedJPanel {
         backButton.setBorderPainted(false);
         backButton.setContentAreaFilled(false);
         backButton.setPreferredSize(new Dimension(28, 28));
+        backButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         backButton.setEnabled(false);
         backButton.addActionListener(e -> {
             if (!backStack.isEmpty()) {
@@ -137,14 +140,25 @@ public final class LiveInstancesView extends ThemedJPanel {
         fieldTable.getColumnModel().getColumn(1).setPreferredWidth(80);
         fieldTable.getColumnModel().getColumn(2).setPreferredWidth(320);
         fieldTable.getColumnModel().getColumn(2).setCellRenderer(new ValueCellRenderer());
-        fieldTable.addMouseListener(new MouseAdapter() {
+        MouseAdapter refNav = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    navigateSelectedRef();
+                HprofSnapshot.FieldValue f = refAt(e.getPoint());
+                if (f != null) {
+                    backStack.push(currentObjId);
+                    showInstance(f.refId);
                 }
             }
-        });
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                fieldTable.setCursor(refAt(e.getPoint()) != null
+                        ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                        : Cursor.getDefaultCursor());
+            }
+        };
+        fieldTable.addMouseListener(refNav);
+        fieldTable.addMouseMotionListener(refNav);
         detail.add(new ThemedJScrollPane(fieldTable), BorderLayout.CENTER);
         return detail;
     }
@@ -228,19 +242,21 @@ public final class LiveInstancesView extends ThemedJPanel {
         }
     }
 
-    private void navigateSelectedRef() {
-        int row = fieldTable.getSelectedRow();
-        if (row < 0) {
-            return;
+    /** The reference {@code FieldValue} under point {@code p} if it is a navigable ref in the Value column, else null. */
+    private HprofSnapshot.FieldValue refAt(Point p) {
+        int row = fieldTable.rowAtPoint(p);
+        int col = fieldTable.columnAtPoint(p);
+        if (row < 0 || col < 0 || fieldTable.convertColumnIndexToModel(col) != 2) {
+            return null;
         }
         Object value = fieldModel.getValueAt(row, 2);
         if (value instanceof HprofSnapshot.FieldValue) {
             HprofSnapshot.FieldValue f = (HprofSnapshot.FieldValue) value;
             if (f.refId != 0) {
-                backStack.push(currentObjId);
-                showInstance(f.refId);
+                return f;
             }
         }
+        return null;
     }
 
     private void clearDetail() {

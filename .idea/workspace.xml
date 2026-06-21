@@ -7,12 +7,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Expose DotGraph stuff to plugin api surface">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Tab-dragging and reordering">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/WelcomeTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/WelcomeTab.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/heap/LiveInstancesView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/heap/LiveInstancesView.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -232,14 +232,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00065" summary="- class creation&#10;- resource file importing/creation&#10;- class/resource deletion&#10;- fixed a caching bug in decompilation">
-      <option name="closed" value="true" />
-      <created>1768926466559</created>
-      <option name="number" value="00065" />
-      <option name="presentableId" value="LOCAL-00065" />
-      <option name="project" value="LOCAL" />
-      <updated>1768926466559</updated>
     </task>
     <task id="LOCAL-00066" summary="- Added refresh button to the bytecode debugger">
       <option name="closed" value="true" />
@@ -625,7 +617,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782027303386</updated>
     </task>
-    <option name="localTasksCounter" value="114" />
+    <task id="LOCAL-00114" summary="- Tab-dragging and reordering">
+      <option name="closed" value="true" />
+      <created>1782033703781</created>
+      <option name="number" value="00114" />
+      <option name="presentableId" value="LOCAL-00114" />
+      <option name="project" value="LOCAL" />
+      <updated>1782033703781</updated>
+    </task>
+    <option name="localTasksCounter" value="115" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -640,7 +640,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Version bump 17.0&#10;- Add Dual view: linked bytecode/source panes" />
     <MESSAGE value="Add usage-count lenses (class/method/field) + span-based navigation&#10;- Clickable &quot;N usages&quot; lenses on class, method, and field declarations; open Find Usages (View ▸ Usage Counts toggle)&#10;- Shared XrefQueryService (one xref build + filter for lenses and Find Usages); class usages scoped to type references, not member accesses&#10;- Navigate/locate declarations via decompiler spans; regex kept only as Hide-Annotations fallback&#10;- Find Usages selection skips string/char literals and prefers the real member-access/call token&#10;- Recompiling a class invalidates the xref database" />
     <MESSAGE value="- Cleanup" />
     <MESSAGE value="- Update ReadMe" />
@@ -665,7 +664,8 @@
     <MESSAGE value="- Fix gaps in refresh" />
     <MESSAGE value="- Fix gaps in refresh&#10;- Clean up logging" />
     <MESSAGE value="- Expose DotGraph stuff to plugin api surface" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Expose DotGraph stuff to plugin api surface" />
+    <MESSAGE value="- Tab-dragging and reordering" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Tab-dragging and reordering" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

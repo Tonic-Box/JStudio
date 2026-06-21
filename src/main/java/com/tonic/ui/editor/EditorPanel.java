@@ -11,6 +11,7 @@ import com.tonic.model.ProjectModel;
 import com.tonic.model.ResourceEntryModel;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.theme.RunnableOverlayIcon;
 
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
@@ -133,7 +134,7 @@ public class EditorPanel extends ThemedJPanel {
         openTabs.put(key, tab);
 
         // Add tab with close button
-        tabbedPane.addTab(tab.getTitle(), Icons.getIcon(classEntry.getIconKey()), tab, tab.getTooltip());
+        tabbedPane.addTab(tab.getTitle(), classIcon(classEntry), tab, tab.getTooltip());
         int index = tabbedPane.getTabCount() - 1;
         tabbedPane.setTabComponentAt(index, createTabComponent(tab));
         tabbedPane.setSelectedIndex(index);
@@ -339,11 +340,17 @@ public class EditorPanel extends ThemedJPanel {
         return panel;
     }
 
+    /** The class icon with the runnable (play) overlay when the class has a {@code main} method - matches the tree. */
+    private static Icon classIcon(ClassEntryModel classEntry) {
+        Icon icon = Icons.getIcon(classEntry.getIconKey());
+        return classEntry.hasMainMethod() ? new RunnableOverlayIcon(icon) : icon;
+    }
+
     private JPanel createTabComponent(EditorTab tab) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 0));
         panel.setOpaque(false);
 
-        JLabel iconLabel = new JLabel(Icons.getIcon(tab.getClassEntry().getIconKey()));
+        JLabel iconLabel = new JLabel(classIcon(tab.getClassEntry()));
         panel.add(iconLabel);
 
         JLabel titleLabel = new JLabel(tab.getTitle());

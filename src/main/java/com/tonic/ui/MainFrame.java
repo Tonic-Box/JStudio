@@ -27,6 +27,7 @@ import com.tonic.ui.properties.PropertiesPanel;
 import com.tonic.plugin.gui.GuiPluginManager;
 import com.tonic.service.ProjectDatabaseService;
 import com.tonic.service.ProjectService;
+import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.transform.TransformPanel;
 import com.tonic.ui.deobfuscation.DeobfuscationPanel;
@@ -892,7 +893,11 @@ public class MainFrame extends JFrame {
         String pid = String.valueOf(process.pid());
         SwingWorkers.run(
                 () -> LiveSession.connect(pid, agentPort),
-                LiveAttachService.getInstance()::adoptRunSession,
+                session -> {
+                    LiveAttachService.getInstance().adoptRunSession(session);
+                    // Default runtime class-load capture ON for a Run auto-attach (the running app is the project).
+                    setLiveCaptureEnabled(true);
+                },
                 err -> consolePanel.log("Live debugging not attached: " + err.getMessage()));
         process.onExit().thenAccept(p -> SwingUtilities.invokeLater(this::onRunProcessExited));
     }
@@ -1767,62 +1772,8 @@ public class MainFrame extends JFrame {
     // === Help Operations ===
 
     public void showKeyboardShortcuts() {
-        String mod = System.getProperty("os.name").toLowerCase().contains("mac") ? "Cmd" : "Ctrl";
-        String sb = "Keyboard Shortcuts:\n\n" +
-                "File:\n" +
-                "  " + mod + "+O         Open JAR/Class\n" +
-                "  " + mod + "+Shift+O   Open Recent\n" +
-                "  " + mod + "+S         Save Project\n" +
-                "  " + mod + "+Shift+S   Save Project As\n" +
-                "  " + mod + "+Alt+E     Export Class\n" +
-                "  " + mod + "+Shift+J   Export as JAR\n" +
-                "  " + mod + "+W         Close Tab\n" +
-                "  " + mod + "+Shift+W   Close Project\n" +
-                "  " + mod + "+Q         Exit\n\n" +
-                "Navigation:\n" +
-                "  " + mod + "+G         Go to Class\n" +
-                "  " + mod + "+L         Go to Line\n" +
-                "  Alt+Left       Navigate Back\n" +
-                "  Alt+Right      Navigate Forward\n\n" +
-                "Edit:\n" +
-                "  " + mod + "+C         Copy\n" +
-                "  " + mod + "+F         Find in File\n" +
-                "  " + mod + "+Shift+F   Find in Project\n" +
-                "  " + mod + "+B         Add Bookmark\n" +
-                "  " + mod + "+Shift+B   View Bookmarks\n" +
-                "  " + mod + "+;         Add Comment\n" +
-                "  " + mod + "+,         Preferences\n\n" +
-                "Views:\n" +
-                "  F5             Source View\n" +
-                "  F6             Bytecode View\n" +
-                "  F7             IR View\n" +
-                "  F8             Hex View\n" +
-                "  " + mod + "+F5        Refresh\n" +
-                "  Alt+Z          Word Wrap\n\n" +
-                "Panels:\n" +
-                "  " + mod + "+1         Toggle Navigator\n" +
-                "  " + mod + "+2         Toggle Properties\n" +
-                "  " + mod + "+3         Toggle Console\n\n" +
-                "Font:\n" +
-                "  " + mod + "+=         Increase Font\n" +
-                "  " + mod + "+-         Decrease Font\n" +
-                "  " + mod + "+0         Reset Font\n\n" +
-                "Analysis:\n" +
-                "  F9             Run Analysis\n" +
-                "  F10            Simulation Analysis\n" +
-                "  " + mod + "+Shift+G   Call Graph\n\n" +
-                "Transform:\n" +
-                "  " + mod + "+Shift+T   Apply Transforms\n" +
-                "  " + mod + "+Alt+S     Script Editor\n" +
-                "  " + mod + "+Shift+D   String Deobfuscation\n\n" +
-                "VM:\n" +
-                "  F11            Bytecode Debugger\n" +
-                "  " + mod + "+Shift+C   VM Console\n" +
-                "  " + mod + "+Shift+E   Execute Method\n" +
-                "  " + mod + "+Shift+H   Heap Forensics\n";
-
-        JOptionPane.showMessageDialog(this, sb, "Keyboard Shortcuts",
-                JOptionPane.INFORMATION_MESSAGE);
+        editorPanel.openCustomView("keyboard-shortcuts", "Keyboard Shortcuts",
+                Icons.getIcon("info"), new KeyboardShortcutsView());
     }
 
     public void showAboutDialog() {
