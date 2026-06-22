@@ -162,6 +162,7 @@ public class MainFrame extends JFrame {
     private BottomToolbar bottomToolbar;
     private JSplitPane editorBottomSplit;
     private boolean bottomPanelCollapsed = true;
+    private int expandedBottomDivider = -1;
 
     // Split panes for layout
     private JSplitPane mainHorizontalSplit;
@@ -309,15 +310,22 @@ public class MainFrame extends JFrame {
         sidePanel = new BottomPanel();
         sidePanel.setEditorPanel(editorPanel);
         sidePanel.setConsolePanel(consolePanel);
-        sidePanel.setOnAllTabsClosed(() -> {
-            bottomPanelCollapsed = true;
-            editorBottomSplit.setDividerLocation(editorBottomSplit.getHeight());
-        });
-        sidePanel.setOnTabOpened(() -> {
-            bottomPanelCollapsed = false;
-            int height = editorBottomSplit.getHeight();
-            if (editorBottomSplit.getDividerLocation() > height - 50) {
-                editorBottomSplit.setDividerLocation(height - 200);
+        sidePanel.setOnAllTabsClosed(this::collapseBottom);
+        sidePanel.setOnTabOpened(this::expandBottom);
+        sidePanel.setCollapseHost(new BottomPanel.CollapseHost() {
+            @Override
+            public boolean isCollapsed() {
+                return bottomPanelCollapsed;
+            }
+
+            @Override
+            public void collapse() {
+                collapseBottom();
+            }
+
+            @Override
+            public void expand() {
+                expandBottom();
             }
         });
 
@@ -365,7 +373,7 @@ public class MainFrame extends JFrame {
             @Override
             public void componentResized(ComponentEvent e) {
                 if (bottomPanelCollapsed && editorBottomSplit.getHeight() > 0) {
-                    editorBottomSplit.setDividerLocation(editorBottomSplit.getHeight());
+                    editorBottomSplit.setDividerLocation(collapsedBottomDivider());
                 }
             }
         });
@@ -1198,6 +1206,34 @@ public class MainFrame extends JFrame {
         sidePanel.toggleConsoleTab();
     }
 
+    /** The divider location that leaves only the bottom tab strip visible (or fully hides it when there are no tabs). */
+    private int collapsedBottomDivider() {
+        int total = editorBottomSplit.getHeight();
+        int strip = sidePanel.hasTabs() ? sidePanel.collapsedHeight() : 0;
+        return Math.max(0, total - strip - editorBottomSplit.getDividerSize());
+    }
+
+    /** Collapses the bottom dock to just its tab strip (or hides it when empty), remembering the expanded height. */
+    private void collapseBottom() {
+        if (!bottomPanelCollapsed) {
+            expandedBottomDivider = editorBottomSplit.getDividerLocation();
+        }
+        bottomPanelCollapsed = true;
+        editorBottomSplit.setDividerLocation(collapsedBottomDivider());
+    }
+
+    /** Expands the bottom dock back to its remembered height (or a default); no-op when already expanded. */
+    private void expandBottom() {
+        if (!bottomPanelCollapsed) {
+            return;
+        }
+        bottomPanelCollapsed = false;
+        int total = editorBottomSplit.getHeight();
+        int location = expandedBottomDivider > 0 && expandedBottomDivider < total - 50
+                ? expandedBottomDivider : Math.max(0, total - 200);
+        editorBottomSplit.setDividerLocation(location);
+    }
+
     public void refreshCurrentView() {
         editorPanel.refreshCurrentTab();
     }
@@ -1947,7 +1983,7 @@ public class MainFrame extends JFrame {
      * Opens the decompiled source for a thread-stack frame: resolves the declaring class in the current
      * project and navigates to the method. Navigation is method-level (a stack frame carries no descriptor).
      */
-    public void openLiveFrame(String internalName, String methodName, int line) {
+    public void openLiveFrame(String internalName, String methodName) {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project == null) {
             return;

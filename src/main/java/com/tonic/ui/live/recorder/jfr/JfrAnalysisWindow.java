@@ -272,7 +272,7 @@ public final class JfrAnalysisWindow extends JFrame {
 
     private void navigate(FrameKey frame) {
         if (frame != null) {
-            mainFrame.openLiveFrame(frame.getClassInternal(), frame.getMethod(), frame.getLine());
+            mainFrame.openLiveFrame(frame.getClassInternal(), frame.getMethod());
         }
     }
 

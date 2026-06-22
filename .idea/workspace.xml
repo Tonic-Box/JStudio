@@ -9,55 +9,8 @@
   <component name="ChangeListManager">
     <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Cleanup">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/DeobfuscationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/DeobfuscationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/detection/ClinitAnalyzer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/detection/EncryptedStringDetector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/detection/EncryptedStringDetector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/model/DecryptorCandidate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/model/DecryptorCandidate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/patch/ConstantPoolPatcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/patch/ConstantPoolPatcher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/event/EventBus.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/event/EventBus.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/Bookmark.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/Bookmark.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/BookmarkStore.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/BookmarkStore.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/Comment.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/Comment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/CommentStore.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/CommentStore.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/MethodEntryModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/MethodEntryModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectDatabase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectDatabase.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/ConsolePluginLogger.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/ConsolePluginLogger.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/LiveGuiPluginContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/LiveGuiPluginContext.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/PluginContextImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/PluginContextImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/ASTBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/ASTBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/AnnotationBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/AnnotationBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/BridgeRegistry.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/BridgeRegistry.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/IRBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/IRBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/IRNodeWrapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/IRNodeWrapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/InstrumentationBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/InstrumentationBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/ResultsBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/ResultsBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/engine/ScriptContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/engine/ScriptContext.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/ConsoleLogService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/ConsoleLogService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectDatabaseService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectDatabaseService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/StringExtractionService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/deadcode/DeadCodeRemover.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/deadcode/DeadCodeRemover.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/simulation/SimulationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/simulation/SimulationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/simulation/listener/ConstantTrackingListener.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/simulation/listener/PurityAnalysisListener.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/simulation/model/MethodPurity.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SearchPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/SearchPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/callgraph/CallGraphRenderer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/FilterableComboBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/FilterableComboBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/constants/ColumnWidths.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/constants/ColumnWidths.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/constants/UIConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/constants/UIConstants.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/util/LayoutHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/util/LayoutHelper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/FileChooserResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/filechooser/FileChooserResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/BaseGraphView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/BaseGraphView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/SnippetCompiler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/SnippetCompiler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/properties/PropertiesPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/properties/PropertiesPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/model/ExecutionTrace.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/util/ComparisonOperator.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/util/ErrorHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/util/ErrorHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/util/MemberReference.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/util/NativeMethodScanner.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomPanel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -277,22 +230,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00067" summary="- cleanup">
-      <option name="closed" value="true" />
-      <created>1768931835169</created>
-      <option name="number" value="00067" />
-      <option name="presentableId" value="LOCAL-00067" />
-      <option name="project" value="LOCAL" />
-      <updated>1768931835169</updated>
-    </task>
-    <task id="LOCAL-00068" summary="- cleanup &amp; bump">
-      <option name="closed" value="true" />
-      <created>1769154067031</created>
-      <option name="number" value="00068" />
-      <option name="presentableId" value="LOCAL-00068" />
-      <option name="project" value="LOCAL" />
-      <updated>1769154067031</updated>
     </task>
     <task id="LOCAL-00069" summary="- cleanup &amp; bump">
       <option name="closed" value="true" />
@@ -670,7 +607,23 @@
       <option name="project" value="LOCAL" />
       <updated>1782077137234</updated>
     </task>
-    <option name="localTasksCounter" value="116" />
+    <task id="LOCAL-00116" summary="- Cleanup">
+      <option name="closed" value="true" />
+      <created>1782086204568</created>
+      <option name="number" value="00116" />
+      <option name="presentableId" value="LOCAL-00116" />
+      <option name="project" value="LOCAL" />
+      <updated>1782086204568</updated>
+    </task>
+    <task id="LOCAL-00117" summary="- Cleanup">
+      <option name="closed" value="true" />
+      <created>1782086215256</created>
+      <option name="number" value="00117" />
+      <option name="presentableId" value="LOCAL-00117" />
+      <option name="project" value="LOCAL" />
+      <updated>1782086215256</updated>
+    </task>
+    <option name="localTasksCounter" value="118" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

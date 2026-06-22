@@ -44,6 +44,7 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
 
     private Runnable onAllTabsClosed;
     private Runnable onTabOpened;
+    private CollapseHost collapseHost;
 
     public BottomPanel() {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -82,6 +83,22 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
 
     public void setOnTabOpened(Runnable callback) {
         this.onTabOpened = callback;
+    }
+
+    /**
+     * Bridges tab-strip clicks to the host's collapse/expand of the bottom dock (the split divider lives in the host).
+     * Clicking the active tab collapses the dock to just its strip; clicking any tab while collapsed expands it again.
+     */
+    public interface CollapseHost {
+        boolean isCollapsed();
+
+        void collapse();
+
+        void expand();
+    }
+
+    public void setCollapseHost(CollapseHost host) {
+        this.collapseHost = host;
     }
 
     public void openFindUsagesTab(FindUsagesEvent event) {
@@ -228,6 +245,35 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
         return tabbedPane.getTabCount() > 0;
     }
 
+    /** The panel height that shows only the tab strip; the host collapses the split to this so the tabs stay clickable. */
+    public int collapsedHeight() {
+        if (tabbedPane.getTabCount() == 0) {
+            return 0;
+        }
+        Rectangle bounds = tabbedPane.getBoundsAt(0);
+        int strip = bounds != null && bounds.height > 0 ? bounds.height : 28;
+        Insets insets = getInsets();
+        return strip + insets.top + insets.bottom + 4;
+    }
+
+    /** Tab-strip click: collapse when re-clicking the active tab, expand + select when collapsed, else just switch. */
+    private void onTabHeaderClicked(Component tabComponent) {
+        int clicked = tabbedPane.indexOfTabComponent(tabComponent);
+        if (clicked < 0) {
+            return;
+        }
+        if (collapseHost != null && collapseHost.isCollapsed()) {
+            tabbedPane.setSelectedIndex(clicked);
+            collapseHost.expand();
+        } else if (clicked == tabbedPane.getSelectedIndex()) {
+            if (collapseHost != null) {
+                collapseHost.collapse();
+            }
+        } else {
+            tabbedPane.setSelectedIndex(clicked);
+        }
+    }
+
     public void closeAllTabs() {
         tabbedPane.removeAll();
         bookmarksPanel = null;
@@ -285,6 +331,15 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
             });
             closeBtn.addActionListener(e -> onTabClosed(associatedTab));
             add(closeBtn);
+
+            MouseAdapter clickHandler = new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    onTabHeaderClicked(ClosableTabComponent.this);
+                }
+            };
+            addMouseListener(clickHandler);
+            label.addMouseListener(clickHandler);
         }
 
         public void applyTheme() {

@@ -119,7 +119,7 @@ public final class LiveThreadsPanel extends ThemedJPanel {
             Object userObject = ((DefaultMutableTreeNode) node).getUserObject();
             if (userObject instanceof StackFrame) {
                 StackFrame frame = (StackFrame) userObject;
-                mainFrame.openLiveFrame(frame.getDeclaringClass(), frame.getMethod(), frame.getLine());
+                mainFrame.openLiveFrame(frame.getDeclaringClass(), frame.getMethod());
             }
         }
     }
