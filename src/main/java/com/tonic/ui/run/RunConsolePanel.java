@@ -28,7 +28,6 @@ public final class RunConsolePanel extends ThemedJPanel implements RunService.Ru
     private final JTextPane output = new JTextPane();
     private final JButton terminateButton = new JButton("Terminate", Icons.getIcon("close"));
     private final JButton rerunButton = new JButton("Rerun", Icons.getIcon("run"));
-    private final JButton clearButton = new JButton("Clear");
     private final JLabel status = new JLabel("Idle.");
 
     private Process process;
@@ -40,6 +39,7 @@ public final class RunConsolePanel extends ThemedJPanel implements RunService.Ru
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
         toolbar.setOpaque(false);
+        JButton clearButton = new JButton("Clear");
         for (JButton button : new JButton[]{terminateButton, rerunButton, clearButton}) {
             button.setFocusable(false);
             toolbar.add(button);

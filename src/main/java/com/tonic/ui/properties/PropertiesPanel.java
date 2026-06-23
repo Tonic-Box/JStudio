@@ -2,7 +2,6 @@ package com.tonic.ui.properties;
 
 import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
-import com.tonic.ui.MainFrame;
 import com.tonic.parser.attribute.CodeAttribute;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
@@ -11,7 +10,6 @@ import com.tonic.model.FieldEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.simulation.metrics.ComplexityMetrics;
 import com.tonic.ui.theme.JStudioTheme;
-
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;

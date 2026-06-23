@@ -144,7 +144,6 @@ public final class DotParser {
         private final List<Tok> toks;
         private int pos;
 
-        private boolean directed;
         private DotGraph.Rankdir rankdir = DotGraph.Rankdir.TB;
         private final LinkedHashMap<String, DotGraph.Node> nodes = new LinkedHashMap<>();
         private final List<DotGraph.Edge> edges = new ArrayList<>();
@@ -155,6 +154,7 @@ public final class DotParser {
 
         DotGraph parse() {
             if (isId("strict")) pos++;
+            boolean directed;
             if (isId("digraph")) { directed = true; pos++; }
             else if (isId("graph")) { directed = false; pos++; }
             else throw new DotParseException("expected 'graph' or 'digraph'");

@@ -153,6 +153,9 @@ public class TestGeneratorDialog extends JDialog {
         String testMethodName = methodNameField.getText().trim();
         TestCaseGenerator.JUnitVersion version =
                 (TestCaseGenerator.JUnitVersion) versionCombo.getSelectedItem();
+        if (version == null) {
+            version = TestCaseGenerator.JUnitVersion.JUNIT5;
+        }
 
         if (testClassName.isEmpty()) testClassName = "GeneratedTest";
         if (testMethodName.isEmpty()) testMethodName = "testMethod";

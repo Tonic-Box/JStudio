@@ -185,7 +185,12 @@ public class CallTracePanel extends ThemedJPanel {
             }
 
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(call);
-            stack.peek().add(node);
+            DefaultMutableTreeNode parent = stack.peek();
+            if (parent == null) {
+                parent = rootNode;
+                stack.push(rootNode);
+            }
+            parent.add(node);
             stack.push(node);
         }
 

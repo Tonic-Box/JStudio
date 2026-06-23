@@ -200,7 +200,7 @@ public class ClassTreeModel extends DefaultTreeModel {
             while (hasSingleResourceFolderChild(folderNode)) {
                 NavigatorNode.ResourceFolderNode childFolder = getSingleResourceFolderChild(folderNode);
                 List<TreeNode> grandChildren = new ArrayList<>();
-                for (int i = 0; i < childFolder.getChildCount(); i++) {
+                for (int i = 0; i < Objects.requireNonNull(childFolder).getChildCount(); i++) {
                     grandChildren.add(childFolder.getChildAt(i));
                 }
 
@@ -255,6 +255,9 @@ public class ClassTreeModel extends DefaultTreeModel {
 
             while (hasSinglePackageChild(pkgNode)) {
                 NavigatorNode.PackageNode childPkg = getSinglePackageChild(pkgNode);
+                if (childPkg == null) {
+                    break;
+                }
                 String combinedName = pkgNode.getPackageName() + "." + getLastSegment(childPkg.getPackageName());
                 pkgNode.setDisplayName(combinedName);
 

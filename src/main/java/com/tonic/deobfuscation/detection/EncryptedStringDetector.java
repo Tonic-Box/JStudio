@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("FieldCanBeLocal")
 public class EncryptedStringDetector {
 
     private static final Pattern BASE64_PATTERN = Pattern.compile("^[A-Za-z0-9+/]{4,}={0,2}$");

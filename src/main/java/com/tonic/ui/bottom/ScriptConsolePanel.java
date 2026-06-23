@@ -24,7 +24,6 @@ import java.awt.FlowLayout;
 public final class ScriptConsolePanel extends ThemedJPanel {
 
     private final JTextPane output = new JTextPane();
-    private final JButton clearButton = new JButton("Clear");
     private final JLabel status = new JLabel("Idle.");
 
     public ScriptConsolePanel() {
@@ -33,6 +32,7 @@ public final class ScriptConsolePanel extends ThemedJPanel {
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
         toolbar.setOpaque(false);
+        JButton clearButton = new JButton("Clear");
         clearButton.setFocusable(false);
         toolbar.add(clearButton);
         ThemedJPanel topBar = new ThemedJPanel(BackgroundStyle.PRIMARY, new BorderLayout());

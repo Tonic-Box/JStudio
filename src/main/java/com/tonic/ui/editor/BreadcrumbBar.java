@@ -10,8 +10,6 @@ import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -21,7 +19,6 @@ public class BreadcrumbBar extends JPanel {
 
     private ClassEntryModel currentClass;
     private String currentMethod;
-    private final List<BreadcrumbItem> items = new ArrayList<>();
 
     private Consumer<String> onPackageClick;
     private Consumer<ClassEntryModel> onClassClick;
@@ -86,7 +83,6 @@ public class BreadcrumbBar extends JPanel {
 
     private void rebuild() {
         removeAll();
-        items.clear();
 
         if (currentClass == null) {
             setVisible(false);
@@ -143,7 +139,6 @@ public class BreadcrumbBar extends JPanel {
     }
 
     private void addItem(BreadcrumbItem item) {
-        items.add(item);
         add(item);
     }
 

@@ -167,7 +167,7 @@ public class TypeBridge extends AbstractBridge {
         Set<SSAValue> variables = new LinkedHashSet<>();
         for (IRBlock block : currentMethod.getBlocks()) {
             for (IRInstruction instr : block.getInstructions()) {
-                if (instr.getResult() instanceof SSAValue) {
+                if (instr.getResult() != null) {
                     variables.add(instr.getResult());
                 }
             }
@@ -187,7 +187,7 @@ public class TypeBridge extends AbstractBridge {
             int id = (int) varRef.asNumber();
             for (IRBlock block : currentMethod.getBlocks()) {
                 for (IRInstruction instr : block.getInstructions()) {
-                    if (instr.getResult() instanceof SSAValue) {
+                    if (instr.getResult() != null) {
                         SSAValue ssa = instr.getResult();
                         if (ssa.getId() == id) {
                             return ssa.getType() != null ?
@@ -200,7 +200,7 @@ public class TypeBridge extends AbstractBridge {
             String name = varRef.asString();
             for (IRBlock block : currentMethod.getBlocks()) {
                 for (IRInstruction instr : block.getInstructions()) {
-                    if (instr.getResult() instanceof SSAValue) {
+                    if (instr.getResult() != null) {
                         SSAValue ssa = instr.getResult();
                         if (ssa.getName().equals(name)) {
                             return ssa.getType() != null ?
@@ -315,7 +315,7 @@ public class TypeBridge extends AbstractBridge {
         if (entryBlock != null) {
             int paramIndex = 0;
             for (IRInstruction instr : entryBlock.getInstructions()) {
-                if (instr.getResult() instanceof SSAValue) {
+                if (instr.getResult() != null) {
                     SSAValue ssa = instr.getResult();
                     String name = ssa.getName();
                     if (name != null && (name.startsWith("p") || name.startsWith("arg"))) {
@@ -340,7 +340,7 @@ public class TypeBridge extends AbstractBridge {
 
         for (IRBlock block : currentMethod.getBlocks()) {
             for (IRInstruction instr : block.getInstructions()) {
-                if (instr.getResult() instanceof SSAValue) {
+                if (instr.getResult() != null) {
                     SSAValue ssa = instr.getResult();
                     if (ssa.getType() != null) {
                         String typeStr = ssa.getType().toString().toLowerCase();
@@ -375,7 +375,7 @@ public class TypeBridge extends AbstractBridge {
                     String returnType = parseReturnTypeFromDescriptor(invoke.getDescriptor());
                     props.put("returnType", ScriptValue.string(returnType));
 
-                    if (invoke.getResult() instanceof SSAValue) {
+                    if (invoke.getResult() != null) {
                         SSAValue ssa = invoke.getResult();
                         props.put("inferredType", ssa.getType() != null ?
                             ScriptValue.string(ssa.getType().toString()) : ScriptValue.NULL);

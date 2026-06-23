@@ -150,12 +150,11 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider {
             }
             type = headType;
             staticContext = false;
-            memberStart = 1;
         } else {
             type = headType;
             staticContext = true;
-            memberStart = 1;
         }
+        memberStart = 1;
 
         for (int i = memberStart; i < segments.length; i++) {
             Class<?> next = fieldType(type, segments[i]);

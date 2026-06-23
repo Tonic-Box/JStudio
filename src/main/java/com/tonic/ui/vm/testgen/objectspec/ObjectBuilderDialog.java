@@ -23,7 +23,6 @@ public class ObjectBuilderDialog extends JDialog {
     private JPanel fieldOverridesPanel;
     private JTextArea expressionArea;
     private JComboBox<String> templateCombo;
-    private JTextField templateNameField;
 
     private final List<ParamConfigPanel> constructorArgPanels = new ArrayList<>();
     private final List<FieldConfigPanel> fieldPanels = new ArrayList<>();
@@ -359,6 +358,10 @@ public class ObjectBuilderDialog extends JDialog {
         ConstructionMode mode = (ConstructionMode) modeCombo.getSelectedItem();
         ObjectSpec spec = new ObjectSpec(typeName);
         spec.setMode(mode);
+
+        if (mode == null) {
+            return spec;
+        }
 
         switch (mode) {
             case CONSTRUCTOR:

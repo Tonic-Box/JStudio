@@ -94,7 +94,7 @@ final class VmValueBuilder {
     private static void setPrimitiveElement(ArrayInstance array, char type, int index, Object value) {
         long bits = value instanceof Boolean ? (((Boolean) value) ? 1 : 0)
                 : value instanceof Character ? (long) (Character) value
-                : ((Number) value).longValue();
+                : asNumber(value).longValue();
         switch (type) {
             case 'I':
                 array.setInt(index, (int) bits);
@@ -103,10 +103,10 @@ final class VmValueBuilder {
                 array.setLong(index, bits);
                 break;
             case 'F':
-                array.setFloat(index, ((Number) value).floatValue());
+                array.setFloat(index, asNumber(value).floatValue());
                 break;
             case 'D':
-                array.setDouble(index, ((Number) value).doubleValue());
+                array.setDouble(index, asNumber(value).doubleValue());
                 break;
             case 'B':
                 array.setByte(index, (byte) bits);
@@ -123,6 +123,18 @@ final class VmValueBuilder {
             default:
                 break;
         }
+    }
+
+    /**
+     * Narrows a built primitive-array element to {@link Number}, throwing a descriptive
+     * {@link IllegalArgumentException} for a malformed spec instead of a raw {@link ClassCastException}.
+     */
+    private static Number asNumber(Object value) {
+        if (value instanceof Number) {
+            return (Number) value;
+        }
+        throw new IllegalArgumentException("Expected a numeric array element but got "
+                + (value == null ? "null" : value.getClass().getName()));
     }
 
     private static ObjectInstance buildObject(VmInstance vm, SimpleHeapManager heap, ArgSpec spec) {

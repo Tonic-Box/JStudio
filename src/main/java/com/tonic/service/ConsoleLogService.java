@@ -13,6 +13,8 @@ public class ConsoleLogService {
 
     private final List<BiConsumer<LogLevel, String>> listeners = new CopyOnWriteArrayList<>();
     private final List<LogEntry> logHistory = new ArrayList<>();
+
+    @SuppressWarnings("FieldCanBeLocal")
     private final int maxHistory = 1000;
 
     private ConsoleLogService() {}

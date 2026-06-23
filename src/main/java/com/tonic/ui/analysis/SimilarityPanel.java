@@ -358,6 +358,10 @@ public class SimilarityPanel extends ThemedJPanel {
         }
 
         SimilarityMetric metric = (SimilarityMetric) metricCombo.getSelectedItem();
+        if (metric == null) {
+            updateStatus("Select a similarity metric first.");
+            return;
+        }
         double threshold = thresholdSlider.getValue() / 100.0;
 
         updateStatus("Finding similar methods (" + metric.getDisplayName() + " >= " + thresholdSlider.getValue() + "%)...");
@@ -457,6 +461,9 @@ public class SimilarityPanel extends ThemedJPanel {
 
         MethodSignature sig1 = result.getMethod1();
         MethodSignature sig2 = result.getMethod2();
+        if (sig1 == null || sig2 == null) {
+            return;
+        }
 
         leftLabel.setText(sig1.getDisplayName() + sig1.getDescriptor());
         rightLabel.setText(sig2.getDisplayName() + sig2.getDescriptor());
@@ -542,6 +549,9 @@ public class SimilarityPanel extends ThemedJPanel {
                 // Data
                 for (int i = 0; i < tableModel.getRowCount(); i++) {
                     SimilarityResult result = tableModel.getResult(i);
+                    if (result == null) {
+                        continue;
+                    }
                     writer.printf("%d,%s,%s,%s,%.2f,%.2f,%.2f%n",
                             result.getScorePercent(),
                             result.getMethod1().getFullReference(),
@@ -613,6 +623,9 @@ public class SimilarityPanel extends ThemedJPanel {
         @Override
         public Object getValueAt(int row, int column) {
             SimilarityResult result = results.get(row);
+            if (result == null) {
+                return column == 0 ? 0 : "";
+            }
             switch (column) {
                 case 0: return result.getScorePercent();
                 case 1: return result.getMethod1().getDisplayName();

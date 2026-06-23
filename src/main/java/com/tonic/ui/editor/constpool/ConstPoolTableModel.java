@@ -3,6 +3,7 @@ package com.tonic.ui.editor.constpool;
 import com.tonic.parser.ConstPool;
 import com.tonic.parser.constpool.*;
 import com.tonic.model.ClassEntryModel;
+import lombok.Getter;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
 
     private List<ConstPoolEntry> allEntries = new ArrayList<>();
     private List<ConstPoolEntry> filteredEntries = new ArrayList<>();
+    @Getter
     private String typeFilter = "All";
     private String searchText = "";
 
@@ -104,10 +106,6 @@ public class ConstPoolTableModel extends AbstractTableModel {
     public void setSearchText(String text) {
         this.searchText = text != null ? text.toLowerCase() : "";
         applyFilters();
-    }
-
-    public String getTypeFilter() {
-        return typeFilter;
     }
 
     public int getTotalCount() {
@@ -289,8 +287,7 @@ public class ConstPoolTableModel extends AbstractTableModel {
             Item<?> natItem = cp.getItem(natIdx);
             if (natItem instanceof NameAndTypeRefItem) {
                 NameAndTypeRefItem nat = (NameAndTypeRefItem) natItem;
-                String name = getUtf8(cp, nat.getValue().getNameIndex());
-                return name;
+                return getUtf8(cp, nat.getValue().getNameIndex());
             }
         } catch (Exception e) {
             // ignore

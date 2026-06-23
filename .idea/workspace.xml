@@ -2,14 +2,23 @@
 <project version="4">
   <component name="AnalysisUIOptions">
     <option name="ANALYZE_INJECTED_CODE" value="false" />
+    <option name="SCOPE_TYPE" value="4" />
   </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add EditorView contract + AbstractEditorView base for editor views&#10;- EditorView interface + AbstractEditorView (theme lifecycle, async-load scaffolding, no-op contract defaults) + AbstractTextView (RSyntaxTextArea setup/theming + text-backed ops)&#10;- Migrate ~17 views onto the base; SourceCodeView/DualView implement EditorView directly. Per-view stubs and duplicated lifecycle/refreshskeletons removed.&#10;- Collapse EditorTab's ~21 instanceof/ViewMode-switch cascades to a Map&lt;ViewMode,EditorView&gt; lookup">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Add toggle to side-pannel window popout for &quot;Always on Top&quot; option (Default on)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolWindowMover.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolWindowMover.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/detection/EncryptedStringDetector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/detection/EncryptedStringDetector.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/graph/dot/DotParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/graph/dot/DotParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/ConsoleLogService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/ConsoleLogService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/ScriptConsolePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/ScriptConsolePanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/MethodRootNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/MethodRootNode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/constpool/ConstPoolTableModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/constpool/ConstPoolTableModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/ScratchCompletionProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/ScratchCompletionProvider.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/properties/PropertiesPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/properties/PropertiesPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/run/RunConsolePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/run/RunConsolePanel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,17 +80,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "C:/Users/zacke/IdeaProjects/VityaHeadless",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "run.code.analysis.last.selected.profile": "pProject Default"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/zacke/IdeaProjects/VityaHeadless&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\zacke\IdeaProjects\JStudio\src\main\resources" />
@@ -229,14 +238,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00074" summary="- Small tweak to self-update/update check">
-      <option name="closed" value="true" />
-      <created>1781074187001</created>
-      <option name="number" value="00074" />
-      <option name="presentableId" value="LOCAL-00074" />
-      <option name="project" value="LOCAL" />
-      <updated>1781074187001</updated>
     </task>
     <task id="LOCAL-00075" summary="- Undid update check throttling">
       <option name="closed" value="true" />
@@ -622,7 +623,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782218298955</updated>
     </task>
-    <option name="localTasksCounter" value="123" />
+    <task id="LOCAL-00123" summary="- Add toggle to side-pannel window popout for &quot;Always on Top&quot; option (Default on)">
+      <option name="closed" value="true" />
+      <created>1782221306065</created>
+      <option name="number" value="00123" />
+      <option name="presentableId" value="LOCAL-00123" />
+      <option name="project" value="LOCAL" />
+      <updated>1782221306065</updated>
+    </task>
+    <option name="localTasksCounter" value="124" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -637,7 +646,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Add Live Java Scratch Pad: eval arbitrary Java in the attached JVM&#10;- MSG_EVAL wire op + agent class-defining/output-teeing&#10;- SnippetCompiler: default-package wrapper, optional return, auto-imports&#10;- Completion: keywords, project + JDK classes, JDK member chains&#10;- Bump version" />
     <MESSAGE value="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source." />
     <MESSAGE value="- cleanup" />
     <MESSAGE value="- Dead member removal" />
@@ -662,7 +670,8 @@
     <MESSAGE value="Decompile &lt;-&gt; recompile (source editor):&#10;- SourceCompiler: skip &lt;clinit&gt; synthesis for static fields backed by a ConstantValue attribute, so a round-trip no longer fabricates `static {}` blocks&#10;- Method-scoped recompile: re-lower only the methods whose body actually changed (via MethodBodyDiff), leaving every sibling byte-identical&#10;- Verifier gate: run YABR's verifier on the re-lowered methods and fail the recompile (surfacing the error) instead of silently applying invalid bytecode&#10;- Add round-trip and method-scoping regression tests&#10;&#10;Bytecode VM:&#10;- VmInstance / SnapshotClassPool / VmSupport: per-instance VM over a defensive, lazily-materialized class-pool snapshot, so concurrent caller each drive an isolated VM that's immune to live project edits and doesn't disturb the debugger UI; shared lookup/arg-conversion helpers deduped&#10;&#10;Editor tabs:&#10;- Center-tab close context menu (Close Others / to the Left / to the Right) now acts on every tab kind (class, resource, custom view), is wired to resource/custom tab headers, and has correct enablement&#10;- Reorder bottom toolbar buttons to Console - History - Bookmarks - Comments" />
     <MESSAGE value="- Decompose UI god-classes; fix listener leaks; de-duplicate theming&#10;- Break the five largest Swing classes into ~28 cohesive, package-private collaborators&#10;- Fix a systemic theme/EventBus/service listener leak&#10;- Add ThemeStyles helper + AbstractRenameDialog&#10;- Extract pure, unit-tested helpers (JvmDescriptorFormatter, SourceDeclarationParser, MethodSignatureMatcher, BytecodeDisassembler)" />
     <MESSAGE value="Add EditorView contract + AbstractEditorView base for editor views&#10;- EditorView interface + AbstractEditorView (theme lifecycle, async-load scaffolding, no-op contract defaults) + AbstractTextView (RSyntaxTextArea setup/theming + text-backed ops)&#10;- Migrate ~17 views onto the base; SourceCodeView/DualView implement EditorView directly. Per-view stubs and duplicated lifecycle/refreshskeletons removed.&#10;- Collapse EditorTab's ~21 instanceof/ViewMode-switch cascades to a Map&lt;ViewMode,EditorView&gt; lookup" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add EditorView contract + AbstractEditorView base for editor views&#10;- EditorView interface + AbstractEditorView (theme lifecycle, async-load scaffolding, no-op contract defaults) + AbstractTextView (RSyntaxTextArea setup/theming + text-backed ops)&#10;- Migrate ~17 views onto the base; SourceCodeView/DualView implement EditorView directly. Per-view stubs and duplicated lifecycle/refreshskeletons removed.&#10;- Collapse EditorTab's ~21 instanceof/ViewMode-switch cascades to a Map&lt;ViewMode,EditorView&gt; lookup" />
+    <MESSAGE value="- Add toggle to side-pannel window popout for &quot;Always on Top&quot; option (Default on)" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Add toggle to side-pannel window popout for &quot;Always on Top&quot; option (Default on)" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

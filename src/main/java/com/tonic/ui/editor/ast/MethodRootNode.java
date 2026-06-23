@@ -3,15 +3,19 @@ package com.tonic.ui.editor.ast;
 import com.tonic.analysis.source.ast.stmt.BlockStmt;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.theme.Icons;
+import lombok.Getter;
 
 import javax.swing.Icon;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class MethodRootNode extends DefaultMutableTreeNode {
 
+    @Getter
     private final String methodName;
+    @Getter
     private final String methodDesc;
     private final int accessFlags;
+    @Getter
     private final BlockStmt body;
 
     public MethodRootNode(MethodEntry method, BlockStmt body) {
@@ -26,28 +30,14 @@ public class MethodRootNode extends DefaultMutableTreeNode {
         }
     }
 
-    public String getMethodName() {
-        return methodName;
-    }
-
-    public String getMethodDesc() {
-        return methodDesc;
-    }
-
-    public BlockStmt getBody() {
-        return body;
-    }
-
     public boolean hasBody() {
         return body != null;
     }
 
     public String getDisplayText() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(formatAccessFlags());
-        sb.append(methodName);
-        sb.append(formatMethodDesc());
-        return sb.toString();
+        return formatAccessFlags() +
+                methodName +
+                formatMethodDesc();
     }
 
     private String formatAccessFlags() {
@@ -113,9 +103,7 @@ public class MethodRootNode extends DefaultMutableTreeNode {
                 idx++;
         }
 
-        for (int i = 0; i < arrayDim; i++) {
-            sb.append("[]");
-        }
+        sb.append("[]".repeat(Math.max(0, arrayDim)));
 
         return idx;
     }
