@@ -11,9 +11,15 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JToggleButton;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -62,7 +68,7 @@ public final class ToolWindowMover {
 
     private void moveToTab(String name, JComponent component) {
         String id = TAB_ID_PREFIX + name;
-        JComponent wrapper = wrap(name, component, () -> editor.closeCustomView(id));
+        JComponent wrapper = wrap(name, component, () -> editor.closeCustomView(id), null);
         active.put(name, new MovedTool(component, MoveTarget.TAB, id, null));
         editor.openCustomView(id, name, null, wrapper, () -> redock(name));
     }
@@ -70,7 +76,8 @@ public final class ToolWindowMover {
     private void moveToWindow(String name, JComponent component) {
         JFrame frame = new JFrame(name);
         frame.setIconImages(owner.getIconImages());
-        frame.setContentPane(wrap(name, component, frame::dispose));
+        frame.setAlwaysOnTop(true);
+        frame.setContentPane(wrap(name, component, frame::dispose, frame));
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setSize(new Dimension(520, 640));
         frame.setLocationRelativeTo(owner);
@@ -119,8 +126,11 @@ public final class ToolWindowMover {
         }
     }
 
-    /** A thin themed bar (tool name + a "Dock back" link) above the moved component. */
-    private JComponent wrap(String name, JComponent component, Runnable onDockBack) {
+    /**
+     * A thin themed bar (tool name on the left; an optional always-on-top toggle + a "Dock back" link on the right)
+     * above the moved component. {@code floatWindow} is the standalone window when moved to one, else null (a tab).
+     */
+    private JComponent wrap(String name, JComponent component, Runnable onDockBack, JFrame floatWindow) {
         ThemedJPanel wrapper = new ThemedJPanel(ThemedJPanel.BackgroundStyle.PRIMARY, new BorderLayout());
 
         JPanel bar = new JPanel(new BorderLayout());
@@ -153,11 +163,53 @@ public final class ToolWindowMover {
             }
         });
 
+        JPanel east = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        east.setOpaque(false);
+        if (floatWindow != null) {
+            east.add(createAlwaysOnTopToggle(floatWindow));
+        }
+        east.add(dockBack);
+
         bar.add(title, BorderLayout.WEST);
-        bar.add(dockBack, BorderLayout.EAST);
+        bar.add(east, BorderLayout.EAST);
         wrapper.add(bar, BorderLayout.NORTH);
         wrapper.add(component, BorderLayout.CENTER);
         return wrapper;
+    }
+
+    /** A small "Always on top" text toggle that fills with a dark rounded box when selected (accent text), dim when off. */
+    private JToggleButton createAlwaysOnTopToggle(JFrame window) {
+        final Color selectedBg = JStudioTheme.getBgPrimary().darker();
+        JToggleButton toggle = new JToggleButton("Always on top") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                if (isSelected()) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(selectedBg);
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                    g2.dispose();
+                }
+                super.paintComponent(g);
+            }
+        };
+        toggle.setSelected(window.isAlwaysOnTop());
+        toggle.setFont(JStudioTheme.getUIFont(11));
+        toggle.setFocusable(false);
+        toggle.setBorderPainted(false);
+        toggle.setContentAreaFilled(false);
+        toggle.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+        toggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        toggle.setToolTipText("Keep this window above other windows");
+        Runnable applyState = () -> {
+            boolean on = toggle.isSelected();
+            window.setAlwaysOnTop(on);
+            toggle.setForeground(on ? JStudioTheme.getAccent() : JStudioTheme.getTextSecondary());
+            toggle.repaint();
+        };
+        applyState.run();
+        toggle.addActionListener(e -> applyState.run());
+        return toggle;
     }
 
     private static final class MovedTool {
