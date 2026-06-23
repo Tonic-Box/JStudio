@@ -210,7 +210,7 @@ public class EditorPanel extends ThemedJPanel {
         }
         tabbedPane.addTab(title, icon, view, title);
         int index = tabbedPane.getTabCount() - 1;
-        tabbedPane.setTabComponentAt(index, createCustomTabComponent(id, title, icon));
+        tabbedPane.setTabComponentAt(index, createCustomTabComponent(id, title, icon, view));
         tabbedPane.setSelectedIndex(index);
     }
 
@@ -242,7 +242,7 @@ public class EditorPanel extends ThemedJPanel {
         return -1;
     }
 
-    private JPanel createCustomTabComponent(String id, String title, Icon icon) {
+    private JPanel createCustomTabComponent(String id, String title, Icon icon, JComponent view) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 0));
         panel.setOpaque(false);
 
@@ -275,15 +275,7 @@ public class EditorPanel extends ThemedJPanel {
         closeButton.addActionListener(e -> closeCustomView(id));
         panel.add(closeButton);
 
-        MouseAdapter tabClickListener = new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                int index = tabbedPane.indexOfTabComponent(panel);
-                if (index != -1) {
-                    tabbedPane.setSelectedIndex(index);
-                }
-            }
-        };
+        MouseAdapter tabClickListener = tabHeaderListener(panel, view);
         panel.addMouseListener(tabClickListener);
         titleLabel.addMouseListener(tabClickListener);
 
@@ -323,15 +315,7 @@ public class EditorPanel extends ThemedJPanel {
         closeButton.addActionListener(e -> closeResourceTab(tab));
         panel.add(closeButton);
 
-        MouseAdapter tabClickListener = new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                int index = tabbedPane.indexOfTabComponent(panel);
-                if (index != -1) {
-                    tabbedPane.setSelectedIndex(index);
-                }
-            }
-        };
+        MouseAdapter tabClickListener = tabHeaderListener(panel, tab);
         panel.addMouseListener(tabClickListener);
         iconLabel.addMouseListener(tabClickListener);
         titleLabel.addMouseListener(tabClickListener);
@@ -378,27 +362,8 @@ public class EditorPanel extends ThemedJPanel {
         closeButton.addActionListener(e -> closeTab(tab));
         panel.add(closeButton);
 
-        // Click on panel/icon/title should select tab and handle context menu
-        MouseAdapter tabClickListener = new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    showTabContextMenu(tab, e);
-                } else {
-                    int index = tabbedPane.indexOfTabComponent(panel);
-                    if (index != -1) {
-                        tabbedPane.setSelectedIndex(index);
-                    }
-                }
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    showTabContextMenu(tab, e);
-                }
-            }
-        };
+        // Left-click selects the tab; right-click shows the close context menu.
+        MouseAdapter tabClickListener = tabHeaderListener(panel, tab);
         panel.addMouseListener(tabClickListener);
         iconLabel.addMouseListener(tabClickListener);
         titleLabel.addMouseListener(tabClickListener);
@@ -478,13 +443,37 @@ public class EditorPanel extends ThemedJPanel {
         tabbedPane.setSelectedIndex(to);
     }
 
-    private void showTabContextMenu(EditorTab tab, MouseEvent e) {
+    /** A header mouse listener: left-click selects the tab; right-click shows its close context menu (bound to {@code tabBody}). */
+    private MouseAdapter tabHeaderListener(JComponent header, Component tabBody) {
+        return new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTabContextMenu(tabBody, e);
+                } else {
+                    int index = tabbedPane.indexOfTabComponent(header);
+                    if (index != -1) {
+                        tabbedPane.setSelectedIndex(index);
+                    }
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTabContextMenu(tabBody, e);
+                }
+            }
+        };
+    }
+
+    private void showTabContextMenu(Component tabBody, MouseEvent e) {
         JPopupMenu menu = new JPopupMenu();
         menu.setBackground(JStudioTheme.getBgSecondary());
         menu.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
 
         // Count the closable tabs (every kind except Welcome) on each side of the clicked tab.
-        int tabIndex = findTabIndex(tab);
+        int tabIndex = findComponentIndex(tabBody);
         int closableLeft = 0;
         int closableRight = 0;
         for (int i = 0; i < tabbedPane.getTabCount(); i++) {
@@ -500,11 +489,11 @@ public class EditorPanel extends ThemedJPanel {
         }
 
         // Close
-        JMenuItem closeItem = createMenuItem("Close", () -> closeTab(tab));
+        JMenuItem closeItem = createMenuItem("Close", () -> closeTabComponent(tabBody));
         menu.add(closeItem);
 
         // Close Others
-        JMenuItem closeOthersItem = createMenuItem("Close Others", () -> closeOtherTabs(tab));
+        JMenuItem closeOthersItem = createMenuItem("Close Others", () -> closeOtherTabs(tabBody));
         closeOthersItem.setEnabled(closableLeft + closableRight > 0);
         menu.add(closeOthersItem);
 
@@ -515,12 +504,12 @@ public class EditorPanel extends ThemedJPanel {
         menu.addSeparator();
 
         // Close Tabs to the Left
-        JMenuItem closeLeftItem = createMenuItem("Close Tabs to the Left", () -> closeTabsToLeft(tab));
+        JMenuItem closeLeftItem = createMenuItem("Close Tabs to the Left", () -> closeTabsToLeft(tabBody));
         closeLeftItem.setEnabled(closableLeft > 0);
         menu.add(closeLeftItem);
 
         // Close Tabs to the Right
-        JMenuItem closeRightItem = createMenuItem("Close Tabs to the Right", () -> closeTabsToRight(tab));
+        JMenuItem closeRightItem = createMenuItem("Close Tabs to the Right", () -> closeTabsToRight(tabBody));
         closeRightItem.setEnabled(closableRight > 0);
         menu.add(closeRightItem);
 
@@ -627,7 +616,7 @@ public class EditorPanel extends ThemedJPanel {
      * Close every closable tab except the specified one (all tab kinds, not just class editors; the Welcome tab is
      * always kept).
      */
-    public void closeOtherTabs(EditorTab keepTab) {
+    public void closeOtherTabs(Component keepTab) {
         // Collect by component reference first so removals don't shift the indices we still need to visit.
         List<Component> toClose = new ArrayList<>();
         for (int i = 0; i < tabbedPane.getTabCount(); i++) {
@@ -645,8 +634,8 @@ public class EditorPanel extends ThemedJPanel {
     /**
      * Close every closable tab to the left of the specified tab (all tab kinds; the Welcome tab is always kept).
      */
-    public void closeTabsToLeft(EditorTab referenceTab) {
-        int refIndex = findTabIndex(referenceTab);
+    public void closeTabsToLeft(Component referenceTab) {
+        int refIndex = findComponentIndex(referenceTab);
         if (refIndex <= 0) {
             return;
         }
@@ -666,8 +655,8 @@ public class EditorPanel extends ThemedJPanel {
     /**
      * Close every closable tab to the right of the specified tab (all tab kinds; the Welcome tab is always kept).
      */
-    public void closeTabsToRight(EditorTab referenceTab) {
-        int refIndex = findTabIndex(referenceTab);
+    public void closeTabsToRight(Component referenceTab) {
+        int refIndex = findComponentIndex(referenceTab);
         if (refIndex < 0 || refIndex >= tabbedPane.getTabCount() - 1) {
             return;
         }

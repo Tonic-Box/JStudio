@@ -87,6 +87,10 @@ public class SourceCompilerParser extends AbstractParser {
     }
 
     public CompilationResult compile(String source, ClassPool classPool) {
+        return compile(source, classPool, null);
+    }
+
+    public CompilationResult compile(String source, ClassPool classPool, java.util.Set<String> changedMethods) {
         if (originalClass == null) {
             return CompilationResult.failure(
                     Collections.singletonList(CompilationError.error(1, 1, 0, 1, "No class file to compile against")),
@@ -94,6 +98,6 @@ public class SourceCompilerParser extends AbstractParser {
                     0
             );
         }
-        return compiler.compile(source, originalClass, classPool);
+        return compiler.compile(source, originalClass, classPool, changedMethods);
     }
 }

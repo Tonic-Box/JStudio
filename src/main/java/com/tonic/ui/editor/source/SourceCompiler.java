@@ -38,6 +38,17 @@ import java.util.Set;
 public class SourceCompiler {
 
     public CompilationResult compile(String source, ClassFile originalClass, ClassPool classPool) {
+        return compile(source, originalClass, classPool, null);
+    }
+
+    /**
+     * Recompiles {@code source}. When {@code changedMethods} is non-null (the {@code name+descriptor} keys from
+     * {@link com.tonic.ui.live.MethodBodyDiff}), only those methods are re-lowered and the rest keep their original
+     * bytecode - so editing one method never perturbs the others. After lowering, the (re)compiled methods are
+     * verified; a method that fails to verify fails the recompile rather than silently shipping invalid bytecode.
+     */
+    public CompilationResult compile(String source, ClassFile originalClass, ClassPool classPool,
+                                     Set<String> changedMethods) {
         long startTime = System.currentTimeMillis();
         List<CompilationError> errors = new ArrayList<>();
 
@@ -68,7 +79,12 @@ public class SourceCompiler {
 
         try {
             List<CompilationError> methodWarnings = new ArrayList<>();
-            ClassFile newClass = lowerToClassFile(cu, originalClass, classPool, methodWarnings);
+            ClassFile newClass = lowerToClassFile(cu, originalClass, classPool, methodWarnings, changedMethods);
+            List<CompilationError> verifyErrors = gateVerify(newClass, classPool, changedMethods);
+            if (!verifyErrors.isEmpty()) {
+                verifyErrors.addAll(methodWarnings);
+                return CompilationResult.failure(verifyErrors, source, elapsed(startTime));
+            }
             return CompilationResult.builder()
                     .success(true)
                     .compiledClass(newClass)
@@ -113,7 +129,7 @@ public class SourceCompiler {
     }
 
     private ClassFile lowerToClassFile(CompilationUnit cu, ClassFile original, ClassPool classPool,
-                                       List<CompilationError> warnings) {
+                                       List<CompilationError> warnings, Set<String> changedMethods) {
         TypeDecl primaryType = cu.getPrimaryType();
         if (primaryType == null) {
             throw new LoweringException("No type declaration found in source");
@@ -143,6 +159,12 @@ public class SourceCompiler {
             String descriptor = buildDescriptor(methodDecl, typeResolver);
 
             MethodEntry targetMethod = findMethod(original, methodName, descriptor);
+            // Method-scoped recompile: an existing method whose body did not change keeps its original bytecode,
+            // so editing one method never re-lowers (and risks perturbing) the others.
+            if (changedMethods != null && targetMethod != null
+                    && !changedMethods.contains(methodName + descriptor)) {
+                continue;
+            }
             boolean isNew = targetMethod == null;
             if (isNew) {
                 try {
@@ -319,7 +341,10 @@ public class SourceCompiler {
                                              List<CompilationError> warnings) {
         List<Statement> initStatements = new ArrayList<>();
         for (FieldDecl field : classDecl.getFields()) {
-            if (field.isStatic() && field.hasInitializer()) {
+            // A static field that the original class represents with a ConstantValue attribute (a compile-time
+            // constant) is initialized by the class loader from the attribute - synthesizing a <clinit> putstatic for
+            // it would fabricate a spurious static block on every round-trip, so skip it.
+            if (field.isStatic() && field.hasInitializer() && !hasConstantValue(original, field.getName())) {
                 VarRefExpr ref = new VarRefExpr(field.getName(), field.getType());
                 BinaryExpr assign = new BinaryExpr(
                     BinaryOperator.ASSIGN, ref, field.getInitializer(), field.getType());
@@ -348,6 +373,52 @@ public class SourceCompiler {
             warnings.add(CompilationError.warning(1, 1, 0, 1,
                 "Could not synthesize static initializer: " + e.getMessage()));
         }
+    }
+
+    /**
+     * Verifies the recompiled class and returns one compilation error per failing method, filtered to the methods we
+     * re-lowered ({@code changedMethods}) so a pre-existing quirk in an untouched method never blocks an edit. An
+     * empty list means the recompile passed verification and is safe to apply.
+     */
+    private List<CompilationError> gateVerify(ClassFile compiled, ClassPool classPool, Set<String> changedMethods) {
+        List<CompilationError> errors = new ArrayList<>();
+        try {
+            com.tonic.analysis.verifier.VerificationResult result =
+                    com.tonic.analysis.verifier.Verifier.builder().classPool(classPool).build().verify(compiled);
+            for (com.tonic.analysis.verifier.VerificationError err : result.getErrors()) {
+                if (!err.isError()) {
+                    continue;
+                }
+                if (changedMethods != null && err.getMethodName() != null
+                        && !changedMethods.contains(err.getMethodName())) {
+                    continue;
+                }
+                String where = err.getMethodName() != null ? " in " + err.getMethodName() : "";
+                errors.add(CompilationError.error(1, 1, 0, 1,
+                        "Verification failed" + where + ": " + err.getMessage()));
+            }
+        } catch (Exception e) {
+            // A failure inside the verifier itself must not block an otherwise-valid recompile.
+        }
+        return errors;
+    }
+
+    /**
+     * Whether the original class's field {@code name} carries a {@code ConstantValue} attribute - i.e. a compile-time
+     * constant the class loader initializes directly, needing no {@code <clinit>} assignment.
+     */
+    private boolean hasConstantValue(ClassFile classFile, String name) {
+        for (FieldEntry field : classFile.getFields()) {
+            if (field.getName().equals(name)) {
+                for (com.tonic.parser.attribute.Attribute attr : field.getAttributes()) {
+                    if (attr instanceof com.tonic.parser.attribute.ConstantValueAttribute) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+        return false;
     }
 
     private boolean fieldExists(ClassFile classFile, String name) {

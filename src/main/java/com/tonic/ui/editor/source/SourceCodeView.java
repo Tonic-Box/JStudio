@@ -306,7 +306,12 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
         SwingWorker<CompilationResult, Void> worker = new SwingWorker<>() {
             @Override
             protected CompilationResult doInBackground() {
-                return compilerParser.compile(source, projectModel != null ? projectModel.getClassPool() : null);
+                ClassPool pool = projectModel != null ? projectModel.getClassPool() : null;
+                // Re-lower only the methods whose body actually changed; an empty/undeterminable diff falls back to
+                // recompiling everything, so an edit is never silently dropped.
+                Set<String> changed = MethodBodyDiff.changedMethods(
+                        baselineSource, source, pool, classEntry.getClassName());
+                return compilerParser.compile(source, pool, changed.isEmpty() ? null : changed);
             }
 
             @Override

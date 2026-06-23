@@ -7,30 +7,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Built in history/vc">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/Snapshot.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/history/LocalHistoryService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/history/HistoryDiffView.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/history/LineDiff.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/history/LocalHistoryPanel.java" afterDir="false" />
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Built in history/vc&#10;- Fixed center tab close options">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/model/ProjectModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/VmDebugApi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/api/VmDebugApi.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/VmDebugApiImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/VmDebugApiImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/VmValueBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/VmValueBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MenuBarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomToolbar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomToolbar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/deadcode/RemoveDeadCodeDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/deadcode/RemoveDeadCodeDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/DeobfuscateNamesDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/DeobfuscateNamesDialog.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/VMExecutionService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/VMDebugSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/VMDebugSession.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompiler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompiler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompilerParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompilerParser.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -250,14 +234,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00070" summary="Fix recompiled changes not persisting to bytecode/export and surface results in the editor:&#10;- Per-method resilience: a method that can't lower keeps its original bytecode and reports a warning instead of aborting the whole class&#10;- Refresh all open views (bytecode, const-pool, hex, IR, AST, ...) after a successful recompile&#10;- Add new methods/fields and regenerate &lt;clinit&gt; from static initializers&#10;- Remove methods dropped from source (constructors/synthetics guarded)&#10;- Materialize synthetic lambdas (rolls back on failure)&#10;&#10;LLVM Support:&#10;- View support for LLVM IR as a View">
-      <option name="closed" value="true" />
-      <created>1780737778706</created>
-      <option name="number" value="00070" />
-      <option name="presentableId" value="LOCAL-00070" />
-      <option name="project" value="LOCAL" />
-      <updated>1780737778707</updated>
     </task>
     <task id="LOCAL-00071" summary="- support for changing class level of created classes">
       <option name="closed" value="true" />
@@ -643,7 +619,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782124547756</updated>
     </task>
-    <option name="localTasksCounter" value="119" />
+    <task id="LOCAL-00119" summary="- Built in history/vc&#10;- Fixed center tab close options">
+      <option name="closed" value="true" />
+      <created>1782173302834</created>
+      <option name="number" value="00119" />
+      <option name="presentableId" value="LOCAL-00119" />
+      <option name="project" value="LOCAL" />
+      <updated>1782173302834</updated>
+    </task>
+    <option name="localTasksCounter" value="120" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -658,7 +642,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Gradle cleanup" />
     <MESSAGE value="- Fixed concurrency issue with fetching of live classes&#10;- Live profiler side tab" />
     <MESSAGE value="- Update readme image" />
     <MESSAGE value="- Update readme" />
@@ -683,7 +666,8 @@
     <MESSAGE value="- Cleanup" />
     <MESSAGE value="- Bottom panels are now minimizable" />
     <MESSAGE value="- Built in history/vc" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Built in history/vc" />
+    <MESSAGE value="- Built in history/vc&#10;- Fixed center tab close options" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Built in history/vc&#10;- Fixed center tab close options" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

@@ -32,6 +32,12 @@ public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
         });
         add(consoleButton);
 
+        historyButton = createButton("History", "undo");
+        historyButton.addActionListener(e -> {
+            if (onLocalHistoryClicked != null) onLocalHistoryClicked.run();
+        });
+        add(historyButton);
+
         bookmarksButton = createButton("Bookmarks", "bookmark");
         bookmarksButton.addActionListener(e -> {
             if (onBookmarksClicked != null) onBookmarksClicked.run();
@@ -43,12 +49,6 @@ public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
             if (onCommentsClicked != null) onCommentsClicked.run();
         });
         add(commentsButton);
-
-        historyButton = createButton("History", "undo");
-        historyButton.addActionListener(e -> {
-            if (onLocalHistoryClicked != null) onLocalHistoryClicked.run();
-        });
-        add(historyButton);
 
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
