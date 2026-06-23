@@ -19,7 +19,7 @@ public class BarChart extends JPanel implements ThemeChangeListener {
     private List<BarEntry> entries = new ArrayList<>();
     private boolean percentageMode = false;
     private boolean showAllEntries = false;
-    private int maxVisibleBars = 8;
+    private final int maxVisibleBars = 8;
 
     private static final int BAR_HEIGHT = 22;
     private static final int BAR_SPACING = 6;
@@ -187,6 +187,12 @@ public class BarChart extends JPanel implements ThemeChangeListener {
         int g = (int) (color.getGreen() * factor);
         int b = (int) (color.getBlue() * factor);
         return new Color(r, g, b);
+    }
+
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        ThemeManager.getInstance().removeThemeChangeListener(this);
     }
 
     @Override

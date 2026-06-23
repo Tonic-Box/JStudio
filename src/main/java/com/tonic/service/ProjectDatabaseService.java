@@ -214,6 +214,15 @@ public class ProjectDatabaseService {
         }
     }
 
+    public void removeListener(DatabaseChangeListener listener) {
+        listeners.remove(listener);
+    }
+
+    /** The number of registered listeners (test-only hook for leak detection). */
+    public int getListenerCount() {
+        return listeners.size();
+    }
+
     private void notifyListeners() {
         for (DatabaseChangeListener listener : listeners) {
             listener.onDatabaseChanged(currentDatabase, dirty);

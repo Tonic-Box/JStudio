@@ -1,45 +1,27 @@
 package com.tonic.ui.navigator;
 
-import com.tonic.parser.ClassFile;
-import com.tonic.parser.ClassPool;
-import com.tonic.renamer.Renamer;
-import com.tonic.renamer.exception.RenameException;
 import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.ColumnWidths;
 import com.tonic.ui.core.constants.UIConstants;
-import com.tonic.ui.dialog.NewClassDialog;
-import com.tonic.ui.dialog.RenameClassDialog;
 import com.tonic.ui.editor.ViewMode;
-import com.tonic.ui.live.LiveAttachService;
 import com.tonic.event.EventBus;
 import com.tonic.event.events.ClassSelectedEvent;
-import com.tonic.event.events.FindUsagesEvent;
 import com.tonic.event.events.MethodSelectedEvent;
-import com.tonic.event.events.ProjectLoadedEvent;
-import com.tonic.event.events.ProjectUpdatedEvent;
 import com.tonic.event.events.ResourceSelectedEvent;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.FieldEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.model.ResourceEntryModel;
-import com.tonic.plugin.api.ui.NavigatorAction;
 import com.tonic.plugin.api.ui.NavigatorActionProvider;
-import com.tonic.plugin.api.ui.NavigatorContext;
-import com.tonic.service.ClassCreationService;
-import com.tonic.service.ClassCreationService.ClassCreationParams;
 import com.tonic.service.ProjectService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.vm.testgen.FuzzTestGeneratorDialog;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -59,20 +41,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NavigatorPanel extends ThemedJPanel {
@@ -85,6 +58,8 @@ public class NavigatorPanel extends ThemedJPanel {
     private final JScrollPane scrollPane;
     private final JPanel loadingOverlay;
     private final JPanel contentWrapper;
+    private final NavigatorTreeStateManager treeState;
+    private final NavigatorContextMenuFactory contextMenuFactory;
     /** Plugin-contributed context-menu providers, consulted each time the tree's popup opens. */
     private final List<NavigatorActionProvider> actionProviders = new CopyOnWriteArrayList<>();
 
@@ -102,6 +77,9 @@ public class NavigatorPanel extends ThemedJPanel {
 
         treeModel = new ClassTreeModel();
         tree = new JTree(treeModel);
+        treeState = new NavigatorTreeStateManager(tree, treeModel);
+        NavigatorActions actions = new NavigatorActions(this, mainFrame, this::selectClass, this::setLoading);
+        contextMenuFactory = new NavigatorContextMenuFactory(this, mainFrame, actions, actionProviders);
         tree.setRootVisible(true);
         tree.setShowsRootHandles(true);
         tree.setToggleClickCount(0);
@@ -363,7 +341,7 @@ public class NavigatorPanel extends ThemedJPanel {
 
     public void loadProject(ProjectModel project) {
         treeModel.loadProject(project);
-        expandToLevel(1);
+        treeState.expandToLevel(1);
     }
 
     public void clear() {
@@ -376,69 +354,9 @@ public class NavigatorPanel extends ThemedJPanel {
         if (project == null) {
             return;
         }
-        // Preserve which nodes are open + the selection across the rebuild (loadProject discards them), matching by
-        // each node's name-path so it survives the new node objects. Best-effort: a renamed node's key changes, so
-        // only that node loses its state.
-        Set<String> expandedKeys = captureExpandedKeys();
-        TreePath selectionPath = tree.getSelectionPath();
-        String selectedKey = selectionPath != null ? pathKey(selectionPath) : null;
-
+        treeState.capture();
         treeModel.loadProject(project);
-
-        restoreTreeState(expandedKeys, selectedKey);
-    }
-
-    /** Name-path keys of every currently-expanded node, so expansion can be restored after a tree rebuild. */
-    private Set<String> captureExpandedKeys() {
-        Set<String> keys = new HashSet<>();
-        Object root = treeModel.getRoot();
-        if (root == null) {
-            return keys;
-        }
-        Enumeration<TreePath> expanded = tree.getExpandedDescendants(new TreePath(root));
-        if (expanded != null) {
-            while (expanded.hasMoreElements()) {
-                keys.add(pathKey(expanded.nextElement()));
-            }
-        }
-        return keys;
-    }
-
-    /** Re-expands the nodes that were open and re-selects the previously selected node, by matching name-paths. */
-    private void restoreTreeState(Set<String> expandedKeys, String selectedKey) {
-        Object root = treeModel.getRoot();
-        if (root instanceof NavigatorNode) {
-            restoreNode((NavigatorNode) root, new TreePath(root), expandedKeys, selectedKey, true);
-        }
-    }
-
-    private void restoreNode(NavigatorNode node, TreePath path, Set<String> expandedKeys,
-                             String selectedKey, boolean isRoot) {
-        String key = pathKey(path);
-        if (selectedKey != null && selectedKey.equals(key)) {
-            tree.setSelectionPath(path);
-            tree.scrollPathToVisible(path);
-        }
-        // A collapsed node had no expanded descendants, so prune the walk there (keeps it bounded to the open subtree).
-        if (!isRoot && !expandedKeys.contains(key)) {
-            return;
-        }
-        tree.expandPath(path);
-        for (int i = 0; i < node.getChildCount(); i++) {
-            Object child = node.getChildAt(i);
-            if (child instanceof NavigatorNode) {
-                restoreNode((NavigatorNode) child, path.pathByAddingChild(child), expandedKeys, selectedKey, false);
-            }
-        }
-    }
-
-    /** A rebuild-stable key for a tree path: its nodes' display texts joined (newline-separated, absent from names). */
-    private static String pathKey(TreePath path) {
-        StringBuilder sb = new StringBuilder();
-        for (Object node : path.getPath()) {
-            sb.append('\n').append(node);
-        }
-        return sb.toString();
+        treeState.restore();
     }
 
     public void setLoading(boolean loading) {
@@ -462,37 +380,15 @@ public class NavigatorPanel extends ThemedJPanel {
     }
 
     public void collapseAll() {
-        int row = tree.getRowCount() - 1;
-        while (row >= 0) {
-            tree.collapseRow(row);
-            row--;
-        }
+        treeState.collapseAll();
     }
 
     public void expandAll() {
-        int row = 0;
-        while (row < tree.getRowCount()) {
-            tree.expandRow(row);
-            row++;
-        }
+        treeState.expandAll();
     }
 
     public void expandToLevel(int level) {
-        expandToLevel((NavigatorNode) treeModel.getRoot(), 0, level);
-    }
-
-    private void expandToLevel(NavigatorNode node, int currentLevel, int targetLevel) {
-        if (currentLevel >= targetLevel) return;
-
-        TreePath path = new TreePath(treeModel.getPathToRoot(node));
-        tree.expandPath(path);
-
-        for (int i = 0; i < node.getChildCount(); i++) {
-            Object child = node.getChildAt(i);
-            if (child instanceof NavigatorNode) {
-                expandToLevel((NavigatorNode) child, currentLevel + 1, targetLevel);
-            }
-        }
+        treeState.expandToLevel(level);
     }
 
     private void showContextMenu(MouseEvent e) {
@@ -502,28 +398,7 @@ public class NavigatorPanel extends ThemedJPanel {
         tree.setSelectionPath(path);
         Object node = path.getLastPathComponent();
 
-        JPopupMenu menu = new JPopupMenu();
-        styleMenu(menu);
-
-        if (node instanceof NavigatorNode.MethodNode) {
-            buildMethodMenu(menu, (NavigatorNode.MethodNode) node);
-        } else if (node instanceof NavigatorNode.FieldNode) {
-            buildFieldMenu(menu, (NavigatorNode.FieldNode) node);
-        } else if (node instanceof NavigatorNode.ClassNode) {
-            buildClassMenu(menu, (NavigatorNode.ClassNode) node);
-        } else if (node instanceof NavigatorNode.PackageNode) {
-            buildPackageMenu(menu, (NavigatorNode.PackageNode) node);
-        } else if (node instanceof NavigatorNode.ProjectNode) {
-            buildProjectMenu(menu);
-        } else if (node instanceof NavigatorNode.ResourceFolderNode) {
-            buildResourceFolderMenu(menu, (NavigatorNode.ResourceFolderNode) node);
-        } else if (node instanceof NavigatorNode.ResourcesRootNode) {
-            buildResourcesRootMenu(menu);
-        } else if (node instanceof NavigatorNode.ResourceNode) {
-            buildResourceMenu(menu, (NavigatorNode.ResourceNode) node);
-        }
-
-        appendPluginActions(menu, node);
+        JPopupMenu menu = contextMenuFactory.buildFor(node);
 
         if (menu.getComponentCount() > 0) {
             menu.show(tree, e.getX(), e.getY());
@@ -542,590 +417,4 @@ public class NavigatorPanel extends ThemedJPanel {
         actionProviders.remove(provider);
     }
 
-    /** Appends plugin-contributed entries (if any) for the right-clicked node, after the built-in items. */
-    private void appendPluginActions(JPopupMenu menu, Object node) {
-        if (actionProviders.isEmpty()) {
-            return;
-        }
-        NavigatorContext context = buildNavigatorContext(node);
-        List<NavigatorAction> actions = new ArrayList<>();
-        for (NavigatorActionProvider provider : actionProviders) {
-            try {
-                List<NavigatorAction> contributed = provider.actionsFor(context);
-                if (contributed != null) {
-                    actions.addAll(contributed);
-                }
-            } catch (Exception ex) {
-                // A misbehaving provider must not break the native context menu.
-            }
-        }
-        if (actions.isEmpty()) {
-            return;
-        }
-        if (menu.getComponentCount() > 0) {
-            menu.addSeparator();
-        }
-        for (NavigatorAction action : actions) {
-            addMenuItem(menu, action.label(), action.action());
-        }
-    }
-
-    private NavigatorContext buildNavigatorContext(Object node) {
-        final ClassEntryModel cls = node instanceof NavigatorNode.ClassNode
-                ? ((NavigatorNode.ClassNode) node).getClassEntry() : null;
-        final MethodEntryModel method = node instanceof NavigatorNode.MethodNode
-                ? ((NavigatorNode.MethodNode) node).getMethodEntry() : null;
-        final FieldEntryModel field = node instanceof NavigatorNode.FieldNode
-                ? ((NavigatorNode.FieldNode) node).getFieldEntry() : null;
-        final ResourceEntryModel resource = node instanceof NavigatorNode.ResourceNode
-                ? ((NavigatorNode.ResourceNode) node).getResource() : null;
-        return new NavigatorContext() {
-            @Override
-            public Optional<ClassEntryModel> selectedClass() {
-                return Optional.ofNullable(cls);
-            }
-
-            @Override
-            public Optional<MethodEntryModel> selectedMethod() {
-                return Optional.ofNullable(method);
-            }
-
-            @Override
-            public Optional<FieldEntryModel> selectedField() {
-                return Optional.ofNullable(field);
-            }
-
-            @Override
-            public Optional<ResourceEntryModel> selectedResource() {
-                return Optional.ofNullable(resource);
-            }
-        };
-    }
-
-    private void buildMethodMenu(JPopupMenu menu, NavigatorNode.MethodNode node) {
-        MethodEntryModel method = node.getMethodEntry();
-
-        addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
-            FindUsagesEvent.forMethod(this, method.getOwner().getClassName(),
-                method.getName(), method.getDescriptor())));
-
-        menu.addSeparator();
-
-        addMenuItem(menu, "Execute Method...", () -> mainFrame.openExecuteMethodDialog(method));
-
-        addMenuItem(menu, "Fuzz & Generate Tests...", () -> openFuzzTestDialog(method));
-
-        menu.addSeparator();
-
-        addMenuItem(menu, "Rename Method...", () -> mainFrame.showRenameMethodDialog(method.getOwner(), method));
-
-        menu.addSeparator();
-
-        addMenuItem(menu, "Copy Signature", () -> {
-            String ownerSimple = getSimpleClassName(method.getOwner().getClassName());
-            String sig = ownerSimple + "." + method.getName() + formatDescriptorParams(method.getDescriptor());
-            copyToClipboard(sig);
-        });
-
-        addMenuItem(menu, "Copy Descriptor", () -> copyToClipboard(method.getDescriptor()));
-
-        addMenuItem(menu, "Copy Full Reference", () -> {
-            String fullRef = method.getOwner().getClassName() + "." + method.getName() + method.getDescriptor();
-            copyToClipboard(fullRef);
-        });
-    }
-
-    private void buildFieldMenu(JPopupMenu menu, NavigatorNode.FieldNode node) {
-        FieldEntryModel field = node.getFieldEntry();
-
-        addMenuItem(menu, "Go to Field", () -> {
-            EventBus.getInstance().post(new ClassSelectedEvent(this, field.getOwner()));
-            SwingUtilities.invokeLater(() -> {
-                mainFrame.getEditorPanel().setViewMode(ViewMode.SOURCE);
-                mainFrame.getEditorPanel().scrollToField(field);
-            });
-        });
-
-        addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
-            FindUsagesEvent.forField(this, field.getOwner().getClassName(),
-                field.getName(), field.getDescriptor())));
-
-        menu.addSeparator();
-
-        addMenuItem(menu, "Rename Field...", () -> mainFrame.showRenameFieldDialog(field.getOwner(), field));
-
-        menu.addSeparator();
-
-        addMenuItem(menu, "Copy Name", () -> copyToClipboard(field.getName()));
-
-        addMenuItem(menu, "Copy Full Name", () -> {
-            String ownerSimple = getSimpleClassName(field.getOwner().getClassName());
-            copyToClipboard(ownerSimple + "." + field.getName());
-        });
-
-        addMenuItem(menu, "Copy Descriptor", () -> copyToClipboard(field.getDescriptor()));
-    }
-
-    private void buildClassMenu(JPopupMenu menu, NavigatorNode.ClassNode node) {
-        ClassEntryModel classEntry = node.getClassEntry();
-
-        addMenuItem(menu, "Open in Editor", () -> EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry)));
-
-        if (classEntry.hasMainMethod() && !LiveAttachService.getInstance().isAttached()) {
-            addMenuItem(menu, "Run " + classEntry.getSimpleName() + ".main()", () -> mainFrame.runMainClass(classEntry));
-        }
-
-        addMenuItem(menu, "Find Usages", () -> EventBus.getInstance().post(
-            FindUsagesEvent.forClass(this, classEntry.getClassName())));
-
-        menu.addSeparator();
-
-        addMenuItem(menu, "Rename Class...", () -> renameClass(classEntry));
-
-        addMenuItem(menu, "Delete", () -> deleteClass(classEntry));
-
-        menu.addSeparator();
-
-        addMenuItem(menu, "Export Class...", () -> mainFrame.exportClass(classEntry));
-
-        menu.addSeparator();
-
-        addMenuItem(menu, "Copy Class Name", () -> copyToClipboard(classEntry.getClassName().replace('/', '.')));
-
-        addMenuItem(menu, "Copy Internal Name", () -> copyToClipboard(classEntry.getClassName()));
-
-        addMenuItem(menu, "Copy Simple Name", () -> copyToClipboard(classEntry.getSimpleName()));
-    }
-
-    private void buildPackageMenu(JPopupMenu menu, NavigatorNode.PackageNode node) {
-        addMenuItem(menu, "Add New Class...", () -> showNewClassDialog(node.getPackageName()));
-    }
-
-    private void buildProjectMenu(JPopupMenu menu) {
-        // Works whether or not a project is loaded: with no project, creating a class spins up a
-        // new (Untitled) project in the root package and opens the class in it.
-        addMenuItem(menu, "Add New Class...", () -> showNewClassDialog(""));
-    }
-
-    private void buildResourceFolderMenu(JPopupMenu menu, NavigatorNode.ResourceFolderNode node) {
-        addMenuItem(menu, "New Empty File...", () -> showNewResourceFileDialog(node.getFolderPath()));
-        addMenuItem(menu, "Import File...", () -> showImportResourceDialog(node.getFolderPath()));
-    }
-
-    private void buildResourcesRootMenu(JPopupMenu menu) {
-        addMenuItem(menu, "New Empty File...", () -> showNewResourceFileDialog(""));
-        addMenuItem(menu, "Import File...", () -> showImportResourceDialog(""));
-    }
-
-    private void buildResourceMenu(JPopupMenu menu, NavigatorNode.ResourceNode node) {
-        ResourceEntryModel resource = node.getResource();
-        addMenuItem(menu, "Open", () -> EventBus.getInstance().post(new ResourceSelectedEvent(this, resource)));
-        menu.addSeparator();
-        addMenuItem(menu, "Delete", () -> deleteResource(resource));
-    }
-
-    private void showNewClassDialog(String packageName) {
-        ProjectModel existingProject = ProjectService.getInstance().getCurrentProject();
-
-        String internalPackageName = packageName.replace('.', '/');
-        NewClassDialog dialog = new NewClassDialog(
-                SwingUtilities.getWindowAncestor(this), internalPackageName);
-        dialog.setVisible(true);
-
-        if (!dialog.isConfirmed()) {
-            return;
-        }
-
-        ClassCreationParams params = dialog.getCreationParams();
-
-        try {
-            ClassFile classFile = ClassCreationService.getInstance().createClass(params);
-
-            // With no project open, creating a class spins up a new project to hold it. Done only
-            // after the dialog is confirmed so cancelling leaves the "No Project" state untouched.
-            boolean newProject = existingProject == null;
-            ProjectModel project = newProject
-                    ? ProjectService.getInstance().createProject("Untitled")
-                    : existingProject;
-
-            ClassEntryModel entry = project.addClass(classFile);
-
-            if (newProject) {
-                EventBus.getInstance().post(new ProjectLoadedEvent(this, project));
-            } else {
-                EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 1));
-            }
-
-            SwingUtilities.invokeLater(() -> {
-                selectClass(entry.getClassName());
-                EventBus.getInstance().post(new ClassSelectedEvent(this, entry));
-            });
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Failed to create class: " + e.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void showNewResourceFileDialog(String folderPath) {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            JOptionPane.showMessageDialog(this,
-                    "No project loaded",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String filename = JOptionPane.showInputDialog(this,
-                "Enter filename (with extension):",
-                "New Resource File",
-                JOptionPane.PLAIN_MESSAGE);
-
-        if (filename == null || filename.trim().isEmpty()) {
-            return;
-        }
-
-        filename = filename.trim();
-        if (!isValidFilename(filename)) {
-            JOptionPane.showMessageDialog(this,
-                    "Invalid filename",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String path = folderPath.isEmpty() ? filename : folderPath + "/" + filename;
-
-        if (project.getResource(path) != null) {
-            JOptionPane.showMessageDialog(this,
-                    "A resource with this name already exists",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        ResourceEntryModel resource = new ResourceEntryModel(path, new byte[0]);
-        project.addResource(resource);
-
-        EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 0));
-
-        SwingUtilities.invokeLater(() ->
-                EventBus.getInstance().post(new ResourceSelectedEvent(this, resource)));
-    }
-
-    private void showImportResourceDialog(String folderPath) {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            JOptionPane.showMessageDialog(this,
-                    "No project loaded",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Import Resource File");
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setMultiSelectionEnabled(true);
-
-        int result = fileChooser.showOpenDialog(this);
-        if (result != JFileChooser.APPROVE_OPTION) {
-            return;
-        }
-
-        File[] selectedFiles = fileChooser.getSelectedFiles();
-        int importedCount = 0;
-
-        for (File file : selectedFiles) {
-            try {
-                byte[] data = Files.readAllBytes(file.toPath());
-                String path = folderPath.isEmpty() ? file.getName() : folderPath + "/" + file.getName();
-
-                if (project.getResource(path) != null) {
-                    int overwrite = JOptionPane.showConfirmDialog(this,
-                            "Resource '" + path + "' already exists. Overwrite?",
-                            "Confirm Overwrite",
-                            JOptionPane.YES_NO_OPTION);
-                    if (overwrite != JOptionPane.YES_OPTION) {
-                        continue;
-                    }
-                }
-
-                ResourceEntryModel resource = new ResourceEntryModel(path, data);
-                project.addResource(resource);
-                importedCount++;
-
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this,
-                        "Failed to import " + file.getName() + ": " + e.getMessage(),
-                        "Import Error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        }
-
-        if (importedCount > 0) {
-            EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 0));
-            JOptionPane.showMessageDialog(this,
-                    "Imported " + importedCount + " file(s)",
-                    "Import Complete",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-
-    private boolean isValidFilename(String filename) {
-        if (filename == null || filename.isEmpty()) {
-            return false;
-        }
-        String invalidChars = "<>:\"/\\|?*";
-        for (char c : invalidChars.toCharArray()) {
-            if (filename.indexOf(c) >= 0) {
-                return false;
-            }
-        }
-        return !filename.equals(".") && !filename.equals("..");
-    }
-
-    private void renameClass(ClassEntryModel classEntry) {
-        String oldName = classEntry.getClassName();
-
-        RenameClassDialog dialog = new RenameClassDialog(
-                SwingUtilities.getWindowAncestor(this), oldName);
-        dialog.setVisible(true);
-
-        if (!dialog.isConfirmed()) {
-            return;
-        }
-
-        String newName = dialog.getNewClassName();
-        if (newName.equals(oldName)) {
-            return;
-        }
-
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassPool() == null) {
-            JOptionPane.showMessageDialog(this,
-                    "No project loaded",
-                    "Rename Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        ClassPool classPool = project.getClassPool();
-
-        setLoading(true);
-
-        try {
-            com.tonic.service.history.LocalHistoryService.getInstance()
-                    .snapshot("Rename class", com.tonic.model.Snapshot.Trigger.RENAME);
-            Renamer renamer = new Renamer(classPool);
-            renamer.mapClass(oldName, newName).apply();
-
-            project.notifyClassRenamed(oldName, newName);
-
-            mainFrame.refreshAfterRename(oldName, newName);
-
-            SwingUtilities.invokeLater(() -> {
-                selectClass(newName);
-                JOptionPane.showMessageDialog(this,
-                        "Class renamed successfully:\n" +
-                                oldName.replace('/', '.') + " -> " + newName.replace('/', '.'),
-                        "Rename Complete",
-                        JOptionPane.INFORMATION_MESSAGE);
-            });
-
-        } catch (RenameException e) {
-            setLoading(false);
-            JOptionPane.showMessageDialog(this,
-                    "Rename failed: " + e.getMessage(),
-                    "Rename Error",
-                    JOptionPane.ERROR_MESSAGE);
-        } catch (Exception e) {
-            setLoading(false);
-            JOptionPane.showMessageDialog(this,
-                    "Unexpected error during rename: " + e.getMessage(),
-                    "Rename Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void deleteClass(ClassEntryModel classEntry) {
-        String className = classEntry.getClassName();
-        String displayName = className.replace('/', '.');
-
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Delete class '" + displayName + "'?\n\nThis cannot be undone.",
-                "Confirm Delete",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-
-        if (confirm != JOptionPane.YES_OPTION) {
-            return;
-        }
-
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            return;
-        }
-
-        com.tonic.service.history.LocalHistoryService.getInstance()
-                .snapshot("Delete class " + displayName, com.tonic.model.Snapshot.Trigger.DELETE);
-        if (project.removeClass(className)) {
-            mainFrame.closeEditorForClass(className);
-            EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, -1));
-        }
-    }
-
-    private void deleteResource(ResourceEntryModel resource) {
-        String path = resource.getPath();
-
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Delete resource '" + path + "'?\n\nThis cannot be undone.",
-                "Confirm Delete",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-
-        if (confirm != JOptionPane.YES_OPTION) {
-            return;
-        }
-
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            return;
-        }
-
-        if (project.removeResource(path)) {
-            mainFrame.closeEditorForResource(path);
-            EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 0));
-        }
-    }
-
-    private void styleMenu(JPopupMenu menu) {
-        menu.setBackground(JStudioTheme.getBgSecondary());
-        menu.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
-    }
-
-    private void addMenuItem(JPopupMenu menu, String text, Runnable action) {
-        JMenuItem item = new JMenuItem(text);
-        item.setBackground(JStudioTheme.getBgSecondary());
-        item.setForeground(JStudioTheme.getTextPrimary());
-        item.addActionListener(e -> action.run());
-        menu.add(item);
-    }
-
-    private void copyToClipboard(String text) {
-        StringSelection selection = new StringSelection(text);
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-    }
-
-    private void openFuzzTestDialog(MethodEntryModel method) {
-        FuzzTestGeneratorDialog dialog = new FuzzTestGeneratorDialog(
-            SwingUtilities.getWindowAncestor(this));
-        dialog.setMethod(
-            method.getOwner().getClassName(),
-            method.getName(),
-            method.getDescriptor());
-        dialog.setVisible(true);
-    }
-
-    private String getSimpleClassName(String internalName) {
-        int lastSlash = internalName.lastIndexOf('/');
-        return lastSlash >= 0 ? internalName.substring(lastSlash + 1) : internalName;
-    }
-
-    private String formatDescriptorParams(String descriptor) {
-        if (descriptor == null || !descriptor.startsWith("(")) {
-            return "()";
-        }
-        int endParen = descriptor.indexOf(')');
-        if (endParen < 0) {
-            return "()";
-        }
-        String params = descriptor.substring(1, endParen);
-        if (params.isEmpty()) {
-            return "()";
-        }
-        StringBuilder result = new StringBuilder("(");
-        int i = 0;
-        boolean first = true;
-        while (i < params.length()) {
-            if (!first) {
-                result.append(", ");
-            }
-            first = false;
-            char c = params.charAt(i);
-            switch (c) {
-                case 'B': result.append("byte"); i++; break;
-                case 'C': result.append("char"); i++; break;
-                case 'D': result.append("double"); i++; break;
-                case 'F': result.append("float"); i++; break;
-                case 'I': result.append("int"); i++; break;
-                case 'J': result.append("long"); i++; break;
-                case 'S': result.append("short"); i++; break;
-                case 'Z': result.append("boolean"); i++; break;
-                case 'V': result.append("void"); i++; break;
-                case '[':
-                    int arrayDims = 0;
-                    while (i < params.length() && params.charAt(i) == '[') {
-                        arrayDims++;
-                        i++;
-                    }
-                    String elementType = parseOneType(params, i);
-                    i += rawTypeLength(params, i);
-                    result.append(elementType);
-                    result.append("[]".repeat(Math.max(0, arrayDims)));
-                    break;
-                case 'L':
-                    int semi = params.indexOf(';', i);
-                    if (semi > i) {
-                        String className = params.substring(i + 1, semi);
-                        result.append(getSimpleClassName(className));
-                        i = semi + 1;
-                    } else {
-                        i++;
-                    }
-                    break;
-                default:
-                    i++;
-            }
-        }
-        result.append(")");
-        return result.toString();
-    }
-
-    private String parseOneType(String params, int i) {
-        if (i >= params.length()) return "?";
-        char c = params.charAt(i);
-        switch (c) {
-            case 'B': return "byte";
-            case 'C': return "char";
-            case 'D': return "double";
-            case 'F': return "float";
-            case 'I': return "int";
-            case 'J': return "long";
-            case 'S': return "short";
-            case 'Z': return "boolean";
-            case 'V': return "void";
-            case 'L':
-                int semi = params.indexOf(';', i);
-                if (semi > i) {
-                    return getSimpleClassName(params.substring(i + 1, semi));
-                }
-                return "Object";
-            default:
-                return "?";
-        }
-    }
-
-    private int rawTypeLength(String params, int i) {
-        if (i >= params.length()) return 0;
-        char c = params.charAt(i);
-        if (c == 'L') {
-            int semi = params.indexOf(';', i);
-            return semi > i ? (semi - i + 1) : 1;
-        }
-        return 1;
-    }
 }

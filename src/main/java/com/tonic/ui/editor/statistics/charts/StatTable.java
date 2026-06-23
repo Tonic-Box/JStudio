@@ -95,6 +95,12 @@ public class StatTable extends JPanel implements ThemeChangeListener {
     }
 
     @Override
+    public void removeNotify() {
+        super.removeNotify();
+        ThemeManager.getInstance().removeThemeChangeListener(this);
+    }
+
+    @Override
     public void onThemeChanged(Theme newTheme) {
         table.setBackground(JStudioTheme.getBgSecondary());
         table.setForeground(JStudioTheme.getTextPrimary());

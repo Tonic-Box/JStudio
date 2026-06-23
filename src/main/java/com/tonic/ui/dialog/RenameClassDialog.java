@@ -2,6 +2,8 @@ package com.tonic.ui.dialog;
 
 import com.tonic.ui.core.component.ThemedJDialog;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.theme.ThemeStyles;
+import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,6 +14,7 @@ public class RenameClassDialog extends ThemedJDialog {
 
     private final JTextField packageField;
     private final JTextField nameField;
+    @Getter
     private boolean confirmed = false;
 
     public RenameClassDialog(Window owner, String currentClassName) {
@@ -50,7 +53,7 @@ public class RenameClassDialog extends ThemedJDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         packageField = new JTextField(currentPackage.replace('/', '.'), 30);
-        styleTextField(packageField);
+        ThemeStyles.styleTextField(packageField);
         content.add(packageField, gbc);
 
         gbc.gridx = 0;
@@ -65,18 +68,18 @@ public class RenameClassDialog extends ThemedJDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         nameField = new JTextField(currentSimpleName, 30);
-        styleTextField(nameField);
+        ThemeStyles.styleTextField(nameField);
         content.add(nameField, gbc);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(JStudioTheme.getBgPrimary());
 
         JButton cancelButton = new JButton("Cancel");
-        styleButton(cancelButton, false);
+        ThemeStyles.styleButton(cancelButton, false);
         cancelButton.addActionListener(e -> dispose());
 
         JButton renameButton = new JButton("Rename");
-        styleButton(renameButton, true);
+        ThemeStyles.styleButton(renameButton, true);
         renameButton.addActionListener(e -> {
             if (validateInput()) {
                 confirmed = true;
@@ -119,50 +122,21 @@ public class RenameClassDialog extends ThemedJDialog {
         nameField.requestFocusInWindow();
     }
 
-    private void styleTextField(JTextField field) {
-        field.setBackground(JStudioTheme.getBgSecondary());
-        field.setForeground(JStudioTheme.getTextPrimary());
-        field.setCaretColor(JStudioTheme.getTextPrimary());
-        field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
-        field.setFont(JStudioTheme.getCodeFont(12));
-    }
-
-    private void styleButton(JButton button, boolean primary) {
-        if (primary) {
-            button.setBackground(JStudioTheme.getAccent());
-            button.setForeground(Color.WHITE);
-        } else {
-            button.setBackground(JStudioTheme.getBgSecondary());
-            button.setForeground(JStudioTheme.getTextPrimary());
-        }
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(6, 16, 6, 16)
-        ));
-    }
-
     private boolean validateInput() {
         String name = nameField.getText().trim();
         if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Class name cannot be empty",
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
+            showError("Class name cannot be empty");
             return false;
         }
-        if (!isValidJavaIdentifier(name)) {
-            JOptionPane.showMessageDialog(this, "Invalid class name: " + name,
-                    "Validation Error", JOptionPane.ERROR_MESSAGE);
+        if (!AbstractRenameDialog.isValidJavaIdentifier(name)) {
+            showError("Invalid class name: " + name);
             return false;
         }
         String pkg = packageField.getText().trim();
         if (!pkg.isEmpty()) {
             for (String part : pkg.split("\\.")) {
-                if (!isValidJavaIdentifier(part)) {
-                    JOptionPane.showMessageDialog(this, "Invalid package name: " + pkg,
-                            "Validation Error", JOptionPane.ERROR_MESSAGE);
+                if (!AbstractRenameDialog.isValidJavaIdentifier(part)) {
+                    showError("Invalid package name: " + pkg);
                     return false;
                 }
             }
@@ -170,17 +144,8 @@ public class RenameClassDialog extends ThemedJDialog {
         return true;
     }
 
-    private boolean isValidJavaIdentifier(String s) {
-        if (s == null || s.isEmpty()) return false;
-        if (!Character.isJavaIdentifierStart(s.charAt(0))) return false;
-        for (int i = 1; i < s.length(); i++) {
-            if (!Character.isJavaIdentifierPart(s.charAt(i))) return false;
-        }
-        return true;
-    }
-
-    public boolean isConfirmed() {
-        return confirmed;
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
     }
 
     public String getNewClassName() {

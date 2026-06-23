@@ -16,8 +16,6 @@ import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 /**
  * Builds the main toolbar for JStudio.
@@ -35,6 +33,7 @@ public class ToolbarBuilder implements ThemeChangeListener {
     private ViewModeComboBox viewModeCombo;
     private JToggleButton omitAnnotationsButton;
     private JButton scratchPadButton;
+    private EventBus.EventHandler<LiveSessionEvent> liveSessionHandler;
 
     public ToolbarBuilder(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
@@ -44,6 +43,14 @@ public class ToolbarBuilder implements ThemeChangeListener {
     @Override
     public void onThemeChanged(Theme newTheme) {
         SwingUtilities.invokeLater(this::applyTheme);
+    }
+
+    /** Unregisters this builder's theme + live-session listeners (called when the main window closes). */
+    public void dispose() {
+        ThemeManager.getInstance().removeThemeChangeListener(this);
+        if (liveSessionHandler != null) {
+            EventBus.getInstance().unregister(LiveSessionEvent.class, liveSessionHandler);
+        }
     }
 
     private void applyTheme() {
@@ -87,12 +94,13 @@ public class ToolbarBuilder implements ThemeChangeListener {
             mainFrame.switchToView(mode);
         });
         viewModeCombo.setLiveViewsAvailable(LiveAttachService.getInstance().isAttached());
-        EventBus.getInstance().register(LiveSessionEvent.class, e -> {
+        liveSessionHandler = e -> {
             viewModeCombo.setLiveViewsAvailable(e.isAttached());
             if (scratchPadButton != null) {
                 scratchPadButton.setVisible(e.isAttached());
             }
-        });
+        };
+        EventBus.getInstance().register(LiveSessionEvent.class, liveSessionHandler);
         toolbar.add(viewModeCombo);
         toolbar.addSeparator();
 
@@ -138,19 +146,7 @@ public class ToolbarBuilder implements ThemeChangeListener {
         button.setPreferredSize(new Dimension(32, 32));
         button.addActionListener(action);
 
-        // Add hover effect
-        button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                button.setContentAreaFilled(true);
-                button.setBackground(JStudioTheme.getHover());
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                button.setContentAreaFilled(false);
-            }
-        });
+        ThemeStyles.addFillHoverEffect(button);
 
         return button;
     }

@@ -40,7 +40,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
     private DefaultListModel<Script> scriptListModel;
 
     // State
-    private ProjectModel projectModel;
     private Script currentScript;
     private Runnable onTransformComplete;
 
@@ -72,7 +71,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
 
         loadBuiltInScripts();
         applySyntaxColors();
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
@@ -583,8 +581,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
     // ==================== Public API ====================
 
     public void setProjectModel(ProjectModel model) {
-        this.projectModel = model;
-
         classComboBox.removeAllItems();
         if (model != null) {
             for (ClassEntryModel classEntry : model.getAllClasses()) {

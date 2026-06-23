@@ -96,6 +96,12 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener {
     }
 
     @Override
+    public void removeNotify() {
+        super.removeNotify();
+        ThemeManager.getInstance().removeThemeChangeListener(this);
+    }
+
+    @Override
     public void onThemeChanged(Theme newTheme) {
         SwingUtilities.invokeLater(this::applyTheme);
     }

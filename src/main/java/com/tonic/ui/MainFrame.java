@@ -31,32 +31,23 @@ import com.tonic.service.history.LocalHistoryService;
 import com.tonic.model.Snapshot;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.transform.TransformPanel;
-import com.tonic.ui.deobfuscation.DeobfuscationPanel;
 import com.tonic.ui.script.ScriptEditorDialog;
-import com.tonic.ui.util.RecentFilesManager;
 import com.tonic.ui.update.UpdateManager;
 import com.tonic.util.Settings;
-import com.tonic.ui.vm.VMConsolePanel;
 import com.tonic.ui.vm.VMExecutionService;
-import com.tonic.ui.vm.debugger.DebuggerPanel;
 import com.tonic.ui.vm.dialog.ExecuteMethodDialog;
 
 import com.tonic.parser.ClassPool;
 import com.tonic.renamer.Renamer;
 import com.tonic.renamer.exception.RenameException;
 import com.tonic.ui.dialog.DeobfuscateNamesDialog;
-import com.tonic.ui.dialog.FindInFilesDialog;
-import com.tonic.ui.dialog.PreferencesDialog;
+import com.tonic.ui.dialog.DialogManager;
+import com.tonic.ui.file.FileOperationsController;
+import com.tonic.ui.layout.LayoutController;
 import com.tonic.ui.dialog.RenameClassDialog;
 import com.tonic.ui.dialog.RenameFieldDialog;
 import com.tonic.ui.dialog.RenameMethodDialog;
 import com.tonic.model.FieldEntryModel;
-import com.tonic.model.ResourceEntryModel;
-import com.tonic.ui.dialog.filechooser.ExtensionFileFilter;
-import com.tonic.ui.dialog.filechooser.FileChooserDialog;
-import com.tonic.ui.dialog.filechooser.FileChooserResult;
-import com.tonic.ui.vm.heap.HeapForensicsPanel;
 import com.tonic.ui.query.QueryExplorerPanel;
 import com.tonic.ui.core.component.ToolWindowPane;
 import com.tonic.event.events.LiveSessionEvent;
@@ -65,13 +56,11 @@ import com.tonic.ui.live.profiler.LiveProfilerPanel;
 import com.tonic.live.LiveSession;
 import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.live.recorder.LiveRecorderPanel;
-import com.tonic.service.run.ProjectJarExporter;
 import com.tonic.ui.run.RunConfigDialog;
 import com.tonic.ui.run.RunConsolePanel;
 import com.tonic.service.run.RunService;
 import com.tonic.service.run.RunStateService;
 import com.tonic.ui.core.SwingWorkers;
-import com.tonic.ui.deadcode.RemoveDeadCodeDialog;
 import com.tonic.ui.live.LiveAttachDialog;
 import com.tonic.ui.live.recorder.jfr.JfrAnalysisWindow;
 import com.tonic.ui.live.eval.LiveScratchPadDialog;
@@ -84,29 +73,22 @@ import com.tonic.analysis.query.planner.QueryTarget;
 import lombok.Getter;
 
 import javax.imageio.ImageIO;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetAdapter;
 import java.awt.dnd.DropTargetDropEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URL;
@@ -134,25 +116,11 @@ public class MainFrame extends JFrame {
     @Getter
     private ToolbarBuilder toolbarBuilder;
 
-    // Analysis and transform dialogs
-    private JDialog analysisDialog;
-    @Getter
-    private AnalysisPanel analysisPanel;
-    private ProjectModel analysisProjectRef;
-    private JDialog transformDialog;
-    private TransformPanel transformPanel;
-    private FindInFilesDialog findInFilesDialog;
-    private ScriptEditorDialog scriptEditorDialog;
-    private PreferencesDialog preferencesDialog;
+    // Tool dialogs (lazily created, cached) are owned by the DialogManager collaborator.
+    private DialogManager dialogManager;
+    // File/project I/O is owned by the FileOperationsController collaborator.
+    private FileOperationsController fileOps;
     private final UpdateManager updateManager;
-    private JDialog vmConsoleDialog;
-    private VMConsolePanel vmConsolePanel;
-    private JFrame debuggerFrame;
-    private DebuggerPanel debuggerPanel;
-    private JDialog heapForensicsDialog;
-    private HeapForensicsPanel heapForensicsPanel;
-    private JDialog deobfuscationDialog;
-    private DeobfuscationPanel deobfuscationPanel;
     private QueryExplorerPanel queryExplorerPanel;
     @Getter
     private ToolWindowPane rightToolWindow;
@@ -161,18 +129,12 @@ public class MainFrame extends JFrame {
     // Bottom panel with tabbed results
     @Getter
     private BottomPanel sidePanel;
-    private BottomToolbar bottomToolbar;
-    private JSplitPane editorBottomSplit;
-    private boolean bottomPanelCollapsed = true;
-    private int expandedBottomDivider = -1;
 
-    // Split panes for layout
-    private JSplitPane mainHorizontalSplit;
-    private JSplitPane leftRightSplit;
+    // Split panes + collapse/divider math are owned by the LayoutController collaborator.
+    private LayoutController layoutController;
 
     // Navigation history
-    private List<ClassEntryModel> navigationHistory = new ArrayList<>();
-    private int historyIndex = -1;
+    private final NavigationHistory navigationHistory = new NavigationHistory();
 
     // Current state
     private ViewMode currentViewMode = ViewMode.SOURCE;
@@ -185,10 +147,6 @@ public class MainFrame extends JFrame {
     private static final int MAX_FONT_SIZE = 32;
     private static final int DEFAULT_FONT_SIZE = 13;
     private boolean wordWrapEnabled = false;
-
-    // Panel visibility state - saved divider positions for restore
-    private int savedNavigatorDivider = 250;
-    private int savedPropertiesDivider = -1;
 
     public MainFrame() {
         super(JStudio.APP_NAME + " " + JStudio.APP_VERSION);
@@ -259,7 +217,7 @@ public class MainFrame extends JFrame {
         new DropTarget(this, DnDConstants.ACTION_COPY_OR_MOVE, new DropTargetAdapter() {
             @Override
             public void drop(DropTargetDropEvent dtde) {
-                handleFileDrop(dtde);
+                fileOps.handleFileDrop(dtde);
             }
         });
     }
@@ -312,27 +270,27 @@ public class MainFrame extends JFrame {
         sidePanel = new BottomPanel();
         sidePanel.setEditorPanel(editorPanel);
         sidePanel.setConsolePanel(consolePanel);
-        sidePanel.setOnAllTabsClosed(this::collapseBottom);
-        sidePanel.setOnTabOpened(this::expandBottom);
+        sidePanel.setOnAllTabsClosed(() -> layoutController.collapseBottom());
+        sidePanel.setOnTabOpened(() -> layoutController.expandBottom());
         sidePanel.setCollapseHost(new BottomPanel.CollapseHost() {
             @Override
             public boolean isCollapsed() {
-                return bottomPanelCollapsed;
+                return layoutController.isBottomCollapsed();
             }
 
             @Override
             public void collapse() {
-                collapseBottom();
+                layoutController.collapseBottom();
             }
 
             @Override
             public void expand() {
-                expandBottom();
+                layoutController.expandBottom();
             }
         });
 
         // Bottom toolbar (always visible, outside split pane)
-        bottomToolbar = new BottomToolbar();
+        BottomToolbar bottomToolbar = new BottomToolbar();
         bottomToolbar.setOnConsoleClicked(() -> sidePanel.toggleConsoleTab());
         bottomToolbar.setOnBookmarksClicked(() -> {
             ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -345,6 +303,10 @@ public class MainFrame extends JFrame {
             sidePanel.toggleCommentsTab();
         });
         bottomToolbar.setOnLocalHistoryClicked(() -> sidePanel.toggleLocalHistoryTab());
+
+        dialogManager = new DialogManager(this, editorPanel);
+        fileOps = new FileOperationsController(this);
+        layoutController = new LayoutController(editorPanel, sidePanel, navigatorPanel, rightToolWindow, bottomToolbar);
     }
 
     private void initializeLayout() {
@@ -359,70 +321,8 @@ public class MainFrame extends JFrame {
         toolbarBuilder = new ToolbarBuilder(this);
         contentPane.add(toolbarBuilder.build(), BorderLayout.NORTH);
 
-        // Main content area with split panes
-        // Left: Navigator
-        // Center: Editor
-        // Right: tool windows (Inspector / Query / AI Chat)
-        // Bottom (editor area): tabbed results incl. Console
-
-        // Editor + side panel vertical split
-        editorBottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, editorPanel, sidePanel);
-        editorBottomSplit.setResizeWeight(1.0);
-        editorBottomSplit.setDividerSize(4);
-        editorBottomSplit.setBorder(null);
-        editorBottomSplit.setContinuousLayout(true);
-        // Keep bottom panel collapsed on resize if it has no tabs
-        editorBottomSplit.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                if (bottomPanelCollapsed && editorBottomSplit.getHeight() > 0) {
-                    editorBottomSplit.setDividerLocation(collapsedBottomDivider());
-                }
-            }
-        });
-
-        // Wrapper for split pane + always-visible toolbar
-        JPanel editorAreaWrapper = new JPanel(new BorderLayout());
-        editorAreaWrapper.add(editorBottomSplit, BorderLayout.CENTER);
-        editorAreaWrapper.add(bottomToolbar, BorderLayout.SOUTH);
-
-        // Center + Right horizontal split
-        leftRightSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                editorAreaWrapper, rightToolWindow);
-        leftRightSplit.setResizeWeight(0.75);
-        leftRightSplit.setDividerSize(4);
-        leftRightSplit.setBorder(null);
-        leftRightSplit.setContinuousLayout(true);
-
-        // The right tool window starts collapsed (stripe only); clicking a stripe tab opens/closes it.
-        rightToolWindow.setCollapseListener(this::applyRightPanelCollapsed);
-        leftRightSplit.addComponentListener(new ComponentAdapter() {
-            private boolean applied = false;
-
-            @Override
-            public void componentResized(ComponentEvent e) {
-                if (leftRightSplit.getWidth() <= 0) {
-                    return;
-                }
-                if (!applied) {
-                    applied = true;
-                    applyRightPanelCollapsed(rightToolWindow.isCollapsed());
-                } else if (rightToolWindow.isCollapsed()) {
-                    int stripe = rightToolWindow.getStripeWidth() + leftRightSplit.getDividerSize();
-                    leftRightSplit.setDividerLocation(Math.max(0, leftRightSplit.getWidth() - stripe));
-                }
-            }
-        });
-
-        // Navigator + (Center + Right) horizontal split
-        mainHorizontalSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                navigatorPanel, leftRightSplit);
-        mainHorizontalSplit.setDividerLocation(250);
-        mainHorizontalSplit.setDividerSize(4);
-        mainHorizontalSplit.setBorder(null);
-        mainHorizontalSplit.setContinuousLayout(true);
-
-        contentPane.add(mainHorizontalSplit, BorderLayout.CENTER);
+        // Main content area with split panes (navigator | (editor-over-bottom-dock | right tool window))
+        contentPane.add(layoutController.buildCenter(), BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
 
         setContentPane(contentPane);
@@ -467,15 +367,16 @@ public class MainFrame extends JFrame {
                     refreshAfterProjectChange();
                 }
             }
-            updateTitleBar();
+            fileOps.updateTitleBar();
         });
 
         // AI assistant wrote a script: refresh the Script Editor's list and open to it.
         EventBus.getInstance().register(ScriptWrittenEvent.class, event ->
             SwingUtilities.invokeLater(() -> {
                 showScriptEditor();
-                if (scriptEditorDialog != null) {
-                    scriptEditorDialog.getEditorPanel().selectScriptByName(event.getScriptName());
+                ScriptEditorDialog dialog = dialogManager.getScriptEditorDialog();
+                if (dialog != null) {
+                    dialog.getEditorPanel().selectScriptByName(event.getScriptName());
                 }
             }));
 
@@ -523,326 +424,27 @@ public class MainFrame extends JFrame {
     // === File Operations ===
 
     public void showOpenDialog() {
-        FileChooserResult result = FileChooserDialog.showOpenDialog(this,
-                "Open JAR or Class File",
-                ExtensionFileFilter.javaFiles());
-
-        if (result.isApproved()) {
-            List<File> files = result.getSelectedFiles();
-            if (ProjectService.getInstance().hasProject()) {
-                int choice = showAppendOrReplaceDialog(files.size());
-                if (choice == 0) {
-                    // Append
-                    appendFiles(files);
-                } else if (choice == 1) {
-                    // Replace - close existing workspace first
-                    editorPanel.closeAllTabs();
-                    navigatorPanel.clear();
-                    navigationHistory.clear();
-                    historyIndex = -1;
-                    if (analysisDialog != null) {
-                        analysisDialog.dispose();
-                        analysisDialog = null;
-                        analysisPanel = null;
-                        analysisProjectRef = null;
-                    }
-                    for (File file : files) {
-                        openFile(file.getAbsolutePath());
-                    }
-                }
-                // choice == 2 is Cancel - do nothing
-            } else {
-                for (File file : files) {
-                    openFile(file.getAbsolutePath());
-                }
-            }
-        }
+        fileOps.showOpenDialog();
     }
 
     public void openFile(String path) {
-        File file = new File(path);
-        if (!file.exists()) {
-            showError("File not found: " + path);
-            return;
-        }
-
-        // Opening a file replaces the current workspace; if attached to a live JVM, drop that session first
-        // (a no-op when not attached) so the live project doesn't linger under the newly-loaded one.
-        if (LiveAttachService.getInstance().isAttached()) {
-            detachLive();
-        }
-
-        statusBar.showProgress("Loading " + file.getName() + "...");
-
-        SwingWorker<ProjectModel, Void> worker = new SwingWorker<>() {
-            @Override
-            protected ProjectModel doInBackground() throws Exception {
-                if (file.isDirectory()) {
-                    return ProjectService.getInstance().loadDirectory(file, (current, total, msg) -> SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg)));
-                } else if (file.getName().endsWith(".jar")) {
-                    return ProjectService.getInstance().loadJar(file, (current, total, msg) -> SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg)));
-                } else if (file.getName().endsWith(".class")) {
-                    return ProjectService.getInstance().loadClassFile(file);
-                } else {
-                    throw new IllegalArgumentException("Unsupported file type: " + file.getName());
-                }
-            }
-
-            @Override
-            protected void done() {
-                statusBar.hideProgress();
-                try {
-                    ProjectModel project = get();
-                    navigatorPanel.loadProject(project);
-                    consolePanel.log("Loaded " + project.getClassCount() + " classes from " + project.getProjectName());
-
-                    // Add to recent files
-                    RecentFilesManager.getInstance().addFile(file);
-                } catch (Exception e) {
-                    showError("Failed to load file: " + e.getMessage());
-                    consolePanel.logError("Load failed: " + e.getMessage());
-                }
-            }
-        };
-
-        worker.execute();
-    }
-
-    @SuppressWarnings("unchecked")
-    private void handleFileDrop(DropTargetDropEvent dtde) {
-        try {
-            dtde.acceptDrop(DnDConstants.ACTION_COPY);
-            Transferable transferable = dtde.getTransferable();
-
-            if (transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
-                List<File> droppedFiles = (List<File>) transferable.getTransferData(DataFlavor.javaFileListFlavor);
-
-                // Filter for supported file types
-                List<File> validFiles = new ArrayList<>();
-                for (File file : droppedFiles) {
-                    if (file.isDirectory() ||
-                        file.getName().endsWith(".jar") ||
-                        file.getName().endsWith(".class")) {
-                        validFiles.add(file);
-                    }
-                }
-
-                if (validFiles.isEmpty()) {
-                    showWarning("No valid files dropped. Only JAR files, class files, and directories are supported.");
-                    dtde.dropComplete(false);
-                    return;
-                }
-
-                // Check if project is already open
-                if (ProjectService.getInstance().hasProject()) {
-                    int choice = showAppendOrReplaceDialog(validFiles.size());
-                    if (choice == 0) {
-                        // Append
-                        appendFiles(validFiles);
-                    } else if (choice == 1) {
-                        // Replace - close existing workspace first
-                        editorPanel.closeAllTabs();
-                        navigatorPanel.clear();
-                        navigationHistory.clear();
-                        historyIndex = -1;
-                        if (analysisDialog != null) {
-                            analysisDialog.dispose();
-                            analysisDialog = null;
-                            analysisPanel = null;
-                            analysisProjectRef = null;
-                        }
-                        for (File file : validFiles) {
-                            openFile(file.getAbsolutePath());
-                        }
-                    }
-                    // choice == 2 is Cancel - do nothing
-                } else {
-                    // No project open, just open files
-                    for (File file : validFiles) {
-                        openFile(file.getAbsolutePath());
-                    }
-                }
-
-                dtde.dropComplete(true);
-            } else {
-                dtde.dropComplete(false);
-            }
-        } catch (Exception e) {
-            showError("Failed to process dropped files: " + e.getMessage());
-            dtde.dropComplete(false);
-        }
-    }
-
-    private int showAppendOrReplaceDialog(int fileCount) {
-        String message = fileCount == 1
-                ? "A project is already open. What would you like to do?"
-                : fileCount + " files dropped. A project is already open. What would you like to do?";
-
-        String[] options = {"Append to Current", "Replace Current", "Cancel"};
-        return JOptionPane.showOptionDialog(
-                this,
-                message,
-                "Project Already Open",
-                JOptionPane.YES_NO_CANCEL_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                options,
-                options[0]
-        );
-    }
-
-    private void appendFiles(List<File> files) {
-        statusBar.showProgress("Appending files...");
-
-        SwingWorker<Integer, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Integer doInBackground() throws Exception {
-                int totalAdded = 0;
-                for (File file : files) {
-                    if (file.isDirectory()) {
-                        totalAdded += ProjectService.getInstance().appendDirectory(file, (current, total, msg) -> SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg)));
-                    } else if (file.getName().endsWith(".jar")) {
-                        totalAdded += ProjectService.getInstance().appendJar(file, (current, total, msg) -> SwingUtilities.invokeLater(() -> statusBar.showProgress(current, total, msg)));
-                    } else if (file.getName().endsWith(".class")) {
-                        totalAdded += ProjectService.getInstance().appendClassFile(file);
-                    }
-                }
-                return totalAdded;
-            }
-
-            @Override
-            protected void done() {
-                statusBar.hideProgress();
-                try {
-                    int added = get();
-                    consolePanel.log("Appended " + added + " classes");
-                    // Refresh navigator
-                    navigatorPanel.loadProject(ProjectService.getInstance().getCurrentProject());
-                } catch (Exception e) {
-                    showError("Failed to append files: " + e.getMessage());
-                    consolePanel.logError("Append failed: " + e.getMessage());
-                }
-            }
-        };
-
-        worker.execute();
+        fileOps.openFile(path);
     }
 
     public void exportCurrentClass() {
-        ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass == null) {
-            showWarning("No class selected to export.");
-            return;
-        }
-        exportClass(currentClass);
+        fileOps.exportCurrentClass();
     }
 
     public void exportClass(ClassEntryModel classEntry) {
-        if (classEntry == null) return;
-
-        FileChooserResult result = FileChooserDialog.showSaveDialog(this,
-                classEntry.getSimpleName() + ".class",
-                ExtensionFileFilter.classFiles());
-
-        if (result.isApproved()) {
-            File outputFile = result.getSelectedFile();
-            try {
-                ClassFile cf = classEntry.getClassFile();
-                byte[] data = cf.write();
-                try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-                    fos.write(data);
-                }
-                consolePanel.log("Exported " + classEntry.getClassName() + " to " + outputFile.getName());
-            } catch (IOException e) {
-                showError("Export failed: " + e.getMessage());
-                consolePanel.logError("Export failed: " + e.getMessage());
-            }
-        }
+        fileOps.exportClass(classEntry);
     }
 
     public void exportAllClasses() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassCount() == 0) {
-            showWarning("No project loaded to export.");
-            return;
-        }
-
-        FileChooserResult result = FileChooserDialog.showDirectoryDialog(this,
-                "Select Export Directory");
-
-        if (result.isApproved()) {
-            File outputDir = result.getSelectedFile();
-            int count = 0;
-            int errors = 0;
-
-            for (ClassEntryModel classEntry : project.getUserClasses()) {
-                try {
-                    ClassFile cf = classEntry.getClassFile();
-                    byte[] data = cf.write();
-
-                    // Create subdirectories for package
-                    String className = classEntry.getClassName();
-                    int lastSlash = className.lastIndexOf('/');
-                    File targetDir = outputDir;
-                    if (lastSlash > 0) {
-                        String packageDir = className.substring(0, lastSlash);
-                        targetDir = new File(outputDir, packageDir);
-                        if (!targetDir.mkdirs() && !targetDir.isDirectory()) {
-                            throw new IOException("Could not create directory: " + targetDir);
-                        }
-                    }
-
-                    String simpleName = lastSlash > 0 ? className.substring(lastSlash + 1) : className;
-                    File outputFile = new File(targetDir, simpleName + ".class");
-
-                    try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-                        fos.write(data);
-                    }
-                    count++;
-                } catch (IOException e) {
-                    consolePanel.logError("Failed to export " + classEntry.getClassName() + ": " + e.getMessage());
-                    errors++;
-                }
-            }
-
-            consolePanel.log("Exported " + count + " classes" + (errors > 0 ? " (" + errors + " errors)" : ""));
-            showInfo("Exported " + count + " classes to " + outputDir.getName());
-        }
+        fileOps.exportAllClasses();
     }
 
     public void exportAsJar() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showInfo("No project is currently open.");
-            return;
-        }
-
-        List<ClassEntryModel> classes = project.getUserClasses();
-        Collection<ResourceEntryModel> resources = project.getAllResources();
-
-        if (classes.isEmpty() && resources.isEmpty()) {
-            showInfo("No classes or resources to export.");
-            return;
-        }
-
-        FileChooserResult result = FileChooserDialog.showSaveDialog(this,
-                "output.jar", ExtensionFileFilter.jarFiles());
-
-        if (!result.isApproved()) {
-            return;
-        }
-
-        File outputFile = result.getSelectedFile();
-
-        try {
-            ProjectJarExporter.export(project, outputFile);
-            consolePanel.log("Exported " + classes.size() + " classes and " +
-                    resources.size() + " resources to " + outputFile.getName());
-            showInfo("Successfully exported to " + outputFile.getName());
-        } catch (IOException e) {
-            consolePanel.logError("Failed to export JAR: " + e.getMessage());
-            showError("Export failed: " + e.getMessage());
-        }
+        fileOps.exportAsJar();
     }
 
     /**
@@ -928,143 +530,23 @@ public class MainFrame extends JFrame {
     }
 
     public void closeProject() {
-        if (!confirmCloseIfDirty()) {
-            return;
-        }
-        ProjectService.getInstance().closeProject();
-        ProjectDatabaseService.getInstance().close();
-        navigatorPanel.clear();
-        editorPanel.closeAllTabs();
-        sidePanel.closeAllTabs();
-        navigationHistory.clear();
-        historyIndex = -1;
-
-        if (analysisDialog != null) {
-            analysisDialog.dispose();
-            analysisDialog = null;
-            analysisPanel = null;
-            analysisProjectRef = null;
-        }
-
-        setTitle(JStudio.APP_NAME + " " + JStudio.APP_VERSION);
+        fileOps.closeProject();
     }
 
     public void openProjectFile() {
-        FileChooserResult result = FileChooserDialog.showOpenDialog(this,
-                "Open JStudio Project",
-                new ExtensionFileFilter("JStudio Project", "jstudio"));
-
-        if (result.isApproved()) {
-            File file = result.getSelectedFile();
-            try {
-                ProjectDatabaseService.getInstance().open(file);
-                String targetPath = ProjectDatabaseService.getInstance().getDatabase().getTargetPath();
-                if (targetPath != null) {
-                    File targetFile = new File(targetPath);
-                    if (targetFile.exists()) {
-                        openFile(targetPath);
-                    } else {
-                        showWarning("Target file not found: " + targetPath + "\nThe project annotations have been loaded but no classes are available.");
-                    }
-                }
-                updateTitleBar();
-            } catch (IOException e) {
-                showError("Failed to open project: " + e.getMessage());
-            }
-        }
+        fileOps.openProjectFile();
     }
 
     public void saveProject() {
-        ProjectDatabaseService dbService = ProjectDatabaseService.getInstance();
-        if (!dbService.hasDatabase()) {
-            ProjectModel project = ProjectService.getInstance().getCurrentProject();
-            if (project != null && project.getSourceFile() != null) {
-                dbService.create(project.getSourceFile());
-            } else {
-                showWarning("No project loaded to save.");
-                return;
-            }
-        }
-        try {
-            dbService.save();
-            LocalHistoryService.getInstance().snapshot(Snapshot.Trigger.SAVE.getDefaultLabel(), Snapshot.Trigger.SAVE);
-            LocalHistoryService.getInstance().flush();
-            updateTitleBar();
-            consolePanel.log("Project saved: " + dbService.getProjectFile().getName());
-        } catch (IOException e) {
-            showError("Failed to save project: " + e.getMessage());
-        }
+        fileOps.saveProject();
     }
 
     public void saveProjectAs() {
-        ProjectDatabaseService dbService = ProjectDatabaseService.getInstance();
-        if (!dbService.hasDatabase()) {
-            ProjectModel project = ProjectService.getInstance().getCurrentProject();
-            if (project != null && project.getSourceFile() != null) {
-                dbService.create(project.getSourceFile());
-            } else {
-                showWarning("No project loaded to save.");
-                return;
-            }
-        }
-
-        String defaultName = "project.jstudio";
-        if (dbService.getProjectFile() != null) {
-            defaultName = dbService.getProjectFile().getName();
-        } else if (dbService.getDatabase() != null) {
-            defaultName = dbService.getDatabase().getTargetFileName().replace(".jar", "") + ".jstudio";
-        }
-
-        FileChooserResult result = FileChooserDialog.showSaveDialog(this,
-                defaultName,
-                new ExtensionFileFilter("JStudio Project", "jstudio"));
-
-        if (result.isApproved()) {
-            File file = result.getSelectedFile();
-            if (!file.getName().endsWith(".jstudio")) {
-                file = new File(file.getAbsolutePath() + ".jstudio");
-            }
-            try {
-                dbService.saveAs(file);
-                updateTitleBar();
-                consolePanel.log("Project saved as: " + file.getName());
-            } catch (IOException e) {
-                showError("Failed to save project: " + e.getMessage());
-            }
-        }
-    }
-
-    private boolean confirmCloseIfDirty() {
-        ProjectDatabaseService dbService = ProjectDatabaseService.getInstance();
-        if (dbService.isDirty()) {
-            int result = JOptionPane.showConfirmDialog(this,
-                    "You have unsaved project changes. Would you like to save before closing?",
-                    "Save Changes?",
-                    JOptionPane.YES_NO_CANCEL_OPTION,
-                    JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                saveProject();
-                return true;
-            } else return result == JOptionPane.NO_OPTION;
-        }
-        return true;
-    }
-
-    private void updateTitleBar() {
-        StringBuilder title = new StringBuilder(JStudio.APP_NAME);
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
-            title.append(" - ").append(project.getProjectName());
-        }
-        ProjectDatabaseService dbService = ProjectDatabaseService.getInstance();
-        if (dbService.isDirty()) {
-            title.append(" *");
-        }
-        setTitle(title.toString());
+        fileOps.saveProjectAs();
     }
 
     public void exitApplication() {
-        if (!confirmCloseIfDirty()) {
+        if (!fileOps.confirmCloseIfDirty()) {
             return;
         }
 
@@ -1073,6 +555,7 @@ public class MainFrame extends JFrame {
 
         GuiPluginManager.getInstance().shutdown();
         statusBar.dispose();
+        toolbarBuilder.dispose();
         queryExplorerPanel.shutdown();
         if (toolWindowMover != null) {
             toolWindowMover.disposeAll();
@@ -1093,11 +576,7 @@ public class MainFrame extends JFrame {
         }
 
         // Save divider positions (console is no longer a separate split; preserve its stored height)
-        settings.saveDividerPositions(
-                mainHorizontalSplit.getDividerLocation(),
-                leftRightSplit.getWidth() - leftRightSplit.getDividerLocation(),
-                settings.getConsoleHeight()
-        );
+        layoutController.saveDividers(settings);
 
         // Save editor settings
         settings.setFontSize(currentFontSize);
@@ -1114,33 +593,32 @@ public class MainFrame extends JFrame {
 
     public void openClassInEditor(ClassEntryModel classEntry) {
         editorPanel.openClass(classEntry, currentViewMode);
-
-        // Add to navigation history
-        if (historyIndex < navigationHistory.size() - 1) {
-            // Remove forward history
-            navigationHistory = new ArrayList<>(navigationHistory.subList(0, historyIndex + 1));
-        }
-        navigationHistory.add(classEntry);
-        historyIndex = navigationHistory.size() - 1;
-
-        // Update status
+        navigationHistory.push(classEntry);
         statusBar.setPosition(classEntry.getClassName());
     }
 
     public void navigateBack() {
-        if (historyIndex > 0) {
-            historyIndex--;
-            ClassEntryModel entry = navigationHistory.get(historyIndex);
+        ClassEntryModel entry = navigationHistory.back();
+        if (entry != null) {
             editorPanel.openClass(entry, currentViewMode);
         }
     }
 
     public void navigateForward() {
-        if (historyIndex < navigationHistory.size() - 1) {
-            historyIndex++;
-            ClassEntryModel entry = navigationHistory.get(historyIndex);
+        ClassEntryModel entry = navigationHistory.forward();
+        if (entry != null) {
             editorPanel.openClass(entry, currentViewMode);
         }
+    }
+
+    /** Resets the back/forward navigation history (used by the file controller when the workspace changes). */
+    public void clearNavigationHistory() {
+        navigationHistory.clear();
+    }
+
+    /** Disposes the cached analysis dialog (used by the file controller when the project is replaced/closed). */
+    public void disposeAnalysisDialog() {
+        dialogManager.disposeAnalysisDialog();
     }
 
     // === View Operations ===
@@ -1174,75 +652,16 @@ public class MainFrame extends JFrame {
     }
 
     public void toggleNavigatorPanel() {
-        if (navigatorPanel.isVisible()) {
-            savedNavigatorDivider = mainHorizontalSplit.getDividerLocation();
-            navigatorPanel.setVisible(false);
-            mainHorizontalSplit.setDividerLocation(0);
-        } else {
-            navigatorPanel.setVisible(true);
-            mainHorizontalSplit.setDividerLocation(savedNavigatorDivider > 0 ? savedNavigatorDivider : 250);
-        }
-        mainHorizontalSplit.revalidate();
+        layoutController.toggleNavigatorPanel();
     }
 
     public void togglePropertiesPanel() {
-        rightToolWindow.setCollapsed(!rightToolWindow.isCollapsed());
-        leftRightSplit.revalidate();
-    }
-
-    /**
-     * Reacts to the right tool window collapsing/expanding: when collapsed, the right column shrinks to just
-     * the stripe; when expanded, the saved layout is restored.
-     */
-    private void applyRightPanelCollapsed(boolean collapsed) {
-        if (collapsed) {
-            int loc = leftRightSplit.getDividerLocation();
-            if (loc > 0 && loc < leftRightSplit.getWidth()) {
-                savedPropertiesDivider = loc;
-            }
-            int stripe = rightToolWindow.getStripeWidth() + leftRightSplit.getDividerSize();
-            leftRightSplit.setDividerLocation(Math.max(0, leftRightSplit.getWidth() - stripe));
-        } else {
-            if (savedPropertiesDivider > 0) {
-                leftRightSplit.setDividerLocation(savedPropertiesDivider);
-            } else {
-                leftRightSplit.setDividerLocation((int) (leftRightSplit.getWidth() * 0.75));
-            }
-        }
-        leftRightSplit.revalidate();
+        layoutController.togglePropertiesPanel();
     }
 
     /** Opens or closes the Console tab in the bottom panel (View menu / keyboard shortcut). */
     public void toggleConsolePanel() {
         sidePanel.toggleConsoleTab();
-    }
-
-    /** The divider location that leaves only the bottom tab strip visible (or fully hides it when there are no tabs). */
-    private int collapsedBottomDivider() {
-        int total = editorBottomSplit.getHeight();
-        int strip = sidePanel.hasTabs() ? sidePanel.collapsedHeight() : 0;
-        return Math.max(0, total - strip - editorBottomSplit.getDividerSize());
-    }
-
-    /** Collapses the bottom dock to just its tab strip (or hides it when empty), remembering the expanded height. */
-    private void collapseBottom() {
-        if (!bottomPanelCollapsed) {
-            expandedBottomDivider = editorBottomSplit.getDividerLocation();
-        }
-        bottomPanelCollapsed = true;
-        editorBottomSplit.setDividerLocation(collapsedBottomDivider());
-    }
-
-    /** Expands the bottom dock back to its remembered height (or a default); no-op when already expanded. */
-    private void expandBottom() {
-        if (!bottomPanelCollapsed) {
-            return;
-        }
-        bottomPanelCollapsed = false;
-        int total = editorBottomSplit.getHeight();
-        int location = expandedBottomDivider > 0 && expandedBottomDivider < total - 50
-                ? expandedBottomDivider : Math.max(0, total - 200);
-        editorBottomSplit.setDividerLocation(location);
     }
 
     public void refreshCurrentView() {
@@ -1354,24 +773,7 @@ public class MainFrame extends JFrame {
     }
 
     public void showFindInProjectDialog() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        // Create the Find in Files dialog if it doesn't exist
-        if (findInFilesDialog == null) {
-            findInFilesDialog = new FindInFilesDialog(this, project);
-        }
-
-        // Pre-fill with selected text if any
-        String selectedText = editorPanel.getSelectedText();
-        if (selectedText != null && !selectedText.isEmpty() && selectedText.length() < 100) {
-            findInFilesDialog.showDialog(selectedText.trim());
-        } else {
-            findInFilesDialog.showDialog();
-        }
+        dialogManager.showFindInProjectDialog();
     }
 
     public void showGoToClassDialog() {
@@ -1460,180 +862,46 @@ public class MainFrame extends JFrame {
     // === Analysis Operations ===
 
     public void runAnalysis() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-        ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass != null) {
-            consolePanel.log("Running analysis on " + currentClass.getClassName() + "...");
-        } else {
-            consolePanel.log("Opening analysis tools...");
-        }
-        showAnalysisDialog();
-    }
-
-    /**
-     * Show the analysis dialog (creates it if needed).
-     * Recreates the panel if the project has changed.
-     */
-    private void showAnalysisDialog() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        boolean needsRecreate = analysisDialog == null || analysisPanel == null || analysisProjectRef != project;
-
-        if (needsRecreate) {
-            if (analysisDialog != null) {
-                analysisDialog.dispose();
-            }
-            analysisPanel = new AnalysisPanel(project);
-            analysisProjectRef = project;
-            analysisDialog = new JDialog(this, "Analysis", false);
-            analysisDialog.setSize(900, 600);
-            analysisDialog.setLocationRelativeTo(this);
-            analysisDialog.add(analysisPanel);
-        }
-
-        analysisDialog.setVisible(true);
-        analysisDialog.toFront();
+        dialogManager.runAnalysis();
     }
 
     public void showSimilarityAnalysis() {
-        if (openAnalysisDialog()) {
-            analysisPanel.showSimilarity();
-        }
+        dialogManager.showSimilarityAnalysis();
     }
 
     public void showSearchAnalysis() {
-        if (openAnalysisDialog()) {
-            analysisPanel.showSearch();
-        }
+        dialogManager.showSearchAnalysis();
     }
 
     public void showStringsAnalysis() {
-        if (openAnalysisDialog()) {
-            analysisPanel.showStrings();
-        }
-    }
-
-    private boolean openAnalysisDialog() {
-        if (ProjectService.getInstance().getCurrentProject() == null) {
-            showWarning("No project loaded.");
-            return false;
-        }
-        showAnalysisDialog();
-        return true;
+        dialogManager.showStringsAnalysis();
     }
 
     // === Transform Operations ===
 
-    private RemoveDeadCodeDialog removeDeadCodeDialog;
-
     /** Opens (reusing one instance) the Remove Dead Code analysis dialog. */
     public void showRemoveDeadCodeDialog() {
-        if (ProjectService.getInstance().getCurrentProject() == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-        if (removeDeadCodeDialog == null) {
-            removeDeadCodeDialog = new RemoveDeadCodeDialog(this);
-        }
-        removeDeadCodeDialog.setVisible(true);
-        removeDeadCodeDialog.toFront();
+        dialogManager.showRemoveDeadCodeDialog();
     }
 
     /** After dead-code removal: close tabs of removed classes and reload the navigator/editor. */
     public void refreshAfterDeadCodeRemoval(Collection<String> removedClassesInternal) {
-        for (String internal : removedClassesInternal) {
-            editorPanel.closeTabForClass(internal);
-        }
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
-            EventBus.getInstance().post(
-                    new ProjectUpdatedEvent(this, project, -removedClassesInternal.size()));
-        }
-        refreshCurrentView();
+        dialogManager.refreshAfterDeadCodeRemoval(removedClassesInternal);
     }
 
     public void showTransformDialog() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        if (transformDialog == null || transformPanel == null) {
-            transformPanel = new TransformPanel(project);
-            // Set callback to refresh the editor when transforms are applied
-            transformPanel.setTransformCallback(this::refreshCurrentView);
-            transformDialog = new JDialog(this, "SSA Transforms", false);
-            transformDialog.setSize(800, 500);
-            transformDialog.setLocationRelativeTo(this);
-            transformDialog.add(transformPanel);
-        }
-
-        // Set the current class (this populates the method dropdown)
-        ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass != null) {
-            transformPanel.setClass(currentClass);
-        }
-
-        transformDialog.setVisible(true);
-        transformDialog.toFront();
+        dialogManager.showTransformDialog();
     }
 
     /**
      * Shows the script editor dialog.
      */
     public void showScriptEditor() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        if (scriptEditorDialog == null) {
-            scriptEditorDialog = new ScriptEditorDialog(this);
-            scriptEditorDialog.setOnTransformComplete(this::refreshCurrentView);
-        }
-
-        scriptEditorDialog.setProjectModel(project);
-
-        ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass != null) {
-            scriptEditorDialog.setClass(currentClass);
-        }
-
-        scriptEditorDialog.setVisible(true);
-        scriptEditorDialog.toFront();
+        dialogManager.showScriptEditor();
     }
 
     public void showDeobfuscationPanel() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded. Load a project before using deobfuscation tools.");
-            return;
-        }
-
-        if (deobfuscationDialog == null || deobfuscationPanel == null) {
-            deobfuscationPanel = new DeobfuscationPanel(project);
-            deobfuscationDialog = new JDialog(this, "String Deobfuscation", false);
-            deobfuscationDialog.setSize(1000, 700);
-            deobfuscationDialog.setLocationRelativeTo(this);
-            deobfuscationDialog.add(deobfuscationPanel);
-        } else {
-            deobfuscationPanel.setProject(project);
-        }
-
-        deobfuscationDialog.setVisible(true);
-        deobfuscationDialog.toFront();
-        consolePanel.log("String Deobfuscation panel opened");
-        statusBar.setMessage("String Deobfuscation");
+        dialogManager.showDeobfuscationPanel();
     }
 
     public void showDeobfuscateNamesDialog() {
@@ -1787,16 +1055,7 @@ public class MainFrame extends JFrame {
     }
 
     public void applyTransform(String transformName) {
-        ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass == null) {
-            showWarning("No class selected for transformation.");
-            return;
-        }
-
-        consolePanel.log("Applying " + transformName + " to " + currentClass.getClassName() + "...");
-
-        // Show transform dialog with the specified transform selected
-        showTransformDialog();
+        dialogManager.applyTransform(transformName);
     }
 
     public void recomputeStackFrames() {
@@ -1852,59 +1111,44 @@ public class MainFrame extends JFrame {
     }
 
     public void showPreferencesDialog() {
-        if (preferencesDialog == null) {
-            preferencesDialog = new PreferencesDialog(this);
-            preferencesDialog.setOnApply(() -> {
-                currentFontSize = Settings.getInstance().getFontSize();
-                editorPanel.setFontSize(currentFontSize);
-            });
-        }
-        preferencesDialog.setVisible(true);
+        dialogManager.showPreferencesDialog();
+    }
+
+    /** Re-reads the font size from settings and applies it to the editor (Preferences "Apply" callback). */
+    public void applyFontSizeFromSettings() {
+        currentFontSize = Settings.getInstance().getFontSize();
+        editorPanel.setFontSize(currentFontSize);
     }
 
     // === Utility Methods ===
 
-    private void showInfo(String message) {
+    public void showInfo(String message) {
         JOptionPane.showMessageDialog(this, message, "Information",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void showWarning(String message) {
+    public void showWarning(String message) {
         JOptionPane.showMessageDialog(this, message, "Warning",
                 JOptionPane.WARNING_MESSAGE);
     }
 
-    private void showError(String message) {
+    public void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Error",
                 JOptionPane.ERROR_MESSAGE);
     }
 
     // === Getters ===
 
+    /** The analysis tool panel, or {@code null} if the analysis dialog has not been opened yet. */
+    public AnalysisPanel getAnalysisPanel() {
+        return dialogManager.getAnalysisPanel();
+    }
+
     /**
      * Run simulation analysis on the current method or class.
      */
     public void runCodeAnalysis() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded.");
-            return;
-        }
-
-        showAnalysisDialog();
-        analysisPanel.showSimulation();
-
-        MethodEntryModel currentMethod = editorPanel.getCurrentMethod();
-        if (currentMethod != null) {
-            analysisPanel.getSimulationPanel().analyzeMethod(currentMethod);
-        } else {
-            ClassEntryModel currentClass = editorPanel.getCurrentClass();
-            if (currentClass != null) {
-                analysisPanel.getSimulationPanel().analyzeClass(currentClass);
-            } else {
-                consolePanel.log("Select a method or class to analyze.");
-            }
-        }
+        dialogManager.runCodeAnalysis();
     }
 
     // === VM Operations ===
@@ -2104,54 +1348,11 @@ public class MainFrame extends JFrame {
     }
 
     public void showVMConsole() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded. Load a project before using the VM Console.");
-            return;
-        }
-
-        if (vmConsoleDialog == null || vmConsolePanel == null) {
-            vmConsolePanel = new VMConsolePanel();
-            vmConsoleDialog = new JDialog(this, "VM Console", false);
-            vmConsoleDialog.setSize(800, 500);
-            vmConsoleDialog.setLocationRelativeTo(this);
-            vmConsoleDialog.add(vmConsolePanel);
-        }
-
-        vmConsoleDialog.setVisible(true);
-        vmConsoleDialog.toFront();
-        vmConsolePanel.focusInput();
+        dialogManager.showVMConsole();
     }
 
     public void showBytecodeDebugger() {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            showWarning("No project loaded. Load a project before using the Bytecode Debugger.");
-            return;
-        }
-
-        if (debuggerFrame == null || debuggerPanel == null) {
-            debuggerPanel = new DebuggerPanel();
-            // A JFrame (unlike a JDialog) gets native minimize/maximize window controls.
-            debuggerFrame = new JFrame("Bytecode Debugger");
-            debuggerFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-            debuggerFrame.setIconImages(getIconImages());
-            debuggerFrame.setSize(1100, 700);
-            debuggerFrame.setLocationRelativeTo(this);
-            debuggerFrame.add(debuggerPanel);
-        }
-
-        MethodEntryModel currentMethod = editorPanel.getCurrentMethod();
-        if (currentMethod != null) {
-            debuggerPanel.setMethod(currentMethod.getMethodEntry());
-            consolePanel.log("Bytecode Debugger: Opened for " + currentMethod.getMethodEntry().getName());
-        } else {
-            consolePanel.log("Bytecode Debugger: Opened - select a method to debug");
-        }
-
-        debuggerFrame.setVisible(true);
-        debuggerFrame.toFront();
-        statusBar.setMessage("Bytecode Debugger opened");
+        dialogManager.showBytecodeDebugger();
     }
 
     public void showExecuteMethodDialog() {
@@ -2227,14 +1428,7 @@ public class MainFrame extends JFrame {
     }
 
     public void showHeapForensics() {
-        if (heapForensicsDialog == null || heapForensicsPanel == null) {
-            heapForensicsPanel = new HeapForensicsPanel();
-            heapForensicsDialog = new JDialog(this, "Heap Forensics", false);
-            heapForensicsDialog.setSize(1200, 800);
-            heapForensicsDialog.setLocationRelativeTo(this);
-            heapForensicsDialog.add(heapForensicsPanel);
-        }
-        heapForensicsDialog.setVisible(true);
+        dialogManager.showHeapForensics();
     }
 
     /**

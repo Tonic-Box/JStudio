@@ -182,6 +182,11 @@ public class ThemeManager {
         listeners.remove(listener);
     }
 
+    /** The number of registered theme listeners (test-only hook for leak detection). */
+    public int getListenerCount() {
+        return listeners.size();
+    }
+
     private void notifyListeners() {
         for (ThemeChangeListener listener : listeners) {
             listener.onThemeChanged(currentTheme);

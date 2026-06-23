@@ -368,6 +368,12 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
     }
 
     @Override
+    public void removeNotify() {
+        super.removeNotify();
+        ThemeManager.getInstance().removeThemeChangeListener(this);
+    }
+
+    @Override
     public void onThemeChanged(Theme newTheme) {
         SwingUtilities.invokeLater(() -> {
             applyTheme();

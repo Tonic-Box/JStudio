@@ -267,6 +267,15 @@ public final class LocalHistoryService {
         }
     }
 
+    public void removeListener(Runnable listener) {
+        listeners.remove(listener);
+    }
+
+    /** The number of registered listeners (test-only hook for leak detection). */
+    public int getListenerCount() {
+        return listeners.size();
+    }
+
     private void notifyListeners() {
         SwingUtilities.invokeLater(() -> listeners.forEach(Runnable::run));
     }

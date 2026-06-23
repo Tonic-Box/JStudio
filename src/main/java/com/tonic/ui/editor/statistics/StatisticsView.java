@@ -295,6 +295,12 @@ public class StatisticsView extends JPanel implements ThemeChangeListener {
     }
 
     @Override
+    public void removeNotify() {
+        super.removeNotify();
+        ThemeManager.getInstance().removeThemeChangeListener(this);
+    }
+
+    @Override
     public void onThemeChanged(Theme newTheme) {
         setBackground(JStudioTheme.getBgTertiary());
         contentPanel.setBackground(JStudioTheme.getBgTertiary());

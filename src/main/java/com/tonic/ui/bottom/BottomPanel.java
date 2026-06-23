@@ -17,7 +17,6 @@ import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
 import lombok.Setter;
 
 import javax.swing.*;
@@ -61,7 +60,6 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
         setPreferredSize(new Dimension(0, 200));
         setMinimumSize(new Dimension(0, 100));
 
-        ThemeManager.getInstance().addThemeChangeListener(this);
         EventBus.getInstance().register(CFGBlockSelectedEvent.class, this::onCFGBlockSelected);
     }
 

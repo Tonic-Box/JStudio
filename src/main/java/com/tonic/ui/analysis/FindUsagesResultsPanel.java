@@ -14,7 +14,6 @@ import com.tonic.model.ProjectModel;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
 import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -83,8 +82,6 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
 
         setPreferredSize(new Dimension(0, 200));
         setMinimumSize(new Dimension(0, 100));
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     public void showUsages(FindUsagesEvent event) {

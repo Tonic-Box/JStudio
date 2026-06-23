@@ -4,13 +4,11 @@ import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
+public class BottomToolbar extends ThemedJPanel {
 
     private final JButton consoleButton;
     private final JButton bookmarksButton;
@@ -49,8 +47,6 @@ public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
             if (onCommentsClicked != null) onCommentsClicked.run();
         });
         add(commentsButton);
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     private JButton createButton(String text, String iconName) {
