@@ -6,6 +6,7 @@ import com.tonic.ui.analysis.FindUsagesResultsPanel;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.editor.EditorPanel;
 import com.tonic.ui.editor.cfg.CFGBlockDetailPanel;
+import com.tonic.ui.history.LocalHistoryPanel;
 import com.tonic.event.EventBus;
 import com.tonic.ui.editor.cfg.CFGBlockSelectedEvent;
 import com.tonic.event.events.FindUsagesEvent;
@@ -35,6 +36,7 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
     private final JTabbedPane tabbedPane;
 
     private BookmarksPanel bookmarksPanel;
+    private LocalHistoryPanel localHistoryPanel;
     private CommentsPanel commentsPanel;
     private CFGBlockDetailPanel cfgBlockDetailPanel;
     private RunConsolePanel runConsolePanel;
@@ -200,6 +202,22 @@ public class BottomPanel extends ThemedJPanel implements ThemeChangeListener {
                 addClosableTab("Comments", commentsPanel);
             }
             tabbedPane.setSelectedComponent(commentsPanel);
+            notifyExpanded();
+        }
+    }
+
+    /** Toggles the Local History tab. The panel reads the history service live, so no project wiring is needed. */
+    public void toggleLocalHistoryTab() {
+        if (localHistoryPanel != null && isTabOpen(localHistoryPanel)) {
+            closeTab(localHistoryPanel);
+        } else {
+            if (localHistoryPanel == null) {
+                localHistoryPanel = new LocalHistoryPanel();
+            }
+            if (!isTabOpen(localHistoryPanel)) {
+                addClosableTab("Local History", localHistoryPanel);
+            }
+            tabbedPane.setSelectedComponent(localHistoryPanel);
             notifyExpanded();
         }
     }

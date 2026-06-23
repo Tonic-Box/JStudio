@@ -27,6 +27,8 @@ import com.tonic.ui.properties.PropertiesPanel;
 import com.tonic.plugin.gui.GuiPluginManager;
 import com.tonic.service.ProjectDatabaseService;
 import com.tonic.service.ProjectService;
+import com.tonic.service.history.LocalHistoryService;
+import com.tonic.model.Snapshot;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 import com.tonic.ui.transform.TransformPanel;
@@ -342,6 +344,7 @@ public class MainFrame extends JFrame {
             sidePanel.setProject(project);
             sidePanel.toggleCommentsTab();
         });
+        bottomToolbar.setOnLocalHistoryClicked(() -> sidePanel.toggleLocalHistoryTab());
     }
 
     private void initializeLayout() {
@@ -458,6 +461,12 @@ public class MainFrame extends JFrame {
             editorPanel.setProjectModel(project);
             editorPanel.refreshWelcomeTab();
             ProjectDatabaseService.getInstance().initializeForProject(project);
+            if (LocalHistoryService.getInstance().attach(project)) {
+                Snapshot saved = LocalHistoryService.getInstance().newest();
+                if (saved != null && LocalHistoryService.getInstance().restore(saved)) {
+                    refreshAfterProjectChange();
+                }
+            }
             updateTitleBar();
         });
 
@@ -978,6 +987,8 @@ public class MainFrame extends JFrame {
         }
         try {
             dbService.save();
+            LocalHistoryService.getInstance().snapshot(Snapshot.Trigger.SAVE.getDefaultLabel(), Snapshot.Trigger.SAVE);
+            LocalHistoryService.getInstance().flush();
             updateTitleBar();
             consolePanel.log("Project saved: " + dbService.getProjectFile().getName());
         } catch (IOException e) {
@@ -1414,6 +1425,22 @@ public class MainFrame extends JFrame {
         }
     }
 
+    /** Opens (or toggles) the Local History bottom tab. */
+    public void showLocalHistoryPanel() {
+        sidePanel.toggleLocalHistoryTab();
+    }
+
+    /** Creates a manual history checkpoint of the current project state. */
+    public void createHistoryCheckpoint() {
+        Snapshot created = LocalHistoryService.getInstance().snapshot(Snapshot.Trigger.MANUAL.getDefaultLabel(),
+                Snapshot.Trigger.MANUAL);
+        if (created == null && LocalHistoryService.getInstance().isEnabled()) {
+            statusBar.setMessage("No changes since the last snapshot");
+        } else if (created != null) {
+            statusBar.setMessage("Checkpoint created");
+        }
+    }
+
     public void showBookmarksPanel() {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project != null) {
@@ -1650,6 +1677,8 @@ public class MainFrame extends JFrame {
 
         SwingUtilities.invokeLater(() -> {
             try {
+                LocalHistoryService.getInstance().snapshot("Rename class " + classEntry.getSimpleName(),
+                        Snapshot.Trigger.RENAME);
                 Renamer renamer = new Renamer(classPool);
                 renamer.mapClass(oldName, newName).apply();
                 project.notifyClassRenamed(oldName, newName);
@@ -1696,6 +1725,7 @@ public class MainFrame extends JFrame {
 
         SwingUtilities.invokeLater(() -> {
             try {
+                LocalHistoryService.getInstance().snapshot("Rename method " + oldName, Snapshot.Trigger.RENAME);
                 Renamer renamer = new Renamer(classPool);
                 renamer.mapMethod(className, oldName, desc, newName).apply();
                 refreshAfterProjectChange();
@@ -1742,6 +1772,7 @@ public class MainFrame extends JFrame {
 
         SwingUtilities.invokeLater(() -> {
             try {
+                LocalHistoryService.getInstance().snapshot("Rename field " + oldName, Snapshot.Trigger.RENAME);
                 Renamer renamer = new Renamer(classPool);
                 renamer.mapField(className, oldName, desc, newName).apply();
                 refreshAfterProjectChange();

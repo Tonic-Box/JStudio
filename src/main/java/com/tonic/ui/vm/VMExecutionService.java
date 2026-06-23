@@ -6,7 +6,6 @@ import com.tonic.analysis.execution.core.BytecodeResult;
 import com.tonic.analysis.execution.core.ExecutionMode;
 import com.tonic.analysis.execution.debug.DebugSession;
 import com.tonic.analysis.execution.frame.StackFrame;
-import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.heap.SimpleHeapManager;
 import com.tonic.analysis.execution.listener.BytecodeListener;
 import com.tonic.analysis.execution.resolve.ClassResolver;
@@ -19,6 +18,7 @@ import com.tonic.analysis.instruction.Instruction;
 import com.tonic.event.EventBus;
 import com.tonic.event.events.ProjectLoadedEvent;
 import com.tonic.event.events.StatusMessageEvent;
+import com.tonic.model.ClassEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.service.ConsoleLogService;
 import com.tonic.service.ProjectService;
@@ -30,7 +30,9 @@ import lombok.Getter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VMExecutionService {
@@ -55,6 +57,11 @@ public class VMExecutionService {
     private int maxCallDepth = 1000;
     @Getter
     private int maxInstructions = 10_000_000;
+
+    // Cached defensive snapshot of the project's user-class bytes, reused across isolated VM instances until the
+    // project's bytecode changes.
+    private long cachedSnapshotVersion = -1;
+    private Map<String, byte[]> cachedFrozenClasses;
 
     private VMExecutionService() {
         EventBus.getInstance().register(ProjectLoadedEvent.class, this::onProjectLoaded);
@@ -503,6 +510,33 @@ public class VMExecutionService {
         return currentDebugSession;
     }
 
+    /**
+     * Mints a fresh, isolated {@link VmInstance} backed by a defensive snapshot of the project's user classes. The
+     * frozen byte set is cached and reused across instances until the project's bytecode changes, so many AI sessions
+     * starting with no edits between them don't repeat the serialize cost.
+     */
+    public synchronized VmInstance createSnapshotInstance() {
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null || project.getClassPool() == null) {
+            throw new IllegalStateException("No project loaded. Load a project before starting a VM session.");
+        }
+        long version = project.getBytecodeVersion();
+        if (cachedFrozenClasses == null || cachedSnapshotVersion != version) {
+            Map<String, byte[]> frozen = new HashMap<>();
+            for (ClassEntryModel entry : project.getUserClasses()) {
+                try {
+                    frozen.put(entry.getClassName(), entry.getClassFile().write());
+                } catch (Exception ignored) {
+                    // unserializable class - omit from the snapshot
+                }
+            }
+            cachedFrozenClasses = frozen;
+            cachedSnapshotVersion = version;
+        }
+        SnapshotClassPool pool = new SnapshotClassPool(cachedFrozenClasses, project.getClassPool());
+        return new VmInstance(pool, maxCallDepth, maxInstructions);
+    }
+
     public MethodEntry findMethod(String className, String methodName, String descriptor) {
         ensureInitialized();
 
@@ -567,58 +601,15 @@ public class VMExecutionService {
     }
 
     private MethodEntry findMethod(ClassFile classFile, String methodName, String descriptor) {
-        for (MethodEntry method : classFile.getMethods()) {
-            if (method.getName().equals(methodName)) {
-                if (descriptor == null || descriptor.isEmpty() || method.getDesc().equals(descriptor)) {
-                    return method;
-                }
-            }
-        }
-        return null;
+        return VmSupport.findMethod(classFile, methodName, descriptor);
     }
 
     private ConcreteValue[] convertToConcreteValues(Object[] args) {
-        if (args == null || args.length == 0) {
-            return new ConcreteValue[0];
-        }
-
-        ConcreteValue[] result = new ConcreteValue[args.length];
-        for (int i = 0; i < args.length; i++) {
-            result[i] = convertToConcreteValue(args[i]);
-        }
-        return result;
+        return VmSupport.toConcreteValues(heapManager, args);
     }
 
     private ConcreteValue convertToConcreteValue(Object value) {
-        if (value == null) {
-            return ConcreteValue.nullRef();
-        }
-
-        if (value instanceof Integer) {
-            return ConcreteValue.intValue((Integer) value);
-        } else if (value instanceof Long) {
-            return ConcreteValue.longValue((Long) value);
-        } else if (value instanceof Float) {
-            return ConcreteValue.floatValue((Float) value);
-        } else if (value instanceof Double) {
-            return ConcreteValue.doubleValue((Double) value);
-        } else if (value instanceof Boolean) {
-            return ConcreteValue.intValue((Boolean) value ? 1 : 0);
-        } else if (value instanceof Byte) {
-            return ConcreteValue.intValue((Byte) value);
-        } else if (value instanceof Short) {
-            return ConcreteValue.intValue((Short) value);
-        } else if (value instanceof Character) {
-            return ConcreteValue.intValue((Character) value);
-        } else if (value instanceof String) {
-            return ConcreteValue.reference(heapManager.internString((String) value));
-        } else if (value instanceof ConcreteValue) {
-            return (ConcreteValue) value;
-        } else if (value instanceof ObjectInstance) {
-            return ConcreteValue.reference((ObjectInstance) value);
-        } else {
-            return ConcreteValue.nullRef();
-        }
+        return VmSupport.toConcreteValue(heapManager, value);
     }
 
     private Object convertFromConcreteValue(ConcreteValue value) {

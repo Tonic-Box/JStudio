@@ -275,6 +275,8 @@ public final class RemoveDeadCodeDialog extends JDialog {
         if (choice != JOptionPane.OK_OPTION) {
             return;
         }
+        com.tonic.service.history.LocalHistoryService.getInstance()
+                .snapshot("Remove dead members", com.tonic.model.Snapshot.Trigger.DEAD_CODE);
         DeadCodeRemover.Result result = DeadCodeRemover.apply(project, items);
         project.markDirty();
         mainFrame.refreshAfterDeadCodeRemoval(result.getRemovedClasses());

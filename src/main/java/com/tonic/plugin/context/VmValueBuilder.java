@@ -1,5 +1,6 @@
 package com.tonic.plugin.context;
 
+import com.tonic.analysis.execution.core.BytecodeResult;
 import com.tonic.analysis.execution.heap.ArrayInstance;
 import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.heap.SimpleHeapManager;
@@ -8,7 +9,7 @@ import com.tonic.model.FieldEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.plugin.api.VmDebugApi.ArgSpec;
 import com.tonic.service.ProjectService;
-import com.tonic.ui.vm.VMExecutionService;
+import com.tonic.ui.vm.VmInstance;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +28,7 @@ final class VmValueBuilder {
     private VmValueBuilder() {
     }
 
-    static Object[] build(VMExecutionService vm, List<ArgSpec> specs) {
+    static Object[] build(VmInstance vm, List<ArgSpec> specs) {
         if (specs == null) {
             return new Object[0];
         }
@@ -39,7 +40,7 @@ final class VmValueBuilder {
     }
 
     /** Builds one value: boxed primitive | ObjectInstance | ArrayInstance | null. */
-    static Object build(VMExecutionService vm, ArgSpec spec) {
+    static Object build(VmInstance vm, ArgSpec spec) {
         if (spec == null) {
             return null;
         }
@@ -74,7 +75,7 @@ final class VmValueBuilder {
         }
     }
 
-    private static ArrayInstance buildArray(VMExecutionService vm, SimpleHeapManager heap, ArgSpec spec) {
+    private static ArrayInstance buildArray(VmInstance vm, SimpleHeapManager heap, ArgSpec spec) {
         String component = spec.getComponentType();
         List<ArgSpec> elements = spec.getElements() != null ? spec.getElements() : Collections.emptyList();
         ArrayInstance array = heap.newArray(component, elements.size());
@@ -124,7 +125,7 @@ final class VmValueBuilder {
         }
     }
 
-    private static ObjectInstance buildObject(VMExecutionService vm, SimpleHeapManager heap, ArgSpec spec) {
+    private static ObjectInstance buildObject(VmInstance vm, SimpleHeapManager heap, ArgSpec spec) {
         ObjectInstance object = heap.newObject(spec.getClassName());
         if (spec.getFields() != null) {
             for (Map.Entry<String, ArgSpec> entry : spec.getFields().entrySet()) {
@@ -133,10 +134,10 @@ final class VmValueBuilder {
             }
         } else if (spec.getConstructorDescriptor() != null) {
             Object[] ctorArgs = build(vm, spec.getConstructorArgs());
-            var result = vm.executeMethod(spec.getClassName(), "<init>", spec.getConstructorDescriptor(),
+            BytecodeResult result = vm.executeMethod(spec.getClassName(), "<init>", spec.getConstructorDescriptor(),
                     object, ctorArgs);
-            if (result != null && !result.isSuccess()) {
-                String reason = result.getException() != null ? result.getException().getMessage() : "unknown";
+            if (!result.isSuccess()) {
+                String reason = result.hasException() ? String.valueOf(result.getException()) : "unknown";
                 throw new IllegalArgumentException("Constructor " + spec.getClassName()
                         + spec.getConstructorDescriptor() + " failed: " + reason);
             }

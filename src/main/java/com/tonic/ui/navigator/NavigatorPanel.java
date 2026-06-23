@@ -918,6 +918,8 @@ public class NavigatorPanel extends ThemedJPanel {
         setLoading(true);
 
         try {
+            com.tonic.service.history.LocalHistoryService.getInstance()
+                    .snapshot("Rename class", com.tonic.model.Snapshot.Trigger.RENAME);
             Renamer renamer = new Renamer(classPool);
             renamer.mapClass(oldName, newName).apply();
 
@@ -968,6 +970,8 @@ public class NavigatorPanel extends ThemedJPanel {
             return;
         }
 
+        com.tonic.service.history.LocalHistoryService.getInstance()
+                .snapshot("Delete class " + displayName, com.tonic.model.Snapshot.Trigger.DELETE);
         if (project.removeClass(className)) {
             mainFrame.closeEditorForClass(className);
             EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, -1));

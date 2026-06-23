@@ -25,7 +25,7 @@ public class ScriptEditorDialog extends JDialog {
     public ScriptEditorDialog(MainFrame parent) {
         super(parent, "JStudio Script Editor", false);
 
-        editorPanel = new ScriptEditorPanel(parent);
+        editorPanel = new ScriptEditorPanel();
 
         setContentPane(editorPanel);
         setSize(1200, 800);

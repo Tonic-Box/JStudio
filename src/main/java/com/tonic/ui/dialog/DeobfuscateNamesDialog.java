@@ -32,7 +32,6 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
     private final JCheckBox skipJdkBox;
     private final JTextArea logArea;
     private final JButton applyButton;
-    private final JButton closeButton;
     private final MainFrame mainFrame;
 
     private int classCounter = 1;
@@ -80,7 +79,7 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(JStudioTheme.getBgPrimary());
 
-        closeButton = new JButton("Close");
+        JButton closeButton = new JButton("Close");
         styleButton(closeButton, false);
         closeButton.addActionListener(e -> dispose());
 
@@ -211,6 +210,8 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
                     publish("");
                     publish("Applying " + renamer.getMappings().size() + " mappings...");
 
+                    com.tonic.service.history.LocalHistoryService.getInstance()
+                            .snapshot("Deobfuscate names", com.tonic.model.Snapshot.Trigger.DEOBFUSCATE);
                     renamer.apply();
 
                     if (!classNameMappings.isEmpty()) {

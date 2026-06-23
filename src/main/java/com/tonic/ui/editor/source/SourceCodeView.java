@@ -292,6 +292,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
             return;
         }
 
+        // Snapshot the pre-edit bytecode BEFORE compiling - the compiler mutates the live ClassFile in place, so
+        // capturing later would record the already-changed bytes.
+        com.tonic.service.history.LocalHistoryService.getInstance()
+                .snapshot("Recompile " + classEntry.getSimpleName(), com.tonic.model.Snapshot.Trigger.RECOMPILE);
+
         String source = textArea.getText();
         // The source as it was before this edit - captured now because a successful recompile overwrites
         // originalSource below; the live patch diffs against it to graft only the methods that changed.
@@ -314,6 +319,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener {
                         compilerParser.setOriginalClass(result.getCompiledClass());
                         if (projectModel != null) {
                             projectModel.setXrefDatabase(null);
+                            projectModel.markDirty();
                         }
                         originalSource = source;
                         dirty = false;

@@ -281,6 +281,14 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
+        menu.add(createMenuItem("Local History", 0, 0,
+                Icons.getIcon("undo"), e -> mainFrame.showLocalHistoryPanel()));
+
+        menu.add(createMenuItem("Create Checkpoint", 0, 0,
+                null, e -> mainFrame.createHistoryCheckpoint()));
+
+        menu.addSeparator();
+
         JMenu optimizeMenu = new JMenu("Optimize");
         optimizeMenu.add(createMenuItem("Constant Folding", 0, 0, null, e -> mainFrame.applyTransform("ConstantFolding")));
         optimizeMenu.add(createMenuItem("Copy Propagation", 0, 0, null, e -> mainFrame.applyTransform("CopyPropagation")));

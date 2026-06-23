@@ -483,13 +483,29 @@ public class EditorPanel extends ThemedJPanel {
         menu.setBackground(JStudioTheme.getBgSecondary());
         menu.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
 
+        // Count the closable tabs (every kind except Welcome) on each side of the clicked tab.
+        int tabIndex = findTabIndex(tab);
+        int closableLeft = 0;
+        int closableRight = 0;
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            Component comp = tabbedPane.getComponentAt(i);
+            if (comp == welcomeTab || i == tabIndex) {
+                continue;
+            }
+            if (i < tabIndex) {
+                closableLeft++;
+            } else {
+                closableRight++;
+            }
+        }
+
         // Close
         JMenuItem closeItem = createMenuItem("Close", () -> closeTab(tab));
         menu.add(closeItem);
 
         // Close Others
         JMenuItem closeOthersItem = createMenuItem("Close Others", () -> closeOtherTabs(tab));
-        closeOthersItem.setEnabled(openTabs.size() > 1);
+        closeOthersItem.setEnabled(closableLeft + closableRight > 0);
         menu.add(closeOthersItem);
 
         // Close All
@@ -499,14 +515,13 @@ public class EditorPanel extends ThemedJPanel {
         menu.addSeparator();
 
         // Close Tabs to the Left
-        int tabIndex = findTabIndex(tab);
         JMenuItem closeLeftItem = createMenuItem("Close Tabs to the Left", () -> closeTabsToLeft(tab));
-        closeLeftItem.setEnabled(tabIndex > 0);
+        closeLeftItem.setEnabled(closableLeft > 0);
         menu.add(closeLeftItem);
 
         // Close Tabs to the Right
         JMenuItem closeRightItem = createMenuItem("Close Tabs to the Right", () -> closeTabsToRight(tab));
-        closeRightItem.setEnabled(tabIndex < tabbedPane.getTabCount() - 1);
+        closeRightItem.setEnabled(closableRight > 0);
         menu.add(closeRightItem);
 
         menu.show(e.getComponent(), e.getX(), e.getY());
@@ -579,59 +594,94 @@ public class EditorPanel extends ThemedJPanel {
     }
 
     /**
-     * Close all tabs except the specified one.
+     * Closes whatever kind of tab {@code content} is the body of - class editor, resource editor, or custom view
+     * (running its close hook) - dispatching to the matching close path. The Welcome tab is never closed.
      */
-    public void closeOtherTabs(EditorTab keepTab) {
-        // Collect tabs to close (avoid concurrent modification)
-        List<EditorTab> tabsToClose = new ArrayList<>();
-        for (EditorTab tab : openTabs.values()) {
-            if (tab != keepTab) {
-                tabsToClose.add(tab);
-            }
+    private void closeTabComponent(Component content) {
+        if (content == null || content == welcomeTab) {
+            return;
         }
-        for (EditorTab tab : tabsToClose) {
-            closeTab(tab);
+        if (content instanceof EditorTab) {
+            closeTab((EditorTab) content);
+        } else if (content instanceof ResourceEditorTab) {
+            closeResourceTab((ResourceEditorTab) content);
+        } else {
+            String id = customViewId(content);
+            if (id != null) {
+                closeCustomView(id);
+            }
         }
     }
 
+    /** The custom-view id whose tab body is {@code content}, or null if it isn't an open custom view. */
+    private String customViewId(Component content) {
+        for (Map.Entry<String, JComponent> entry : customViews.entrySet()) {
+            if (entry.getValue() == content) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
     /**
-     * Close all tabs to the left of the specified tab.
+     * Close every closable tab except the specified one (all tab kinds, not just class editors; the Welcome tab is
+     * always kept).
+     */
+    public void closeOtherTabs(EditorTab keepTab) {
+        // Collect by component reference first so removals don't shift the indices we still need to visit.
+        List<Component> toClose = new ArrayList<>();
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            Component comp = tabbedPane.getComponentAt(i);
+            if (comp != welcomeTab && comp != keepTab) {
+                toClose.add(comp);
+            }
+        }
+        for (Component comp : toClose) {
+            closeTabComponent(comp);
+        }
+        tabbedPane.setSelectedComponent(keepTab);
+    }
+
+    /**
+     * Close every closable tab to the left of the specified tab (all tab kinds; the Welcome tab is always kept).
      */
     public void closeTabsToLeft(EditorTab referenceTab) {
         int refIndex = findTabIndex(referenceTab);
-        if (refIndex <= 0) return;
-
-        // Collect tabs to close
-        List<EditorTab> tabsToClose = new ArrayList<>();
+        if (refIndex <= 0) {
+            return;
+        }
+        List<Component> toClose = new ArrayList<>();
         for (int i = 0; i < refIndex; i++) {
             Component comp = tabbedPane.getComponentAt(i);
-            if (comp instanceof EditorTab) {
-                tabsToClose.add((EditorTab) comp);
+            if (comp != welcomeTab) {
+                toClose.add(comp);
             }
         }
-        for (EditorTab tab : tabsToClose) {
-            closeTab(tab);
+        for (Component comp : toClose) {
+            closeTabComponent(comp);
         }
+        tabbedPane.setSelectedComponent(referenceTab);
     }
 
     /**
-     * Close all tabs to the right of the specified tab.
+     * Close every closable tab to the right of the specified tab (all tab kinds; the Welcome tab is always kept).
      */
     public void closeTabsToRight(EditorTab referenceTab) {
         int refIndex = findTabIndex(referenceTab);
-        if (refIndex < 0 || refIndex >= tabbedPane.getTabCount() - 1) return;
-
-        // Collect tabs to close
-        List<EditorTab> tabsToClose = new ArrayList<>();
+        if (refIndex < 0 || refIndex >= tabbedPane.getTabCount() - 1) {
+            return;
+        }
+        List<Component> toClose = new ArrayList<>();
         for (int i = refIndex + 1; i < tabbedPane.getTabCount(); i++) {
             Component comp = tabbedPane.getComponentAt(i);
-            if (comp instanceof EditorTab) {
-                tabsToClose.add((EditorTab) comp);
+            if (comp != welcomeTab) {
+                toClose.add(comp);
             }
         }
-        for (EditorTab tab : tabsToClose) {
-            closeTab(tab);
+        for (Component comp : toClose) {
+            closeTabComponent(comp);
         }
+        tabbedPane.setSelectedComponent(referenceTab);
     }
 
     /**

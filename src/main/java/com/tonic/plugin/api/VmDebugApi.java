@@ -10,29 +10,32 @@ import java.util.Map;
  * and single-step through it, observing the operand stack, locals, and call stack at each step. The VM is an
  * isolated interpreter over the loaded project's classes (its own heap; no real JVM/IO side effects).
  * <p>
- * Stateful and single-session: there is one shared VM debug session (also used by the Bytecode Debugger UI).
- * {@link #start} replaces any active session. Call off the EDT (stepping can be slow).
+ * Each {@link #start} creates a NEW isolated session - its own heap over a defensive snapshot of the project's
+ * bytecode - and returns its {@code handle}; pass that handle to {@link #step}/{@link #current}/{@link #stop}.
+ * Independent handles run independently, so concurrent callers (e.g. subagents) don't interfere with each other or
+ * with the Bytecode Debugger UI. Call off the EDT (stepping can be slow).
  */
 public interface VmDebugApi {
 
     /**
-     * Starts a debug session at {@code className.methodName descriptor} with the given arguments and pauses at the
-     * first instruction. {@code recursive} lets the interpreter execute called methods (needed to step into calls
-     * and for recursion). Replaces any active session. Returns the initial {@link DebugState}.
+     * Starts a NEW isolated debug session at {@code className.methodName descriptor} with the given arguments and
+     * pauses at the first instruction. {@code recursive} lets the interpreter execute called methods (needed to step
+     * into calls and for recursion). Returns the initial {@link DebugState}, whose {@code handle} addresses this
+     * session in subsequent calls.
      */
     DebugState start(String className, String methodName, String descriptor, List<ArgSpec> args, boolean recursive);
 
-    /** Advances the paused session one step and returns the new state (terminal state if it finished). */
-    DebugState step(StepMode mode);
+    /** Advances the session for {@code handle} one step and returns the new state (terminal state if it finished). */
+    DebugState step(String handle, StepMode mode);
 
-    /** The current state without stepping. */
-    DebugState current();
+    /** The current state of {@code handle} without stepping. */
+    DebugState current(String handle);
 
-    /** True if a session is running and paused (steppable). */
-    boolean isActive();
+    /** True if the session for {@code handle} is running and paused (steppable). */
+    boolean isActive(String handle);
 
-    /** Ends the session. */
-    void stop();
+    /** Ends and disposes the session for {@code handle}. */
+    void stop(String handle);
 
     enum StepMode {
         /** Execute one instruction, descending into any call. */
@@ -45,6 +48,7 @@ public interface VmDebugApi {
 
     @Getter
     final class DebugState {
+        private final String handle;
         private final boolean active;
         private final boolean terminated;
         private final DebugResult result;
@@ -57,9 +61,10 @@ public interface VmDebugApi {
         private final List<Local> locals;
         private final List<Frame> callStack;
 
-        public DebugState(boolean active, boolean terminated, DebugResult result, String className,
+        public DebugState(String handle, boolean active, boolean terminated, DebugResult result, String className,
                           String methodName, String descriptor, int pc, int line,
                           List<StackSlot> operandStack, List<Local> locals, List<Frame> callStack) {
+            this.handle = handle;
             this.active = active;
             this.terminated = terminated;
             this.result = result;

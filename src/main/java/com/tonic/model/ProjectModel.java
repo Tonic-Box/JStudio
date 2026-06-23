@@ -39,6 +39,9 @@ public class ProjectModel {
     private final Map<String, ResourceEntryModel> resources = new LinkedHashMap<>();
     @Getter
     private boolean dirty;
+    /** Monotonic counter bumped on every bytecode mutation; the VM uses it to invalidate its cached class snapshot. */
+    @Getter
+    private long bytecodeVersion;
 
     public ProjectModel() {
         this.projectName = "Untitled";
@@ -56,6 +59,7 @@ public class ProjectModel {
     /** Marks the project as having unsaved changes (so close prompts to save). */
     public void markDirty() {
         this.dirty = true;
+        bytecodeVersion++;
     }
 
     /**
@@ -69,7 +73,7 @@ public class ProjectModel {
         ClassEntryModel entry = new ClassEntryModel(classFile);
         classEntries.put(className, entry);
         userClassNames.add(className);
-        dirty = true;
+        markDirty();
         return entry;
     }
 
@@ -95,7 +99,7 @@ public class ProjectModel {
             c.invalidateDecompilationCache();
         }
 
-        dirty = true;
+        markDirty();
         return true;
     }
 
@@ -207,7 +211,7 @@ public class ProjectModel {
 
     public void addResource(ResourceEntryModel resource) {
         resources.put(resource.getPath(), resource);
-        dirty = true;
+        markDirty();
     }
 
     /**
@@ -217,7 +221,7 @@ public class ProjectModel {
     public boolean removeResource(String path) {
         ResourceEntryModel removed = resources.remove(path);
         if (removed != null) {
-            dirty = true;
+            markDirty();
             return true;
         }
         return false;
@@ -309,7 +313,7 @@ public class ProjectModel {
             xrefDatabase.clear();
         }
 
-        dirty = true;
+        markDirty();
     }
 
     public void applyClassNameMappings(Map<String, String> oldToNewNames) {
@@ -332,7 +336,67 @@ public class ProjectModel {
             xrefDatabase.clear();
         }
 
-        dirty = true;
+        markDirty();
+    }
+
+    /**
+     * Replaces every user class (and all resources) with the given name->bytes sets, parsing each into a fresh
+     * {@link ClassFile}, then rebuilds the class pool ONCE. Used by Local History restore; non-user (library/JDK)
+     * entries are left untouched. Callers must trigger a UI refresh afterward (decompilation caches are cleared here).
+     */
+    public void replaceUserClasses(Map<String, byte[]> classBytes, Map<String, byte[]> resourceBytes) {
+        for (String name : new ArrayList<>(userClassNames)) {
+            classEntries.remove(name);
+        }
+        userClassNames.clear();
+
+        for (Map.Entry<String, byte[]> entry : classBytes.entrySet()) {
+            try {
+                ClassFile cf = new ClassFile(new java.io.ByteArrayInputStream(entry.getValue()));
+                classEntries.put(cf.getClassName(), new ClassEntryModel(cf));
+                userClassNames.add(cf.getClassName());
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to restore class " + entry.getKey() + ": " + e.getMessage(), e);
+            }
+        }
+
+        rebuildClassPool();
+
+        resources.clear();
+        for (Map.Entry<String, byte[]> entry : resourceBytes.entrySet()) {
+            resources.put(entry.getKey(), new ResourceEntryModel(entry.getKey(), entry.getValue()));
+        }
+
+        if (xrefDatabase != null) {
+            xrefDatabase.clear();
+        }
+        invalidateAllDecompilationCaches();
+        markDirty();
+    }
+
+    /**
+     * Replaces a single user class's bytecode from stored bytes (Local History per-class restore). No-op if the class
+     * is not present. Callers must trigger a UI refresh afterward.
+     */
+    public void replaceClass(String internalName, byte[] bytes) {
+        ClassEntryModel entry = classEntries.get(internalName);
+        if (entry == null) {
+            return;
+        }
+        ClassFile cf;
+        try {
+            cf = new ClassFile(new java.io.ByteArrayInputStream(bytes));
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to restore class " + internalName + ": " + e.getMessage(), e);
+        }
+        entry.updateClassFile(cf);
+        if (classPool != null) {
+            classPool.put(cf);
+        }
+        if (xrefDatabase != null) {
+            xrefDatabase.clear();
+        }
+        markDirty();
     }
 
     @Override

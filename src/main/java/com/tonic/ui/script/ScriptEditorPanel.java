@@ -1,7 +1,6 @@
 package com.tonic.ui.script;
 
 import com.tonic.live.LiveSession;
-import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.live.LiveAttachService;
@@ -45,7 +44,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
     private Script currentScript;
     private Runnable onTransformComplete;
 
-    public ScriptEditorPanel(MainFrame mainFrame) {
+    public ScriptEditorPanel() {
         super(BackgroundStyle.TERTIARY, new BorderLayout());
         this.currentScript = new Script("Untitled", Script.Mode.AST, "");
 
@@ -357,6 +356,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         final ClassEntryModel fClass = targetClass;
         final MethodEntryModel fMethod = targetMethod;
 
+        com.tonic.service.history.LocalHistoryService.getInstance()
+                .snapshot("Script transform", com.tonic.model.Snapshot.Trigger.SCRIPT);
         SwingWorker<Integer, Void> worker = new SwingWorker<>() {
             @Override
             protected Integer doInBackground() {

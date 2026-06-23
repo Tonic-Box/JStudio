@@ -8,6 +8,7 @@ import com.tonic.analysis.execution.state.ValueTag;
 import com.tonic.parser.MethodEntry;
 import com.tonic.service.ConsoleLogService;
 import com.tonic.ui.vm.VMExecutionService;
+import com.tonic.ui.vm.VmInstance;
 import lombok.Getter;
 
 import javax.swing.Timer;
@@ -29,6 +30,8 @@ public class VMDebugSession {
     private int stepDelayMs = 300;
 
     private final List<DebugListener> listeners = new CopyOnWriteArrayList<>();
+    private final VmInstance vmInstance;
+    @Getter
     private DebugSession yabrSession;
     @Getter
     private MethodEntry currentMethod;
@@ -39,6 +42,12 @@ public class VMDebugSession {
     private Timer animationTimer;
 
     public VMDebugSession() {
+        this(null);
+    }
+
+    /** Drives an isolated {@link VmInstance} (its own heap + snapshot pool); null uses the shared default VM. */
+    public VMDebugSession(VmInstance vmInstance) {
+        this.vmInstance = vmInstance;
         this.started = false;
     }
 
@@ -47,20 +56,19 @@ public class VMDebugSession {
             throw new IllegalStateException("Session already started");
         }
 
-        VMExecutionService vmService = VMExecutionService.getInstance();
-        if (!vmService.isInitialized()) {
-            vmService.initialize();
-        }
-
         this.currentMethod = method;
 
-        yabrSession = vmService.createDebugSession(
-            method.getOwnerName(),
-            method.getName(),
-            method.getDesc(),
-            recursive,
-            args
-        );
+        if (vmInstance != null) {
+            yabrSession = vmInstance.createDebugSession(
+                method.getOwnerName(), method.getName(), method.getDesc(), recursive, args);
+        } else {
+            VMExecutionService vmService = VMExecutionService.getInstance();
+            if (!vmService.isInitialized()) {
+                vmService.initialize();
+            }
+            yabrSession = vmService.createDebugSession(
+                method.getOwnerName(), method.getName(), method.getDesc(), recursive, args);
+        }
 
         yabrSession.addListener(new YabrDebugListener());
         started = true;

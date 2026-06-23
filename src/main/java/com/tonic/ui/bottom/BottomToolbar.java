@@ -15,10 +15,12 @@ public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
     private final JButton consoleButton;
     private final JButton bookmarksButton;
     private final JButton commentsButton;
+    private final JButton historyButton;
 
     private Runnable onConsoleClicked;
     private Runnable onBookmarksClicked;
     private Runnable onCommentsClicked;
+    private Runnable onLocalHistoryClicked;
 
     public BottomToolbar() {
         super(BackgroundStyle.SECONDARY, new FlowLayout(FlowLayout.RIGHT, 4, 2));
@@ -41,6 +43,12 @@ public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
             if (onCommentsClicked != null) onCommentsClicked.run();
         });
         add(commentsButton);
+
+        historyButton = createButton("History", "undo");
+        historyButton.addActionListener(e -> {
+            if (onLocalHistoryClicked != null) onLocalHistoryClicked.run();
+        });
+        add(historyButton);
 
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
@@ -70,6 +78,10 @@ public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
         this.onCommentsClicked = callback;
     }
 
+    public void setOnLocalHistoryClicked(Runnable callback) {
+        this.onLocalHistoryClicked = callback;
+    }
+
     @Override
     public void onThemeChanged(Theme newTheme) {
         SwingUtilities.invokeLater(this::applyThemeToComponents);
@@ -82,6 +94,7 @@ public class BottomToolbar extends ThemedJPanel implements ThemeChangeListener {
         applyButtonTheme(consoleButton);
         applyButtonTheme(bookmarksButton);
         applyButtonTheme(commentsButton);
+        applyButtonTheme(historyButton);
     }
 
     private void applyButtonTheme(JButton button) {

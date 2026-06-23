@@ -6,6 +6,7 @@ import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.parser.MethodEntry;
 import com.tonic.plugin.api.VmDebugApi;
 import com.tonic.ui.vm.VMExecutionService;
+import com.tonic.ui.vm.VmInstance;
 import com.tonic.ui.vm.debugger.DebugStateModel;
 import com.tonic.ui.vm.debugger.FrameEntry;
 import com.tonic.ui.vm.debugger.LocalEntry;
@@ -14,89 +15,121 @@ import com.tonic.ui.vm.debugger.VMDebugSession;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
- * Drives JStudio's bytecode interpreter/debugger ({@link VMExecutionService} + YABR {@code DebugSession}) for
- * plugins. The VM is a single global session shared with the Bytecode Debugger UI, so the active wrapper is held
- * statically; {@link #start} replaces any running session ("AI takes over"). Reuses {@link VMDebugSession} for
- * stepping and its YABR-state-&gt;model conversion, then maps to the public DTOs.
+ * Drives JStudio's bytecode interpreter/debugger for plugins. Each {@link #start} mints a fresh isolated
+ * {@link VmInstance} (its own heap over a defensive bytecode snapshot) wrapped in a {@link VMDebugSession}, keyed by
+ * an opaque handle, so concurrent callers (e.g. subagents) run independent sessions that don't disturb each other or
+ * the Bytecode Debugger UI. Maps YABR debug state to the public DTOs.
  */
 public class VmDebugApiImpl implements VmDebugApi {
 
-    private static VMDebugSession session;
+    private static final int MAX_SESSIONS = 16;
 
-    @Override
-    public DebugState start(String className, String methodName, String descriptor,
-                            List<ArgSpec> args, boolean recursive) {
-        VMExecutionService vm = VMExecutionService.getInstance();
-        if (!vm.isInitialized()) {
-            vm.initialize();
+    private final Map<String, Session> sessions = new LinkedHashMap<>();
+
+    private static final class Session {
+        final VmInstance instance;
+        final VMDebugSession debug;
+
+        Session(VmInstance instance, VMDebugSession debug) {
+            this.instance = instance;
+            this.debug = debug;
         }
-        MethodEntry method = vm.findMethod(className, methodName, descriptor);
-        if (method == null) {
-            throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
-        }
-        Object[] built = VmValueBuilder.build(vm, args);
-        VMDebugSession fresh = new VMDebugSession();
-        fresh.start(method, recursive, built);
-        session = fresh;
-        return toState(fresh);
     }
 
     @Override
-    public DebugState step(StepMode mode) {
-        VMDebugSession current = session;
-        if (current == null || !current.isStarted()) {
-            return inactive();
+    public synchronized DebugState start(String className, String methodName, String descriptor,
+                                         List<ArgSpec> args, boolean recursive) {
+        VmInstance instance = VMExecutionService.getInstance().createSnapshotInstance();
+        MethodEntry method = instance.findMethod(className, methodName, descriptor);
+        if (method == null) {
+            instance.dispose();
+            throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
+        }
+        Object[] built = VmValueBuilder.build(instance, args);
+        VMDebugSession debug = new VMDebugSession(instance);
+        debug.start(method, recursive, built);
+
+        evictIfFull();
+        String handle = UUID.randomUUID().toString();
+        sessions.put(handle, new Session(instance, debug));
+        return toState(handle, debug);
+    }
+
+    @Override
+    public synchronized DebugState step(String handle, StepMode mode) {
+        Session s = sessions.get(handle);
+        if (s == null || !s.debug.isStarted()) {
+            return inactive(handle);
         }
         switch (mode) {
             case OVER:
-                current.stepOver();
+                s.debug.stepOver();
                 break;
             case OUT:
-                current.stepOut();
+                s.debug.stepOut();
                 break;
             default:
-                current.stepInto();
+                s.debug.stepInto();
                 break;
         }
-        return toState(current);
+        return toState(handle, s.debug);
     }
 
     @Override
-    public DebugState current() {
-        VMDebugSession current = session;
-        return current != null ? toState(current) : inactive();
+    public synchronized DebugState current(String handle) {
+        Session s = sessions.get(handle);
+        return s != null ? toState(handle, s.debug) : inactive(handle);
     }
 
     @Override
-    public boolean isActive() {
-        VMDebugSession current = session;
-        return current != null && current.isStarted() && !current.isStopped();
+    public synchronized boolean isActive(String handle) {
+        Session s = sessions.get(handle);
+        return s != null && s.debug.isStarted() && !s.debug.isStopped();
     }
 
     @Override
-    public void stop() {
-        VMDebugSession current = session;
-        if (current != null) {
-            current.stop();
+    public synchronized void stop(String handle) {
+        Session s = sessions.remove(handle);
+        if (s != null) {
+            s.debug.stop();
+            s.instance.dispose();
         }
     }
 
-    private static DebugState inactive() {
-        return new DebugState(false, false, null, "", "", "", -1, -1,
+    /** Disposes the oldest session(s) when the live-session cap is reached (backstop against leaked handles). */
+    private void evictIfFull() {
+        while (sessions.size() >= MAX_SESSIONS) {
+            Iterator<Map.Entry<String, Session>> it = sessions.entrySet().iterator();
+            if (!it.hasNext()) {
+                return;
+            }
+            Session oldest = it.next().getValue();
+            it.remove();
+            oldest.debug.stop();
+            oldest.instance.dispose();
+        }
+    }
+
+    private static DebugState inactive(String handle) {
+        return new DebugState(handle, false, false, null, "", "", "", -1, -1,
                 Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     }
 
-    private static DebugState toState(VMDebugSession s) {
+    private static DebugState toState(String handle, VMDebugSession s) {
         boolean terminated = s.isStopped();
         boolean active = s.isStarted() && !terminated;
-        DebugResult result = terminated ? terminalResult() : null;
+        DebugResult result = terminated ? terminalResult(s) : null;
 
         DebugStateModel m = s.getLastState();
         if (m == null) {
-            return new DebugState(active, terminated, result, "", "", "", -1, -1,
+            return new DebugState(handle, active, terminated, result, "", "", "", -1, -1,
                     Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
         }
 
@@ -113,12 +146,12 @@ public class VmDebugApiImpl implements VmDebugApi {
             frames.add(new Frame(f.getClassName(), f.getMethodName(), f.getDescriptor(),
                     f.getInstructionIndex(), f.getLineNumber(), f.isCurrent()));
         }
-        return new DebugState(active, terminated, result, m.getClassName(), m.getMethodName(),
+        return new DebugState(handle, active, terminated, result, m.getClassName(), m.getMethodName(),
                 m.getDescriptor(), m.getInstructionIndex(), m.getLineNumber(), stack, locals, frames);
     }
 
-    private static DebugResult terminalResult() {
-        DebugSession yabr = VMExecutionService.getInstance().getCurrentDebugSession();
+    private static DebugResult terminalResult(VMDebugSession s) {
+        DebugSession yabr = s.getYabrSession();
         if (yabr == null) {
             return null;
         }
