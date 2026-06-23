@@ -1,12 +1,9 @@
 package com.tonic.ui.editor.hex;
 
 import com.tonic.parser.ClassFile;
-import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.model.ClassEntryModel;
+import com.tonic.ui.editor.view.AbstractEditorView;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -16,7 +13,7 @@ import java.awt.datatransfer.StringSelection;
 /**
  * Hex view showing raw class file bytes in traditional hex dump format.
  */
-public class HexView extends JPanel implements ThemeChangeListener {
+public class HexView extends AbstractEditorView {
 
     private final ClassEntryModel classEntry;
     private final JTextPane textPane;
@@ -25,9 +22,6 @@ public class HexView extends JPanel implements ThemeChangeListener {
     private final JLabel headerLabel;
 
     private static final int BYTES_PER_LINE = 16;
-    private boolean loaded = false;
-    private final LoadingOverlay loadingOverlay;
-    private SwingWorker<byte[], Void> currentWorker;
 
     // Style names
     private static final String STYLE_OFFSET = "offset";
@@ -38,9 +32,6 @@ public class HexView extends JPanel implements ThemeChangeListener {
 
     public HexView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
 
         textPane = new JTextPane();
         textPane.setEditable(false);
@@ -55,18 +46,7 @@ public class HexView extends JPanel implements ThemeChangeListener {
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
-        loadingOverlay = new LoadingOverlay();
-
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new OverlayLayout(contentPanel));
-        loadingOverlay.setAlignmentX(0.5f);
-        loadingOverlay.setAlignmentY(0.5f);
-        scrollPane.setAlignmentX(0.5f);
-        scrollPane.setAlignmentY(0.5f);
-        contentPanel.add(loadingOverlay);
-        contentPanel.add(scrollPane);
-
-        add(contentPanel, BorderLayout.CENTER);
+        add(overlayWrap(scrollPane), BorderLayout.CENTER);
 
         headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setBackground(JStudioTheme.getBgSecondary());
@@ -76,24 +56,10 @@ public class HexView extends JPanel implements ThemeChangeListener {
         headerLabel.setForeground(JStudioTheme.getTextSecondary());
         headerPanel.add(headerLabel);
         add(headerPanel, BorderLayout.NORTH);
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgTertiary());
-
+    protected void applyChildThemes() {
         textPane.setBackground(JStudioTheme.getBgTertiary());
         textPane.setForeground(JStudioTheme.getTextPrimary());
         textPane.setCaretColor(JStudioTheme.getTextPrimary());
@@ -132,12 +98,7 @@ public class HexView extends JPanel implements ThemeChangeListener {
         StyleConstants.setForeground(highlightStyle, JStudioTheme.getWarning());
     }
 
-    /** Forces a fresh hex dump from current bytecode; plain {@link #refresh()} no-ops once loaded. */
-    public void reload() {
-        loaded = false;
-        refresh();
-    }
-
+    @Override
     public void refresh() {
         if (loaded) {
             return;
@@ -148,7 +109,7 @@ public class HexView extends JPanel implements ThemeChangeListener {
         textPane.setText("");
         loadingOverlay.showLoading("Loading hex dump...");
 
-        currentWorker = new SwingWorker<>() {
+        SwingWorker<byte[], Void> worker = new SwingWorker<>() {
             @Override
             protected byte[] doInBackground() {
                 try {
@@ -184,15 +145,8 @@ public class HexView extends JPanel implements ThemeChangeListener {
                 }
             }
         };
-
-        currentWorker.execute();
-    }
-
-    private void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
-            currentWorker.cancel(true);
-            loadingOverlay.hideLoading();
-        }
+        currentWorker = worker;
+        worker.execute();
     }
 
     private void displayHexDump(byte[] bytes) {
@@ -256,6 +210,7 @@ public class HexView extends JPanel implements ThemeChangeListener {
     /**
      * Get the current text.
      */
+    @Override
     public String getText() {
         return textPane.getText();
     }
@@ -263,6 +218,7 @@ public class HexView extends JPanel implements ThemeChangeListener {
     /**
      * Copy current selection to clipboard.
      */
+    @Override
     public void copySelection() {
         String selected = textPane.getSelectedText();
         if (selected != null && !selected.isEmpty()) {
@@ -274,6 +230,7 @@ public class HexView extends JPanel implements ThemeChangeListener {
     /**
      * Go to a specific line.
      */
+    @Override
     public void goToLine(int line) {
         try {
             int offset = textPane.getDocument().getDefaultRootElement().getElement(line - 1).getStartOffset();
@@ -287,6 +244,7 @@ public class HexView extends JPanel implements ThemeChangeListener {
     /**
      * Show find dialog.
      */
+    @Override
     public void showFindDialog() {
         String input = JOptionPane.showInputDialog(this, "Find (hex bytes like 'CA FE'):", "Find",
                 JOptionPane.PLAIN_MESSAGE);
@@ -304,6 +262,7 @@ public class HexView extends JPanel implements ThemeChangeListener {
     /**
      * Get the selected text.
      */
+    @Override
     public String getSelectedText() {
         return textPane.getSelectedText();
     }
@@ -311,6 +270,7 @@ public class HexView extends JPanel implements ThemeChangeListener {
     /**
      * Scroll to text.
      */
+    @Override
     public void scrollToText(String text) {
         if (text == null || text.isEmpty()) return;
 
@@ -326,14 +286,8 @@ public class HexView extends JPanel implements ThemeChangeListener {
     /**
      * Set the font size.
      */
+    @Override
     public void setFontSize(int size) {
         textPane.setFont(JStudioTheme.getCodeFont(size));
-    }
-
-    /**
-     * Set word wrap (not really applicable for hex view).
-     */
-    public void setWordWrap(boolean enabled) {
-        // Hex view doesn't use word wrap
     }
 }

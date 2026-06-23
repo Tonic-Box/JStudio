@@ -2,36 +2,28 @@ package com.tonic.ui.editor.llvm;
 
 import com.tonic.analysis.ssa.SSA;
 import com.tonic.parser.MethodEntry;
-import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.MethodEntryModel;
+import com.tonic.ui.editor.view.AbstractTextView;
 import com.tonic.ui.theme.*;
 
-import lombok.Getter;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
-import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
 
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.OverlayLayout;
 import javax.swing.SwingWorker;
-import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
 
 /**
  * Editor view that shows the class lowered to textual LLVM IR. Lowering runs off the EDT; methods
  * outside the lowerer's computational subset are annotated rather than failing the view.
  */
-public class LLVMView extends JPanel implements ThemeChangeListener {
+public class LLVMView extends AbstractTextView {
 
     private static final String SYNTAX_STYLE_LLVM = "text/llvm";
 
@@ -41,75 +33,20 @@ public class LLVMView extends JPanel implements ThemeChangeListener {
     }
 
     private final ClassEntryModel classEntry;
-    private final RSyntaxTextArea textArea;
-    private final RTextScrollPane scrollPane;
-    private final LoadingOverlay loadingOverlay;
 
     private static final String METHOD_DIVIDER = "=========================================================================";
-
-    @Getter
-    private boolean loaded = false;
-    private SwingWorker<String, Void> currentWorker;
 
     public LLVMView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
 
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
+        initTextArea(SYNTAX_STYLE_LLVM);
 
-        textArea = new RSyntaxTextArea();
-        textArea.setSyntaxEditingStyle(SYNTAX_STYLE_LLVM);
-        textArea.setEditable(false);
-        textArea.setAntiAliasingEnabled(true);
-        textArea.setFont(JStudioTheme.getCodeFont(12));
-        textArea.setCodeFoldingEnabled(false);
-        textArea.setBracketMatchingEnabled(false);
-
-        scrollPane = new RTextScrollPane(textArea);
-        scrollPane.setLineNumbersEnabled(true);
-        scrollPane.setBorder(null);
-
-        loadingOverlay = new LoadingOverlay();
-
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new OverlayLayout(contentPanel));
-        loadingOverlay.setAlignmentX(0.5f);
-        loadingOverlay.setAlignmentY(0.5f);
-        scrollPane.setAlignmentX(0.5f);
-        scrollPane.setAlignmentY(0.5f);
-        contentPanel.add(loadingOverlay);
-        contentPanel.add(scrollPane);
-
-        add(contentPanel, BorderLayout.CENTER);
-
-        applyTheme();
-        ThemeManager.getInstance().addThemeChangeListener(this);
+        add(overlayWrap(scrollPane), BorderLayout.CENTER);
     }
 
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgTertiary());
-
-        textArea.setBackground(JStudioTheme.getBgTertiary());
-        textArea.setForeground(JStudioTheme.getTextPrimary());
-        textArea.setCaretColor(JStudioTheme.getTextPrimary());
-        textArea.setSelectionColor(JStudioTheme.getSelection());
-        textArea.setCurrentLineHighlightColor(JStudioTheme.getLineHighlight());
-        textArea.setFadeCurrentLineHighlight(true);
-
-        scrollPane.getGutter().setBackground(JStudioTheme.getBgSecondary());
-        scrollPane.getGutter().setLineNumberColor(JStudioTheme.getTextSecondary());
-        scrollPane.getGutter().setBorderColor(JStudioTheme.getBorder());
+    protected void applyChildThemes() {
+        applyTextTheme();
 
         SyntaxScheme scheme = textArea.getSyntaxScheme();
 
@@ -136,11 +73,12 @@ public class LLVMView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void refresh() {
         cancelCurrentWorker();
         loadingOverlay.showLoading("Lowering to LLVM IR...");
 
-        currentWorker = new SwingWorker<>() {
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
                 return generateLLVM();
@@ -162,15 +100,8 @@ public class LLVMView extends JPanel implements ThemeChangeListener {
                 }
             }
         };
-
-        currentWorker.execute();
-    }
-
-    private void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
-            currentWorker.cancel(true);
-            loadingOverlay.hideLoading();
-        }
+        currentWorker = worker;
+        worker.execute();
     }
 
     private String generateLLVM() {
@@ -227,30 +158,9 @@ public class LLVMView extends JPanel implements ThemeChangeListener {
         return sb.toString();
     }
 
-    public String getText() {
-        return textArea.getText();
-    }
-
-    public void copySelection() {
-        String selected = textArea.getSelectedText();
-        if (selected != null && !selected.isEmpty()) {
-            StringSelection selection = new StringSelection(selected);
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-        }
-    }
-
-    public void goToLine(int line) {
-        try {
-            int offset = textArea.getLineStartOffset(line - 1);
-            textArea.setCaretPosition(offset);
-            textArea.requestFocus();
-        } catch (Exception e) {
-            // Line out of range
-        }
-    }
-
     private String lastSearch;
 
+    @Override
     public void showFindDialog() {
         String input = (String) JOptionPane.showInputDialog(
             this,
@@ -267,10 +177,7 @@ public class LLVMView extends JPanel implements ThemeChangeListener {
         }
     }
 
-    public String getSelectedText() {
-        return textArea.getSelectedText();
-    }
-
+    @Override
     public void scrollToText(String searchText) {
         if (searchText == null || searchText.isEmpty()) return;
 
@@ -278,14 +185,5 @@ public class LLVMView extends JPanel implements ThemeChangeListener {
         context.setMatchCase(false);
         context.setWholeWord(false);
         SearchEngine.find(textArea, context);
-    }
-
-    public void setFontSize(int size) {
-        textArea.setFont(JStudioTheme.getCodeFont(size));
-    }
-
-    public void setWordWrap(boolean enabled) {
-        textArea.setLineWrap(enabled);
-        textArea.setWrapStyleWord(enabled);
     }
 }

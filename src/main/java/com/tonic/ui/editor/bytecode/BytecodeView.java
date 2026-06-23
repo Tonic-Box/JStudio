@@ -1,31 +1,22 @@
 package com.tonic.ui.editor.bytecode;
 
 import com.tonic.parser.MethodEntry;
-import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.ui.editor.dual.BcLocation;
 import com.tonic.ui.editor.dual.BytecodeLineIndex;
+import com.tonic.ui.editor.view.AbstractTextView;
 import com.tonic.ui.theme.*;
 
-import com.tonic.ui.editor.SearchPanel;
-
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
-import org.fife.ui.rtextarea.RTextScrollPane;
 
-import javax.swing.JPanel;
-import javax.swing.OverlayLayout;
 import javax.swing.SwingWorker;
-import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
@@ -34,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntConsumer;
 
-public class BytecodeView extends JPanel implements ThemeChangeListener {
+public class BytecodeView extends AbstractTextView {
 
     private static final String SYNTAX_STYLE_BYTECODE = "text/bytecode";
 
@@ -44,15 +35,9 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     }
 
     private final ClassEntryModel classEntry;
-    private final RSyntaxTextArea textArea;
-    private final RTextScrollPane scrollPane;
-    private final SearchPanel searchPanel;
-    private final LoadingOverlay loadingOverlay;
 
     private static final String METHOD_DIVIDER = "=========================================================================";
 
-    private boolean loaded = false;
-    private SwingWorker<String, Void> currentWorker;
     private Runnable pendingHighlight;
 
     private final Map<Integer, Object> highlightedLines = new HashMap<>();
@@ -64,41 +49,12 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     public BytecodeView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
 
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
+        initTextArea(SYNTAX_STYLE_BYTECODE);
 
-        textArea = new RSyntaxTextArea();
-        textArea.setSyntaxEditingStyle(SYNTAX_STYLE_BYTECODE);
-        textArea.setEditable(false);
-        textArea.setAntiAliasingEnabled(true);
-        textArea.setFont(JStudioTheme.getCodeFont(12));
-        textArea.setCodeFoldingEnabled(false);
-        textArea.setBracketMatchingEnabled(false);
-
-        scrollPane = new RTextScrollPane(textArea);
-        scrollPane.setLineNumbersEnabled(true);
-        scrollPane.setBorder(null);
-
-        loadingOverlay = new LoadingOverlay();
-
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new OverlayLayout(contentPanel));
-        loadingOverlay.setAlignmentX(0.5f);
-        loadingOverlay.setAlignmentY(0.5f);
-        scrollPane.setAlignmentX(0.5f);
-        scrollPane.setAlignmentY(0.5f);
-        contentPanel.add(loadingOverlay);
-        contentPanel.add(scrollPane);
-
-        add(contentPanel, BorderLayout.CENTER);
-
-        searchPanel = new SearchPanel(textArea, scrollPane);
+        add(overlayWrap(scrollPane), BorderLayout.CENTER);
         add(searchPanel, BorderLayout.SOUTH);
 
-        applyTheme();
         setupMouseListener();
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     private void setupMouseListener() {
@@ -134,29 +90,8 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgTertiary());
-
-        textArea.setBackground(JStudioTheme.getBgTertiary());
-        textArea.setForeground(JStudioTheme.getTextPrimary());
-        textArea.setCaretColor(JStudioTheme.getTextPrimary());
-        textArea.setSelectionColor(JStudioTheme.getSelection());
-        textArea.setCurrentLineHighlightColor(JStudioTheme.getLineHighlight());
-        textArea.setFadeCurrentLineHighlight(true);
-
-        scrollPane.getGutter().setBackground(JStudioTheme.getBgSecondary());
-        scrollPane.getGutter().setLineNumberColor(JStudioTheme.getTextSecondary());
-        scrollPane.getGutter().setBorderColor(JStudioTheme.getBorder());
+    protected void applyChildThemes() {
+        applyTextTheme();
 
         SyntaxScheme scheme = textArea.getSyntaxScheme();
 
@@ -190,12 +125,13 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void refresh() {
         cancelCurrentWorker();
         lineIndex = null;
         loadingOverlay.showLoading("Loading bytecode...");
 
-        currentWorker = new SwingWorker<>() {
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
                 return generateBytecodeText();
@@ -224,8 +160,8 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
                 }
             }
         };
-
-        currentWorker.execute();
+        currentWorker = worker;
+        worker.execute();
     }
 
     private String generateBytecodeText() {
@@ -263,13 +199,6 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         return sb.toString();
     }
 
-    private void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
-            currentWorker.cancel(true);
-            loadingOverlay.hideLoading();
-        }
-    }
-
     private String formatAccessFlags(int flags) {
         StringBuilder sb = new StringBuilder();
         sb.append("//");
@@ -284,28 +213,7 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         return sb.toString();
     }
 
-    public String getText() {
-        return textArea.getText();
-    }
-
-    public void copySelection() {
-        String selected = textArea.getSelectedText();
-        if (selected != null && !selected.isEmpty()) {
-            StringSelection selection = new StringSelection(selected);
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-        }
-    }
-
-    public void goToLine(int line) {
-        try {
-            int offset = textArea.getLineStartOffset(line - 1);
-            textArea.setCaretPosition(offset);
-            textArea.requestFocus();
-        } catch (Exception e) {
-            // Line out of range
-        }
-    }
-
+    @Override
     public void highlightLine(int line) {
         clearHighlights();
         addHighlight(line - 1);
@@ -324,23 +232,6 @@ public class BytecodeView extends JPanel implements ThemeChangeListener {
         } catch (Exception e) {
             // Line out of range
         }
-    }
-
-    public void showFindDialog() {
-        searchPanel.showPanel();
-    }
-
-    public String getSelectedText() {
-        return textArea.getSelectedText();
-    }
-
-    public void setFontSize(int size) {
-        textArea.setFont(JStudioTheme.getCodeFont(size));
-    }
-
-    public void setWordWrap(boolean enabled) {
-        textArea.setLineWrap(enabled);
-        textArea.setWrapStyleWord(enabled);
     }
 
     /**

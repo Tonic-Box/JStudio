@@ -6,9 +6,9 @@ import com.tonic.analysis.source.ast.stmt.BlockStmt;
 import com.tonic.analysis.source.recovery.MethodRecoverer;
 import com.tonic.analysis.ssa.SSA;
 import com.tonic.parser.MethodEntry;
-import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.MethodEntryModel;
+import com.tonic.ui.editor.view.AbstractTextView;
 import com.tonic.ui.theme.*;
 
 import lombok.Getter;
@@ -23,11 +23,10 @@ import org.fife.ui.rtextarea.SearchEngine;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.datatransfer.StringSelection;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ASTView extends JPanel implements ThemeChangeListener {
+public class ASTView extends AbstractTextView {
 
     private static final String SYNTAX_STYLE_AST = "text/ast";
     private static final String TEXT_VIEW = "TEXT";
@@ -40,16 +39,12 @@ public class ASTView extends JPanel implements ThemeChangeListener {
 
     private final ClassEntryModel classEntry;
 
-    private final RSyntaxTextArea textArea;
-    private final RTextScrollPane textScrollPane;
-
     private final JTree astTree;
     private final ASTTreeModel treeModel;
     private final JScrollPane treeScrollPane;
 
     private final JPanel contentPanel;
     private final CardLayout cardLayout;
-    private final LoadingOverlay loadingOverlay;
 
     private final JToolBar toolbar;
     private final JToggleButton textViewBtn;
@@ -60,16 +55,10 @@ public class ASTView extends JPanel implements ThemeChangeListener {
     private static final String METHOD_DIVIDER = "=========================================================================";
 
     @Getter
-    private boolean loaded = false;
-    @Getter
     private boolean showingTreeView = false;
-    private SwingWorker<ASTResult, Void> currentWorker;
 
     public ASTView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
 
         toolbar = createToolbar();
         add(toolbar, BorderLayout.NORTH);
@@ -82,9 +71,9 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         textArea.setCodeFoldingEnabled(false);
         textArea.setBracketMatchingEnabled(false);
 
-        textScrollPane = new RTextScrollPane(textArea);
-        textScrollPane.setLineNumbersEnabled(true);
-        textScrollPane.setBorder(null);
+        scrollPane = new RTextScrollPane(textArea);
+        scrollPane.setLineNumbersEnabled(true);
+        scrollPane.setBorder(null);
 
         treeModel = new ASTTreeModel();
         astTree = new JTree(treeModel);
@@ -100,31 +89,17 @@ public class ASTView extends JPanel implements ThemeChangeListener {
 
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
-        contentPanel.add(textScrollPane, TEXT_VIEW);
+        contentPanel.add(scrollPane, TEXT_VIEW);
         contentPanel.add(treeScrollPane, TREE_VIEW);
 
-        loadingOverlay = new LoadingOverlay();
-
-        JPanel overlayPanel = new JPanel();
-        overlayPanel.setLayout(new OverlayLayout(overlayPanel));
-        loadingOverlay.setAlignmentX(0.5f);
-        loadingOverlay.setAlignmentY(0.5f);
-        contentPanel.setAlignmentX(0.5f);
-        contentPanel.setAlignmentY(0.5f);
-        overlayPanel.add(loadingOverlay);
-        overlayPanel.add(contentPanel);
-
-        add(overlayPanel, BorderLayout.CENTER);
+        add(overlayWrap(contentPanel), BorderLayout.CENTER);
 
         textViewBtn = (JToggleButton) toolbar.getComponentAtIndex(0);
         treeViewBtn = (JToggleButton) toolbar.getComponentAtIndex(1);
         expandAllBtn = (JButton) toolbar.getComponentAtIndex(3);
         collapseAllBtn = (JButton) toolbar.getComponentAtIndex(4);
 
-        applyTheme();
         updateToolbarState();
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     private JToolBar createToolbar() {
@@ -211,18 +186,8 @@ public class ASTView extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgTertiary());
+    protected void applyChildThemes() {
+        applyTextTheme();
 
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
@@ -234,17 +199,6 @@ public class ASTView extends JPanel implements ThemeChangeListener {
                 styleButton((JButton) c);
             }
         }
-
-        textArea.setBackground(JStudioTheme.getBgTertiary());
-        textArea.setForeground(JStudioTheme.getTextPrimary());
-        textArea.setCaretColor(JStudioTheme.getTextPrimary());
-        textArea.setSelectionColor(JStudioTheme.getSelection());
-        textArea.setCurrentLineHighlightColor(JStudioTheme.getLineHighlight());
-        textArea.setFadeCurrentLineHighlight(true);
-
-        textScrollPane.getGutter().setBackground(JStudioTheme.getBgSecondary());
-        textScrollPane.getGutter().setLineNumberColor(JStudioTheme.getTextSecondary());
-        textScrollPane.getGutter().setBorderColor(JStudioTheme.getBorder());
 
         SyntaxScheme scheme = textArea.getSyntaxScheme();
 
@@ -278,12 +232,13 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void refresh() {
         cancelCurrentWorker();
         loadingOverlay.showLoading("Decompiling to AST...");
         treeModel.clear();
 
-        currentWorker = new SwingWorker<>() {
+        SwingWorker<ASTResult, Void> worker = new SwingWorker<>() {
             @Override
             protected ASTResult doInBackground() {
                 return generateASTBoth();
@@ -306,15 +261,8 @@ public class ASTView extends JPanel implements ThemeChangeListener {
                 }
             }
         };
-
-        currentWorker.execute();
-    }
-
-    private void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
-            currentWorker.cancel(true);
-            loadingOverlay.hideLoading();
-        }
+        currentWorker = worker;
+        worker.execute();
     }
 
     private static class ASTResult {
@@ -388,30 +336,9 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         return sb.toString();
     }
 
-    public String getText() {
-        return textArea.getText();
-    }
-
-    public void copySelection() {
-        String selected = textArea.getSelectedText();
-        if (selected != null && !selected.isEmpty()) {
-            StringSelection selection = new StringSelection(selected);
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-        }
-    }
-
-    public void goToLine(int line) {
-        try {
-            int offset = textArea.getLineStartOffset(line - 1);
-            textArea.setCaretPosition(offset);
-            textArea.requestFocus();
-        } catch (Exception e) {
-            // Line out of range
-        }
-    }
-
     private String lastSearch;
 
+    @Override
     public void showFindDialog() {
         String input = (String) JOptionPane.showInputDialog(
             this,
@@ -428,10 +355,7 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         }
     }
 
-    public String getSelectedText() {
-        return textArea.getSelectedText();
-    }
-
+    @Override
     public void scrollToText(String searchText) {
         if (searchText == null || searchText.isEmpty()) return;
 
@@ -441,14 +365,10 @@ public class ASTView extends JPanel implements ThemeChangeListener {
         SearchEngine.find(textArea, context);
     }
 
+    @Override
     public void setFontSize(int size) {
         textArea.setFont(JStudioTheme.getCodeFont(size));
         astTree.setRowHeight(size + 8);
-    }
-
-    public void setWordWrap(boolean enabled) {
-        textArea.setLineWrap(enabled);
-        textArea.setWrapStyleWord(enabled);
     }
 
     public void setShowTreeView(boolean showTree) {

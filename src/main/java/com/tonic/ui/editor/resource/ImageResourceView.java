@@ -1,11 +1,9 @@
 package com.tonic.ui.editor.resource;
 
 import com.tonic.model.ResourceEntryModel;
+import com.tonic.ui.editor.view.AbstractEditorView;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -16,7 +14,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -26,7 +23,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 
-public class ImageResourceView extends JPanel implements ThemeChangeListener {
+public class ImageResourceView extends AbstractEditorView {
 
     private final ResourceEntryModel resource;
     private final JLabel imageLabel;
@@ -42,7 +39,6 @@ public class ImageResourceView extends JPanel implements ThemeChangeListener {
 
     public ImageResourceView(ResourceEntryModel resource) {
         this.resource = resource;
-        setLayout(new BorderLayout());
 
         toolbar = createToolbar();
         add(toolbar, BorderLayout.NORTH);
@@ -70,9 +66,6 @@ public class ImageResourceView extends JPanel implements ThemeChangeListener {
         add(infoLabel, BorderLayout.SOUTH);
 
         loadImage();
-        applyTheme();
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     private JToolBar createToolbar() {
@@ -208,18 +201,7 @@ public class ImageResourceView extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgTertiary());
+    protected void applyChildThemes() {
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());

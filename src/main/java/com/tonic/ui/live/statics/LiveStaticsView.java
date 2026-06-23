@@ -9,6 +9,7 @@ import com.tonic.ui.core.SwingWorkers;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.component.ThemedJScrollPane;
 import com.tonic.ui.core.component.ThemedJTable;
+import com.tonic.ui.editor.view.AbstractEditorView;
 import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
@@ -40,9 +41,8 @@ import java.util.List;
  * reference fields can only be set to null, and {@code final} fields are read-only. The bottom list shows
  * static methods that can be invoked with primitive/String/null arguments.
  */
-public final class LiveStaticsView extends ThemedJPanel {
+public final class LiveStaticsView extends AbstractEditorView {
 
-    private final ClassEntryModel classEntry;
     private final String className;
 
     private final JLabel statusLabel = new JLabel(" ");
@@ -76,18 +76,15 @@ public final class LiveStaticsView extends ThemedJPanel {
     private final JList<StaticMethod> methodList = new JList<>(methodModel);
     private JButton invokeButton;
 
-    private boolean loaded;
-
     public LiveStaticsView(ClassEntryModel classEntry) {
-        super(BackgroundStyle.TERTIARY, new BorderLayout());
-        this.classEntry = classEntry;
+        super(new BorderLayout());
         this.className = classEntry.getClassName();
 
         ThemedJPanel topBar = new ThemedJPanel(BackgroundStyle.PRIMARY, new FlowLayout(FlowLayout.LEFT, 8, 4));
         refreshButton = new JButton("Refresh", Icons.getIcon("refresh"));
         refreshButton.setFocusable(false);
         refreshButton.setToolTipText("Re-read live static state");
-        refreshButton.addActionListener(e -> reload());
+        refreshButton.addActionListener(e -> reloadData());
         setNullButton = new JButton("Set null");
         setNullButton.setFocusable(false);
         setNullButton.setToolTipText("Set the selected reference/String field to null");
@@ -164,14 +161,15 @@ public final class LiveStaticsView extends ThemedJPanel {
     }
 
     /** Called when the view becomes visible (EditorTab refresh). */
+    @Override
     public void refresh() {
         if (!loaded) {
             loaded = true;
-            reload();
+            reloadData();
         }
     }
 
-    private void reload() {
+    private void reloadData() {
         LiveSession session = LiveAttachService.getInstance().getSession();
         if (session == null) {
             fieldRows.clear();

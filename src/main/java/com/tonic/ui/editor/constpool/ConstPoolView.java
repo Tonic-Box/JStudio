@@ -1,11 +1,8 @@
 package com.tonic.ui.editor.constpool;
 
-import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.model.ClassEntryModel;
+import com.tonic.ui.editor.view.AbstractEditorView;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -16,7 +13,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
 
-public class ConstPoolView extends JPanel implements ThemeChangeListener {
+public class ConstPoolView extends AbstractEditorView {
 
     private final ClassEntryModel classEntry;
     private final JTable table;
@@ -25,8 +22,6 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
     private final JTextField searchField;
     private final JLabel statusLabel;
     private final JScrollPane scrollPane;
-    private final LoadingOverlay loadingOverlay;
-    private SwingWorker<?, ?> currentWorker;
 
     private static final String[] TYPE_OPTIONS = {
             "All",
@@ -43,7 +38,6 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
     public ConstPoolView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
 
-        setLayout(new BorderLayout());
         setBackground(JStudioTheme.getBgPrimary());
 
         JPanel toolbar = createToolbar();
@@ -57,18 +51,7 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(JStudioTheme.getBgPrimary());
 
-        loadingOverlay = new LoadingOverlay();
-
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new OverlayLayout(contentPanel));
-        loadingOverlay.setAlignmentX(0.5f);
-        loadingOverlay.setAlignmentY(0.5f);
-        scrollPane.setAlignmentX(0.5f);
-        scrollPane.setAlignmentY(0.5f);
-        contentPanel.add(loadingOverlay);
-        contentPanel.add(scrollPane);
-
-        add(contentPanel, BorderLayout.CENTER);
+        add(overlayWrap(scrollPane), BorderLayout.CENTER);
 
         statusLabel = new JLabel("No entries");
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
@@ -78,8 +61,6 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
 
         typeFilter = (JComboBox<String>) ((JPanel) toolbar.getComponent(0)).getComponent(1);
         searchField = (JTextField) ((JPanel) toolbar.getComponent(0)).getComponent(3);
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     private JPanel createToolbar() {
@@ -225,12 +206,13 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void refresh() {
         cancelCurrentWorker();
 
         loadingOverlay.showLoading("Loading constant pool...");
 
-        currentWorker = new SwingWorker<List<ConstPoolEntry>, Void>() {
+        SwingWorker<List<ConstPoolEntry>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<ConstPoolEntry> doInBackground() {
                 return ConstPoolTableModel.buildEntries(classEntry);
@@ -251,15 +233,8 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
                 }
             }
         };
-
-        currentWorker.execute();
-    }
-
-    private void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
-            currentWorker.cancel(true);
-            loadingOverlay.hideLoading();
-        }
+        currentWorker = worker;
+        worker.execute();
     }
 
     private void updateStatus() {
@@ -274,6 +249,7 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public String getText() {
         StringBuilder sb = new StringBuilder();
         sb.append("Constant Pool for ").append(classEntry.getClassName()).append("\n");
@@ -288,6 +264,7 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         return sb.toString();
     }
 
+    @Override
     public void copySelection() {
         int[] rows = table.getSelectedRows();
         if (rows.length == 0) return;
@@ -303,6 +280,7 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
     }
 
+    @Override
     public String getSelectedText() {
         int[] rows = table.getSelectedRows();
         if (rows.length == 0) return null;
@@ -315,6 +293,7 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         return sb.toString();
     }
 
+    @Override
     public void goToLine(int line) {
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             Object val = tableModel.getValueAt(i, 0);
@@ -326,6 +305,7 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void showFindDialog() {
         String input = JOptionPane.showInputDialog(this, "Search:", "Find", JOptionPane.PLAIN_MESSAGE);
         if (input != null && !input.isEmpty()) {
@@ -335,6 +315,7 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void scrollToText(String text) {
         if (text == null || text.isEmpty()) return;
 
@@ -348,27 +329,14 @@ public class ConstPoolView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void setFontSize(int size) {
         table.setFont(JStudioTheme.getCodeFont(size));
         table.setRowHeight(size + 10);
     }
 
-    public void highlightLine(int index) {
-        goToLine(index);
-    }
-
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
+    protected void applyChildThemes() {
         setBackground(JStudioTheme.getBgPrimary());
 
         table.setBackground(JStudioTheme.getBgPrimary());

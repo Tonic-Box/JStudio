@@ -15,6 +15,7 @@ import com.tonic.ui.editor.hex.HexView;
 import com.tonic.ui.editor.ir.IRView;
 import com.tonic.ui.editor.llvm.LLVMView;
 import com.tonic.ui.editor.source.SourceCodeView;
+import com.tonic.ui.editor.view.EditorView;
 import com.tonic.ui.live.heap.LiveInstancesView;
 import com.tonic.ui.live.statics.LiveStaticsView;
 import com.tonic.model.ClassEntryModel;
@@ -30,7 +31,9 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -79,6 +82,9 @@ public class EditorTab extends JPanel {
     private volatile LiveInstancesView liveInstancesView;
     private volatile LiveStaticsView liveStaticsView;
 
+    /** All instantiated views keyed by mode, for polymorphic dispatch (kept in sync with the typed fields). */
+    private final Map<ViewMode, EditorView> views = new EnumMap<>(ViewMode.class);
+
     private int fontSize = 12;
     private boolean wordWrap = false;
     private final Set<ViewMode> loadingViews = new HashSet<>();
@@ -121,45 +127,16 @@ public class EditorTab extends JPanel {
         hexView = new HexView(classEntry);
         cardPanel.add(hexView, ViewMode.HEX.name());
 
+        views.put(ViewMode.SOURCE, sourceView);
+        views.put(ViewMode.BYTECODE, bytecodeView);
+        views.put(ViewMode.CONSTPOOL, constPoolView);
+        views.put(ViewMode.HEX, hexView);
+
         add(cardPanel, BorderLayout.CENTER);
     }
 
     private boolean isViewReady(ViewMode mode) {
-        switch (mode) {
-            case SOURCE:
-            case BYTECODE:
-            case CONSTPOOL:
-            case HEX:
-                return true;
-            case IR:
-                return irView != null;
-            case LLVM:
-                return llvmView != null;
-            case AST:
-                return astView != null;
-            case PDG:
-                return pdgView != null;
-            case SDG:
-                return sdgView != null;
-            case CPG:
-                return cpgView != null;
-            case CFG:
-                return controlFlowView != null;
-            case CALLGRAPH:
-                return callGraphView != null;
-            case ATTRIBUTES:
-                return attributesView != null;
-            case STATISTICS:
-                return statisticsView != null;
-            case DUAL:
-                return dualView != null;
-            case LIVE_INSTANCES:
-                return liveInstancesView != null;
-            case LIVE_STATICS:
-                return liveStaticsView != null;
-            default:
-                return false;
-        }
+        return views.containsKey(mode);
     }
 
     private <T extends JPanel> void loadViewInBackground(ViewMode mode, Supplier<T> viewFactory, Consumer<T> viewSetter) {
@@ -178,10 +155,11 @@ public class EditorTab extends JPanel {
             protected void done() {
                 try {
                     T view = get();
-                    applySettingsToView(view);
+                    applySettingsToView((EditorView) view);
 
                     viewSetter.accept(view);
                     cardPanel.add(view, mode.name());
+                    views.put(mode, (EditorView) view);
                     loadingViews.remove(mode);
 
                     if (currentMode == mode) {
@@ -195,41 +173,9 @@ public class EditorTab extends JPanel {
         }.execute();
     }
 
-    private void applySettingsToView(JPanel view) {
-        if (view instanceof IRView) {
-            ((IRView) view).setFontSize(fontSize);
-            ((IRView) view).setWordWrap(wordWrap);
-        } else if (view instanceof LLVMView) {
-            ((LLVMView) view).setFontSize(fontSize);
-            ((LLVMView) view).setWordWrap(wordWrap);
-        } else if (view instanceof ASTView) {
-            ((ASTView) view).setFontSize(fontSize);
-            ((ASTView) view).setWordWrap(wordWrap);
-        } else if (view instanceof PDGView) {
-            ((PDGView) view).setFontSize(fontSize);
-            ((PDGView) view).setWordWrap(wordWrap);
-        } else if (view instanceof SDGView) {
-            ((SDGView) view).setFontSize(fontSize);
-            ((SDGView) view).setWordWrap(wordWrap);
-        } else if (view instanceof CPGView) {
-            ((CPGView) view).setFontSize(fontSize);
-            ((CPGView) view).setWordWrap(wordWrap);
-        } else if (view instanceof ControlFlowView) {
-            ((ControlFlowView) view).setFontSize(fontSize);
-            ((ControlFlowView) view).setWordWrap(wordWrap);
-        } else if (view instanceof CallGraphView) {
-            ((CallGraphView) view).setFontSize(fontSize);
-            ((CallGraphView) view).setWordWrap(wordWrap);
-        } else if (view instanceof AttributesView) {
-            ((AttributesView) view).setFontSize(fontSize);
-            ((AttributesView) view).setWordWrap(wordWrap);
-        } else if (view instanceof StatisticsView) {
-            ((StatisticsView) view).setFontSize(fontSize);
-            ((StatisticsView) view).setWordWrap(wordWrap);
-        } else if (view instanceof DualView) {
-            ((DualView) view).setFontSize(fontSize);
-            ((DualView) view).setWordWrap(wordWrap);
-        }
+    private void applySettingsToView(EditorView view) {
+        view.setFontSize(fontSize);
+        view.setWordWrap(wordWrap);
     }
 
     private void ensureViewLoaded(ViewMode mode) {
@@ -285,24 +231,9 @@ public class EditorTab extends JPanel {
     }
 
     private void refreshView(ViewMode mode) {
-        switch (mode) {
-            case SOURCE: sourceView.refresh(); break;
-            case BYTECODE: bytecodeView.refresh(); break;
-            case CONSTPOOL: constPoolView.refresh(); break;
-            case HEX: hexView.refresh(); break;
-            case IR: if (irView != null) irView.refresh(); break;
-            case LLVM: if (llvmView != null) llvmView.refresh(); break;
-            case AST: if (astView != null) astView.refresh(); break;
-            case PDG: if (pdgView != null) pdgView.refresh(); break;
-            case SDG: if (sdgView != null) sdgView.refresh(); break;
-            case CPG: if (cpgView != null) cpgView.refresh(); break;
-            case CFG: if (controlFlowView != null) controlFlowView.refresh(); break;
-            case CALLGRAPH: if (callGraphView != null) callGraphView.refresh(); break;
-            case ATTRIBUTES: if (attributesView != null) attributesView.refresh(); break;
-            case STATISTICS: if (statisticsView != null) statisticsView.refresh(); break;
-            case DUAL: if (dualView != null) dualView.refresh(); break;
-            case LIVE_INSTANCES: if (liveInstancesView != null) liveInstancesView.refresh(); break;
-            case LIVE_STATICS: if (liveStaticsView != null) liveStaticsView.refresh(); break;
+        EditorView view = views.get(mode);
+        if (view != null) {
+            view.refresh();
         }
     }
 
@@ -410,63 +341,21 @@ public class EditorTab extends JPanel {
     }
 
     public void copySelection() {
-        switch (currentMode) {
-            case SOURCE: sourceView.copySelection(); break;
-            case BYTECODE: bytecodeView.copySelection(); break;
-            case CONSTPOOL: constPoolView.copySelection(); break;
-            case HEX: hexView.copySelection(); break;
-            case IR: if (irView != null) irView.copySelection(); break;
-            case LLVM: if (llvmView != null) llvmView.copySelection(); break;
-            case AST: if (astView != null) astView.copySelection(); break;
-            case PDG: if (pdgView != null) pdgView.copySelection(); break;
-            case SDG: if (sdgView != null) sdgView.copySelection(); break;
-            case CPG: if (cpgView != null) cpgView.copySelection(); break;
-            case CFG: if (controlFlowView != null) controlFlowView.copySelection(); break;
-            case CALLGRAPH: if (callGraphView != null) callGraphView.copySelection(); break;
-            case ATTRIBUTES: if (attributesView != null) attributesView.copySelection(); break;
-            case STATISTICS: if (statisticsView != null) statisticsView.copySelection(); break;
-            case DUAL: if (dualView != null) dualView.copySelection(); break;
+        EditorView view = views.get(currentMode);
+        if (view != null) {
+            view.copySelection();
         }
     }
 
     public String getText() {
-        switch (currentMode) {
-            case SOURCE: return sourceView.getText();
-            case BYTECODE: return bytecodeView.getText();
-            case CONSTPOOL: return constPoolView.getText();
-            case HEX: return hexView.getText();
-            case IR: return irView != null ? irView.getText() : "";
-            case LLVM: return llvmView != null ? llvmView.getText() : "";
-            case AST: return astView != null ? astView.getText() : "";
-            case PDG: return pdgView != null ? pdgView.getText() : "";
-            case SDG: return sdgView != null ? sdgView.getText() : "";
-            case CPG: return cpgView != null ? cpgView.getText() : "";
-            case CFG: return controlFlowView != null ? controlFlowView.getText() : "";
-            case CALLGRAPH: return callGraphView != null ? callGraphView.getText() : "";
-            case ATTRIBUTES: return attributesView != null ? attributesView.getText() : "";
-            case STATISTICS: return statisticsView != null ? statisticsView.getText() : "";
-            case DUAL: return dualView != null ? dualView.getText() : "";
-            default: return "";
-        }
+        EditorView view = views.get(currentMode);
+        return view != null ? view.getText() : "";
     }
 
     public void goToLine(int line) {
-        switch (currentMode) {
-            case SOURCE: sourceView.goToLine(line); break;
-            case BYTECODE: bytecodeView.goToLine(line); break;
-            case CONSTPOOL: constPoolView.goToLine(line); break;
-            case HEX: hexView.goToLine(line); break;
-            case IR: if (irView != null) irView.goToLine(line); break;
-            case LLVM: if (llvmView != null) llvmView.goToLine(line); break;
-            case AST: if (astView != null) astView.goToLine(line); break;
-            case PDG: if (pdgView != null) pdgView.goToLine(line); break;
-            case SDG: if (sdgView != null) sdgView.goToLine(line); break;
-            case CPG: if (cpgView != null) cpgView.goToLine(line); break;
-            case CFG: if (controlFlowView != null) controlFlowView.goToLine(line); break;
-            case CALLGRAPH: if (callGraphView != null) callGraphView.goToLine(line); break;
-            case ATTRIBUTES: if (attributesView != null) attributesView.goToLine(line); break;
-            case STATISTICS: if (statisticsView != null) statisticsView.goToLine(line); break;
-            case DUAL: if (dualView != null) dualView.goToLine(line); break;
+        EditorView view = views.get(currentMode);
+        if (view != null) {
+            view.goToLine(line);
         }
     }
 
@@ -474,42 +363,16 @@ public class EditorTab extends JPanel {
      * Highlight a specific line, scroll to it, and place caret one line above.
      */
     public void highlightLine(int line) {
-        switch (currentMode) {
-            case SOURCE:
-                sourceView.highlightLine(line - 1);
-                break;
-            case BYTECODE:
-                bytecodeView.highlightLine(line);
-                break;
-            case CONSTPOOL:
-                constPoolView.highlightLine(line);
-                break;
-            case DUAL:
-                if (dualView != null) dualView.highlightLine(line);
-                break;
-            default:
-                goToLine(line);
-                break;
+        EditorView view = views.get(currentMode);
+        if (view != null) {
+            view.highlightLine(currentMode == ViewMode.SOURCE ? line - 1 : line);
         }
     }
 
     public void showFindDialog() {
-        switch (currentMode) {
-            case SOURCE: sourceView.showFindDialog(); break;
-            case BYTECODE: bytecodeView.showFindDialog(); break;
-            case CONSTPOOL: constPoolView.showFindDialog(); break;
-            case HEX: hexView.showFindDialog(); break;
-            case IR: if (irView != null) irView.showFindDialog(); break;
-            case LLVM: if (llvmView != null) llvmView.showFindDialog(); break;
-            case AST: if (astView != null) astView.showFindDialog(); break;
-            case PDG: if (pdgView != null) pdgView.showFindDialog(); break;
-            case SDG: if (sdgView != null) sdgView.showFindDialog(); break;
-            case CPG: if (cpgView != null) cpgView.showFindDialog(); break;
-            case CFG: if (controlFlowView != null) controlFlowView.showFindDialog(); break;
-            case CALLGRAPH: if (callGraphView != null) callGraphView.showFindDialog(); break;
-            case ATTRIBUTES: if (attributesView != null) attributesView.showFindDialog(); break;
-            case STATISTICS: if (statisticsView != null) statisticsView.showFindDialog(); break;
-            case DUAL: if (dualView != null) dualView.showFindDialog(); break;
+        EditorView view = views.get(currentMode);
+        if (view != null) {
+            view.showFindDialog();
         }
     }
 
@@ -527,24 +390,8 @@ public class EditorTab extends JPanel {
     }
 
     public String getSelectedText() {
-        switch (currentMode) {
-            case SOURCE: return sourceView.getSelectedText();
-            case BYTECODE: return bytecodeView.getSelectedText();
-            case CONSTPOOL: return constPoolView.getSelectedText();
-            case HEX: return hexView.getSelectedText();
-            case IR: return irView != null ? irView.getSelectedText() : null;
-            case LLVM: return llvmView != null ? llvmView.getSelectedText() : null;
-            case AST: return astView != null ? astView.getSelectedText() : null;
-            case PDG: return pdgView != null ? pdgView.getSelectedText() : null;
-            case SDG: return sdgView != null ? sdgView.getSelectedText() : null;
-            case CPG: return cpgView != null ? cpgView.getSelectedText() : null;
-            case CFG: return controlFlowView != null ? controlFlowView.getSelectedText() : null;
-            case CALLGRAPH: return callGraphView != null ? callGraphView.getSelectedText() : null;
-            case ATTRIBUTES: return attributesView != null ? attributesView.getSelectedText() : null;
-            case STATISTICS: return statisticsView != null ? statisticsView.getSelectedText() : null;
-            case DUAL: return dualView != null ? dualView.getSelectedText() : null;
-            default: return null;
-        }
+        EditorView view = views.get(currentMode);
+        return view != null ? view.getSelectedText() : null;
     }
 
     public void scrollToMethod(MethodEntryModel method) {
@@ -553,19 +400,12 @@ public class EditorTab extends JPanel {
         switch (currentMode) {
             case SOURCE: sourceView.scrollToMethodDeclaration(methodName, methodDesc); break;
             case BYTECODE: bytecodeView.scrollToMethod(methodName, methodDesc); break;
-            case CONSTPOOL: constPoolView.scrollToText(methodName); break;
-            case HEX: hexView.scrollToText(methodName); break;
-            case IR: if (irView != null) irView.scrollToText(methodName); break;
-            case LLVM: if (llvmView != null) llvmView.scrollToText(methodName); break;
-            case AST: if (astView != null) astView.scrollToText(methodName); break;
-            case PDG: if (pdgView != null) pdgView.scrollToText(methodName); break;
-            case SDG: if (sdgView != null) sdgView.scrollToText(methodName); break;
-            case CPG: if (cpgView != null) cpgView.scrollToText(methodName); break;
-            case CFG: if (controlFlowView != null) controlFlowView.scrollToText(methodName); break;
-            case CALLGRAPH: if (callGraphView != null) callGraphView.scrollToText(methodName); break;
-            case ATTRIBUTES: if (attributesView != null) attributesView.scrollToText(methodName); break;
-            case STATISTICS: if (statisticsView != null) statisticsView.scrollToText(methodName); break;
             case DUAL: if (dualView != null) dualView.scrollToMethod(methodName, methodDesc); break;
+            default: {
+                EditorView view = views.get(currentMode);
+                if (view != null) view.scrollToText(methodName);
+                break;
+            }
         }
     }
 
@@ -593,21 +433,9 @@ public class EditorTab extends JPanel {
      */
     public void setFontSize(int size) {
         this.fontSize = size;
-        sourceView.setFontSize(size);
-        bytecodeView.setFontSize(size);
-        constPoolView.setFontSize(size);
-        hexView.setFontSize(size);
-        if (irView != null) irView.setFontSize(size);
-        if (llvmView != null) llvmView.setFontSize(size);
-        if (astView != null) astView.setFontSize(size);
-        if (pdgView != null) pdgView.setFontSize(size);
-        if (sdgView != null) sdgView.setFontSize(size);
-        if (cpgView != null) cpgView.setFontSize(size);
-        if (controlFlowView != null) controlFlowView.setFontSize(size);
-        if (callGraphView != null) callGraphView.setFontSize(size);
-        if (attributesView != null) attributesView.setFontSize(size);
-        if (statisticsView != null) statisticsView.setFontSize(size);
-        if (dualView != null) dualView.setFontSize(size);
+        for (EditorView view : views.values()) {
+            view.setFontSize(size);
+        }
     }
 
     /**
@@ -615,20 +443,9 @@ public class EditorTab extends JPanel {
      */
     public void setWordWrap(boolean enabled) {
         this.wordWrap = enabled;
-        sourceView.setWordWrap(enabled);
-        bytecodeView.setWordWrap(enabled);
-        hexView.setWordWrap(enabled);
-        if (irView != null) irView.setWordWrap(enabled);
-        if (llvmView != null) llvmView.setWordWrap(enabled);
-        if (astView != null) astView.setWordWrap(enabled);
-        if (pdgView != null) pdgView.setWordWrap(enabled);
-        if (sdgView != null) sdgView.setWordWrap(enabled);
-        if (cpgView != null) cpgView.setWordWrap(enabled);
-        if (controlFlowView != null) controlFlowView.setWordWrap(enabled);
-        if (callGraphView != null) callGraphView.setWordWrap(enabled);
-        if (attributesView != null) attributesView.setWordWrap(enabled);
-        if (statisticsView != null) statisticsView.setWordWrap(enabled);
-        if (dualView != null) dualView.setWordWrap(enabled);
+        for (EditorView view : views.values()) {
+            view.setWordWrap(enabled);
+        }
     }
 
     /**
@@ -666,21 +483,13 @@ public class EditorTab extends JPanel {
     public boolean navigateToMethod(String methodName, String methodDesc) {
         switch (currentMode) {
             case BYTECODE: return bytecodeView.scrollToMethod(methodName, methodDesc);
-            case SOURCE: sourceView.scrollToText(methodName); return true;
-            case CONSTPOOL: constPoolView.scrollToText(methodName); return true;
-            case HEX: return false;
-            case IR: if (irView != null) { irView.scrollToText(methodName); return true; } return false;
-            case LLVM: if (llvmView != null) { llvmView.scrollToText(methodName); return true; } return false;
-            case AST: if (astView != null) { astView.scrollToText(methodName); return true; } return false;
-            case PDG: if (pdgView != null) { pdgView.scrollToText(methodName); return true; } return false;
-            case SDG: if (sdgView != null) { sdgView.scrollToText(methodName); return true; } return false;
-            case CPG: if (cpgView != null) { cpgView.scrollToText(methodName); return true; } return false;
-            case CFG: if (controlFlowView != null) { controlFlowView.scrollToText(methodName); return true; } return false;
-            case CALLGRAPH: if (callGraphView != null) { callGraphView.scrollToText(methodName); return true; } return false;
-            case ATTRIBUTES: if (attributesView != null) { attributesView.scrollToText(methodName); return true; } return false;
-            case STATISTICS: if (statisticsView != null) { statisticsView.scrollToText(methodName); return true; } return false;
             case DUAL: if (dualView != null) { dualView.scrollToMethod(methodName, methodDesc); return true; } return false;
-            default: return false;
+            case HEX: return false;
+            default: {
+                EditorView view = views.get(currentMode);
+                if (view != null) { view.scrollToText(methodName); return true; }
+                return false;
+            }
         }
     }
 

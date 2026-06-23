@@ -6,6 +6,7 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.ui.editor.SearchPanel;
+import com.tonic.ui.editor.view.EditorView;
 import com.tonic.ui.MainFrame;
 import com.tonic.model.Bookmark;
 import com.tonic.model.ClassEntryModel;
@@ -50,7 +51,7 @@ import javax.swing.SwingUtilities;
 /**
  * Source code view using RSyntaxTextArea for Java syntax highlighting.
  */
-public class SourceCodeView extends JPanel implements ThemeChangeListener {
+public class SourceCodeView extends JPanel implements ThemeChangeListener, EditorView {
 
     private final ClassEntryModel classEntry;
     /**

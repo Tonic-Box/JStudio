@@ -1,16 +1,13 @@
 package com.tonic.ui.editor.resource;
 
 import com.tonic.model.ResourceEntryModel;
+import com.tonic.ui.editor.view.AbstractEditorView;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
@@ -19,7 +16,7 @@ import javax.swing.JTextPane;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 
-public class HexResourceView extends JPanel implements ThemeChangeListener {
+public class HexResourceView extends AbstractEditorView {
 
     private final ResourceEntryModel resource;
     private final JTextPane textPane;
@@ -36,7 +33,6 @@ public class HexResourceView extends JPanel implements ThemeChangeListener {
 
     public HexResourceView(ResourceEntryModel resource) {
         this.resource = resource;
-        setLayout(new BorderLayout());
 
         textPane = new JTextPane();
         textPane.setEditable(false);
@@ -55,9 +51,6 @@ public class HexResourceView extends JPanel implements ThemeChangeListener {
         add(headerPanel, BorderLayout.NORTH);
 
         displayHexDump();
-        applyTheme();
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     private void setupStyles() {
@@ -122,18 +115,7 @@ public class HexResourceView extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgTertiary());
+    protected void applyChildThemes() {
         textPane.setBackground(JStudioTheme.getBgTertiary());
         textPane.setForeground(JStudioTheme.getTextPrimary());
         textPane.setCaretColor(JStudioTheme.getTextPrimary());
@@ -144,10 +126,12 @@ public class HexResourceView extends JPanel implements ThemeChangeListener {
         setupStyles();
     }
 
+    @Override
     public String getText() {
         return textPane.getText();
     }
 
+    @Override
     public void setFontSize(int size) {
         textPane.setFont(JStudioTheme.getCodeFont(size));
         headerLabel.setFont(JStudioTheme.getCodeFont(size));

@@ -6,6 +6,7 @@ import com.tonic.ui.core.SwingWorkers;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.component.ThemedJScrollPane;
 import com.tonic.ui.core.component.ThemedJTable;
+import com.tonic.ui.editor.view.AbstractEditorView;
 import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.live.LiveHeapService;
 import com.tonic.ui.theme.Icons;
@@ -44,7 +45,7 @@ import java.util.List;
  * navigable (double-click), with a back stack. The Refresh button takes a fresh dump; merely switching to
  * another class's tab re-filters the existing snapshot instantly (no new dump).
  */
-public final class LiveInstancesView extends ThemedJPanel {
+public final class LiveInstancesView extends AbstractEditorView {
 
     private final ClassEntryModel classEntry;
 
@@ -66,10 +67,9 @@ public final class LiveInstancesView extends ThemedJPanel {
 
     private final Deque<Long> backStack = new ArrayDeque<>();
     private long currentObjId;
-    private boolean loaded;
 
     public LiveInstancesView(ClassEntryModel classEntry) {
-        super(BackgroundStyle.TERTIARY, new BorderLayout());
+        super(new BorderLayout());
         this.classEntry = classEntry;
 
         ThemedJPanel topBar = new ThemedJPanel(BackgroundStyle.PRIMARY,
@@ -164,6 +164,7 @@ public final class LiveInstancesView extends ThemedJPanel {
     }
 
     /** Called when the view becomes visible (EditorTab refresh). Lists instances using the current snapshot. */
+    @Override
     public void refresh() {
         if (!loaded) {
             loaded = true;

@@ -4,6 +4,7 @@ import com.tonic.model.ClassEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.ui.editor.bytecode.BytecodeView;
 import com.tonic.ui.editor.source.SourceCodeView;
+import com.tonic.ui.editor.view.EditorView;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.JPanel;
@@ -23,7 +24,7 @@ import java.awt.KeyboardFocusManager;
  * both. The source pane keeps annotations on so its line numbers stay aligned with the decompiler's
  * offset/line maps that the linking depends on.
  */
-public class DualView extends JPanel {
+public class DualView extends JPanel implements EditorView {
 
     private final BytecodeView bytecodeView;
     private final SourceCodeView sourceView;
@@ -47,6 +48,11 @@ public class DualView extends JPanel {
     public void refresh() {
         bytecodeView.refresh();
         sourceView.refresh();
+    }
+
+    public void reload() {
+        bytecodeView.reload();
+        sourceView.reload();
     }
 
     public void copySelection() {
@@ -78,6 +84,14 @@ public class DualView extends JPanel {
             bytecodeView.goToLine(line);
         } else {
             sourceView.goToLine(line);
+        }
+    }
+
+    public void scrollToText(String text) {
+        if (isBytecodeFocused()) {
+            bytecodeView.scrollToText(text);
+        } else {
+            sourceView.scrollToText(text);
         }
     }
 

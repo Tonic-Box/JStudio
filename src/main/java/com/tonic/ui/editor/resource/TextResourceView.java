@@ -1,29 +1,22 @@
 package com.tonic.ui.editor.resource;
 
 import com.tonic.model.ResourceEntryModel;
+import com.tonic.ui.editor.view.AbstractTextView;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.BorderFactory;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.nio.charset.StandardCharsets;
 
-public class TextResourceView extends JPanel implements ThemeChangeListener {
+public class TextResourceView extends AbstractTextView {
 
     private final ResourceEntryModel resource;
-    private final RSyntaxTextArea textArea;
-    private final RTextScrollPane scrollPane;
 
     public TextResourceView(ResourceEntryModel resource) {
         this.resource = resource;
-        setLayout(new BorderLayout());
 
         textArea = new RSyntaxTextArea();
         textArea.setEditable(false);
@@ -39,9 +32,6 @@ public class TextResourceView extends JPanel implements ThemeChangeListener {
         add(scrollPane, BorderLayout.CENTER);
 
         loadContent();
-        applyTheme();
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     private void loadContent() {
@@ -86,17 +76,7 @@ public class TextResourceView extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
+    protected void applyChildThemes() {
         setBackground(JStudioTheme.getBgTertiary());
         textArea.setBackground(JStudioTheme.getBgTertiary());
         textArea.setForeground(JStudioTheme.getTextPrimary());
@@ -108,13 +88,5 @@ public class TextResourceView extends JPanel implements ThemeChangeListener {
         scrollPane.getGutter().setLineNumberColor(JStudioTheme.getTextSecondary());
         scrollPane.getGutter().setBorderColor(JStudioTheme.getBorder());
         scrollPane.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 0, JStudioTheme.getBorder()));
-    }
-
-    public String getText() {
-        return textArea.getText();
-    }
-
-    public void setFontSize(int size) {
-        textArea.setFont(JStudioTheme.getCodeFont(size));
     }
 }

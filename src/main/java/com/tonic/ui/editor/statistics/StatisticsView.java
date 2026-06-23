@@ -1,17 +1,13 @@
 package com.tonic.ui.editor.statistics;
 
-import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.ui.editor.statistics.charts.BarChart;
 import com.tonic.ui.editor.statistics.charts.PieChart;
 import com.tonic.ui.editor.statistics.charts.StatCard;
 import com.tonic.ui.editor.statistics.charts.StatTable;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.service.ConsoleLogService;
+import com.tonic.ui.editor.view.AbstractEditorView;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
-import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -20,10 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class StatisticsView extends JPanel implements ThemeChangeListener {
+public class StatisticsView extends AbstractEditorView {
 
     private final ClassEntryModel classEntry;
-    private final LoadingOverlay loadingOverlay;
     private final JPanel contentPanel;
     private final JScrollPane scrollPane;
 
@@ -37,15 +32,8 @@ public class StatisticsView extends JPanel implements ThemeChangeListener {
     private BarChart opcodeChart;
     private StatTable methodTable;
 
-    @Getter
-    private boolean loaded = false;
-    private SwingWorker<ClassStatistics, Void> currentWorker;
-
     public StatisticsView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
 
         contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
@@ -60,20 +48,7 @@ public class StatisticsView extends JPanel implements ThemeChangeListener {
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-        loadingOverlay = new LoadingOverlay();
-
-        JPanel wrapperPanel = new JPanel();
-        wrapperPanel.setLayout(new OverlayLayout(wrapperPanel));
-        loadingOverlay.setAlignmentX(0.5f);
-        loadingOverlay.setAlignmentY(0.5f);
-        scrollPane.setAlignmentX(0.5f);
-        scrollPane.setAlignmentY(0.5f);
-        wrapperPanel.add(loadingOverlay);
-        wrapperPanel.add(scrollPane);
-
-        add(wrapperPanel, BorderLayout.CENTER);
-
-        ThemeManager.getInstance().addThemeChangeListener(this);
+        add(overlayWrap(scrollPane), BorderLayout.CENTER);
     }
 
     private void buildUI() {
@@ -144,11 +119,12 @@ public class StatisticsView extends JPanel implements ThemeChangeListener {
         return panel;
     }
 
+    @Override
     public void refresh() {
         cancelCurrentWorker();
         loadingOverlay.showLoading("Calculating statistics...");
 
-        currentWorker = new SwingWorker<>() {
+        SwingWorker<ClassStatistics, Void> worker = new SwingWorker<>() {
             @Override
             protected ClassStatistics doInBackground() {
                 StatisticsCalculator calculator = new StatisticsCalculator();
@@ -169,15 +145,8 @@ public class StatisticsView extends JPanel implements ThemeChangeListener {
                 }
             }
         };
-
-        currentWorker.execute();
-    }
-
-    private void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
-            currentWorker.cancel(true);
-            loadingOverlay.hideLoading();
-        }
+        currentWorker = worker;
+        worker.execute();
     }
 
     private void updateUI(ClassStatistics stats) {
@@ -260,48 +229,15 @@ public class StatisticsView extends JPanel implements ThemeChangeListener {
         complexityCard.setValue("?");
     }
 
+    @Override
     public String getText() {
         return "// Statistics for: " + classEntry.getClassName() + "\n\n" +
                 "Methods: " + methodCountCard + "\n" +
                 "Fields: " + fieldCountCard + "\n";
     }
 
-    public void copySelection() {
-        // No text selection in this view
-    }
-
-    public String getSelectedText() {
-        return null;
-    }
-
-    public void goToLine(int line) {
-        // Not applicable for statistics view
-    }
-
-    public void showFindDialog() {
-        // Not applicable for statistics view
-    }
-
-    public void scrollToText(String text) {
-        // Not applicable for statistics view
-    }
-
-    public void setFontSize(int size) {
-        // Could adjust card font sizes if needed
-    }
-
-    public void setWordWrap(boolean enabled) {
-        // Not applicable for statistics view
-    }
-
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
+    protected void applyChildThemes() {
         setBackground(JStudioTheme.getBgTertiary());
         contentPanel.setBackground(JStudioTheme.getBgTertiary());
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());

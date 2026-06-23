@@ -7,60 +7,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Decompose UI god-classes; fix listener leaks; de-duplicate theming&#10;- Break the five largest Swing classes into ~28 cohesive, package-private collaborators&#10;- Fix a systemic theme/EventBus/service listener leak&#10;- Add ThemeStyles helper + AbstractRenameDialog&#10;- Extract pure, unit-tested helpers (JvmDescriptorFormatter, SourceDeclarationParser, MethodSignatureMatcher, BytecodeDisassembler)">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/NavigationHistory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/util/JvmDescriptorFormatter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/AbstractRenameDialog.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/DialogManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/TabContextMenu.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/TabDragController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/TabHeaderFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/TabRegistry.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/AnnotationFilter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/CommentGutterController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/MethodSignatureMatcher.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/RunGutterController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceDeclarationParser.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceLineHighlighter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceNavigator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/UsageLensController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/file/FileOperationsController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/layout/LayoutController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorActions.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorContextMenuFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorTreeStateManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/ThemeStyles.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/BreakpointController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/BytecodeDisassembler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/BytecodeTableView.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerToolbar.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/FrameNavigator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/InstructionCategory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/InstructionEntry.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/TraceRecorder.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/core/util/JvmDescriptorFormatterTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/dialog/AbstractRenameDialogTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/source/MethodSignatureMatcherTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/source/SourceDeclarationParserTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/theme/ListenerLifecycleTest.java" afterDir="false" />
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add EditorView contract + AbstractEditorView base for editor views&#10;- EditorView interface + AbstractEditorView (theme lifecycle, async-load scaffolding, no-op contract defaults) + AbstractTextView (RSyntaxTextArea setup/theming + text-backed ops)&#10;- Migrate ~17 views onto the base; SourceCodeView/DualView implement EditorView directly. Per-view stubs and duplicated lifecycle/refreshskeletons removed.&#10;- Collapse EditorTab's ~21 instanceof/ViewMode-switch cascades to a Map&lt;ViewMode,EditorView&gt; lookup">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/view/AbstractEditorView.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/view/AbstractTextView.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/view/EditorView.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/view/AbstractEditorViewTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectDatabaseService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/ProjectDatabaseService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/history/LocalHistoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/history/LocalHistoryService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/MainFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/ToolbarBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/FindUsagesResultsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/analysis/FindUsagesResultsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomToolbar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/BottomToolbar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/ToolWindowPane.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/RenameClassDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/RenameClassDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/RenameFieldDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/RenameFieldDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/RenameMethodDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/dialog/RenameMethodDialog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/WelcomeTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/WelcomeTab.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/EditorTab.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/ASTView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/ASTView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/attributes/AttributesView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/attributes/AttributesView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/constpool/ConstPoolView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/constpool/ConstPoolView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/dual/DualView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/dual/DualView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/BaseGraphView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/graph/BaseGraphView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/hex/HexView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/hex/HexView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ir/IRView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ir/IRView.java" afterDir="false" />
@@ -70,14 +28,8 @@
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/resource/TextResourceView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/resource/TextResourceView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/StatisticsView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/StatisticsView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/charts/BarChart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/charts/BarChart.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/charts/PieChart.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/charts/PieChart.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/charts/StatCard.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/charts/StatCard.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/charts/StatTable.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/statistics/charts/StatTable.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/navigator/NavigatorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/script/ScriptEditorPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/ThemeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/ThemeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/DebuggerPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/heap/LiveInstancesView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/heap/LiveInstancesView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/statics/LiveStaticsView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/statics/LiveStaticsView.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -297,14 +249,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00072" summary="- Can create new classes from blank project now">
-      <option name="closed" value="true" />
-      <created>1781036835586</created>
-      <option name="number" value="00072" />
-      <option name="presentableId" value="LOCAL-00072" />
-      <option name="project" value="LOCAL" />
-      <updated>1781036835586</updated>
     </task>
     <task id="LOCAL-00073" summary="- Improved bytecode view&#10;- fixed highlight bug in bytecode view&#10;- Auto update checking now">
       <option name="closed" value="true" />
@@ -690,7 +634,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782190784836</updated>
     </task>
-    <option name="localTasksCounter" value="121" />
+    <task id="LOCAL-00121" summary="- Decompose UI god-classes; fix listener leaks; de-duplicate theming&#10;- Break the five largest Swing classes into ~28 cohesive, package-private collaborators&#10;- Fix a systemic theme/EventBus/service listener leak&#10;- Add ThemeStyles helper + AbstractRenameDialog&#10;- Extract pure, unit-tested helpers (JvmDescriptorFormatter, SourceDeclarationParser, MethodSignatureMatcher, BytecodeDisassembler)">
+      <option name="closed" value="true" />
+      <created>1782212896260</created>
+      <option name="number" value="00121" />
+      <option name="presentableId" value="LOCAL-00121" />
+      <option name="project" value="LOCAL" />
+      <updated>1782212896260</updated>
+    </task>
+    <option name="localTasksCounter" value="122" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -705,7 +657,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Update readme" />
     <MESSAGE value="Add Live Java Scratch Pad: eval arbitrary Java in the attached JVM&#10;- MSG_EVAL wire op + agent class-defining/output-teeing&#10;- SnippetCompiler: default-package wrapper, optional return, auto-imports&#10;- Completion: keywords, project + JDK classes, JDK member chains&#10;- Bump version" />
     <MESSAGE value="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source." />
     <MESSAGE value="- cleanup" />
@@ -730,7 +681,8 @@
     <MESSAGE value="- Built in history/vc&#10;- Fixed center tab close options" />
     <MESSAGE value="Decompile &lt;-&gt; recompile (source editor):&#10;- SourceCompiler: skip &lt;clinit&gt; synthesis for static fields backed by a ConstantValue attribute, so a round-trip no longer fabricates `static {}` blocks&#10;- Method-scoped recompile: re-lower only the methods whose body actually changed (via MethodBodyDiff), leaving every sibling byte-identical&#10;- Verifier gate: run YABR's verifier on the re-lowered methods and fail the recompile (surfacing the error) instead of silently applying invalid bytecode&#10;- Add round-trip and method-scoping regression tests&#10;&#10;Bytecode VM:&#10;- VmInstance / SnapshotClassPool / VmSupport: per-instance VM over a defensive, lazily-materialized class-pool snapshot, so concurrent caller each drive an isolated VM that's immune to live project edits and doesn't disturb the debugger UI; shared lookup/arg-conversion helpers deduped&#10;&#10;Editor tabs:&#10;- Center-tab close context menu (Close Others / to the Left / to the Right) now acts on every tab kind (class, resource, custom view), is wired to resource/custom tab headers, and has correct enablement&#10;- Reorder bottom toolbar buttons to Console - History - Bookmarks - Comments" />
     <MESSAGE value="- Decompose UI god-classes; fix listener leaks; de-duplicate theming&#10;- Break the five largest Swing classes into ~28 cohesive, package-private collaborators&#10;- Fix a systemic theme/EventBus/service listener leak&#10;- Add ThemeStyles helper + AbstractRenameDialog&#10;- Extract pure, unit-tested helpers (JvmDescriptorFormatter, SourceDeclarationParser, MethodSignatureMatcher, BytecodeDisassembler)" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Decompose UI god-classes; fix listener leaks; de-duplicate theming&#10;- Break the five largest Swing classes into ~28 cohesive, package-private collaborators&#10;- Fix a systemic theme/EventBus/service listener leak&#10;- Add ThemeStyles helper + AbstractRenameDialog&#10;- Extract pure, unit-tested helpers (JvmDescriptorFormatter, SourceDeclarationParser, MethodSignatureMatcher, BytecodeDisassembler)" />
+    <MESSAGE value="Add EditorView contract + AbstractEditorView base for editor views&#10;- EditorView interface + AbstractEditorView (theme lifecycle, async-load scaffolding, no-op contract defaults) + AbstractTextView (RSyntaxTextArea setup/theming + text-backed ops)&#10;- Migrate ~17 views onto the base; SourceCodeView/DualView implement EditorView directly. Per-view stubs and duplicated lifecycle/refreshskeletons removed.&#10;- Collapse EditorTab's ~21 instanceof/ViewMode-switch cascades to a Map&lt;ViewMode,EditorView&gt; lookup" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add EditorView contract + AbstractEditorView base for editor views&#10;- EditorView interface + AbstractEditorView (theme lifecycle, async-load scaffolding, no-op contract defaults) + AbstractTextView (RSyntaxTextArea setup/theming + text-backed ops)&#10;- Migrate ~17 views onto the base; SourceCodeView/DualView implement EditorView directly. Per-view stubs and duplicated lifecycle/refreshskeletons removed.&#10;- Collapse EditorTab's ~21 instanceof/ViewMode-switch cascades to a Map&lt;ViewMode,EditorView&gt; lookup" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

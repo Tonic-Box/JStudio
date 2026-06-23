@@ -5,13 +5,9 @@ import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.*;
 import com.tonic.parser.constpool.Utf8Item;
-import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.model.ClassEntryModel;
+import com.tonic.ui.editor.view.AbstractEditorView;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
-import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -23,25 +19,18 @@ import java.awt.datatransfer.StringSelection;
 import java.util.Enumeration;
 import java.util.List;
 
-public class AttributesView extends JPanel implements ThemeChangeListener {
+public class AttributesView extends AbstractEditorView {
 
     private final ClassEntryModel classEntry;
     private final JTree tree;
     private final DefaultMutableTreeNode root;
     private final DefaultTreeModel treeModel;
     private final JScrollPane scrollPane;
-    private final LoadingOverlay loadingOverlay;
 
-    @Getter
-    private boolean loaded = false;
-    private SwingWorker<Void, Void> currentWorker;
     private String lastSearch;
 
     public AttributesView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
-
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
 
         root = new DefaultMutableTreeNode("Attributes");
         treeModel = new DefaultTreeModel(root);
@@ -60,28 +49,15 @@ public class AttributesView extends JPanel implements ThemeChangeListener {
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        loadingOverlay = new LoadingOverlay();
-
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new OverlayLayout(contentPanel));
-        loadingOverlay.setAlignmentX(0.5f);
-        loadingOverlay.setAlignmentY(0.5f);
-        scrollPane.setAlignmentX(0.5f);
-        scrollPane.setAlignmentY(0.5f);
-        contentPanel.add(loadingOverlay);
-        contentPanel.add(scrollPane);
-
-        add(contentPanel, BorderLayout.CENTER);
-
-        applyTheme();
-        ThemeManager.getInstance().addThemeChangeListener(this);
+        add(overlayWrap(scrollPane), BorderLayout.CENTER);
     }
 
+    @Override
     public void refresh() {
         cancelCurrentWorker();
         loadingOverlay.showLoading("Loading attributes...");
 
-        currentWorker = new SwingWorker<>() {
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
                 return null;
@@ -102,15 +78,8 @@ public class AttributesView extends JPanel implements ThemeChangeListener {
                 }
             }
         };
-
-        currentWorker.execute();
-    }
-
-    private void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
-            currentWorker.cancel(true);
-            loadingOverlay.hideLoading();
-        }
+        currentWorker = worker;
+        worker.execute();
     }
 
     private void loadAttributes() {
@@ -347,24 +316,14 @@ public class AttributesView extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(this::applyTheme);
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgTertiary());
+    protected void applyChildThemes() {
         tree.setBackground(JStudioTheme.getBgTertiary());
         tree.setForeground(JStudioTheme.getTextPrimary());
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
         repaint();
     }
 
+    @Override
     public String getText() {
         StringBuilder sb = new StringBuilder();
         sb.append("// Attributes for: ").append(classEntry.getClassName()).append("\n\n");
@@ -390,6 +349,7 @@ public class AttributesView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void copySelection() {
         TreePath[] paths = tree.getSelectionPaths();
         if (paths == null || paths.length == 0) return;
@@ -409,6 +369,7 @@ public class AttributesView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public String getSelectedText() {
         TreePath path = tree.getSelectionPath();
         if (path == null) return null;
@@ -419,6 +380,7 @@ public class AttributesView extends JPanel implements ThemeChangeListener {
         return null;
     }
 
+    @Override
     public void goToLine(int line) {
         if (line >= 0 && line < tree.getRowCount()) {
             tree.setSelectionRow(line);
@@ -426,6 +388,7 @@ public class AttributesView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void showFindDialog() {
         String input = (String) JOptionPane.showInputDialog(
                 this, "Search:", "Find Attribute",
@@ -436,6 +399,7 @@ public class AttributesView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void scrollToText(String text) {
         if (text == null || text.isEmpty()) return;
 
@@ -456,13 +420,10 @@ public class AttributesView extends JPanel implements ThemeChangeListener {
         }
     }
 
+    @Override
     public void setFontSize(int size) {
         tree.setFont(JStudioTheme.getCodeFont(size));
         tree.setRowHeight(size + 10);
-    }
-
-    public void setWordWrap(boolean enabled) {
-        // Tree doesn't support word wrap
     }
 
     enum CategoryType {

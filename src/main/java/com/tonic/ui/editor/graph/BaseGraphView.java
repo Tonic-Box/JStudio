@@ -8,14 +8,10 @@ import com.mxgraph.util.mxCellRenderer;
 import com.mxgraph.util.mxConstants;
 import com.mxgraph.view.mxGraph;
 import com.mxgraph.view.mxStylesheet;
-import com.tonic.ui.core.component.LoadingOverlay;
 import com.tonic.model.ClassEntryModel;
+import com.tonic.ui.editor.view.AbstractEditorView;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
-import com.tonic.ui.theme.Theme;
-import com.tonic.ui.theme.ThemeChangeListener;
-import com.tonic.ui.theme.ThemeManager;
-import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -36,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
 
-public abstract class BaseGraphView extends JPanel implements ThemeChangeListener {
+public abstract class BaseGraphView extends AbstractEditorView {
 
     protected final ClassEntryModel classEntry;
 
@@ -61,15 +57,9 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
 
     protected boolean showingVisual = true;
 
-    @Getter
-    protected boolean loaded = false;
-
     protected boolean initializing = true;
 
     protected String currentDOT = "";
-
-    protected LoadingOverlay loadingOverlay;
-    protected SwingWorker<String, Void> currentWorker;
 
     private Point panStartScreen;
     private Point panStartViewport;
@@ -77,14 +67,10 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
     public BaseGraphView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
         initComponents();
-        ThemeManager.getInstance().addThemeChangeListener(this);
         initializing = false;
     }
 
     private void initComponents() {
-        setLayout(new BorderLayout());
-        setBackground(JStudioTheme.getBgTertiary());
-
         createToolbar();
         add(toolbar, BorderLayout.NORTH);
 
@@ -98,18 +84,7 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         contentPanel.add(graphComponent, VISUAL_CARD);
         contentPanel.add(dotScrollPane, DOT_CARD);
 
-        loadingOverlay = new LoadingOverlay();
-
-        JPanel wrapperPanel = new JPanel();
-        wrapperPanel.setLayout(new OverlayLayout(wrapperPanel));
-        loadingOverlay.setAlignmentX(0.5f);
-        loadingOverlay.setAlignmentY(0.5f);
-        contentPanel.setAlignmentX(0.5f);
-        contentPanel.setAlignmentY(0.5f);
-        wrapperPanel.add(loadingOverlay);
-        wrapperPanel.add(contentPanel);
-
-        add(wrapperPanel, BorderLayout.CENTER);
+        add(overlayWrap(contentPanel), BorderLayout.CENTER);
     }
 
     private void createToolbar() {
@@ -368,24 +343,10 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
     }
 
     @Override
-    public void removeNotify() {
-        super.removeNotify();
-        ThemeManager.getInstance().removeThemeChangeListener(this);
-    }
-
-    @Override
-    public void onThemeChanged(Theme newTheme) {
-        SwingUtilities.invokeLater(() -> {
-            applyTheme();
-            setupGraphStyles();
-            if (loaded) {
-                rebuildGraph();
-            }
-        });
-    }
-
-    private void applyTheme() {
-        setBackground(JStudioTheme.getBgTertiary());
+    protected void applyChildThemes() {
+        if (toolbar == null) {
+            return;
+        }
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
         contentPanel.setBackground(JStudioTheme.getBgTertiary());
@@ -397,8 +358,14 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         dotTextPane.setForeground(JStudioTheme.getTextPrimary());
         dotTextPane.setCaretColor(JStudioTheme.getTextPrimary());
         dotScrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
+
+        setupGraphStyles();
+        if (loaded) {
+            rebuildGraph();
+        }
     }
 
+    @Override
     public void refresh() {
         if (loaded) {
             return;
@@ -409,7 +376,7 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         loadingOverlay.showLoading("Building graph...");
         graphComponent.setEnabled(false);
 
-        currentWorker = new SwingWorker<>() {
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
                 prepareGraphData();
@@ -435,15 +402,8 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
                 }
             }
         };
-
-        currentWorker.execute();
-    }
-
-    private void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
-            currentWorker.cancel(true);
-            loadingOverlay.hideLoading();
-        }
+        currentWorker = worker;
+        worker.execute();
     }
 
     protected abstract void prepareGraphData();
@@ -643,10 +603,12 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         return String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
     }
 
+    @Override
     public String getText() {
         return currentDOT;
     }
 
+    @Override
     public void copySelection() {
         if (showingVisual) {
             return;
@@ -658,6 +620,7 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         }
     }
 
+    @Override
     public String getSelectedText() {
         if (showingVisual) {
             return null;
@@ -665,6 +628,7 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         return dotTextPane.getSelectedText();
     }
 
+    @Override
     public void goToLine(int line) {
         if (showingVisual) return;
         try {
@@ -676,14 +640,7 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         }
     }
 
-    public void highlightLine(int line) {
-        goToLine(line);
-    }
-
-    public void showFindDialog() {
-        // Not implemented for graph view
-    }
-
+    @Override
     public void scrollToText(String searchText) {
         if (showingVisual || searchText == null || searchText.isEmpty()) return;
         String text = dotTextPane.getText();
@@ -695,11 +652,8 @@ public abstract class BaseGraphView extends JPanel implements ThemeChangeListene
         }
     }
 
+    @Override
     public void setFontSize(int size) {
         dotTextPane.setFont(JStudioTheme.getCodeFont(size));
-    }
-
-    public void setWordWrap(boolean enabled) {
-        // No-op for graph view
     }
 }
