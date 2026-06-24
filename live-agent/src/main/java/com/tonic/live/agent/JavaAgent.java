@@ -126,21 +126,25 @@ public final class JavaAgent {
 
     private static void serveConnection(Socket s) throws IOException {
         DataInputStream in = new DataInputStream(s.getInputStream());
-        while (true) {
-            int len = in.readInt();
-            if (len < 0 || len > (64 << 20)) {
-                return;
+        try {
+            while (true) {
+                int len = in.readInt();
+                if (len < 0 || len > (64 << 20)) {
+                    return;
+                }
+                byte[] frame = new byte[len];
+                in.readFully(frame);
+                if (frame.length == 0) {
+                    continue;
+                }
+                DataInputStream body = new DataInputStream(new java.io.ByteArrayInputStream(frame, 1, frame.length - 1));
+                byte[] response = dispatch(frame[0] & 0xFF, body);
+                if (response != null) {
+                    sendFrame(response);
+                }
             }
-            byte[] frame = new byte[len];
-            in.readFully(frame);
-            if (frame.length == 0) {
-                continue;
-            }
-            DataInputStream body = new DataInputStream(new java.io.ByteArrayInputStream(frame, 1, frame.length - 1));
-            byte[] response = dispatch(frame[0] & 0xFF, body);
-            if (response != null) {
-                sendFrame(response);
-            }
+        } finally {
+            SCAN.clear();
         }
     }
 
@@ -183,6 +187,20 @@ public final class JavaAgent {
                 return handleJfrStop();
             case LiveProtocol.MSG_JFR_SNAPSHOT:
                 return handleJfrSnapshot();
+            case LiveProtocol.MSG_SCAN_FIRST:
+                return handleScanFirst(in);
+            case LiveProtocol.MSG_SCAN_NEXT:
+                return handleScanNext(in);
+            case LiveProtocol.MSG_SCAN_READ:
+                return handleScanRead(in);
+            case LiveProtocol.MSG_SCAN_WRITE:
+                return handleScanWrite(in);
+            case LiveProtocol.MSG_SCAN_FREEZE:
+                return handleScanFreeze(in);
+            case LiveProtocol.MSG_SCAN_PIN:
+                return handleScanPin(in);
+            case LiveProtocol.MSG_SCAN_CLEAR:
+                return handleScanClear();
             default:
                 return error("operation not supported by the JStudio Live agent");
         }
@@ -727,6 +745,79 @@ public final class JavaAgent {
         if (c == double.class) return "D";
         if (c.isArray()) return "[" + descriptor(c.getComponentType());
         return "L" + c.getName().replace('.', '/') + ";";
+    }
+
+    // ---- value scanner ----------------------------------------------------------------------------
+
+    private static final ScanEngine SCAN = new ScanEngine();
+
+    private static byte[] handleScanFirst(DataInputStream in) throws IOException {
+        int valueType = in.readUnsignedByte();
+        int scanKind = in.readUnsignedByte();
+        String value = readString(in);
+        String value2 = readString(in);
+        String pkgFilter = readString(in);
+        int maxVisited = in.readInt();
+        int maxMatches = in.readInt();
+        int limit = in.readInt();
+        try {
+            SCAN.firstScan(inst, valueType, scanKind, value, value2, pkgFilter, maxVisited, maxMatches);
+            return SCAN.page(LiveProtocol.MSG_SCAN_FIRST, false, 0, limit);
+        } catch (NumberFormatException e) {
+            return error("invalid scan value: " + e.getMessage());
+        }
+    }
+
+    private static byte[] handleScanNext(DataInputStream in) throws IOException {
+        int comparator = in.readUnsignedByte();
+        String value = readString(in);
+        String value2 = readString(in);
+        int offset = in.readInt();
+        int limit = in.readInt();
+        SCAN.nextScan(comparator, value, value2);
+        return SCAN.page(LiveProtocol.MSG_SCAN_NEXT, false, offset, limit);
+    }
+
+    private static byte[] handleScanRead(DataInputStream in) throws IOException {
+        boolean pinnedOnly = in.readUnsignedByte() != 0;
+        int offset = in.readInt();
+        int limit = in.readInt();
+        return SCAN.page(LiveProtocol.MSG_SCAN_READ, pinnedOnly, offset, limit);
+    }
+
+    private static byte[] handleScanWrite(DataInputStream in) throws IOException {
+        long id = in.readLong();
+        boolean isNull = in.readUnsignedByte() != 0;
+        String value = readString(in);
+        try {
+            return strResp(LiveProtocol.MSG_SCAN_WRITE, SCAN.write(id, isNull, value));
+        } catch (RuntimeException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    private static byte[] handleScanFreeze(DataInputStream in) throws IOException {
+        long id = in.readLong();
+        boolean on = in.readUnsignedByte() != 0;
+        String value = readString(in);
+        try {
+            SCAN.freeze(id, on, value);
+            return resp(LiveProtocol.MSG_SCAN_FREEZE, 1);
+        } catch (RuntimeException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    private static byte[] handleScanPin(DataInputStream in) throws IOException {
+        long id = in.readLong();
+        boolean on = in.readUnsignedByte() != 0;
+        SCAN.pin(id, on);
+        return resp(LiveProtocol.MSG_SCAN_PIN, 1);
+    }
+
+    private static byte[] handleScanClear() throws IOException {
+        SCAN.clear();
+        return resp(LiveProtocol.MSG_SCAN_CLEAR, 1);
     }
 
     // ---- helpers -----------------------------------------------------------------------------------

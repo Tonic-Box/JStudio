@@ -6,6 +6,8 @@ import com.tonic.live.protocol.LiveEvent;
 import com.tonic.live.protocol.MetricsSnapshot;
 import com.tonic.live.protocol.LiveProtocol;
 import com.tonic.live.protocol.LoadedClass;
+import com.tonic.live.protocol.ScanLocation;
+import com.tonic.live.protocol.ScanPage;
 import com.tonic.live.protocol.StackFrame;
 import com.tonic.live.protocol.StaticField;
 import com.tonic.live.protocol.StaticMethod;
@@ -25,8 +27,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -41,8 +48,19 @@ public final class LiveAgentClient implements Closeable {
     private final DataInputStream in;
     private final DataOutputStream out;
     private final Thread reader;
-    private final SynchronousQueue<byte[]> responses = new SynchronousQueue<>();
+    /** Unbounded so the reader never blocks handing off a response; requests are serialized (one in flight). */
+    private final BlockingQueue<byte[]> responses = new LinkedBlockingQueue<>();
     private final CopyOnWriteArrayList<Consumer<LiveEvent>> listeners = new CopyOnWriteArrayList<>();
+    /** Events run here, never on the reader thread, so a slow/blocking listener can't wedge the protocol stream. */
+    private final ExecutorService eventDispatch = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "live-agent-events");
+        t.setDaemon(true);
+        return t;
+    });
+    /** Pushed into {@link #responses} on disconnect/close so an in-flight request fails instead of hanging forever. */
+    private static final byte[] POISON = new byte[0];
+    /** Last-resort backstop against a wedged-but-connected agent; a real disconnect unblocks immediately. */
+    private static final long REQUEST_TIMEOUT_MS = 300_000;
     private volatile boolean closed;
 
     private LiveAgentClient(Socket socket) throws IOException {
@@ -209,6 +227,94 @@ public final class LiveAgentClient implements Closeable {
         return readString(r);
     }
 
+    // ---- value scanner ----------------------------------------------------------------------------
+
+    public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter,
+                              int maxVisited, int maxMatches, int limit) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_FIRST, b -> {
+            b.writeByte(valueType);
+            b.writeByte(scanKind);
+            writeString(b, value == null ? "" : value);
+            writeString(b, value2 == null ? "" : value2);
+            writeString(b, pkgFilter == null ? "" : pkgFilter);
+            b.writeInt(maxVisited);
+            b.writeInt(maxMatches);
+            b.writeInt(limit);
+        }));
+        skipType(r, LiveProtocol.MSG_SCAN_FIRST);
+        return readPage(r);
+    }
+
+    public ScanPage scanNext(int comparator, String value, String value2, int offset, int limit) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_NEXT, b -> {
+            b.writeByte(comparator);
+            writeString(b, value == null ? "" : value);
+            writeString(b, value2 == null ? "" : value2);
+            b.writeInt(offset);
+            b.writeInt(limit);
+        }));
+        skipType(r, LiveProtocol.MSG_SCAN_NEXT);
+        return readPage(r);
+    }
+
+    public ScanPage scanRead(boolean pinnedOnly, int offset, int limit) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_READ, b -> {
+            b.writeByte(pinnedOnly ? 1 : 0);
+            b.writeInt(offset);
+            b.writeInt(limit);
+        }));
+        skipType(r, LiveProtocol.MSG_SCAN_READ);
+        return readPage(r);
+    }
+
+    public String scanWrite(long id, boolean isNull, String value) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_WRITE, b -> {
+            b.writeLong(id);
+            b.writeByte(isNull ? 1 : 0);
+            writeString(b, value == null ? "" : value);
+        }));
+        skipType(r, LiveProtocol.MSG_SCAN_WRITE);
+        return readString(r);
+    }
+
+    public void scanFreeze(long id, boolean on, String value) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_FREEZE, b -> {
+            b.writeLong(id);
+            b.writeByte(on ? 1 : 0);
+            writeString(b, value == null ? "" : value);
+        }));
+        skipType(r, LiveProtocol.MSG_SCAN_FREEZE);
+        r.readUnsignedByte();
+    }
+
+    public void scanPin(long id, boolean on) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_PIN, b -> {
+            b.writeLong(id);
+            b.writeByte(on ? 1 : 0);
+        }));
+        skipType(r, LiveProtocol.MSG_SCAN_PIN);
+        r.readUnsignedByte();
+    }
+
+    public void scanClear() throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_CLEAR, b -> {
+        }));
+        skipType(r, LiveProtocol.MSG_SCAN_CLEAR);
+        r.readUnsignedByte();
+    }
+
+    private ScanPage readPage(DataInputStream r) throws IOException {
+        int total = r.readInt();
+        boolean truncated = r.readUnsignedByte() != 0;
+        int returned = r.readInt();
+        List<ScanLocation> locations = new ArrayList<>(Math.max(0, returned));
+        for (int i = 0; i < returned; i++) {
+            locations.add(new ScanLocation(r.readLong(), readString(r), readString(r), readString(r),
+                    readString(r), readString(r), readString(r), r.readUnsignedByte()));
+        }
+        return new ScanPage(total, truncated, locations);
+    }
+
     /** Lists the static methods of a class (name + JVM descriptor). */
     public List<StaticMethod> listStaticMethods(String internalName) throws IOException {
         DataInputStream r = request(payload(LiveProtocol.MSG_LIST_STATIC_METHODS, b -> writeString(b, internalName)));
@@ -334,17 +440,30 @@ public final class LiveAgentClient implements Closeable {
                 int type = len > 0 ? (frame[0] & 0xFF) : -1;
                 // Async events occupy [0x40, 0x7F); MSG_ERROR (0x7F) is a response to the in-flight request.
                 if (type >= 0x40 && type != LiveProtocol.MSG_ERROR) {
-                    dispatchEvent(frame);
+                    final byte[] f = frame;
+                    dispatchAsync(() -> dispatchEvent(f));
                 } else {
-                    responses.put(frame);
+                    responses.add(frame);   // unbounded: never blocks the reader
                 }
             }
         } catch (EOFException eof) {
             // peer closed
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
+            // connection error
+        } finally {
+            // Wake any request blocked waiting for a response it will now never get.
+            responses.offer(POISON);
             if (!closed) {
-                emit(LiveEvent.vmDeath());
+                dispatchAsync(() -> emit(LiveEvent.vmDeath()));
             }
+        }
+    }
+
+    /** Runs an event task on the dedicated dispatch thread; a no-op once dispatch has been shut down. */
+    private void dispatchAsync(Runnable task) {
+        try {
+            eventDispatch.execute(task);
+        } catch (RejectedExecutionException ignored) {
         }
     }
 
@@ -366,15 +485,26 @@ public final class LiveAgentClient implements Closeable {
     }
 
     private synchronized DataInputStream request(byte[] payload) throws IOException {
+        if (closed) {
+            throw new IOException("live agent connection is closed");
+        }
+        responses.clear();   // drop any straggler from a prior timed-out request
         out.writeInt(payload.length);
         out.write(payload);
         out.flush();
         byte[] resp;
         try {
-            resp = responses.take();
+            resp = responses.poll(REQUEST_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("interrupted waiting for response", e);
+        }
+        if (resp == null) {        // backstop timeout: agent wedged - tear the connection down
+            closeQuietly();
+            throw new IOException("live agent did not respond");
+        }
+        if (resp.length == 0) {    // POISON: the connection dropped while we were waiting
+            throw new IOException("live agent disconnected");
         }
         DataInputStream r = new DataInputStream(new ByteArrayInputStream(resp));
         r.mark(1);
@@ -419,6 +549,16 @@ public final class LiveAgentClient implements Closeable {
     @Override
     public void close() throws IOException {
         closed = true;
+        responses.offer(POISON);     // wake any in-flight request
+        eventDispatch.shutdownNow();
+        reader.interrupt();
         socket.close();
+    }
+
+    private void closeQuietly() {
+        try {
+            close();
+        } catch (IOException ignored) {
+        }
     }
 }

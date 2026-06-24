@@ -5,6 +5,7 @@ import com.tonic.live.protocol.ContentionEdge;
 import com.tonic.live.protocol.LiveEvent;
 import com.tonic.live.protocol.LoadedClass;
 import com.tonic.live.protocol.MetricsSnapshot;
+import com.tonic.live.protocol.ScanPage;
 import com.tonic.live.protocol.StaticField;
 import com.tonic.live.protocol.StaticMethod;
 import com.tonic.live.protocol.ThreadInfo;
@@ -138,6 +139,44 @@ public final class LiveSession implements Closeable {
     /** Sets a static field's value (or to null); returns the field's re-read value. */
     public String setStatic(String className, String field, boolean setNull, String value) throws IOException {
         return client.setStatic(className, field, setNull, value);
+    }
+
+    // ---- value scanner: an agent-resident scan session holding live (object,field) handles -------
+
+    /** First scan: walk app roots, retaining matching field locations as the new candidate set. */
+    public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter,
+                              int maxVisited, int maxMatches, int limit) throws IOException {
+        return client.scanFirst(valueType, scanKind, value, value2, pkgFilter, maxVisited, maxMatches, limit);
+    }
+
+    /** Next scan: re-read the retained set and narrow it by the comparator (changed/increased/...). */
+    public ScanPage scanNext(int comparator, String value, String value2, int offset, int limit) throws IOException {
+        return client.scanNext(comparator, value, value2, offset, limit);
+    }
+
+    /** Re-reads current values of the active (or pinned) set for live refresh. */
+    public ScanPage scanRead(boolean pinnedOnly, int offset, int limit) throws IOException {
+        return client.scanRead(pinnedOnly, offset, limit);
+    }
+
+    /** Writes a value into a scanned field; returns the re-read value. */
+    public String scanWrite(long id, boolean isNull, String value) throws IOException {
+        return client.scanWrite(id, isNull, value);
+    }
+
+    /** Freezes (re-applies on a timer) or unfreezes a scanned field at {@code value}. */
+    public void scanFreeze(long id, boolean on, String value) throws IOException {
+        client.scanFreeze(id, on, value);
+    }
+
+    /** Pins/unpins a location onto the watch list (survives narrowing). */
+    public void scanPin(long id, boolean on) throws IOException {
+        client.scanPin(id, on);
+    }
+
+    /** Clears the scan session (active + pinned + freezes). */
+    public void scanClear() throws IOException {
+        client.scanClear();
     }
 
     /** Lists the static methods of a class. */

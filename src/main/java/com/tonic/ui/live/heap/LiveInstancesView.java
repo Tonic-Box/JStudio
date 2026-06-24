@@ -1,6 +1,9 @@
 package com.tonic.ui.live.heap;
 
+import com.tonic.event.EventBus;
+import com.tonic.event.events.ScanSeedEvent;
 import com.tonic.live.LiveSession;
+import com.tonic.live.protocol.LiveProtocol;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.ui.core.SwingWorkers;
 import com.tonic.ui.core.component.ThemedJPanel;
@@ -19,6 +22,8 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
@@ -159,8 +164,79 @@ public final class LiveInstancesView extends AbstractEditorView {
         };
         fieldTable.addMouseListener(refNav);
         fieldTable.addMouseMotionListener(refNav);
+        fieldTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                maybeScanPopup(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                maybeScanPopup(e);
+            }
+        });
         detail.add(new ThemedJScrollPane(fieldTable), BorderLayout.CENTER);
         return detail;
+    }
+
+    /** Right-click "Scan for this value" on a primitive/String field value: seeds the live Value Scanner. */
+    private void maybeScanPopup(MouseEvent e) {
+        if (!e.isPopupTrigger()) {
+            return;
+        }
+        int row = fieldTable.rowAtPoint(e.getPoint());
+        if (row < 0) {
+            return;
+        }
+        fieldTable.setRowSelectionInterval(row, row);
+        Object value = fieldModel.getValueAt(row, 2);
+        if (!(value instanceof HprofSnapshot.FieldValue)) {
+            return;
+        }
+        HprofSnapshot.FieldValue f = (HprofSnapshot.FieldValue) value;
+        int valueType = scanTypeOf(f);
+        if (valueType < 0) {
+            return;
+        }
+        String seedValue = seedValueOf(valueType, f.display);
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem scan = new JMenuItem("Scan for this value");
+        scan.addActionListener(ev -> EventBus.getInstance().post(
+                new ScanSeedEvent(this, valueType, seedValue, "")));
+        menu.add(scan);
+        menu.show(fieldTable, e.getX(), e.getY());
+    }
+
+    /** Maps an instance field value to a scanner {@code SCAN_*} type, or -1 for non-scannable (refs/null). */
+    private static int scanTypeOf(HprofSnapshot.FieldValue f) {
+        switch (f.type) {
+            case "int": return LiveProtocol.SCAN_INT;
+            case "long": return LiveProtocol.SCAN_LONG;
+            case "short": return LiveProtocol.SCAN_SHORT;
+            case "byte": return LiveProtocol.SCAN_BYTE;
+            case "char": return LiveProtocol.SCAN_CHAR;
+            case "float": return LiveProtocol.SCAN_FLOAT;
+            case "double": return LiveProtocol.SCAN_DOUBLE;
+            case "boolean": return LiveProtocol.SCAN_BOOLEAN;
+            case "ref":
+                return f.refId != 0 && f.display.startsWith("\"") ? LiveProtocol.SCAN_STRING : -1;
+            default:
+                return -1;
+        }
+    }
+
+    /** Strips the display quoting the snapshot adds (Strings {@code "..."}, chars {@code '.'}) for the scan value. */
+    private static String seedValueOf(int valueType, String display) {
+        if (valueType == LiveProtocol.SCAN_STRING && display.length() >= 2
+                && display.startsWith("\"") && display.endsWith("\"")) {
+            String s = display.substring(1, display.length() - 1);
+            return s.endsWith("...") ? s.substring(0, s.length() - 3) : s;
+        }
+        if (valueType == LiveProtocol.SCAN_CHAR && display.length() >= 3
+                && display.startsWith("'") && display.endsWith("'")) {
+            return display.substring(1, display.length() - 1);
+        }
+        return display;
     }
 
     /** Called when the view becomes visible (EditorTab refresh). Lists instances using the current snapshot. */

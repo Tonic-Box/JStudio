@@ -31,7 +31,56 @@ public final class LiveProtocol {
     public static final int MSG_JFR_START = 0x1F;        // req: str profile, u32 categoryMask, u32 maxSizeMb; resp: u8 ok
     public static final int MSG_JFR_STOP = 0x20;         // req: empty; resp: str localJfrPath (stops + clears the active recording)
     public static final int MSG_JFR_SNAPSHOT = 0x21;     // req: empty; resp: str localJfrPath (recording keeps running)
+
+    // Live value scanner (Cheat-Engine-style): an agent-resident scan session holding live (object,field) handles.
+    // A "location" wire record is: u64 id, str declaringClass, str fieldName, str fieldDesc, str displayPath,
+    // str type, str value, u8 flags (FLAG_PINNED|FLAG_FROZEN|FLAG_COLLECTED). A "page" is: u32 total, u8 truncated,
+    // u32 returned, [location]*. Scalar values travel as strings parsed agent-side (mirroring MSG_SET_STATIC).
+    public static final int MSG_SCAN_FIRST = 0x30;  // req: u8 valueType,u8 scanKind,str value,str value2,str pkgFilter,u32 maxVisited,u32 maxMatches,u32 limit; resp: page
+    public static final int MSG_SCAN_NEXT = 0x31;   // req: u8 comparator,str value,str value2,u32 offset,u32 limit; resp: page
+    public static final int MSG_SCAN_READ = 0x32;   // req: u8 pinnedOnly,u32 offset,u32 limit; resp: page
+    public static final int MSG_SCAN_WRITE = 0x33;  // req: u64 id,u8 isNull,str value; resp: str newValue
+    public static final int MSG_SCAN_FREEZE = 0x34; // req: u64 id,u8 on,str value; resp: u8 ok
+    public static final int MSG_SCAN_PIN = 0x35;    // req: u64 id,u8 on; resp: u8 ok
+    public static final int MSG_SCAN_CLEAR = 0x36;  // req: empty; resp: u8 ok
+
     public static final int MSG_ERROR = 0x7F;            // resp only: string message
+
+    // Scanner value types (u8) - which kind of field to scan + how to parse the value strings.
+    public static final int SCAN_INT = 0;
+    public static final int SCAN_LONG = 1;
+    public static final int SCAN_SHORT = 2;
+    public static final int SCAN_BYTE = 3;
+    public static final int SCAN_CHAR = 4;
+    public static final int SCAN_FLOAT = 5;
+    public static final int SCAN_DOUBLE = 6;
+    public static final int SCAN_BOOLEAN = 7;
+    public static final int SCAN_STRING = 8;
+    public static final int SCAN_NUMBER = 9;   // any numeric field (byte/short/int/long/float/double); matches store their real type
+
+    // First-scan predicate (u8). UNKNOWN records every field of the type (+ current value) for later narrowing.
+    public static final int SCANKIND_EXACT = 0;
+    public static final int SCANKIND_GREATER = 1;
+    public static final int SCANKIND_LESS = 2;
+    public static final int SCANKIND_BETWEEN = 3;
+    public static final int SCANKIND_UNKNOWN = 4;
+
+    // Next-scan comparator (u8) - compares each retained location's current value to its previous value.
+    public static final int CMP_EXACT = 0;
+    public static final int CMP_CHANGED = 1;
+    public static final int CMP_UNCHANGED = 2;
+    public static final int CMP_INCREASED = 3;
+    public static final int CMP_DECREASED = 4;
+    public static final int CMP_INCREASED_BY = 5;
+    public static final int CMP_DECREASED_BY = 6;
+    public static final int CMP_GREATER = 7;
+    public static final int CMP_LESS = 8;
+    public static final int CMP_BETWEEN = 9;
+
+    // Scanner location flags (u8 bitset).
+    public static final int FLAG_PINNED = 1;
+    public static final int FLAG_FROZEN = 1 << 1;
+    public static final int FLAG_COLLECTED = 1 << 2;
 
     // MSG_GET_STATICS field kinds: how the UI may edit the value.
     public static final int STATIC_READONLY = 0;         // final - not editable

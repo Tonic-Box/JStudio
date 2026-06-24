@@ -51,8 +51,10 @@ import com.tonic.model.FieldEntryModel;
 import com.tonic.ui.query.QueryExplorerPanel;
 import com.tonic.ui.core.component.ToolWindowPane;
 import com.tonic.event.events.LiveSessionEvent;
+import com.tonic.event.events.ScanSeedEvent;
 import com.tonic.ui.live.threads.LiveThreadsPanel;
 import com.tonic.ui.live.profiler.LiveProfilerPanel;
+import com.tonic.ui.live.scanner.LiveValueScannerPanel;
 import com.tonic.live.LiveSession;
 import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.live.recorder.LiveRecorderPanel;
@@ -249,6 +251,10 @@ public class MainFrame extends JFrame {
                     liveProfilerPanel = new LiveProfilerPanel();
                 }
                 rightToolWindow.addTool("Profiler", liveProfilerPanel);
+                if (liveValueScannerPanel == null) {
+                    liveValueScannerPanel = new LiveValueScannerPanel(this);
+                }
+                rightToolWindow.addTool("Value Scanner", liveValueScannerPanel);
                 LiveSession session = LiveAttachService.getInstance().getSession();
                 if (session != null && session.supportsJfr()) {
                     if (liveRecorderPanel == null) {
@@ -259,11 +265,20 @@ public class MainFrame extends JFrame {
             } else {
                 // A live tool may have been moved to a tab/window; tear that float down (the session is gone) before
                 // the dock removal, which is then a clean no-op.
-                for (String tool : new String[]{"Threads", "Profiler", "Recorder"}) {
+                for (String tool : new String[]{"Threads", "Profiler", "Recorder", "Value Scanner"}) {
                     toolWindowMover.closeFloat(tool);
                     rightToolWindow.removeTool(tool);
                 }
             }
+        });
+
+        // "Scan for this value" from the live heap/statics views: focus the scanner tool and seed its scan bar.
+        EventBus.getInstance().register(ScanSeedEvent.class, e -> {
+            if (liveValueScannerPanel == null) {
+                return;
+            }
+            rightToolWindow.select("Value Scanner");
+            liveValueScannerPanel.seed(e.getValueType(), e.getValue(), e.getPackageFilter());
         });
 
         // Bottom panel with tabbed results (Find Usages, Console, Bookmarks, Comments)
@@ -1216,6 +1231,12 @@ public class MainFrame extends JFrame {
     private LiveSession liveCaptureSession;
     private LiveThreadsPanel liveThreadsPanel;
     private LiveProfilerPanel liveProfilerPanel;
+    private LiveValueScannerPanel liveValueScannerPanel;
+
+    /** The live Value Scanner tool (present only while attached); null when not attached. */
+    public LiveValueScannerPanel getValueScannerPanel() {
+        return liveValueScannerPanel;
+    }
 
     /**
      * Arms or disarms runtime class-load capture on the active live session. Captured classes (packers,

@@ -1,5 +1,7 @@
 package com.tonic.ui.live.statics;
 
+import com.tonic.event.EventBus;
+import com.tonic.event.events.ScanSeedEvent;
 import com.tonic.live.LiveSession;
 import com.tonic.live.protocol.LiveProtocol;
 import com.tonic.live.protocol.StaticField;
@@ -22,8 +24,10 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -32,6 +36,8 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -122,8 +128,61 @@ public final class LiveStaticsView extends AbstractEditorView {
                 setNullButton.setEnabled(nullable);
             }
         });
+        fieldTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                maybeScanPopup(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                maybeScanPopup(e);
+            }
+        });
         panel.add(new ThemedJScrollPane(fieldTable), BorderLayout.CENTER);
         return panel;
+    }
+
+    /** Right-click "Scan for this value" on a primitive/String field: seeds the live Value Scanner. */
+    private void maybeScanPopup(MouseEvent e) {
+        if (!e.isPopupTrigger()) {
+            return;
+        }
+        int row = fieldTable.rowAtPoint(e.getPoint());
+        if (row < 0 || row >= fieldRows.size()) {
+            return;
+        }
+        fieldTable.setRowSelectionInterval(row, row);
+        StaticField field = fieldRows.get(row);
+        int valueType = scanTypeOf(field.getTypeDesc());
+        if (valueType < 0) {
+            return;
+        }
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem scan = new JMenuItem("Scan for this value");
+        scan.addActionListener(ev -> EventBus.getInstance().post(
+                new ScanSeedEvent(this, valueType, field.getValue(), "")));
+        menu.add(scan);
+        menu.show(fieldTable, e.getX(), e.getY());
+    }
+
+    /** Maps a field descriptor to a scanner {@code SCAN_*} value type, or -1 for non-scannable types. */
+    private static int scanTypeOf(String desc) {
+        if (desc == null || desc.isEmpty()) {
+            return -1;
+        }
+        switch (desc) {
+            case "I": return LiveProtocol.SCAN_INT;
+            case "J": return LiveProtocol.SCAN_LONG;
+            case "S": return LiveProtocol.SCAN_SHORT;
+            case "B": return LiveProtocol.SCAN_BYTE;
+            case "C": return LiveProtocol.SCAN_CHAR;
+            case "F": return LiveProtocol.SCAN_FLOAT;
+            case "D": return LiveProtocol.SCAN_DOUBLE;
+            case "Z": return LiveProtocol.SCAN_BOOLEAN;
+            case "Ljava/lang/String;": return LiveProtocol.SCAN_STRING;
+            default: return -1;
+        }
     }
 
     private JComponent buildMethodsPanel() {
