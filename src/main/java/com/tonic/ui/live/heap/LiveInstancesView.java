@@ -3,6 +3,8 @@ package com.tonic.ui.live.heap;
 import com.tonic.event.EventBus;
 import com.tonic.event.events.ScanSeedEvent;
 import com.tonic.live.LiveSession;
+import com.tonic.live.protocol.LiveField;
+import com.tonic.live.protocol.LiveInstance;
 import com.tonic.live.protocol.LiveProtocol;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.ui.core.SwingWorkers;
@@ -11,14 +13,15 @@ import com.tonic.ui.core.component.ThemedJScrollPane;
 import com.tonic.ui.core.component.ThemedJTable;
 import com.tonic.ui.editor.view.AbstractEditorView;
 import com.tonic.ui.live.LiveAttachService;
-import com.tonic.ui.live.LiveHeapService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -27,6 +30,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
@@ -45,10 +49,11 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * A heap-snapshot view of the live instances of one class. The left list shows every instance of the tab's
- * class found in the current heap dump; selecting one shows its field values on the right. References are
- * navigable (double-click), with a back stack. The Refresh button takes a fresh dump; merely switching to
- * another class's tab re-filters the existing snapshot instantly (no new dump).
+ * A live view of the instances of one class. The left list shows instances found by walking the live heap;
+ * selecting one shows its current field values on the right, read from the real object via a retained handle.
+ * Non-final primitive/String fields edit in place (double-click; booleans use a true/false dropdown) and are
+ * written straight to the live object; reference fields are click-to-navigate, with a back stack. Refresh
+ * re-walks the heap.
  */
 public final class LiveInstancesView extends AbstractEditorView {
 
@@ -60,18 +65,28 @@ public final class LiveInstancesView extends AbstractEditorView {
     private JButton backButton;
     private final JLabel detailHeader = new JLabel(" ");
 
-    private final DefaultListModel<Long> listModel = new DefaultListModel<>();
-    private final JList<Long> instanceList = new JList<>(listModel);
-    private final DefaultTableModel fieldModel = new DefaultTableModel(new Object[]{"Field", "Type", "Value"}, 0) {
+    private static final int MAX_INSTANCES = 10_000;
+    private static final int MAX_VISITED = 3_000_000;
+
+    private final DefaultListModel<LiveInstance> listModel = new DefaultListModel<>();
+    private final JList<LiveInstance> instanceList = new JList<>(listModel);
+    private final FieldTableModel fieldModel = new FieldTableModel();
+    private final ThemedJTable fieldTable = new ThemedJTable(fieldModel) {
         @Override
-        public boolean isCellEditable(int row, int column) {
-            return false;
+        public javax.swing.table.TableCellEditor getCellEditor(int row, int column) {
+            if (convertColumnIndexToModel(column) == 2) {
+                Object v = fieldModel.getValueAt(convertRowIndexToModel(row), 2);
+                if (v instanceof LiveField && ((LiveField) v).isBoolean()) {
+                    return new ValueEditor(new JComboBox<>(new String[]{"true", "false"}));
+                }
+                return new ValueEditor(new JTextField());
+            }
+            return super.getCellEditor(row, column);
         }
     };
-    private final ThemedJTable fieldTable = new ThemedJTable(fieldModel);
 
     private final Deque<Long> backStack = new ArrayDeque<>();
-    private long currentObjId;
+    private long currentHandleId;
 
     public LiveInstancesView(ClassEntryModel classEntry) {
         super(new BorderLayout());
@@ -81,8 +96,8 @@ public final class LiveInstancesView extends AbstractEditorView {
                 new FlowLayout(FlowLayout.LEFT, 8, 4));
         refreshButton = new JButton("Refresh", Icons.getIcon("refresh"));
         refreshButton.setFocusable(false);
-        refreshButton.setToolTipText("Take a fresh heap dump and re-list instances");
-        refreshButton.addActionListener(e -> reload(true));
+        refreshButton.setToolTipText("Re-walk the live heap and re-list instances");
+        refreshButton.addActionListener(e -> loadInstances());
         countLabel.setForeground(JStudioTheme.getTextSecondary());
         countLabel.setFont(JStudioTheme.getUIFont(12));
         progressBar.setIndeterminate(true);
@@ -100,10 +115,10 @@ public final class LiveInstancesView extends AbstractEditorView {
         instanceList.setCellRenderer(new InstanceCellRenderer());
         instanceList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                Long sel = instanceList.getSelectedValue();
+                LiveInstance sel = instanceList.getSelectedValue();
                 if (sel != null) {
                     backStack.clear();
-                    showInstance(sel);
+                    showInstance(sel.getHandleId(), sel.getLabel());
                 }
             }
         });
@@ -132,7 +147,9 @@ public final class LiveInstancesView extends AbstractEditorView {
         backButton.setEnabled(false);
         backButton.addActionListener(e -> {
             if (!backStack.isEmpty()) {
-                showInstance(backStack.pop());
+                String n = classEntry.getClassName();
+                int slash = n.lastIndexOf('/');
+                showInstance(backStack.pop(), slash < 0 ? n : n.substring(slash + 1));
             }
         });
         detailHeader.setForeground(JStudioTheme.getAccent());
@@ -148,10 +165,10 @@ public final class LiveInstancesView extends AbstractEditorView {
         MouseAdapter refNav = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                HprofSnapshot.FieldValue f = refAt(e.getPoint());
+                LiveField f = refAt(e.getPoint());
                 if (f != null) {
-                    backStack.push(currentObjId);
-                    showInstance(f.refId);
+                    backStack.push(currentHandleId);
+                    showInstance(f.getRefHandleId(), f.getDisplay());
                 }
             }
 
@@ -190,53 +207,36 @@ public final class LiveInstancesView extends AbstractEditorView {
         }
         fieldTable.setRowSelectionInterval(row, row);
         Object value = fieldModel.getValueAt(row, 2);
-        if (!(value instanceof HprofSnapshot.FieldValue)) {
+        if (!(value instanceof LiveField)) {
             return;
         }
-        HprofSnapshot.FieldValue f = (HprofSnapshot.FieldValue) value;
+        LiveField f = (LiveField) value;
         int valueType = scanTypeOf(f);
-        if (valueType < 0) {
+        if (valueType < 0 || "null".equals(f.getDisplay())) {
             return;
         }
-        String seedValue = seedValueOf(valueType, f.display);
         JPopupMenu menu = new JPopupMenu();
         JMenuItem scan = new JMenuItem("Scan for this value");
         scan.addActionListener(ev -> EventBus.getInstance().post(
-                new ScanSeedEvent(this, valueType, seedValue, "")));
+                new ScanSeedEvent(this, valueType, f.getDisplay(), "")));
         menu.add(scan);
         menu.show(fieldTable, e.getX(), e.getY());
     }
 
-    /** Maps an instance field value to a scanner {@code SCAN_*} type, or -1 for non-scannable (refs/null). */
-    private static int scanTypeOf(HprofSnapshot.FieldValue f) {
-        switch (f.type) {
-            case "int": return LiveProtocol.SCAN_INT;
-            case "long": return LiveProtocol.SCAN_LONG;
-            case "short": return LiveProtocol.SCAN_SHORT;
-            case "byte": return LiveProtocol.SCAN_BYTE;
-            case "char": return LiveProtocol.SCAN_CHAR;
-            case "float": return LiveProtocol.SCAN_FLOAT;
-            case "double": return LiveProtocol.SCAN_DOUBLE;
-            case "boolean": return LiveProtocol.SCAN_BOOLEAN;
-            case "ref":
-                return f.refId != 0 && f.display.startsWith("\"") ? LiveProtocol.SCAN_STRING : -1;
-            default:
-                return -1;
+    /** Maps an instance field (by JVM type descriptor) to a scanner {@code SCAN_*} type, or -1 if not scannable. */
+    private static int scanTypeOf(LiveField f) {
+        switch (f.getTypeDesc()) {
+            case "I": return LiveProtocol.SCAN_INT;
+            case "J": return LiveProtocol.SCAN_LONG;
+            case "S": return LiveProtocol.SCAN_SHORT;
+            case "B": return LiveProtocol.SCAN_BYTE;
+            case "C": return LiveProtocol.SCAN_CHAR;
+            case "F": return LiveProtocol.SCAN_FLOAT;
+            case "D": return LiveProtocol.SCAN_DOUBLE;
+            case "Z": return LiveProtocol.SCAN_BOOLEAN;
+            case "Ljava/lang/String;": return LiveProtocol.SCAN_STRING;
+            default: return -1;
         }
-    }
-
-    /** Strips the display quoting the snapshot adds (Strings {@code "..."}, chars {@code '.'}) for the scan value. */
-    private static String seedValueOf(int valueType, String display) {
-        if (valueType == LiveProtocol.SCAN_STRING && display.length() >= 2
-                && display.startsWith("\"") && display.endsWith("\"")) {
-            String s = display.substring(1, display.length() - 1);
-            return s.endsWith("...") ? s.substring(0, s.length() - 3) : s;
-        }
-        if (valueType == LiveProtocol.SCAN_CHAR && display.length() >= 3
-                && display.startsWith("'") && display.endsWith("'")) {
-            return display.substring(1, display.length() - 1);
-        }
-        return display;
     }
 
     /** Called when the view becomes visible (EditorTab refresh). Lists instances using the current snapshot. */
@@ -244,15 +244,12 @@ public final class LiveInstancesView extends AbstractEditorView {
     public void refresh() {
         if (!loaded) {
             loaded = true;
-            reload(false);
+            loadInstances();
         }
     }
 
-    /**
-     * Lists the instances of this class. With {@code forceDump} a brand-new heap dump is taken; otherwise the
-     * existing snapshot is reused (only dumping if none exists yet). Runs the dump/parse off the EDT.
-     */
-    private void reload(boolean forceDump) {
+    /** Walks the live heap for instances of this class (live handles, so fields can be read and written). */
+    private void loadInstances() {
         LiveSession session = LiveAttachService.getInstance().getSession();
         if (session == null) {
             listModel.clear();
@@ -265,29 +262,25 @@ public final class LiveInstancesView extends AbstractEditorView {
         instanceList.setEnabled(false);
         listModel.clear();
         clearDetail();
-        countLabel.setText(forceDump ? "Taking heap dump..." : "Loading snapshot...");
+        countLabel.setText("Walking heap...");
         final String internalName = classEntry.getClassName();
 
         SwingWorkers.run(
-                () -> {
-                    LiveHeapService svc = LiveHeapService.get();
-                    HprofSnapshot snap = forceDump ? svc.snapshot(session) : svc.ensureSnapshot(session);
-                    return snap.instancesOf(internalName);
-                },
+                () -> session.listInstances(internalName, MAX_INSTANCES, MAX_VISITED),
                 this::showInstances,
                 err -> {
                     endLoading();
                     listModel.clear();
                     clearDetail();
-                    countLabel.setText("Heap dump failed: " + err.getMessage());
+                    countLabel.setText("Instance walk failed: " + err.getMessage());
                 });
     }
 
-    private void showInstances(List<Long> ids) {
+    private void showInstances(List<LiveInstance> instances) {
         endLoading();
         listModel.clear();
-        for (Long id : ids) {
-            listModel.addElement(id);
+        for (LiveInstance i : instances) {
+            listModel.addElement(i);
         }
         countLabel.setText(listModel.size() + " instance" + (listModel.size() == 1 ? "" : "s"));
         clearDetail();
@@ -299,41 +292,71 @@ public final class LiveInstancesView extends AbstractEditorView {
         instanceList.setEnabled(true);
     }
 
-    private void showInstance(long objId) {
-        currentObjId = objId;
+    private void showInstance(long handleId, String header) {
+        currentHandleId = handleId;
         backButton.setEnabled(!backStack.isEmpty());
-        HprofSnapshot snap = LiveHeapService.get().getSnapshot();
-        if (snap == null) {
-            clearDetail();
+        detailHeader.setText(header);
+        fieldModel.setRowCount(0);
+        LiveSession session = LiveAttachService.getInstance().getSession();
+        if (session == null) {
             return;
         }
-        detailHeader.setText(snap.labelFor(objId));
-        fieldModel.setRowCount(0);
-        try {
-            HprofSnapshot.InstanceData data = snap.decode(objId);
-            for (HprofSnapshot.FieldValue f : data.fields) {
-                fieldModel.addRow(new Object[]{f.name, f.type, f});
-            }
-        } catch (Exception ex) {
-            detailHeader.setText("Failed to decode @" + Long.toHexString(objId) + ": " + ex.getMessage());
+        SwingWorkers.run(
+                () -> session.instanceFields(handleId),
+                fields -> {
+                    fieldModel.setRowCount(0);
+                    for (LiveField f : fields) {
+                        fieldModel.addRow(new Object[]{f.getName(), prettyType(f.getTypeDesc()), f});
+                    }
+                },
+                err -> detailHeader.setText(header + " - read failed: " + err.getMessage()));
+    }
+
+    /** Writes an edited primitive/String field to the live object, then refreshes the cell with the read-back value. */
+    private void commitFieldEdit(int row, LiveField field, String newValue) {
+        LiveSession session = LiveAttachService.getInstance().getSession();
+        if (session == null) {
+            return;
+        }
+        SwingWorkers.run(
+                () -> session.setInstanceField(currentHandleId, field.getName(), false, newValue),
+                newDisplay -> fieldModel.setLiveField(row, new LiveField(field.getName(), field.getTypeDesc(),
+                        newDisplay, field.getRefHandleId(), field.isEditable())),
+                err -> countLabel.setText("Set failed: " + err.getMessage()));
+    }
+
+    /** Friendly type from a JVM descriptor: {@code I -> int}, {@code Ljava/lang/String; -> String}, {@code [I -> int[]}. */
+    private static String prettyType(String desc) {
+        if (desc == null || desc.isEmpty()) {
+            return "?";
+        }
+        switch (desc.charAt(0)) {
+            case 'Z': return "boolean";
+            case 'B': return "byte";
+            case 'C': return "char";
+            case 'S': return "short";
+            case 'I': return "int";
+            case 'J': return "long";
+            case 'F': return "float";
+            case 'D': return "double";
+            case '[': return prettyType(desc.substring(1)) + "[]";
+            case 'L':
+                String n = desc.substring(1, desc.endsWith(";") ? desc.length() - 1 : desc.length());
+                int slash = n.lastIndexOf('/');
+                return slash < 0 ? n : n.substring(slash + 1);
+            default: return desc;
         }
     }
 
-    /** The reference {@code FieldValue} under point {@code p} if it is a navigable ref in the Value column, else null. */
-    private HprofSnapshot.FieldValue refAt(Point p) {
+    /** The reference {@code LiveField} under point {@code p} if it is a navigable ref in the Value column, else null. */
+    private LiveField refAt(Point p) {
         int row = fieldTable.rowAtPoint(p);
         int col = fieldTable.columnAtPoint(p);
         if (row < 0 || col < 0 || fieldTable.convertColumnIndexToModel(col) != 2) {
             return null;
         }
         Object value = fieldModel.getValueAt(row, 2);
-        if (value instanceof HprofSnapshot.FieldValue) {
-            HprofSnapshot.FieldValue f = (HprofSnapshot.FieldValue) value;
-            if (f.refId != 0) {
-                return f;
-            }
-        }
-        return null;
+        return value instanceof LiveField && ((LiveField) value).isReference() ? (LiveField) value : null;
     }
 
     private void clearDetail() {
@@ -345,14 +368,64 @@ public final class LiveInstancesView extends AbstractEditorView {
         }
     }
 
-    /** Renders an instance id as its snapshot label (Class@hex, or the text for a String). */
+    /** Table model whose Value column (2) holds {@link LiveField}s; non-final primitive/String cells edit in place. */
+    private final class FieldTableModel extends DefaultTableModel {
+        FieldTableModel() {
+            super(new Object[]{"Field", "Type", "Value"}, 0);
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            if (column != 2) {
+                return false;
+            }
+            Object v = getValueAt(row, 2);
+            return v instanceof LiveField && ((LiveField) v).isEditable();
+        }
+
+        @Override
+        public void setValueAt(Object aValue, int row, int column) {
+            if (column == 2) {
+                Object cur = getValueAt(row, 2);
+                if (cur instanceof LiveField && ((LiveField) cur).isEditable()) {
+                    commitFieldEdit(row, (LiveField) cur, String.valueOf(aValue));
+                    return;
+                }
+            }
+            super.setValueAt(aValue, row, column);
+        }
+
+        /** Programmatic update that bypasses the edit intercept (used after a successful write). */
+        void setLiveField(int row, LiveField f) {
+            super.setValueAt(f, row, 2);
+        }
+    }
+
+    /** Value-column editor: a true/false combo for booleans, a text field otherwise; seeds from the field's display. */
+    private static final class ValueEditor extends DefaultCellEditor {
+        ValueEditor(JComboBox<String> combo) {
+            super(combo);
+        }
+
+        ValueEditor(JTextField text) {
+            super(text);
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
+                                                     int row, int column) {
+            String text = value instanceof LiveField ? ((LiveField) value).getDisplay() : String.valueOf(value);
+            return super.getTableCellEditorComponent(table, text, isSelected, row, column);
+        }
+    }
+
+    /** Renders a live instance by its agent-supplied label (Class@hex, or the text for a String). */
     private static final class InstanceCellRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                                                       boolean isSelected, boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            HprofSnapshot snap = LiveHeapService.get().getSnapshot();
-            setText(snap != null && value instanceof Long ? snap.labelFor((Long) value) : String.valueOf(value));
+            setText(value instanceof LiveInstance ? ((LiveInstance) value).getLabel() : String.valueOf(value));
             setFont(JStudioTheme.getCodeFont(12));
             setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
             if (isSelected) {
@@ -366,7 +439,7 @@ public final class LiveInstancesView extends AbstractEditorView {
         }
     }
 
-    /** Colours field values: references accent + underlined, strings green, null muted, primitives plain. */
+    /** Colours field values: references accent, strings/chars green, null muted, primitives plain. */
     private static final class ValueCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
@@ -374,14 +447,14 @@ public final class LiveInstancesView extends AbstractEditorView {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             Color fg = JStudioTheme.getTextPrimary();
             String text = String.valueOf(value);
-            if (value instanceof HprofSnapshot.FieldValue) {
-                HprofSnapshot.FieldValue f = (HprofSnapshot.FieldValue) value;
-                text = f.display;
-                if (f.refId != 0) {
+            if (value instanceof LiveField) {
+                LiveField f = (LiveField) value;
+                text = f.getDisplay();
+                if (f.isReference()) {
                     fg = JStudioTheme.getAccent();
-                } else if ("null".equals(f.display)) {
+                } else if ("null".equals(f.getDisplay())) {
                     fg = JStudioTheme.getTextDisabled();
-                } else if (f.display.startsWith("\"") || "char".equals(f.type)) {
+                } else if ("Ljava/lang/String;".equals(f.getTypeDesc()) || "C".equals(f.getTypeDesc())) {
                     fg = JStudioTheme.getSuccess();
                 }
             }

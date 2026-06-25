@@ -36,13 +36,19 @@ public final class LiveProtocol {
     // A "location" wire record is: u64 id, str declaringClass, str fieldName, str fieldDesc, str displayPath,
     // str type, str value, u8 flags (FLAG_PINNED|FLAG_FROZEN|FLAG_COLLECTED). A "page" is: u32 total, u8 truncated,
     // u32 returned, [location]*. Scalar values travel as strings parsed agent-side (mirroring MSG_SET_STATIC).
-    public static final int MSG_SCAN_FIRST = 0x30;  // req: u8 valueType,u8 scanKind,str value,str value2,str pkgFilter,u32 maxVisited,u32 maxMatches,u32 limit; resp: page
+    public static final int MSG_SCAN_FIRST = 0x30;  // req: u8 valueType,u8 scanKind,str value,str value2,str pkgFilter,u32 maxVisited,u32 maxMatches,u32 limit,u8 userClassesOnly; resp: page
     public static final int MSG_SCAN_NEXT = 0x31;   // req: u8 comparator,str value,str value2,u32 offset,u32 limit; resp: page
     public static final int MSG_SCAN_READ = 0x32;   // req: u8 pinnedOnly,u32 offset,u32 limit; resp: page
     public static final int MSG_SCAN_WRITE = 0x33;  // req: u64 id,u8 isNull,str value; resp: str newValue
     public static final int MSG_SCAN_FREEZE = 0x34; // req: u64 id,u8 on,str value; resp: u8 ok
     public static final int MSG_SCAN_PIN = 0x35;    // req: u64 id,u8 on; resp: u8 ok
     public static final int MSG_SCAN_CLEAR = 0x36;  // req: empty; resp: u8 ok
+
+    // Live instances (the instances view): walk the heap for live instances of a class, then read/write their
+    // fields by handle. Handles are weak refs the agent retains, so a write hits the real live object.
+    public static final int MSG_LIST_INSTANCES = 0x37;     // req: str class,u32 maxInstances,u32 maxVisited; resp: u32 count,[u64 id,str label]*
+    public static final int MSG_INSTANCE_FIELDS = 0x38;    // req: u64 handleId; resp: u32 count,[str name,str typeDesc,str display,u64 refId,u8 editable]*
+    public static final int MSG_SET_INSTANCE_FIELD = 0x39; // req: u64 handleId,str field,u8 isNull,str value; resp: str newValue
 
     public static final int MSG_ERROR = 0x7F;            // resp only: string message
 

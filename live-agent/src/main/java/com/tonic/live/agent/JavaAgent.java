@@ -73,6 +73,7 @@ public final class JavaAgent {
 
     private static void start(String args, Instrumentation instrumentation) {
         inst = instrumentation;
+        openAllModules(instrumentation);
         int port = parsePort(args);
         if (port <= 0) {
             log("no/invalid port in agent args: " + args);
@@ -83,6 +84,32 @@ public final class JavaAgent {
         t.setDaemon(true);
         t.start();
         log("started on 127.0.0.1:" + port);
+    }
+
+    /**
+     * Opens every boot-layer module's packages to this agent's module so the heap scanner can read fields
+     * of JDK objects (Swing/AWT component trees, collection internals, etc.) via reflection. Without this,
+     * {@code setAccessible(true)} throws {@code InaccessibleObjectException} on Java 17+ for closed modules,
+     * the object-graph walk dies at the first JDK object, and app values held inside JDK containers are
+     * never visited (e.g. a button/list string reachable only through a Swing window's component tree).
+     */
+    private static void openAllModules(Instrumentation inst) {
+        try {
+            java.util.Set<Module> agent = java.util.Collections.singleton(JavaAgent.class.getModule());
+            for (Module m : ModuleLayer.boot().modules()) {
+                if (!inst.isModifiableModule(m)) {
+                    continue;
+                }
+                java.util.Map<String, java.util.Set<Module>> opens = new java.util.HashMap<>();
+                for (String pkg : m.getPackages()) {
+                    opens.put(pkg, agent);
+                }
+                inst.redefineModule(m, java.util.Collections.emptySet(), java.util.Collections.emptyMap(),
+                        opens, java.util.Collections.emptySet(), java.util.Collections.emptyMap());
+            }
+        } catch (Throwable t) {
+            log("openAllModules failed (heap scan may miss values inside JDK objects): " + t);
+        }
     }
 
     private static int parsePort(String args) {
@@ -201,6 +228,12 @@ public final class JavaAgent {
                 return handleScanPin(in);
             case LiveProtocol.MSG_SCAN_CLEAR:
                 return handleScanClear();
+            case LiveProtocol.MSG_LIST_INSTANCES:
+                return handleListInstances(in);
+            case LiveProtocol.MSG_INSTANCE_FIELDS:
+                return handleInstanceFields(in);
+            case LiveProtocol.MSG_SET_INSTANCE_FIELD:
+                return handleSetInstanceField(in);
             default:
                 return error("operation not supported by the JStudio Live agent");
         }
@@ -760,8 +793,9 @@ public final class JavaAgent {
         int maxVisited = in.readInt();
         int maxMatches = in.readInt();
         int limit = in.readInt();
+        boolean userClassesOnly = in.readBoolean();
         try {
-            SCAN.firstScan(inst, valueType, scanKind, value, value2, pkgFilter, maxVisited, maxMatches);
+            SCAN.firstScan(inst, valueType, scanKind, value, value2, pkgFilter, userClassesOnly, maxVisited, maxMatches);
             return SCAN.page(LiveProtocol.MSG_SCAN_FIRST, false, 0, limit);
         } catch (NumberFormatException e) {
             return error("invalid scan value: " + e.getMessage());
@@ -791,6 +825,63 @@ public final class JavaAgent {
         String value = readString(in);
         try {
             return strResp(LiveProtocol.MSG_SCAN_WRITE, SCAN.write(id, isNull, value));
+        } catch (RuntimeException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    private static byte[] handleListInstances(DataInputStream in) throws IOException {
+        String className = readString(in).replace('/', '.');
+        int maxInstances = in.readInt();
+        int maxVisited = in.readInt();
+        try {
+            List<Object[]> rows = SCAN.collectInstances(inst, className, maxInstances, maxVisited);
+            Buf b = new Buf();
+            b.u8(LiveProtocol.MSG_LIST_INSTANCES);
+            ByteArrayOutputStream tmp = new ByteArrayOutputStream();
+            DataOutputStream td = new DataOutputStream(tmp);
+            for (Object[] r : rows) {
+                td.writeLong((Long) r[0]);
+                writeString(td, (String) r[1]);
+            }
+            b.u32(rows.size());
+            b.raw(tmp.toByteArray());
+            return b.toBytes();
+        } catch (RuntimeException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    private static byte[] handleInstanceFields(DataInputStream in) throws IOException {
+        long id = in.readLong();
+        try {
+            List<Object[]> rows = SCAN.instanceFields(id);
+            Buf b = new Buf();
+            b.u8(LiveProtocol.MSG_INSTANCE_FIELDS);
+            ByteArrayOutputStream tmp = new ByteArrayOutputStream();
+            DataOutputStream td = new DataOutputStream(tmp);
+            for (Object[] r : rows) {
+                writeString(td, (String) r[0]);
+                writeString(td, (String) r[1]);
+                writeString(td, (String) r[2]);
+                td.writeLong((Long) r[3]);
+                td.writeByte(((Boolean) r[4]) ? 1 : 0);
+            }
+            b.u32(rows.size());
+            b.raw(tmp.toByteArray());
+            return b.toBytes();
+        } catch (RuntimeException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    private static byte[] handleSetInstanceField(DataInputStream in) throws IOException {
+        long id = in.readLong();
+        String field = readString(in);
+        boolean isNull = in.readUnsignedByte() != 0;
+        String value = readString(in);
+        try {
+            return strResp(LiveProtocol.MSG_SET_INSTANCE_FIELD, SCAN.setInstanceField(id, field, isNull, value));
         } catch (RuntimeException e) {
             return error(e.getMessage());
         }

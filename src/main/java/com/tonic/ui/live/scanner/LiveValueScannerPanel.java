@@ -25,6 +25,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JCheckBox;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.Timer;
@@ -83,6 +84,7 @@ public final class LiveValueScannerPanel extends ThemedJPanel {
     private final JTextField valueField = new JTextField(8);
     private final JTextField value2Field = new JTextField(8);
     private final JTextField pkgFilterField = new JTextField(8);
+    private final JCheckBox includeJdkCheckbox = new JCheckBox("Include Java internals");
     private final JButton firstScanButton = new JButton("First Scan");
     private final JButton nextScanButton = new JButton("Next Scan");
     private final JButton newScanButton = new JButton("New Scan");
@@ -180,6 +182,11 @@ public final class LiveValueScannerPanel extends ThemedJPanel {
         buttons.add(label("Next:"));
         buttons.add(comparatorCombo);
         buttons.add(nextScanButton);
+        buttons.add(Box.createHorizontalStrut(10));
+        includeJdkCheckbox.setFocusable(false);
+        includeJdkCheckbox.setToolTipText("Off: only values reachable through your app's classes. "
+                + "On: also report values held directly in JDK/library internals (slower, noisier).");
+        buttons.add(includeJdkCheckbox);
         c.gridy = 3; c.gridx = 0; c.gridwidth = 4; c.anchor = GridBagConstraints.WEST;
         bar.add(buttons, c);
 
@@ -294,12 +301,13 @@ public final class LiveValueScannerPanel extends ThemedJPanel {
         String value = valueField.getText();
         String value2 = value2Field.getText();
         String pkgFilter = pkgFilterField.getText().trim();
+        boolean userClassesOnly = !includeJdkCheckbox.isSelected();
 
         scanInFlight = true;
         statusLabel.setText("Scanning...");
         updateButtons();
         SwingWorkers.run(
-                () -> session.scanFirst(valueType, scanKind, value, value2, pkgFilter,
+                () -> session.scanFirst(valueType, scanKind, value, value2, pkgFilter, userClassesOnly,
                         MAX_VISITED, MAX_MATCHES, PAGE_LIMIT),
                 page -> {
                     scanInFlight = false;

@@ -3,6 +3,8 @@ package com.tonic.live;
 import com.tonic.live.protocol.AgentInfo;
 import com.tonic.live.protocol.ContentionEdge;
 import com.tonic.live.protocol.LiveEvent;
+import com.tonic.live.protocol.LiveField;
+import com.tonic.live.protocol.LiveInstance;
 import com.tonic.live.protocol.LoadedClass;
 import com.tonic.live.protocol.MetricsSnapshot;
 import com.tonic.live.protocol.ScanPage;
@@ -145,8 +147,9 @@ public final class LiveSession implements Closeable {
 
     /** First scan: walk app roots, retaining matching field locations as the new candidate set. */
     public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter,
-                              int maxVisited, int maxMatches, int limit) throws IOException {
-        return client.scanFirst(valueType, scanKind, value, value2, pkgFilter, maxVisited, maxMatches, limit);
+                              boolean userClassesOnly, int maxVisited, int maxMatches, int limit) throws IOException {
+        return client.scanFirst(valueType, scanKind, value, value2, pkgFilter, userClassesOnly,
+                maxVisited, maxMatches, limit);
     }
 
     /** Next scan: re-read the retained set and narrow it by the comparator (changed/increased/...). */
@@ -162,6 +165,19 @@ public final class LiveSession implements Closeable {
     /** Writes a value into a scanned field; returns the re-read value. */
     public String scanWrite(long id, boolean isNull, String value) throws IOException {
         return client.scanWrite(id, isNull, value);
+    }
+
+    /** Walks the heap for live instances of a class; their fields can then be read/written by handle. */
+    public List<LiveInstance> listInstances(String className, int maxInstances, int maxVisited) throws IOException {
+        return client.listInstances(className, maxInstances, maxVisited);
+    }
+
+    public List<LiveField> instanceFields(long handleId) throws IOException {
+        return client.instanceFields(handleId);
+    }
+
+    public String setInstanceField(long handleId, String field, boolean isNull, String value) throws IOException {
+        return client.setInstanceField(handleId, field, isNull, value);
     }
 
     /** Freezes (re-applies on a timer) or unfreezes a scanned field at {@code value}. */

@@ -3,6 +3,8 @@ package com.tonic.live;
 import com.tonic.live.protocol.AgentInfo;
 import com.tonic.live.protocol.ContentionEdge;
 import com.tonic.live.protocol.LiveEvent;
+import com.tonic.live.protocol.LiveField;
+import com.tonic.live.protocol.LiveInstance;
 import com.tonic.live.protocol.MetricsSnapshot;
 import com.tonic.live.protocol.LiveProtocol;
 import com.tonic.live.protocol.LoadedClass;
@@ -230,7 +232,7 @@ public final class LiveAgentClient implements Closeable {
     // ---- value scanner ----------------------------------------------------------------------------
 
     public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter,
-                              int maxVisited, int maxMatches, int limit) throws IOException {
+                              boolean userClassesOnly, int maxVisited, int maxMatches, int limit) throws IOException {
         DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_FIRST, b -> {
             b.writeByte(valueType);
             b.writeByte(scanKind);
@@ -240,6 +242,7 @@ public final class LiveAgentClient implements Closeable {
             b.writeInt(maxVisited);
             b.writeInt(maxMatches);
             b.writeInt(limit);
+            b.writeBoolean(userClassesOnly);
         }));
         skipType(r, LiveProtocol.MSG_SCAN_FIRST);
         return readPage(r);
@@ -274,6 +277,49 @@ public final class LiveAgentClient implements Closeable {
             writeString(b, value == null ? "" : value);
         }));
         skipType(r, LiveProtocol.MSG_SCAN_WRITE);
+        return readString(r);
+    }
+
+    public List<LiveInstance> listInstances(String className, int maxInstances, int maxVisited) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_LIST_INSTANCES, b -> {
+            writeString(b, className == null ? "" : className);
+            b.writeInt(maxInstances);
+            b.writeInt(maxVisited);
+        }));
+        skipType(r, LiveProtocol.MSG_LIST_INSTANCES);
+        int count = r.readInt();
+        List<LiveInstance> out = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            long id = r.readLong();
+            out.add(new LiveInstance(id, readString(r)));
+        }
+        return out;
+    }
+
+    public List<LiveField> instanceFields(long handleId) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_INSTANCE_FIELDS, b -> b.writeLong(handleId)));
+        skipType(r, LiveProtocol.MSG_INSTANCE_FIELDS);
+        int count = r.readInt();
+        List<LiveField> out = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            String name = readString(r);
+            String typeDesc = readString(r);
+            String display = readString(r);
+            long refId = r.readLong();
+            boolean editable = r.readUnsignedByte() != 0;
+            out.add(new LiveField(name, typeDesc, display, refId, editable));
+        }
+        return out;
+    }
+
+    public String setInstanceField(long handleId, String field, boolean isNull, String value) throws IOException {
+        DataInputStream r = request(payload(LiveProtocol.MSG_SET_INSTANCE_FIELD, b -> {
+            b.writeLong(handleId);
+            writeString(b, field);
+            b.writeByte(isNull ? 1 : 0);
+            writeString(b, value == null ? "" : value);
+        }));
+        skipType(r, LiveProtocol.MSG_SET_INSTANCE_FIELD);
         return readString(r);
     }
 

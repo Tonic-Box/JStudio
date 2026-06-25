@@ -35,9 +35,13 @@ final class ScanEngine {
     private final AtomicLong ids = new AtomicLong(1);
     private final Map<Long, Location> active = new LinkedHashMap<>();
     private final Map<Long, Location> pinned = new LinkedHashMap<>();
+    /** Live-instance handles for the instances view: id -> weak ref to the object (so reads/writes hit the live object). */
+    private final Map<Long, WeakReference<Object>> instanceHandles = new LinkedHashMap<>();
     private final Map<Long, Object[]> frozen = new LinkedHashMap<>();   // id -> [Location, boxed value to re-apply]
     private ScheduledExecutorService freezeTimer;
     private boolean truncated;
+    /** When set, only matches whose declaring class is a user (non-JDK) class are retained. */
+    private boolean userClassesOnly;
 
     /** One retained value location: a weak handle to the owner plus how to read/write the slot. */
     private static final class Location {
@@ -88,9 +92,10 @@ final class ScanEngine {
 
     /** First scan: walk app roots, retain matching locations as the new active set. */
     synchronized void firstScan(Instrumentation inst, int valueType, int scanKind, String value, String value2,
-                                String pkgFilter, int maxVisited, int maxMatches) {
+                                String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches) {
         clear();
         truncated = false;
+        this.userClassesOnly = userClassesOnly;
         Class<?> wanted = primitiveFor(valueType);
         Object target = scanKind == LiveProtocol.SCANKIND_UNKNOWN ? null : parse(valueType, value);
         Object target2 = scanKind == LiveProtocol.SCANKIND_BETWEEN ? parse(valueType, value2) : null;
@@ -152,6 +157,9 @@ final class ScanEngine {
                 break;
             }
             Object o = queue.poll();
+            if (o == null) {
+                continue;
+            }
             visitedCount++;
             Class<?> oc = o.getClass();
             if (oc.isArray()) {
@@ -189,9 +197,9 @@ final class ScanEngine {
                 }
             }
         }
-        System.err.println("[SCAN-DIAG] valueType=" + valueType + " kind=" + scanKind + " target=" + target
-                + " windows=" + windows.length + " visited=" + visitedCount
-                + " matches=" + active.size() + " truncated=" + truncated);
+        //System.err.println("[SCAN-DIAG] valueType=" + valueType + " kind=" + scanKind + " target=" + target
+        //        + " windows=" + windows.length + " visited=" + visitedCount
+        //        + " matches=" + active.size() + " truncated=" + truncated);
     }
 
     private void walkArray(Object arr, Class<?> arrClass, int valueType, Class<?> wanted, int scanKind,
@@ -274,6 +282,194 @@ final class ScanEngine {
             loc.last = Array.get(o, loc.index);
         }
         return format(loc.last);
+    }
+
+    // ---- live instances (the instances view) --------------------------------------------------------
+
+    /** Walks the reachable heap collecting live instances of {@code className}; returns [handleId, label] pairs. */
+    synchronized List<Object[]> collectInstances(Instrumentation inst, String className, int maxInstances,
+                                                 int maxVisited) {
+        // Keep prior handles valid (a re-walk or another instances view must not orphan a still-shown list);
+        // they are weak refs, so only soft-cap the map to bound growth across a long session.
+        if (instanceHandles.size() > 1_000_000) {
+            instanceHandles.clear();
+        }
+        List<Object[]> out = new ArrayList<>();
+        Class<?> target = null;
+        for (Class<?> c : inst.getAllLoadedClasses()) {
+            if (c.getName().equals(className)) {
+                target = c;
+                break;
+            }
+        }
+        if (target == null) {
+            return out;
+        }
+
+        Deque<Object> queue = new ArrayDeque<>();
+        Map<Object, Boolean> visited = new IdentityHashMap<>();
+        int visitedCount = 0;
+        long deadline = System.currentTimeMillis() + DEFAULT_TIME_BUDGET_MS;
+
+        for (Class<?> c : inst.getAllLoadedClasses()) {
+            if (!includeClass(c, null)) {
+                continue;
+            }
+            for (Field f : safeFields(c)) {
+                if (Modifier.isStatic(f.getModifiers()) && !f.getType().isPrimitive()) {
+                    enqueue(queue, visited, safeGet(f, null));
+                }
+            }
+        }
+        for (Thread th : Thread.getAllStackTraces().keySet()) {
+            enqueue(queue, visited, th);
+        }
+        for (Object w : awtRoots()) {
+            enqueue(queue, visited, w);
+        }
+
+        while (!queue.isEmpty()) {
+            if (visitedCount >= maxVisited || System.currentTimeMillis() > deadline || out.size() >= maxInstances) {
+                break;
+            }
+            Object o = queue.poll();
+            if (o == null) {
+                continue;
+            }
+            visitedCount++;
+            Class<?> oc = o.getClass();
+            if (oc == target) {
+                long hid = ids.getAndIncrement();
+                instanceHandles.put(hid, new WeakReference<>(o));
+                out.add(new Object[]{hid, label(o)});
+            }
+            if (oc.isArray()) {
+                if (!oc.getComponentType().isPrimitive()) {
+                    int len = Array.getLength(o);
+                    for (int i = 0; i < len; i++) {
+                        enqueue(queue, visited, Array.get(o, i));
+                    }
+                }
+                continue;
+            }
+            for (Class<?> k = oc; k != null && k != Object.class; k = k.getSuperclass()) {
+                for (Field f : safeFields(k)) {
+                    if (!Modifier.isStatic(f.getModifiers()) && !f.getType().isPrimitive()) {
+                        enqueue(queue, visited, safeGet(f, o));
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Reads the live instance fields of a handle: returns [name, typeDescriptor, display, refHandleId, editable]
+     * per field. A reference field gets a fresh handle so the UI can navigate into it; primitives/Strings are
+     * editable unless final.
+     */
+    synchronized List<Object[]> instanceFields(long id) {
+        List<Object[]> out = new ArrayList<>();
+        Object o = resolveInstance(id);
+        if (o == null) {
+            return out;
+        }
+        for (Class<?> k = o.getClass(); k != null && k != Object.class; k = k.getSuperclass()) {
+            for (Field f : safeFields(k)) {
+                if (Modifier.isStatic(f.getModifiers())) {
+                    continue;
+                }
+                Class<?> t = f.getType();
+                Object v = safeGet(f, o);
+                long refId = 0;
+                String display;
+                if (t.isPrimitive() || t == String.class) {
+                    display = format(v);
+                } else if (v == null) {
+                    display = "null";
+                } else {
+                    refId = ids.getAndIncrement();
+                    instanceHandles.put(refId, new WeakReference<>(v));
+                    display = label(v);
+                }
+                boolean editable = (t.isPrimitive() || t == String.class) && !Modifier.isFinal(f.getModifiers());
+                out.add(new Object[]{f.getName(), descriptor(t), display, refId, editable});
+            }
+        }
+        return out;
+    }
+
+    /** Sets a live instance field by handle, parsing the string against the field's declared type. */
+    synchronized String setInstanceField(long id, String fieldName, boolean isNull, String value) {
+        Object o = resolveInstance(id);
+        if (o == null) {
+            throw new IllegalStateException("the object was garbage-collected");
+        }
+        Field f = null;
+        for (Class<?> k = o.getClass(); k != null && f == null; k = k.getSuperclass()) {
+            for (Field cand : safeFields(k)) {
+                if (!Modifier.isStatic(cand.getModifiers()) && cand.getName().equals(fieldName)) {
+                    f = cand;
+                    break;
+                }
+            }
+        }
+        if (f == null) {
+            throw new IllegalStateException("no such field: " + fieldName);
+        }
+        if (Modifier.isFinal(f.getModifiers())) {
+            throw new IllegalStateException("field is final");
+        }
+        try {
+            f.setAccessible(true);
+            f.set(o, isNull ? null : parseForField(f.getType(), value));
+            return format(f.get(o));
+        } catch (Exception e) {
+            throw new IllegalStateException("set failed: " + e.getMessage());
+        }
+    }
+
+    private Object resolveInstance(long id) {
+        WeakReference<Object> ref = instanceHandles.get(id);
+        return ref == null ? null : ref.get();
+    }
+
+    private static String label(Object o) {
+        if (o instanceof String) {
+            return "\"" + o + "\"";
+        }
+        return o.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(o));
+    }
+
+    private static Object parseForField(Class<?> t, String s) {
+        if (t == boolean.class || t == Boolean.class) {
+            return Boolean.parseBoolean(s.trim());
+        }
+        if (t == byte.class || t == Byte.class) {
+            return Byte.parseByte(s.trim());
+        }
+        if (t == short.class || t == Short.class) {
+            return Short.parseShort(s.trim());
+        }
+        if (t == char.class || t == Character.class) {
+            return s.isEmpty() ? '\0' : s.charAt(0);
+        }
+        if (t == int.class || t == Integer.class) {
+            return Integer.parseInt(s.trim());
+        }
+        if (t == long.class || t == Long.class) {
+            return Long.parseLong(s.trim());
+        }
+        if (t == float.class || t == Float.class) {
+            return Float.parseFloat(s.trim());
+        }
+        if (t == double.class || t == Double.class) {
+            return Double.parseDouble(s.trim());
+        }
+        if (t == String.class) {
+            return s;
+        }
+        throw new IllegalStateException("unsupported field type: " + t.getName());
     }
 
     synchronized void freeze(long id, boolean on, String value) {
@@ -432,6 +628,9 @@ final class ScanEngine {
 
     private void record(int valueType, Object owner, Field field, int index, String declaringClass,
                         String fieldName, String fieldDesc, String displayPath, Object value, int maxMatches) {
+        if (userClassesOnly && !isUserClassName(declaringClass)) {
+            return;
+        }
         if (active.size() >= maxMatches) {
             truncated = true;
             return;
@@ -471,6 +670,16 @@ final class ScanEngine {
         } catch (Throwable t) {
             return new Object[0];
         }
+    }
+
+    /** True for an application (non-JDK) class, given its internal name. Array slots ("[...") are not user-owned. */
+    private static boolean isUserClassName(String internalName) {
+        if (internalName == null || internalName.isEmpty() || internalName.startsWith("[")) {
+            return false;
+        }
+        return !(internalName.startsWith("java/") || internalName.startsWith("javax/")
+                || internalName.startsWith("jdk/") || internalName.startsWith("sun/")
+                || internalName.startsWith("com/sun/") || internalName.startsWith("com/tonic/live/"));
     }
 
     private static boolean includeClass(Class<?> c, String pkgFilter) {
