@@ -794,8 +794,11 @@ public final class JavaAgent {
         int maxMatches = in.readInt();
         int limit = in.readInt();
         boolean userClassesOnly = in.readBoolean();
+        boolean useDropbox = in.readUnsignedByte() != 0;
+        boolean rootsOnly = in.readUnsignedByte() != 0;
         try {
-            SCAN.firstScan(inst, valueType, scanKind, value, value2, pkgFilter, userClassesOnly, maxVisited, maxMatches);
+            SCAN.firstScan(inst, valueType, scanKind, value, value2, pkgFilter, userClassesOnly, maxVisited,
+                    maxMatches, useDropbox, rootsOnly);
             return SCAN.page(LiveProtocol.MSG_SCAN_FIRST, false, 0, limit);
         } catch (NumberFormatException e) {
             return error("invalid scan value: " + e.getMessage());
@@ -834,8 +837,11 @@ public final class JavaAgent {
         String className = readString(in).replace('/', '.');
         int maxInstances = in.readInt();
         int maxVisited = in.readInt();
+        boolean fromDropbox = in.readUnsignedByte() != 0;
         try {
-            List<Object[]> rows = SCAN.collectInstances(inst, className, maxInstances, maxVisited);
+            List<Object[]> rows = fromDropbox
+                    ? SCAN.consumeInstances(className)
+                    : SCAN.collectInstances(inst, className, maxInstances, maxVisited);
             Buf b = new Buf();
             b.u8(LiveProtocol.MSG_LIST_INSTANCES);
             ByteArrayOutputStream tmp = new ByteArrayOutputStream();

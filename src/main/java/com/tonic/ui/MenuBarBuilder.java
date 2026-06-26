@@ -2,6 +2,7 @@ package com.tonic.ui;
 
 import com.tonic.plugin.gui.GuiPluginManager;
 import com.tonic.plugin.gui.PluginManagerDialog;
+import com.tonic.ui.debug.DebugManager;
 import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
@@ -362,6 +363,12 @@ public class MenuBarBuilder {
         JCheckBoxMenuItem capture = new JCheckBoxMenuItem("Capture Runtime Classes");
         capture.setToolTipText("Stream classes defined at runtime (packers, defineHiddenClass, ASM) into the project");
         capture.addActionListener(e -> mainFrame.setLiveCaptureEnabled(capture.isSelected()));
+        JMenuItem enableDebugger = createMenuItem("Enable Debugger (JDI)", 0, 0,
+                null, e -> mainFrame.enableDebuggerOnAttached());
+        enableDebugger.setToolTipText("Late-load JDWP into the attached JVM so breakpoints/stepping work (external opt-in)");
+        JCheckBoxMenuItem suspendAll = new JCheckBoxMenuItem("Suspend All Threads on Breakpoint");
+        suspendAll.setToolTipText("On a breakpoint hit, suspend the whole target VM (off = only the thread that hit)");
+        suspendAll.addActionListener(e -> DebugManager.getInstance().setSuspendAll(suspendAll.isSelected()));
 
         menu.add(attach);
         menu.add(detach);
@@ -370,6 +377,8 @@ public class MenuBarBuilder {
         menu.add(patch);
         menu.add(scratchPad);
         menu.add(capture);
+        menu.add(enableDebugger);
+        menu.add(suspendAll);
 
         menu.addMenuListener(new MenuListener() {
             @Override
@@ -382,6 +391,10 @@ public class MenuBarBuilder {
                 scratchPad.setVisible(connected);
                 capture.setVisible(connected);
                 capture.setSelected(connected && mainFrame.isLiveCaptureEnabled());
+                boolean debugging = DebugManager.getInstance().isConnected();
+                enableDebugger.setVisible(connected && !debugging);
+                suspendAll.setVisible(debugging);
+                suspendAll.setSelected(DebugManager.getInstance().isSuspendAll());
             }
 
             @Override

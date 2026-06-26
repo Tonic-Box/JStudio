@@ -232,7 +232,8 @@ public final class LiveAgentClient implements Closeable {
     // ---- value scanner ----------------------------------------------------------------------------
 
     public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter,
-                              boolean userClassesOnly, int maxVisited, int maxMatches, int limit) throws IOException {
+                              boolean userClassesOnly, int maxVisited, int maxMatches, int limit,
+                              boolean useDropbox, boolean rootsOnly) throws IOException {
         DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_FIRST, b -> {
             b.writeByte(valueType);
             b.writeByte(scanKind);
@@ -243,6 +244,8 @@ public final class LiveAgentClient implements Closeable {
             b.writeInt(maxMatches);
             b.writeInt(limit);
             b.writeBoolean(userClassesOnly);
+            b.writeByte(useDropbox ? 1 : 0);
+            b.writeByte(rootsOnly ? 1 : 0);
         }));
         skipType(r, LiveProtocol.MSG_SCAN_FIRST);
         return readPage(r);
@@ -280,11 +283,13 @@ public final class LiveAgentClient implements Closeable {
         return readString(r);
     }
 
-    public List<LiveInstance> listInstances(String className, int maxInstances, int maxVisited) throws IOException {
+    public List<LiveInstance> listInstances(String className, int maxInstances, int maxVisited, boolean fromDropbox)
+            throws IOException {
         DataInputStream r = request(payload(LiveProtocol.MSG_LIST_INSTANCES, b -> {
             writeString(b, className == null ? "" : className);
             b.writeInt(maxInstances);
             b.writeInt(maxVisited);
+            b.writeByte(fromDropbox ? 1 : 0);
         }));
         skipType(r, LiveProtocol.MSG_LIST_INSTANCES);
         int count = r.readInt();

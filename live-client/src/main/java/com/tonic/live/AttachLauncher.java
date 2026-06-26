@@ -57,4 +57,17 @@ public final class AttachLauncher {
             vm.detach();
         }
     }
+
+    /**
+     * Late-loads the JDK's JDWP agent into {@code pid} so a JDI debugger can attach, telling it to serve the
+     * {@code dt_socket} transport on {@code 127.0.0.1:port}. May fail on hardened JVMs that block agent loading.
+     */
+    public static void loadJdwp(String pid, int port) throws Exception {
+        VirtualMachine vm = VirtualMachine.attach(pid);
+        try {
+            vm.loadAgentLibrary("jdwp", "transport=dt_socket,server=y,suspend=n,address=127.0.0.1:" + port);
+        } finally {
+            vm.detach();
+        }
+    }
 }

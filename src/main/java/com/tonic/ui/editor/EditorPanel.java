@@ -307,6 +307,13 @@ public class EditorPanel extends ThemedJPanel {
         }
     }
 
+    /** Re-renders breakpoint gutters on every open class tab (e.g. when the debug session connects/disconnects). */
+    public void refreshBreakpointGutters() {
+        for (EditorTab tab : registry.classTabs()) {
+            tab.refreshBreakpointGutters();
+        }
+    }
+
     /**
      * Copy selection from current tab.
      */

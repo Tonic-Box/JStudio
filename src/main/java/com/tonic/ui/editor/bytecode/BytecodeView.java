@@ -3,6 +3,8 @@ package com.tonic.ui.editor.bytecode;
 import com.tonic.parser.MethodEntry;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.MethodEntryModel;
+import com.tonic.ui.debug.Breakpoint;
+import com.tonic.ui.debug.BreakpointGutterController;
 import com.tonic.ui.editor.dual.BcLocation;
 import com.tonic.ui.editor.dual.BytecodeLineIndex;
 import com.tonic.ui.editor.view.AbstractTextView;
@@ -13,6 +15,9 @@ import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
 
+import javax.swing.BorderFactory;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -45,16 +50,43 @@ public class BytecodeView extends AbstractTextView {
 
     private IntConsumer onLineActivated;
     private BytecodeLineIndex lineIndex;
+    private final BreakpointGutterController breakpointGutter;
 
     public BytecodeView(ClassEntryModel classEntry) {
         this.classEntry = classEntry;
 
         initTextArea(SYNTAX_STYLE_BYTECODE);
+        scrollPane.setIconRowHeaderEnabled(true);
+        breakpointGutter = new BreakpointGutterController(textArea, scrollPane,
+                new BytecodeBreakpointMapper(this, classEntry));
 
         add(overlayWrap(scrollPane), BorderLayout.CENTER);
         add(searchPanel, BorderLayout.SOUTH);
 
         setupMouseListener();
+    }
+
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        breakpointGutter.attach();
+    }
+
+    @Override
+    public void removeNotify() {
+        breakpointGutter.detach();
+        super.removeNotify();
+    }
+
+    /** Re-renders breakpoint dots and re-arms the gutter; called when the debug session connects/disconnects. */
+    public void refreshBreakpointGutter() {
+        breakpointGutter.updateIcons();
+    }
+
+    /** The 0-based display line for the instruction at {@code pc} in the {@code name+desc} method, or -1. */
+    public int displayLineForPc(String methodKey, int pc) {
+        List<Integer> lines = ensureLineIndex().displayLinesForPcRange(methodKey, pc, pc);
+        return lines.isEmpty() ? -1 : lines.get(0);
     }
 
     private void setupMouseListener() {
@@ -86,7 +118,43 @@ public class BytecodeView extends AbstractTextView {
                     // Ignore
                 }
             }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                maybeShowBreakpointMenu(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                maybeShowBreakpointMenu(e);
+            }
         });
+    }
+
+    /** Right-click on an instruction line offers Add/Remove Breakpoint while the debugger is connected. */
+    private void maybeShowBreakpointMenu(MouseEvent e) {
+        if (!e.isPopupTrigger()) {
+            return;
+        }
+        int line;
+        try {
+            line = textArea.getLineOfOffset(textArea.viewToModel2D(e.getPoint())) + 1;
+        } catch (Exception ex) {
+            return;
+        }
+        Breakpoint bp = breakpointGutter.breakpointAt(line);
+        if (bp == null) {
+            return;
+        }
+        JPopupMenu menu = new JPopupMenu();
+        menu.setBackground(JStudioTheme.getBgSecondary());
+        menu.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
+        JMenuItem item = new JMenuItem(breakpointGutter.isSet(bp) ? "Remove Breakpoint" : "Add Breakpoint");
+        item.setBackground(JStudioTheme.getBgSecondary());
+        item.setForeground(JStudioTheme.getTextPrimary());
+        item.addActionListener(ev -> breakpointGutter.toggle(bp));
+        menu.add(item);
+        menu.show(textArea, e.getX(), e.getY());
     }
 
     @Override
@@ -149,6 +217,7 @@ public class BytecodeView extends AbstractTextView {
                     textArea.setCaretPosition(0);
                     lineIndex = null;
                     loaded = true;
+                    breakpointGutter.updateIcons();
                     Runnable highlight = pendingHighlight;
                     pendingHighlight = null;
                     if (highlight != null) {

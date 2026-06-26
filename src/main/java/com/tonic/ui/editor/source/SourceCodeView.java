@@ -10,6 +10,8 @@ import com.tonic.ui.editor.view.EditorView;
 import com.tonic.ui.MainFrame;
 import com.tonic.model.Bookmark;
 import com.tonic.model.ClassEntryModel;
+import com.tonic.ui.debug.Breakpoint;
+import com.tonic.ui.debug.BreakpointGutterController;
 import com.tonic.model.ProjectModel;
 import com.tonic.service.ProjectDatabaseService;
 import com.tonic.live.LiveSession;
@@ -69,6 +71,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     private final SourceLineHighlighter lineHighlighter;
     private final CommentGutterController commentGutter;
     private final RunGutterController runGutter;
+    private final BreakpointGutterController breakpointGutter;
     private final LoadingOverlay loadingOverlay;
     private SwingWorker<String, Void> currentWorker;
     private Runnable pendingNavigation;
@@ -119,6 +122,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
 
         runGutter = new RunGutterController(textArea, scrollPane, classEntry,
                 () -> omitAnnotations, this::runMainViaMainFrame);
+        breakpointGutter = new BreakpointGutterController(textArea, scrollPane, new SourceBreakpointMapper(classEntry));
         usageLens = new UsageLensController(textArea, classEntry,
                 () -> omitAnnotations, () -> dirty, () -> projectModel);
         navigator = new SourceNavigator(this, textArea, classEntry, lineHighlighter,
@@ -427,6 +431,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         usageLens.setEnabled(enabled);
     }
 
+    /** Re-renders breakpoint dots and re-arms the gutter; called when the debug session connects/disconnects. */
+    public void refreshBreakpointGutter() {
+        breakpointGutter.updateIcons();
+    }
+
     private void showContextMenu(MouseEvent e) {
         JPopupMenu menu = new JPopupMenu();
         menu.setBackground(JStudioTheme.getBgSecondary());
@@ -440,6 +449,16 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
             // Use default line 1
         }
         final int line = lineNumber;
+
+        // Add/Remove Breakpoint (only while the debugger is connected and the line is an executable location)
+        Breakpoint breakpoint = breakpointGutter.breakpointAt(line);
+        if (breakpoint != null) {
+            JMenuItem bpItem = createMenuItem(
+                    breakpointGutter.isSet(breakpoint) ? "Remove Breakpoint" : "Add Breakpoint", null);
+            bpItem.addActionListener(ev -> breakpointGutter.toggle(breakpoint));
+            menu.add(bpItem);
+            menu.addSeparator();
+        }
 
         // Copy
         JMenuItem copyItem = createMenuItem("Copy", Icons.getIcon("copy"));
@@ -538,11 +557,13 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     public void addNotify() {
         super.addNotify();
         runGutter.attach();
+        breakpointGutter.attach();
     }
 
     @Override
     public void removeNotify() {
         runGutter.detach();
+        breakpointGutter.detach();
         commentGutter.detach();
         ThemeManager.getInstance().removeThemeChangeListener(this);
         super.removeNotify();
@@ -642,6 +663,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
             loaded = true;
             commentGutter.updateIcons();
             runGutter.updateIcons();
+            breakpointGutter.updateIcons();
             usageLens.scheduleUpdate();
             return;
         }
@@ -692,6 +714,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
                     loadingOverlay.hideLoading();
                     commentGutter.updateIcons();
                     runGutter.updateIcons();
+                    breakpointGutter.updateIcons();
                     usageLens.scheduleUpdate();
                     Runnable navigation = pendingNavigation;
                     pendingNavigation = null;

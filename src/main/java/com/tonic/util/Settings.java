@@ -32,6 +32,7 @@ public class Settings {
     private static final String PREF_LAST_PROJECT = "session.lastProject";
     private static final String PREF_THEME = "appearance.theme";
     private static final String PREF_LOAD_JDK_CLASSES = "classpool.loadJdk";
+    private static final String PREF_DEBUG_SUSPEND_ALL = "debug.suspendAll";
 
     private static final String PREF_UPDATE_CHECK = "update.checkOnStartup";
     private static final String PREF_UPDATE_SKIPPED = "update.skippedVersion";
@@ -175,6 +176,10 @@ public class Settings {
     // Execution settings
     public boolean isLoadJdkClassesEnabled() { return prefs.getBoolean(PREF_LOAD_JDK_CLASSES, true); }
     public void setLoadJdkClassesEnabled(boolean enabled) { prefs.putBoolean(PREF_LOAD_JDK_CLASSES, enabled); }
+
+    // Debugger (JDI): suspend the whole VM on a breakpoint hit (off = only the thread that hit)
+    public boolean isDebuggerSuspendAll() { return prefs.getBoolean(PREF_DEBUG_SUSPEND_ALL, true); }
+    public void setDebuggerSuspendAll(boolean enabled) { prefs.putBoolean(PREF_DEBUG_SUSPEND_ALL, enabled); }
 
     // Update checks
     public boolean isUpdateCheckEnabled() { return prefs.getBoolean(PREF_UPDATE_CHECK, true); }

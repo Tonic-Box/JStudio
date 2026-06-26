@@ -66,6 +66,7 @@ dependencies {
 
     // Live JVM debugging client (attach + protocol to the pure-Java agent)
     implementation(project(":live-client"))
+    implementation(project(":live-debug"))
 }
 
 java {

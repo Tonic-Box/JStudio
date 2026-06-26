@@ -90,9 +90,14 @@ final class ScanEngine {
 
     // ---- scans ------------------------------------------------------------------------------------
 
-    /** First scan: walk app roots, retain matching locations as the new active set. */
+    /**
+     * First scan: walk roots, retain matching locations as the new active set. {@code useDropbox} additionally
+     * enqueues the JDI-parked objects in {@link DropBox#BOX} as roots; {@code rootsOnly} uses ONLY those
+     * (skipping the agent's statics/threads/AWT roots) - the JDI class-scoped scan path.
+     */
     synchronized void firstScan(Instrumentation inst, int valueType, int scanKind, String value, String value2,
-                                String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches) {
+                                String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches,
+                                boolean useDropbox, boolean rootsOnly) {
         clear();
         truncated = false;
         this.userClassesOnly = userClassesOnly;
@@ -105,50 +110,17 @@ final class ScanEngine {
         Map<Object, Boolean> visited = new IdentityHashMap<>();
         int visitedCount = 0;
 
-        for (Class<?> c : inst.getAllLoadedClasses()) {
-            if (!includeClass(c, pkgFilter)) {
-                continue;
-            }
-            for (Field f : safeFields(c)) {
-                if (!Modifier.isStatic(f.getModifiers())) {
-                    continue;
-                }
-                Class<?> t = f.getType();
-                if (t.isPrimitive()) {
-                    if (matchesType(t, wanted)) {
-                        Object v = safeGet(f, null);
-                        if (v != null && predicate(scanKind, valueType, v, target, target2)) {
-                            record(recType(valueType, t), null, f, -1, internal(c), f.getName(), descriptor(t),
-                                    c.getSimpleName() + "." + f.getName(), v, maxMatches);
-                        }
-                    }
-                } else {
-                    Object v = safeGet(f, null);
-                    if (v == null) {
-                        continue;
-                    }
-                    if (refMatches(valueType, v)) {
-                        if (predicate(scanKind, valueType, v, target, target2)) {
-                            record(valueType, null, f, -1, internal(c), f.getName(), descriptor(t),
-                                    c.getSimpleName() + "." + f.getName(), v, maxMatches);
-                        }
-                    } else {
-                        enqueue(queue, visited, v);
-                    }
+        if (!rootsOnly) {
+            enqueueAgentRoots(inst, queue, visited, pkgFilter, valueType, scanKind, wanted, target, target2, maxMatches);
+        }
+        if (useDropbox) {
+            Object[] box = DropBox.BOX;
+            DropBox.BOX = null;
+            if (box != null) {
+                for (Object o : box) {
+                    enqueue(queue, visited, o);
                 }
             }
-        }
-
-        // Beyond app static fields, two more pure-Java root sets reach state no app static holds:
-        //  - every live thread (Runnable targets, thread-local maps), and
-        //  - every AWT/Swing window: a GUI app's data models hang off its visible windows, which the JDK owns
-        //    (the AppContext window list), not the app's static fields.
-        for (Thread th : Thread.getAllStackTraces().keySet()) {
-            enqueue(queue, visited, th);
-        }
-        Object[] windows = awtRoots();
-        for (Object w : windows) {
-            enqueue(queue, visited, w);
         }
 
         while (!queue.isEmpty()) {
@@ -197,9 +169,54 @@ final class ScanEngine {
                 }
             }
         }
-        //System.err.println("[SCAN-DIAG] valueType=" + valueType + " kind=" + scanKind + " target=" + target
-        //        + " windows=" + windows.length + " visited=" + visitedCount
-        //        + " matches=" + active.size() + " truncated=" + truncated);
+    }
+
+    /**
+     * Enqueues the agent's own roots - app static fields (recording matches found directly in statics), every
+     * live thread, and every AWT/Swing window. This is the reach the JDI stack-root harvest augments, not replaces.
+     */
+    private void enqueueAgentRoots(Instrumentation inst, Deque<Object> queue, Map<Object, Boolean> visited,
+                                   String pkgFilter, int valueType, int scanKind, Class<?> wanted,
+                                   Object target, Object target2, int maxMatches) {
+        for (Class<?> c : inst.getAllLoadedClasses()) {
+            if (!includeClass(c, pkgFilter)) {
+                continue;
+            }
+            for (Field f : safeFields(c)) {
+                if (!Modifier.isStatic(f.getModifiers())) {
+                    continue;
+                }
+                Class<?> t = f.getType();
+                if (t.isPrimitive()) {
+                    if (matchesType(t, wanted)) {
+                        Object v = safeGet(f, null);
+                        if (v != null && predicate(scanKind, valueType, v, target, target2)) {
+                            record(recType(valueType, t), null, f, -1, internal(c), f.getName(), descriptor(t),
+                                    c.getSimpleName() + "." + f.getName(), v, maxMatches);
+                        }
+                    }
+                } else {
+                    Object v = safeGet(f, null);
+                    if (v == null) {
+                        continue;
+                    }
+                    if (refMatches(valueType, v)) {
+                        if (predicate(scanKind, valueType, v, target, target2)) {
+                            record(valueType, null, f, -1, internal(c), f.getName(), descriptor(t),
+                                    c.getSimpleName() + "." + f.getName(), v, maxMatches);
+                        }
+                    } else {
+                        enqueue(queue, visited, v);
+                    }
+                }
+            }
+        }
+        for (Thread th : Thread.getAllStackTraces().keySet()) {
+            enqueue(queue, visited, th);
+        }
+        for (Object w : awtRoots()) {
+            enqueue(queue, visited, w);
+        }
     }
 
     private void walkArray(Object arr, Class<?> arrClass, int valueType, Class<?> wanted, int scanKind,
@@ -359,6 +376,35 @@ final class ScanEngine {
                     }
                 }
             }
+        }
+        return out;
+    }
+
+    /**
+     * Registers the JDI-parked objects in {@link DropBox#BOX} as instance handles (filtered to {@code className})
+     * and returns {@code [handleId, label]} rows - the same shape as {@link #collectInstances}, so the field
+     * read/write path is reused unchanged. Clears the dropbox so its strong reference only pins the set briefly.
+     */
+    synchronized List<Object[]> consumeInstances(String className) {
+        List<Object[]> out = new ArrayList<>();
+        Object[] box = DropBox.BOX;
+        DropBox.BOX = null;
+        if (box == null) {
+            return out;
+        }
+        if (instanceHandles.size() > 1_000_000) {
+            instanceHandles.clear();
+        }
+        for (Object o : box) {
+            if (o == null) {
+                continue;
+            }
+            if (className != null && !className.isEmpty() && !o.getClass().getName().equals(className)) {
+                continue;
+            }
+            long hid = ids.getAndIncrement();
+            instanceHandles.put(hid, new WeakReference<>(o));
+            out.add(new Object[]{hid, label(o)});
         }
         return out;
     }

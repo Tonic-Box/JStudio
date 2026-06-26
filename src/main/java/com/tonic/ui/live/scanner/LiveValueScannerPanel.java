@@ -16,6 +16,7 @@ import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.component.ThemedJScrollPane;
 import com.tonic.ui.core.component.ThemedJTable;
 import com.tonic.ui.editor.ViewMode;
+import com.tonic.ui.debug.JdiReachService;
 import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.theme.JStudioTheme;
 
@@ -84,6 +85,7 @@ public final class LiveValueScannerPanel extends ThemedJPanel {
     private final JTextField valueField = new JTextField(8);
     private final JTextField value2Field = new JTextField(8);
     private final JTextField pkgFilterField = new JTextField(8);
+    private final JTextField scopeClassField = new JTextField(8);
     private final JCheckBox includeJdkCheckbox = new JCheckBox("Include Java internals");
     private final JButton firstScanButton = new JButton("First Scan");
     private final JButton nextScanButton = new JButton("Next Scan");
@@ -140,6 +142,8 @@ public final class LiveValueScannerPanel extends ThemedJPanel {
         value2Field.setToolTipText("Upper bound - used only by the Between scan.");
         value2Field.setEnabled(false);
         pkgFilterField.setToolTipText("Limit the search to a package (internal form, e.g. com/foo); blank searches all app classes.");
+        scopeClassField.setToolTipText("Requires the JDI debugger. When set, scans ONLY this class's complete "
+                + "instance set (e.g. com.foo.Bar); blank uses the normal heap walk, augmented with stack roots under JDI.");
         firstScanButton.setFocusable(false);
         firstScanButton.addActionListener(e -> firstScan());
         firstScanButton.setToolTipText("Walk the live heap and keep every field matching the value.");
@@ -175,6 +179,13 @@ public final class LiveValueScannerPanel extends ThemedJPanel {
         c.anchor = GridBagConstraints.WEST; bar.add(pkgFilterField, c);
         c.gridwidth = 1; c.weightx = 0; c.fill = GridBagConstraints.NONE;
 
+        c.gridy = 3;
+        c.gridx = 0; c.gridwidth = 1; c.weightx = 0; c.fill = GridBagConstraints.NONE;
+        c.anchor = GridBagConstraints.EAST; bar.add(label("Class scope:"), c);
+        c.gridx = 1; c.gridwidth = 3; c.weightx = 1; c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.WEST; bar.add(scopeClassField, c);
+        c.gridwidth = 1; c.weightx = 0; c.fill = GridBagConstraints.NONE;
+
         ThemedJPanel buttons = new ThemedJPanel(BackgroundStyle.PRIMARY, new FlowLayout(FlowLayout.LEFT, 6, 0));
         buttons.add(firstScanButton);
         buttons.add(newScanButton);
@@ -187,10 +198,10 @@ public final class LiveValueScannerPanel extends ThemedJPanel {
         includeJdkCheckbox.setToolTipText("Off: only values reachable through your app's classes. "
                 + "On: also report values held directly in JDK/library internals (slower, noisier).");
         buttons.add(includeJdkCheckbox);
-        c.gridy = 3; c.gridx = 0; c.gridwidth = 4; c.anchor = GridBagConstraints.WEST;
+        c.gridy = 4; c.gridx = 0; c.gridwidth = 4; c.anchor = GridBagConstraints.WEST;
         bar.add(buttons, c);
 
-        c.gridy = 4; c.gridx = 0; c.gridwidth = 4; c.anchor = GridBagConstraints.WEST;
+        c.gridy = 5; c.gridx = 0; c.gridwidth = 4; c.anchor = GridBagConstraints.WEST;
         bar.add(statusLabel, c);
         return bar;
     }
@@ -301,14 +312,15 @@ public final class LiveValueScannerPanel extends ThemedJPanel {
         String value = valueField.getText();
         String value2 = value2Field.getText();
         String pkgFilter = pkgFilterField.getText().trim();
+        String scopeClass = scopeClassField.getText().trim();
         boolean userClassesOnly = !includeJdkCheckbox.isSelected();
 
         scanInFlight = true;
         statusLabel.setText("Scanning...");
         updateButtons();
         SwingWorkers.run(
-                () -> session.scanFirst(valueType, scanKind, value, value2, pkgFilter, userClassesOnly,
-                        MAX_VISITED, MAX_MATCHES, PAGE_LIMIT),
+                () -> JdiReachService.getInstance().scanFirst(session, valueType, scanKind, value, value2, pkgFilter,
+                        userClassesOnly, MAX_VISITED, MAX_MATCHES, PAGE_LIMIT, scopeClass),
                 page -> {
                     scanInFlight = false;
                     scanned = true;

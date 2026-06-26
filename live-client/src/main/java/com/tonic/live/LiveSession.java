@@ -148,8 +148,19 @@ public final class LiveSession implements Closeable {
     /** First scan: walk app roots, retaining matching field locations as the new candidate set. */
     public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter,
                               boolean userClassesOnly, int maxVisited, int maxMatches, int limit) throws IOException {
+        return scanFirst(valueType, scanKind, value, value2, pkgFilter, userClassesOnly,
+                maxVisited, maxMatches, limit, false, false);
+    }
+
+    /**
+     * First scan with JDI-reach flags. {@code useDropbox} adds the JDI-parked objects as extra roots;
+     * {@code rootsOnly} scans ONLY those (the class-scoped path). The caller must park the set first.
+     */
+    public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter,
+                              boolean userClassesOnly, int maxVisited, int maxMatches, int limit,
+                              boolean useDropbox, boolean rootsOnly) throws IOException {
         return client.scanFirst(valueType, scanKind, value, value2, pkgFilter, userClassesOnly,
-                maxVisited, maxMatches, limit);
+                maxVisited, maxMatches, limit, useDropbox, rootsOnly);
     }
 
     /** Next scan: re-read the retained set and narrow it by the comparator (changed/increased/...). */
@@ -169,7 +180,16 @@ public final class LiveSession implements Closeable {
 
     /** Walks the heap for live instances of a class; their fields can then be read/written by handle. */
     public List<LiveInstance> listInstances(String className, int maxInstances, int maxVisited) throws IOException {
-        return client.listInstances(className, maxInstances, maxVisited);
+        return listInstances(className, maxInstances, maxVisited, false);
+    }
+
+    /**
+     * Lists live instances of a class. When {@code fromDropbox} is set the agent consumes the JDI-parked object
+     * set (complete reach) instead of walking the heap; the caller must have parked it first.
+     */
+    public List<LiveInstance> listInstances(String className, int maxInstances, int maxVisited, boolean fromDropbox)
+            throws IOException {
+        return client.listInstances(className, maxInstances, maxVisited, fromDropbox);
     }
 
     public List<LiveField> instanceFields(long handleId) throws IOException {

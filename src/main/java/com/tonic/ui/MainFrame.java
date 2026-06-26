@@ -56,6 +56,11 @@ import com.tonic.ui.live.threads.LiveThreadsPanel;
 import com.tonic.ui.live.profiler.LiveProfilerPanel;
 import com.tonic.ui.live.scanner.LiveValueScannerPanel;
 import com.tonic.live.LiveSession;
+import com.tonic.event.events.DebugPausedEvent;
+import com.tonic.event.events.DebugSessionEvent;
+import com.tonic.live.debug.DebugLocation;
+import com.tonic.ui.debug.DebugManager;
+import com.tonic.ui.debug.DebuggerPanel;
 import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.live.recorder.LiveRecorderPanel;
 import com.tonic.ui.run.RunConfigDialog;
@@ -270,6 +275,27 @@ public class MainFrame extends JFrame {
                     rightToolWindow.removeTool(tool);
                 }
             }
+        });
+
+        // The JDI "Debugger" tool is present only while a debug session is connected.
+        EventBus.getInstance().register(DebugSessionEvent.class, e -> {
+            if (e.isConnected()) {
+                if (debuggerPanel == null) {
+                    debuggerPanel = new DebuggerPanel(this);
+                }
+                rightToolWindow.addTool("Debugger", debuggerPanel);
+            } else {
+                toolWindowMover.closeFloat("Debugger");
+                rightToolWindow.removeTool("Debugger");
+            }
+            // Re-arm breakpoint gutters on already-open tabs (they were opened before the session existed).
+            editorPanel.refreshBreakpointGutters();
+        });
+
+        // On a breakpoint hit: navigate to the current line and focus the Debugger tool.
+        EventBus.getInstance().register(DebugPausedEvent.class, e -> {
+            navigateToDebugLocation(e.getLocation());
+            rightToolWindow.select("Debugger");
         });
 
         // "Scan for this value" from the live heap/statics views: focus the scanner tool and seed its scan bar.
@@ -497,6 +523,7 @@ public class MainFrame extends JFrame {
                                      RunConsolePanel panel) {
         List<String> vmOptions = new ArrayList<>(config.vmOptions);
         int port = -1;
+        int jdwpPort = -1;
         File agentJar = LiveAttachService.getInstance().resolveAgentJar();
         if (agentJar == null) {
             consolePanel.log("Live debugging unavailable (agent jar not found); running without it.");
@@ -510,6 +537,13 @@ public class MainFrame extends JFrame {
             if (port > 0) {
                 vmOptions.add(0, "-javaagent:" + agentJar.getAbsolutePath() + "=port=" + port);
             }
+            try (ServerSocket probe = new ServerSocket(0)) {
+                jdwpPort = probe.getLocalPort();
+            } catch (IOException ignored) {
+            }
+            if (jdwpPort > 0) {
+                vmOptions.add(0, "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=127.0.0.1:" + jdwpPort);
+            }
         }
 
         Process process = RunService.run(
@@ -519,25 +553,38 @@ public class MainFrame extends JFrame {
             RunStateService.getInstance().setProcess(process);
             process.onExit().thenAccept(p -> RunStateService.getInstance().clearIf(process));
         }
-        if (process == null || port <= 0) {
+        if (process == null) {
             return;
         }
 
-        int agentPort = port;
         String pid = String.valueOf(process.pid());
-        SwingWorkers.run(
-                () -> LiveSession.connect(pid, agentPort),
-                session -> {
-                    LiveAttachService.getInstance().adoptRunSession(session);
-                    // Default runtime class-load capture ON for a Run auto-attach (the running app is the project).
-                    setLiveCaptureEnabled(true);
-                },
-                err -> consolePanel.log("Live debugging not attached: " + err.getMessage()));
+        if (port > 0) {
+            int agentPort = port;
+            SwingWorkers.run(
+                    () -> LiveSession.connect(pid, agentPort),
+                    session -> {
+                        LiveAttachService.getInstance().adoptRunSession(session);
+                        // Default runtime class-load capture ON for a Run auto-attach (the running app is the project).
+                        setLiveCaptureEnabled(true);
+                    },
+                    err -> consolePanel.log("Live debugging not attached: " + err.getMessage()));
+        }
+        if (jdwpPort > 0) {
+            int debugPort = jdwpPort;
+            SwingWorkers.run(
+                    () -> {
+                        DebugManager.getInstance().connectWithRetry("127.0.0.1", debugPort);
+                        return Boolean.TRUE;
+                    },
+                    ok -> consolePanel.log("Debugger attached (JDI)."),
+                    err -> consolePanel.log("Debugger not attached: " + err.getMessage()));
+        }
         process.onExit().thenAccept(p -> SwingUtilities.invokeLater(this::onRunProcessExited));
     }
 
     /** When a launched run process exits, drop its auto-attached live session (if it is still the active one). */
     private void onRunProcessExited() {
+        DebugManager.getInstance().disconnect();
         LiveAttachService svc = LiveAttachService.getInstance();
         if (svc.isRunSession()) {
             detachLive();
@@ -1176,6 +1223,64 @@ public class MainFrame extends JFrame {
         new LiveAttachDialog(this).setVisible(true);
     }
 
+    /**
+     * Opens the class for a JDI debug location and scrolls/highlights its source line, reusing the same
+     * offset-to-source navigation that Find Usages uses. Called on a breakpoint hit and on a call-stack click.
+     */
+    public void navigateToDebugLocation(DebugLocation loc) {
+        if (loc == null) {
+            return;
+        }
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            return;
+        }
+        ClassEntryModel ce = project.getClass(loc.getClassName().replace('.', '/'));
+        if (ce == null) {
+            ce = project.findClassByName(loc.getClassName());
+        }
+        if (ce == null) {
+            return;
+        }
+        ClassEntryModel target = ce;
+        SwingUtilities.invokeLater(() -> editorPanel.navigateToSourceOffset(
+                target, loc.getMethodName(), loc.getMethodDescriptor(), (int) loc.getCodeIndex(), null));
+    }
+
+    /**
+     * External opt-in for the JDI debugger: late-loads the JDWP agent into the currently attached JVM and
+     * connects the debugger. Degrades gracefully (a console message) if the target blocks agent loading.
+     */
+    public void enableDebuggerOnAttached() {
+        if (DebugManager.getInstance().isConnected()) {
+            return;
+        }
+        LiveSession s = LiveAttachService.getInstance().getSession();
+        if (s == null) {
+            showWarning("Attach to a live JVM first (Attach -> Attach to Live JVM).");
+            return;
+        }
+        String pid = s.getPid();
+        int dp = -1;
+        try (ServerSocket probe = new ServerSocket(0)) {
+            dp = probe.getLocalPort();
+        } catch (IOException ignored) {
+        }
+        if (dp <= 0) {
+            showWarning("Could not allocate a debug port.");
+            return;
+        }
+        int debugPort = dp;
+        consolePanel.log("Enabling debugger (JDI) on pid " + pid + "...");
+        SwingWorkers.run(
+                () -> {
+                    DebugManager.getInstance().connectExternal(pid, debugPort);
+                    return Boolean.TRUE;
+                },
+                ok -> consolePanel.log("Debugger attached (JDI) to pid " + pid + "."),
+                err -> consolePanel.log("Debugger unavailable on this JVM: " + err.getMessage()));
+    }
+
     /** Opens (reusing one window) the JFR analysis view for a captured {@code .jfr} recording. */
     public void showJfrAnalysis(File jfr) {
         if (jfrAnalysisWindow == null) {
@@ -1215,6 +1320,7 @@ public class MainFrame extends JFrame {
 
     /** Detaches from the live JVM (closes the session); the pulled classes remain for offline browsing. */
     public void detachLive() {
+        DebugManager.getInstance().disconnect();
         LiveAttachService svc = LiveAttachService.getInstance();
         if (!svc.isAttached()) {
             return;
@@ -1232,6 +1338,7 @@ public class MainFrame extends JFrame {
     private LiveThreadsPanel liveThreadsPanel;
     private LiveProfilerPanel liveProfilerPanel;
     private LiveValueScannerPanel liveValueScannerPanel;
+    private DebuggerPanel debuggerPanel;
 
     /** The live Value Scanner tool (present only while attached); null when not attached. */
     public LiveValueScannerPanel getValueScannerPanel() {

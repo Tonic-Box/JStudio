@@ -276,6 +276,16 @@ public class EditorTab extends JPanel {
         }
     }
 
+    /** Re-renders the source/bytecode breakpoint gutters (e.g. when the debug session connects/disconnects). */
+    public void refreshBreakpointGutters() {
+        if (sourceView != null) {
+            sourceView.refreshBreakpointGutter();
+        }
+        if (bytecodeView != null) {
+            bytecodeView.refreshBreakpointGutter();
+        }
+    }
+
     /**
      * Forces a full reload after the underlying class was mutated externally (e.g. an AI rename or script run):
      * drops the decompilation cache and refreshes every instantiated view - including the source view, whose

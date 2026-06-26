@@ -12,6 +12,7 @@ import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.component.ThemedJScrollPane;
 import com.tonic.ui.core.component.ThemedJTable;
 import com.tonic.ui.editor.view.AbstractEditorView;
+import com.tonic.ui.debug.JdiReachService;
 import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
@@ -262,11 +263,11 @@ public final class LiveInstancesView extends AbstractEditorView {
         instanceList.setEnabled(false);
         listModel.clear();
         clearDetail();
-        countLabel.setText("Walking heap...");
+        countLabel.setText(JdiReachService.getInstance().isJdiBacked() ? "Enumerating (JDI)..." : "Walking heap...");
         final String internalName = classEntry.getClassName();
 
         SwingWorkers.run(
-                () -> session.listInstances(internalName, MAX_INSTANCES, MAX_VISITED),
+                () -> JdiReachService.getInstance().listInstances(session, internalName, MAX_INSTANCES, MAX_VISITED),
                 this::showInstances,
                 err -> {
                     endLoading();
