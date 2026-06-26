@@ -10,12 +10,19 @@ import com.tonic.live.debug.DebugListener;
 import com.tonic.live.debug.DebugLocation;
 import com.tonic.live.debug.DebugSession;
 import com.tonic.live.debug.DebugVariable;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.ProjectModel;
+import com.tonic.service.ProjectService;
+import com.tonic.service.SyntheticLvtInjector;
 import com.tonic.util.Settings;
+import lombok.Getter;
 
 import javax.swing.SwingUtilities;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * App-side owner of the optional JDI debug session (the control-plane counterpart to
@@ -36,7 +43,11 @@ public final class DebugManager implements DebugListener {
     private static final String AGENT_THREAD_PREFIX = "jstudio-live-java-agent";
 
     private volatile DebugSession session;
+    @Getter
     private volatile DebugLocation pausedLocation;
+
+    /** Classes a synthetic LocalVariableTable injection has already been attempted for this session (once each). */
+    private final Set<String> injectedLvtClasses = ConcurrentHashMap.newKeySet();
 
     private DebugManager() {
     }
@@ -54,10 +65,6 @@ public final class DebugManager implements DebugListener {
         return s != null && s.isPaused();
     }
 
-    public DebugLocation getPausedLocation() {
-        return pausedLocation;
-    }
-
     // ---- connection ---------------------------------------------------------------------------------
 
     /** Connects JDI to a target already serving JDWP at {@code host:port} (a JStudio-launched JVM). */
@@ -66,6 +73,7 @@ public final class DebugManager implements DebugListener {
         session = DebugSession.attach(host, port, this, Settings.getInstance().isDebuggerSuspendAll(),
                 AGENT_THREAD_PREFIX);
         BreakpointService.getInstance().reinstall();
+        session.start();
         postSession(true);
     }
 
@@ -86,7 +94,7 @@ public final class DebugManager implements DebugListener {
                 }
             }
         }
-        throw last != null ? last : new IOException("debugger connect failed");
+        throw last;
     }
 
     /** Late-loads the JDWP agent into an externally-attached {@code pid}, then connects JDI (with retry). */
@@ -100,6 +108,7 @@ public final class DebugManager implements DebugListener {
         if (s != null) {
             session = null;
             pausedLocation = null;
+            injectedLvtClasses.clear();
             s.dispose();
             postSession(false);
         }
@@ -125,6 +134,12 @@ public final class DebugManager implements DebugListener {
         DebugSession s = session;
         if (s != null) {
             s.addBreakpoint(className, methodName, methodDesc, pc);
+            if (!injectedLvtClasses.contains(className)) {
+                final DebugSession session0 = s;
+                Thread t = new Thread(() -> maybeInjectSyntheticLvt(session0, className), "jstudio-lvt-inject");
+                t.setDaemon(true);
+                t.start();
+            }
         }
     }
 
@@ -170,6 +185,18 @@ public final class DebugManager implements DebugListener {
         return s != null ? s.variables(frameIndex) : Collections.emptyList();
     }
 
+    /** Fields/elements of a reference value handed out by {@link #variables} (click-to-expand). */
+    public List<DebugVariable> objectFields(long refHandle) {
+        DebugSession s = session;
+        return s != null ? s.objectFields(refHandle) : Collections.emptyList();
+    }
+
+    /** The first {@code max} elements of an array reference (for the hover preview / element viewer). */
+    public List<DebugVariable> arrayElements(long refHandle, int max) {
+        DebugSession s = session;
+        return s != null ? s.arrayElements(refHandle, max) : Collections.emptyList();
+    }
+
     // ---- DebugListener (event thread) -> EventBus on the EDT -----------------------------------------
 
     @Override
@@ -187,6 +214,38 @@ public final class DebugManager implements DebugListener {
     @Override
     public void onDisconnected() {
         SwingUtilities.invokeLater(this::disconnect);
+    }
+
+    @Override
+    public void onClassPrepared(String className) {
+        maybeInjectSyntheticLvt(session, className);
+    }
+
+    /**
+     * Injects a synthetic LocalVariableTable into a stripped class so the live debugger reports named locals
+     * matching the decompilation. Best-effort and once per class per session: skips when the VM can't HotSwap,
+     * the class isn't loaded, the project lacks it, or it already carries an LVT (every method), and never
+     * disturbs the unchanged bytecode (only the debug attribute is added).
+     */
+    private void maybeInjectSyntheticLvt(DebugSession s, String className) {
+        if (s == null || !s.canRedefineClasses() || !s.isClassLoaded(className)) {
+            return;
+        }
+        if (!injectedLvtClasses.add(className)) {
+            return;
+        }
+        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        if (project == null) {
+            return;
+        }
+        ClassEntryModel entry = project.getClass(className.replace('.', '/'));
+        if (entry == null) {
+            return;
+        }
+        byte[] augmented = SyntheticLvtInjector.augment(entry.getClassFile());
+        if (augmented != null) {
+            s.redefineClasses(className, augmented);
+        }
     }
 
     private void postSession(boolean connected) {

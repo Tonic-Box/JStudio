@@ -59,6 +59,7 @@ import com.tonic.live.LiveSession;
 import com.tonic.event.events.DebugPausedEvent;
 import com.tonic.event.events.DebugSessionEvent;
 import com.tonic.live.debug.DebugLocation;
+import com.tonic.ui.debug.BreakpointService;
 import com.tonic.ui.debug.DebugManager;
 import com.tonic.ui.debug.DebuggerPanel;
 import com.tonic.ui.live.LiveAttachService;
@@ -542,7 +543,11 @@ public class MainFrame extends JFrame {
             } catch (IOException ignored) {
             }
             if (jdwpPort > 0) {
-                vmOptions.add(0, "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=127.0.0.1:" + jdwpPort);
+                // Suspend at VMStart only when breakpoints are pre-set, so they can catch app startup; the
+                // debugger installs them on connect and resumes. No breakpoints -> run immediately.
+                String suspend = BreakpointService.getInstance().all().isEmpty() ? "n" : "y";
+                vmOptions.add(0, "-agentlib:jdwp=transport=dt_socket,server=y,suspend=" + suspend
+                        + ",address=127.0.0.1:" + jdwpPort);
             }
         }
 

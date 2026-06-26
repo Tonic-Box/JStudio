@@ -15,4 +15,12 @@ public interface DebugListener {
 
     /** The debug connection ended (target died, disconnected, or the session was disposed). */
     void onDisconnected();
+
+    /**
+     * A class that has a pending breakpoint has just been prepared in the target (its methods have not run yet).
+     * The hook for injecting a synthetic LocalVariableTable into a stripped class before it executes. No-op by
+     * default. Invoked on the event thread while the prepared thread is suspended.
+     */
+    default void onClassPrepared(String className) {
+    }
 }

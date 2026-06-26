@@ -1,6 +1,7 @@
 package com.tonic.ui.debug;
 
 import com.tonic.event.EventBus;
+import com.tonic.event.events.DebugFrameSelectedEvent;
 import com.tonic.event.events.DebugPausedEvent;
 import com.tonic.event.events.DebugResumedEvent;
 import com.tonic.event.events.DebugSessionEvent;
@@ -151,6 +152,7 @@ public final class DebuggerPanel extends JPanel {
             return;
         }
         mainFrame.navigateToDebugLocation(frame.getLocation());
+        EventBus.getInstance().post(new DebugFrameSelectedEvent(this, frame));
         varsModel.setRowCount(0);
         for (DebugVariable v : DebugManager.getInstance().variables(frame.getIndex())) {
             varsModel.addRow(new Object[]{v.getName(), prettyType(v.getTypeDescriptor()), v.getDisplay()});

@@ -61,6 +61,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
      *  Get the text area for direct access (e.g., for Ctrl+Click).
      */
     @Getter
+    private static final int HINT_SCROLL_PADDING = 16;
+
     private final RSyntaxTextArea textArea;
     private final RTextScrollPane scrollPane;
     private final SearchPanel searchPanel;
@@ -72,6 +74,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     private final CommentGutterController commentGutter;
     private final RunGutterController runGutter;
     private final BreakpointGutterController breakpointGutter;
+    private final RuntimeHintController runtimeHints;
     private final LoadingOverlay loadingOverlay;
     private SwingWorker<String, Void> currentWorker;
     private Runnable pendingNavigation;
@@ -100,6 +103,32 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 usageLens.paint((Graphics2D) g);
+                if (runtimeHints != null) {
+                    runtimeHints.paint((Graphics2D) g);
+                }
+            }
+
+            @Override
+            public String getToolTipText(MouseEvent e) {
+                if (runtimeHints != null) {
+                    String t = runtimeHints.tooltipAt(e.getPoint());
+                    if (t != null) {
+                        return t;
+                    }
+                }
+                return super.getToolTipText(e);
+            }
+
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                if (runtimeHints != null) {
+                    int need = runtimeHints.requiredWidth();
+                    if (need > 0 && need + HINT_SCROLL_PADDING > d.width) {
+                        d.width = need + HINT_SCROLL_PADDING;
+                    }
+                }
+                return d;
             }
         };
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
@@ -123,6 +152,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         runGutter = new RunGutterController(textArea, scrollPane, classEntry,
                 () -> omitAnnotations, this::runMainViaMainFrame);
         breakpointGutter = new BreakpointGutterController(textArea, scrollPane, new SourceBreakpointMapper(classEntry));
+        runtimeHints = new RuntimeHintController(textArea, classEntry);
         usageLens = new UsageLensController(textArea, classEntry,
                 () -> omitAnnotations, () -> dirty, () -> projectModel);
         navigator = new SourceNavigator(this, textArea, classEntry, lineHighlighter,
@@ -558,12 +588,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         super.addNotify();
         runGutter.attach();
         breakpointGutter.attach();
+        runtimeHints.attach();
     }
 
     @Override
     public void removeNotify() {
         runGutter.detach();
         breakpointGutter.detach();
+        runtimeHints.detach();
         commentGutter.detach();
         ThemeManager.getInstance().removeThemeChangeListener(this);
         super.removeNotify();

@@ -3,6 +3,7 @@ package com.tonic.live.debug;
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ArrayReference;
 import com.sun.jdi.ArrayType;
+import com.sun.jdi.CharValue;
 import com.sun.jdi.ClassType;
 import com.sun.jdi.Field;
 import com.sun.jdi.LocalVariable;
@@ -32,6 +33,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A live JDI debug session: owns the attached {@link VirtualMachine}, pumps its event queue on a daemon thread,
@@ -55,6 +58,10 @@ public final class DebugSession {
     private volatile ThreadReference pausedThread;
     private volatile boolean pausedAll;
 
+    /** Handles to the paused frame's reference values, for click-to-expand; cleared each pause. */
+    private final Map<Long, ObjectReference> refHandles = new ConcurrentHashMap<>();
+    private final AtomicLong refIds = new AtomicLong(1);
+
     private final List<BreakpointSpec> breakpoints = new ArrayList<>();
     private final List<BreakpointRequest> installed = new ArrayList<>();
     private final Map<String, ClassPrepareRequest> prepareRequests = new HashMap<>();
@@ -66,7 +73,15 @@ public final class DebugSession {
         this.agentThreadPrefix = agentThreadPrefix;
         this.pump = new Thread(this::pumpLoop, "jstudio-jdi-events");
         this.pump.setDaemon(true);
-        this.pump.start();
+    }
+
+    /**
+     * Starts the event pump. Call after breakpoints are installed so that a suspend-on-start launch
+     * (jdwp {@code suspend=y}) gets its requests in place before the initial VMStart event is resumed - which
+     * is what lets pre-set breakpoints catch application startup.
+     */
+    public void start() {
+        pump.start();
     }
 
     /**
@@ -331,7 +346,8 @@ public final class DebugSession {
             StackFrame frame = t.frame(frameIndex);
             ObjectReference self = frame.thisObject();
             if (self != null) {
-                out.add(new DebugVariable("this", self.referenceType().signature(), label(self), true));
+                out.add(new DebugVariable("this", self.referenceType().signature(), label(self), true,
+                        register(self), false, 0));
             }
             try {
                 for (LocalVariable lv : frame.visibleVariables()) {
@@ -361,7 +377,10 @@ public final class DebugSession {
                         handlePause(((BreakpointEvent) event).thread(), set.suspendPolicy());
                         resumeAfter = false;
                     } else if (event instanceof ClassPrepareEvent) {
-                        installPending(((ClassPrepareEvent) event).referenceType());
+                        ReferenceType prepared = ((ClassPrepareEvent) event).referenceType();
+                        if (installPending(prepared)) {
+                            listener.onClassPrepared(prepared.name());
+                        }
                     } else if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
                         running = false;
                         resumeAfter = false;
@@ -385,6 +404,7 @@ public final class DebugSession {
     private void handlePause(ThreadReference thread, int suspendPolicy) {
         this.pausedThread = thread;
         this.pausedAll = suspendPolicy == EventRequest.SUSPEND_ALL;
+        refHandles.clear();
         if (pausedAll) {
             resumeAgentThreads();
         }
@@ -414,11 +434,49 @@ public final class DebugSession {
         }
     }
 
-    private synchronized void installPending(ReferenceType rt) {
+    private synchronized boolean installPending(ReferenceType rt) {
+        boolean hadBreakpoint = false;
         for (BreakpointSpec spec : breakpoints) {
             if (spec.className.equals(rt.name())) {
                 installSpec(rt, spec);
+                hadBreakpoint = true;
             }
+        }
+        return hadBreakpoint;
+    }
+
+    /** Whether the target VM supports {@link #redefineClasses} (HotSwap). */
+    public boolean canRedefineClasses() {
+        return vm.canRedefineClasses();
+    }
+
+    /** Whether {@code className} (a binary/dotted name) is loaded in the target. */
+    public boolean isClassLoaded(String className) {
+        return !vm.classesByName(className).isEmpty();
+    }
+
+    /**
+     * Redefines every loaded type named {@code className} with {@code bytes} (HotSwap). Used to install a
+     * synthetic LocalVariableTable onto otherwise-unchanged bytecode. Returns false (without throwing) when the
+     * VM can't redefine, the class is not loaded, or JDI rejects the bytes - so debugging continues regardless.
+     */
+    public synchronized boolean redefineClasses(String className, byte[] bytes) {
+        if (bytes == null || !vm.canRedefineClasses()) {
+            return false;
+        }
+        List<ReferenceType> types = vm.classesByName(className);
+        if (types.isEmpty()) {
+            return false;
+        }
+        try {
+            Map<ReferenceType, byte[]> redefs = new HashMap<>();
+            for (ReferenceType rt : types) {
+                redefs.put(rt, bytes);
+            }
+            vm.redefineClasses(redefs);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -448,9 +506,69 @@ public final class DebugSession {
         return loc.getClassName() + "." + loc.getMethodName() + "()" + at;
     }
 
-    private static DebugVariable toVar(String name, String signature, Value v) {
+    private DebugVariable toVar(String name, String signature, Value v) {
         boolean ref = v instanceof ObjectReference && !(v instanceof StringReference);
-        return new DebugVariable(name, signature, label(v), ref);
+        long handle = ref ? register((ObjectReference) v) : 0;
+        boolean array = false;
+        int arrayLength = 0;
+        if (v instanceof ArrayReference && !"char[]".equals(((ArrayReference) v).referenceType().name())) {
+            array = true;
+            arrayLength = ((ArrayReference) v).length();
+        }
+        return new DebugVariable(name, signature, label(v), ref, handle, array, arrayLength);
+    }
+
+    private long register(ObjectReference o) {
+        long id = refIds.getAndIncrement();
+        refHandles.put(id, o);
+        return id;
+    }
+
+    /** Fields (or array elements) of a previously-handed-out reference value, for click-to-expand drilling. */
+    public List<DebugVariable> objectFields(long handle) {
+        List<DebugVariable> out = new ArrayList<>();
+        ObjectReference o = refHandles.get(handle);
+        if (o == null) {
+            return out;
+        }
+        try {
+            if (o instanceof ArrayReference) {
+                return arrayElements(handle, 200);
+            }
+            List<Field> fields = new ArrayList<>();
+            for (Field f : o.referenceType().allFields()) {
+                if (!f.isStatic()) {
+                    fields.add(f);
+                }
+            }
+            Map<Field, Value> values = o.getValues(fields);
+            for (Field f : fields) {
+                out.add(toVar(f.name(), f.signature(), values.get(f)));
+            }
+        } catch (Exception ignored) {
+        }
+        return out;
+    }
+
+    /** The first {@code max} elements of an array reference, index-labelled ({@code [0]}, {@code [1]}, ...). */
+    public List<DebugVariable> arrayElements(long handle, int max) {
+        List<DebugVariable> out = new ArrayList<>();
+        ObjectReference o = refHandles.get(handle);
+        if (!(o instanceof ArrayReference)) {
+            return out;
+        }
+        try {
+            ArrayReference arr = (ArrayReference) o;
+            int n = Math.min(arr.length(), Math.max(0, max));
+            if (n > 0) {
+                List<Value> vals = arr.getValues(0, n);
+                for (int i = 0; i < vals.size(); i++) {
+                    out.add(toVar("[" + i + "]", "", vals.get(i)));
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return out;
     }
 
     private static String label(Value v) {
@@ -460,11 +578,37 @@ public final class DebugSession {
         if (v instanceof StringReference) {
             return "\"" + ((StringReference) v).value() + "\"";
         }
+        if (v instanceof ArrayReference) {
+            ArrayReference arr = (ArrayReference) v;
+            if ("char[]".equals(arr.referenceType().name())) {
+                return charArrayString(arr);
+            }
+            return arr.referenceType().name() + " (len " + arr.length() + ")";
+        }
         if (v instanceof ObjectReference) {
             ObjectReference o = (ObjectReference) v;
             return o.referenceType().name() + "@" + o.uniqueID();
         }
         return v.toString();
+    }
+
+    /** Renders a {@code char[]} as its quoted string content (capped), e.g. an in-flight password buffer. */
+    private static String charArrayString(ArrayReference arr) {
+        int len = arr.length();
+        int cap = Math.min(len, 200);
+        StringBuilder sb = new StringBuilder("\"");
+        if (cap > 0) {
+            for (Value cv : arr.getValues(0, cap)) {
+                if (cv instanceof CharValue) {
+                    sb.append(((CharValue) cv).value());
+                }
+            }
+        }
+        sb.append('"');
+        if (len > cap) {
+            sb.append(" (").append(len).append(" chars)");
+        }
+        return sb.toString();
     }
 
     private static final class BreakpointSpec {

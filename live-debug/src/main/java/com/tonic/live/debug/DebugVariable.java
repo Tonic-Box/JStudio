@@ -13,11 +13,21 @@ public final class DebugVariable {
     private final String typeDescriptor;
     private final String display;
     private final boolean reference;
+    /** Handle to the underlying object for click-to-expand, or 0 when this is not a reference. */
+    private final long refHandle;
+    /** True for a non-char array (gets the element tooltip + viewer dialog); char[] is shown as a string. */
+    private final boolean array;
+    /** Element count when {@link #array}, else 0. */
+    private final int arrayLength;
 
-    public DebugVariable(String name, String typeDescriptor, String display, boolean reference) {
+    public DebugVariable(String name, String typeDescriptor, String display, boolean reference, long refHandle,
+                         boolean array, int arrayLength) {
         this.name = name;
         this.typeDescriptor = typeDescriptor;
         this.display = display;
         this.reference = reference;
+        this.refHandle = refHandle;
+        this.array = array;
+        this.arrayLength = arrayLength;
     }
 }

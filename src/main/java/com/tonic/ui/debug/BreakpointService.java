@@ -2,7 +2,6 @@ package com.tonic.ui.debug;
 
 import com.tonic.event.EventBus;
 import com.tonic.event.events.BreakpointsChangedEvent;
-import com.tonic.event.events.DebugSessionEvent;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -10,10 +9,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Session-scoped registry of breakpoints (keyed by class + method + bytecode offset). Breakpoints exist only
- * while the debugger is connected and are cleared on disconnect. The source and bytecode gutters render from
- * this single set, so a breakpoint set in one view appears in the other; mutations install/remove in the live
- * session immediately and post a {@link BreakpointsChangedEvent} so the gutters refresh.
+ * Registry of breakpoints (keyed by class + method + bytecode offset). Breakpoints are settable any time -
+ * including before a debugger is attached - and persist across sessions: {@link #reinstall} arms them whenever
+ * a session connects. The source and bytecode gutters render from this single set, so a breakpoint set in one
+ * view appears in the other; mutations install/remove in the live session immediately and post a
+ * {@link BreakpointsChangedEvent} so the gutters refresh.
  */
 public final class BreakpointService {
 
@@ -22,11 +22,6 @@ public final class BreakpointService {
     private final Set<Breakpoint> breakpoints = new LinkedHashSet<>();
 
     private BreakpointService() {
-        EventBus.getInstance().register(DebugSessionEvent.class, e -> {
-            if (!e.isConnected()) {
-                clear();
-            }
-        });
     }
 
     public static BreakpointService getInstance() {
