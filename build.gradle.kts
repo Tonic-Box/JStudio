@@ -25,7 +25,7 @@ application {
 }
 
 repositories {
-    mavenLocal()
+    //mavenLocal()
     mavenCentral()
     maven { url = uri("https://www.jitpack.io") }
 }
@@ -50,8 +50,8 @@ dependencies {
 
     implementation("com.github.javaparser:javaparser-core:3.25.5")
 
-    implementation("com.tonic:YABR:1.0.1")
-    //implementation("com.github.Tonic-Box:YABR:main-SNAPSHOT")
+    //implementation("com.tonic:YABR:1.0.1")
+    implementation("com.github.Tonic-Box:YABR:main-SNAPSHOT")
 
     // CLI dependencies
     implementation("info.picocli:picocli:4.7.5")
