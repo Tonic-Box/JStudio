@@ -750,8 +750,14 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         if (line < 0) {
             line = primary;
         }
-        highlightAndScrollToLine(line - 1);
-        lineHighlighter.selectTokenOnLine(line - 1, selectToken);
+        // Defer the scroll/select: when the class was just opened (cached source applied synchronously), the
+        // text component isn't laid out yet, so an immediate scroll lands nowhere - the old "navigate twice"
+        // bug. invokeLater runs it after the pending layout pass; it's harmless when already realized.
+        final int target = line;
+        SwingUtilities.invokeLater(() -> {
+            highlightAndScrollToLine(target - 1);
+            lineHighlighter.selectTokenOnLine(target - 1, selectToken);
+        });
         return true;
     }
 
