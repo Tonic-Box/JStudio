@@ -13,7 +13,11 @@ import com.tonic.model.ClassEntryModel;
 import com.tonic.ui.debug.Breakpoint;
 import com.tonic.ui.debug.BreakpointGutterController;
 import com.tonic.model.ProjectModel;
+import com.tonic.model.Snapshot;
+import com.tonic.service.history.LocalHistoryService;
+import com.tonic.service.LocalVariableRenamer;
 import com.tonic.service.ProjectDatabaseService;
+import com.tonic.ui.dialog.RenameLocalDialog;
 import com.tonic.live.LiveSession;
 import com.tonic.ui.core.SwingWorkers;
 import com.tonic.ui.live.LiveAttachService;
@@ -523,6 +527,16 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
             menu.add(findUsagesItem);
         }
 
+        // Rename local variable (when the click lands on a method-scoped local or parameter)
+        String localWord = identifierAt(clickOffset);
+        LocalVariableRenamer.Target localTarget =
+                localWord != null ? LocalVariableRenamer.locate(classEntry, line, localWord) : null;
+        if (localTarget != null) {
+            JMenuItem renameLocal = createMenuItem("Rename local '" + localTarget.oldName + "'...", null);
+            renameLocal.addActionListener(ev -> renameLocal(localTarget));
+            menu.add(renameLocal);
+        }
+
         menu.addSeparator();
 
         // Add Comment at Line
@@ -563,6 +577,86 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
             item.setIcon(icon);
         }
         return item;
+    }
+
+    /** The Java identifier spanning {@code offset} in the document, or null if {@code offset} isn't on one. */
+    private String identifierAt(int offset) {
+        try {
+            String text = textArea.getText();
+            if (offset < 0 || offset > text.length()) {
+                return null;
+            }
+            int start = offset;
+            int end = offset;
+            while (start > 0 && Character.isJavaIdentifierPart(text.charAt(start - 1))) {
+                start--;
+            }
+            while (end < text.length() && Character.isJavaIdentifierPart(text.charAt(end))) {
+                end++;
+            }
+            return start < end ? text.substring(start, end) : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Prompts for a new name and renames the local by editing the method's LocalVariableTable, then re-decompiles
+     * (the decompiler renders the LVT name) while restoring the exact caret + scroll position.
+     */
+    private void renameLocal(LocalVariableRenamer.Target target) {
+        RenameLocalDialog dialog = new RenameLocalDialog(SwingUtilities.getWindowAncestor(this), target.oldName);
+        dialog.setVisible(true);
+        if (!dialog.isConfirmed()) {
+            return;
+        }
+        String newName = dialog.getNewName();
+        if (newName.equals(target.oldName)) {
+            return;
+        }
+        if (LocalVariableRenamer.wouldConflict(classEntry, target, newName)) {
+            JOptionPane.showMessageDialog(this,
+                    "A local named '" + newName + "' is already in scope here.",
+                    "Rename Conflict", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int caretLine = 0;
+        int caretCol = 0;
+        try {
+            int caretOffset = textArea.getCaretPosition();
+            caretLine = textArea.getLineOfOffset(caretOffset);
+            caretCol = caretOffset - textArea.getLineStartOffset(caretLine);
+        } catch (BadLocationException ignored) {
+        }
+        Point viewPos = scrollPane.getViewport().getViewPosition();
+
+        LocalHistoryService.getInstance().snapshot("Rename local " + target.oldName, Snapshot.Trigger.RENAME);
+        if (!LocalVariableRenamer.rename(classEntry, target, newName)) {
+            JOptionPane.showMessageDialog(this, "Could not rename the local variable.",
+                    "Rename Failed", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        final int line = caretLine;
+        final int col = caretCol;
+        pendingNavigation = () -> restoreCaretAndScroll(line, col, viewPos);
+        reload();
+        if (onRecompiled != null) {
+            onRecompiled.run();
+        }
+    }
+
+    /** Restores the caret to {@code (line, col)} (clamped) and the scroll viewport after a re-decompile. */
+    private void restoreCaretAndScroll(int line, int col, Point viewPos) {
+        try {
+            int targetLine = Math.max(0, Math.min(line, textArea.getLineCount() - 1));
+            int lineStart = textArea.getLineStartOffset(targetLine);
+            int lineEnd = textArea.getLineEndOffset(targetLine);
+            textArea.setCaretPosition(Math.min(lineStart + col, Math.max(lineStart, lineEnd - 1)));
+        } catch (BadLocationException ignored) {
+        }
+        SwingUtilities.invokeLater(() -> scrollPane.getViewport().setViewPosition(viewPos));
     }
 
     private void addBookmark() {
