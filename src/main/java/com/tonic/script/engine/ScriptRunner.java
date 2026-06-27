@@ -1,4 +1,5 @@
 package com.tonic.script.engine;
+import com.tonic.analysis.ClassFactory;
 
 import com.tonic.analysis.source.ast.stmt.BlockStmt;
 import com.tonic.analysis.source.editor.ASTEditor;
@@ -332,7 +333,7 @@ public final class ScriptRunner {
      */
     private static void commitClass(ClassEntryModel classEntry, Consumer<String> out) {
         try {
-            classEntry.getClassFile().computeFrames();
+            ClassFactory.computeFrames(classEntry.getClassFile());
         } catch (Exception e) {
             out.accept("Frame computation failed for " + classEntry.getClassName() + ": " + e.getMessage() + "\n");
         }

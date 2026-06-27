@@ -1,4 +1,5 @@
 package com.tonic.ui.editor.bytecode;
+import com.tonic.analysis.CodePrinter;
 
 import com.tonic.analysis.DisassemblyOptions;
 import com.tonic.parser.MethodEntry;
@@ -9,8 +10,8 @@ import lombok.Getter;
  * Formats bytecode for display in the UI.
  *
  * <p>All disassembly (header, line numbers, local-variable and stack-frame markers, exception table,
- * resolved invokedynamic bootstraps) is produced by YABR's {@link CodeAttribute#prettyPrintCode(
- * DisassemblyOptions)} verbose profile; this class only applies the UI indentation.
+ * resolved invokedynamic bootstraps) is produced by YABR's {@link CodePrinter#prettyPrintCode(
+ * CodeAttribute, DisassemblyOptions)} verbose profile; this class only applies the UI indentation.
  */
 @Getter
 public class BytecodeFormatter {
@@ -36,7 +37,7 @@ public class BytecodeFormatter {
         }
 
         StringBuilder sb = new StringBuilder();
-        for (String line : code.prettyPrintCode(DisassemblyOptions.verbose()).split("\n")) {
+        for (String line : CodePrinter.prettyPrintCode(code, DisassemblyOptions.verbose()).split("\n")) {
             if (line.isEmpty()) {
                 continue;
             }

@@ -1,4 +1,5 @@
 package com.tonic.plugin.context;
+import com.tonic.analysis.CodePrinter;
 
 import com.tonic.analysis.DisassemblyOptions;
 import com.tonic.analysis.callgraph.CallGraph;
@@ -111,7 +112,7 @@ public class YabrAccessImpl implements YabrAccess {
             return Optional.empty();
         }
         DisassemblyOptions options = verbose ? DisassemblyOptions.verbose() : DisassemblyOptions.terse();
-        return Optional.of(code.prettyPrintCode(options));
+        return Optional.of(CodePrinter.prettyPrintCode(code, options));
     }
 
     @Override

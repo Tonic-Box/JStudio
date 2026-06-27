@@ -5,7 +5,7 @@ import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.Attribute;
 import com.tonic.parser.attribute.RuntimeVisibleAnnotationsAttribute;
-import com.tonic.parser.attribute.anotation.Annotation;
+import com.tonic.parser.attribute.annotation.Annotation;
 import com.tonic.parser.constpool.ClassRefItem;
 import com.tonic.parser.constpool.Item;
 import com.tonic.parser.constpool.Utf8Item;

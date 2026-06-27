@@ -1,6 +1,6 @@
 package com.tonic.ui.query;
 
-import com.tonic.utill.Opcode;
+import com.tonic.util.Opcode;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMaker;
 import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rsyntaxtextarea.TokenMap;

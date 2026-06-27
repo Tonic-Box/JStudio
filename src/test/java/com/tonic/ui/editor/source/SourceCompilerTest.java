@@ -1,10 +1,11 @@
 package com.tonic.ui.editor.source;
+import com.tonic.analysis.ClassFactory;
 
 import com.tonic.analysis.source.decompile.ClassDecompiler;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
-import com.tonic.utill.AccessBuilder;
+import com.tonic.util.AccessBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -133,7 +134,7 @@ class SourceCompilerTest {
     @Test
     void keepsConstructorWhenNotDeclaredInSource() throws Exception {
         ClassFile cf = pool.createNewClass("test/gen/Ctor", new AccessBuilder().setPublic().build());
-        cf.createNewMethod(true, new AccessBuilder().setPublic().build(), "<init>", "()V");
+        ClassFactory.createMethodWithBody(cf, new AccessBuilder().setPublic().build(), "<init>", "()V");
 
         String source = "package test.gen;\n\npublic class Ctor {\n"
             + "    static int v() { return 1; }\n}\n";

@@ -1,4 +1,5 @@
 package com.tonic.script;
+import com.tonic.analysis.ClassFactory;
 
 import com.tonic.analysis.source.ast.stmt.BlockStmt;
 import com.tonic.analysis.source.editor.ASTEditor;
@@ -54,7 +55,7 @@ public class ScriptPrintlnDiagnosticTest {
         int before = countCalls(cf, m, false);
         SSA ssa = new SSA(cf.getConstPool());
         ssa.lower(ssa.lift(m), m);
-        cf.computeFrames();
+        ClassFactory.computeFrames(cf);
         assertEquals(before, countCalls(cf, m, false), "IR lift->lower must preserve every call");
     }
 
@@ -94,7 +95,7 @@ public class ScriptPrintlnDiagnosticTest {
     }
 
     /** Mirrors ScriptRunner.runASTMode incl. the verify-and-restore guard; returns modifications cemented. */
-    private static int applyGuarded(ClassPool pool, ClassFile cf, MethodEntry m) throws Exception {
+    private static int applyGuarded(ClassPool pool, ClassFile cf, MethodEntry m) {
         ScriptInterpreter interp = new ScriptInterpreter();
         CommonAPI api = new CommonAPI();
         api.setContext(cf.getClassName(), m.getName(), m.getDesc());
@@ -113,13 +114,13 @@ public class ScriptPrintlnDiagnosticTest {
         IRMethod pristine = new SSA(cf.getConstPool()).lift(m);
         new ASTLowerer(cf.getConstPool(), pool).replaceBody(body, ir);
         ssa.lower(ir, m);
-        cf.computeFrames();
+        ClassFactory.computeFrames(cf);
 
         BlockStmt check = MethodRecoverer.recoverMethod(new SSA(cf.getConstPool()).lift(m), m);
         java.util.List<String> actual = check == null ? null : sigs(check, m, cf.getClassName());
         if (actual == null || !actual.equals(intended)) {
             new SSA(cf.getConstPool()).lower(pristine, m);
-            cf.computeFrames();
+            ClassFactory.computeFrames(cf);
             return 0;
         }
         return count;

@@ -45,3 +45,6 @@ bin/
 /nul
 /warnings.txt
 /DemoJar.jar
+/.serena/.gitignore
+/.serena/project.yml
+/.serena/

@@ -8,17 +8,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Add toggle to side-pannel window popout for &quot;Always on Top&quot; option (Default on)">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- YABR usage updates for yabrs recent large restructuring">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/detection/EncryptedStringDetector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/deobfuscation/detection/EncryptedStringDetector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/graph/dot/DotParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/graph/dot/DotParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/ConsoleLogService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/ConsoleLogService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/ScriptConsolePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/bottom/ScriptConsolePanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/MethodRootNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/ast/MethodRootNode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/constpool/ConstPoolTableModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/constpool/ConstPoolTableModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/ScratchCompletionProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/eval/ScratchCompletionProvider.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/properties/PropertiesPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/properties/PropertiesPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/run/RunConsolePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/run/RunConsolePanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/YabrAccessImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/YabrAccessImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/AnnotationBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/AnnotationBridge.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/ProjectBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/ProjectBridge.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/engine/ScriptRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/engine/ScriptRunner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeFormatter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeFormatter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/AnnotationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/AnnotationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryTokenMaker.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryTokenMaker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/BytecodeDisassembler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/BytecodeDisassembler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/tonic/script/ScriptPrintlnDiagnosticTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/tonic/script/ScriptPrintlnDiagnosticTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/source/SourceCompilerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/source/SourceCompilerTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,7 +87,7 @@
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/zacke/IdeaProjects/VityaHeadless&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/zacke/IdeaProjects/Vellum&quot;,
     &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
@@ -646,7 +649,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Add JFR analysis window: visualize captured recordings in-app&#10;&#10;Double-click a capture in the Recorder to open a resizable analysis window: an Overview dashboard plus CPU, Allocations, Locks, and Exceptions tabs (shown only when recorded). Each combines a flame graph with a ranked, data-bar table; double-click a frame or hot-method row to open its decompiled source." />
     <MESSAGE value="- cleanup" />
     <MESSAGE value="- Dead member removal" />
     <MESSAGE value="- Compile scratch-pad snippets to the attached JVM's class version&#10;- Add Run: launch the loaded app's main() in a separate JVM" />
@@ -671,7 +673,8 @@
     <MESSAGE value="- Decompose UI god-classes; fix listener leaks; de-duplicate theming&#10;- Break the five largest Swing classes into ~28 cohesive, package-private collaborators&#10;- Fix a systemic theme/EventBus/service listener leak&#10;- Add ThemeStyles helper + AbstractRenameDialog&#10;- Extract pure, unit-tested helpers (JvmDescriptorFormatter, SourceDeclarationParser, MethodSignatureMatcher, BytecodeDisassembler)" />
     <MESSAGE value="Add EditorView contract + AbstractEditorView base for editor views&#10;- EditorView interface + AbstractEditorView (theme lifecycle, async-load scaffolding, no-op contract defaults) + AbstractTextView (RSyntaxTextArea setup/theming + text-backed ops)&#10;- Migrate ~17 views onto the base; SourceCodeView/DualView implement EditorView directly. Per-view stubs and duplicated lifecycle/refreshskeletons removed.&#10;- Collapse EditorTab's ~21 instanceof/ViewMode-switch cascades to a Map&lt;ViewMode,EditorView&gt; lookup" />
     <MESSAGE value="- Add toggle to side-pannel window popout for &quot;Always on Top&quot; option (Default on)" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Add toggle to side-pannel window popout for &quot;Always on Top&quot; option (Default on)" />
+    <MESSAGE value="- YABR usage updates for yabrs recent large restructuring" />
+    <option name="LAST_COMMIT_MESSAGE" value="- YABR usage updates for yabrs recent large restructuring" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

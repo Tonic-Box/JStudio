@@ -8,7 +8,7 @@ import com.tonic.parser.attribute.Attribute;
 import com.tonic.parser.attribute.table.LineNumberTableEntry;
 import com.tonic.parser.constpool.*;
 import com.tonic.ui.core.util.JvmDescriptorFormatter;
-import com.tonic.utill.Opcode;
+import com.tonic.util.Opcode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
