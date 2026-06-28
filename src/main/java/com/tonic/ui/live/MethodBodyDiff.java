@@ -3,6 +3,7 @@ package com.tonic.ui.live;
 import com.tonic.analysis.source.ast.ASTPrinter;
 import com.tonic.analysis.source.ast.decl.ClassDecl;
 import com.tonic.analysis.source.ast.decl.CompilationUnit;
+import com.tonic.analysis.source.ast.decl.ConstructorDecl;
 import com.tonic.analysis.source.ast.decl.MethodDecl;
 import com.tonic.analysis.source.ast.decl.ParameterDecl;
 import com.tonic.analysis.source.ast.decl.TypeDecl;
@@ -87,6 +88,11 @@ public final class MethodBodyDiff {
                 bodies.put(signature(method, resolver), ASTPrinter.format(method.getBody()));
             }
         }
+        for (ConstructorDecl constructor : classDecl.getConstructors()) {
+            if (constructor.getBody() != null) {
+                bodies.put(constructorSignature(constructor, resolver), ASTPrinter.format(constructor.getBody()));
+            }
+        }
         return bodies;
     }
 
@@ -105,5 +111,17 @@ public final class MethodBodyDiff {
                 ? resolver.descriptorOf(method.getReturnType())
                 : method.getReturnType().toIRType().getDescriptor());
         return method.getName() + descriptor;
+    }
+
+    /** The constructor's {@code <init>} key: its parameters (resolved like {@link #signature}) and void return. */
+    private static String constructorSignature(ConstructorDecl constructor, TypeResolver resolver) {
+        StringBuilder descriptor = new StringBuilder("(");
+        for (ParameterDecl parameter : constructor.getParameters()) {
+            descriptor.append(resolver != null
+                    ? resolver.descriptorOf(parameter.getType())
+                    : parameter.getType().toIRType().getDescriptor());
+        }
+        descriptor.append(")V");
+        return "<init>" + descriptor;
     }
 }

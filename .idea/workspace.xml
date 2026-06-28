@@ -9,18 +9,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- YABR usage updates for yabrs recent large restructuring">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/YabrAccessImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/plugin/context/YabrAccessImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/AnnotationBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/AnnotationBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/ProjectBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/bridge/ProjectBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/script/engine/ScriptRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/script/engine/ScriptRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeFormatter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeFormatter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/AnnotationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/AnnotationFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryTokenMaker.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/query/QueryTokenMaker.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/BytecodeDisassembler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/vm/debugger/BytecodeDisassembler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/tonic/script/ScriptPrintlnDiagnosticTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/tonic/script/ScriptPrintlnDiagnosticTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompiler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompiler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/MethodBodyDiff.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/live/MethodBodyDiff.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/source/SourceCompilerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/source/SourceCompilerTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -241,14 +233,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00075" summary="- Undid update check throttling">
-      <option name="closed" value="true" />
-      <created>1781075026811</created>
-      <option name="number" value="00075" />
-      <option name="presentableId" value="LOCAL-00075" />
-      <option name="project" value="LOCAL" />
-      <updated>1781075026811</updated>
     </task>
     <task id="LOCAL-00076" summary="- Bump version to 11">
       <option name="closed" value="true" />
@@ -634,7 +618,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782221306065</updated>
     </task>
-    <option name="localTasksCounter" value="124" />
+    <task id="LOCAL-00124" summary="- YABR usage updates for yabrs recent large restructuring">
+      <option name="closed" value="true" />
+      <created>1782570158296</created>
+      <option name="number" value="00124" />
+      <option name="presentableId" value="LOCAL-00124" />
+      <option name="project" value="LOCAL" />
+      <updated>1782570158296</updated>
+    </task>
+    <option name="localTasksCounter" value="125" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

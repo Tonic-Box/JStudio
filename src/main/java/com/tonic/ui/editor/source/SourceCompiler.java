@@ -2,6 +2,7 @@ package com.tonic.ui.editor.source;
 
 import com.tonic.analysis.source.ast.decl.ClassDecl;
 import com.tonic.analysis.source.ast.decl.CompilationUnit;
+import com.tonic.analysis.source.ast.decl.ConstructorDecl;
 import com.tonic.analysis.source.ast.decl.FieldDecl;
 import com.tonic.analysis.source.ast.decl.MethodDecl;
 import com.tonic.analysis.source.ast.decl.Modifier;
@@ -29,10 +30,14 @@ import com.tonic.parser.ClassPool;
 import com.tonic.parser.FieldEntry;
 import com.tonic.parser.MethodEntry;
 
+import com.tonic.analysis.source.ast.SourceLocation;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class SourceCompiler {
@@ -77,14 +82,23 @@ public class SourceCompiler {
             return CompilationResult.failure(errors, source, elapsed(startTime));
         }
 
+        // Transactional recompile: lower into a working copy of the class so a failed compile (a lowering
+        // error or a gate-verify failure) never mutates the model's ClassFile. The copy is swapped into the
+        // pool under the class's name so self/new-member type resolution sees the in-progress version; on
+        // success the copy stays (and the caller commits it), on failure the original is restored.
+        Map<String, Integer> memberLines = buildMemberLineMap(cu, originalClass, classPool);
+        ClassFile working = workingCopy(originalClass);
+        boolean swappedIn = swapInPool(classPool, originalClass, working);
+        boolean committed = false;
         try {
             List<CompilationError> methodWarnings = new ArrayList<>();
-            ClassFile newClass = lowerToClassFile(cu, originalClass, classPool, methodWarnings, changedMethods);
-            List<CompilationError> verifyErrors = gateVerify(newClass, classPool, changedMethods);
+            ClassFile newClass = lowerToClassFile(cu, working, classPool, methodWarnings, changedMethods);
+            List<CompilationError> verifyErrors = gateVerify(newClass, classPool, changedMethods, memberLines);
             if (!verifyErrors.isEmpty()) {
                 verifyErrors.addAll(methodWarnings);
                 return CompilationResult.failure(verifyErrors, source, elapsed(startTime));
             }
+            committed = true;
             return CompilationResult.builder()
                     .success(true)
                     .compiledClass(newClass)
@@ -98,7 +112,40 @@ public class SourceCompiler {
         } catch (Exception e) {
             errors.add(CompilationError.error(1, 1, 0, 1, "Compilation error: " + e.getMessage()));
             return CompilationResult.failure(errors, source, elapsed(startTime));
+        } finally {
+            if (swappedIn && !committed) {
+                restoreInPool(classPool, working, originalClass);
+            }
         }
+    }
+
+    /**
+     * A standalone byte-for-byte copy of {@code original} to lower into, so the original (the model's live
+     * ClassFile) is untouched unless the recompile succeeds. Falls back to the original itself only if the
+     * copy cannot be made (a write failure), preserving prior behavior in that rare case.
+     */
+    private ClassFile workingCopy(ClassFile original) {
+        try {
+            return new ClassFile(new java.io.ByteArrayInputStream(original.write()));
+        } catch (Exception e) {
+            return original;
+        }
+    }
+
+    /** Replaces {@code original} with {@code working} in the pool so in-progress resolution sees the copy. */
+    private boolean swapInPool(ClassPool pool, ClassFile original, ClassFile working) {
+        if (pool == null || working == original) {
+            return false;
+        }
+        pool.remove(original.getClassName());
+        pool.put(working);
+        return true;
+    }
+
+    /** Restores {@code original} in the pool (failed recompile): drop the working copy, put the original back. */
+    private void restoreInPool(ClassPool pool, ClassFile working, ClassFile original) {
+        pool.remove(working.getClassName());
+        pool.put(original);
     }
 
     public List<CompilationError> parseOnly(String source) {
@@ -194,10 +241,12 @@ public class SourceCompiler {
                     ? "Could not compile new method '"
                     : "Could not recompile method '";
                 String suffix = isNew ? "': " : "' (kept original): ";
-                warnings.add(CompilationError.warning(1, 1, 0, 1,
+                warnings.add(CompilationError.warning(lineOf(methodDecl.getLocation()), 1, 0, 1,
                     prefix + methodName + descriptor + suffix + e.getMessage()));
             }
         }
+
+        lowerConstructors(classDecl, original, lowerer, ssa, typeResolver, ownerClass, changedMethods, warnings);
 
         synthesizeStaticInitializer(classDecl, original, lowerer, ssa, ownerClass, warnings);
 
@@ -211,6 +260,56 @@ public class SourceCompiler {
             throw new LoweringException("Failed to rebuild class file: " + e.getMessage(), e);
         }
         return original;
+    }
+
+    /**
+     * Re-lowers edited constructors into their {@code <init>} entries. A constructor is re-lowered only when it
+     * appears in {@code changedMethods} (an explicit edit); the whole-class recompile path
+     * ({@code changedMethods == null}) leaves constructors as their original bytecode. The ASTLowerer maps the
+     * {@code ConstructorDecl} body to {@code <init>}, synthesizing the implicit {@code super(...)} call.
+     */
+    private void lowerConstructors(ClassDecl classDecl, ClassFile original, ASTLowerer lowerer, SSA ssa,
+                                   TypeResolver typeResolver, String ownerClass, Set<String> changedMethods,
+                                   List<CompilationError> warnings) {
+        for (ConstructorDecl ctorDecl : classDecl.getConstructors()) {
+            if (ctorDecl.getBody() == null) {
+                continue;
+            }
+            String descriptor = ctorDescriptor(ctorDecl, typeResolver);
+            String key = "<init>" + descriptor;
+            if (changedMethods == null || !changedMethods.contains(key)) {
+                continue;
+            }
+            MethodEntry targetMethod = findMethod(original, "<init>", descriptor);
+            if (targetMethod == null) {
+                continue;
+            }
+            try {
+                IRMethod irMethod = lowerer.lower(toInitMethodDecl(ctorDecl), ownerClass);
+                ssa.lower(irMethod, targetMethod);
+            } catch (Exception e) {
+                warnings.add(CompilationError.warning(lineOf(ctorDecl.getLocation()), 1, 0, 1,
+                    "Could not recompile constructor '" + key + "' (kept original): " + e.getMessage()));
+            }
+        }
+    }
+
+    /** A constructor's JVM descriptor: its parameters (resolved via {@code resolver}) and void return. */
+    private String ctorDescriptor(ConstructorDecl ctorDecl, TypeResolver resolver) {
+        StringBuilder sb = new StringBuilder("(");
+        for (var param : ctorDecl.getParameters()) {
+            sb.append(typeDescriptor(param.getType(), resolver));
+        }
+        return sb.append(")V").toString();
+    }
+
+    /** Wraps a ConstructorDecl as an {@code <init>} MethodDecl so the method lowering path can lower it. */
+    private MethodDecl toInitMethodDecl(ConstructorDecl ctorDecl) {
+        MethodDecl methodDecl = new MethodDecl("<init>", VoidSourceType.INSTANCE).withModifiers(ctorDecl.getModifiers());
+        for (var param : ctorDecl.getParameters()) {
+            methodDecl.addParameter(param);
+        }
+        return methodDecl.withBody(ctorDecl.getBody());
     }
 
     /** Access flags for generated synthetic methods: private static synthetic. */
@@ -380,7 +479,8 @@ public class SourceCompiler {
      * re-lowered ({@code changedMethods}) so a pre-existing quirk in an untouched method never blocks an edit. An
      * empty list means the recompile passed verification and is safe to apply.
      */
-    private List<CompilationError> gateVerify(ClassFile compiled, ClassPool classPool, Set<String> changedMethods) {
+    private List<CompilationError> gateVerify(ClassFile compiled, ClassPool classPool, Set<String> changedMethods,
+                                              Map<String, Integer> memberLines) {
         List<CompilationError> errors = new ArrayList<>();
         try {
             com.tonic.analysis.verifier.VerificationResult result =
@@ -394,13 +494,44 @@ public class SourceCompiler {
                     continue;
                 }
                 String where = err.getMethodName() != null ? " in " + err.getMethodName() : "";
-                errors.add(CompilationError.error(1, 1, 0, 1,
+                int line = err.getMethodName() != null ? memberLines.getOrDefault(err.getMethodName(), 1) : 1;
+                errors.add(CompilationError.error(line, 1, 0, 1,
                         "Verification failed" + where + ": " + err.getMessage()));
             }
         } catch (Exception e) {
             // A failure inside the verifier itself must not block an otherwise-valid recompile.
         }
         return errors;
+    }
+
+    /**
+     * Maps each source member's {@code name + descriptor} key (matching {@code VerificationError.getMethodName})
+     * to its source declaration line, so a verify failure points at the offending member rather than line 1.
+     */
+    private Map<String, Integer> buildMemberLineMap(CompilationUnit cu, ClassFile original, ClassPool classPool) {
+        Map<String, Integer> map = new HashMap<>();
+        TypeDecl primary = cu.getPrimaryType();
+        if (!(primary instanceof ClassDecl)) {
+            return map;
+        }
+        ClassDecl classDecl = (ClassDecl) primary;
+        TypeResolver resolver = descriptorResolver(classPool, original.getClassName(), classDecl, cu);
+        for (MethodDecl m : classDecl.getMethods()) {
+            if (m.getBody() != null) {
+                map.put(m.getName() + buildDescriptor(m, resolver), lineOf(m.getLocation()));
+            }
+        }
+        for (ConstructorDecl c : classDecl.getConstructors()) {
+            if (c.getBody() != null) {
+                map.put("<init>" + ctorDescriptor(c, resolver), lineOf(c.getLocation()));
+            }
+        }
+        return map;
+    }
+
+    /** The source line of {@code location}, or 1 when unknown. */
+    private int lineOf(SourceLocation location) {
+        return location != null && location.hasLineNumber() ? location.lineNumber() : 1;
     }
 
     /**

@@ -5,9 +5,12 @@ import com.tonic.analysis.source.decompile.ClassDecompiler;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
+import com.tonic.ui.live.MethodBodyDiff;
 import com.tonic.util.AccessBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,6 +41,57 @@ class SourceCompilerTest {
         String base = ClassDecompiler.decompile(cf);
         int lastBrace = base.lastIndexOf('}');
         return base.substring(0, lastBrace) + members + "}\n";
+    }
+
+    @Test
+    void editsToConstructorBodyArePersisted() throws Exception {
+        // Establish a class with a default constructor and a field, mirroring a decompiled target.
+        ClassFile cf = ClassFactory.createClass(pool, "test/gen/CtorEdit", new AccessBuilder().setPublic().build());
+        String withField = "package test.gen;\n\npublic class CtorEdit {\n"
+            + "    public int x;\n"
+            + "    public CtorEdit() { }\n}\n";
+        ClassFile base = new SourceCompiler().compile(withField, cf, pool).getCompiledClass();
+
+        // Edit the constructor body, exactly as the editor does: diff the bodies, then recompile with
+        // the resulting changedMethods so only <init> is re-lowered.
+        String baseline = ClassDecompiler.decompile(base);
+        String edited = baseline.replace("public CtorEdit() {", "public CtorEdit() { this.x = 42;");
+        assertNotEquals(baseline, edited, "edit must actually change the constructor body");
+
+        Set<String> changed = MethodBodyDiff.changedMethods(baseline, edited, pool, "test/gen/CtorEdit");
+        assertTrue(changed.contains("<init>()V"),
+            "constructor body change must be detected as a changed method: " + changed);
+
+        CompilationResult result = new SourceCompiler().compile(edited, base, pool, changed);
+        assertTrue(result.isSuccess(), "constructor recompile should succeed and verify");
+
+        String out = ClassDecompiler.decompile(result.getCompiledClass());
+        assertTrue(out.replaceAll("\\s+", "").contains("x=42"),
+            "edited constructor body must persist in the recompiled <init>:\n" + out);
+    }
+
+    @Test
+    void recompileLowersIntoCopyLeavingInputUntouched() throws Exception {
+        // Transactional recompile: compile() must lower into a working copy, never mutating the input
+        // ClassFile in place. A successful edit returns a distinct object and leaves the input byte-identical,
+        // which is what guarantees a FAILED recompile cannot corrupt the model.
+        ClassFile cf = ClassFactory.createClass(pool, "test/gen/Tx", new AccessBuilder().setPublic().build());
+        ClassFile base = new SourceCompiler().compile(withMembers(cf,
+            "    static int ok() { return 1; }\n"), cf, pool).getCompiledClass();
+
+        String baseline = ClassDecompiler.decompile(base);
+        String edited = baseline.replace("return 1", "return 2");
+        Set<String> changed = MethodBodyDiff.changedMethods(baseline, edited, pool, "test/gen/Tx");
+
+        byte[] beforeBytes = base.write();
+        CompilationResult result = new SourceCompiler().compile(edited, base, pool, changed);
+
+        assertTrue(result.isSuccess(), "edit should recompile");
+        assertNotSame(base, result.getCompiledClass(), "result must be a working copy, not the input object");
+        assertArrayEquals(beforeBytes, base.write(),
+            "the input ClassFile must be untouched by recompile (lowered into a copy)");
+        assertTrue(ClassDecompiler.decompile(result.getCompiledClass()).contains("return 2"),
+            "the working copy must carry the edit");
     }
 
     @Test
