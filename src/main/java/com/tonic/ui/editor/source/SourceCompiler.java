@@ -263,9 +263,11 @@ public class SourceCompiler {
     }
 
     /**
-     * Re-lowers edited constructors into their {@code <init>} entries. A constructor is re-lowered only when it
-     * appears in {@code changedMethods} (an explicit edit); the whole-class recompile path
-     * ({@code changedMethods == null}) leaves constructors as their original bytecode. The ASTLowerer maps the
+     * Re-lowers constructors into their {@code <init>} entries from the edited source. In changed-methods mode
+     * only constructors that actually changed are re-lowered; in the whole-class fallback
+     * ({@code changedMethods == null}) every constructor is re-lowered so a constructor-body edit is never
+     * silently dropped when the body diff falls back to recompiling everything. A constructor whose lowering
+     * fails keeps its original bytecode (the {@code catch} below). The ASTLowerer maps the
      * {@code ConstructorDecl} body to {@code <init>}, synthesizing the implicit {@code super(...)} call.
      */
     private void lowerConstructors(ClassDecl classDecl, ClassFile original, ASTLowerer lowerer, SSA ssa,
@@ -277,7 +279,7 @@ public class SourceCompiler {
             }
             String descriptor = ctorDescriptor(ctorDecl, typeResolver);
             String key = "<init>" + descriptor;
-            if (changedMethods == null || !changedMethods.contains(key)) {
+            if (changedMethods != null && !changedMethods.contains(key)) {
                 continue;
             }
             MethodEntry targetMethod = findMethod(original, "<init>", descriptor);
@@ -288,8 +290,11 @@ public class SourceCompiler {
                 IRMethod irMethod = lowerer.lower(toInitMethodDecl(ctorDecl), ownerClass);
                 ssa.lower(irMethod, targetMethod);
             } catch (Exception e) {
+                String detail = e.getMessage() != null ? e.getMessage()
+                    : e.getClass().getSimpleName()
+                        + (e.getStackTrace().length > 0 ? " at " + e.getStackTrace()[0] : "");
                 warnings.add(CompilationError.warning(lineOf(ctorDecl.getLocation()), 1, 0, 1,
-                    "Could not recompile constructor '" + key + "' (kept original): " + e.getMessage()));
+                    "Could not recompile constructor '" + key + "' (kept original): " + detail));
             }
         }
     }
