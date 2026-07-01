@@ -24,6 +24,7 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
     private static final int ANIMATION_DELAY = 40;
 
     private String message = "Loading...";
+    private String subMessage = "";
     private int rotation = 0;
     private final Timer animationTimer;
     @Getter
@@ -42,6 +43,7 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
 
     public void showLoading(String message) {
         this.message = message != null ? message : "Loading...";
+        this.subMessage = "";
         this.loading = true;
         this.rotation = 0;
         setVisible(true);
@@ -49,8 +51,20 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
         repaint();
     }
 
+    /**
+     * Sets an optional second status line shown under the main message (e.g. a live progress detail). No-op
+     * unless currently loading; pass null/empty to clear it.
+     */
+    public void setSubMessage(String subMessage) {
+        this.subMessage = subMessage != null ? subMessage : "";
+        if (loading) {
+            repaint();
+        }
+    }
+
     public void hideLoading() {
         this.loading = false;
+        this.subMessage = "";
         animationTimer.stop();
         setVisible(false);
     }
@@ -108,7 +122,37 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
         int textY = centerY + SPINNER_SIZE / 2 + 10;
         g2.drawString(message, textX, textY);
 
+        if (!subMessage.isEmpty()) {
+            g2.setColor(JStudioTheme.getTextSecondary());
+            g2.setFont(JStudioTheme.getUIFont(11));
+            FontMetrics subFm = g2.getFontMetrics();
+            String sub = fitLeft(subFm, subMessage, Math.min(width - 24, 420));
+            g2.drawString(sub, centerX - subFm.stringWidth(sub) / 2, textY + subFm.getHeight() + 2);
+        }
+
         g2.dispose();
+    }
+
+    /**
+     * Truncates {@code s} from the LEFT so it fits within {@code maxWidth} pixels, keeping the tail (the newest
+     * text for a live status line) with a leading ellipsis. Returns {@code s} unchanged when it already fits.
+     */
+    private static String fitLeft(FontMetrics fm, String s, int maxWidth) {
+        if (fm.stringWidth(s) <= maxWidth) {
+            return s;
+        }
+        int ellipsisWidth = fm.stringWidth("... ");
+        StringBuilder sb = new StringBuilder();
+        int width = 0;
+        for (int i = s.length() - 1; i >= 0; i--) {
+            int charWidth = fm.charWidth(s.charAt(i));
+            if (width + charWidth + ellipsisWidth > maxWidth) {
+                break;
+            }
+            sb.insert(0, s.charAt(i));
+            width += charWidth;
+        }
+        return "... " + sb;
     }
 
     @Override

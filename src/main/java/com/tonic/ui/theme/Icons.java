@@ -11,6 +11,7 @@ import java.awt.FontMetrics;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.util.function.Supplier;
 
 /**
@@ -84,6 +85,7 @@ public class Icons {
             case "package":
                 return new PackageIcon(size);
             case "analyze":
+                return new AnalyzeIcon(size);
             case "play":
             case "run":
                 return new PlayIcon(size);
@@ -480,6 +482,25 @@ public class Icons {
             path.lineTo(13, 8);
             path.closePath();
             g2.fill(path);
+        }
+    }
+
+    /**
+     * An ascending bar chart - the "analysis / metrics" metaphor. Deliberately distinct from
+     * {@link PlayIcon} (the run/play triangle) so "Run Analysis" is not confused with running a main method,
+     * and from the node-based {@link GraphIcon}. Rendered in the accent colour rather than play's green.
+     */
+    private static class AnalyzeIcon extends BaseIcon {
+        AnalyzeIcon(int size) {
+            super(size);
+        }
+
+        @Override
+        protected void paintIconContent(Graphics2D g2) {
+            g2.setColor(JStudioTheme.getAccent());
+            g2.fill(new Rectangle2D.Float(2.5f, 9f, 2.6f, 4.5f));
+            g2.fill(new Rectangle2D.Float(6.7f, 6f, 2.6f, 7.5f));
+            g2.fill(new Rectangle2D.Float(10.9f, 3f, 2.6f, 10.5f));
         }
     }
 

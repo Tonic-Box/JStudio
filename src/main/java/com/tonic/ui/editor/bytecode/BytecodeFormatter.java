@@ -2,6 +2,8 @@ package com.tonic.ui.editor.bytecode;
 import com.tonic.analysis.CodePrinter;
 
 import com.tonic.analysis.DisassemblyOptions;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
 import lombok.Getter;
@@ -44,6 +46,26 @@ public class BytecodeFormatter {
             sb.append("  ").append(line.stripTrailing()).append("\n");
         }
         return sb.toString();
+    }
+
+    /**
+     * A whole-class bytecode dump: each method's signature followed by its disassembled code. Convenience for
+     * callers that hold only a {@link ClassEntryModel} (e.g. plugins, which cannot reach YABR types directly)
+     * and want a single printable String for the class.
+     */
+    public static String formatClass(ClassEntryModel classEntry) {
+        StringBuilder sb = new StringBuilder();
+        for (MethodEntryModel methodModel : classEntry.getMethods()) {
+            MethodEntry method = methodModel.getMethodEntry();
+            sb.append(method.getName()).append(method.getDesc()).append("\n");
+            if (method.getCodeAttribute() != null) {
+                sb.append(new BytecodeFormatter(method).format());
+            } else {
+                sb.append("  // no code (abstract or native)\n");
+            }
+            sb.append("\n");
+        }
+        return sb.toString().trim();
     }
 
 }

@@ -8,9 +8,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Make source recompile transactional with accurate error lines&#10;- Lower into a working copy swapped into the pool; a failed compile restores the original so a verify/lowering failure never corrupts the model&#10;- Fix mapping of verify/lowering errors to the offending member's declaration line">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add reusable read-only Java view, class bytecode dump, and overlay sub-line&#10;- ReadonlyJavaView: themed, selectable, read-only syntax-highlighted Java source&#10;- BytecodeFormatter.formatClass: whole-class bytecode disassembly from a ClassEntryModel&#10;- LoadingOverlay: optional second status line (setSubMessage), left-truncated to keep the tail&#10;- Icons: dedicated AnalyzeIcon so &quot;Run Analysis&quot; no longer reuses the play icon">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/ReadonlyJavaView.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompiler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCompiler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/LoadingOverlay.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/LoadingOverlay.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeFormatter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeFormatter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -230,14 +233,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00077" summary="Rewrite Query Explorer DSL as a composable matcher algebra&#10;- Replace the per-predicate query AST/visitors with a composable, registry-driven Condition/Accessor/Operator algebra&#10;- Add static, SSA/CFG (recursive, loops, inLoop, loopDepth), and data-flow (flowsTo/flowsFrom over param/return/arg/insn) tiers&#10;- Add SEQUENCE [...] instruction-pattern matching (opcode/_/.. steps, ( ) predicates, * + {n,m}) plus an opcodes regex shorthand&#10;- Move the Query Explorer from a popup into a right-edge tool-window tab (new ToolWindowPane), keeping the inspector as the default tab&#10;- Add DSL syntax highlighting (QueryTokenMaker: keywords, operators, literals, opcode mnemonics) and a themed HTML help popup with highlighted examples&#10;- Remove the visual query builder and the Query Explorer menu entry&#10;- Add WrapLayout so the query config controls stay visible in narrow widths&#10;- Remove the standalone Dependencies and Data Flow analysis panels; restructure the Analysis menu (Simulation -&gt; Code Analysis; add Similarity/Search/Strings)&#10;- Add query test coverage (pipeline, SSA, data-flow, sequence, tokenizer, help examples);&#10;- Cleaned up a LOT of dead/old code&#10;- bumped version to 13">
-      <option name="closed" value="true" />
-      <created>1781131047375</created>
-      <option name="number" value="00077" />
-      <option name="presentableId" value="LOCAL-00077" />
-      <option name="project" value="LOCAL" />
-      <updated>1781131047377</updated>
     </task>
     <task id="LOCAL-00078" summary="- Query DSL md docs">
       <option name="closed" value="true" />
@@ -623,7 +618,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782663596822</updated>
     </task>
-    <option name="localTasksCounter" value="126" />
+    <task id="LOCAL-00126" summary="- Fix for compiling code into constructors">
+      <option name="closed" value="true" />
+      <created>1782703840873</created>
+      <option name="number" value="00126" />
+      <option name="presentableId" value="LOCAL-00126" />
+      <option name="project" value="LOCAL" />
+      <updated>1782703840873</updated>
+    </task>
+    <option name="localTasksCounter" value="127" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -638,8 +641,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Dead member removal" />
-    <MESSAGE value="- Compile scratch-pad snippets to the attached JVM's class version&#10;- Add Run: launch the loaded app's main() in a separate JVM" />
     <MESSAGE value="- Implemented built-in AI integration and chat side-tab (claude/GPT)&#10;- Moved JStudio console to a bottom tab&#10;- Fixed some theming issues&#10;- Run main() classes from inside JStudio now with automatic attach for live analysis&#10;- Cleaned up codebase" />
     <MESSAGE value="- Overhauled plugin API surface&#10;- Moved JStudio console to a bottom tab&#10;- Fixed some theming issues&#10;- Run main() classes from inside JStudio now with automatic attach for live analysis&#10;- Cleaned up codebase" />
     <MESSAGE value="- Version bump" />
@@ -663,7 +664,9 @@
     <MESSAGE value="- Add toggle to side-pannel window popout for &quot;Always on Top&quot; option (Default on)" />
     <MESSAGE value="- YABR usage updates for yabrs recent large restructuring" />
     <MESSAGE value="Make source recompile transactional with accurate error lines&#10;- Lower into a working copy swapped into the pool; a failed compile restores the original so a verify/lowering failure never corrupts the model&#10;- Fix mapping of verify/lowering errors to the offending member's declaration line" />
-    <option name="LAST_COMMIT_MESSAGE" value="Make source recompile transactional with accurate error lines&#10;- Lower into a working copy swapped into the pool; a failed compile restores the original so a verify/lowering failure never corrupts the model&#10;- Fix mapping of verify/lowering errors to the offending member's declaration line" />
+    <MESSAGE value="- Fix for compiling code into constructors" />
+    <MESSAGE value="Add reusable read-only Java view, class bytecode dump, and overlay sub-line&#10;- ReadonlyJavaView: themed, selectable, read-only syntax-highlighted Java source&#10;- BytecodeFormatter.formatClass: whole-class bytecode disassembly from a ClassEntryModel&#10;- LoadingOverlay: optional second status line (setSubMessage), left-truncated to keep the tail&#10;- Icons: dedicated AnalyzeIcon so &quot;Run Analysis&quot; no longer reuses the play icon" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add reusable read-only Java view, class bytecode dump, and overlay sub-line&#10;- ReadonlyJavaView: themed, selectable, read-only syntax-highlighted Java source&#10;- BytecodeFormatter.formatClass: whole-class bytecode disassembly from a ClassEntryModel&#10;- LoadingOverlay: optional second status line (setSubMessage), left-truncated to keep the tail&#10;- Icons: dedicated AnalyzeIcon so &quot;Run Analysis&quot; no longer reuses the play icon" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
