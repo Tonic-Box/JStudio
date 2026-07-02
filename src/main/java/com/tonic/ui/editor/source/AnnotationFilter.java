@@ -15,26 +15,73 @@ import java.util.Set;
 /**
  * Strips annotation declarations out of decompiled source for the "omit annotations" view. Pure: it derives the
  * annotation simple-name set from the class file's {@code RuntimeVisibleAnnotations} and removes matching annotation
- * lines (including multi-line forms with nested parens) from the text, leaving only code.
+ * lines (including multi-line forms with nested parens) from the text, leaving only code. Only whole lines are
+ * removed, so {@link #filterWithMap} can also return an exact original-to-filtered line map.
  */
 final class AnnotationFilter {
 
     private AnnotationFilter() {
     }
 
+    /** The filtered source plus a map from each original 0-based line to its 0-based filtered line (-1 if removed). */
+    static final class Filtered {
+        final String text;
+        final int[] lineMap;
+
+        Filtered(String text, int[] lineMap) {
+            this.text = text;
+            this.lineMap = lineMap;
+        }
+    }
+
     static String filter(ClassFile classFile, String source) {
+        return filterWithMap(classFile, source).text;
+    }
+
+    /**
+     * Strips annotation declaration lines and returns the filtered text alongside a line map, so callers (e.g. the
+     * usage lens) can translate line numbers from the original source to the filtered view. Since only whole lines
+     * are removed, the map is exact.
+     */
+    static Filtered filterWithMap(ClassFile classFile, String source) {
+        String[] lines = source.split("\n", -1);
+        int[] lineMap = new int[lines.length];
         Set<String> annotationNames = collectAnnotationNames(classFile);
         if (annotationNames.isEmpty()) {
-            return source;
+            for (int i = 0; i < lines.length; i++) {
+                lineMap[i] = i;
+            }
+            return new Filtered(source, lineMap);
         }
 
-        String result = source;
-        for (String annoName : annotationNames) {
-            result = removeAnnotation(result, annoName);
+        StringBuilder result = new StringBuilder();
+        int filtered = 0;
+        int i = 0;
+        while (i < lines.length) {
+            String line = lines[i];
+            if (isAnnotationStartAny(line.trim(), annotationNames)) {
+                lineMap[i] = -1;
+                int parenDepth = countChar(line, '(') - countChar(line, ')');
+                while (parenDepth > 0 && i + 1 < lines.length) {
+                    i++;
+                    lineMap[i] = -1;
+                    parenDepth += countChar(lines[i], '(') - countChar(lines[i], ')');
+                }
+                i++;
+                while (i < lines.length && !isActualJavaCode(lines[i].trim())) {
+                    lineMap[i] = -1;
+                    i++;
+                }
+                continue;
+            }
+            if (filtered > 0) {
+                result.append("\n");
+            }
+            result.append(line);
+            lineMap[i] = filtered++;
+            i++;
         }
-
-        result = removeEmptyAnnotationLines(result);
-        return result;
+        return new Filtered(result.toString(), lineMap);
     }
 
     /** Collect all annotation simple names from the class file (class, methods, fields). */
@@ -91,52 +138,18 @@ final class AnnotationFilter {
         return null;
     }
 
-    /**
-     * Remove a specific annotation (including multi-line with nested parens) from source.
-     * Also handles obfuscated annotations where the type name contains newlines.
-     */
-    private static String removeAnnotation(String source, String annotationName) {
-        String cleanName = annotationName.replace("\r", "").split("\n")[0].trim();
-        if (cleanName.isEmpty()) {
-            return source;
+    /** True when {@code trimmed} begins an annotation whose simple name matches any collected annotation. */
+    private static boolean isAnnotationStartAny(String trimmed, Set<String> annotationNames) {
+        if (!trimmed.startsWith("@")) {
+            return false;
         }
-
-        StringBuilder result = new StringBuilder();
-        String[] lines = source.split("\n", -1);
-        int i = 0;
-
-        while (i < lines.length) {
-            String line = lines[i];
-            String trimmed = line.trim();
-
-            if (isAnnotationStart(trimmed, cleanName)) {
-                int parenDepth = countChar(line, '(') - countChar(line, ')');
-
-                while (parenDepth > 0 && i + 1 < lines.length) {
-                    i++;
-                    int delta = countChar(lines[i], '(') - countChar(lines[i], ')');
-                    parenDepth += delta;
-                }
-                i++;
-
-                while (i < lines.length) {
-                    String nextTrimmed = lines[i].trim();
-                    if (isActualJavaCode(nextTrimmed)) {
-                        break;
-                    }
-                    i++;
-                }
-                continue;
+        for (String name : annotationNames) {
+            String cleanName = name.replace("\r", "").split("\n")[0].trim();
+            if (!cleanName.isEmpty() && isAnnotationStart(trimmed, cleanName)) {
+                return true;
             }
-
-            result.append(line);
-            if (i < lines.length - 1) {
-                result.append("\n");
-            }
-            i++;
         }
-
-        return result.toString();
+        return false;
     }
 
     private static final Set<String> JAVA_KEYWORDS = Set.of(
@@ -222,10 +235,5 @@ final class AnnotationFilter {
             prev = ch;
         }
         return count;
-    }
-
-    /** Remove any remaining standalone annotation lines not in our collected set. */
-    private static String removeEmptyAnnotationLines(String source) {
-        return source;
     }
 }

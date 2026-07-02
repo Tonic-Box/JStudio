@@ -8,9 +8,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add reusable read-only Java view, class bytecode dump, and overlay sub-line&#10;- ReadonlyJavaView: themed, selectable, read-only syntax-highlighted Java source&#10;- BytecodeFormatter.formatClass: whole-class bytecode disassembly from a ClassEntryModel&#10;- LoadingOverlay: optional second status line (setSubMessage), left-truncated to keep the tail&#10;- Icons: dedicated AnalyzeIcon so &quot;Run Analysis&quot; no longer reuses the play icon">
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" afterDir="false" />
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Version bump">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/AnnotationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/AnnotationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/UsageLens.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/UsageLens.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/UsageLensController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/UsageLensController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/source/UsageLensTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/source/UsageLensTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -230,14 +234,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00079" summary="- Fixed a bug with query DSLs `IN` sets&#10;- Updated some stale data in README">
-      <option name="closed" value="true" />
-      <created>1781133105150</created>
-      <option name="number" value="00079" />
-      <option name="presentableId" value="LOCAL-00079" />
-      <option name="project" value="LOCAL" />
-      <updated>1781133105150</updated>
     </task>
     <task id="LOCAL-00080" summary="- Migrated Query Engine over to YABR">
       <option name="closed" value="true" />
@@ -623,7 +619,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782950315839</updated>
     </task>
-    <option name="localTasksCounter" value="128" />
+    <task id="LOCAL-00128" summary="- Version bump">
+      <option name="closed" value="true" />
+      <created>1782950534828</created>
+      <option name="number" value="00128" />
+      <option name="presentableId" value="LOCAL-00128" />
+      <option name="project" value="LOCAL" />
+      <updated>1782950534828</updated>
+    </task>
+    <option name="localTasksCounter" value="129" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -640,7 +644,6 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="- Implemented built-in AI integration and chat side-tab (claude/GPT)&#10;- Moved JStudio console to a bottom tab&#10;- Fixed some theming issues&#10;- Run main() classes from inside JStudio now with automatic attach for live analysis&#10;- Cleaned up codebase" />
     <MESSAGE value="- Overhauled plugin API surface&#10;- Moved JStudio console to a bottom tab&#10;- Fixed some theming issues&#10;- Run main() classes from inside JStudio now with automatic attach for live analysis&#10;- Cleaned up codebase" />
-    <MESSAGE value="- Version bump" />
     <MESSAGE value="- VM Debugging exposed to Plugins API surface&#10;- DOT Graph parsing API" />
     <MESSAGE value="- Added plugin API surface for live attach tooling" />
     <MESSAGE value="- gutter run icon next to main methods turns into stop button when running" />
@@ -663,7 +666,8 @@
     <MESSAGE value="Make source recompile transactional with accurate error lines&#10;- Lower into a working copy swapped into the pool; a failed compile restores the original so a verify/lowering failure never corrupts the model&#10;- Fix mapping of verify/lowering errors to the offending member's declaration line" />
     <MESSAGE value="- Fix for compiling code into constructors" />
     <MESSAGE value="Add reusable read-only Java view, class bytecode dump, and overlay sub-line&#10;- ReadonlyJavaView: themed, selectable, read-only syntax-highlighted Java source&#10;- BytecodeFormatter.formatClass: whole-class bytecode disassembly from a ClassEntryModel&#10;- LoadingOverlay: optional second status line (setSubMessage), left-truncated to keep the tail&#10;- Icons: dedicated AnalyzeIcon so &quot;Run Analysis&quot; no longer reuses the play icon" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add reusable read-only Java view, class bytecode dump, and overlay sub-line&#10;- ReadonlyJavaView: themed, selectable, read-only syntax-highlighted Java source&#10;- BytecodeFormatter.formatClass: whole-class bytecode disassembly from a ClassEntryModel&#10;- LoadingOverlay: optional second status line (setSubMessage), left-truncated to keep the tail&#10;- Icons: dedicated AnalyzeIcon so &quot;Run Analysis&quot; no longer reuses the play icon" />
+    <MESSAGE value="- Version bump" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Version bump" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

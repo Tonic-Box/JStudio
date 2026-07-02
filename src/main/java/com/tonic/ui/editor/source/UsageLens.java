@@ -70,6 +70,15 @@ public final class UsageLens {
      * anchor line. {@code sourceLines} is the displayed source split on {@code \n}.
      */
     public static List<LensEntry> compute(String[] sourceLines, List<LensTarget> targets) {
+        return compute(sourceLines, targets, null);
+    }
+
+    /**
+     * As {@link #compute(String[], List)} but for a filtered view: {@code lineMap} (from {@code AnnotationFilter})
+     * translates each original 0-based line to its 0-based line in {@code sourceLines} (-1 if removed), so lenses
+     * land correctly when annotations are hidden. A null map is the identity (unfiltered source).
+     */
+    public static List<LensEntry> compute(String[] sourceLines, List<LensTarget> targets, int[] lineMap) {
         List<LensEntry> entries = new ArrayList<>();
         if (sourceLines == null || targets == null) {
             return entries;
@@ -78,7 +87,7 @@ public final class UsageLens {
             if (target.span == null) {
                 continue;
             }
-            int declLine = target.span.getStartLine() - 1;
+            int declLine = mapLine(target.span.getStartLine() - 1, lineMap);
             if (declLine < 0 || declLine >= sourceLines.length) {
                 continue;
             }
@@ -95,6 +104,26 @@ public final class UsageLens {
         }
         entries.sort(Comparator.comparingInt(e -> e.anchorLine));
         return entries;
+    }
+
+    /**
+     * Translates a 0-based original declaration line to its 0-based line in the displayed source. Identity when
+     * {@code lineMap} is null. If the exact line was removed (e.g. the span points at an annotation line), falls
+     * back to the next kept line; returns -1 if none remains.
+     */
+    private static int mapLine(int originalLine, int[] lineMap) {
+        if (originalLine < 0) {
+            return -1;
+        }
+        if (lineMap == null) {
+            return originalLine;
+        }
+        for (int i = originalLine; i < lineMap.length; i++) {
+            if (lineMap[i] >= 0) {
+                return lineMap[i];
+            }
+        }
+        return -1;
     }
 
     private static String lensText(int count) {

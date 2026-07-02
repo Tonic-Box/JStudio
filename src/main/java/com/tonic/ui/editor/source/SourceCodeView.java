@@ -74,6 +74,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
 
     private boolean loaded = false;
     private boolean omitAnnotations = false;
+    /** Original-to-filtered line map for the current displayed text when annotations are hidden; null otherwise. */
+    private int[] annotationLineMap = null;
     private final SourceLineHighlighter lineHighlighter;
     private final CommentGutterController commentGutter;
     private final RunGutterController runGutter;
@@ -158,7 +160,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         breakpointGutter = new BreakpointGutterController(textArea, scrollPane, new SourceBreakpointMapper(classEntry));
         runtimeHints = new RuntimeHintController(textArea, classEntry);
         usageLens = new UsageLensController(textArea, classEntry,
-                () -> omitAnnotations, () -> dirty, () -> projectModel);
+                () -> dirty, () -> projectModel, () -> annotationLineMap);
         navigator = new SourceNavigator(this, textArea, classEntry, lineHighlighter,
                 () -> omitAnnotations, () -> projectModel);
 
@@ -783,8 +785,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     public void refresh() {
         String cachedSource = classEntry.getDecompilationCache();
         if (cachedSource != null) {
-            String textToSet = omitAnnotations
-                    ? AnnotationFilter.filter(classEntry.getClassFile(), cachedSource) : cachedSource;
+            String textToSet = applyAnnotationFilter(cachedSource);
             applyTextToEditor(textToSet);
             loaded = true;
             commentGutter.updateIcons();
@@ -833,8 +834,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
                     } else {
                         classEntry.setDecompilationCache(source);
                     }
-                    String textToSet = omitAnnotations
-                    ? AnnotationFilter.filter(classEntry.getClassFile(), source) : source;
+                    String textToSet = applyAnnotationFilter(source);
                     applyTextToEditor(textToSet);
                     loaded = true;
                     loadingOverlay.hideLoading();
@@ -946,8 +946,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         this.omitAnnotations = omit;
         if (loaded && classEntry.getDecompilationCache() != null) {
             String source = classEntry.getDecompilationCache();
-            String textToSet = omitAnnotations
-                    ? AnnotationFilter.filter(classEntry.getClassFile(), source) : source;
+            String textToSet = applyAnnotationFilter(source);
             ignoreDocumentChanges = true;
             textArea.setText(textToSet);
             textArea.setCaretPosition(0);
@@ -957,6 +956,21 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
             ignoreDocumentChanges = false;
             usageLens.scheduleUpdate();
         }
+    }
+
+    /**
+     * Applies the annotation filter to {@code source} when annotations are hidden, recording the
+     * original-to-filtered line map used by the usage lens; when shown, returns the source unchanged and clears
+     * the map (identity).
+     */
+    private String applyAnnotationFilter(String source) {
+        if (!omitAnnotations) {
+            annotationLineMap = null;
+            return source;
+        }
+        AnnotationFilter.Filtered filtered = AnnotationFilter.filterWithMap(classEntry.getClassFile(), source);
+        annotationLineMap = filtered.lineMap;
+        return filtered.text;
     }
 
     /**

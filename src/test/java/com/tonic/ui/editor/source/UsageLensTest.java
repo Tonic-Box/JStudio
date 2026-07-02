@@ -99,4 +99,37 @@ class UsageLensTest {
         assertTrue(UsageLens.compute(null, List.of()).isEmpty());
         assertTrue(UsageLens.compute(SOURCE, null).isEmpty());
     }
+
+    // Filtered view (annotations hidden): original lines 3 (@Deprecated) and 5 (@Inject) removed.
+    private static final String[] FILTERED = {
+            "package com.example;",   // original line 1 -> 0
+            "",                       // original line 2 -> 1
+            "public class Foo {",     // original line 4 -> 2
+            "    private int x;"      // original line 6 -> 3
+    };
+    private static final int[] LINE_MAP = {0, 1, -1, 2, -1, 3};
+
+    @Test
+    void translatesLinesThroughAnnotationLineMap() {
+        // Class decl at original line 4 -> filtered index 2, with a blank line above (filtered index 1).
+        UsageLens.LensEntry cls = UsageLens.compute(FILTERED,
+                List.of(target(FindUsagesEvent.TargetType.CLASS, "com/example/Foo", null, 4, 5)), LINE_MAP).get(0);
+        assertEquals(2, cls.declarationLine);
+        assertEquals(1, cls.anchorLine);
+        assertFalse(cls.endOfLine);
+
+        // Field decl at original line 6 -> filtered index 3, no blank above (the class line).
+        UsageLens.LensEntry field = UsageLens.compute(FILTERED,
+                List.of(target(FindUsagesEvent.TargetType.FIELD, "x", "I", 6, 2)), LINE_MAP).get(0);
+        assertEquals(3, field.declarationLine);
+        assertTrue(field.endOfLine);
+    }
+
+    @Test
+    void spanOnRemovedLineFallsForwardToNextKeptLine() {
+        // Span points at the removed @Deprecated line (original line 3) -> falls forward to the class decl.
+        UsageLens.LensEntry e = UsageLens.compute(FILTERED,
+                List.of(target(FindUsagesEvent.TargetType.CLASS, "com/example/Foo", null, 3, 5)), LINE_MAP).get(0);
+        assertEquals(2, e.declarationLine);
+    }
 }

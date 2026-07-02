@@ -34,20 +34,20 @@ final class UsageLensController {
 
     private final RSyntaxTextArea textArea;
     private final ClassEntryModel classEntry;
-    private final BooleanSupplier omitAnnotations;
     private final BooleanSupplier dirty;
     private final Supplier<ProjectModel> projectModel;
+    private final Supplier<int[]> annotationLineMap;
     private final UsageLensOverlay lensOverlay = new UsageLensOverlay();
     private boolean enabled = Settings.getInstance().isUsageLensEnabled();
     private int generation;
 
-    UsageLensController(RSyntaxTextArea textArea, ClassEntryModel classEntry, BooleanSupplier omitAnnotations,
-                        BooleanSupplier dirty, Supplier<ProjectModel> projectModel) {
+    UsageLensController(RSyntaxTextArea textArea, ClassEntryModel classEntry, BooleanSupplier dirty,
+                        Supplier<ProjectModel> projectModel, Supplier<int[]> annotationLineMap) {
         this.textArea = textArea;
         this.classEntry = classEntry;
-        this.omitAnnotations = omitAnnotations;
         this.dirty = dirty;
         this.projectModel = projectModel;
+        this.annotationLineMap = annotationLineMap;
         installMouseHandling();
     }
 
@@ -72,7 +72,7 @@ final class UsageLensController {
         Map<String, DecompileResult.MethodSpan> methodSpans = classEntry.getMethodSpans();
         Map<String, DecompileResult.MemberSpan> fieldSpans = classEntry.getFieldSpans();
         DecompileResult.MemberSpan classSpan = classEntry.getClassSpan();
-        if (!enabled || omitAnnotations.getAsBoolean() || dirty.getAsBoolean()
+        if (!enabled || dirty.getAsBoolean()
                 || projectModel.get() == null || methodSpans == null) {
             lensOverlay.clear();
             textArea.repaint();
@@ -128,7 +128,7 @@ final class UsageLensController {
                 try {
                     List<UsageLens.LensTarget> targets = get();
                     String[] lines = textArea.getText().split("\n", -1);
-                    lensOverlay.setEntries(UsageLens.compute(lines, targets));
+                    lensOverlay.setEntries(UsageLens.compute(lines, targets, annotationLineMap.get()));
                     textArea.repaint();
                 } catch (Exception e) {
                     // Leave existing lenses untouched
