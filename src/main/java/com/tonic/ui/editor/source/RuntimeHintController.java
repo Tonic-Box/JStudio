@@ -103,7 +103,7 @@ final class RuntimeHintController {
         if (s == null) {
             return "";
         }
-        return s.length() <= INLINE_VALUE_MAX ? s : s.substring(0, INLINE_VALUE_MAX) + "…";
+        return s.length() <= INLINE_VALUE_MAX ? s : s.substring(0, INLINE_VALUE_MAX) + "...";
     }
 
     void attach() {

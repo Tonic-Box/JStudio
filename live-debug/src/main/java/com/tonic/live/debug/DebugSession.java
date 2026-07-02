@@ -474,9 +474,42 @@ public final class DebugSession {
                 redefs.put(rt, bytes);
             }
             vm.redefineClasses(redefs);
+            // HotSwap invalidates breakpoints in the redefined class; re-arm them from the specs. Only the debug
+            // attribute changed, so code indices are unchanged and the requests re-install at the same locations.
+            reinstallBreakpoints(className, types);
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    /** Drops the now-obsolete breakpoint requests for {@code className} and re-installs them from the specs. */
+    private void reinstallBreakpoints(String className, List<ReferenceType> types) {
+        List<BreakpointRequest> stale = new ArrayList<>();
+        for (BreakpointRequest req : installed) {
+            boolean forClass;
+            try {
+                forClass = req.location().declaringType().name().equals(className);
+            } catch (Exception obsolete) {
+                forClass = true;
+            }
+            if (forClass) {
+                stale.add(req);
+            }
+        }
+        if (!stale.isEmpty()) {
+            try {
+                vm.eventRequestManager().deleteEventRequests(stale);
+            } catch (Exception ignored) {
+            }
+            installed.removeAll(stale);
+        }
+        for (ReferenceType rt : types) {
+            for (BreakpointSpec spec : breakpoints) {
+                if (spec.className.equals(className)) {
+                    installSpec(rt, spec);
+                }
+            }
         }
     }
 

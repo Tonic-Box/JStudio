@@ -8,13 +8,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Version bump">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Fix line remapping when annotations are hidden">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/AnnotationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/AnnotationFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/SourceCodeView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/UsageLens.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/UsageLens.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/UsageLensController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/UsageLensController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/source/UsageLensTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/tonic/ui/editor/source/UsageLensTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/live-debug/src/main/java/com/tonic/live/debug/DebugSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/live-debug/src/main/java/com/tonic/live/debug/DebugSession.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/service/SyntheticLvtInjector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/service/SyntheticLvtInjector.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/RuntimeHintController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/RuntimeHintController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -234,14 +232,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00080" summary="- Migrated Query Engine over to YABR">
-      <option name="closed" value="true" />
-      <created>1781217061269</created>
-      <option name="number" value="00080" />
-      <option name="presentableId" value="LOCAL-00080" />
-      <option name="project" value="LOCAL" />
-      <updated>1781217061269</updated>
     </task>
     <task id="LOCAL-00081" summary="- Extract non-UI logic out of com.tonic.ui into sibling packages (util/model/event/service/deobfuscation/script/simulation); cli/plugin now depend on those, not ui&#10;- Decouple entry-model icons to string keys resolved UI-side&#10;- Migrate query UI to YABR's com.tonic.analysis.query engine (QueryMatch/QueryTarget); build result labels UI-side&#10;- Clear query results when a new project loads&#10;- Default the bytecode debugger's &quot;Recursive Calls&quot; checkbox to on&#10;- Migrated Query Engine over to YABR">
       <option name="closed" value="true" />
@@ -627,7 +617,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782950534828</updated>
     </task>
-    <option name="localTasksCounter" value="129" />
+    <task id="LOCAL-00129" summary="- Fix line remapping when annotations are hidden">
+      <option name="closed" value="true" />
+      <created>1783003374345</created>
+      <option name="number" value="00129" />
+      <option name="presentableId" value="LOCAL-00129" />
+      <option name="project" value="LOCAL" />
+      <updated>1783003374345</updated>
+    </task>
+    <option name="localTasksCounter" value="130" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -642,7 +640,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Implemented built-in AI integration and chat side-tab (claude/GPT)&#10;- Moved JStudio console to a bottom tab&#10;- Fixed some theming issues&#10;- Run main() classes from inside JStudio now with automatic attach for live analysis&#10;- Cleaned up codebase" />
     <MESSAGE value="- Overhauled plugin API surface&#10;- Moved JStudio console to a bottom tab&#10;- Fixed some theming issues&#10;- Run main() classes from inside JStudio now with automatic attach for live analysis&#10;- Cleaned up codebase" />
     <MESSAGE value="- VM Debugging exposed to Plugins API surface&#10;- DOT Graph parsing API" />
     <MESSAGE value="- Added plugin API surface for live attach tooling" />
@@ -667,7 +664,8 @@
     <MESSAGE value="- Fix for compiling code into constructors" />
     <MESSAGE value="Add reusable read-only Java view, class bytecode dump, and overlay sub-line&#10;- ReadonlyJavaView: themed, selectable, read-only syntax-highlighted Java source&#10;- BytecodeFormatter.formatClass: whole-class bytecode disassembly from a ClassEntryModel&#10;- LoadingOverlay: optional second status line (setSubMessage), left-truncated to keep the tail&#10;- Icons: dedicated AnalyzeIcon so &quot;Run Analysis&quot; no longer reuses the play icon" />
     <MESSAGE value="- Version bump" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Version bump" />
+    <MESSAGE value="- Fix line remapping when annotations are hidden" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Fix line remapping when annotations are hidden" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
