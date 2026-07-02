@@ -9,11 +9,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add reusable read-only Java view, class bytecode dump, and overlay sub-line&#10;- ReadonlyJavaView: themed, selectable, read-only syntax-highlighted Java source&#10;- BytecodeFormatter.formatClass: whole-class bytecode disassembly from a ClassEntryModel&#10;- LoadingOverlay: optional second status line (setSubMessage), left-truncated to keep the tail&#10;- Icons: dedicated AnalyzeIcon so &quot;Run Analysis&quot; no longer reuses the play icon">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/source/ReadonlyJavaView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/LoadingOverlay.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/core/component/LoadingOverlay.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeFormatter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeFormatter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/theme/Icons.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/JStudio.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -233,14 +230,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00078" summary="- Query DSL md docs">
-      <option name="closed" value="true" />
-      <created>1781132556994</created>
-      <option name="number" value="00078" />
-      <option name="presentableId" value="LOCAL-00078" />
-      <option name="project" value="LOCAL" />
-      <updated>1781132556994</updated>
     </task>
     <task id="LOCAL-00079" summary="- Fixed a bug with query DSLs `IN` sets&#10;- Updated some stale data in README">
       <option name="closed" value="true" />
@@ -626,7 +615,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782703840873</updated>
     </task>
-    <option name="localTasksCounter" value="127" />
+    <task id="LOCAL-00127" summary="Add reusable read-only Java view, class bytecode dump, and overlay sub-line&#10;- ReadonlyJavaView: themed, selectable, read-only syntax-highlighted Java source&#10;- BytecodeFormatter.formatClass: whole-class bytecode disassembly from a ClassEntryModel&#10;- LoadingOverlay: optional second status line (setSubMessage), left-truncated to keep the tail&#10;- Icons: dedicated AnalyzeIcon so &quot;Run Analysis&quot; no longer reuses the play icon">
+      <option name="closed" value="true" />
+      <created>1782950315839</created>
+      <option name="number" value="00127" />
+      <option name="presentableId" value="LOCAL-00127" />
+      <option name="project" value="LOCAL" />
+      <updated>1782950315839</updated>
+    </task>
+    <option name="localTasksCounter" value="128" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

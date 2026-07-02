@@ -7,7 +7,7 @@ plugins {
     id("maven-publish")
 }
 group = "com.tonic.ui"
-version = "23.0-SNAPSHOT"
+version = "24.0-SNAPSHOT"
 
 // Publish the regular (thin) jar to Maven Local so external plugins (e.g. JSAIPlugin) can compile against the
 // JStudio API. NOT the shadow fat jar - plugins get com.tonic.* classes only; the host supplies deps at runtime.
