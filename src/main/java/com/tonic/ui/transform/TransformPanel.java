@@ -621,7 +621,6 @@ public class TransformPanel extends ThemedJPanel {
                 case "Conditional Constant Propagation": ssa.withConditionalConstantPropagation(); break;
                 case "Loop Invariant Code Motion": ssa.withLoopInvariantCodeMotion(); break;
                 case "Loop Predication": ssa.withLoopPredication(); break;
-                case "Induction Variable Simplification": ssa.withInductionVariableSimplification(); break;
                 case "Jump Threading": ssa.withJumpThreading(); break;
                 case "Block Merging": ssa.withBlockMerging(); break;
                 case "Control Flow Reducibility": ssa.withControlFlowReducibility(); break;

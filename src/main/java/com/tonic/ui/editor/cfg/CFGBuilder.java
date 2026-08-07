@@ -72,7 +72,7 @@ public class CFGBuilder {
                     boundaries.add(offset + jumpOffset);
                 }
                 boundaries.add(offset + instr.getLength());
-            } else if (instr instanceof ReturnInstruction || instr instanceof ATHROWInstruction) {
+            } else if (instr instanceof MethodReturnInstruction || instr instanceof ATHROWInstruction) {
                 boundaries.add(offset + instr.getLength());
             }
         }
@@ -173,7 +173,7 @@ public class CFGBuilder {
                         block.addEdge(caseBlock, CFGEdgeType.SWITCH_CASE);
                     }
                 }
-            } else if (!(lastInstr instanceof ReturnInstruction) && !(lastInstr instanceof ATHROWInstruction)) {
+            } else if (!(lastInstr instanceof MethodReturnInstruction) && !(lastInstr instanceof ATHROWInstruction)) {
                 int fallthrough = offset + lastInstr.getLength();
                 CFGBlock nextBlock = blockMap.get(fallthrough);
                 if (nextBlock != null) {

@@ -8,9 +8,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="- Live debug local values now get widened so that local tracing vid JDI can track more comprehensively across a given method">
+    <list default="true" id="a2f8628d-ef6a-445a-bbf2-621b2c7eb785" name="Changes" comment="Add non verbose output mode for Bytecode formatter">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeFormatter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/bytecode/BytecodeFormatter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/cfg/CFGBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/editor/cfg/CFGBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tonic/ui/transform/TransformPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tonic/ui/transform/TransformPanel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -230,14 +232,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1765849537971</updated>
-    </task>
-    <task id="LOCAL-00082" summary="- Find Usages now jumps to the exact call site in source and selects the referenced name&#10;- Bytecode debugger: tabbed Bytecode/Source view; source tab tracks the executing line and supports breakpoints (gutter click or context menu)&#10;- Debugger source tab shows only the current method (exact decompiler spans, editor-matching line numbers)&#10;- Debugger opens in a frame with minimize/maximize&#10;- Fix breakpoints binding to the wrong method when viewing callees in recursive mode">
-      <option name="closed" value="true" />
-      <created>1781245618105</created>
-      <option name="number" value="00082" />
-      <option name="presentableId" value="LOCAL-00082" />
-      <option name="project" value="LOCAL" />
-      <updated>1781245618105</updated>
     </task>
     <task id="LOCAL-00083" summary="- Version bump 15.0">
       <option name="closed" value="true" />
@@ -623,7 +617,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783020977626</updated>
     </task>
-    <option name="localTasksCounter" value="131" />
+    <task id="LOCAL-00131" summary="Add non verbose output mode for Bytecode formatter">
+      <option name="closed" value="true" />
+      <created>1783261262317</created>
+      <option name="number" value="00131" />
+      <option name="presentableId" value="LOCAL-00131" />
+      <option name="project" value="LOCAL" />
+      <updated>1783261262317</updated>
+    </task>
+    <option name="localTasksCounter" value="132" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -638,7 +640,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- VM Debugging exposed to Plugins API surface&#10;- DOT Graph parsing API" />
     <MESSAGE value="- Added plugin API surface for live attach tooling" />
     <MESSAGE value="- gutter run icon next to main methods turns into stop button when running" />
     <MESSAGE value="Script Editor: AI script API + engine fixes&#10;&#10;Host-side ScriptApi (write/list/read/run) on PluginContext with a bottom-tab Script Console (ScriptConsolePanel + events) so the AI plugin can author and run scripts. Extract the run loop into ScriptRunner.&#10;&#10;Engine fixes:&#10;- explicit ast/ir/annotations.remove() sentinel (a bare null/no-return now KEEPS a node instead of deleting it)&#10;- cement AST/IR transforms to bytecode, with a verify-and-restore guard that skips methods the decompiler can't round-trip losslessly&#10;- register the full bridge set per pass (no &quot;Cannot call non-function&quot; spam) and invalidate decompile/IR caches after a change&#10;&#10;Fix built-in examples (match by call.owner; use *.remove()) and document the return-value convention + per-method/cementing behavior." />
@@ -663,7 +664,8 @@
     <MESSAGE value="- Version bump" />
     <MESSAGE value="- Fix line remapping when annotations are hidden" />
     <MESSAGE value="- Live debug local values now get widened so that local tracing vid JDI can track more comprehensively across a given method" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Live debug local values now get widened so that local tracing vid JDI can track more comprehensively across a given method" />
+    <MESSAGE value="Add non verbose output mode for Bytecode formatter" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add non verbose output mode for Bytecode formatter" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JStudio$JStudio__run_.ic" NAME="JStudio [run] Coverage Results" MODIFIED="1768034065338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
