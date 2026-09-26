@@ -24,7 +24,6 @@ import lombok.Getter;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.io.File;
 import java.util.List;
 
 /** The heap forensics tab: pick a method, run it in the VM with allocation and mutation tracking, then browse classes, objects and snapshots. */
@@ -61,15 +60,12 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
     public HeapForensicsPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
-        SimpleHeapManager heapManager = new SimpleHeapManager();
-        this.tracker = new HeapForensicsTracker(heapManager);
-        this.listener = new HeapForensicsListener(tracker);
-        this.tracker.addListener(this);
 
         setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM));
 
         JPanel toolbarPanel = createToolbar();
         add(toolbarPanel, BorderLayout.NORTH);
+        newTracking();
 
         MethodSelectorPanel methodSelector = new MethodSelectorPanel("Select Method");
         methodSelector.setPreferredSize(new Dimension(250, 0));
@@ -267,11 +263,18 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         clearBtn.addActionListener(e -> reset());
         toolbar.add(clearBtn);
 
-        JButton exportBtn = new JButton("Export...");
-        exportBtn.addActionListener(e -> showExportDialog());
-        toolbar.add(exportBtn);
-
         return toolbar;
+    }
+
+    private void newTracking()
+    {
+        tracker = new HeapForensicsTracker(new SimpleHeapManager());
+        listener = new HeapForensicsListener(tracker);
+        tracker.addListener(this);
+        tracker.setInstructionCounter(listener::getInstructionCount);
+        tracker.setTracking(trackingToggle.isSelected());
+        listener.setTrackMutations(trackMutationsCheck.isSelected());
+        listener.setProvenanceDepth((Integer) provenanceSpinner.getValue());
     }
 
     private JScrollPane wrapWithTitle(JComponent component, String title)
@@ -321,38 +324,30 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
             return;
         }
 
+        ArgumentConfigPanel.Arguments arguments = argumentConfigPanel.captureArguments();
+        reset();
+
         isRunning = true;
         updateButtonStates();
         statusLabel.setText("Initializing...");
         showLoading();
 
         ClassPool classPool = project.getClassPool();
+        SimpleHeapManager heapManager = (SimpleHeapManager) tracker.getHeapManager();
+        HeapForensicsListener runListener = listener;
 
         SwingWorker<ExecutionResultWrapper, String> worker = new SwingWorker<>()
         {
-            private SimpleHeapManager heapManager;
-
             @Override
             protected ExecutionResultWrapper doInBackground()
             {
                 try
                 {
-                    publish("Initializing VM...");
-                    SwingUtilities.invokeAndWait(() -> reset());
-
                     publish("Building class resolver...");
                     ClassResolver classResolver = new ClassResolver(classPool);
-                    heapManager = (SimpleHeapManager) tracker.getHeapManager();
                     heapManager.setClassResolver(classResolver);
 
-                    final ClassResolver finalResolver = classResolver;
-                    SwingUtilities.invokeAndWait(() ->
-                    {
-                        argumentConfigPanel.setHeapManager(heapManager);
-                        argumentConfigPanel.setClassResolver(finalResolver);
-                    });
-
-                    ConcreteValue[] args = argumentConfigPanel.getArguments();
+                    ConcreteValue[] args = arguments.toConcrete(heapManager, classResolver, 100, 1_000_000);
 
                     publish("Analyzing " + selectedMethod.getName() + "...");
 
@@ -365,7 +360,7 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
                             .build();
 
                     BytecodeEngine engine = new BytecodeEngine(ctx);
-                    engine.addListener(listener);
+                    engine.addListener(runListener);
 
                     BytecodeResult result = engine.execute(method, args);
 
@@ -518,28 +513,6 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         updateStatus();
     }
 
-    private void showExportDialog()
-    {
-        String[] options = {"JSON", "CSV", "HTML Report", "Cancel"};
-        int choice = JOptionPane.showOptionDialog(this, "Select export format:", "Export Heap Data", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-
-        if (choice >= 0 && choice < 3)
-        {
-            JFileChooser chooser = new JFileChooser();
-            String ext = choice == 0 ? ".json" : choice == 1 ? ".csv" : ".html";
-            chooser.setSelectedFile(new File("heap_export" + ext));
-            if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
-            {
-                exportData(chooser.getSelectedFile(), choice);
-            }
-        }
-    }
-
-    private void exportData(File file, int format)
-    {
-        statusLabel.setText("Export not yet implemented");
-    }
-
     private void updateStatus()
     {
         if (!isRunning)
@@ -570,13 +543,10 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         SwingUtilities.invokeLater(this::refresh);
     }
 
-    /** Discards all tracked data by replacing the heap, tracker and listener, and clears the views. */
+    /** Discards all tracked data by replacing the heap, tracker and listener with ones set up from the toolbar options, and clears the views. */
     public void reset()
     {
-        SimpleHeapManager newHeap = new SimpleHeapManager();
-        tracker = new HeapForensicsTracker(newHeap);
-        listener = new HeapForensicsListener(tracker);
-        tracker.addListener(this);
+        newTracking();
         objectDetailPanel.setTracker(tracker);
 
         classSummaryPanel.clear();

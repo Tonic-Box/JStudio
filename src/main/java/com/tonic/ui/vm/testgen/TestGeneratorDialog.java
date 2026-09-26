@@ -9,8 +9,10 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.List;
 
 /** A modal dialog that previews a generated JUnit test for one recorded call or execution and lets the user copy or save it. */
 public class TestGeneratorDialog extends JDialog
@@ -23,12 +25,8 @@ public class TestGeneratorDialog extends JDialog
     private JTextField methodNameField;
     private JTextArea previewArea;
 
-    private MethodCall methodCall;
-    private ExecutionResult executionResult;
-    private String entryClass;
-    private String entryMethod;
-    private String entryDescriptor;
-    private Object[] entryArgs;
+    private TestCaseGenerator.TestCase testCase;
+    private String unavailableReason = "No execution data available";
 
     private TestCaseGenerator.GeneratedTest currentTest;
 
@@ -172,22 +170,20 @@ public class TestGeneratorDialog extends JDialog
      */
     public void setMethodCall(MethodCall call)
     {
-        this.methodCall = call;
-        this.executionResult = null;
-        this.entryClass = null;
-        this.entryMethod = null;
-        this.entryDescriptor = null;
-        this.entryArgs = null;
-
-        String targetClass = call.getOwnerClass().replace('/', '.');
-        classNameField.setText(generator.suggestTestClassName(targetClass));
+        classNameField.setText(generator.suggestTestClassName(call.getOwnerClass()));
         methodNameField.setText(generator.suggestTestMethodName(call.getMethodName()));
-
-        regeneratePreview();
+        try
+        {
+            setTestCase(TestCaseGenerator.TestCase.fromCall(call));
+        }
+        catch (IllegalArgumentException e)
+        {
+            setUnavailable(e.getMessage());
+        }
     }
 
     /**
-     * Sets a VM execution as the test source, suggests names, and regenerates the preview.
+     * Sets a static method's VM execution as the test source, suggests names, and regenerates the preview.
      *
      * @param result the execution result
      * @param className the class's internal name, with slashes
@@ -197,56 +193,66 @@ public class TestGeneratorDialog extends JDialog
      */
     public void setExecutionResult(ExecutionResult result, String className, String methodName, String descriptor, Object[] args)
     {
-        this.methodCall = null;
-        this.executionResult = result;
-        this.entryClass = className;
-        this.entryMethod = methodName;
-        this.entryDescriptor = descriptor;
-        this.entryArgs = args;
-
-        String targetClass = className.replace('/', '.');
-        classNameField.setText(generator.suggestTestClassName(targetClass));
+        classNameField.setText(generator.suggestTestClassName(className));
         methodNameField.setText(generator.suggestTestMethodName(methodName));
+        try
+        {
+            setTestCase(TestCaseGenerator.TestCase.fromResult(result, className, methodName, descriptor, true, null, args));
+        }
+        catch (IllegalArgumentException e)
+        {
+            setUnavailable(e.getMessage());
+        }
+    }
 
+    private void setTestCase(TestCaseGenerator.TestCase testCase)
+    {
+        this.testCase = testCase;
+        this.unavailableReason = null;
+        regeneratePreview();
+    }
+
+    private void setUnavailable(String reason)
+    {
+        this.testCase = null;
+        this.unavailableReason = reason;
         regeneratePreview();
     }
 
     private void regeneratePreview()
     {
+        currentTest = null;
+        if (testCase == null)
+        {
+            previewArea.setText("// " + unavailableReason);
+            return;
+        }
+
         String testClassName = classNameField.getText().trim();
         String testMethodName = methodNameField.getText().trim();
-        TestCaseGenerator.JUnitVersion version =
-                (TestCaseGenerator.JUnitVersion) versionCombo.getSelectedItem();
+        TestCaseGenerator.JUnitVersion version = (TestCaseGenerator.JUnitVersion) versionCombo.getSelectedItem();
         if (version == null)
         {
             version = TestCaseGenerator.JUnitVersion.JUNIT5;
         }
-
-        if (testClassName.isEmpty()) testClassName = "GeneratedTest";
-        if (testMethodName.isEmpty()) testMethodName = "testMethod";
+        if (testClassName.isEmpty())
+        {
+            testClassName = "GeneratedTest";
+        }
+        if (testMethodName.isEmpty())
+        {
+            testMethodName = "testMethod";
+        }
 
         try
         {
-            if (methodCall != null)
-            {
-                currentTest = generator.generate(methodCall, version, testClassName, testMethodName);
-            }
-            else if (executionResult != null)
-            {
-                currentTest = generator.generate(executionResult, entryClass, entryMethod, entryDescriptor, entryArgs, version, testClassName, testMethodName);
-            }
-            else
-            {
-                previewArea.setText("// No execution data available");
-                return;
-            }
-
+            currentTest = generator.generate(List.of(testCase), version, testClassName, testMethodName);
             previewArea.setText(currentTest.getCode());
             previewArea.setCaretPosition(0);
         }
-        catch (Exception e)
+        catch (IllegalArgumentException e)
         {
-            previewArea.setText("// Error generating test: " + e.getMessage());
+            previewArea.setText("// Cannot generate a test: " + e.getMessage());
         }
     }
 
@@ -285,9 +291,9 @@ public class TestGeneratorDialog extends JDialog
                 }
             }
 
-            try (FileWriter writer = new FileWriter(file))
+            try
             {
-                writer.write(currentTest.getCode());
+                Files.writeString(file.toPath(), currentTest.getCode(), StandardCharsets.UTF_8);
                 JOptionPane.showMessageDialog(this, "Test saved to: " + file.getAbsolutePath(), "Saved", JOptionPane.INFORMATION_MESSAGE);
             }
             catch (IOException e)

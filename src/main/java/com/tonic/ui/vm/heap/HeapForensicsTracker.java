@@ -9,6 +9,7 @@ import lombok.Getter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
 
 /** The record of one execution's heap activity: every allocation and field write, the objects still reachable by id, and the snapshots taken; thread-safe. */
@@ -28,6 +29,7 @@ public class HeapForensicsTracker
     private final Map<Integer, Map<String, FieldValue>> objectFields;
 
     private long lastInstructionCount;
+    private LongSupplier instructionCounter;
     @Getter
     private boolean tracking = true;
 
@@ -51,6 +53,16 @@ public class HeapForensicsTracker
         this.objectMutations = new ConcurrentHashMap<>();
         this.objectFields = new ConcurrentHashMap<>();
         this.listeners = new CopyOnWriteArrayList<>();
+    }
+
+    /**
+     * Sets where the live instruction count of a running execution is read from, so snapshots taken mid-run are stamped correctly.
+     *
+     * @param instructionCounter the live count, or null to use the count recorded at the last execution end
+     */
+    public void setInstructionCounter(LongSupplier instructionCounter)
+    {
+        this.instructionCounter = instructionCounter;
     }
 
     /** Resets the current instruction count for a new run. */
@@ -123,13 +135,13 @@ public class HeapForensicsTracker
      * Captures every tracked object with its recorded fields and mutations, keeps the snapshot and notifies listeners.
      *
      * @param label the snapshot's name
-     * @return the snapshot, stamped with the last recorded instruction count
+     * @return the snapshot, stamped with the current instruction count
      */
     public HeapSnapshot takeSnapshot(String label)
     {
         HeapSnapshot.Builder builder = HeapSnapshot.builder()
                 .label(label)
-                .instructionCount(lastInstructionCount);
+                .instructionCount(getCurrentInstructionCount());
 
         for (Map.Entry<Integer, ObjectInstance> entry : liveObjects.entrySet())
         {
@@ -286,11 +298,11 @@ public class HeapForensicsTracker
      * Lists the writes to one object.
      *
      * @param objectId the object's heap id, or -1 for static fields
-     * @return the tracker's own list of writes, or an empty list when none were recorded
+     * @return the writes in record order, unmodifiable, empty when none were recorded
      */
     public List<MutationEvent> getMutationsForObject(int objectId)
     {
-        return objectMutations.getOrDefault(objectId, Collections.emptyList());
+        return Collections.unmodifiableList(objectMutations.getOrDefault(objectId, Collections.emptyList()));
     }
 
     /**
@@ -365,10 +377,14 @@ public class HeapForensicsTracker
         return mutations.size();
     }
 
-    /** @return the instruction count recorded at the last execution end, 0 during a run */
+    /**
+     * Reads the current instruction count.
+     *
+     * @return the live count when a counter is set, otherwise the count recorded at the last execution end
+     */
     public long getCurrentInstructionCount()
     {
-        return lastInstructionCount;
+        return instructionCounter != null ? instructionCounter.getAsLong() : lastInstructionCount;
     }
 
     /**

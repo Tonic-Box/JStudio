@@ -203,27 +203,10 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
     public void setMethod(MethodEntry method)
     {
         this.currentMethod = method;
-        loadMethod(method);
+        loadBytecode(method);
         argumentConfigPanel.setMethod(method);
         statusLabel.setText("Loaded: " + method.getOwnerName() + "." + method.getName() + method.getDesc());
         toolbar.updateButtonStates();
-    }
-
-    private void loadMethod(MethodEntry method)
-    {
-        this.displayedMethod = method;
-        bytecodeTableView.setTitle(method);
-
-        CodeAttribute code = method.getCodeAttribute();
-        if (code == null)
-        {
-            bytecodeTableView.clearInstructions();
-            return;
-        }
-
-        BytecodeDisassembler.Result result = disassembler.disassemble(method);
-        bytecodeTableView.setInstructions(result.instructions, result.pcToRow);
-        sourceView.showMethod(method, breakpoints());
     }
 
     private void enableTraceActions()
@@ -296,36 +279,17 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         }
     }
 
-    /**
-     * Makes a method the one to debug, clears breakpoints and shows its bytecode; does nothing if the model is null.
-     *
-     * @param methodModel the method, or null
-     */
-    public void loadMethod(MethodEntryModel methodModel)
-    {
-        if (methodModel == null) return;
-
-        this.currentMethod = methodModel.getMethodEntry();
-        loadBytecode(currentMethod);
-        argumentConfigPanel.setMethod(currentMethod);
-
-        statusLabel.setText("Method loaded: " + currentMethod.getOwnerName() + "." + currentMethod.getName());
-        appendOutput("Loaded method: " + currentMethod.getName() + currentMethod.getDesc());
-        toolbar.updateButtonStates();
-    }
-
     private void loadBytecode(MethodEntry method)
     {
         this.displayedMethod = method;
         bytecodeTableView.setTitle(method);
-
-        breakpointController.clear();
 
         CodeAttribute code = method.getCodeAttribute();
         if (code == null)
         {
             appendOutput("Method has no code (abstract or native)");
             bytecodeTableView.clearInstructions();
+            sourceView.showMethod(method, breakpoints());
             return;
         }
 
@@ -334,6 +298,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         {
             appendOutput("Method has empty bytecode");
             bytecodeTableView.clearInstructions();
+            sourceView.showMethod(method, breakpoints());
             return;
         }
 
@@ -357,23 +322,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
 
         try
         {
-            VMExecutionService vmService = VMExecutionService.getInstance();
-            if (!vmService.isInitialized())
-            {
-                vmService.initialize();
-            }
-
-            argumentConfigPanel.setHeapManager(vmService.getHeapManager());
-            argumentConfigPanel.setClassResolver(vmService.getClassResolver());
-            localsPanel.setClassResolver(vmService.getClassResolver());
-            stackPanel.setClassResolver(vmService.getClassResolver());
-
-            Object[] vmArgs = args.length > 0 ? args : argumentConfigPanel.getArguments();
-            session.start(currentMethod, recursiveExecution, vmArgs);
-
-            toolbar.updateButtonStates();
-            String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
-            appendOutput("Started debugging: " + currentMethod.getName() + modeStr);
+            startSession(args.length > 0 ? args : null);
         }
         catch (Exception e)
         {
@@ -388,29 +337,32 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         {
             try
             {
-                VMExecutionService vmService = VMExecutionService.getInstance();
-                if (!vmService.isInitialized())
-                {
-                    vmService.initialize();
-                }
-
-                argumentConfigPanel.setHeapManager(vmService.getHeapManager());
-                argumentConfigPanel.setClassResolver(vmService.getClassResolver());
-                localsPanel.setClassResolver(vmService.getClassResolver());
-                stackPanel.setClassResolver(vmService.getClassResolver());
-
-                ConcreteValue[] vmArgs = argumentConfigPanel.getArguments();
-                session.start(currentMethod, recursiveExecution, (Object[]) vmArgs);
-
-                toolbar.updateButtonStates();
-                String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
-                appendOutput("Started debugging: " + currentMethod.getName() + modeStr);
+                startSession(null);
             }
             catch (Exception e)
             {
                 appendOutput("Failed to start: " + e.getMessage());
             }
         }
+    }
+
+    private void startSession(Object[] args)
+    {
+        VMExecutionService vmService = VMExecutionService.getInstance();
+        if (!vmService.isInitialized())
+        {
+            vmService.initialize();
+        }
+
+        localsPanel.setClassResolver(vmService.getClassResolver());
+        stackPanel.setClassResolver(vmService.getClassResolver());
+
+        Object[] vmArgs = args != null ? args : argumentConfigPanel.captureArguments().toConcrete(vmService.getHeapManager(), vmService.getClassResolver(), vmService.getMaxCallDepth(), vmService.getMaxInstructions());
+        session.start(currentMethod, recursiveExecution, vmArgs);
+
+        toolbar.updateButtonStates();
+        String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
+        appendOutput("Started debugging: " + currentMethod.getName() + modeStr);
     }
 
     /** Stops the debug session and clears the execution highlight. */

@@ -33,13 +33,11 @@ public class HeapForensicsListener implements BytecodeListener
     @Getter
     @Setter
     private boolean trackMutations = true;
-    @Getter
-    @Setter
-    private boolean trackStaticFields = true;
 
     private StackFrame currentFrame;
+    private int currentOpcode = -1;
     @Getter
-    private long instructionCount = 0;
+    private volatile long instructionCount = 0;
 
     /**
      * Creates a listener that records into a tracker.
@@ -85,6 +83,7 @@ public class HeapForensicsListener implements BytecodeListener
     public void beforeInstruction(StackFrame frame, Instruction instruction)
     {
         currentFrame = frame;
+        currentOpcode = instruction != null ? instruction.getOpcode() : -1;
     }
 
     @Override
@@ -122,7 +121,7 @@ public class HeapForensicsListener implements BytecodeListener
         AllocationEvent event = AllocationEvent.builder()
                 .objectId(array.getId())
                 .className(array.getComponentType() + "[]")
-                .opcode(0xBD)
+                .opcode(arrayAllocationOpcode(array))
                 .instructionCount(instructionCount)
                 .provenance(provenance)
                 .arrayLength(array.getLength())
@@ -132,7 +131,7 @@ public class HeapForensicsListener implements BytecodeListener
     }
 
     @Override
-    public void onFieldWrite(ObjectInstance instance, String fieldName, ConcreteValue oldValue, ConcreteValue newValue)
+    public void onFieldWrite(ObjectInstance instance, String owner, String fieldName, String descriptor, ConcreteValue oldValue, ConcreteValue newValue)
     {
         if (!trackMutations)
         {
@@ -141,14 +140,11 @@ public class HeapForensicsListener implements BytecodeListener
 
         ProvenanceInfo provenance = provenanceDepth > 0 ? captureProvenance() : null;
 
-        String fieldOwner = instance.getClassName();
-        String fieldDescriptor = inferDescriptor(newValue);
-
         MutationEvent event = MutationEvent.builder()
                 .objectId(instance.getId())
-                .fieldOwner(fieldOwner)
+                .fieldOwner(owner)
                 .fieldName(fieldName)
-                .fieldDescriptor(fieldDescriptor)
+                .fieldDescriptor(descriptor)
                 .oldValue(unwrapValue(oldValue))
                 .newValue(unwrapValue(newValue))
                 .instructionCount(instructionCount)
@@ -177,7 +173,7 @@ public class HeapForensicsListener implements BytecodeListener
                 .oldValue(unwrapValue(oldValue))
                 .newValue(unwrapValue(newValue))
                 .instructionCount(instructionCount)
-                .opcode(0x4F)
+                .mutationType(MutationEvent.MutationType.forArrayStore(array.getComponentType()))
                 .provenance(provenance)
                 .build();
 
@@ -290,32 +286,13 @@ public class HeapForensicsListener implements BytecodeListener
         return -1;
     }
 
-    private String inferDescriptor(ConcreteValue value)
+    private int arrayAllocationOpcode(ArrayInstance array)
     {
-        if (value == null || value.isNull())
+        if (currentOpcode == 0xBC || currentOpcode == 0xBD || currentOpcode == 0xC5)
         {
-            return "Ljava/lang/Object;";
+            return currentOpcode;
         }
-        switch (value.getTag())
-        {
-            case INT:
-                return "I";
-            case LONG:
-                return "J";
-            case FLOAT:
-                return "F";
-            case DOUBLE:
-                return "D";
-            case REFERENCE:
-                ObjectInstance ref = value.asReference();
-                if (ref != null)
-                {
-                    return "L" + ref.getClassName() + ";";
-                }
-                return "Ljava/lang/Object;";
-            default:
-                return "Ljava/lang/Object;";
-        }
+        return array.isPrimitiveArray() ? 0xBC : 0xBD;
     }
 
     private Object unwrapValue(ConcreteValue value)
@@ -346,6 +323,7 @@ public class HeapForensicsListener implements BytecodeListener
     {
         instructionCount = 0;
         currentFrame = null;
+        currentOpcode = -1;
         callStackFrames.clear();
     }
 }

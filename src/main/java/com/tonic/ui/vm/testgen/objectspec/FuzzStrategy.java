@@ -61,6 +61,28 @@ public class FuzzStrategy
     }
 
     /**
+     * Copies the strategy, including its own copy of the string set.
+     *
+     * @return the copy
+     */
+    public FuzzStrategy copy()
+    {
+        FuzzStrategy copy = new FuzzStrategy(type);
+        copy.minInt = minInt;
+        copy.maxInt = maxInt;
+        copy.minDouble = minDouble;
+        copy.maxDouble = maxDouble;
+        copy.stringSet = stringSet != null ? stringSet.clone() : null;
+        copy.stringPattern = stringPattern;
+        copy.minCollectionSize = minCollectionSize;
+        copy.maxCollectionSize = maxCollectionSize;
+        copy.includeEdgeCases = includeEdgeCases;
+        copy.includeNull = includeNull;
+        copy.sampleCount = sampleCount;
+        return copy;
+    }
+
+    /**
      * Creates a strategy of the default type for the value's type.
      *
      * @return the new strategy

@@ -319,7 +319,7 @@ final class NavigatorActions
     void openFuzzTestDialog(MethodEntryModel method)
     {
         FuzzTestGeneratorDialog dialog = new FuzzTestGeneratorDialog(SwingUtilities.getWindowAncestor(parent));
-        dialog.setMethod(method.getOwner().getClassName(), method.getName(), method.getDescriptor());
+        dialog.setMethod(method.getMethodEntry());
         dialog.setVisible(true);
     }
 }

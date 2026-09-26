@@ -235,7 +235,7 @@ public class ParamSpec
     }
 
     /**
-     * Copies the spec, deep-copying the nested object spec; the fuzz strategy is shared.
+     * Copies the spec, deep-copying the fuzz strategy and the nested object spec.
      *
      * @return the copy
      */
@@ -244,7 +244,7 @@ public class ParamSpec
         ParamSpec copy = new ParamSpec(name, typeDescriptor);
         copy.mode = mode;
         copy.fixedValue = fixedValue;
-        copy.fuzzStrategy = fuzzStrategy;
+        copy.fuzzStrategy = fuzzStrategy != null ? fuzzStrategy.copy() : null;
         copy.nestedObjectSpec = nestedObjectSpec != null ? nestedObjectSpec.copy() : null;
         copy.templateName = templateName;
         return copy;

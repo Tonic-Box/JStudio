@@ -94,7 +94,7 @@ public final class VmInstance
                 .maxInstructions(maxInstructions)
                 .build();
         currentDebugSession = new DebugSession(sessionContext);
-        currentDebugSession.start(method, VmSupport.toConcreteValues(heapManager, args));
+        currentDebugSession.start(method, new VmValueConverter(heapManager).toConcreteAll(args, null));
         return currentDebugSession;
     }
 
@@ -132,7 +132,7 @@ public final class VmInstance
         {
             all = args;
         }
-        ConcreteValue[] vmArgs = VmSupport.toConcreteValues(heapManager, all);
+        ConcreteValue[] vmArgs = new VmValueConverter(heapManager).toConcreteAll(all, null);
         BytecodeContext context = new BytecodeContext.Builder()
                 .heapManager(heapManager)
                 .classResolver(classResolver)

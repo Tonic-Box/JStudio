@@ -8,7 +8,8 @@ import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.io.File;
-import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 
 /** Shows a run's console output, coloring stderr lines, with a line count and export to a text file. */
@@ -188,9 +189,7 @@ public class ConsoleOutputPanel extends ThemedJPanel
             try
             {
                 File file = chooser.getSelectedFile();
-                FileWriter writer = new FileWriter(file);
-                writer.write(outputPane.getText());
-                writer.close();
+                Files.writeString(file.toPath(), outputPane.getText(), StandardCharsets.UTF_8);
                 JOptionPane.showMessageDialog(this, "Exported to " + file.getName(), "Export Complete", JOptionPane.INFORMATION_MESSAGE);
             }
             catch (Exception e)

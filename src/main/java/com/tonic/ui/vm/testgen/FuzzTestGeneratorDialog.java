@@ -1,8 +1,12 @@
 package com.tonic.ui.vm.testgen;
 
+import com.tonic.parser.MethodEntry;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.vm.model.MethodCall;
 import com.tonic.ui.vm.testgen.MethodFuzzer.FuzzConfig;
 import com.tonic.ui.vm.testgen.MethodFuzzer.FuzzResult;
+import com.tonic.ui.vm.testgen.objectspec.ObjectBuilderDialog;
+import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
 import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
 import com.tonic.ui.vm.testgen.objectspec.ValueMode;
 
@@ -14,12 +18,13 @@ import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
 
-/** A modal dialog that fuzzes a static method in the VM, groups the results by branch path, and generates a JUnit test class from the selected results. */
+/** A modal dialog that fuzzes a method in the VM, instance methods on receivers built from a configurable constructor, groups the results by branch path, and generates a JUnit test class from the selected results. */
 public class FuzzTestGeneratorDialog extends JDialog
 {
 
@@ -34,6 +39,8 @@ public class FuzzTestGeneratorDialog extends JDialog
     private JProgressBar progressBar;
     private JLabel statusLabel;
     private JLabel paramsConfigLabel;
+    private JButton configReceiverButton;
+    private JLabel receiverLabel;
 
     private FuzzResultTableModel tableModel;
 
@@ -47,6 +54,8 @@ public class FuzzTestGeneratorDialog extends JDialog
     private String className;
     private String methodName;
     private String descriptor;
+    private boolean staticMethod;
+    private ParamSpec receiverSpec;
 
     private List<FuzzResult> fuzzResults = new ArrayList<>();
     private List<ParamSpec> paramSpecs = new ArrayList<>();
@@ -97,6 +106,16 @@ public class FuzzTestGeneratorDialog extends JDialog
         paramsConfigLabel.setForeground(JStudioTheme.getInfo());
         paramsConfigLabel.setFont(paramsConfigLabel.getFont().deriveFont(Font.ITALIC, 11f));
         configPanel.add(paramsConfigLabel);
+
+        configReceiverButton = new JButton("Configure Receiver...");
+        configReceiverButton.setToolTipText("Choose how the instance the method is called on is constructed");
+        configReceiverButton.addActionListener(e -> openReceiverConfig());
+        configPanel.add(configReceiverButton);
+
+        receiverLabel = new JLabel("");
+        receiverLabel.setForeground(JStudioTheme.getInfo());
+        receiverLabel.setFont(receiverLabel.getFont().deriveFont(Font.ITALIC, 11f));
+        configPanel.add(receiverLabel);
 
         configPanel.add(Box.createHorizontalStrut(10));
 
@@ -258,17 +277,17 @@ public class FuzzTestGeneratorDialog extends JDialog
     }
 
     /**
-     * Sets the method to fuzz, suggests a test class name, and resets the parameter specs to fuzz every parameter.
+     * Sets the method to fuzz, suggests a test class name, resets the parameter specs to fuzz every parameter, and for an instance method picks a receiver constructor.
      *
-     * @param className the class's internal name, with slashes
-     * @param methodName the method's name
-     * @param descriptor the method's descriptor
+     * @param method the method to fuzz
      */
-    public void setMethod(String className, String methodName, String descriptor)
+    public void setMethod(MethodEntry method)
     {
-        this.className = className;
-        this.methodName = methodName;
-        this.descriptor = descriptor;
+        this.className = method.getOwnerName();
+        this.methodName = method.getName();
+        this.descriptor = method.getDesc();
+        this.staticMethod = (method.getAccess() & 0x0008) != 0;
+        this.receiverSpec = staticMethod || method.getClassFile() == null ? null : MethodFuzzer.defaultReceiverSpec(method.getClassFile());
 
         String simpleClass = className.replace('/', '.');
         int lastDot = simpleClass.lastIndexOf('.');
@@ -277,9 +296,31 @@ public class FuzzTestGeneratorDialog extends JDialog
 
         setTitle("Fuzz & Generate Tests - " + simpleName + "." + methodName);
 
-        MethodFuzzer tempFuzzer = new MethodFuzzer(className, methodName, descriptor, null);
+        MethodFuzzer tempFuzzer = new MethodFuzzer(className, methodName, descriptor, staticMethod, null);
         paramSpecs = tempFuzzer.getDefaultParamSpecs();
         updateParamsConfigLabel();
+        updateReceiverLabel();
+    }
+
+    private void updateReceiverLabel()
+    {
+        configReceiverButton.setVisible(!staticMethod);
+        receiverLabel.setVisible(!staticMethod);
+        if (!staticMethod)
+        {
+            receiverLabel.setText(receiverSpec != null && receiverSpec.getNestedObjectSpec() != null ? "this = " + receiverSpec.getNestedObjectSpec().getSummary() : "no receiver configured");
+        }
+    }
+
+    private void openReceiverConfig()
+    {
+        ObjectSpec existing = receiverSpec != null ? receiverSpec.getNestedObjectSpec() : null;
+        ObjectSpec result = ObjectBuilderDialog.showDialog(this, className, existing);
+        if (result != null)
+        {
+            receiverSpec = ParamSpec.object("this", "L" + className + ";", result);
+            updateReceiverLabel();
+        }
     }
 
     private void updateParamsConfigLabel()
@@ -341,11 +382,18 @@ public class FuzzTestGeneratorDialog extends JDialog
         config.setIncludeNulls(nullsCheckbox.isSelected());
         config.setIncludeRandom(randomCheckbox.isSelected());
 
-        MethodFuzzer fuzzer = new MethodFuzzer(className, methodName, descriptor, config);
+        if (!staticMethod && receiverSpec == null)
+        {
+            JOptionPane.showMessageDialog(this, "Configure how to construct the receiver first", "No Receiver", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        MethodFuzzer fuzzer = new MethodFuzzer(className, methodName, descriptor, staticMethod, config);
         if (!paramSpecs.isEmpty())
         {
             fuzzer.setParameterSpecs(paramSpecs);
         }
+        fuzzer.setReceiverSpec(receiverSpec);
 
         runFuzzButton.setEnabled(false);
         progressBar.setVisible(true);
@@ -447,161 +495,27 @@ public class FuzzTestGeneratorDialog extends JDialog
         String testClassName = classNameField.getText().trim();
         if (testClassName.isEmpty()) testClassName = "GeneratedTest";
 
-        TestCaseGenerator.JUnitVersion version =
-                (TestCaseGenerator.JUnitVersion) versionCombo.getSelectedItem();
+        TestCaseGenerator.JUnitVersion version = (TestCaseGenerator.JUnitVersion) versionCombo.getSelectedItem();
 
-        String code = generateMultiTestClass(selected, version, testClassName);
-        previewArea.setText(code);
-        previewArea.setCaretPosition(0);
-
-        copyButton.setEnabled(true);
-        saveButton.setEnabled(true);
-    }
-
-    private String generateMultiTestClass(List<FuzzResult> results, TestCaseGenerator.JUnitVersion version, String testClassName)
-    {
-        StringBuilder sb = new StringBuilder();
-
-        String targetClass = className.replace('/', '.');
-        int lastDot = targetClass.lastIndexOf('.');
-        String packageName = lastDot >= 0 ? targetClass.substring(0, lastDot) : "";
-        String simpleTargetClass = lastDot >= 0 ? targetClass.substring(lastDot + 1) : targetClass;
-
-        if (!packageName.isEmpty())
+        try
         {
-            sb.append("package ").append(packageName).append(";\n\n");
-        }
-
-        sb.append("import ").append(version.getTestAnnotationImport()).append(";\n");
-        sb.append("import static ").append(version.getAssertionsImport()).append(".*;\n");
-        if (version == TestCaseGenerator.JUnitVersion.JUNIT5)
-        {
-            boolean hasException = results.stream().anyMatch(r -> r.getResult().getException() != null);
-            if (hasException)
+            List<TestCaseGenerator.TestCase> cases = new ArrayList<>();
+            for (FuzzResult result : selected)
             {
-                sb.append("import static org.junit.jupiter.api.Assertions.assertThrows;\n");
+                cases.add(TestCaseGenerator.TestCase.fromResult(result.getResult(), className, methodName, descriptor, staticMethod, result.getReceiver(), result.getInputs()));
             }
+            String code = generator.generate(cases, version, testClassName, generator.suggestTestMethodName(methodName)).getCode();
+            previewArea.setText(code);
+            previewArea.setCaretPosition(0);
+            copyButton.setEnabled(true);
+            saveButton.setEnabled(true);
         }
-        sb.append("\n");
-
-        sb.append("public class ").append(testClassName).append(" {\n\n");
-
-        int testNum = 1;
-        for (FuzzResult result : results)
+        catch (IllegalArgumentException e)
         {
-            String testMethodName = "test" + capitalize(methodName) + "_" + testNum;
-            generateTestMethod(sb, result, version, testMethodName, simpleTargetClass);
-            sb.append("\n");
-            testNum++;
+            previewArea.setText("// Cannot generate tests: " + e.getMessage());
+            copyButton.setEnabled(false);
+            saveButton.setEnabled(false);
         }
-
-        sb.append("}\n");
-        return sb.toString();
-    }
-
-    private void generateTestMethod(StringBuilder sb, FuzzResult result, TestCaseGenerator.JUnitVersion version, String testMethodName, String targetClass)
-    {
-        boolean hasException = result.getResult().getException() != null;
-        Object returnValue = result.getResult().getReturnValue();
-        Object[] args = result.getInputs();
-
-        String exceptionClass = "RuntimeException";
-        if (hasException)
-        {
-            String msg = result.getResult().getException().getMessage();
-            if (msg != null && msg.contains("VM Exception:"))
-            {
-                String part = msg.substring(msg.indexOf(':') + 1).trim();
-                int space = part.indexOf(' ');
-                if (space > 0)
-                {
-                    exceptionClass = part.substring(0, space);
-                    if (exceptionClass.contains("/"))
-                    {
-                        exceptionClass = exceptionClass.substring(exceptionClass.lastIndexOf('/') + 1);
-                    }
-                }
-            }
-        }
-
-        if (hasException && version == TestCaseGenerator.JUnitVersion.JUNIT4)
-        {
-            sb.append("    @Test(expected = ").append(exceptionClass).append(".class)\n");
-        }
-        else
-        {
-            sb.append("    @Test\n");
-        }
-
-        if (version == TestCaseGenerator.JUnitVersion.JUNIT4)
-        {
-            sb.append("    public void ").append(testMethodName).append("() {\n");
-        }
-        else
-        {
-            sb.append("    void ").append(testMethodName).append("() {\n");
-        }
-
-        String argsString = formatArguments(args);
-
-        if (hasException && version == TestCaseGenerator.JUnitVersion.JUNIT5)
-        {
-            sb.append("        assertThrows(").append(exceptionClass).append(".class, () -> {\n");
-            sb.append("            ").append(targetClass).append(".").append(methodName);
-            sb.append("(").append(argsString).append(");\n");
-            sb.append("        });\n");
-        }
-        else if (returnValue != null)
-        {
-            String returnType = inferReturnType(returnValue);
-            sb.append("        ").append(returnType).append(" result = ");
-            sb.append(targetClass).append(".").append(methodName);
-            sb.append("(").append(argsString).append(");\n");
-            sb.append("        assertEquals(").append(generator.formatLiteral(returnValue)).append(", result);\n");
-        }
-        else
-        {
-            sb.append("        ").append(targetClass).append(".").append(methodName);
-            sb.append("(").append(argsString).append(");\n");
-            if (!hasException)
-            {
-                sb.append("        // Completed without exception\n");
-            }
-        }
-
-        sb.append("    }\n");
-    }
-
-    private String formatArguments(Object[] args)
-    {
-        if (args == null || args.length == 0) return "";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < args.length; i++)
-        {
-            if (i > 0) sb.append(", ");
-            sb.append(generator.formatLiteral(args[i]));
-        }
-        return sb.toString();
-    }
-
-    private String inferReturnType(Object value)
-    {
-        if (value instanceof Integer) return "int";
-        if (value instanceof Long) return "long";
-        if (value instanceof Float) return "float";
-        if (value instanceof Double) return "double";
-        if (value instanceof Boolean) return "boolean";
-        if (value instanceof Character) return "char";
-        if (value instanceof Byte) return "byte";
-        if (value instanceof Short) return "short";
-        if (value instanceof String) return "String";
-        return "Object";
-    }
-
-    private String capitalize(String s)
-    {
-        if (s == null || s.isEmpty()) return s;
-        return Character.toUpperCase(s.charAt(0)) + (s.length() > 1 ? s.substring(1) : "");
     }
 
     private void copyToClipboard()
@@ -641,9 +555,9 @@ public class FuzzTestGeneratorDialog extends JDialog
                 if (result != JOptionPane.YES_OPTION) return;
             }
 
-            try (FileWriter writer = new FileWriter(file))
+            try
             {
-                writer.write(code);
+                Files.writeString(file.toPath(), code, StandardCharsets.UTF_8);
                 JOptionPane.showMessageDialog(this, "Test saved to: " + file.getAbsolutePath(), "Saved", JOptionPane.INFORMATION_MESSAGE);
             }
             catch (IOException e)
@@ -757,7 +671,7 @@ public class FuzzTestGeneratorDialog extends JDialog
                 case 0:
                     return selected.get(row);
                 case 1:
-                    return formatInputs(r.getInputs());
+                    return formatInputs(r.getReceiver(), r.getInputs());
                 case 2:
                     return r.getOutcomeDescription();
                 case 3:
@@ -777,10 +691,14 @@ public class FuzzTestGeneratorDialog extends JDialog
             }
         }
 
-        private String formatInputs(Object[] inputs)
+        private String formatInputs(Object receiver, Object[] inputs)
         {
-            if (inputs == null || inputs.length == 0) return "()";
-            StringBuilder sb = new StringBuilder("(");
+            StringBuilder sb = new StringBuilder();
+            if (receiver != null)
+            {
+                sb.append(receiver).append(": ");
+            }
+            sb.append("(");
             for (int i = 0; i < inputs.length; i++)
             {
                 if (i > 0) sb.append(", ");
@@ -800,6 +718,7 @@ public class FuzzTestGeneratorDialog extends JDialog
                 return "\"" + s + "\"";
             }
             if (arg instanceof Character) return "'" + arg + "'";
+            if (arg.getClass().isArray()) return MethodCall.formatValue(arg);
             return String.valueOf(arg);
         }
     }

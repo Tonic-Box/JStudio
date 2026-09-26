@@ -13,8 +13,10 @@ import lombok.Getter;
 
 import javax.swing.Timer;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /** A debug session over one method run in the VM, with stepping, animated resume, breakpoints and value editing, reported to listeners. */
@@ -60,6 +62,7 @@ public class VMDebugSession
 
     private final List<DebugListener> listeners = new CopyOnWriteArrayList<>();
     private final VmInstance vmInstance;
+    private final Set<Breakpoint> breakpoints = new LinkedHashSet<>();
     @Getter
     private DebugSession yabrSession;
     @Getter
@@ -119,6 +122,10 @@ public class VMDebugSession
         }
 
         yabrSession.addListener(new YabrDebugListener());
+        for (Breakpoint breakpoint : breakpoints)
+        {
+            yabrSession.addBreakpoint(breakpoint);
+        }
         started = true;
 
         notifySessionStarted();
@@ -156,29 +163,7 @@ public class VMDebugSession
         {
             yabrSession.stepInto();
 
-            if (yabrSession.isStopped())
-            {
-                started = false;
-                String reason = "Execution completed";
-                BytecodeResult result = yabrSession.getResult();
-                if (result != null)
-                {
-                    if (result.hasException())
-                    {
-                        reason = "Exception: " + result.getException();
-                    }
-                    else
-                    {
-                        String returnVal = formatReturnValue(result);
-                        if (returnVal != null)
-                        {
-                            reason = "Execution completed - Return: " + returnVal;
-                        }
-                    }
-                }
-                notifySessionStopped(reason);
-            }
-            else
+            if (!finishIfStopped())
             {
                 updateState();
             }
@@ -203,29 +188,7 @@ public class VMDebugSession
         try
         {
             yabrSession.stepOver();
-            if (yabrSession.isStopped())
-            {
-                started = false;
-                String reason = "Execution completed";
-                BytecodeResult result = yabrSession.getResult();
-                if (result != null)
-                {
-                    if (result.hasException())
-                    {
-                        reason = "Exception: " + result.getException();
-                    }
-                    else
-                    {
-                        String returnVal = formatReturnValue(result);
-                        if (returnVal != null)
-                        {
-                            reason = "Execution completed - Return: " + returnVal;
-                        }
-                    }
-                }
-                notifySessionStopped(reason);
-            }
-            else
+            if (!finishIfStopped())
             {
                 updateState();
             }
@@ -250,29 +213,7 @@ public class VMDebugSession
         try
         {
             yabrSession.stepOut();
-            if (yabrSession.isStopped())
-            {
-                started = false;
-                String reason = "Execution completed";
-                BytecodeResult result = yabrSession.getResult();
-                if (result != null)
-                {
-                    if (result.hasException())
-                    {
-                        reason = "Exception: " + result.getException();
-                    }
-                    else
-                    {
-                        String returnVal = formatReturnValue(result);
-                        if (returnVal != null)
-                        {
-                            reason = "Execution completed - Return: " + returnVal;
-                        }
-                    }
-                }
-                notifySessionStopped(reason);
-            }
-            else
+            if (!finishIfStopped())
             {
                 updateState();
             }
@@ -298,31 +239,8 @@ public class VMDebugSession
 
         animationTimer = new Timer(stepDelayMs, e ->
         {
-            if (yabrSession == null || yabrSession.isStopped())
+            if (finishIfStopped())
             {
-                stopAnimation();
-                started = false;
-                String reason = "Execution completed";
-                if (yabrSession != null)
-                {
-                    BytecodeResult result = yabrSession.getResult();
-                    if (result != null)
-                    {
-                        if (result.hasException())
-                        {
-                            reason = "Exception: " + result.getException();
-                        }
-                        else
-                        {
-                            String returnVal = formatReturnValue(result);
-                            if (returnVal != null)
-                            {
-                                reason = "Execution completed - Return: " + returnVal;
-                            }
-                        }
-                    }
-                }
-                notifySessionStopped(reason);
                 return;
             }
 
@@ -334,30 +252,9 @@ public class VMDebugSession
             try
             {
                 yabrSession.stepInto();
-                updateState();
-
-                if (yabrSession.isStopped())
+                if (!finishIfStopped())
                 {
-                    stopAnimation();
-                    started = false;
-                    String reason = "Execution completed";
-                    BytecodeResult result = yabrSession.getResult();
-                    if (result != null)
-                    {
-                        if (result.hasException())
-                        {
-                            reason = "Exception: " + result.getException();
-                        }
-                        else
-                        {
-                            String returnVal = formatReturnValue(result);
-                            if (returnVal != null)
-                            {
-                                reason = "Execution completed - Return: " + returnVal;
-                            }
-                        }
-                    }
-                    notifySessionStopped(reason);
+                    updateState();
                 }
             }
             catch (StackOverflowError ex)
@@ -373,6 +270,35 @@ public class VMDebugSession
         });
 
         animationTimer.start();
+    }
+
+    private boolean finishIfStopped()
+    {
+        if (yabrSession != null && !yabrSession.isStopped())
+        {
+            return false;
+        }
+        stopAnimation();
+        started = false;
+        String reason = "Execution completed";
+        BytecodeResult result = yabrSession != null ? yabrSession.getResult() : null;
+        if (result != null)
+        {
+            if (result.hasException())
+            {
+                reason = "Exception: " + result.getException();
+            }
+            else
+            {
+                String returnVal = formatReturnValue(result);
+                if (returnVal != null)
+                {
+                    reason = "Execution completed - Return: " + returnVal;
+                }
+            }
+        }
+        notifySessionStopped(reason);
+        return true;
     }
 
     /** Stops the animated resume, if running. */
@@ -475,7 +401,7 @@ public class VMDebugSession
     }
 
     /**
-     * Runs until execution reaches a bytecode offset in the current method.
+     * Runs until execution reaches a bytecode offset in the current method; notifies listeners of the new state, or that the session stopped if execution finished first.
      *
      * @param pc the bytecode offset to stop at
      */
@@ -486,7 +412,10 @@ public class VMDebugSession
         try
         {
             yabrSession.runToCursor(pc);
-            updateState();
+            if (!finishIfStopped())
+            {
+                updateState();
+            }
         }
         catch (Exception e)
         {
@@ -495,7 +424,7 @@ public class VMDebugSession
     }
 
     /**
-     * Adds a breakpoint; ignored if the session has not been started.
+     * Adds a breakpoint; it is kept across sessions and applied to every session this one starts.
      *
      * @param className the internal name of the method's class
      * @param methodName the method's name
@@ -504,14 +433,15 @@ public class VMDebugSession
      */
     public void addBreakpoint(String className, String methodName, String descriptor, int pc)
     {
-        if (yabrSession != null)
+        Breakpoint breakpoint = new Breakpoint(className, methodName, descriptor, pc);
+        if (breakpoints.add(breakpoint) && yabrSession != null)
         {
-            yabrSession.addBreakpoint(new Breakpoint(className, methodName, descriptor, pc));
+            yabrSession.addBreakpoint(breakpoint);
         }
     }
 
     /**
-     * Removes a breakpoint; ignored if the session has not been started.
+     * Removes a breakpoint from this and any running session.
      *
      * @param className the internal name of the method's class
      * @param methodName the method's name
@@ -520,11 +450,32 @@ public class VMDebugSession
      */
     public void removeBreakpoint(String className, String methodName, String descriptor, int pc)
     {
-        if (yabrSession != null)
+        Breakpoint breakpoint = new Breakpoint(className, methodName, descriptor, pc);
+        if (breakpoints.remove(breakpoint) && yabrSession != null)
         {
-            Breakpoint bp = new Breakpoint(className, methodName, descriptor, pc);
-            yabrSession.removeBreakpoint(bp);
+            yabrSession.removeBreakpoint(breakpoint);
         }
+    }
+
+    /**
+     * Lists the breakpoint offsets set in one method.
+     *
+     * @param className the internal name of the method's class
+     * @param methodName the method's name
+     * @param descriptor the method's descriptor
+     * @return the bytecode offsets, in the order they were added
+     */
+    public Set<Integer> getBreakpointPcs(String className, String methodName, String descriptor)
+    {
+        Set<Integer> pcs = new LinkedHashSet<>();
+        for (Breakpoint breakpoint : breakpoints)
+        {
+            if (breakpoint.getClassName().equals(className) && breakpoint.getMethodName().equals(methodName) && breakpoint.getMethodDesc().equals(descriptor))
+            {
+                pcs.add(breakpoint.getPC());
+            }
+        }
+        return pcs;
     }
 
     /**

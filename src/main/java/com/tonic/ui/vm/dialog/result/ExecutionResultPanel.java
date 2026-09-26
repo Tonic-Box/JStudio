@@ -1,5 +1,6 @@
 package com.tonic.ui.vm.dialog.result;
 
+import com.tonic.parser.MethodEntry;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
@@ -24,9 +25,7 @@ public class ExecutionResultPanel extends ThemedJPanel
     private final JButton fuzzTestButton;
 
     private ExecutionResult currentResult;
-    private String executionClassName;
-    private String executionMethodName;
-    private String executionDescriptor;
+    private MethodEntry executionMethod;
     private Object[] executionArgs;
 
     /** Creates the panel showing no result. */
@@ -95,7 +94,7 @@ public class ExecutionResultPanel extends ThemedJPanel
         consolePanel.update(result.getConsoleOutput());
         statsPanel.update(result);
 
-        saveAsTestButton.setEnabled(executionClassName != null && currentResult != null);
+        saveAsTestButton.setEnabled(executionMethod != null && executionArgs != null);
 
         if (!result.getMethodCalls().isEmpty())
         {
@@ -112,60 +111,54 @@ public class ExecutionResultPanel extends ThemedJPanel
     }
 
     /**
-     * Sets the method the next result belongs to, enabling fuzzing, without changing the recorded arguments.
+     * Sets the method the next result belongs to, enabling fuzzing; the shown result and recorded arguments are cleared because they belong to the previous method.
      *
-     * @param className the class's internal name, with slashes, or null to disable fuzzing
-     * @param methodName the method name
-     * @param descriptor the method descriptor
+     * @param method the method, or null to disable fuzzing
      */
-    public void setMethodContext(String className, String methodName, String descriptor)
+    public void setMethodContext(MethodEntry method)
     {
-        this.executionClassName = className;
-        this.executionMethodName = methodName;
-        this.executionDescriptor = descriptor;
-        fuzzTestButton.setEnabled(className != null);
+        clear();
+        this.executionMethod = method;
+        this.executionArgs = null;
+        fuzzTestButton.setEnabled(method != null);
     }
 
     /**
      * Sets the method and arguments the next result belongs to, enabling fuzzing.
      *
-     * @param className the class's internal name, with slashes, or null to disable fuzzing
-     * @param methodName the method name
-     * @param descriptor the method descriptor
+     * @param method the method, or null to disable fuzzing
      * @param args the arguments the method ran with, copied; null for none
      */
-    public void setExecutionContext(String className, String methodName, String descriptor, Object[] args)
+    public void setExecutionContext(MethodEntry method, Object[] args)
     {
-        this.executionClassName = className;
-        this.executionMethodName = methodName;
-        this.executionDescriptor = descriptor;
+        this.executionMethod = method;
         this.executionArgs = args != null ? args.clone() : new Object[0];
-        fuzzTestButton.setEnabled(className != null);
+        fuzzTestButton.setEnabled(method != null);
     }
 
     private void openTestGeneratorDialog()
     {
-        if (currentResult == null || executionClassName == null)
+        if (currentResult == null || executionMethod == null || executionArgs == null)
         {
             return;
         }
 
         Window owner = SwingUtilities.getWindowAncestor(this);
         TestGeneratorDialog dialog = new TestGeneratorDialog(owner);
-        dialog.setExecutionResult(currentResult, executionClassName, executionMethodName, executionDescriptor, executionArgs);
+        dialog.setExecutionResult(currentResult, executionMethod.getOwnerName(), executionMethod.getName(), executionMethod.getDesc(), executionArgs);
         dialog.setVisible(true);
     }
 
     private void openFuzzTestDialog()
     {
-        if (executionClassName == null)
+        if (executionMethod == null)
         {
             return;
         }
 
         Window owner = SwingUtilities.getWindowAncestor(this);
         FuzzTestGeneratorDialog dialog = new FuzzTestGeneratorDialog(owner);
-        dialog.setMethod(executionClassName, executionMethodName, executionDescriptor);
+        dialog.setMethod(executionMethod);
         dialog.setVisible(true);
     }
 
@@ -193,9 +186,7 @@ public class ExecutionResultPanel extends ThemedJPanel
     public void clearAll()
     {
         clear();
-        executionClassName = null;
-        executionMethodName = null;
-        executionDescriptor = null;
+        executionMethod = null;
         executionArgs = null;
         fuzzTestButton.setEnabled(false);
     }

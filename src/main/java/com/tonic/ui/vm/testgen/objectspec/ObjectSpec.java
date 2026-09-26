@@ -191,29 +191,27 @@ public class ObjectSpec
     }
 
     /**
-     * Checks whether any argument or field value is fuzzed, following nested object specs of constructor arguments only.
+     * Checks whether any constructor argument, factory argument or field value is fuzzed, following nested object specs.
      *
      * @return true if a value is fuzzed
      */
     public boolean hasAnyFuzzParams()
     {
-        for (ParamSpec arg : constructorArgs)
+        return anyFuzzed(constructorArgs) || anyFuzzed(factoryArgs) || anyFuzzed(fieldOverrides.values());
+    }
+
+    private static boolean anyFuzzed(Iterable<ParamSpec> specs)
+    {
+        for (ParamSpec spec : specs)
         {
-            if (arg.getMode() == ValueMode.FUZZ) return true;
-            if (arg.getMode() == ValueMode.OBJECT_SPEC &&
-                    arg.getNestedObjectSpec() != null &&
-                    arg.getNestedObjectSpec().hasAnyFuzzParams())
+            if (spec.getMode() == ValueMode.FUZZ)
             {
                 return true;
             }
-        }
-        for (ParamSpec arg : factoryArgs)
-        {
-            if (arg.getMode() == ValueMode.FUZZ) return true;
-        }
-        for (ParamSpec field : fieldOverrides.values())
-        {
-            if (field.getMode() == ValueMode.FUZZ) return true;
+            if (spec.getMode() == ValueMode.OBJECT_SPEC && spec.getNestedObjectSpec() != null && spec.getNestedObjectSpec().hasAnyFuzzParams())
+            {
+                return true;
+            }
         }
         return false;
     }

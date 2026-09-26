@@ -1,22 +1,28 @@
 package com.tonic.ui.vm.testgen;
 
+import com.tonic.parser.ClassFile;
+import com.tonic.parser.MethodEntry;
 import com.tonic.ui.vm.VMExecutionService;
 import com.tonic.ui.vm.model.ExecutionResult;
 import com.tonic.ui.vm.testgen.objectspec.ObjectFactory;
+import com.tonic.ui.vm.testgen.objectspec.ObjectSpec;
 import com.tonic.ui.vm.testgen.objectspec.ParamSpec;
 import com.tonic.ui.vm.testgen.objectspec.ValueMode;
+import com.tonic.util.DescriptorParser;
 import lombok.Getter;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-/** Runs a static method in the VM over generated inputs and records each outcome with the branch path it took. */
+/** Runs a method in the VM over generated inputs, an instance method on receivers built from a receiver spec, and records each outcome with the branch path it took. */
 public class MethodFuzzer
 {
 
-    /** One fuzz run: the inputs, the execution result, and the branch path, keyed by path plus a coarse category of the return value or exception. */
+    /** One fuzz run: the receiver and inputs, the execution result, and the branch path, keyed by path plus a coarse category of the return value or exception. */
     public static class FuzzResult
     {
+        @Getter
+        private final Object receiver;
         private final Object[] inputs;
         @Getter
         private final ExecutionResult result;
@@ -32,25 +38,28 @@ public class MethodFuzzer
         /**
          * Creates a result with no branch tracking.
          *
+         * @param receiver the receiver spec the instance was built from, null for a static method
          * @param inputs the arguments passed, copied
          * @param result the execution result
          */
-        public FuzzResult(Object[] inputs, ExecutionResult result)
+        public FuzzResult(Object receiver, Object[] inputs, ExecutionResult result)
         {
-            this(inputs, result, "NO_BRANCHES", "No branches tracked", 0);
+            this(receiver, inputs, result, "NO_BRANCHES", "No branches tracked", 0);
         }
 
         /**
          * Creates a result with its branch path.
          *
+         * @param receiver the receiver spec the instance was built from, null for a static method
          * @param inputs the arguments passed, copied
          * @param result the execution result
          * @param branchPathSignature the signature of the branch path taken
          * @param branchSummary a readable summary of the branch path
          * @param uniqueBranchPoints the number of distinct branch sites visited
          */
-        public FuzzResult(Object[] inputs, ExecutionResult result, String branchPathSignature, String branchSummary, int uniqueBranchPoints)
+        public FuzzResult(Object receiver, Object[] inputs, ExecutionResult result, String branchPathSignature, String branchSummary, int uniqueBranchPoints)
         {
+            this.receiver = receiver;
             this.inputs = inputs.clone();
             this.result = result;
             this.branchPathSignature = branchPathSignature;
@@ -218,28 +227,77 @@ public class MethodFuzzer
         }
     }
 
+    @Getter
     private final String className;
+    @Getter
     private final String methodName;
+    @Getter
     private final String descriptor;
+    @Getter
+    private final boolean staticMethod;
     private final List<String> paramTypes;
     private final FuzzConfig config;
     private List<ParamSpec> paramSpecs;
+    @Getter
+    private ParamSpec receiverSpec;
 
     /**
-     * Creates a fuzzer for a static method.
+     * Creates a fuzzer for a method.
      *
      * @param className the class's internal name, with slashes
      * @param methodName the method's name
      * @param descriptor the method's descriptor, parsed for parameter types
+     * @param staticMethod whether the method is static; an instance method needs a receiver spec before it can run
      * @param config the fuzzing options, or null for the defaults
+     * @throws IllegalArgumentException if the descriptor is malformed
      */
-    public MethodFuzzer(String className, String methodName, String descriptor, FuzzConfig config)
+    public MethodFuzzer(String className, String methodName, String descriptor, boolean staticMethod, FuzzConfig config)
     {
         this.className = className;
         this.methodName = methodName;
         this.descriptor = descriptor;
-        this.paramTypes = parseParameterTypes(descriptor);
+        this.staticMethod = staticMethod;
+        this.paramTypes = DescriptorParser.parameterDescriptors(descriptor);
         this.config = config != null ? config : new FuzzConfig();
+    }
+
+    /**
+     * Sets how receivers are built for an instance method; each value the spec generates is combined with the argument sets.
+     *
+     * @param receiverSpec the receiver's spec, typically a constructor object spec, or null for none
+     */
+    public void setReceiverSpec(ParamSpec receiverSpec)
+    {
+        this.receiverSpec = receiverSpec;
+    }
+
+    /**
+     * Builds a receiver spec from a class's constructors: the no-argument one when present, otherwise the first, with fuzzed arguments.
+     *
+     * @param owner the class whose instances receive the calls
+     * @return the spec, or null when the class declares no constructor
+     */
+    public static ParamSpec defaultReceiverSpec(ClassFile owner)
+    {
+        MethodEntry chosen = null;
+        for (MethodEntry method : owner.getMethods())
+        {
+            if (method.getName().equals("<init>") && (chosen == null || method.getDesc().equals("()V")))
+            {
+                chosen = method;
+            }
+        }
+        if (chosen == null)
+        {
+            return null;
+        }
+        ObjectSpec spec = ObjectSpec.withConstructor(owner.getClassName(), chosen.getDesc());
+        List<String> types = DescriptorParser.parameterDescriptors(chosen.getDesc());
+        for (int i = 0; i < types.size(); i++)
+        {
+            spec.addConstructorArg(ParamSpec.fuzz("arg" + i, types.get(i)));
+        }
+        return ParamSpec.object("this", "L" + owner.getClassName() + ";", spec);
     }
 
     /**
@@ -313,66 +371,9 @@ public class MethodFuzzer
             }
         }
 
-        if (paramTypes.size() == 1)
-        {
-            for (Object val : valuesPerParam.get(0))
-            {
-                inputSets.add(new Object[]{val});
-            }
-        }
-        else
-        {
-            generateCombinations(valuesPerParam, inputSets, config.iterationsPerType * 3);
-        }
-
+        int cap = paramTypes.size() == 1 ? Math.max(1, valuesPerParam.get(0).size()) : config.iterationsPerType * 3;
+        inputSets.addAll(ObjectFactory.combinations(valuesPerParam, cap));
         return inputSets;
-    }
-
-    private void generateCombinations(List<List<Object>> valuesPerParam, List<Object[]> result, int maxCombos)
-    {
-        int[] indices = new int[valuesPerParam.size()];
-        int totalCombos = 1;
-        for (List<Object> vals : valuesPerParam)
-        {
-            totalCombos *= vals.size();
-        }
-
-        if (totalCombos <= maxCombos)
-        {
-            for (int i = 0; i < totalCombos; i++)
-            {
-                Object[] combo = new Object[valuesPerParam.size()];
-                int idx = i;
-                for (int p = valuesPerParam.size() - 1; p >= 0; p--)
-                {
-                    int size = valuesPerParam.get(p).size();
-                    combo[p] = valuesPerParam.get(p).get(idx % size);
-                    idx /= size;
-                }
-                result.add(combo);
-            }
-        }
-        else
-        {
-            Set<String> seen = new HashSet<>();
-            Random rand = ThreadLocalRandom.current();
-            int attempts = 0;
-            while (result.size() < maxCombos && attempts < maxCombos * 10)
-            {
-                Object[] combo = new Object[valuesPerParam.size()];
-                for (int p = 0; p < valuesPerParam.size(); p++)
-                {
-                    List<Object> vals = valuesPerParam.get(p);
-                    combo[p] = vals.get(rand.nextInt(vals.size()));
-                }
-                String key = Arrays.toString(combo);
-                if (seen.add(key))
-                {
-                    result.add(combo);
-                }
-                attempts++;
-            }
-        }
     }
 
     private List<Object> generateValuesForType(String type)
@@ -666,14 +667,15 @@ public class MethodFuzzer
     }
 
     /**
-     * Runs the method once per generated argument set, initializing the VM service first if needed; an execution that throws is recorded as a failed result.
+     * Runs the method once per generated argument set, and for an instance method once per receiver and argument set combination, initializing the VM service first if needed; an execution that throws is recorded as a failed result.
      *
      * @param callback receives progress and completion, or null
-     * @return one result per argument set, in order
+     * @return one result per run, in order
+     * @throws IllegalStateException if the method is an instance method and no receiver spec is set
      */
     public List<FuzzResult> runFuzz(ProgressCallback callback)
     {
-        List<Object[]> inputSets = generateInputSets();
+        List<Object[]> runs = generateRuns();
         List<FuzzResult> results = new ArrayList<>();
 
         VMExecutionService service = VMExecutionService.getInstance();
@@ -682,11 +684,13 @@ public class MethodFuzzer
             service.initialize();
         }
 
-        int total = inputSets.size();
+        int total = runs.size();
         int current = 0;
 
-        for (Object[] inputs : inputSets)
+        for (Object[] run : runs)
         {
+            Object receiver = run[0];
+            Object[] inputs = (Object[]) run[1];
             if (callback != null)
             {
                 callback.onProgress(current, total, "Testing input " + (current + 1) + " of " + total);
@@ -695,13 +699,13 @@ public class MethodFuzzer
             try
             {
                 BranchTrackingListener branchListener = new BranchTrackingListener();
-                ExecutionResult result = service.executeStaticMethodWithListener(className, methodName, descriptor, inputs, branchListener);
+                ExecutionResult result = service.executeWithListener(className, methodName, descriptor, receiver, inputs, branchListener);
 
                 String pathSig = branchListener.getPathSignature();
                 String summary = branchListener.getSummary();
                 int uniquePoints = branchListener.getUniqueBranchPoints();
 
-                results.add(new FuzzResult(inputs, result, pathSig, summary, uniquePoints));
+                results.add(new FuzzResult(receiver, inputs, result, pathSig, summary, uniquePoints));
             }
             catch (Exception e)
             {
@@ -709,7 +713,7 @@ public class MethodFuzzer
                         .success(false)
                         .exception(e)
                         .build();
-                results.add(new FuzzResult(inputs, errorResult));
+                results.add(new FuzzResult(receiver, inputs, errorResult));
             }
 
             current++;
@@ -721,6 +725,26 @@ public class MethodFuzzer
         }
 
         return results;
+    }
+
+    private List<Object[]> generateRuns()
+    {
+        List<Object> inputSets = new ArrayList<>(generateInputSets());
+        List<Object> receivers;
+        if (staticMethod)
+        {
+            receivers = Collections.singletonList(null);
+        }
+        else if (receiverSpec == null)
+        {
+            throw new IllegalStateException("Configure how to construct the receiver of " + className + "." + methodName);
+        }
+        else
+        {
+            receivers = ObjectFactory.getInstance().generateValues(receiverSpec, config.iterationsPerType);
+        }
+        int cap = Math.max(inputSets.size(), config.iterationsPerType * 3);
+        return ObjectFactory.combinations(List.of(receivers, inputSets), cap);
     }
 
     /**
@@ -834,54 +858,6 @@ public class MethodFuzzer
             return "RV:" + rv;
         }
         return "RV:OTHER";
-    }
-
-    private List<String> parseParameterTypes(String descriptor)
-    {
-        List<String> types = new ArrayList<>();
-        int i = descriptor.indexOf('(');
-        if (i < 0) return types;
-        i++;
-
-        while (i < descriptor.length() && descriptor.charAt(i) != ')')
-        {
-            char c = descriptor.charAt(i);
-            if (c == 'L')
-            {
-                int end = descriptor.indexOf(';', i);
-                if (end < 0) break;
-                types.add(descriptor.substring(i, end + 1));
-                i = end + 1;
-            }
-            else if (c == '[')
-            {
-                int start = i;
-                i++;
-                while (i < descriptor.length() && descriptor.charAt(i) == '[') i++;
-                if (i < descriptor.length())
-                {
-                    char elem = descriptor.charAt(i);
-                    if (elem == 'L')
-                    {
-                        int end = descriptor.indexOf(';', i);
-                        if (end < 0) break;
-                        types.add(descriptor.substring(start, end + 1));
-                        i = end + 1;
-                    }
-                    else
-                    {
-                        types.add(descriptor.substring(start, i + 1));
-                        i++;
-                    }
-                }
-            }
-            else
-            {
-                types.add(String.valueOf(c));
-                i++;
-            }
-        }
-        return types;
     }
 
     /** Receives progress from runFuzz. */

@@ -1,21 +1,17 @@
 package com.tonic.ui.vm.heap;
 
-import com.tonic.analysis.execution.core.BytecodeContext;
-import com.tonic.analysis.execution.core.BytecodeEngine;
-import com.tonic.analysis.execution.core.BytecodeResult;
 import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.heap.SimpleHeapManager;
 import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
-import com.tonic.service.ConsoleLogService;
 import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.core.constants.UIConstants;
 import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.vm.VmValueConverter;
 import com.tonic.ui.vm.testgen.MethodFuzzer;
-
-import com.tonic.analysis.execution.heap.ArrayInstance;
+import com.tonic.util.DescriptorParser;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -40,7 +36,6 @@ public class ArgumentConfigPanel extends ThemedJPanel
     private Mode currentMode = Mode.MANUAL;
     private MethodEntry method;
     private List<String> paramTypes = new ArrayList<>();
-    private SimpleHeapManager heapManager;
     private final JPanel contentPanel;
     private final CardLayout cardLayout;
     private final JPanel manualPanel;
@@ -56,7 +51,6 @@ public class ArgumentConfigPanel extends ThemedJPanel
     private List<Object[]> fuzzCombinations;
     private int currentComboIndex = 0;
 
-    private ClassResolver classResolver;
     private JPanel receiverSection;
     private JPanel receiverContent;
     private JComboBox<MethodEntry> constructorCombo;
@@ -182,7 +176,7 @@ public class ArgumentConfigPanel extends ThemedJPanel
     public void setMethod(MethodEntry method)
     {
         this.method = method;
-        this.paramTypes = parseParameterTypes(method != null ? method.getDesc() : "()V");
+        this.paramTypes = method != null ? DescriptorParser.parameterDescriptors(method.getDesc()) : new ArrayList<>();
         this.currentComboIndex = 0;
         this.fuzzCombinations = null;
         this.arrayValues.clear();
@@ -193,26 +187,6 @@ public class ArgumentConfigPanel extends ThemedJPanel
             regenerateCombinations();
         }
         updateFuzzInfo();
-    }
-
-    /**
-     * Sets the heap that string, array and receiver arguments are allocated in.
-     *
-     * @param heapManager the heap
-     */
-    public void setHeapManager(SimpleHeapManager heapManager)
-    {
-        this.heapManager = heapManager;
-    }
-
-    /**
-     * Sets the resolver used to find and run the receiver's constructor.
-     *
-     * @param classResolver the resolver
-     */
-    public void setClassResolver(ClassResolver classResolver)
-    {
-        this.classResolver = classResolver;
     }
 
     private void buildReceiverSection()
@@ -321,28 +295,22 @@ public class ArgumentConfigPanel extends ThemedJPanel
 
     private void populateConstructors()
     {
-        if (constructorCombo == null || method == null || classResolver == null) return;
+        if (constructorCombo == null || method == null)
+        {
+            return;
+        }
 
         constructorCombo.removeAllItems();
-        String ownerClass = method.getOwnerName();
-
-        try
+        ClassFile classFile = method.getClassFile();
+        if (classFile != null)
         {
-            ClassFile classFile = classResolver.resolveClass(ownerClass);
-            if (classFile != null && classFile.getMethods() != null)
+            for (MethodEntry m : classFile.getMethods())
             {
-                for (MethodEntry m : classFile.getMethods())
+                if ("<init>".equals(m.getName()))
                 {
-                    if ("<init>".equals(m.getName()))
-                    {
-                        constructorCombo.addItem(m);
-                    }
+                    constructorCombo.addItem(m);
                 }
             }
-        }
-        catch (Exception e)
-        {
-            ConsoleLogService.getInstance().error("[HeapForensics] Failed to load constructors: " + e.getMessage());
         }
 
         if (constructorCombo.getItemCount() == 0)
@@ -356,7 +324,7 @@ public class ArgumentConfigPanel extends ThemedJPanel
 
     private String formatConstructorDesc(String desc)
     {
-        List<String> types = parseParameterTypes(desc);
+        List<String> types = DescriptorParser.parameterDescriptors(desc);
         if (types.isEmpty())
         {
             return "<init>()";
@@ -401,7 +369,7 @@ public class ArgumentConfigPanel extends ThemedJPanel
             return;
         }
 
-        ctorParamTypes = parseParameterTypes(ctor.getDesc());
+        ctorParamTypes = new ArrayList<>(DescriptorParser.parameterDescriptors(ctor.getDesc()));
 
         if (ctorParamTypes.isEmpty())
         {
@@ -471,7 +439,7 @@ public class ArgumentConfigPanel extends ThemedJPanel
         {
             Object[] newValues = dialog.getElements();
             ctorArrayValues.put(paramIndex, newValues);
-            displayField.setText(ArrayEditorDialog.formatArrayDisplay(newValues, componentType));
+            displayField.setText(ArrayEditorDialog.formatArrayDisplay(newValues));
         }
     }
 
@@ -561,7 +529,7 @@ public class ArgumentConfigPanel extends ThemedJPanel
         {
             Object[] newValues = dialog.getElements();
             arrayValues.put(paramIndex, newValues);
-            displayField.setText(ArrayEditorDialog.formatArrayDisplay(newValues, componentType));
+            displayField.setText(ArrayEditorDialog.formatArrayDisplay(newValues));
         }
     }
 
@@ -591,7 +559,7 @@ public class ArgumentConfigPanel extends ThemedJPanel
         config.setIncludeNulls(nullsCheck.isSelected());
         config.setIterationsPerType((Integer) iterationsSpinner.getValue());
 
-        MethodFuzzer fuzzer = new MethodFuzzer(method.getOwnerName(), method.getName(), method.getDesc(), config);
+        MethodFuzzer fuzzer = new MethodFuzzer(method.getOwnerName(), method.getName(), method.getDesc(), (method.getAccess() & 0x0008) != 0, config);
 
         fuzzCombinations = fuzzer.generateInputSets();
         currentComboIndex = 0;
@@ -621,52 +589,6 @@ public class ArgumentConfigPanel extends ThemedJPanel
         manualPanel.add(noMethod);
     }
 
-    private ObjectInstance constructReceiver()
-    {
-        String ownerClass = method.getOwnerName();
-        ObjectInstance receiver = heapManager.newObject(ownerClass);
-
-        MethodEntry ctor = (MethodEntry) (constructorCombo != null ? constructorCombo.getSelectedItem() : null);
-        if (ctor == null || classResolver == null)
-        {
-            ConsoleLogService.getInstance().debug("[HeapForensics] No constructor selected, returning uninitialized receiver");
-            return receiver;
-        }
-
-        Object[] ctorArgs = collectConstructorArguments();
-        ConcreteValue[] ctorArgValues = convertCtorArgsToConcreteValues(ctorArgs);
-
-        ConcreteValue[] frameArgs = new ConcreteValue[ctorArgValues.length + 1];
-        frameArgs[0] = ConcreteValue.reference(receiver);
-        System.arraycopy(ctorArgValues, 0, frameArgs, 1, ctorArgValues.length);
-
-        try
-        {
-            BytecodeContext ctx = new BytecodeContext.Builder()
-                    .heapManager(heapManager)
-                    .classResolver(classResolver)
-                    .build();
-            BytecodeEngine engine = new BytecodeEngine(ctx);
-            ConsoleLogService.getInstance().debug("[HeapForensics] Executing constructor: " + ctor.getOwnerName() + "." + ctor.getName() + ctor.getDesc());
-            BytecodeResult result = engine.execute(ctor, frameArgs);
-
-            if (result.hasException())
-            {
-                ConsoleLogService.getInstance().error("[HeapForensics] Constructor threw exception: " + result.getException());
-            }
-            else
-            {
-                ConsoleLogService.getInstance().debug("[HeapForensics] Constructor executed successfully");
-            }
-        }
-        catch (Exception e)
-        {
-            ConsoleLogService.getInstance().error("[HeapForensics] Failed to execute constructor", e);
-        }
-
-        return receiver;
-    }
-
     private Object[] collectConstructorArguments()
     {
         Object[] args = new Object[ctorParamFields.size()];
@@ -686,61 +608,81 @@ public class ArgumentConfigPanel extends ThemedJPanel
         return args;
     }
 
-    private ConcreteValue[] convertCtorArgsToConcreteValues(Object[] args)
-    {
-        if (args == null || args.length == 0)
-        {
-            return new ConcreteValue[0];
-        }
-
-        ConcreteValue[] result = new ConcreteValue[args.length];
-        for (int i = 0; i < args.length; i++)
-        {
-            result[i] = convertToConcreteValue(args[i], ctorParamTypes.get(i));
-        }
-        return result;
-    }
-
     /**
-     * Builds the argument values from the manual fields or the current fuzz combination; for an instance method a receiver is allocated and its selected constructor run first.
+     * Captures the arguments from the manual fields or the current fuzz combination, and for an instance method the selected constructor and its arguments; call on the event dispatch thread.
      *
-     * @return the values in call order, the receiver first for instance methods; empty when no method is set
+     * @return the captured arguments, or null when no method is set
      */
-    public ConcreteValue[] getArguments()
+    public Arguments captureArguments()
     {
         if (method == null)
         {
-            return new ConcreteValue[0];
+            return null;
         }
-
-        boolean isStatic = (method.getAccess() & 0x0008) != 0;
-
-        Object[] rawArgs;
+        Object[] values;
         if (paramTypes.isEmpty())
         {
-            rawArgs = new Object[0];
+            values = new Object[0];
         }
         else if (currentMode == Mode.MANUAL)
         {
-            rawArgs = collectManualArguments();
+            values = collectManualArguments();
         }
         else
         {
-            rawArgs = getCurrentFuzzArguments();
+            values = getCurrentFuzzArguments().clone();
         }
+        boolean isStatic = (method.getAccess() & 0x0008) != 0;
+        MethodEntry constructor = isStatic || constructorCombo == null ? null : (MethodEntry) constructorCombo.getSelectedItem();
+        Object[] constructorArgs = constructor != null ? collectConstructorArguments() : new Object[0];
+        return new Arguments(method, values, constructor, constructorArgs);
+    }
 
-        ConcreteValue[] paramValues = convertToConcreteValues(rawArgs);
+    /** Argument values captured from the panel, converted to VM values off the event dispatch thread. */
+    public static final class Arguments
+    {
+        private final MethodEntry method;
+        private final Object[] values;
+        private final MethodEntry constructor;
+        private final Object[] constructorArgs;
 
-        if (isStatic)
+        Arguments(MethodEntry method, Object[] values, MethodEntry constructor, Object[] constructorArgs)
         {
-            return paramValues;
+            this.method = method;
+            this.values = values;
+            this.constructor = constructor;
+            this.constructorArgs = constructorArgs;
         }
 
-        ConcreteValue[] result = new ConcreteValue[paramValues.length + 1];
-        ObjectInstance receiver = constructReceiver();
-        result[0] = ConcreteValue.reference(receiver);
-        System.arraycopy(paramValues, 0, result, 1, paramValues.length);
-        return result;
+        /**
+         * Converts the captured values to VM values of the declared parameter types; for an instance method a receiver is allocated and its selected constructor run first.
+         *
+         * @param heap the heap values are allocated in
+         * @param resolver the resolver the constructor is found and run with
+         * @param maxCallDepth the call depth limit for the constructor run
+         * @param maxInstructions the instruction limit for the constructor run
+         * @return the values in call order, the receiver first for an instance method
+         * @throws IllegalArgumentException if a value cannot be passed as its type, or an instance method's class has no constructor to build the receiver with
+         * @throws IllegalStateException if the constructor throws
+         */
+        public ConcreteValue[] toConcrete(SimpleHeapManager heap, ClassResolver resolver, int maxCallDepth, int maxInstructions)
+        {
+            VmValueConverter converter = new VmValueConverter(heap, resolver, maxCallDepth, maxInstructions);
+            ConcreteValue[] params = converter.toConcreteAll(values, DescriptorParser.parameterDescriptors(method.getDesc()));
+            if ((method.getAccess() & 0x0008) != 0)
+            {
+                return params;
+            }
+            if (constructor == null)
+            {
+                throw new IllegalArgumentException(method.getOwnerName() + " has no constructor to build the receiver with");
+            }
+            ObjectInstance receiver = converter.construct(method.getOwnerName(), constructor.getDesc(), constructorArgs);
+            ConcreteValue[] all = new ConcreteValue[params.length + 1];
+            all[0] = ConcreteValue.reference(receiver);
+            System.arraycopy(params, 0, all, 1, params.length);
+            return all;
+        }
     }
 
     private Object[] collectManualArguments()
@@ -913,258 +855,6 @@ public class ArgumentConfigPanel extends ThemedJPanel
             default:
                 return null;
         }
-    }
-
-    private ConcreteValue[] convertToConcreteValues(Object[] args)
-    {
-        if (args == null || args.length == 0)
-        {
-            return new ConcreteValue[0];
-        }
-
-        ConcreteValue[] result = new ConcreteValue[args.length];
-        for (int i = 0; i < args.length; i++)
-        {
-            result[i] = convertToConcreteValue(args[i], paramTypes.get(i));
-        }
-        return result;
-    }
-
-    private ConcreteValue convertToConcreteValue(Object value, String type)
-    {
-        if (value == null)
-        {
-            if (isPrimitiveType(type))
-            {
-                value = getDefaultForType(type);
-            }
-            else
-            {
-                return ConcreteValue.nullRef();
-            }
-        }
-
-        if (type.startsWith("[") && value instanceof Object[])
-        {
-            return convertArrayToConcreteValue((Object[]) value, type);
-        }
-
-        if (value instanceof Integer)
-        {
-            return ConcreteValue.intValue((Integer) value);
-        }
-        else if (value instanceof Long)
-        {
-            return ConcreteValue.longValue((Long) value);
-        }
-        else if (value instanceof Float)
-        {
-            return ConcreteValue.floatValue((Float) value);
-        }
-        else if (value instanceof Double)
-        {
-            return ConcreteValue.doubleValue((Double) value);
-        }
-        else if (value instanceof Boolean)
-        {
-            return ConcreteValue.intValue((Boolean) value ? 1 : 0);
-        }
-        else if (value instanceof Byte)
-        {
-            return ConcreteValue.intValue((Byte) value);
-        }
-        else if (value instanceof Short)
-        {
-            return ConcreteValue.intValue((Short) value);
-        }
-        else if (value instanceof Character)
-        {
-            return ConcreteValue.intValue((Character) value);
-        }
-        else if (value instanceof String)
-        {
-            if (heapManager != null)
-            {
-                return ConcreteValue.reference(heapManager.internString((String) value));
-            }
-            return ConcreteValue.nullRef();
-        }
-        return ConcreteValue.nullRef();
-    }
-
-    private ConcreteValue convertArrayToConcreteValue(Object[] elements, String arrayType)
-    {
-        if (heapManager == null)
-        {
-            return ConcreteValue.nullRef();
-        }
-
-        String componentType = getArrayComponentType(arrayType);
-        int length = elements.length;
-
-        ArrayInstance array = heapManager.newArray(componentType, length);
-        if (array == null)
-        {
-            return ConcreteValue.nullRef();
-        }
-
-        for (int i = 0; i < length; i++)
-        {
-            Object elem = elements[i];
-            setArrayElement(array, componentType, i, elem);
-        }
-
-        return ConcreteValue.reference(array);
-    }
-
-    private void setArrayElement(ArrayInstance array, String componentType, int index, Object value)
-    {
-        if (value == null)
-        {
-            if (!isPrimitiveType(componentType))
-            {
-                array.set(index, null);
-            }
-            return;
-        }
-
-        try
-        {
-            switch (componentType)
-            {
-                case "I":
-                    array.setInt(index, ((Number) value).intValue());
-                    break;
-                case "J":
-                    array.setLong(index, ((Number) value).longValue());
-                    break;
-                case "F":
-                    array.setFloat(index, ((Number) value).floatValue());
-                    break;
-                case "D":
-                    array.setDouble(index, ((Number) value).doubleValue());
-                    break;
-                case "B":
-                    array.setByte(index, ((Number) value).byteValue());
-                    break;
-                case "S":
-                    array.setShort(index, ((Number) value).shortValue());
-                    break;
-                case "Z":
-                    array.setBoolean(index, (Boolean) value);
-                    break;
-                case "C":
-                    if (value instanceof Character)
-                    {
-                        array.setChar(index, (Character) value);
-                    }
-                    else if (value instanceof Number)
-                    {
-                        array.setChar(index, (char) ((Number) value).intValue());
-                    }
-                    break;
-                case "Ljava/lang/String;":
-                    if (value instanceof String && heapManager != null)
-                    {
-                        array.set(index, heapManager.internString((String) value));
-                    }
-                    break;
-                default:
-                    if (!isPrimitiveType(componentType))
-                    {
-                        array.set(index, null);
-                    }
-            }
-        }
-        catch (Exception ignored)
-        {
-        }
-    }
-
-    private boolean isPrimitiveType(String type)
-    {
-        if (type == null || type.isEmpty()) return false;
-        char c = type.charAt(0);
-        return c == 'B' || c == 'C' || c == 'D' || c == 'F' ||
-                c == 'I' || c == 'J' || c == 'S' || c == 'Z';
-    }
-
-    private ConcreteValue convertElementToConcreteValue(Object value, String componentType)
-    {
-        if (value == null)
-        {
-            return ConcreteValue.nullRef();
-        }
-
-        switch (componentType)
-        {
-            case "I":
-                if (value instanceof Number) return ConcreteValue.intValue(((Number) value).intValue());
-                break;
-            case "J":
-                if (value instanceof Number) return ConcreteValue.longValue(((Number) value).longValue());
-                break;
-            case "F":
-                if (value instanceof Number) return ConcreteValue.floatValue(((Number) value).floatValue());
-                break;
-            case "D":
-                if (value instanceof Number) return ConcreteValue.doubleValue(((Number) value).doubleValue());
-                break;
-            case "B":
-                if (value instanceof Number) return ConcreteValue.intValue(((Number) value).byteValue());
-                break;
-            case "S":
-                if (value instanceof Number) return ConcreteValue.intValue(((Number) value).shortValue());
-                break;
-            case "Z":
-                if (value instanceof Boolean) return ConcreteValue.intValue((Boolean) value ? 1 : 0);
-                break;
-            case "C":
-                if (value instanceof Character) return ConcreteValue.intValue((Character) value);
-                if (value instanceof Number) return ConcreteValue.intValue(((Number) value).intValue());
-                break;
-            case "Ljava/lang/String;":
-                if (value instanceof String && heapManager != null)
-                {
-                    return ConcreteValue.reference(heapManager.internString((String) value));
-                }
-                break;
-        }
-
-        if (componentType.startsWith("Ljava/lang/Integer"))
-        {
-            if (value instanceof Number) return ConcreteValue.intValue(((Number) value).intValue());
-        }
-        else if (componentType.startsWith("Ljava/lang/Long"))
-        {
-            if (value instanceof Number) return ConcreteValue.longValue(((Number) value).longValue());
-        }
-
-        return ConcreteValue.nullRef();
-    }
-
-    private List<String> parseParameterTypes(String descriptor)
-    {
-        List<String> types = new ArrayList<>();
-        int i = 1;
-        while (i < descriptor.length() && descriptor.charAt(i) != ')')
-        {
-            int start = i;
-            while (i < descriptor.length() && descriptor.charAt(i) == '[') i++;
-
-            if (i < descriptor.length() && descriptor.charAt(i) == 'L')
-            {
-                int end = descriptor.indexOf(';', i);
-                if (end < 0) break;
-                i = end + 1;
-            }
-            else if (i < descriptor.length())
-            {
-                i++;
-            }
-            types.add(descriptor.substring(start, i));
-        }
-        return types;
     }
 
     private String formatType(String type)

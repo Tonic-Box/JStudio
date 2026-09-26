@@ -9,6 +9,7 @@ import com.tonic.analysis.instruction.LookupSwitchInstruction;
 import com.tonic.analysis.instruction.TableSwitchInstruction;
 import lombok.Getter;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class BranchTrackingListener implements BytecodeListener
     private static final int MAX_LOOP_ITERATIONS = 100;
 
     private final List<BranchDecision> branchPath = new ArrayList<>();
-    private final Map<Integer, Integer> branchVisitCounts = new HashMap<>();
+    private final Map<String, Integer> branchVisitCounts = new HashMap<>();
 
     private int pendingBranchPC = -1;
     private String pendingMethodKey = null;
@@ -68,7 +69,7 @@ public class BranchTrackingListener implements BytecodeListener
                     frame.getMethod().getDesc();
             int pc = frame.getPC();
 
-            int globalKey = (methodKey.hashCode() * 31) + pc;
+            String globalKey = methodKey + "@" + pc;
             int visitCount = branchVisitCounts.getOrDefault(globalKey, 0);
 
             if (visitCount < MAX_LOOP_ITERATIONS)
@@ -180,7 +181,7 @@ public class BranchTrackingListener implements BytecodeListener
         try
         {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] digest = md.digest(input.getBytes());
+            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
             StringBuilder hex = new StringBuilder();
             for (byte b : digest)
             {

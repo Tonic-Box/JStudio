@@ -3,7 +3,7 @@ package com.tonic.ui.vm.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Arrays;
+import java.lang.reflect.Array;
 
 /** One call recorded while tracing a VM run: the target method, its arguments and depth, and its return value, timing and whether it threw. */
 @Getter
@@ -118,36 +118,51 @@ public class MethodCall
         for (int i = 0; i < arguments.length; i++)
         {
             if (i > 0) sb.append(", ");
-            sb.append(formatArgument(arguments[i]));
+            sb.append(formatValue(arguments[i]));
         }
         sb.append(')');
         return sb.toString();
     }
 
-    private String formatArgument(Object arg)
+    /**
+     * Formats a recorded value for display: strings quoted and cut at 50 characters, chars quoted, and arrays of any element type listed element by element.
+     *
+     * @param value the value, or null
+     * @return the display text
+     */
+    public static String formatValue(Object value)
     {
-        if (arg == null)
+        if (value == null)
         {
             return "null";
         }
-        if (arg instanceof String)
+        if (value instanceof String)
         {
-            String s = (String) arg;
+            String s = (String) value;
             if (s.length() > 50)
             {
                 return "\"" + s.substring(0, 47) + "...\"";
             }
             return "\"" + s + "\"";
         }
-        if (arg instanceof Character)
+        if (value instanceof Character)
         {
-            return "'" + arg + "'";
+            return "'" + value + "'";
         }
-        if (arg.getClass().isArray())
+        if (value.getClass().isArray())
         {
-            return arg.getClass().getSimpleName() + Arrays.toString((Object[]) arg);
+            StringBuilder sb = new StringBuilder(value.getClass().getComponentType().getSimpleName()).append("[]{");
+            for (int i = 0; i < Array.getLength(value); i++)
+            {
+                if (i > 0)
+                {
+                    sb.append(", ");
+                }
+                sb.append(formatValue(Array.get(value, i)));
+            }
+            return sb.append('}').toString();
         }
-        return String.valueOf(arg);
+        return String.valueOf(value);
     }
 
     /**

@@ -18,6 +18,8 @@ public class ParamConfigPanel extends ThemedJPanel
     private JTextField valueField;
     private JButton configButton;
     private JLabel summaryLabel;
+    private JLabel nameLabel;
+    private JLabel typeLabel;
 
     /**
      * Creates the row for a spec, editing it in place.
@@ -39,11 +41,11 @@ public class ParamConfigPanel extends ThemedJPanel
         setLayout(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL + 1, UIConstants.SPACING_TINY));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
 
-        JLabel nameLabel = createLabel(spec.getName() != null ? spec.getName() : "param");
+        nameLabel = createLabel(spec.getName() != null ? spec.getName() : "param");
         nameLabel.setPreferredSize(new Dimension(80, 20));
         add(nameLabel);
 
-        JLabel typeLabel = createLabel("(" + spec.getSimpleTypeName() + ")");
+        typeLabel = createLabel("(" + spec.getSimpleTypeName() + ")");
         typeLabel.setForeground(JStudioTheme.getTextSecondary());
         typeLabel.setPreferredSize(new Dimension(80, 20));
         add(typeLabel);
@@ -196,13 +198,19 @@ public class ParamConfigPanel extends ThemedJPanel
     }
 
     /**
-     * Replaces the edited spec with a copy of another and refreshes the controls; the name and type labels are not updated.
+     * Replaces the edited spec with a copy of another and refreshes every control, including the name and type labels and the available modes.
      *
      * @param newSpec the spec to copy and edit
      */
     public void loadSpec(ParamSpec newSpec)
     {
         this.spec = newSpec.copy();
+        ValueMode mode = spec.getMode();
+        nameLabel.setText(spec.getName() != null ? spec.getName() : "param");
+        typeLabel.setText("(" + spec.getSimpleTypeName() + ")");
+        populateModeCombo();
+        spec.setMode(mode);
+        valueField.setText(mode == ValueMode.FIXED && spec.getFixedValue() != null ? String.valueOf(spec.getFixedValue()) : "");
         updateDisplay();
     }
 

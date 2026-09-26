@@ -68,7 +68,7 @@ public class ObjectFactory
      *
      * @param spec the object's spec, or null
      * @param count how many values to aim for per argument or field, and the cap on combinations
-     * @return constructor calls, field injections, or an expression placeholder; a single null for null specs, missing templates and the factory-method and null modes
+     * @return constructor calls, factory calls, field injections, or an expression object; a single null for null specs, missing templates and the null mode
      */
     public List<Object> generateObjectValues(ObjectSpec spec, int count)
     {
@@ -84,11 +84,14 @@ public class ObjectFactory
             case CONSTRUCTOR:
                 return generateConstructorValues(resolved, count);
 
+            case FACTORY_METHOD:
+                return generateFactoryValues(resolved, count);
+
             case FIELD_INJECTION:
                 return generateFieldInjectionValues(resolved, count);
 
             case EXPRESSION:
-                return Collections.singletonList(new PlaceholderObject(resolved.getTypeName(), "EXPR: " + resolved.getExpression()));
+                return Collections.singletonList(new ExpressionObject(resolved.getTypeName(), resolved.getExpression()));
 
             case TEMPLATE:
                 ObjectTemplate template = ObjectTemplateManager.getInstance()
@@ -106,25 +109,36 @@ public class ObjectFactory
 
     private List<Object> generateConstructorValues(ObjectSpec spec, int count)
     {
-        List<ParamSpec> args = spec.getConstructorArgs();
+        List<Object> results = new ArrayList<>();
+        for (Object[] combo : argumentCombinations(spec.getConstructorArgs(), count))
+        {
+            results.add(new ConstructorCall(spec.getTypeName(), spec.getConstructorDescriptor(), combo));
+        }
+        return results;
+    }
+
+    private List<Object> generateFactoryValues(ObjectSpec spec, int count)
+    {
+        List<Object> results = new ArrayList<>();
+        for (Object[] combo : argumentCombinations(spec.getFactoryArgs(), count))
+        {
+            results.add(new FactoryCall(spec.getTypeName(), spec.getFactoryMethodName(), spec.getFactoryMethodDescriptor(), combo));
+        }
+        return results;
+    }
+
+    private List<Object[]> argumentCombinations(List<ParamSpec> args, int count)
+    {
         if (args.isEmpty())
         {
-            return Collections.singletonList(new ConstructorCall(spec.getTypeName(), spec.getConstructorDescriptor(), new Object[0]));
+            return Collections.singletonList(new Object[0]);
         }
-
         List<List<Object>> argValueLists = new ArrayList<>();
         for (ParamSpec arg : args)
         {
             argValueLists.add(generateValues(arg, count));
         }
-
-        List<Object[]> combinations = generateCombinations(argValueLists, count);
-        List<Object> results = new ArrayList<>();
-        for (Object[] combo : combinations)
-        {
-            results.add(new ConstructorCall(spec.getTypeName(), spec.getConstructorDescriptor(), combo));
-        }
-        return results;
+        return combinations(argValueLists, count);
     }
 
     private List<Object> generateFieldInjectionValues(ObjectSpec spec, int count)
@@ -435,67 +449,64 @@ public class ObjectFactory
         return sb.toString();
     }
 
-    private List<Object[]> generateCombinations(List<List<Object>> valueLists, int maxCombos)
+    /**
+     * Combines one value per list into argument sets: every combination when there are at most the cap, otherwise a random sample of distinct ones; an empty list contributes null.
+     *
+     * @param valueLists the candidate values for each position
+     * @param maxCombos the most combinations to return
+     * @return the combinations, empty when there are no positions
+     */
+    public static List<Object[]> combinations(List<List<Object>> valueLists, int maxCombos)
     {
         List<Object[]> result = new ArrayList<>();
-
         if (valueLists.isEmpty())
         {
             return result;
         }
 
+        List<List<Object>> lists = new ArrayList<>();
+        long totalCombos = 1;
         for (List<Object> list : valueLists)
         {
-            if (list.isEmpty())
-            {
-                list.add(null);
-            }
-        }
-
-        int totalCombos = 1;
-        for (List<Object> list : valueLists)
-        {
-            totalCombos *= list.size();
-            if (totalCombos > maxCombos * 10) break;
+            List<Object> values = list.isEmpty() ? Collections.singletonList(null) : list;
+            lists.add(values);
+            totalCombos = Math.min(totalCombos * values.size(), (long) Integer.MAX_VALUE);
         }
 
         if (totalCombos <= maxCombos)
         {
             for (int i = 0; i < totalCombos; i++)
             {
-                Object[] combo = new Object[valueLists.size()];
+                Object[] combo = new Object[lists.size()];
                 int idx = i;
-                for (int p = valueLists.size() - 1; p >= 0; p--)
+                for (int p = lists.size() - 1; p >= 0; p--)
                 {
-                    int size = valueLists.get(p).size();
-                    combo[p] = valueLists.get(p).get(idx % size);
+                    int size = lists.get(p).size();
+                    combo[p] = lists.get(p).get(idx % size);
                     idx /= size;
                 }
                 result.add(combo);
             }
-        }
-        else
-        {
-            Set<String> seen = new HashSet<>();
-            Random rand = ThreadLocalRandom.current();
-            int attempts = 0;
-            while (result.size() < maxCombos && attempts < maxCombos * 10)
-            {
-                Object[] combo = new Object[valueLists.size()];
-                for (int p = 0; p < valueLists.size(); p++)
-                {
-                    List<Object> vals = valueLists.get(p);
-                    combo[p] = vals.get(rand.nextInt(vals.size()));
-                }
-                String key = Arrays.toString(combo);
-                if (seen.add(key))
-                {
-                    result.add(combo);
-                }
-                attempts++;
-            }
+            return result;
         }
 
+        Set<String> seen = new HashSet<>();
+        Random rand = ThreadLocalRandom.current();
+        long attempts = 0;
+        while (result.size() < maxCombos && attempts < maxCombos * 10L)
+        {
+            Object[] combo = new Object[lists.size()];
+            for (int p = 0; p < lists.size(); p++)
+            {
+                List<Object> vals = lists.get(p);
+                combo[p] = vals.get(rand.nextInt(vals.size()));
+            }
+            if (seen.add(Arrays.deepToString(combo)))
+            {
+                result.add(combo);
+            }
+            attempts++;
+        }
         return result;
     }
 
@@ -511,7 +522,7 @@ public class ObjectFactory
             valueLists.add(fieldValueLists.get(name));
         }
 
-        List<Object[]> arrayCombos = generateCombinations(valueLists, maxCombos);
+        List<Object[]> arrayCombos = combinations(valueLists, maxCombos);
         for (Object[] combo : arrayCombos)
         {
             Map<String, Object> map = new LinkedHashMap<>();
@@ -562,6 +573,33 @@ public class ObjectFactory
         }
     }
 
+    /** A description of an object returned by a static factory method on its own class with given arguments. */
+    @Getter
+    @AllArgsConstructor
+    public static class FactoryCall
+    {
+        private final String typeName;
+        private final String methodName;
+        private final String descriptor;
+        private final Object[] args;
+
+        @Override
+        public String toString()
+        {
+            StringBuilder sb = new StringBuilder(typeName.substring(typeName.lastIndexOf('/') + 1));
+            sb.append('.').append(methodName).append('(');
+            for (int i = 0; i < args.length; i++)
+            {
+                if (i > 0)
+                {
+                    sb.append(", ");
+                }
+                sb.append(args[i] instanceof String ? "\"" + args[i] + "\"" : String.valueOf(args[i]));
+            }
+            return sb.append(')').toString();
+        }
+    }
+
     /** A description of an object built by setting field values directly. */
     @Getter
     @AllArgsConstructor
@@ -591,18 +629,18 @@ public class ObjectFactory
         }
     }
 
-    /** A stand-in for an object that cannot be built here, such as one given by an expression. */
+    /** An object given by a Java expression; it has a source form but cannot be built in the VM. */
     @Getter
     @AllArgsConstructor
-    public static class PlaceholderObject
+    public static class ExpressionObject
     {
         private final String typeName;
-        private final String description;
+        private final String expression;
 
         @Override
         public String toString()
         {
-            return description;
+            return "EXPR: " + expression;
         }
     }
 }

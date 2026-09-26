@@ -469,13 +469,12 @@ public class ArrayEditorDialog extends JDialog
     }
 
     /**
-     * Formats elements as a bracketed list, quoting strings and chars, cut short with an ellipsis once past about 50 characters.
+     * Formats elements as a bracketed list, quoting strings and chars, cut short with an ellipsis once past about 50 characters when elements remain.
      *
      * @param elements the elements, or null
-     * @param componentType the element type descriptor; unused
      * @return the display text, [] when there are no elements
      */
-    public static String formatArrayDisplay(Object[] elements, String componentType)
+    public static String formatArrayDisplay(Object[] elements)
     {
         if (elements == null || elements.length == 0)
         {
@@ -503,7 +502,7 @@ public class ArrayEditorDialog extends JDialog
             {
                 sb.append(val);
             }
-            if (sb.length() > 50)
+            if (sb.length() > 50 && i < elements.length - 1)
             {
                 sb.append(", ...");
                 break;

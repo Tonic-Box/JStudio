@@ -8,12 +8,20 @@ import lombok.Getter;
 @Getter
 public class MutationEvent
 {
-    /** The bytecode instruction that wrote a field. */
+    /** The bytecode instruction that wrote a field or an array element. */
     @Getter
     public enum MutationType
     {
         PUTFIELD(0xB5),
-        PUTSTATIC(0xB3);
+        PUTSTATIC(0xB3),
+        IASTORE(0x4F),
+        LASTORE(0x50),
+        FASTORE(0x51),
+        DASTORE(0x52),
+        AASTORE(0x53),
+        BASTORE(0x54),
+        CASTORE(0x55),
+        SASTORE(0x56);
 
         private final int opcode;
 
@@ -23,14 +31,61 @@ public class MutationEvent
         }
 
         /**
-         * Maps a field-write opcode to its type.
+         * Maps a store opcode to its type.
          *
          * @param opcode the bytecode opcode
-         * @return PUTSTATIC for 0xB3, otherwise PUTFIELD
+         * @return the matching type, or PUTFIELD when the opcode is not a store opcode
          */
         public static MutationType fromOpcode(int opcode)
         {
-            return opcode == 0xB3 ? PUTSTATIC : PUTFIELD;
+            for (MutationType type : values())
+            {
+                if (type.opcode == opcode)
+                {
+                    return type;
+                }
+            }
+            return PUTFIELD;
+        }
+
+        /**
+         * Picks the array store instruction for an element type.
+         *
+         * @param componentType the array's component type descriptor
+         * @return BASTORE for byte and boolean arrays, the matching primitive store, or AASTORE for references
+         */
+        public static MutationType forArrayStore(String componentType)
+        {
+            switch (componentType)
+            {
+                case "I":
+                    return IASTORE;
+                case "J":
+                    return LASTORE;
+                case "F":
+                    return FASTORE;
+                case "D":
+                    return DASTORE;
+                case "B":
+                case "Z":
+                    return BASTORE;
+                case "C":
+                    return CASTORE;
+                case "S":
+                    return SASTORE;
+                default:
+                    return AASTORE;
+            }
+        }
+
+        /**
+         * Tells whether this is an array element store.
+         *
+         * @return true for the array store instructions
+         */
+        public boolean isArrayStore()
+        {
+            return this != PUTFIELD && this != PUTSTATIC;
         }
     }
 

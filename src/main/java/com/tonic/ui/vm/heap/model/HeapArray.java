@@ -1,6 +1,7 @@
 package com.tonic.ui.vm.heap.model;
 
 import com.tonic.analysis.execution.heap.ArrayInstance;
+import com.tonic.util.DescriptorParser;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -113,61 +114,11 @@ public class HeapArray extends HeapObject
      */
     public String getComponentTypeName()
     {
-        if (componentType == null || componentType.isEmpty()) return "?";
-        switch (componentType.charAt(0))
+        if (componentType == null || componentType.isEmpty())
         {
-            case 'B':
-                return "byte";
-            case 'C':
-                return "char";
-            case 'D':
-                return "double";
-            case 'F':
-                return "float";
-            case 'I':
-                return "int";
-            case 'J':
-                return "long";
-            case 'S':
-                return "short";
-            case 'Z':
-                return "boolean";
-            case 'L':
-                int end = componentType.indexOf(';');
-                if (end > 0)
-                {
-                    String className = componentType.substring(1, end);
-                    int lastSlash = className.lastIndexOf('/');
-                    return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
-                }
-                return componentType;
-            case '[':
-                return getArrayTypeName(componentType);
-            default:
-                return componentType;
+            return "?";
         }
-    }
-
-    private String getArrayTypeName(String desc)
-    {
-        int dims = 0;
-        while (dims < desc.length() && desc.charAt(dims) == '[')
-        {
-            dims++;
-        }
-        String elementDesc = desc.substring(dims);
-        String elementName;
-        if (elementDesc.startsWith("L") && elementDesc.endsWith(";"))
-        {
-            String className = elementDesc.substring(1, elementDesc.length() - 1);
-            int lastSlash = className.lastIndexOf('/');
-            elementName = lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
-        }
-        else
-        {
-            elementName = getComponentTypeName();
-        }
-        return elementName + "[]".repeat(dims);
+        return DescriptorParser.formatFieldDescriptor(componentType);
     }
 
     /**

@@ -3,7 +3,7 @@ package com.tonic.util;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Formats JVM type and method descriptors as readable Java type names using simple class names. */
+/** Splits JVM method descriptors and formats type and method descriptors as readable Java type names using simple class names. */
 public class DescriptorParser
 {
 
@@ -15,7 +15,7 @@ public class DescriptorParser
      * Splits a method descriptor's parameters into readable type names, such as int and String.
      *
      * @param methodDescriptor the method descriptor, or null
-     * @return one name per parameter, empty when the descriptor is null or has no parameter list
+     * @return one name per parameter, empty when the descriptor is null or malformed
      */
     public static List<String> parseParameterTypes(String methodDescriptor)
     {
@@ -24,37 +24,108 @@ public class DescriptorParser
         {
             return out;
         }
-        int i = methodDescriptor.indexOf('(') + 1;
-        int end = methodDescriptor.indexOf(')');
-        if (i <= 0 || end < 0)
+        try
         {
-            return out;
+            for (String descriptor : parameterDescriptors(methodDescriptor))
+            {
+                out.add(formatFieldDescriptor(descriptor));
+            }
         }
-        while (i < end)
+        catch (IllegalArgumentException e)
         {
-            int start = i;
-            while (i < end && methodDescriptor.charAt(i) == '[')
-            {
-                i++;
-            }
-            if (i < end && methodDescriptor.charAt(i) == 'L')
-            {
-                i = methodDescriptor.indexOf(';', i) + 1;
-            }
-            else
-            {
-                i++;
-            }
-            out.add(formatFieldDescriptor(methodDescriptor.substring(start, i)));
+            out.clear();
         }
         return out;
+    }
+
+    /**
+     * Splits a method descriptor's parameters into field descriptors, such as I and [Ljava/lang/String;.
+     *
+     * @param methodDescriptor the method descriptor
+     * @return one descriptor per parameter, in order
+     * @throws IllegalArgumentException if the descriptor is null or malformed
+     */
+    public static List<String> parameterDescriptors(String methodDescriptor)
+    {
+        if (methodDescriptor == null || !methodDescriptor.startsWith("("))
+        {
+            throw new IllegalArgumentException("Not a method descriptor: " + methodDescriptor);
+        }
+        int end = methodDescriptor.indexOf(')');
+        if (end < 0)
+        {
+            throw new IllegalArgumentException("Not a method descriptor: " + methodDescriptor);
+        }
+        List<String> out = new ArrayList<>();
+        int i = 1;
+        while (i < end)
+        {
+            int next = fieldDescriptorEnd(methodDescriptor, i, end);
+            out.add(methodDescriptor.substring(i, next));
+            i = next;
+        }
+        return out;
+    }
+
+    /**
+     * Extracts a method descriptor's return type.
+     *
+     * @param methodDescriptor the method descriptor
+     * @return the return type's field descriptor, V for void
+     * @throws IllegalArgumentException if the descriptor is null or malformed
+     */
+    public static String returnDescriptor(String methodDescriptor)
+    {
+        parameterDescriptors(methodDescriptor);
+        int start = methodDescriptor.indexOf(')') + 1;
+        if (start >= methodDescriptor.length())
+        {
+            throw new IllegalArgumentException("Method descriptor has no return type: " + methodDescriptor);
+        }
+        if (methodDescriptor.charAt(start) == 'V' && start + 1 == methodDescriptor.length())
+        {
+            return "V";
+        }
+        if (fieldDescriptorEnd(methodDescriptor, start, methodDescriptor.length()) != methodDescriptor.length())
+        {
+            throw new IllegalArgumentException("Malformed return type: " + methodDescriptor);
+        }
+        return methodDescriptor.substring(start);
+    }
+
+    private static int fieldDescriptorEnd(String descriptor, int start, int limit)
+    {
+        int i = start;
+        while (i < limit && descriptor.charAt(i) == '[')
+        {
+            i++;
+        }
+        if (i >= limit)
+        {
+            throw new IllegalArgumentException("Malformed descriptor: " + descriptor);
+        }
+        char tag = descriptor.charAt(i);
+        if (tag == 'L')
+        {
+            int semicolon = descriptor.indexOf(';', i);
+            if (semicolon < 0 || semicolon >= limit || semicolon == i + 1)
+            {
+                throw new IllegalArgumentException("Malformed descriptor: " + descriptor);
+            }
+            return semicolon + 1;
+        }
+        if ("BCDFIJSZ".indexOf(tag) < 0)
+        {
+            throw new IllegalArgumentException("Malformed descriptor: " + descriptor);
+        }
+        return i + 1;
     }
 
     /**
      * Formats one field descriptor as a readable type name with trailing brackets for each array dimension.
      *
      * @param desc the field descriptor
-     * @return the type name, "?" when the descriptor is null or empty, or the descriptor itself when its tag is unknown
+     * @return the type name, "?" when the descriptor is null or empty, or the descriptor itself when its tag is unknown or a class name is unterminated
      */
     public static String formatFieldDescriptor(String desc)
     {
@@ -111,6 +182,10 @@ public class DescriptorParser
                     {
                         String className = desc.substring(i + 1, semicolon);
                         result.append(extractSimpleName(className));
+                    }
+                    else
+                    {
+                        return desc;
                     }
                     break;
                 default:

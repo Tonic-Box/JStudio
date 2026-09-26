@@ -16,9 +16,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
-/** A modal dialog listing a heap object's fields; double-click opens a nested inspector for a reference or edits a primitive, refusing circular references. */
+/** A modal dialog listing a heap object's fields; double-click opens a nested inspector for a reference or edits a primitive, refusing circular references, and a reference field's context menu sets it to null. */
 public class ObjectInspectorDialog extends JDialog
 {
 
@@ -57,11 +58,12 @@ public class ObjectInspectorDialog extends JDialog
      * @param classResolver resolves the object's classes
      * @param visitedObjectIds the ids of objects already open in parent inspectors, or null for none; the set is modified
      * @param onFieldEdit applies field edits, or null to make edits do nothing
+     * @throws NullPointerException if the object is null
      */
     public ObjectInspectorDialog(Window owner, ObjectInstance object, ClassResolver classResolver, Set<Integer> visitedObjectIds, FieldEditCallback onFieldEdit)
     {
         super(owner, buildTitle(object), ModalityType.APPLICATION_MODAL);
-        this.object = object;
+        this.object = Objects.requireNonNull(object, "object");
         this.classResolver = classResolver;
         this.visitedObjectIds = visitedObjectIds != null ? visitedObjectIds : new HashSet<>();
         this.visitedObjectIds.add(object.getId());
@@ -156,10 +158,22 @@ public class ObjectInspectorDialog extends JDialog
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                if (e.getClickCount() == 2)
+                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e))
                 {
                     handleDoubleClick(e.getPoint());
                 }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e)
+            {
+                showReferenceMenu(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e)
+            {
+                showReferenceMenu(e);
             }
         });
 
@@ -179,6 +193,35 @@ public class ObjectInspectorDialog extends JDialog
 
         panel.add(closeButton);
         return panel;
+    }
+
+    private void showReferenceMenu(MouseEvent e)
+    {
+        if (!e.isPopupTrigger())
+        {
+            return;
+        }
+        int row = fieldsTable.rowAtPoint(e.getPoint());
+        FieldInfo field = row >= 0 ? tableModel.getFieldAt(row) : null;
+        if (field == null || field.isFinal() || onFieldEdit == null || !isReference(field.getDescriptor()) || field.getValue() == null)
+        {
+            return;
+        }
+        fieldsTable.setRowSelectionInterval(row, row);
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem setNull = new JMenuItem("Set to null");
+        setNull.addActionListener(ev ->
+        {
+            onFieldEdit.onFieldEdit(object, field.getOwnerClass(), field.getName(), field.getDescriptor(), null);
+            loadFields();
+        });
+        menu.add(setNull);
+        menu.show(fieldsTable, e.getX(), e.getY());
+    }
+
+    private static boolean isReference(String descriptor)
+    {
+        return descriptor != null && (descriptor.startsWith("L") || descriptor.startsWith("["));
     }
 
     private void loadFields()
@@ -254,21 +297,26 @@ public class ObjectInspectorDialog extends JDialog
         {
             return null;
         }
-
-        switch (value.getTag())
+        switch (descriptor.charAt(0))
         {
-            case INT:
+            case 'Z':
+                return value.asInt() != 0;
+            case 'B':
+                return (byte) value.asInt();
+            case 'C':
+                return (char) value.asInt();
+            case 'S':
+                return (short) value.asInt();
+            case 'I':
                 return value.asInt();
-            case LONG:
+            case 'J':
                 return value.asLong();
-            case FLOAT:
+            case 'F':
                 return value.asFloat();
-            case DOUBLE:
+            case 'D':
                 return value.asDouble();
-            case REFERENCE:
-                return value.asReference();
             default:
-                return null;
+                return value.asReference();
         }
     }
 
@@ -316,10 +364,10 @@ public class ObjectInspectorDialog extends JDialog
     }
 
     /**
-     * Shows a top-level inspector for an object and waits until it closes.
+     * Shows a top-level inspector for an object and waits until it closes; does nothing for a null object.
      *
      * @param parent a component in the owning window
-     * @param object the object to inspect
+     * @param object the object to inspect, or null
      * @param classResolver resolves the object's classes
      * @param onFieldEdit applies field edits, or null
      */
@@ -329,16 +377,20 @@ public class ObjectInspectorDialog extends JDialog
     }
 
     /**
-     * Shows an inspector for an object and waits until it closes.
+     * Shows an inspector for an object and waits until it closes; does nothing for a null object.
      *
      * @param parent a component in the owning window
-     * @param object the object to inspect
+     * @param object the object to inspect, or null
      * @param classResolver resolves the object's classes
      * @param visitedObjectIds the ids of objects already open in parent inspectors, or null for none; the set is modified
      * @param onFieldEdit applies field edits, or null
      */
     public static void showDialog(Component parent, ObjectInstance object, ClassResolver classResolver, Set<Integer> visitedObjectIds, FieldEditCallback onFieldEdit)
     {
+        if (object == null)
+        {
+            return;
+        }
         Window window = SwingUtilities.getWindowAncestor(parent);
         ObjectInspectorDialog dialog = new ObjectInspectorDialog(window, object, classResolver, visitedObjectIds, onFieldEdit);
         dialog.setVisible(true);

@@ -254,7 +254,7 @@ public class ExecuteMethodDialog extends JDialog
             signatureLabel.setForeground(JStudioTheme.getTextPrimary());
             rebuildParametersPanel();
             statusLabel.setText("Ready to execute: " + method.getOwnerName() + "." + method.getName());
-            resultPanel.setMethodContext(method.getOwnerName(), method.getName(), method.getDesc());
+            resultPanel.setMethodContext(method);
         }
         else
         {
@@ -413,6 +413,7 @@ public class ExecuteMethodDialog extends JDialog
             return;
         }
 
+        MethodEntry target = method;
         String className = method.getOwnerName();
         String methodName = method.getName();
         String descriptor = method.getDesc();
@@ -455,7 +456,7 @@ public class ExecuteMethodDialog extends JDialog
                     try
                     {
                         ExecutionResult result = get();
-                        resultPanel.setExecutionContext(className, methodName, descriptor, args);
+                        resultPanel.setExecutionContext(target, args);
                         displayResult(result);
                         if (result.isSuccess())
                         {
