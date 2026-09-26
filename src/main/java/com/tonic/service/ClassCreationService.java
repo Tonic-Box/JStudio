@@ -107,15 +107,15 @@ public class ClassCreationService implements AccessFlags
         builder.addMethod(ACC_PUBLIC | ACC_STATIC, "values", "()" + arrayDesc)
                 .code()
                 .getstatic(className, "$VALUES", arrayDesc)
-                .invokevirtual(arrayDesc.substring(1, arrayDesc.length() - 1), "clone", "()Ljava/lang/Object;")
-                .checkcast(arrayDesc.substring(1, arrayDesc.length() - 1))
+                .invokevirtual(arrayDesc, "clone", "()Ljava/lang/Object;")
+                .checkcast(arrayDesc)
                 .areturn()
                 .end()
                 .end();
 
         builder.addMethod(ACC_PUBLIC | ACC_STATIC, "valueOf", "(Ljava/lang/String;)L" + className + ";")
                 .code()
-                .ldc(className.replace('/', '.'))
+                .ldcClass(className)
                 .aload(0)
                 .invokestatic("java/lang/Enum", "valueOf", "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum;")
                 .checkcast(className)

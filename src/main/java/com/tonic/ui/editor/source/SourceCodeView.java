@@ -389,6 +389,12 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         final String internalName = classEntry.getClassName();
         final ClassFile edited = classEntry.getClassFile();
         final ClassPool classPool = projectModel != null ? projectModel.getClassPool() : null;
+        final Set<String> memberChanges = MethodBodyDiff.addedOrRemovedMethods(baselineSource, editedSource, classPool, internalName);
+        if (!memberChanges.isEmpty())
+        {
+            compileToolbar.showPatchFailed("Live patch can only change method bodies; these methods were added or removed: " + memberChanges);
+            return;
+        }
         final Set<String> changedMethods = MethodBodyDiff.changedMethods(baselineSource, editedSource, classPool, internalName);
         compileToolbar.showPatching();
         SwingWorkers.run(() ->

@@ -1,15 +1,12 @@
 package com.tonic.ui.dialog;
 
-import com.tonic.parser.ClassFile;
-import com.tonic.parser.ClassPool;
-import com.tonic.parser.FieldEntry;
-import com.tonic.parser.MethodEntry;
-import com.tonic.renamer.Renamer;
-import com.tonic.renamer.exception.RenameException;
 import com.tonic.ui.MainFrame;
 import com.tonic.ui.core.component.ThemedJDialog;
 import com.tonic.model.ProjectModel;
+import com.tonic.model.Snapshot;
+import com.tonic.service.NameDeobfuscator;
 import com.tonic.service.ProjectService;
+import com.tonic.service.history.LocalHistoryService;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.*;
@@ -18,11 +15,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /** Modal dialog that renames the project's classes, methods and fields to sequential names such as Class1, method1 and field1, logging each rename. */
 public class DeobfuscateNamesDialog extends ThemedJDialog
@@ -36,9 +28,6 @@ public class DeobfuscateNamesDialog extends ThemedJDialog
     private final JButton applyButton;
     private final MainFrame mainFrame;
 
-    private int classCounter = 1;
-    private int methodCounter = 1;
-    private int fieldCounter = 1;
 
     /**
      * Creates the dialog with every option checked.
@@ -146,175 +135,42 @@ public class DeobfuscateNamesDialog extends ThemedJDialog
         applyButton.setEnabled(false);
         logArea.setText("");
         mainFrame.setNavigatorLoading(true);
+        NameDeobfuscator deobfuscator = new NameDeobfuscator(project, renameClassesBox.isSelected(), renameMethodsBox.isSelected(), renameFieldsBox.isSelected(), skipJdkBox.isSelected(), this::log);
 
-        new SwingWorker<Void, String>()
+        new SwingWorker<NameDeobfuscator.Result, Void>()
         {
-            private int classesRenamed = 0;
-            private int methodsRenamed = 0;
-            private int fieldsRenamed = 0;
-            private final Set<String> renamedOldClassNames = new HashSet<>();
-            private boolean success = false;
-
             @Override
-            protected Void doInBackground()
+            protected NameDeobfuscator.Result doInBackground()
             {
-                try
-                {
-                    ClassPool classPool = project.getClassPool();
-                    Renamer renamer = new Renamer(classPool);
-
-                    Set<String> userClasses = new HashSet<>(project.getUserClassNames());
-                    Set<String> processedMethods = new HashSet<>();
-                    Set<String> processedFields = new HashSet<>();
-                    Map<String, String> classNameMappings = new HashMap<>();
-
-                    publish("Starting deobfuscation...");
-                    publish("User classes: " + userClasses.size());
-
-                    for (String className : userClasses)
-                    {
-                        ClassFile cf = classPool.get(className);
-                        if (cf == null) continue;
-
-                        if (skipJdkBox.isSelected() && isLibraryClass(className))
-                        {
-                            continue;
-                        }
-
-                        if (renameClassesBox.isSelected())
-                        {
-                            String newClassName = generateClassName(className);
-                            renamer.mapClass(className, newClassName);
-                            classNameMappings.put(className, newClassName);
-                            renamedOldClassNames.add(className);
-                            publish("Class: " + className + " -> " + newClassName);
-                            classesRenamed++;
-                        }
-
-                        if (renameMethodsBox.isSelected())
-                        {
-                            for (MethodEntry method : cf.getMethods())
-                            {
-                                String name = method.getName();
-                                if (isSpecialMethod(name)) continue;
-
-                                String key = className + "." + name + method.getDesc();
-                                if (processedMethods.contains(key)) continue;
-                                processedMethods.add(key);
-
-                                String newName = "method" + (methodCounter++);
-                                renamer.mapMethod(className, name, method.getDesc(), newName);
-                                publish("  Method: " + name + " -> " + newName);
-                                methodsRenamed++;
-                            }
-                        }
-
-                        if (renameFieldsBox.isSelected())
-                        {
-                            for (FieldEntry field : cf.getFields())
-                            {
-                                String name = field.getName();
-
-                                String key = className + "." + name + field.getDesc();
-                                if (processedFields.contains(key)) continue;
-                                processedFields.add(key);
-
-                                String newName = "field" + (fieldCounter++);
-                                renamer.mapField(className, name, field.getDesc(), newName);
-                                publish("  Field: " + name + " -> " + newName);
-                                fieldsRenamed++;
-                            }
-                        }
-                    }
-
-                    publish("");
-                    publish("Applying " + renamer.getMappings().size() + " mappings...");
-
-                    com.tonic.service.history.LocalHistoryService.getInstance()
-                            .snapshot("Deobfuscate names", com.tonic.model.Snapshot.Trigger.DEOBFUSCATE);
-                    renamer.apply();
-
-                    if (!classNameMappings.isEmpty())
-                    {
-                        project.applyClassNameMappings(classNameMappings);
-                    }
-
-                    publish("");
-                    publish("=== Summary ===");
-                    publish("Classes renamed: " + classesRenamed);
-                    publish("Methods renamed: " + methodsRenamed);
-                    publish("Fields renamed: " + fieldsRenamed);
-                    publish("");
-                    publish("Done!");
-
-                    success = true;
-
-                }
-                catch (RenameException e)
-                {
-                    publish("ERROR: Rename failed - " + e.getMessage());
-                }
-                catch (Exception e)
-                {
-                    publish("ERROR: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-                }
-                return null;
-            }
-
-            @Override
-            protected void process(List<String> chunks)
-            {
-                for (String msg : chunks)
-                {
-                    log(msg);
-                }
+                log("Starting deobfuscation...");
+                LocalHistoryService.getInstance().snapshot("Deobfuscate names", Snapshot.Trigger.DEOBFUSCATE);
+                NameDeobfuscator.Result result = deobfuscator.apply();
+                log("");
+                log("=== Summary ===");
+                log("Classes renamed: " + result.getClasses());
+                log("Methods renamed: " + result.getMethods());
+                log("Fields renamed: " + result.getFields());
+                log("");
+                log("Done!");
+                return result;
             }
 
             @Override
             protected void done()
             {
                 applyButton.setEnabled(true);
-                if (success)
+                try
                 {
-                    int total = classesRenamed + methodsRenamed + fieldsRenamed;
-                    mainFrame.refreshAfterBulkRename(renamedOldClassNames, total);
+                    NameDeobfuscator.Result result = get();
+                    mainFrame.refreshAfterBulkRename(result.getOldClassNames(), result.getClasses() + result.getMethods() + result.getFields());
                 }
-                else
+                catch (Exception e)
                 {
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    log("ERROR: " + cause.getClass().getSimpleName() + " - " + cause.getMessage());
                     mainFrame.setNavigatorLoading(false);
                 }
             }
         }.execute();
-    }
-
-    private String generateClassName(String oldName)
-    {
-        int lastSlash = oldName.lastIndexOf('/');
-        String pkg = lastSlash >= 0 ? oldName.substring(0, lastSlash + 1) : "";
-        return pkg + "Class" + (classCounter++);
-    }
-
-    private boolean isSpecialMethod(String name)
-    {
-        return name.equals("<init>") ||
-                name.equals("<clinit>") ||
-                name.equals("main") ||
-                name.equals("toString") ||
-                name.equals("hashCode") ||
-                name.equals("equals") ||
-                name.equals("clone") ||
-                name.equals("finalize");
-    }
-
-    private boolean isLibraryClass(String className)
-    {
-        return className.startsWith("java/") ||
-                className.startsWith("javax/") ||
-                className.startsWith("sun/") ||
-                className.startsWith("com/sun/") ||
-                className.startsWith("jdk/") ||
-                className.startsWith("org/w3c/") ||
-                className.startsWith("org/xml/") ||
-                className.startsWith("org/ietf/");
     }
 }

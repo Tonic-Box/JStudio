@@ -696,8 +696,9 @@ public class VMExecutionService
                 {
                     frozen.put(entry.getClassName(), entry.getClassFile().write());
                 }
-                catch (Exception ignored)
+                catch (Exception e)
                 {
+                    ConsoleLogService.getInstance().warn("VM snapshot: " + entry.getClassName() + " could not be serialized and is read from the live project: " + e.getMessage());
                 }
             }
             cachedFrozenClasses = frozen;

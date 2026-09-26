@@ -24,22 +24,45 @@ public final class LivePatch
      * @param session the attached session, used to fetch the running class bytes
      * @param internalName the class's internal name, with slashes
      * @param edited the recompiled class, source of the new method bodies
-     * @param changedMethods name plus descriptor keys of the methods to graft; keys missing from either class are skipped
+     * @param changedMethods name plus descriptor keys of the methods to graft
      * @return the running class bytes with the edited bodies spliced in
+     * @throws IllegalStateException if a key is missing from the running or the edited class
      * @throws Exception if fetching, parsing, grafting or writing the class fails
      */
     public static byte[] buildGraftedRedefineBytes(LiveSession session, String internalName, ClassFile edited, Set<String> changedMethods) throws Exception
     {
-        ClassFile running = new ClassFile(new ByteArrayInputStream(session.fetchClassBytes(internalName)));
+        return graftOnto(session.fetchClassBytes(internalName), edited, changedMethods);
+    }
 
+    /**
+     * Grafts the edited method bodies onto a running class's bytes.
+     *
+     * @param runningBytes the running class's bytes
+     * @param edited the recompiled class, source of the new method bodies
+     * @param changedMethods name plus descriptor keys of the methods to graft
+     * @return the running class bytes with the edited bodies spliced in
+     * @throws IllegalStateException if a key is missing from the running or the edited class, naming each such key
+     * @throws Exception if parsing, grafting or writing the class fails
+     */
+    public static byte[] graftOnto(byte[] runningBytes, ClassFile edited, Set<String> changedMethods) throws Exception
+    {
+        ClassFile running = new ClassFile(new ByteArrayInputStream(runningBytes));
+
+        Set<String> missing = new LinkedHashSet<>();
         for (String key : changedMethods)
         {
-            MethodEntry source = findMethod(edited, key);
-            MethodEntry target = findMethod(running, key);
-            if (source != null && target != null)
+            if (findMethod(edited, key) == null || findMethod(running, key) == null)
             {
-                MethodGrafter.replaceMethodBody(edited, source, running, target);
+                missing.add(key);
             }
+        }
+        if (!missing.isEmpty())
+        {
+            throw new IllegalStateException("live redefine can only change the bodies of methods the running class already has; these changed methods are missing from the running or the recompiled class: " + missing);
+        }
+        for (String key : changedMethods)
+        {
+            MethodGrafter.replaceMethodBody(edited, findMethod(edited, key), running, findMethod(running, key));
         }
         running.rebuild();
         return running.write();

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /** The open project: its class entries (user classes marked apart from library ones), resources, class pool and xref database, with a dirty flag and a bytecode version. */
@@ -36,9 +37,11 @@ public class ProjectModel
     private final Map<String, ResourceEntryModel> resources = new LinkedHashMap<>();
     @Getter
     private boolean dirty;
-    /** Monotonic counter bumped on every bytecode mutation; the VM uses it to invalidate its cached class snapshot. */
+    private static final AtomicLong VERSIONS = new AtomicLong();
+
+    /** Version of the project's bytecode, unique across every project in this run and changed on every mutation; the VM keys its cached class snapshot on it. */
     @Getter
-    private long bytecodeVersion;
+    private long bytecodeVersion = VERSIONS.incrementAndGet();
 
     /** Creates an empty project named Untitled with no class pool. */
     public ProjectModel()
@@ -61,7 +64,7 @@ public class ProjectModel
     public void markDirty()
     {
         this.dirty = true;
-        bytecodeVersion++;
+        bytecodeVersion = VERSIONS.incrementAndGet();
     }
 
     /**
@@ -328,6 +331,7 @@ public class ProjectModel
             xrefDatabase.clear();
         }
         dirty = false;
+        bytecodeVersion = VERSIONS.incrementAndGet();
     }
 
     /**

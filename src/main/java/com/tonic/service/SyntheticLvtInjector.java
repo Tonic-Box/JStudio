@@ -97,7 +97,7 @@ public final class SyntheticLvtInjector
         return null;
     }
 
-    private static List<LocalVariableTableEntry> widen(List<LocalVariableTableEntry> entries, ConstPool constPool, int codeLen)
+    static List<LocalVariableTableEntry> widen(List<LocalVariableTableEntry> entries, ConstPool constPool, int codeLen)
     {
         Map<Integer, List<LocalVariableTableEntry>> bySlot = new LinkedHashMap<>();
         for (LocalVariableTableEntry e : entries)
@@ -108,16 +108,16 @@ public final class SyntheticLvtInjector
         for (List<LocalVariableTableEntry> group : bySlot.values())
         {
             LocalVariableTableEntry first = group.get(0);
-            boolean sameType = true;
+            boolean sameVariable = true;
             for (LocalVariableTableEntry e : group)
             {
-                if (e.getDescriptorIndex() != first.getDescriptorIndex())
+                if (e.getDescriptorIndex() != first.getDescriptorIndex() || e.getNameIndex() != first.getNameIndex())
                 {
-                    sameType = false;
+                    sameVariable = false;
                     break;
                 }
             }
-            if (sameType)
+            if (sameVariable)
             {
                 out.add(new LocalVariableTableEntry(constPool, 0, codeLen, first.getNameIndex(), first.getDescriptorIndex(), first.getIndex()));
             }

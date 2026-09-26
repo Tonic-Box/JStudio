@@ -7,6 +7,7 @@ import com.tonic.analysis.xref.XrefDatabase;
 import com.tonic.analysis.xref.XrefType;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.ProjectModel;
+import com.tonic.service.LibraryOverrides;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.FieldEntry;
@@ -16,7 +17,6 @@ import com.tonic.renamer.hierarchy.ClassNode;
 import com.tonic.service.XrefQueryService;
 import com.tonic.util.AccessFlags;
 
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -29,7 +29,7 @@ public final class DeadCodeAnalyzer
     private final ClassPool pool;
     private final Set<String> userClasses;
     private final Set<String> skip;
-    private final Map<String, ExternalInfo> externalSignatureCache = new HashMap<>();
+    private final LibraryOverrides libraryOverrides;
     private Consumer<String> progress = m ->
     {
     };
@@ -47,6 +47,7 @@ public final class DeadCodeAnalyzer
         this.pool = project.getClassPool();
         this.userClasses = project.getUserClassNames();
         this.skip = config.skipClasses();
+        this.libraryOverrides = new LibraryOverrides(project);
     }
 
     /**
@@ -131,7 +132,7 @@ public final class DeadCodeAnalyzer
                         || (name.equals("main") && desc.equals("([Ljava/lang/String;)V") && AccessFlags.isStatic(access))
                         || (config.isPublicAsEntryPoints() && AccessFlags.isPublic(access))
                         || config.keeps(owner, name, desc)
-                        || overridesExternal(owner, name, desc);
+                        || libraryOverrides.overridesLibrary(owner, name, desc);
                 if (root)
                 {
                     roots.add(new MethodReference(owner, name, desc));
@@ -227,125 +228,6 @@ public final class DeadCodeAnalyzer
         return live;
     }
 
-    private boolean overridesExternal(String owner, String name, String desc)
-    {
-        if (name.equals("<init>") || name.equals("<clinit>"))
-        {
-            return false;
-        }
-        ExternalInfo info = externalSignatureCache.computeIfAbsent(owner, this::computeExternalSignatures);
-        return info.unresolved || info.signatures.contains(name + ' ' + desc);
-    }
-
-    private ExternalInfo computeExternalSignatures(String owner)
-    {
-        Set<String> signatures = new HashSet<>();
-        boolean[] unresolved = {false};
-        Set<String> visited = new HashSet<>();
-        Deque<String> stack = new ArrayDeque<>();
-        pushUserSupertypes(project.getClass(owner), stack);
-        while (!stack.isEmpty())
-        {
-            String c = stack.pop();
-            if (!visited.add(c))
-            {
-                continue;
-            }
-            if (userClasses.contains(c))
-            {
-                pushUserSupertypes(project.getClass(c), stack);
-            }
-            else if (!collectReflective(c, signatures))
-            {
-                unresolved[0] = true;
-            }
-        }
-        return new ExternalInfo(signatures, unresolved[0]);
-    }
-
-    private static void pushUserSupertypes(ClassEntryModel entry, Deque<String> stack)
-    {
-        if (entry == null || entry.getClassFile() == null)
-        {
-            return;
-        }
-        ClassFile cf = entry.getClassFile();
-        String superName = cf.getSuperClassName();
-        if (superName != null && !superName.isEmpty())
-        {
-            stack.push(superName);
-        }
-        List<String> interfaces = cf.getInterfaceNames();
-        if (interfaces != null)
-        {
-            for (String iface : interfaces)
-            {
-                if (iface != null && !iface.isEmpty())
-                {
-                    stack.push(iface);
-                }
-            }
-        }
-    }
-
-    private boolean collectReflective(String internalName, Set<String> signatures)
-    {
-        try
-        {
-            Class<?> root = Class.forName(internalName.replace('/', '.'), false, getClass().getClassLoader());
-            Set<Class<?>> visited = new HashSet<>();
-            Deque<Class<?>> queue = new ArrayDeque<>();
-            queue.add(root);
-            while (!queue.isEmpty())
-            {
-                Class<?> k = queue.poll();
-                if (!visited.add(k))
-                {
-                    continue;
-                }
-                for (Method m : k.getDeclaredMethods())
-                {
-                    signatures.add(m.getName() + ' ' + methodDescriptor(m));
-                }
-                if (k.getSuperclass() != null)
-                {
-                    queue.add(k.getSuperclass());
-                }
-                Collections.addAll(queue, k.getInterfaces());
-            }
-            return true;
-        }
-        catch (Throwable t)
-        {
-            return false;
-        }
-    }
-
-    private static String methodDescriptor(Method m)
-    {
-        StringBuilder sb = new StringBuilder("(");
-        for (Class<?> p : m.getParameterTypes())
-        {
-            sb.append(typeDescriptor(p));
-        }
-        return sb.append(')').append(typeDescriptor(m.getReturnType())).toString();
-    }
-
-    private static String typeDescriptor(Class<?> c)
-    {
-        if (c == void.class) return "V";
-        if (c == boolean.class) return "Z";
-        if (c == byte.class) return "B";
-        if (c == char.class) return "C";
-        if (c == short.class) return "S";
-        if (c == int.class) return "I";
-        if (c == long.class) return "J";
-        if (c == float.class) return "F";
-        if (c == double.class) return "D";
-        if (c.isArray()) return "[" + typeDescriptor(c.getComponentType());
-        return "L" + c.getName().replace('.', '/') + ";";
-    }
-
     private MethodReference sourceRef(Xref ref)
     {
         if (ref.getSourceMethod() == null)
@@ -364,17 +246,5 @@ public final class DeadCodeAnalyzer
         }
         String desc = f.getDesc();
         return desc.length() == 1 || desc.equals("Ljava/lang/String;");
-    }
-
-    private static final class ExternalInfo
-    {
-        private final Set<String> signatures;
-        private final boolean unresolved;
-
-        ExternalInfo(Set<String> signatures, boolean unresolved)
-        {
-            this.signatures = signatures;
-            this.unresolved = unresolved;
-        }
     }
 }

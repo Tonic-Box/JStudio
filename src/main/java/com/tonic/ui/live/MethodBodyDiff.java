@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /** Finds the methods whose bodies changed between two revisions of a class's source, keyed by name plus descriptor; reformatting alone is not a change. */
 public final class MethodBodyDiff
@@ -56,6 +57,35 @@ public final class MethodBodyDiff
                 changed.add(entry.getKey());
             }
         }
+        return changed;
+    }
+
+    /**
+     * Returns the name plus descriptor keys of the primary type's methods and constructors present in only one of the two revisions, which a live redefine cannot apply.
+     *
+     * @param baseline the source before the edit, such as the original decompilation
+     * @param edited the source the user just compiled
+     * @param classPool the project's class pool, used to resolve reference types in signatures; may be null
+     * @param ownerClass the internal name of the class being patched
+     * @return the keys of added and removed methods; empty if either source is null or fails to parse
+     */
+    public static Set<String> addedOrRemovedMethods(String baseline, String edited, ClassPool classPool, String ownerClass)
+    {
+        if (baseline == null || edited == null)
+        {
+            return Collections.emptySet();
+        }
+        Map<String, String> baselineBodies = methodBodies(baseline, classPool, ownerClass);
+        Map<String, String> editedBodies = methodBodies(edited, classPool, ownerClass);
+        if (baselineBodies.isEmpty() || editedBodies.isEmpty())
+        {
+            return Collections.emptySet();
+        }
+        Set<String> changed = new TreeSet<>(baselineBodies.keySet());
+        changed.addAll(editedBodies.keySet());
+        Set<String> common = new HashSet<>(baselineBodies.keySet());
+        common.retainAll(editedBodies.keySet());
+        changed.removeAll(common);
         return changed;
     }
 
