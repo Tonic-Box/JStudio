@@ -9,9 +9,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/** Writes a focused call graph as Graphviz DOT, with methods outside the graph drawn dashed and edges coloured by invoke kind. */
 public class CallGraphDOTExporter
 {
 
+    /**
+     * Writes the focus method, its callers and callees, and the calls among them as a DOT digraph.
+     *
+     * @param focus the method the graph centres on
+     * @param callers the methods shown above the focus
+     * @param callees the methods shown below the focus
+     * @param graph the call graph the edges are read from
+     * @return the DOT source
+     */
     public String export(MethodReference focus, Set<MethodReference> callers, Set<MethodReference> callees, CallGraph graph)
     {
         StringBuilder sb = new StringBuilder();

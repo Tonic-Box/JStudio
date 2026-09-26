@@ -1,5 +1,6 @@
 package com.tonic.ui.core.constants;
 
+/** Shared UI sizes: font sizes, spacing and other pixel and column constants. */
 public final class UIConstants
 {
 

@@ -5,9 +5,7 @@ import lombok.Getter;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Variable scope for script execution.
- */
+/** A variable scope of the script interpreter, chained to its parent; names can be marked constant. */
 public class ScriptContext
 {
 
@@ -16,18 +14,27 @@ public class ScriptContext
     private final Map<String, ScriptValue> variables = new HashMap<>();
     private final Map<String, Boolean> constants = new HashMap<>();
 
+    /** Creates a root scope. */
     public ScriptContext()
     {
         this.parent = null;
     }
 
+    /**
+     * Creates a scope nested in another.
+     *
+     * @param parent the enclosing scope, or null for a root
+     */
     public ScriptContext(ScriptContext parent)
     {
         this.parent = parent;
     }
 
     /**
-     * Defines a new variable in this scope.
+     * Defines or redefines a variable in this scope, shadowing any outer one.
+     *
+     * @param name the variable name
+     * @param value its value
      */
     public void define(String name, ScriptValue value)
     {
@@ -36,7 +43,10 @@ public class ScriptContext
     }
 
     /**
-     * Defines a new constant in this scope.
+     * Defines or redefines a constant in this scope; later assignment through set fails.
+     *
+     * @param name the constant name
+     * @param value its value
      */
     public void defineConstant(String name, ScriptValue value)
     {
@@ -45,7 +55,10 @@ public class ScriptContext
     }
 
     /**
-     * Gets a variable, searching up the scope chain.
+     * Looks a name up in this scope, then outward.
+     *
+     * @param name the variable name
+     * @return its value, or the script null value when no scope defines it
      */
     public ScriptValue get(String name)
     {
@@ -61,7 +74,11 @@ public class ScriptContext
     }
 
     /**
-     * Sets a variable, searching up the scope chain.
+     * Assigns to the nearest scope defining the name, or defines it here when none does.
+     *
+     * @param name the variable name
+     * @param value the new value
+     * @throws RuntimeException if the nearest definition is a constant
      */
     public void set(String name, ScriptValue value)
     {
@@ -96,7 +113,9 @@ public class ScriptContext
     }
 
     /**
-     * Creates a child scope.
+     * Creates a scope nested in this one.
+     *
+     * @return the new scope
      */
     public ScriptContext child()
     {

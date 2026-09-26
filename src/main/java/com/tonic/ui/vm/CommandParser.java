@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/** Parses VM console input: slash commands and ClassName.method(args) calls with Java literal arguments. */
 public class CommandParser
 {
 
@@ -21,6 +22,12 @@ public class CommandParser
     private static final Pattern HEX_LITERAL = Pattern.compile("0[xX]([0-9a-fA-F]+)");
     private static final Pattern BOOLEAN_LITERAL = Pattern.compile("true|false");
 
+    /**
+     * Parses one console line into a command, a method call, an empty result or an error.
+     *
+     * @param input the typed line
+     * @return the parse result; empty for null or blank input, an error result when the line matches neither form
+     */
     public ParseResult parse(String input)
     {
         if (input == null || input.trim().isEmpty())
@@ -77,6 +84,13 @@ public class CommandParser
         return ParseResult.methodCall(className, methodName, args);
     }
 
+    /**
+     * Splits a comma-separated argument list at top level (outside strings and parentheses) and parses each argument.
+     *
+     * @param argsString the text between the call's parentheses
+     * @return the parsed values, empty for null or empty input
+     * @throws Exception if an argument is not a recognized literal
+     */
     public Object[] parseArguments(String argsString) throws Exception
     {
         if (argsString == null || argsString.isEmpty())
@@ -132,6 +146,13 @@ public class CommandParser
         return args.toArray();
     }
 
+    /**
+     * Parses one literal: null, boolean, string, char, hex int, long, float, double or int.
+     *
+     * @param value the literal text
+     * @return the boxed value, or null for the literal null
+     * @throws Exception if the text is not a recognized literal
+     */
     public Object parseValue(String value) throws Exception
     {
         value = value.trim();
@@ -240,6 +261,12 @@ public class CommandParser
         return result.toString();
     }
 
+    /**
+     * Builds a method descriptor's parameter part from the runtime types of the arguments.
+     *
+     * @param args the argument values; null and unknown types map to Object
+     * @return the parenthesized parameter descriptor, without a return type
+     */
     public String inferDescriptor(Object[] args)
     {
         StringBuilder sb = new StringBuilder("(");
@@ -296,9 +323,11 @@ public class CommandParser
         return "Ljava/lang/Object;";
     }
 
+    /** The outcome of parsing one console line: its kind plus the command or method-call parts that apply to it. */
     @Getter
     public static class ParseResult
     {
+        /** The kind of line parsed. */
         public enum Type
         {
             EMPTY,
@@ -326,41 +355,87 @@ public class CommandParser
             this.errorMessage = errorMessage;
         }
 
+        /**
+         * Creates the result for blank input.
+         *
+         * @return the result
+         */
         public static ParseResult empty()
         {
             return new ParseResult(Type.EMPTY, null, null, null, null, null, null);
         }
 
+        /**
+         * Creates a slash-command result.
+         *
+         * @param command the command name, lower-cased, without the slash
+         * @param args the text after the command, or null if none
+         * @return the result
+         */
         public static ParseResult command(String command, String args)
         {
             return new ParseResult(Type.COMMAND, command, args, null, null, null, null);
         }
 
+        /**
+         * Creates a method-call result.
+         *
+         * @param className the class's internal name, with slashes
+         * @param methodName the method name
+         * @param args the parsed argument values
+         * @return the result
+         */
         public static ParseResult methodCall(String className, String methodName, Object[] args)
         {
             return new ParseResult(Type.METHOD_CALL, null, null, className, methodName, args, null);
         }
 
+        /**
+         * Creates an error result.
+         *
+         * @param message what was wrong with the input
+         * @return the result
+         */
         public static ParseResult error(String message)
         {
             return new ParseResult(Type.ERROR, null, null, null, null, null, message);
         }
 
+        /**
+         * Tells whether the input was blank.
+         *
+         * @return true for an empty result
+         */
         public boolean isEmpty()
         {
             return type == Type.EMPTY;
         }
 
+        /**
+         * Tells whether the input was a slash command.
+         *
+         * @return true for a command result
+         */
         public boolean isCommand()
         {
             return type == Type.COMMAND;
         }
 
+        /**
+         * Tells whether the input was a method call.
+         *
+         * @return true for a method-call result
+         */
         public boolean isMethodCall()
         {
             return type == Type.METHOD_CALL;
         }
 
+        /**
+         * Tells whether the input failed to parse.
+         *
+         * @return true for an error result
+         */
         public boolean isError()
         {
             return type == Type.ERROR;

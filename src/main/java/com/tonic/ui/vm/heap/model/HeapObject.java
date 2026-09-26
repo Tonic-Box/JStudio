@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** A heap object captured in a snapshot: its id, class, allocation site, field values and recorded mutations. */
 @Getter
 public class HeapObject
 {
@@ -41,6 +42,11 @@ public class HeapObject
         return name != null && (name.contains("$Lambda$") || name.contains("$$Lambda$"));
     }
 
+    /**
+     * Strips the package from the class name.
+     *
+     * @return the class name after the last slash, or null as text when there is no class name
+     */
     public String getSimpleClassName()
     {
         if (className == null)
@@ -51,16 +57,32 @@ public class HeapObject
         return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
     }
 
+    /**
+     * Looks up a captured field.
+     *
+     * @param key the field's owner.name:descriptor key
+     * @return the field value, or null when not captured
+     */
     public FieldValue getField(String key)
     {
         return fields.get(key);
     }
 
+    /**
+     * Tells whether any writes to this object were recorded.
+     *
+     * @return true when there is at least one mutation
+     */
     public boolean hasMutations()
     {
         return !mutations.isEmpty();
     }
 
+    /**
+     * Lists the fields of a lambda that hold captured values, recognized by the arg$, capture$ and val$ name prefixes.
+     *
+     * @return the captured field names, or an empty list when this is not a lambda
+     */
     public List<String> getLambdaCaptureFieldNames()
     {
         if (!lambda)
@@ -80,6 +102,11 @@ public class HeapObject
         return captures;
     }
 
+    /**
+     * Lists the ids of objects this object's fields point to.
+     *
+     * @return the referenced object ids, in field order
+     */
     public List<Integer> getReferencedObjectIds()
     {
         List<Integer> refs = new ArrayList<>();
@@ -93,6 +120,15 @@ public class HeapObject
         return refs;
     }
 
+    /**
+     * Captures an object instance without its field values.
+     *
+     * @param instance the live object
+     * @param allocationTime the instruction count at which the object was allocated
+     * @param provenance where the object was allocated, or null if unknown
+     * @param mutations the writes recorded against the object, or null for none
+     * @return the captured object
+     */
     public static HeapObject fromObjectInstance(ObjectInstance instance, long allocationTime, ProvenanceInfo provenance, List<MutationEvent> mutations)
     {
         Builder builder = builder()
@@ -116,11 +152,17 @@ public class HeapObject
         return className + " #" + id;
     }
 
+    /**
+     * Starts a new object builder.
+     *
+     * @return an empty builder
+     */
     public static Builder builder()
     {
         return new Builder();
     }
 
+    /** Builder for heap objects; the class name defaults to empty and the fields and mutations to empty collections. */
     public static class Builder
     {
         private int id;
@@ -131,60 +173,119 @@ public class HeapObject
         private List<MutationEvent> mutations = new ArrayList<>();
         private boolean isArray;
 
+        /**
+         * Sets the object id.
+         *
+         * @param id the heap id
+         * @return this builder
+         */
         public Builder id(int id)
         {
             this.id = id;
             return this;
         }
 
+        /**
+         * Sets the class.
+         *
+         * @param className the class's internal name
+         * @return this builder
+         */
         public Builder className(String className)
         {
             this.className = className;
             return this;
         }
 
+        /**
+         * Sets when the object was allocated.
+         *
+         * @param allocationTime the instruction count at allocation
+         * @return this builder
+         */
         public Builder allocationTime(long allocationTime)
         {
             this.allocationTime = allocationTime;
             return this;
         }
 
+        /**
+         * Sets where the object was allocated.
+         *
+         * @param provenance the allocation site, or null if unknown
+         * @return this builder
+         */
         public Builder provenance(ProvenanceInfo provenance)
         {
             this.provenance = provenance;
             return this;
         }
 
+        /**
+         * Replaces the fields; the map is used directly, not copied.
+         *
+         * @param fields the fields keyed by owner.name:descriptor, or null for none
+         * @return this builder
+         */
         public Builder fields(Map<String, FieldValue> fields)
         {
             this.fields = fields != null ? fields : new LinkedHashMap<>();
             return this;
         }
 
+        /**
+         * Adds one field under its key.
+         *
+         * @param field the field value
+         * @return this builder
+         */
         public Builder addField(FieldValue field)
         {
             this.fields.put(field.getKey(), field);
             return this;
         }
 
+        /**
+         * Replaces the mutations; the list is used directly, not copied.
+         *
+         * @param mutations the recorded writes, or null for none
+         * @return this builder
+         */
         public Builder mutations(List<MutationEvent> mutations)
         {
             this.mutations = mutations != null ? mutations : new ArrayList<>();
             return this;
         }
 
+        /**
+         * Adds one mutation.
+         *
+         * @param mutation the recorded write
+         * @return this builder
+         */
         public Builder addMutation(MutationEvent mutation)
         {
             this.mutations.add(mutation);
             return this;
         }
 
+        /**
+         * Marks the object as an array or not.
+         *
+         * @param isArray true for arrays
+         * @return this builder
+         */
         public Builder isArray(boolean isArray)
         {
             this.isArray = isArray;
             return this;
         }
 
+        /**
+         * Builds the object, copying the fields and mutations.
+         *
+         * @return the heap object
+         */
         public HeapObject build()
         {
             return new HeapObject(this);

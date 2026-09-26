@@ -35,9 +35,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.swing.SwingUtilities;
 
-/**
- * Welcome tab showing project info and quick links to main() methods.
- */
+/** The welcome tab: project counts, class file versions, and links to the project's main methods. */
 public class WelcomeTab extends JPanel implements ThemeChangeListener
 {
 
@@ -56,6 +54,11 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
     private JLabel interfaceCountLabel;
     private final JScrollPane scrollPane;
 
+    /**
+     * Creates the tab showing no project.
+     *
+     * @param mainFrame the window whose actions the tab's buttons and links run
+     */
     public WelcomeTab(MainFrame mainFrame)
     {
         this.mainFrame = mainFrame;
@@ -469,7 +472,9 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
     }
 
     /**
-     * Set the project model and refresh the display.
+     * Shows a project.
+     *
+     * @param project the project, or null to show none
      */
     public void setProjectModel(ProjectModel project)
     {
@@ -477,9 +482,7 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
         refresh();
     }
 
-    /**
-     * Refresh the welcome tab with current project info.
-     */
+    /** Redraws the tab from the current project. */
     public void refresh()
     {
         if (projectModel == null)

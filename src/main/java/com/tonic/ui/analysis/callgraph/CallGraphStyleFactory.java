@@ -13,6 +13,7 @@ import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
+/** The named mxGraph styles of the call graph, colored from the current theme, and the choice of style per node and edge. */
 public class CallGraphStyleFactory
 {
 
@@ -93,6 +94,11 @@ public class CallGraphStyleFactory
         return toHex(JStudioTheme.getError());
     }
 
+    /**
+     * Gives a graph a fresh stylesheet holding every node and edge style.
+     *
+     * @param graph the graph to style
+     */
     public void setupStyles(mxGraph graph)
     {
         mxStylesheet stylesheet = new mxStylesheet();
@@ -256,6 +262,14 @@ public class CallGraphStyleFactory
         return style;
     }
 
+    /**
+     * Picks a node's style: external for methods outside the pool, otherwise by constructor, static initializer or plain method, in a focus variant for the focus method.
+     *
+     * @param callGraph the graph that says whether the method is in the pool
+     * @param ref the method
+     * @param isFocus whether it is the focus method
+     * @return the style name
+     */
     public String getNodeStyle(CallGraph callGraph, MethodReference ref, boolean isFocus)
     {
         String methodName = ref.getName();
@@ -281,6 +295,14 @@ public class CallGraphStyleFactory
         }
     }
 
+    /**
+     * Picks an edge's style from the invoke kind of the first call site from caller to callee.
+     *
+     * @param callGraph the graph holding the call sites
+     * @param caller the calling method
+     * @param callee the called method
+     * @return the style name, or the plain edge style if no call site is found
+     */
     public String getEdgeStyle(CallGraph callGraph, MethodReference caller, MethodReference callee)
     {
         CallGraphNode callerNode = callGraph.getNode(caller);

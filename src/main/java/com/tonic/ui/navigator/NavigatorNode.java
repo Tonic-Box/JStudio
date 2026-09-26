@@ -12,21 +12,39 @@ import lombok.Getter;
 import javax.swing.Icon;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-/**
- * Base class for navigator tree nodes.
- */
+/** A node of the class navigator tree, which supplies its own label, icon and tooltip. */
 public abstract class NavigatorNode extends DefaultMutableTreeNode
 {
 
+    /**
+     * Creates a node.
+     *
+     * @param userObject the model object the node stands for
+     */
     public NavigatorNode(Object userObject)
     {
         super(userObject);
     }
 
+    /**
+     * Gives the tree label.
+     *
+     * @return the label text
+     */
     public abstract String getDisplayText();
 
+    /**
+     * Gives the tree icon.
+     *
+     * @return the icon
+     */
     public abstract Icon getIcon();
 
+    /**
+     * Gives the hover text.
+     *
+     * @return the tooltip text
+     */
     public abstract String getTooltip();
 
     @Override
@@ -52,14 +70,18 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         return sanitized;
     }
 
-    /**
-     * Root node representing the project.
-     */
+    /** The root node: the project name and its class count. */
     public static class ProjectNode extends NavigatorNode
     {
         private final String name;
         private final int classCount;
 
+        /**
+         * Creates the root.
+         *
+         * @param name the project name
+         * @param classCount the number of classes, shown in the label
+         */
         public ProjectNode(String name, int classCount)
         {
             super(name);
@@ -86,15 +108,18 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         }
     }
 
-    /**
-     * Node representing a package.
-     */
+    /** A package node, labelled by its last segment unless given another display name. */
     public static class PackageNode extends NavigatorNode
     {
         @Getter
         private final String packageName;
         private String displayName;
 
+        /**
+         * Creates a package node.
+         *
+         * @param packageName the dotted package name
+         */
         public PackageNode(String packageName)
         {
             super(packageName);
@@ -103,6 +128,11 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
             this.displayName = lastDot >= 0 ? packageName.substring(lastDot + 1) : packageName;
         }
 
+        /**
+         * Replaces the label, for example when single-child packages are compacted into one node.
+         *
+         * @param displayName the label text
+         */
         public void setDisplayName(String displayName)
         {
             this.displayName = displayName;
@@ -127,14 +157,17 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         }
     }
 
-    /**
-     * Node representing a class.
-     */
+    /** A class node; its icon carries a run overlay when the class has a main method. */
     @Getter
     public static class ClassNode extends NavigatorNode
     {
         private final ClassEntryModel classEntry;
 
+        /**
+         * Creates a class node.
+         *
+         * @param classEntry the class
+         */
         public ClassNode(ClassEntryModel classEntry)
         {
             super(classEntry);
@@ -162,14 +195,17 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         }
     }
 
-    /**
-     * Node representing a method.
-     */
+    /** A method node; its tooltip adds the complexity summary when metrics exist. */
     @Getter
     public static class MethodNode extends NavigatorNode
     {
         private final MethodEntryModel methodEntry;
 
+        /**
+         * Creates a method node.
+         *
+         * @param methodEntry the method
+         */
         public MethodNode(MethodEntryModel methodEntry)
         {
             super(methodEntry);
@@ -203,14 +239,17 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         }
     }
 
-    /**
-     * Node representing a field.
-     */
+    /** A field node, labelled name: type. */
     @Getter
     public static class FieldNode extends NavigatorNode
     {
         private final FieldEntryModel fieldEntry;
 
+        /**
+         * Creates a field node.
+         *
+         * @param fieldEntry the field
+         */
         public FieldNode(FieldEntryModel fieldEntry)
         {
             super(fieldEntry);
@@ -236,14 +275,18 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         }
     }
 
-    /**
-     * Category node (e.g., "Fields", "Methods").
-     */
+    /** A grouping node such as Fields or Methods. */
     public static class CategoryNode extends NavigatorNode
     {
         private final String name;
         private final Icon icon;
 
+        /**
+         * Creates a grouping node.
+         *
+         * @param name the label
+         * @param icon the icon
+         */
         public CategoryNode(String name, Icon icon)
         {
             super(name);
@@ -270,11 +313,17 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         }
     }
 
+    /** The root of the non-class resources, labelled with their count. */
     @Getter
     public static class ResourcesRootNode extends NavigatorNode
     {
         private final int resourceCount;
 
+        /**
+         * Creates the resources root.
+         *
+         * @param resourceCount the number of resource files
+         */
         public ResourcesRootNode(int resourceCount)
         {
             super("Resources");
@@ -300,12 +349,18 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         }
     }
 
+    /** A resource folder node, labelled by its last path segment. */
     @Getter
     public static class ResourceFolderNode extends NavigatorNode
     {
         private final String folderPath;
         private final String folderName;
 
+        /**
+         * Creates a folder node.
+         *
+         * @param folderPath the folder's path in the archive, with slashes
+         */
         public ResourceFolderNode(String folderPath)
         {
             super(folderPath);
@@ -333,11 +388,17 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         }
     }
 
+    /** A resource file node; its tooltip shows the path and size. */
     @Getter
     public static class ResourceNode extends NavigatorNode
     {
         private final ResourceEntryModel resource;
 
+        /**
+         * Creates a resource node.
+         *
+         * @param resource the resource file
+         */
         public ResourceNode(ResourceEntryModel resource)
         {
             super(resource);

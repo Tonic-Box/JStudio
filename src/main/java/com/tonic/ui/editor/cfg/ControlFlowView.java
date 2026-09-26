@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** The control flow graph view of one chosen method, drawn with bytecode or IR in each block. */
 public class ControlFlowView extends BaseGraphView
 {
 
@@ -27,6 +28,11 @@ public class ControlFlowView extends BaseGraphView
     private List<CFGBlock> currentBlocks;
     private boolean showIR = false;
 
+    /**
+     * Creates the view and fills the method selector from the class.
+     *
+     * @param classEntry the class whose methods can be chosen
+     */
     public ControlFlowView(ClassEntryModel classEntry)
     {
         super(classEntry);

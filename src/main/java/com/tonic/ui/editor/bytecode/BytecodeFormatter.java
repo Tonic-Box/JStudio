@@ -9,13 +9,7 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
 import lombok.Getter;
 
-/**
- * Formats bytecode for display in the UI.
- *
- * <p>All disassembly (header, line numbers, local-variable and stack-frame markers, exception table,
- * resolved invokedynamic bootstraps) is produced by YABR's {@link CodePrinter#prettyPrintCode(
- *CodeAttribute, DisassemblyOptions)} verbose profile; this class only applies the UI indentation.
- */
+/** Formats method bytecode for display; YABR's code printer produces the disassembly and this class only indents it. */
 @Getter
 public class BytecodeFormatter
 {
@@ -26,6 +20,11 @@ public class BytecodeFormatter
      */
     private final MethodEntry method;
 
+    /**
+     * Creates a formatter for one method.
+     *
+     * @param method the method to disassemble
+     */
     public BytecodeFormatter(MethodEntry method)
     {
         this.method = method;
@@ -34,15 +33,21 @@ public class BytecodeFormatter
     private static final int TRIVIAL_CODE_BYTES = 16;
 
     /**
-     * Format the method's bytecode for display (verbose profile).
-     * Returns a string with format "offset: opcode operands" per line, plus verbose comment lines.
+     * Disassembles the method with the verbose profile.
+     *
+     * @return one indented "offset: opcode operands" line per instruction plus verbose comment lines; empty when the method has no code
      */
     public String format()
     {
         return format(false);
     }
 
-    /** As {@link #format()} but {@code terse} selects YABR's compact profile (no header/lines/locals/frames/etc). */
+    /**
+     * Disassembles the method with the verbose or compact profile.
+     *
+     * @param terse true for the compact profile, which drops the header, line numbers, locals and frames
+     * @return the indented disassembly, one line per entry; empty when the method has no code
+     */
     public String format(boolean terse)
     {
         CodeAttribute code = method.getCodeAttribute();
@@ -64,9 +69,10 @@ public class BytecodeFormatter
     }
 
     /**
-     * A whole-class bytecode dump: each method's signature followed by its disassembled code. Convenience for
-     * callers that hold only a {@link ClassEntryModel} (e.g. plugins, which cannot reach YABR types directly)
-     * and want a single printable String for the class.
+     * Dumps a whole class's bytecode, verbose, with every method.
+     *
+     * @param classEntry the class
+     * @return each method's name and descriptor followed by its disassembly
      */
     public static String formatClass(ClassEntryModel classEntry)
     {
@@ -74,9 +80,12 @@ public class BytecodeFormatter
     }
 
     /**
-     * A whole-class bytecode dump. {@code terse} uses YABR's compact profile; {@code skipTrivial} omits the body
-     * of trivial methods (getters/setters, {@code super()}-only constructors, tiny returns) with a summary note,
-     * to keep the token cost of feeding a class to an LLM down.
+     * Dumps a whole class's bytecode.
+     *
+     * @param classEntry the class
+     * @param terse true for the compact disassembly profile
+     * @param skipTrivial true to omit methods with no code or at most 16 bytes of code, noting how many were omitted
+     * @return each included method's name and descriptor followed by its disassembly
      */
     public static String formatClass(ClassEntryModel classEntry, boolean terse, boolean skipTrivial)
     {
@@ -109,8 +118,10 @@ public class BytecodeFormatter
     }
 
     /**
-     * A compact per-method index (signature + code size) for pointing an LLM at methods it can inspect on demand,
-     * instead of inlining the whole disassembly.
+     * Lists a class's methods with their code sizes, as a compact index to inspect methods from on demand.
+     *
+     * @param classEntry the class
+     * @return one line per method with its name, descriptor, and code size or a no-code marker; trivial methods are flagged
      */
     public static String indexOf(ClassEntryModel classEntry)
     {
@@ -144,7 +155,13 @@ public class BytecodeFormatter
         return code == null || code.getCode() == null || code.getCode().length <= TRIVIAL_CODE_BYTES;
     }
 
-    /** One method's disassembly from a {@link MethodEntryModel}, for callers that can't reach YABR types (plugins). */
+    /**
+     * Disassembles one method, for callers such as plugins that cannot reach YABR types.
+     *
+     * @param methodModel the method
+     * @param terse true for the compact disassembly profile
+     * @return the indented disassembly; empty when the method has no code
+     */
     public static String formatMethod(MethodEntryModel methodModel, boolean terse)
     {
         return new BytecodeFormatter(methodModel.getMethodEntry()).format(terse);

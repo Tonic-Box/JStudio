@@ -18,11 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Host-side {@link ScriptApi}: persists scripts via {@link ScriptStore}, runs them via {@link ScriptRunner}, and
- * drives the UI (editor refresh, bottom Script Console tab) through {@link EventBus} so it needs no {@code MainFrame}
- * handle. Called off the EDT (the chat worker thread); the {@code MainFrame} event handlers marshal UI work.
- */
+/** The ScriptApi over ScriptStore and ScriptRunner, driving the editor and Script Console through EventBus events so it needs no window handle. */
 public class ScriptApiImpl implements ScriptApi
 {
 

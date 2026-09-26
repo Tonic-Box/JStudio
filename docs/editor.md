@@ -86,3 +86,35 @@ its less obvious choices are recorded here.
 - The debugger's source view shows the method's slice of the class source and rebases between document and display
   lines, keeping whole-document line numbers so they match the editor. Before it is laid out it has no geometry,
   so scrolling is deferred.
+
+## More notes
+
+- The find panel debounces typing by 200 ms and scroll refreshes by 50 ms, keeps match offsets sorted so moving
+  between matches is a binary search, and does not use RSyntaxTextArea's SearchEngine, which is quadratic in the
+  number of matches.
+- `EditorTab.reload` exists for classes changed outside the tab (an AI rename, a script run). It must call the
+  source view's `reload`, not `refresh`: `refresh` does nothing once a view has loaded and would keep showing the
+  stale cached source.
+- Source-offset navigation looks up the ceiling entry first, because an inlined expression is emitted by the later
+  statement that consumes it, then the floor entry, each checked for the token, and finally scans the lines between.
+  Without a line map it returns false so the caller falls back to method-level navigation.
+- The usage lens sits on the blank line the decompiler leaves between members (an inlay without touching the
+  document), falling back to the end of the declaration line; one placement algorithm serves every member kind.
+- `SourceAssembler` swaps in only the header and the method bodies that have a cleaned replacement; imports, gaps
+  and other methods stay verbatim, so a failed piece never drops a member. It takes only a class model and strings
+  because the span types are YABR types plugins cannot reach. `ReadonlyJavaView` exists for plugins whose classpath
+  excludes RSyntaxTextArea.
+- In live-patch mode the compile toolbar patches the running JVM, since a recompile alone does not affect it.
+- `BytecodeLineIndex` is the only code that depends on the disassembly text format: a method header is a column-0
+  `//` line whose last token contains `(`, and an instruction line is an indent, a decimal offset and a colon.
+  `BytecodeFormatter` indents every verbose comment so none look like headers. All disassembly comes from YABR's
+  `CodePrinter.prettyPrintCode`; the whole-class and single-method helpers exist for plugins, and `skipTrivial`
+  and `indexOf` keep down the token cost of feeding a class to an LLM.
+- The dual view hosts its own pane instances rather than reparenting the tab's views; font, wrap and method
+  scrolling apply to both panes, and the source pane keeps annotations on so its lines match the decompiler's maps.
+  `SourceBytecodeLinker` is the one place that translates between panes, many-to-one both ways; an unmapped line
+  highlights one side only.
+- A bytecode PC highlight requested during a refresh is deferred until the load finishes, because the load
+  replaces the document and would wipe it.
+- Editor views get the theme lifecycle from `ThemedJPanel`: register in the constructor, unregister in
+  `removeNotify`, re-theme in `applyChildThemes`, where text views add their token styling after `applyTextTheme`.

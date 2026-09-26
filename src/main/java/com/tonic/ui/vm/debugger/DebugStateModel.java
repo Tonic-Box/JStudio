@@ -6,6 +6,7 @@ import lombok.Getter;
 import java.util.Collections;
 import java.util.List;
 
+/** An immutable snapshot of a paused debug session: location, operand stack, locals and call stack. */
 @Getter
 @Builder
 public class DebugStateModel
@@ -27,6 +28,11 @@ public class DebugStateModel
     @Builder.Default
     private final List<FrameEntry> callStack = Collections.emptyList();
 
+    /**
+     * Returns the class name without its package.
+     *
+     * @return the part of the internal class name after the last slash
+     */
     public String getSimpleClassName()
     {
         int lastSlash = className.lastIndexOf('/');

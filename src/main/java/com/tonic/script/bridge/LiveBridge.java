@@ -16,18 +16,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Exposes the attached live JVM to scripts as the global {@code live} object. Operations are synchronous
- * protocol calls (run on the script thread). The Java agent supports thread enumeration, deadlock
- * detection, runtime class capture, and live patch (redefine).
- *
- * <p>Example: {@code let dl = live.deadlocks(); live.redefineFromProject("com/foo/Bar");}
- */
+/** The live script global for an attached JVM: threads, deadlock detection, class-load capture and redefinition from the project, each a synchronous call on the script thread. */
 public final class LiveBridge extends AbstractBridge
 {
 
     private final LiveSession session;
 
+    /**
+     * Creates a bridge over a live session.
+     *
+     * @param interpreter the interpreter that runs script callbacks
+     * @param session the attached JVM's session
+     */
     public LiveBridge(ScriptInterpreter interpreter, LiveSession session)
     {
         super(interpreter, null);

@@ -7,9 +7,11 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Generates JUnit 4 or 5 test source that replays one recorded call and asserts its return value or exception. */
 public class TestCaseGenerator
 {
 
+    /** A supported JUnit version, with its display name and the imports its tests need. */
     @Getter
     public enum JUnitVersion
     {
@@ -29,6 +31,7 @@ public class TestCaseGenerator
 
     }
 
+    /** A generated test class: its source, file name, package and class name. */
     @Getter
     public static class GeneratedTest
     {
@@ -37,6 +40,14 @@ public class TestCaseGenerator
         private final String packageName;
         private final String className;
 
+        /**
+         * Creates a generated test.
+         *
+         * @param code the test class source
+         * @param suggestedFileName the file name to save it as
+         * @param packageName the package, empty for the default package
+         * @param className the test class's simple name
+         */
         public GeneratedTest(String code, String suggestedFileName, String packageName, String className)
         {
             this.code = code;
@@ -47,6 +58,15 @@ public class TestCaseGenerator
 
     }
 
+    /**
+     * Generates a test class with one test replaying a recorded method call as a static call, expecting RuntimeException if it threw.
+     *
+     * @param call the recorded call
+     * @param version the JUnit version to target
+     * @param testClassName the test class's simple name
+     * @param testMethodName the test method's name
+     * @return the generated test, in the target class's package
+     */
     public GeneratedTest generate(MethodCall call, JUnitVersion version, String testClassName, String testMethodName)
     {
         StringBuilder sb = new StringBuilder();
@@ -87,6 +107,19 @@ public class TestCaseGenerator
         return new GeneratedTest(sb.toString(), suggestedFileName, packageName, testClassName);
     }
 
+    /**
+     * Generates a test class with one test replaying a VM execution as a static call, expecting the thrown exception's class when it can be read from the message.
+     *
+     * @param result the execution result
+     * @param entryClass the class's internal name, with slashes
+     * @param entryMethod the method's name
+     * @param descriptor the method's descriptor
+     * @param args the arguments the method was called with
+     * @param version the JUnit version to target
+     * @param testClassName the test class's simple name
+     * @param testMethodName the test method's name
+     * @return the generated test, in the target class's package
+     */
     public GeneratedTest generate(ExecutionResult result, String entryClass, String entryMethod, String descriptor, Object[] args, JUnitVersion version, String testClassName, String testMethodName)
     {
         StringBuilder sb = new StringBuilder();
@@ -279,6 +312,12 @@ public class TestCaseGenerator
         return sb.toString();
     }
 
+    /**
+     * Formats a value as a Java source literal.
+     *
+     * @param value the value to format
+     * @return the literal with its type suffix, quoting and escapes, or a TODO placeholder comment for types that have no literal
+     */
     public String formatLiteral(Object value)
     {
         if (value == null)
@@ -429,11 +468,23 @@ public class TestCaseGenerator
         return fqcn.substring(last + 1);
     }
 
+    /**
+     * Suggests a test class name.
+     *
+     * @param targetClassName the class under test, with dots or slashes
+     * @return the simple name followed by Test
+     */
     public String suggestTestClassName(String targetClassName)
     {
         return extractSimpleName(targetClassName) + "Test";
     }
 
+    /**
+     * Suggests a test method name.
+     *
+     * @param methodName the method under test, or null
+     * @return test followed by the capitalized name, or testMethod when the name is null or empty
+     */
     public String suggestTestMethodName(String methodName)
     {
         if (methodName == null || methodName.isEmpty())

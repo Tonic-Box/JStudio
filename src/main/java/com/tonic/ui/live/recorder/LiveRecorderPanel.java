@@ -33,14 +33,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
-/**
- * Right-dock tool (shown only while attached to a JFR-capable JVM): start/stop a Java Flight Recorder recording
- * in the target, snapshot the in-progress buffer, and export the captured {@code .jfr} files. The recordings
- * open in JDK Mission Control today; in-app analysis is a later slice.
- *
- * <p>Event-driven, not polling: the only timer is a client-side clock for the "Recording mm:ss" label, so the
- * (serial) connection stays free. Network calls run off the EDT via {@link SwingWorkers}.
- */
+/** The Flight Recorder tool for a JFR-capable attached JVM: starts, stops and snapshots recordings, then saves or analyzes the captured files. */
 public final class LiveRecorderPanel extends ThemedJPanel
 {
 
@@ -89,6 +82,11 @@ public final class LiveRecorderPanel extends ThemedJPanel
     private long startNanos;
     private boolean recording;
 
+    /**
+     * Builds the recorder controls and captured-recordings list.
+     *
+     * @param mainFrame the main window, used to open analysis windows
+     */
     public LiveRecorderPanel(MainFrame mainFrame)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());

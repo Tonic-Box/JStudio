@@ -10,6 +10,7 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
+/** Modal dialog for renaming a class and optionally moving it to another package, with separate package and name fields. */
 public class RenameClassDialog extends ThemedJDialog
 {
 
@@ -18,6 +19,12 @@ public class RenameClassDialog extends ThemedJDialog
     @Getter
     private boolean confirmed = false;
 
+    /**
+     * Creates the dialog with the fields filled from the current name.
+     *
+     * @param owner the window to center on and block
+     * @param currentClassName the class's internal name, with slashes
+     */
     public RenameClassDialog(Window owner, String currentClassName)
     {
         super(owner, "Rename Class", ModalityType.APPLICATION_MODAL);
@@ -166,6 +173,11 @@ public class RenameClassDialog extends ThemedJDialog
         JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    /**
+     * The class name as currently typed.
+     *
+     * @return the internal name, with slashes, or just the simple name if the package field is empty
+     */
     public String getNewClassName()
     {
         String pkg = packageField.getText().trim().replace('.', '/');

@@ -1,5 +1,6 @@
 package com.tonic.ui.core.constants;
 
+/** Preferred table column widths, in pixels. */
 public final class ColumnWidths
 {
 

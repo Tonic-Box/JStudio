@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+/** The bar shown over the source editor while it has unsaved edits: compile status, recompile and discard buttons, and an expandable diagnostics list. */
 public class FloatingCompileToolbar extends JPanel implements ThemeChangeListener
 {
 
@@ -39,6 +40,12 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
     private boolean errorListExpanded = false;
     private Consumer<Integer> lineNavigator;
 
+    /**
+     * Creates the toolbar and registers it for theme changes.
+     *
+     * @param onCompile run when the recompile button is pressed
+     * @param onDiscard run when the discard button is pressed
+     */
     public FloatingCompileToolbar(Runnable onCompile, Runnable onDiscard)
     {
 
@@ -141,6 +148,11 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
+    /**
+     * Sets what a double-click on a diagnostic does.
+     *
+     * @param navigator receives the diagnostic's source line
+     */
     public void setLineNavigator(Consumer<Integer> navigator)
     {
         this.lineNavigator = navigator;
@@ -173,6 +185,7 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         return button;
     }
 
+    /** Shows the toolbar in the modified state with the diagnostics cleared and compile enabled. */
     public void showModified()
     {
         statusLabel.setText("Source modified");
@@ -187,11 +200,24 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
+    /**
+     * Shows the error and warning counts with no diagnostic list.
+     *
+     * @param errorCount the number of errors; compile is disabled when above zero
+     * @param warningCount the number of warnings
+     */
     public void showWithErrors(int errorCount, int warningCount)
     {
         showWithErrors(errorCount, warningCount, Collections.emptyList());
     }
 
+    /**
+     * Shows the error and warning counts and lists the diagnostics, expanding the list when it is non-empty.
+     *
+     * @param errorCount the number of errors; compile is disabled when above zero
+     * @param warningCount the number of warnings
+     * @param errors the diagnostics to list
+     */
     public void showWithErrors(int errorCount, int warningCount, List<CompilationError> errors)
     {
         errorListModel.clear();
@@ -234,6 +260,7 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
+    /** Shows the compiling state with both buttons disabled. */
     public void showCompiling()
     {
         statusLabel.setText("Compiling...");
@@ -245,8 +272,9 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
     }
 
     /**
-     * Switches the compile button between plain recompile and recompile + live-patch (used while attached to a
-     * running JVM, where a recompile on its own has no effect on the target).
+     * Switches the compile button between plain recompile and recompile plus live-patch.
+     *
+     * @param on whether a JVM is attached and a recompile should also patch it
      */
     public void setLivePatchMode(boolean on)
     {
@@ -254,6 +282,7 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         compileButton.setToolTipText(on ? "Recompile and live-patch the attached JVM" : null);
     }
 
+    /** Shows the live-patching state with both buttons disabled. */
     public void showPatching()
     {
         statusLabel.setText("Patching live JVM...");
@@ -264,6 +293,7 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
+    /** Shows that the compile and live patch succeeded. */
     public void showPatched()
     {
         statusLabel.setText("Compiled & patched live");
@@ -274,6 +304,11 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
+    /**
+     * Shows that the live patch failed.
+     *
+     * @param message the failure reason
+     */
     public void showPatchFailed(String message)
     {
         statusLabel.setText("Live patch failed: " + message);
@@ -284,6 +319,11 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
+    /**
+     * Shows a successful compile and clears the diagnostics.
+     *
+     * @param timeMs the compile time in milliseconds
+     */
     public void showSuccess(long timeMs)
     {
         statusLabel.setText("Compiled successfully (" + timeMs + "ms)");
@@ -298,6 +338,7 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
+    /** Hides the toolbar and clears the diagnostics. */
     public void hideToolbar()
     {
         setVisible(false);
@@ -332,6 +373,7 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         errorList.setFont(JStudioTheme.getCodeFont(12));
     }
 
+    /** Unregisters from theme changes; safe to call more than once. */
     public void dispose()
     {
         ThemeManager.getInstance().removeThemeChangeListener(this);

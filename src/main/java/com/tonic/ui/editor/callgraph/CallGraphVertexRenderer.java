@@ -7,6 +7,7 @@ import com.tonic.ui.theme.JStudioTheme;
 
 import java.awt.Color;
 
+/** Renders a call graph vertex as the method's owner class above its name, styled as focus, external or plain. */
 public class CallGraphVertexRenderer implements GraphVertexRenderer<MethodReference>
 {
 
@@ -17,6 +18,13 @@ public class CallGraphVertexRenderer implements GraphVertexRenderer<MethodRefere
     private static final int MAX_CLASS_LENGTH = 22;
     private static final int MAX_METHOD_LENGTH = 20;
 
+    /**
+     * Creates a renderer.
+     *
+     * @param callGraph the graph used to tell external methods apart
+     * @param focusMethod the method the graph centres on
+     * @param isFocus true to style every vertex as the focus
+     */
     public CallGraphVertexRenderer(CallGraph callGraph, MethodReference focusMethod, boolean isFocus)
     {
         this.callGraph = callGraph;

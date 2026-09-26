@@ -13,17 +13,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Custom file chooser dialog to replace JFileChooser.
- * Provides a modern, dark-themed file selection experience.
- */
+/** A modal, themed replacement for JFileChooser; approving a selection saves its directory to settings as the last directory. */
 public class FileChooserDialog extends JDialog
 {
 
-    /**
-     * -- GETTER --
-     *  Get the panel for configuration.
-     */
+    /** The panel, for configuring the dialog before it is shown. */
     @Getter
     private final FileChooserPanel panel;
     private FileChooserResult result = FileChooserResult.cancelled();
@@ -32,7 +26,10 @@ public class FileChooserDialog extends JDialog
     private static File lastDirectory = new File(System.getProperty("user.home"));
 
     /**
-     * Create a new file chooser dialog.
+     * Creates the dialog; configure it through its panel or use the builder.
+     *
+     * @param owner the window to center on and block, or null
+     * @param title the title
      */
     public FileChooserDialog(Window owner, String title)
     {
@@ -76,7 +73,9 @@ public class FileChooserDialog extends JDialog
     }
 
     /**
-     * Show the dialog and return the result.
+     * Shows the dialog and blocks until it closes.
+     *
+     * @return the result, cancelled if the dialog was closed without approving
      */
     public FileChooserResult showDialog()
     {
@@ -85,7 +84,11 @@ public class FileChooserDialog extends JDialog
     }
 
     /**
-     * Show an open file dialog.
+     * Shows an Open File dialog starting in the last directory.
+     *
+     * @param parent a component in the owning window, or null
+     * @param filters the file filters, in order; All Files is always added
+     * @return the result
      */
     public static FileChooserResult showOpenDialog(Component parent, ExtensionFileFilter... filters)
     {
@@ -98,7 +101,12 @@ public class FileChooserDialog extends JDialog
     }
 
     /**
-     * Show an open file dialog with a title.
+     * Shows an open file dialog with a title, starting in the last directory.
+     *
+     * @param parent a component in the owning window, or null
+     * @param title the title
+     * @param filters the file filters, in order; All Files is always added
+     * @return the result
      */
     public static FileChooserResult showOpenDialog(Component parent, String title, ExtensionFileFilter... filters)
     {
@@ -111,7 +119,11 @@ public class FileChooserDialog extends JDialog
     }
 
     /**
-     * Show a save file dialog.
+     * Shows a Save File dialog starting in the last directory.
+     *
+     * @param parent a component in the owning window, or null
+     * @param suggestedName the initial file name, or null or empty for none
+     * @return the result
      */
     public static FileChooserResult showSaveDialog(Component parent, String suggestedName)
     {
@@ -124,7 +136,12 @@ public class FileChooserDialog extends JDialog
     }
 
     /**
-     * Show a save file dialog with filters.
+     * Shows a Save File dialog with filters, starting in the last directory.
+     *
+     * @param parent a component in the owning window, or null
+     * @param suggestedName the initial file name, or null or empty for none
+     * @param filters the file filters, in order; All Files is always added
+     * @return the result
      */
     public static FileChooserResult showSaveDialog(Component parent, String suggestedName, ExtensionFileFilter... filters)
     {
@@ -138,7 +155,10 @@ public class FileChooserDialog extends JDialog
     }
 
     /**
-     * Show a directory selection dialog.
+     * Shows a Select Folder dialog starting in the last directory.
+     *
+     * @param parent a component in the owning window, or null
+     * @return the result
      */
     public static FileChooserResult showDirectoryDialog(Component parent)
     {
@@ -150,7 +170,11 @@ public class FileChooserDialog extends JDialog
     }
 
     /**
-     * Show a directory selection dialog with a title.
+     * Shows a folder selection dialog with a title, starting in the last directory.
+     *
+     * @param parent a component in the owning window, or null
+     * @param title the title
+     * @return the result
      */
     public static FileChooserResult showDirectoryDialog(Component parent, String title)
     {
@@ -162,7 +186,9 @@ public class FileChooserDialog extends JDialog
     }
 
     /**
-     * Set the last used directory.
+     * Sets the in-memory last directory, using a file's parent if given a file; ignores null and missing paths.
+     *
+     * @param directory the directory or a file in it
      */
     public static void setLastDirectory(File directory)
     {
@@ -173,16 +199,16 @@ public class FileChooserDialog extends JDialog
     }
 
     /**
-     * Create a builder for advanced configuration.
+     * Starts building a dialog.
+     *
+     * @return a new builder
      */
     public static Builder builder()
     {
         return new Builder();
     }
 
-    /**
-     * Builder for creating customized file chooser dialogs.
-     */
+    /** Builder for a configured file chooser dialog; by default it opens a file, starting in the last directory saved to settings. */
     public static class Builder
     {
         private FileChooserMode mode = FileChooserMode.OPEN_FILE;
@@ -197,7 +223,10 @@ public class FileChooserDialog extends JDialog
         }
 
         /**
-         * Set the dialog mode.
+         * Sets what the dialog selects.
+         *
+         * @param mode the mode
+         * @return this builder
          */
         public Builder mode(FileChooserMode mode)
         {
@@ -206,7 +235,10 @@ public class FileChooserDialog extends JDialog
         }
 
         /**
-         * Set the dialog title.
+         * Sets the title.
+         *
+         * @param title the title
+         * @return this builder
          */
         public Builder title(String title)
         {
@@ -215,7 +247,10 @@ public class FileChooserDialog extends JDialog
         }
 
         /**
-         * Set the initial directory.
+         * Sets the starting directory, which replaces the last directory.
+         *
+         * @param directory the directory; the home directory is used if it does not exist
+         * @return this builder
          */
         public Builder directory(File directory)
         {
@@ -225,7 +260,10 @@ public class FileChooserDialog extends JDialog
         }
 
         /**
-         * Set the initial file name.
+         * Sets the initial file name.
+         *
+         * @param name the name, or null or empty for none
+         * @return this builder
          */
         public Builder fileName(String name)
         {
@@ -234,7 +272,10 @@ public class FileChooserDialog extends JDialog
         }
 
         /**
-         * Add file filters.
+         * Adds file filters, skipping nulls.
+         *
+         * @param filters the filters, or null for none
+         * @return this builder
          */
         public Builder filters(ExtensionFileFilter... filters)
         {
@@ -252,7 +293,10 @@ public class FileChooserDialog extends JDialog
         }
 
         /**
-         * Add a single filter.
+         * Adds one file filter.
+         *
+         * @param filter the filter, or null to add nothing
+         * @return this builder
          */
         public Builder filter(ExtensionFileFilter filter)
         {
@@ -264,7 +308,10 @@ public class FileChooserDialog extends JDialog
         }
 
         /**
-         * Whether to use the last used directory.
+         * Chooses whether to start in the last directory saved to settings or in the directory set with directory.
+         *
+         * @param use true for the last directory
+         * @return this builder
          */
         public Builder useLastDirectory(boolean use)
         {
@@ -273,7 +320,10 @@ public class FileChooserDialog extends JDialog
         }
 
         /**
-         * Build and return the dialog.
+         * Creates the configured dialog, falling back to the home directory if the starting directory does not exist.
+         *
+         * @param parent a component in the owning window, or null
+         * @return the dialog, not yet shown
          */
         public FileChooserDialog build(Component parent)
         {

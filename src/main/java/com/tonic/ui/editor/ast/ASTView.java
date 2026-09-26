@@ -26,6 +26,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/** The AST view of a class: each method is recovered to source AST and shown as a text dump or a browsable tree. */
 public class ASTView extends AbstractTextView
 {
 
@@ -59,6 +60,11 @@ public class ASTView extends AbstractTextView
     @Getter
     private boolean showingTreeView = false;
 
+    /**
+     * Creates the view, starting on the text dump; content loads on refresh.
+     *
+     * @param classEntry the class to show
+     */
     public ASTView(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;
@@ -402,6 +408,11 @@ public class ASTView extends AbstractTextView
         astTree.setRowHeight(size + 8);
     }
 
+    /**
+     * Switches between the tree and the text dump, updating the toolbar toggles.
+     *
+     * @param showTree true for the tree, false for the text dump
+     */
     public void setShowTreeView(boolean showTree)
     {
         if (showTree)

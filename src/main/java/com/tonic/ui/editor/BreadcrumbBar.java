@@ -12,9 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
 
-/**
- * Breadcrumb navigation bar showing current location: Package > Class > Method
- */
+/** The breadcrumb bar above the editor showing package, class and method, each clickable; hidden while no class is set. */
 public class BreadcrumbBar extends JPanel
 {
 
@@ -25,6 +23,7 @@ public class BreadcrumbBar extends JPanel
     private Consumer<ClassEntryModel> onClassClick;
     private Consumer<String> onMethodClick;
 
+    /** Creates an empty, hidden bar. */
     public BreadcrumbBar()
     {
         setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
@@ -34,7 +33,9 @@ public class BreadcrumbBar extends JPanel
     }
 
     /**
-     * Update the breadcrumb to show the given class.
+     * Shows a class, clearing any method.
+     *
+     * @param classEntry the class, or null to hide the bar
      */
     public void setClass(ClassEntryModel classEntry)
     {
@@ -44,7 +45,9 @@ public class BreadcrumbBar extends JPanel
     }
 
     /**
-     * Update the breadcrumb to show a method within the current class.
+     * Shows a method within the current class.
+     *
+     * @param methodName the method's name, or null to show only the class
      */
     public void setMethod(String methodName)
     {
@@ -52,9 +55,7 @@ public class BreadcrumbBar extends JPanel
         rebuild();
     }
 
-    /**
-     * Clear the breadcrumb.
-     */
+    /** Clears the class and method and hides the bar. */
     public void clear()
     {
         this.currentClass = null;
@@ -63,7 +64,9 @@ public class BreadcrumbBar extends JPanel
     }
 
     /**
-     * Set callback for package click.
+     * Sets what runs when the package crumb is clicked.
+     *
+     * @param callback receives the package name
      */
     public void setOnPackageClick(Consumer<String> callback)
     {
@@ -71,7 +74,9 @@ public class BreadcrumbBar extends JPanel
     }
 
     /**
-     * Set callback for class click.
+     * Sets what runs when the class crumb is clicked.
+     *
+     * @param callback receives the current class
      */
     public void setOnClassClick(Consumer<ClassEntryModel> callback)
     {
@@ -79,7 +84,9 @@ public class BreadcrumbBar extends JPanel
     }
 
     /**
-     * Set callback for method click.
+     * Sets what runs when the method crumb is clicked.
+     *
+     * @param callback receives the method name
      */
     public void setOnMethodClick(Consumer<String> callback)
     {

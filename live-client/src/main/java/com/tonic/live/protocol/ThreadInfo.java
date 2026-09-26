@@ -11,6 +11,13 @@ public final class ThreadInfo
     private final String name;
     private final int state;
 
+    /**
+     * Creates a thread entry.
+     *
+     * @param id the thread id
+     * @param name the thread name
+     * @param state the Thread.State ordinal
+     */
     public ThreadInfo(long id, String name, int state)
     {
         this.id = id;

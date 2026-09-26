@@ -10,9 +10,7 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 
-/**
- * Hex view showing raw class file bytes in traditional hex dump format.
- */
+/** The hex view: the class file's written bytes as a sixteen-bytes-per-line dump with offset and ASCII columns. */
 public class HexView extends AbstractEditorView
 {
 
@@ -30,6 +28,11 @@ public class HexView extends AbstractEditorView
     private static final String STYLE_SEPARATOR = "separator";
     private static final String STYLE_HIGHLIGHT = "highlight";
 
+    /**
+     * Creates the view; the dump loads on the first refresh.
+     *
+     * @param classEntry the class whose bytes to show
+     */
     public HexView(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;
@@ -226,7 +229,9 @@ public class HexView extends AbstractEditorView
     }
 
     /**
-     * Get the current text.
+     * Gets the dump text.
+     *
+     * @return the whole dump as text
      */
     @Override
     public String getText()
@@ -234,9 +239,7 @@ public class HexView extends AbstractEditorView
         return textPane.getText();
     }
 
-    /**
-     * Copy current selection to clipboard.
-     */
+    /** Copies the selected dump text to the system clipboard. */
     @Override
     public void copySelection()
     {
@@ -249,7 +252,9 @@ public class HexView extends AbstractEditorView
     }
 
     /**
-     * Go to a specific line.
+     * Moves the caret to a dump line; out-of-range lines are ignored.
+     *
+     * @param line the 1-based line number
      */
     @Override
     public void goToLine(int line)
@@ -265,9 +270,7 @@ public class HexView extends AbstractEditorView
         }
     }
 
-    /**
-     * Show find dialog.
-     */
+    /** Prompts for text such as hex bytes and selects its first case-insensitive match in the dump. */
     @Override
     public void showFindDialog()
     {
@@ -286,7 +289,9 @@ public class HexView extends AbstractEditorView
     }
 
     /**
-     * Get the selected text.
+     * Gets the selected dump text.
+     *
+     * @return the selection, or null when nothing is selected
      */
     @Override
     public String getSelectedText()
@@ -295,7 +300,9 @@ public class HexView extends AbstractEditorView
     }
 
     /**
-     * Scroll to text.
+     * Selects the first case-insensitive match of a text in the dump.
+     *
+     * @param text the text to find; null or empty does nothing
      */
     @Override
     public void scrollToText(String text)
@@ -313,7 +320,9 @@ public class HexView extends AbstractEditorView
     }
 
     /**
-     * Set the font size.
+     * Sets the dump's font size.
+     *
+     * @param size the font size in points
      */
     @Override
     public void setFontSize(int size)

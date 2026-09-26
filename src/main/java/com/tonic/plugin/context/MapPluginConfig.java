@@ -4,26 +4,44 @@ import com.tonic.plugin.api.PluginConfig;
 
 import java.util.*;
 
+/** A PluginConfig backed by a mutable hash map of strings; not thread-safe. */
 public class MapPluginConfig implements PluginConfig
 {
 
     private final Map<String, String> properties;
 
+    /** Creates an empty configuration. */
     public MapPluginConfig()
     {
         this.properties = new HashMap<>();
     }
 
+    /**
+     * Creates a configuration holding a copy of the given values.
+     *
+     * @param properties the initial keys and values
+     */
     public MapPluginConfig(Map<String, String> properties)
     {
         this.properties = new HashMap<>(properties);
     }
 
+    /**
+     * Sets one value, replacing any earlier one.
+     *
+     * @param key the configuration key
+     * @param value the value
+     */
     public void put(String key, String value)
     {
         properties.put(key, value);
     }
 
+    /**
+     * Sets several values, replacing earlier ones with the same keys.
+     *
+     * @param values the keys and values to add
+     */
     public void putAll(Map<String, String> values)
     {
         properties.putAll(values);

@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/** A PluginLogger that prints timestamped, plugin-labelled lines to two print streams, standard out and error by default; debug output starts off. */
 public class ConsolePluginLogger implements PluginLogger
 {
 
@@ -16,6 +17,11 @@ public class ConsolePluginLogger implements PluginLogger
     private final PrintStream err;
     private boolean debugEnabled = false;
 
+    /**
+     * Creates a logger that writes to standard out and standard error.
+     *
+     * @param pluginName the name printed on every line
+     */
     public ConsolePluginLogger(String pluginName)
     {
         this.pluginName = pluginName;
@@ -23,6 +29,13 @@ public class ConsolePluginLogger implements PluginLogger
         this.err = System.err;
     }
 
+    /**
+     * Creates a logger that writes to the given streams.
+     *
+     * @param pluginName the name printed on every line
+     * @param out receives info, warn, debug and progress lines
+     * @param err receives error lines and stack traces
+     */
     public ConsolePluginLogger(String pluginName, PrintStream out, PrintStream err)
     {
         this.pluginName = pluginName;
@@ -30,6 +43,11 @@ public class ConsolePluginLogger implements PluginLogger
         this.err = err;
     }
 
+    /**
+     * Turns debug output, and stack traces on errors, on or off.
+     *
+     * @param enabled true to write them
+     */
     public void setDebugEnabled(boolean enabled)
     {
         this.debugEnabled = enabled;

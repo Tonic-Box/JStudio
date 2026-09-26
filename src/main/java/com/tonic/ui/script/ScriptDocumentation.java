@@ -5,6 +5,7 @@ import com.tonic.ui.theme.ThemeManager;
 
 import java.awt.Color;
 
+/** The script language reference as themed HTML pages, one per navigation section. */
 public class ScriptDocumentation
 {
 
@@ -12,6 +13,11 @@ public class ScriptDocumentation
     {
     }
 
+    /**
+     * Builds the reference's CSS from the current theme's colors.
+     *
+     * @return a style element holding the rules
+     */
     public static String getStylesheet()
     {
         Theme theme = ThemeManager.getInstance().getCurrentTheme();
@@ -53,6 +59,11 @@ public class ScriptDocumentation
         return String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
     }
 
+    /**
+     * Gives the Overview page: the language and the analysis APIs it offers.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getOverview()
     {
         return getStylesheet() +
@@ -85,6 +96,11 @@ public class ScriptDocumentation
                 "</div>\n";
     }
 
+    /**
+     * Gives the Loops page: while, for, for-of, for-in, break and continue.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getLoops()
     {
         return getStylesheet() +
@@ -117,6 +133,11 @@ public class ScriptDocumentation
                 "}</pre>\n";
     }
 
+    /**
+     * Gives the Array Methods page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getArrayMethods()
     {
         return getStylesheet() +
@@ -169,6 +190,11 @@ public class ScriptDocumentation
                 "<span class='kw'>let</span> str = arr.<span class='fn'>join</span>(<span class='str'>\", \"</span>);  <span class='cmt'>// \"1, 2, 3\"</span></pre>\n";
     }
 
+    /**
+     * Gives the Try/Catch page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getTryCatch()
     {
         return getStylesheet() +
@@ -193,6 +219,11 @@ public class ScriptDocumentation
                 "}</pre>\n";
     }
 
+    /**
+     * Gives the Results API page: adding, querying and exporting findings.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getResultsApi()
     {
         return getStylesheet() +
@@ -232,6 +263,11 @@ public class ScriptDocumentation
                 "<span class='kw'>let</span> summary = results.<span class='fn'>summary</span>();</pre>\n";
     }
 
+    /**
+     * Gives the Project API page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getProjectApi()
     {
         return getStylesheet() +
@@ -261,6 +297,11 @@ public class ScriptDocumentation
                 "<span class='fn'>log</span>(<span class='str'>\"Methods: \"</span> + project.<span class='fn'>methodCount</span>());</pre>\n";
     }
 
+    /**
+     * Gives the Call Graph API page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getCallGraphApi()
     {
         return getStylesheet() +
@@ -294,6 +335,11 @@ public class ScriptDocumentation
                 "<span class='kw'>let</span> reachable = callgraph.<span class='fn'>getReachableFrom</span>(entries);</pre>\n";
     }
 
+    /**
+     * Gives the Data Flow API page, including taint analysis.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getDataFlowApi()
     {
         return getStylesheet() +
@@ -330,6 +376,11 @@ public class ScriptDocumentation
                 "}</pre>\n";
     }
 
+    /**
+     * Gives the Dependency API page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getDependencyApi()
     {
         return getStylesheet() +
@@ -364,6 +415,11 @@ public class ScriptDocumentation
                 "<span class='kw'>let</span> roots = dependencies.<span class='fn'>findRootClasses</span>();</pre>\n";
     }
 
+    /**
+     * Gives the Pattern API page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getPatternApi()
     {
         return getStylesheet() +
@@ -389,6 +445,11 @@ public class ScriptDocumentation
                 "<span class='kw'>let</span> throws = patterns.<span class='fn'>findThrows</span>();</pre>\n";
     }
 
+    /**
+     * Gives the Simulation API page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getSimulationApi()
     {
         return getStylesheet() +
@@ -419,6 +480,11 @@ public class ScriptDocumentation
                 "<span class='kw'>let</span> trace = simulation.<span class='fn'>trace</span>();</pre>\n";
     }
 
+    /**
+     * Gives the Instrumentation API page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getInstrumentApi()
     {
         return getStylesheet() +
@@ -446,6 +512,11 @@ public class ScriptDocumentation
                 "<span class='fn'>log</span>(<span class='str'>\"Made \"</span> + mods + <span class='str'>\" modifications\"</span>);</pre>\n";
     }
 
+    /**
+     * Gives the Types API page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getTypesApi()
     {
         return getStylesheet() +
@@ -472,6 +543,11 @@ public class ScriptDocumentation
                 "<span class='kw'>let</span> strings = types.<span class='fn'>findByType</span>(<span class='str'>\"String\"</span>);</pre>\n";
     }
 
+    /**
+     * Gives the AST API page: handlers, factories, traversal and mutation.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getAstApi()
     {
         return getStylesheet() +
@@ -591,6 +667,11 @@ public class ScriptDocumentation
                 "ast.<span class='fn'>getSimpleName</span>(<span class='str'>\"java/lang/String\"</span>); <span class='cmt'>// \"String\"</span></pre>\n";
     }
 
+    /**
+     * Gives the Strings API page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getStringsApi()
     {
         return getStylesheet() +
@@ -617,6 +698,11 @@ public class ScriptDocumentation
                 "<span class='kw'>let</span> byClass = strings.<span class='fn'>groupByClass</span>();</pre>\n";
     }
 
+    /**
+     * Gives the Pipeline API page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getPipelineApi()
     {
         return getStylesheet() +
@@ -645,6 +731,11 @@ public class ScriptDocumentation
                 "<span class='fn'>log</span>(<span class='str'>\"Total time: \"</span> + pipeline.<span class='fn'>getTotalTime</span>() + <span class='str'>\"ms\"</span>);</pre>\n";
     }
 
+    /**
+     * Gives the security scanner example page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getSecurityExample()
     {
         return getStylesheet() +
@@ -684,6 +775,11 @@ public class ScriptDocumentation
                 "results.<span class='fn'>exportJson</span>(<span class='str'>\"security-report.json\"</span>);</pre>\n";
     }
 
+    /**
+     * Gives the dead code finder example page.
+     *
+     * @return the page as HTML, stylesheet first
+     */
     public static String getDeadCodeExample()
     {
         return getStylesheet() +
@@ -712,6 +808,11 @@ public class ScriptDocumentation
                 "<span class='fn'>log</span>(results.<span class='fn'>toTable</span>());</pre>\n";
     }
 
+    /**
+     * Lists the navigation entries in order; subsections are indented by two spaces.
+     *
+     * @return the titles
+     */
     public static String[] getSectionTitles()
     {
         return new String[]
@@ -741,6 +842,12 @@ public class ScriptDocumentation
                 };
     }
 
+    /**
+     * Picks the page for a navigation entry; a group heading shows its first subsection.
+     *
+     * @param section a title from getSectionTitles, indentation included
+     * @return the page, or the overview for an unknown title
+     */
     public static String getContentForSection(String section)
     {
         switch (section)

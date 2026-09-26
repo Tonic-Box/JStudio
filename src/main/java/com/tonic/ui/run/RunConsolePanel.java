@@ -18,11 +18,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 
-/**
- * The dedicated "Run" output panel (a bottom-panel tab): streams a launched process's stdout (normal) and
- * stderr (red), with Terminate / Rerun / Clear controls and the final exit code. Implements
- * {@link RunService.RunOutput}; all callbacks marshal to the EDT.
- */
+/** The Run bottom tab: streams a launched process's stdout and stderr (in red) with Terminate, Rerun and Clear controls and the exit code; its output callbacks marshal to the EDT. */
 public final class RunConsolePanel extends ThemedJPanel implements RunService.RunOutput
 {
 
@@ -34,6 +30,7 @@ public final class RunConsolePanel extends ThemedJPanel implements RunService.Ru
     private Process process;
     private Runnable rerunAction;
 
+    /** Creates an idle, empty console with no process and no rerun action. */
     public RunConsolePanel()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -72,13 +69,21 @@ public final class RunConsolePanel extends ThemedJPanel implements RunService.Ru
         updateButtons();
     }
 
-    /** Sets the action that relaunches with the same configuration (used by the Rerun button). */
+    /**
+     * Sets what the Rerun button runs; it only runs while no process is live.
+     *
+     * @param action the relaunch with the same configuration, or null for none
+     */
     public void setRerunAction(Runnable action)
     {
         this.rerunAction = action;
     }
 
-    /** Binds the live process to this panel (enables Terminate while it runs). */
+    /**
+     * Binds the live process to this panel, enabling Terminate while it runs.
+     *
+     * @param process the launched process, or null if the launch failed
+     */
     public void setProcess(Process process)
     {
         this.process = process;

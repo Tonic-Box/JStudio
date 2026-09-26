@@ -8,13 +8,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Placement logic for the editor's usage-count lenses. For each member (method, field, or class) the
- * lens text goes on the blank line directly above the declaration (the decompiler separates members
- * with blank lines, giving an IntelliJ-style inlay without touching the document), falling back to
- * the end of the declaration line itself when no blank line exists. One placement algorithm serves
- * all member kinds; painting and hit-testing live in {@link UsageLensOverlay}.
- */
+/** Placement of the editor's usage-count lenses: on the blank line above each member declaration, or at the end of the declaration line when there is none. */
 public final class UsageLens
 {
 
@@ -27,6 +21,15 @@ public final class UsageLens
         final DecompileResult.MemberSpan span;
         final int count;
 
+        /**
+         * Creates a target.
+         *
+         * @param type the member kind
+         * @param memberName the member name
+         * @param memberDescriptor the member descriptor
+         * @param span the member's declaration span in the unfiltered source; a null span is skipped
+         * @param count the number of usages
+         */
         public LensTarget(FindUsagesEvent.TargetType type, String memberName, String memberDescriptor, DecompileResult.MemberSpan span, int count)
         {
             this.type = type;
@@ -70,8 +73,11 @@ public final class UsageLens
     }
 
     /**
-     * Builds lens entries for every target whose span lands within the displayed source, sorted by
-     * anchor line. {@code sourceLines} is the displayed source split on {@code \n}.
+     * Builds a lens entry for every target whose declaration lands within the source.
+     *
+     * @param sourceLines the displayed source, split into lines
+     * @param targets the members to lens
+     * @return the entries sorted by anchor line; empty when either argument is null
      */
     public static List<LensEntry> compute(String[] sourceLines, List<LensTarget> targets)
     {
@@ -79,9 +85,12 @@ public final class UsageLens
     }
 
     /**
-     * As {@link #compute(String[], List)} but for a filtered view: {@code lineMap} (from {@code AnnotationFilter})
-     * translates each original 0-based line to its 0-based line in {@code sourceLines} (-1 if removed), so lenses
-     * land correctly when annotations are hidden. A null map is the identity (unfiltered source).
+     * Builds a lens entry for every target whose declaration survives into a filtered view of the source.
+     *
+     * @param sourceLines the displayed source, split into lines
+     * @param targets the members to lens
+     * @param lineMap maps each original 0-based line to its 0-based displayed line, or -1 if removed; null means unfiltered
+     * @return the entries sorted by anchor line; empty when sourceLines or targets is null
      */
     public static List<LensEntry> compute(String[] sourceLines, List<LensTarget> targets, int[] lineMap)
     {

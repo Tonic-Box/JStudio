@@ -11,9 +11,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Table model for the file list, providing columns for name, size, date, and type.
- */
+/** Table model for the file list, with icon, name, size, date and type columns; directories always sort before files. */
 public class FileListModel extends AbstractTableModel
 {
 
@@ -27,22 +25,13 @@ public class FileListModel extends AbstractTableModel
     private static final Class<?>[] COLUMN_CLASSES = {Icon.class, String.class, Long.class, Date.class, String.class};
 
     private final List<FileEntry> entries = new ArrayList<>();
-    /**
-     * -- GETTER --
-     *  Get the current directory.
-     */
+    /** The directory whose files are shown, or null if none was set. */
     @Getter
     private File currentDirectory;
-    /**
-     * -- GETTER --
-     *  Get the current sort column.
-     */
+    /** The column the rows are sorted by. */
     @Getter
     private int sortColumn = COL_NAME;
-    /**
-     * -- GETTER --
-     *  Check if sorting is ascending.
-     */
+    /** Whether the sort is ascending. */
     @Getter
     private boolean sortAscending = true;
 
@@ -97,7 +86,10 @@ public class FileListModel extends AbstractTableModel
     }
 
     /**
-     * Get the file entry at the specified row.
+     * The entry in a row.
+     *
+     * @param row the row index
+     * @return the entry, or null if the row is out of range
      */
     public FileEntry getEntryAt(int row)
     {
@@ -109,7 +101,10 @@ public class FileListModel extends AbstractTableModel
     }
 
     /**
-     * Get the file at the specified row.
+     * The file in a row.
+     *
+     * @param row the row index
+     * @return the file, or null if the row is out of range
      */
     public File getFileAt(int row)
     {
@@ -118,7 +113,10 @@ public class FileListModel extends AbstractTableModel
     }
 
     /**
-     * Get entries for the specified rows.
+     * The entries in several rows, skipping rows out of range.
+     *
+     * @param rows the row indexes
+     * @return a new list of entries, in the order of rows
      */
     public List<FileEntry> getEntriesAt(int[] rows)
     {
@@ -135,7 +133,10 @@ public class FileListModel extends AbstractTableModel
     }
 
     /**
-     * Get files for the specified rows.
+     * The files in several rows, skipping rows out of range.
+     *
+     * @param rows the row indexes
+     * @return a new list of files, in the order of rows
      */
     public List<File> getFilesAt(int[] rows)
     {
@@ -152,7 +153,9 @@ public class FileListModel extends AbstractTableModel
     }
 
     /**
-     * Set the files to display.
+     * Replaces the rows with the given files, sorted by the current sort.
+     *
+     * @param files the files, or null for none
      */
     public void setFiles(List<File> files)
     {
@@ -171,7 +174,9 @@ public class FileListModel extends AbstractTableModel
     }
 
     /**
-     * Set the current directory.
+     * Records which directory the rows belong to.
+     *
+     * @param directory the directory
      */
     public void setCurrentDirectory(File directory)
     {
@@ -179,7 +184,9 @@ public class FileListModel extends AbstractTableModel
     }
 
     /**
-     * Sort by the specified column.
+     * Sorts by a column, flipping the direction if it is already the sort column and starting ascending otherwise.
+     *
+     * @param column the column, one of the COL constants
      */
     public void sortBy(int column)
     {
@@ -225,7 +232,10 @@ public class FileListModel extends AbstractTableModel
     }
 
     /**
-     * Find the row index for a file matching the given prefix.
+     * Finds the first row whose name starts with a prefix, ignoring case.
+     *
+     * @param prefix the prefix
+     * @return the row index, or -1 if none matches or the prefix is null or empty
      */
     public int findByPrefix(String prefix)
     {
@@ -245,9 +255,7 @@ public class FileListModel extends AbstractTableModel
         return -1;
     }
 
-    /**
-     * File entry wrapper with cached properties.
-     */
+    /** A file with its name, kind, size, modification date, type label and system icon read once at creation. */
     @Getter
     public static class FileEntry
     {
@@ -259,6 +267,11 @@ public class FileListModel extends AbstractTableModel
         private final String type;
         private final Icon icon;
 
+        /**
+         * Reads the file's properties.
+         *
+         * @param file the file
+         */
         public FileEntry(File file)
         {
             this.file = file;
@@ -308,7 +321,9 @@ public class FileListModel extends AbstractTableModel
         }
 
         /**
-         * Format size for display.
+         * The size in B, KB, MB or GB with one decimal place.
+         *
+         * @return the size text, or -- for a directory
          */
         public String getFormattedSize()
         {
@@ -336,7 +351,9 @@ public class FileListModel extends AbstractTableModel
         }
 
         /**
-         * Format date for display.
+         * The modification date in the form Jan 05, 2026 14:30.
+         *
+         * @return the date text
          */
         public String getFormattedDate()
         {

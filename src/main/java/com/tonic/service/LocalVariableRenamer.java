@@ -19,12 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 
-/**
- * Renames a local variable (or parameter) by editing its method's LocalVariableTable entry and re-parsing the
- * class. The decompiler renders local names from the LVT, so the new name appears on the next decompile - no
- * source rewriting and no cross-class reference updates (locals are method-scoped). For a stripped method (no
- * LVT) a synthetic table is materialized first (from the decompiler's recovered names) so the rename persists.
- */
+/** Renames a local variable or parameter by editing its method's LocalVariableTable, adding one from the decompiler's recovered names when the method has none. */
 public final class LocalVariableRenamer
 {
 
@@ -32,12 +27,7 @@ public final class LocalVariableRenamer
     {
     }
 
-    /**
-     * A located rename target: the method, the JVM local slot, the current name, the JVM descriptor, and the
-     * exact LVT scope of the clicked occurrence. The scope is what distinguishes separate variables that reuse
-     * one slot+name across disjoint regions (e.g. the {@code i} of three sequential {@code for} loops) - only
-     * the entry matching this scope is renamed.
-     */
+    /** A located rename target: the method, local slot, current name, descriptor and the exact LVT scope of the clicked occurrence, so only that entry is renamed. */
     public static final class Target
     {
         public final String methodKey;
@@ -59,9 +49,12 @@ public final class LocalVariableRenamer
     }
 
     /**
-     * Resolves the local variable named {@code word} at 1-based source {@code line}, or null when the click
-     * isn't a renamable local (no enclosing method, {@code this}, or no matching in-scope LVT entry). For a
-     * stripped method this materializes the recovered LVT in memory to find the slot (without modifying it).
+     * Finds the local variable a word on a decompiled source line refers to, using a recovered table in memory for a method with no LVT.
+     *
+     * @param classEntry the class shown in the source view
+     * @param line the 1-based source line
+     * @param word the clicked identifier
+     * @return the target, preferring the entry in scope at the line, or null when the word is empty or this, the line maps to no method with code, or no entry has that name
      */
     public static Target locate(ClassEntryModel classEntry, int line, String word)
     {
@@ -99,8 +92,12 @@ public final class LocalVariableRenamer
     }
 
     /**
-     * Whether {@code newName} already names a different in-scope local in the target's method (renaming would
-     * shadow/collide). Disjoint-scope reuse of the name is allowed and reported as no conflict.
+     * Checks whether a new name is already used by a local in another slot whose scope overlaps the target's.
+     *
+     * @param classEntry the class holding the method
+     * @param target the variable being renamed
+     * @param newName the proposed name
+     * @return true if the rename would collide; false when it would not, or the method or its table cannot be resolved
      */
     public static boolean wouldConflict(ClassEntryModel classEntry, Target target, String newName)
     {
@@ -142,9 +139,12 @@ public final class LocalVariableRenamer
     }
 
     /**
-     * Applies the rename: edits the target slot's LVT entries (materializing a synthetic LVT first if the
-     * method has none) and re-installs the re-parsed class on {@code classEntry}. Returns false if the method or
-     * its LVT can't be resolved.
+     * Renames the target's LVT entry in a re-parsed copy of the class, adding a recovered table first if the method has none, and installs the copy on the class entry.
+     *
+     * @param classEntry the class holding the method
+     * @param target the variable to rename
+     * @param newName the new name
+     * @return true if renamed; false if the method or its table cannot be resolved or the class fails to rebuild
      */
     public static boolean rename(ClassEntryModel classEntry, Target target, String newName)
     {

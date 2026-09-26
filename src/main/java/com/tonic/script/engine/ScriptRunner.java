@@ -25,16 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * Runs a Script-Editor script (the JS-like DSL) against a target scope, applying its AST/IR/annotation transforms
- * and returning the number of modifications. All console output is routed to a caller-supplied {@code out} sink
- * (each call receives one line, terminated by {@code \n}), so this is UI-free: the Script Editor passes a sink that
- * appends to its console on the EDT, while the AI assistant passes a sink that buffers + streams to the bottom
- * Script Console tab. Synchronous and blocking.
- *
- * <p>Extracted from {@code ScriptEditorPanel} so the editor and the assistant share one implementation of the
- * bytecode-mutation logic.
- */
+/** Runs a Script Editor script over all classes, one class or one method, applying its annotation, AST and IR transforms synchronously and writing all output to a caller-supplied line sink. */
 public final class ScriptRunner
 {
 
@@ -49,9 +40,17 @@ public final class ScriptRunner
     }
 
     /**
-     * Runs {@code source} over the given scope. {@code targetClass}/{@code targetMethod} are required for
-     * {@link Scope#CLASS}/{@link Scope#METHOD} respectively. {@code live} may be null (no attached JVM). Returns
-     * the total modification count.
+     * Runs a script over a scope and commits every class it changed; errors are written to the sink, not thrown.
+     *
+     * @param source the script source
+     * @param mode which representation the script transforms
+     * @param project the loaded project; required for the ALL scope
+     * @param live the attached JVM session, or null for none
+     * @param scope which targets to run on
+     * @param targetClass the class, required for the CLASS and METHOD scopes
+     * @param targetMethod the method, required for the METHOD scope
+     * @param out receives each output line, newline-terminated
+     * @return the total number of modifications
      */
     public static int run(String source, Script.Mode mode, ProjectModel project, LiveSession live, Scope scope, ClassEntryModel targetClass, MethodEntryModel targetMethod, Consumer<String> out)
     {

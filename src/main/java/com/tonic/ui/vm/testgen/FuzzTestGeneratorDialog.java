@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
+/** A modal dialog that fuzzes a static method in the VM, groups the results by branch path, and generates a JUnit test class from the selected results. */
 public class FuzzTestGeneratorDialog extends JDialog
 {
 
@@ -50,6 +51,11 @@ public class FuzzTestGeneratorDialog extends JDialog
     private List<FuzzResult> fuzzResults = new ArrayList<>();
     private List<ParamSpec> paramSpecs = new ArrayList<>();
 
+    /**
+     * Creates the dialog; call setMethod before showing it.
+     *
+     * @param owner the window to center over and block
+     */
     public FuzzTestGeneratorDialog(Window owner)
     {
         super(owner, "Fuzz & Generate Tests", ModalityType.APPLICATION_MODAL);
@@ -251,6 +257,13 @@ public class FuzzTestGeneratorDialog extends JDialog
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    /**
+     * Sets the method to fuzz, suggests a test class name, and resets the parameter specs to fuzz every parameter.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method's name
+     * @param descriptor the method's descriptor
+     */
     public void setMethod(String className, String methodName, String descriptor)
     {
         this.className = className;

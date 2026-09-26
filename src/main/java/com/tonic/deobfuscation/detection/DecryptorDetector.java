@@ -9,12 +9,19 @@ import com.tonic.deobfuscation.model.DecryptorCandidate.DecryptorType;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Finds static methods in a class that look like string decryptors, scored by signature, visibility, name and bytecode traits. */
 public class DecryptorDetector
 {
 
     private static final int ACC_STATIC = 0x0008;
     private static final int ACC_PRIVATE = 0x0002;
 
+    /**
+     * Scores every method of a class as a possible decryptor.
+     *
+     * @param classFile the class to scan
+     * @return the candidates scoring at least 0.3, highest confidence first; empty when none
+     */
     public List<DecryptorCandidate> scan(ClassFile classFile)
     {
         List<DecryptorCandidate> candidates = new ArrayList<>();

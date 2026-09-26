@@ -48,6 +48,7 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/** The class navigator tool window: a filterable tree of the project's packages, classes, members and resources. */
 public class NavigatorPanel extends ThemedJPanel
 {
 
@@ -63,6 +64,11 @@ public class NavigatorPanel extends ThemedJPanel
     private final NavigatorContextMenuFactory contextMenuFactory;
     private final List<NavigatorActionProvider> actionProviders = new CopyOnWriteArrayList<>();
 
+    /**
+     * Builds the toolbar, search field, tree and loading overlay.
+     *
+     * @param mainFrame the window whose actions the context menu invokes
+     */
     public NavigatorPanel(MainFrame mainFrame)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -387,18 +393,25 @@ public class NavigatorPanel extends ThemedJPanel
         }
     }
 
+    /**
+     * Shows a project with its top level expanded.
+     *
+     * @param project the project to show
+     */
     public void loadProject(ProjectModel project)
     {
         treeModel.loadProject(project);
         treeState.expandToLevel(1);
     }
 
+    /** Empties the tree and the search field. */
     public void clear()
     {
         treeModel.clear();
         searchField.setText("");
     }
 
+    /** Reloads the current project, keeping expansion and selection; does nothing without a project. */
     public void refresh()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -411,6 +424,11 @@ public class NavigatorPanel extends ThemedJPanel
         treeState.restore();
     }
 
+    /**
+     * Shows or hides the loading overlay.
+     *
+     * @param loading true to show it
+     */
     public void setLoading(boolean loading)
     {
         loadingOverlay.setVisible(loading);
@@ -418,12 +436,18 @@ public class NavigatorPanel extends ThemedJPanel
         contentWrapper.repaint();
     }
 
+    /** Focuses the search field and selects its text. */
     public void focusSearchField()
     {
         searchField.requestFocus();
         searchField.selectAll();
     }
 
+    /**
+     * Selects a class's node and scrolls it into view; does nothing if the class is not in the tree.
+     *
+     * @param className the class's internal name, with slashes
+     */
     public void selectClass(String className)
     {
         NavigatorNode.ClassNode node = treeModel.findClassNode(className);
@@ -435,16 +459,23 @@ public class NavigatorPanel extends ThemedJPanel
         }
     }
 
+    /** Collapses every node. */
     public void collapseAll()
     {
         treeState.collapseAll();
     }
 
+    /** Expands every node. */
     public void expandAll()
     {
         treeState.expandAll();
     }
 
+    /**
+     * Expands the tree down to a depth.
+     *
+     * @param level how many levels below the root to expand
+     */
     public void expandToLevel(int level)
     {
         treeState.expandToLevel(level);
@@ -467,14 +498,20 @@ public class NavigatorPanel extends ThemedJPanel
     }
 
     /**
-     * Registers a plugin context-menu provider. Returns nothing; callers track removal via
-     * {@link #removeActionProvider(NavigatorActionProvider)}.
+     * Registers a plugin context-menu provider.
+     *
+     * @param provider the provider, consulted each time a context menu opens
      */
     public void addActionProvider(NavigatorActionProvider provider)
     {
         actionProviders.add(provider);
     }
 
+    /**
+     * Unregisters a plugin context-menu provider.
+     *
+     * @param provider the provider to remove
+     */
     public void removeActionProvider(NavigatorActionProvider provider)
     {
         actionProviders.remove(provider);

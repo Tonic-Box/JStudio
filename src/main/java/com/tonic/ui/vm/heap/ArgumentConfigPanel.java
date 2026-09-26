@@ -28,9 +28,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** The argument editor for a VM run: typed manual fields or generated fuzz combinations, plus the receiver's constructor for instance methods. */
 public class ArgumentConfigPanel extends ThemedJPanel
 {
 
+    /** How arguments are supplied: typed by hand or generated. */
     public enum Mode
     {MANUAL, FUZZ}
 
@@ -63,6 +65,7 @@ public class ArgumentConfigPanel extends ThemedJPanel
     private final Map<Integer, Object[]> ctorArrayValues = new HashMap<>();
     private boolean receiverExpanded = false;
 
+    /** Builds the mode toggle and the manual and fuzz cards, starting in manual mode with no method. */
     public ArgumentConfigPanel()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
@@ -171,6 +174,11 @@ public class ArgumentConfigPanel extends ThemedJPanel
         }
     }
 
+    /**
+     * Shows the fields for a method's parameters and discards previous values and fuzz combinations.
+     *
+     * @param method the method to configure, or null for none
+     */
     public void setMethod(MethodEntry method)
     {
         this.method = method;
@@ -187,11 +195,21 @@ public class ArgumentConfigPanel extends ThemedJPanel
         updateFuzzInfo();
     }
 
+    /**
+     * Sets the heap that string, array and receiver arguments are allocated in.
+     *
+     * @param heapManager the heap
+     */
     public void setHeapManager(SimpleHeapManager heapManager)
     {
         this.heapManager = heapManager;
     }
 
+    /**
+     * Sets the resolver used to find and run the receiver's constructor.
+     *
+     * @param classResolver the resolver
+     */
     public void setClassResolver(ClassResolver classResolver)
     {
         this.classResolver = classResolver;
@@ -683,6 +701,11 @@ public class ArgumentConfigPanel extends ThemedJPanel
         return result;
     }
 
+    /**
+     * Builds the argument values from the manual fields or the current fuzz combination; for an instance method a receiver is allocated and its selected constructor run first.
+     *
+     * @return the values in call order, the receiver first for instance methods; empty when no method is set
+     */
     public ConcreteValue[] getArguments()
     {
         if (method == null)
@@ -748,11 +771,17 @@ public class ArgumentConfigPanel extends ThemedJPanel
         return fuzzCombinations.get(currentComboIndex);
     }
 
+    /**
+     * Tells whether another fuzz combination follows the current one.
+     *
+     * @return true when a later combination exists
+     */
     public boolean hasNextCombination()
     {
         return fuzzCombinations != null && currentComboIndex < fuzzCombinations.size() - 1;
     }
 
+    /** Moves to the next fuzz combination, if there is one. */
     public void nextCombination()
     {
         if (hasNextCombination())
@@ -762,22 +791,34 @@ public class ArgumentConfigPanel extends ThemedJPanel
         }
     }
 
+    /** Returns to the first fuzz combination. */
     public void resetCombinations()
     {
         currentComboIndex = 0;
         updateFuzzInfo();
     }
 
+    /**
+     * Counts the generated fuzz combinations.
+     *
+     * @return the number of combinations, 0 when none are generated
+     */
     public int getTotalCombinations()
     {
         return fuzzCombinations != null ? fuzzCombinations.size() : 0;
     }
 
+    /** @return the index of the current fuzz combination */
     public int getCurrentCombinationIndex()
     {
         return currentComboIndex;
     }
 
+    /**
+     * Formats the current arguments for display.
+     *
+     * @return the arguments in parentheses, strings and chars quoted
+     */
     public String getCurrentArgsDescription()
     {
         Object[] args = currentMode == Mode.MANUAL ? collectManualArguments() : getCurrentFuzzArguments();

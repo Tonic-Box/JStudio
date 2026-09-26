@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import java.util.UUID;
 
+/** A user bookmark on a class, member or line, optionally bound to one of the ten quick slots. */
 @Getter
 @Setter
 public class Bookmark
@@ -21,6 +22,7 @@ public class Bookmark
     private long timestamp;
     private String notes;
 
+    /** Creates an unnamed, unslotted bookmark with a fresh id and the current time. */
     public Bookmark()
     {
         this.id = UUID.randomUUID().toString();
@@ -29,6 +31,12 @@ public class Bookmark
         this.timestamp = System.currentTimeMillis();
     }
 
+    /**
+     * Creates a bookmark on a class.
+     *
+     * @param className the class's internal name, with slashes
+     * @param name the user's label, or null to fall back to the location
+     */
     public Bookmark(String className, String name)
     {
         this();
@@ -36,11 +44,21 @@ public class Bookmark
         this.name = name;
     }
 
+    /**
+     * Reports whether the bookmark is bound to a quick slot.
+     *
+     * @return true if the slot is between 0 and 9
+     */
     public boolean hasSlot()
     {
         return slot >= 0 && slot <= 9;
     }
 
+    /**
+     * Builds the location key: the class, then #member and :line when set.
+     *
+     * @return the location key
+     */
     public String getLocationKey()
     {
         StringBuilder key = new StringBuilder(className);
@@ -55,6 +73,11 @@ public class Bookmark
         return key.toString();
     }
 
+    /**
+     * The name shown in lists.
+     *
+     * @return the user's label, or else the simple class name with #member when a member is set
+     */
     public String getDisplayName()
     {
         if (name != null && !name.isEmpty())

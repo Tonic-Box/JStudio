@@ -3,6 +3,7 @@ package com.tonic.ui.vm.debugger.edit;
 import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.analysis.execution.state.ValueTag;
 
+/** Parses text typed by the user into VM values of a given kind; references accept only null. */
 public final class ValueParser
 {
 
@@ -10,6 +11,14 @@ public final class ValueParser
     {
     }
 
+    /**
+     * Parses trimmed text as a value of the given kind.
+     *
+     * @param input the text, such as a decimal or hex number, true or false for an int, or null for a reference
+     * @param tag the kind of value to produce
+     * @return the parsed value
+     * @throws ValueParseException if the input is empty, the kind is not supported, or the text is not a valid value of that kind
+     */
     public static ConcreteValue parse(String input, ValueTag tag) throws ValueParseException
     {
         if (input == null || input.trim().isEmpty())
@@ -236,6 +245,12 @@ public final class ValueParser
         throw new ValueParseException("Invalid character literal: " + input);
     }
 
+    /**
+     * Describes a kind of value for display.
+     *
+     * @param tag the kind of value
+     * @return a readable type name, such as "int (32-bit integer)"
+     */
     public static String formatTypeName(ValueTag tag)
     {
         switch (tag)
@@ -257,6 +272,12 @@ public final class ValueParser
         }
     }
 
+    /**
+     * Returns whether values of a kind can be edited.
+     *
+     * @param tag the kind of value
+     * @return true for int, long, float, double, reference and null
+     */
     public static boolean isEditable(ValueTag tag)
     {
         return tag == ValueTag.INT ||

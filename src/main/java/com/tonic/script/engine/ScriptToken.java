@@ -2,13 +2,12 @@ package com.tonic.script.engine;
 
 import lombok.Getter;
 
-/**
- * Token types for the script lexer.
- */
+/** A token from the script lexer: its type, text, and source line and column. */
 @Getter
 public class ScriptToken
 {
 
+    /** The kinds of script token: literals, keywords, operators, punctuation, EOF and error. */
     public enum Type
     {
         IDENTIFIER,
@@ -83,6 +82,14 @@ public class ScriptToken
     private final int line;
     private final int column;
 
+    /**
+     * Creates a token.
+     *
+     * @param type the token kind
+     * @param value the token text
+     * @param line the 1-based source line
+     * @param column the 1-based source column
+     */
     public ScriptToken(Type type, String value, int line, int column)
     {
         this.type = type;
@@ -97,6 +104,12 @@ public class ScriptToken
         return String.format("%s(%s) at %d:%d", type, value, line, column);
     }
 
+    /**
+     * Tells whether the token is any of the given kinds.
+     *
+     * @param types the kinds to test
+     * @return true when the token type is one of them
+     */
     public boolean is(Type... types)
     {
         for (Type t : types)

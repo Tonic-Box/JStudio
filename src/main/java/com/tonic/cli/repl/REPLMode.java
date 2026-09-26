@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+/** The interactive Groovy REPL over a loaded project, with colon-prefixed commands and project objects bound as script variables. */
 public class REPLMode
 {
 
@@ -27,6 +28,11 @@ public class REPLMode
     private final LineReader reader;
     private boolean running;
 
+    /**
+     * Opens the system terminal and a Groovy shell with an empty binding.
+     *
+     * @throws IOException if the terminal cannot be opened
+     */
     public REPLMode() throws IOException
     {
         Terminal terminal = TerminalBuilder.builder()
@@ -42,6 +48,7 @@ public class REPLMode
         shell = new GroovyShell(binding);
     }
 
+    /** Prints the startup banner to standard output. */
     public void printBanner()
     {
         System.out.println("+=============================================================+");
@@ -53,6 +60,13 @@ public class REPLMode
         System.out.println();
     }
 
+    /**
+     * Loads a jar, zip, class file or directory as the current project and rebinds the script variables to it.
+     *
+     * @param file the target to load
+     * @throws IllegalArgumentException if the file type is not supported
+     * @throws Exception if loading the project fails
+     */
     public void loadTarget(File file) throws Exception
     {
         project = loadProjectFromFile(file);
@@ -84,6 +98,12 @@ public class REPLMode
         }
     }
 
+    /**
+     * Evaluates a Groovy script file in the REPL shell and prints its result when non-null.
+     *
+     * @param scriptFile the script to run
+     * @throws Exception if the file cannot be read or the script fails
+     */
     public void executeScript(File scriptFile) throws Exception
     {
         String script = new String(Files.readAllBytes(scriptFile.toPath()));
@@ -94,6 +114,7 @@ public class REPLMode
         }
     }
 
+    /** Reads and runs lines until quit or end of input; lines starting with a colon are commands, the rest are Groovy, and errors are printed without stopping the loop. */
     public void run()
     {
         running = true;

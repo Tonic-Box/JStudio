@@ -10,10 +10,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
-/**
- * Queries the GitHub Releases API for JStudio's latest release. All failures (offline, rate limit,
- * malformed response) resolve to {@code null} so update checks never surface as errors on their own.
- */
+/** Asks the GitHub releases API for JStudio's latest release; every failure yields null, so a check never raises an error itself. */
 public final class UpdateChecker
 {
 
@@ -29,7 +26,9 @@ public final class UpdateChecker
             .build();
 
     /**
-     * @return the latest release, or {@code null} on any failure.
+     * Fetches and parses the latest release.
+     *
+     * @return the release, or null on a network error, a non-200 response, or a tag without a version number
      */
     public UpdateInfo fetchLatest()
     {

@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
+/** A modal dialog that edits one debugger value as text, validating it for its type before closing. */
 public class ValueEditDialog extends JDialog
 {
 
@@ -22,6 +23,14 @@ public class ValueEditDialog extends JDialog
     @Getter
     private boolean confirmed;
 
+    /**
+     * Builds the dialog, prefilled with the current value.
+     *
+     * @param owner the window that owns the dialog
+     * @param title the dialog title
+     * @param currentValue the value's current text
+     * @param tag the kind of value being edited
+     */
     public ValueEditDialog(Window owner, String title, String currentValue, ValueTag tag)
     {
         super(owner, title, ModalityType.APPLICATION_MODAL);
@@ -181,6 +190,15 @@ public class ValueEditDialog extends JDialog
         dispose();
     }
 
+    /**
+     * Shows the dialog modally and waits for the user.
+     *
+     * @param parent a component in the owning window
+     * @param title the dialog title
+     * @param currentValue the value's current text
+     * @param tag the kind of value being edited
+     * @return the new value, or null if cancelled
+     */
     public static ConcreteValue showDialog(Component parent, String title, String currentValue, ValueTag tag)
     {
         Window window = SwingUtilities.getWindowAncestor(parent);

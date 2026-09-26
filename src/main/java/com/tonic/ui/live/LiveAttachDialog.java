@@ -23,11 +23,7 @@ import java.awt.Window;
 import java.lang.management.ManagementFactory;
 import java.util.List;
 
-/**
- * "Attach to live JVM" dialog: lists local JVMs, loads the Java agent into the chosen one, and builds
- * a fresh project from its loaded classes with a progress bar. The heavy work runs on a SwingWorker so
- * the UI stays responsive while classes stream in.
- */
+/** The "Attach to Live JVM" dialog; it lists local JVMs and builds a project from the chosen one's loaded classes on a background worker. */
 public final class LiveAttachDialog extends ThemedJDialog
 {
 
@@ -38,6 +34,11 @@ public final class LiveAttachDialog extends ThemedJDialog
     private final JLabel status = new JLabel("Select a running JVM to attach to.");
     private final JButton attachButton = new JButton("Attach");
 
+    /**
+     * Creates the modal dialog and starts listing local JVMs.
+     *
+     * @param owner the frame the dialog is modal to
+     */
     public LiveAttachDialog(Frame owner)
     {
         super(owner, "Attach to Live JVM", true);

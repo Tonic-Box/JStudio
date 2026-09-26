@@ -20,6 +20,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
 
+/** Drives the call graph view: builds the graph in the background, tracks the focus method and handles mouse input. */
 public class CallGraphController
 {
 
@@ -30,6 +31,17 @@ public class CallGraphController
     private final JComboBox<String> focusCombo;
     private final Consumer<String> statusCallback;
 
+    /**
+     * Wires the graph component's click, double-click and popup handling.
+     *
+     * @param project the project whose class pool the graph is built from
+     * @param model the shared graph state
+     * @param renderer draws the graph around the focus method
+     * @param graph the graph the context menu reads its selection from
+     * @param graphComponent the component that receives the mouse events
+     * @param focusCombo the focus-method picker this controller fills and follows
+     * @param statusCallback receives status line text
+     */
     public CallGraphController(ProjectModel project, CallGraphModel model, CallGraphRenderer renderer, mxGraph graph, mxGraphComponent graphComponent, JComboBox<String> focusCombo, Consumer<String> statusCallback)
     {
         this.project = project;
@@ -92,6 +104,7 @@ public class CallGraphController
         });
     }
 
+    /** Builds the call graph of the project's class pool in the background, then fills the focus picker and selects its first method. */
     public void buildCallGraph()
     {
         ClassPool classPool = project.getClassPool();
@@ -136,6 +149,7 @@ public class CallGraphController
         worker.execute();
     }
 
+    /** Fills the focus picker with every non-JDK pool method as owner.name, after a placeholder entry. */
     public void populateFocusCombo()
     {
         focusCombo.removeAllItems();
@@ -156,6 +170,7 @@ public class CallGraphController
         }
     }
 
+    /** Focuses the method picked in the combo box and redraws; the placeholder clears the focus. */
     public void updateFocus()
     {
         CallGraph callGraph = model.getCallGraph();
@@ -181,6 +196,11 @@ public class CallGraphController
         }
     }
 
+    /**
+     * Focuses a method, redraws and selects it in the picker.
+     *
+     * @param method the method to focus
+     */
     public void handleFocusMethod(MethodReference method)
     {
         model.setFocusMethod(method);
@@ -189,6 +209,11 @@ public class CallGraphController
         statusCallback.accept("Focused on: " + method.getOwner() + "." + method.getName());
     }
 
+    /**
+     * Focuses a method from the class model, starting a graph build first if none exists.
+     *
+     * @param method the method to focus
+     */
     public void focusOnMethod(MethodEntry method)
     {
         if (model.getCallGraph() == null)
@@ -210,6 +235,7 @@ public class CallGraphController
         }
     }
 
+    /** Redraws the graph and reports the focus method's caller and callee counts. */
     public void visualizeAndUpdateStatus()
     {
         renderer.render();
@@ -222,6 +248,11 @@ public class CallGraphController
         }
     }
 
+    /**
+     * Sets the traversal depth and redraws if a method is focused.
+     *
+     * @param newDepth how many call levels to show on each side of the focus method
+     */
     public void onDepthChanged(int newDepth)
     {
         model.setMaxDepth(newDepth);

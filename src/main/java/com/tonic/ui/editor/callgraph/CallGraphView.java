@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/** The call graph view: the callers and callees of one chosen method, to a chosen depth. */
 public class CallGraphView extends BaseGraphView
 {
 
@@ -43,6 +44,11 @@ public class CallGraphView extends BaseGraphView
     private String prepareError = null;
     private int pendingDepth = 3;
 
+    /**
+     * Creates the view and fills the method selector from the class.
+     *
+     * @param classEntry the class whose methods can be chosen
+     */
     public CallGraphView(ClassEntryModel classEntry)
     {
         super(classEntry);
@@ -50,6 +56,11 @@ public class CallGraphView extends BaseGraphView
         populateMethodSelector();
     }
 
+    /**
+     * Sets the project the call graph is built from and drops any graph already built.
+     *
+     * @param projectModel the project, whose user classes make up the graph
+     */
     public void setProjectModel(ProjectModel projectModel)
     {
         this.projectModel = projectModel;

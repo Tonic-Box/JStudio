@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
 
+/** The base of the graph views: a toolbar, a zoomable JGraphX canvas and a DOT source pane, with layout and export. */
 public abstract class BaseGraphView extends AbstractEditorView
 {
 
@@ -65,6 +66,11 @@ public abstract class BaseGraphView extends AbstractEditorView
     private Point panStartScreen;
     private Point panStartViewport;
 
+    /**
+     * Creates the view and its components; subclasses add toolbar items and the graph data.
+     *
+     * @param classEntry the class the graph is drawn from
+     */
     public BaseGraphView(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;
@@ -512,6 +518,7 @@ public abstract class BaseGraphView extends AbstractEditorView
         }
     }
 
+    /** Shows the graph canvas. */
     public void switchToVisual()
     {
         showingVisual = true;
@@ -519,6 +526,7 @@ public abstract class BaseGraphView extends AbstractEditorView
         cardLayout.show(contentPanel, VISUAL_CARD);
     }
 
+    /** Shows the DOT source of the current graph. */
     public void switchToDOT()
     {
         showingVisual = false;
@@ -543,16 +551,19 @@ public abstract class BaseGraphView extends AbstractEditorView
         }
     }
 
+    /** Zooms the canvas in one step. */
     public void zoomIn()
     {
         graphComponent.zoomIn();
     }
 
+    /** Zooms the canvas out one step. */
     public void zoomOut()
     {
         graphComponent.zoomOut();
     }
 
+    /** Zooms the canvas so the whole graph fits, with a small margin. */
     public void fitToWindow()
     {
         graphComponent.zoomActual();
@@ -563,6 +574,11 @@ public abstract class BaseGraphView extends AbstractEditorView
         }
     }
 
+    /**
+     * Lays out the graph again; does nothing when the graph is empty or the name is unknown.
+     *
+     * @param layoutType Hierarchical, Organic or Circular
+     */
     public void applyLayout(String layoutType)
     {
         if (layoutType == null || graph.getChildVertices(graph.getDefaultParent()).length == 0)
@@ -598,6 +614,7 @@ public abstract class BaseGraphView extends AbstractEditorView
         }
     }
 
+    /** Asks for a file and writes the DOT source to it, reporting success or failure in a dialog. */
     public void exportDOT()
     {
         JFileChooser chooser = new JFileChooser();
@@ -617,6 +634,7 @@ public abstract class BaseGraphView extends AbstractEditorView
         }
     }
 
+    /** Asks for a file and writes the graph to it as a PNG, reporting success or failure in a dialog. */
     public void exportPNG()
     {
         JFileChooser chooser = new JFileChooser();

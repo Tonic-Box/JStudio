@@ -2,6 +2,7 @@ package com.tonic.ui.vm.testgen.objectspec;
 
 import lombok.Getter;
 
+/** How an object argument is built: by constructor, factory method, field injection, expression or saved template, or left null. */
 @Getter
 public enum ConstructionMode
 {

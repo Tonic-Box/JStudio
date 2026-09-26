@@ -16,10 +16,7 @@ import com.tonic.script.engine.ScriptValue;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Bridge for bytecode instrumentation.
- * Exposes an 'instrument' global object for modifying IR.
- */
+/** The instrument script global: collects instrumentation rules for methods, calls, field access and constants and applies them to one method's IR at a time. */
 public class InstrumentationBridge
 {
 
@@ -29,12 +26,23 @@ public class InstrumentationBridge
 
     private final List<InstrumentationRule> rules = new ArrayList<>();
 
+    /**
+     * Creates a bridge with no rules.
+     *
+     * @param interpreter the interpreter that runs rule callbacks
+     * @param projectModel the project the rules are applied to
+     */
     public InstrumentationBridge(ScriptInterpreter interpreter, ProjectModel projectModel)
     {
         this.interpreter = interpreter;
         this.projectModel = projectModel;
     }
 
+    /**
+     * Sets where the bridge's log messages go.
+     *
+     * @param callback receives each log message, or null to drop them
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
@@ -48,6 +56,11 @@ public class InstrumentationBridge
         }
     }
 
+    /**
+     * Builds the instrument script object: rule registration, apply, and rule management.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createInstrumentObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

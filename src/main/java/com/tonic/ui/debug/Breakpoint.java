@@ -2,11 +2,7 @@ package com.tonic.ui.debug;
 
 import java.util.Objects;
 
-/**
- * A breakpoint identified by its canonical location: the declaring class (dotted), the method (name + JVM
- * descriptor), and the bytecode offset. The offset is the single source of truth, so the same breakpoint maps
- * to a source line (via the decompiler line map) and to a bytecode line (via the disassembly index).
- */
+/** A breakpoint keyed by dotted class, method name and descriptor, and bytecode offset; the offset is what maps it to both a source line and a bytecode line. */
 public final class Breakpoint
 {
 
@@ -15,6 +11,14 @@ public final class Breakpoint
     public final String methodDesc;
     public final long pc;
 
+    /**
+     * Creates a breakpoint at a bytecode offset.
+     *
+     * @param className the declaring class, dotted
+     * @param methodName the method's name
+     * @param methodDesc the method's JVM descriptor
+     * @param pc the bytecode offset within the method
+     */
     public Breakpoint(String className, String methodName, String methodDesc, long pc)
     {
         this.className = className;

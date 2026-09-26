@@ -18,10 +18,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-/**
- * Represents an open project containing classes to analyze.
- * Can be loaded from a JAR file, directory, or individual class files.
- */
+/** The open project: its class entries (user classes marked apart from library ones), resources, class pool and xref database, with a dirty flag and a bytecode version. */
 public class ProjectModel
 {
 
@@ -42,6 +39,7 @@ public class ProjectModel
     @Getter
     private long bytecodeVersion;
 
+    /** Creates an empty project named Untitled with no class pool. */
     public ProjectModel()
     {
         this.projectName = "Untitled";
@@ -49,14 +47,16 @@ public class ProjectModel
     }
 
     /**
-     * Set the class pool (does not auto-populate class entries).
+     * Sets the class pool without adding class entries for its classes.
+     *
+     * @param classPool the class pool
      */
     public void setClassPool(ClassPool classPool)
     {
         this.classPool = classPool;
     }
 
-    /** Marks the project as having unsaved changes (so close prompts to save). */
+    /** Marks the project as having unsaved changes and bumps the bytecode version. */
     public void markDirty()
     {
         this.dirty = true;
@@ -64,7 +64,10 @@ public class ProjectModel
     }
 
     /**
-     * Add a user class to the project.
+     * Adds a user class, putting it in the class pool and marking the project dirty.
+     *
+     * @param classFile the parsed class
+     * @return the new class entry
      */
     public ClassEntryModel addClass(ClassFile classFile)
     {
@@ -81,9 +84,10 @@ public class ProjectModel
     }
 
     /**
-     * Remove a class from the project and rebuild all analysis state.
-     * This invalidates the ClassPool, xref database, and all decompilation caches.
-     * @return true if the class was removed, false if it didn't exist
+     * Removes a class, rebuilds the class pool, clears the xref database and every decompilation cache, and marks the project dirty.
+     *
+     * @param className the class's internal name, with slashes
+     * @return true if the class was removed, false if it was not in the project
      */
     public boolean removeClass(String className)
     {
@@ -138,7 +142,10 @@ public class ProjectModel
     }
 
     /**
-     * Get a class entry by internal name.
+     * Looks up a class entry.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the entry, or null if the name is null or not in the project
      */
     public ClassEntryModel getClass(String internalName)
     {
@@ -146,18 +153,16 @@ public class ProjectModel
     }
 
     /**
-     * Get all class entries.
+     * Lists every class entry, user and library.
+     *
+     * @return a new list of the entries
      */
     public List<ClassEntryModel> getAllClasses()
     {
         return new ArrayList<>(classEntries.values());
     }
 
-    /**
-     * Drops every class's cached decompilation. A project mutation (rename, script transform) can change references
-     * in any class, so a cache scoped to the mutated class alone leaves other classes showing stale source; clearing
-     * all of them forces a fresh decompile from current bytecode the next time each is viewed.
-     */
+    /** Drops every class's cached decompilation, so each is decompiled from current bytecode the next time it is viewed. */
     public void invalidateAllDecompilationCaches()
     {
         for (ClassEntryModel entry : classEntries.values())
@@ -167,7 +172,9 @@ public class ProjectModel
     }
 
     /**
-     * Get user classes only (classes explicitly loaded by user).
+     * Lists the classes the user loaded, excluding library and JDK classes.
+     *
+     * @return a new list of the user class entries
      */
     public List<ClassEntryModel> getUserClasses()
     {
@@ -177,7 +184,10 @@ public class ProjectModel
     }
 
     /**
-     * Check if a class name is a user class (not JDK/library).
+     * Reports whether a class was loaded by the user rather than from a library or the JDK.
+     *
+     * @param className the class's internal name, with slashes
+     * @return true if it is a user class, false if it is not or the name is null
      */
     public boolean isUserClass(String className)
     {
@@ -185,7 +195,9 @@ public class ProjectModel
     }
 
     /**
-     * Get the set of user class names (classes explicitly loaded by user).
+     * The names of the classes the user loaded.
+     *
+     * @return a read-only live view of the user class internal names
      */
     public Set<String> getUserClassNames()
     {
@@ -193,7 +205,10 @@ public class ProjectModel
     }
 
     /**
-     * Get classes in a specific package.
+     * Lists the classes whose dotted package name starts with a prefix.
+     *
+     * @param packagePrefix the dotted package prefix
+     * @return a new list of the matching entries
      */
     public List<ClassEntryModel> getClassesInPackage(String packagePrefix)
     {
@@ -209,7 +224,9 @@ public class ProjectModel
     }
 
     /**
-     * Get all unique package names.
+     * Lists the distinct dotted package names, sorted.
+     *
+     * @return a new sorted list of package names, with the empty string for the default package
      */
     public List<String> getPackages()
     {
@@ -227,13 +244,20 @@ public class ProjectModel
     }
 
     /**
-     * Get the number of classes in the project.
+     * Counts the class entries, user and library.
+     *
+     * @return the number of class entries
      */
     public int getClassCount()
     {
         return classEntries.size();
     }
 
+    /**
+     * Adds a resource, replacing any at the same path, and marks the project dirty.
+     *
+     * @param resource the resource
+     */
     public void addResource(ResourceEntryModel resource)
     {
         resources.put(resource.getPath(), resource);
@@ -241,8 +265,10 @@ public class ProjectModel
     }
 
     /**
-     * Remove a resource from the project.
-     * @return true if the resource was removed, false if it didn't exist
+     * Removes a resource and marks the project dirty.
+     *
+     * @param path the resource's path inside the project
+     * @return true if the resource was removed, false if it was not in the project
      */
     public boolean removeResource(String path)
     {
@@ -255,24 +281,38 @@ public class ProjectModel
         return false;
     }
 
+    /**
+     * Looks up a resource.
+     *
+     * @param path the resource's path inside the project
+     * @return the resource, or null if none is at that path
+     */
     public ResourceEntryModel getResource(String path)
     {
         return resources.get(path);
     }
 
+    /**
+     * The project's resources, in insertion order.
+     *
+     * @return a read-only live view of the resources
+     */
     public Collection<ResourceEntryModel> getAllResources()
     {
         return Collections.unmodifiableCollection(resources.values());
     }
 
+    /**
+     * Counts the resources.
+     *
+     * @return the number of resources
+     */
     public int getResourceCount()
     {
         return resources.size();
     }
 
-    /**
-     * Clear all classes from the project.
-     */
+    /** Removes every class and resource, empties the class pool and xref database, and clears the dirty flag. */
     public void clear()
     {
         classEntries.clear();
@@ -289,23 +329,41 @@ public class ProjectModel
         dirty = false;
     }
 
+    /**
+     * Sets the name shown for the project.
+     *
+     * @param projectName the project name
+     */
     public void setProjectName(String projectName)
     {
         this.projectName = projectName;
     }
 
+    /**
+     * Sets the file the project was loaded from.
+     *
+     * @param sourceFile the jar, directory or class file
+     */
     public void setSourceFile(File sourceFile)
     {
         this.sourceFile = sourceFile;
     }
 
+    /**
+     * Sets the cross-reference database.
+     *
+     * @param xrefDatabase the xref database
+     */
     public void setXrefDatabase(XrefDatabase xrefDatabase)
     {
         this.xrefDatabase = xrefDatabase;
     }
 
     /**
-     * Find a class entry by name (supports both internal and qualified names).
+     * Finds a class by internal name, dotted name, or name suffix, in that order.
+     *
+     * @param name the internal, dotted or simple class name
+     * @return the first matching entry, or null if the name is null or nothing matches
      */
     public ClassEntryModel findClassByName(String name)
     {
@@ -329,11 +387,22 @@ public class ProjectModel
         return null;
     }
 
+    /**
+     * Sets or clears the unsaved-changes flag without bumping the bytecode version.
+     *
+     * @param dirty whether the project has unsaved changes
+     */
     public void setDirty(boolean dirty)
     {
         this.dirty = dirty;
     }
 
+    /**
+     * Rekeys a renamed class, refreshes its display data, clears the xref database and marks the project dirty.
+     *
+     * @param oldName the old internal name
+     * @param newName the new internal name
+     */
     public void notifyClassRenamed(String oldName, String newName)
     {
         ClassEntryModel entry = classEntries.remove(oldName);
@@ -356,6 +425,11 @@ public class ProjectModel
         markDirty();
     }
 
+    /**
+     * Rekeys many renamed classes at once, then clears the xref database and marks the project dirty.
+     *
+     * @param oldToNewNames the old internal name to new internal name map
+     */
     public void applyClassNameMappings(Map<String, String> oldToNewNames)
     {
         for (Map.Entry<String, String> entry : oldToNewNames.entrySet())
@@ -385,9 +459,11 @@ public class ProjectModel
     }
 
     /**
-     * Replaces every user class (and all resources) with the given name->bytes sets, parsing each into a fresh
-     * {@link ClassFile}, then rebuilds the class pool ONCE. Used by Local History restore; non-user (library/JDK)
-     * entries are left untouched. Callers must trigger a UI refresh afterward (decompilation caches are cleared here).
+     * Replaces every user class and every resource with the given bytes, leaving library classes alone, rebuilding the class pool once and dropping all derived caches.
+     *
+     * @param classBytes the class bytes, keyed by internal name
+     * @param resourceBytes the resource bytes, keyed by path
+     * @throws IllegalStateException if a class fails to parse
      */
     public void replaceUserClasses(Map<String, byte[]> classBytes, Map<String, byte[]> resourceBytes)
     {
@@ -428,8 +504,11 @@ public class ProjectModel
     }
 
     /**
-     * Replaces a single user class's bytecode from stored bytes (Local History per-class restore). No-op if the class
-     * is not present. Callers must trigger a UI refresh afterward.
+     * Replaces one class's bytecode; does nothing if the class is not in the project.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @param bytes the class file bytes
+     * @throws IllegalStateException if the bytes fail to parse
      */
     public void replaceClass(String internalName, byte[] bytes)
     {

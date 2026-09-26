@@ -11,23 +11,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Wraps IR nodes (instructions, blocks, values) for script access.
- * Provides a uniform interface to access node properties from scripts.
- */
+/** Wraps an SSA IR instruction, block or value as a script object exposing the properties of its kind. */
 @Getter
 public class IRNodeWrapper
 {
 
     private final Object node;
 
+    /**
+     * Wraps a node.
+     *
+     * @param node the IR instruction, block or value
+     */
     public IRNodeWrapper(Object node)
     {
         this.node = node;
     }
 
     /**
-     * Creates a ScriptValue representing this node.
+     * Builds the script object for the node: its type name and the properties of its kind.
+     *
+     * @return the script object
      */
     public ScriptValue toScriptValue()
     {

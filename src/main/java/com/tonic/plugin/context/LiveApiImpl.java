@@ -21,15 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * The plugin-facing {@link LiveApi}: wraps {@link LiveAttachService} / {@link LiveSession} (and, for eval/redefine,
- * the Scratch Pad compiler + the loaded project) and maps live-client protocol types to the public DTOs. Attach
- * state is read per call, so attach/detach is reflected immediately.
- *
- * <p>The {@link LiveSession} is borrowed from {@link LiveAttachService} and never closed here - it owns the
- * connection's lifecycle (closing it would detach the whole app) - hence the class-level {@code resource}
- * suppression.
- */
+/** The LiveApi over LiveAttachService's session, read on every call so attach and detach show at once; it borrows the session and never closes it. */
 @SuppressWarnings("resource")
 public class LiveApiImpl implements LiveApi
 {

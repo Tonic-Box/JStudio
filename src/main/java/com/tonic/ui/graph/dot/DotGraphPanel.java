@@ -36,12 +36,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * The expanded, interactive view of a DOT diagram: a pan/zoom {@link mxGraphComponent} with a toolbar (zoom, fit,
- * view-DOT toggle, copy DOT, save as PNG). Read-only; rebuilds its own graph from the DOT source so it is
- * independent of the inline thumbnail. Embeddable anywhere - hosted by {@link DotGraphDialog} (a popup window) and
- * opened as an editor tab from the AI chat. Fits to view the first time it is shown at a non-zero size.
- */
+/** The interactive, read-only DOT diagram: a pan and zoom graph with a toolbar, fitted to view the first time it gets a size. */
 public final class DotGraphPanel extends JPanel
 {
 
@@ -55,6 +50,11 @@ public final class DotGraphPanel extends JPanel
     private Point panStartViewport;
     private boolean fitted;
 
+    /**
+     * Builds the graph from the DOT text, with a card to switch to the raw source.
+     *
+     * @param dotSource the DOT text to draw
+     */
     public DotGraphPanel(String dotSource)
     {
         super(new BorderLayout());

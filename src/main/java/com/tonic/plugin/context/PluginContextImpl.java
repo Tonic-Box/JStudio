@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+/** The PluginContext for headless runs from the CLI and REPL, bound to one fixed project with its APIs built once. */
 public class PluginContextImpl implements PluginContext
 {
 
@@ -26,6 +27,12 @@ public class PluginContextImpl implements PluginContext
     private final Map<String, Object> environment = new ConcurrentHashMap<>();
     private File exportDir;
 
+    /**
+     * Creates a context over a project with empty configuration.
+     *
+     * @param projectModel the project the plugin works on
+     * @param pluginName the name that prefixes log lines and labels findings
+     */
     public PluginContextImpl(ProjectModel projectModel, String pluginName)
     {
         this.logger = new ConsolePluginLogger(pluginName);
@@ -40,6 +47,13 @@ public class PluginContextImpl implements PluginContext
         this.results = new ResultCollector(pluginName);
     }
 
+    /**
+     * Creates a context over a project with the given configuration.
+     *
+     * @param projectModel the project the plugin works on
+     * @param pluginName the name that prefixes log lines and labels findings
+     * @param configProperties the configuration values, copied
+     */
     public PluginContextImpl(ProjectModel projectModel, String pluginName, Map<String, String> configProperties)
     {
         this(projectModel, pluginName);
@@ -130,6 +144,11 @@ public class PluginContextImpl implements PluginContext
         return exportDir;
     }
 
+    /**
+     * Sets the directory getExportDir reports.
+     *
+     * @param exportDir the output directory, or null for none
+     */
     public void setExportDir(File exportDir)
     {
         this.exportDir = exportDir;

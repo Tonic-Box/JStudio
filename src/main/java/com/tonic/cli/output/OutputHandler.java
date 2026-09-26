@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+/** Writes an execution result as text, JSON or CSV, to a file or to standard output when no file is given. */
 public abstract class OutputHandler
 {
 
@@ -18,8 +19,21 @@ public abstract class OutputHandler
         this.outputFile = outputFile;
     }
 
+    /**
+     * Writes the result in this handler's format.
+     *
+     * @param result the result to write
+     * @throws IOException if the output file cannot be written
+     */
     public abstract void writeResult(ExecutionResult result) throws IOException;
 
+    /**
+     * Creates the handler for a format.
+     *
+     * @param format the output format
+     * @param outputFile where to write, or null for standard output
+     * @return the handler
+     */
     public static OutputHandler forFormat(OutputFormat format, File outputFile)
     {
         switch (format)

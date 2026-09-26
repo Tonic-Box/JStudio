@@ -6,6 +6,11 @@ import com.tonic.event.Event;
 public class BreakpointsChangedEvent extends Event
 {
 
+    /**
+     * Creates the event.
+     *
+     * @param source the poster
+     */
     public BreakpointsChangedEvent(Object source)
     {
         super(source);

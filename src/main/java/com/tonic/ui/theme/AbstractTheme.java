@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/** Base theme that picks the code and UI fonts from the first installed family in a preference list. */
 public abstract class AbstractTheme implements Theme
 {
 
@@ -57,6 +58,11 @@ public abstract class AbstractTheme implements Theme
         return new Font(Font.SANS_SERIF, Font.PLAIN, size);
     }
 
+    /**
+     * Lists the installed font families whose i and m glyphs have the same width.
+     *
+     * @return the family names, sorted
+     */
     public static List<String> getAvailableMonospaceFonts()
     {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();

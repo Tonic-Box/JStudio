@@ -36,14 +36,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Non-modal scratch pad for running arbitrary Java inside the attached JVM. The snippet is compiled against
- * the target's pulled classes ({@link SnippetCompiler}) and executed there ({@link LiveSession#eval}) in a
- * throwaway child of a chosen context class's loader; stdout/result/exceptions come back into the console.
- *
- * <p>Stateless per run (each Run is a fresh class). Running arbitrary code in a live JVM is as powerful as
- * live redefinition, so the first run in a session asks for confirmation.
- */
+/** A non-modal scratch pad that compiles Java snippets against the target's classes and runs them inside the attached JVM, asking for confirmation on the first run. */
 public final class LiveScratchPadDialog extends JDialog
 {
 
@@ -61,6 +54,11 @@ public final class LiveScratchPadDialog extends JDialog
     private SnippetCompiler compiler;
     private AutoCompletion autoCompletion;
 
+    /**
+     * Creates the dialog with the default snippet in its editor.
+     *
+     * @param owner the frame that owns the dialog
+     */
     public LiveScratchPadDialog(Frame owner)
     {
         super(owner, "Java Scratch Pad", false);
@@ -135,7 +133,11 @@ public final class LiveScratchPadDialog extends JDialog
         });
     }
 
-    /** Binds the dialog to {@code project}: rebuilds the compiler, completion, and context list. */
+    /**
+     * Binds the dialog to a project and rebuilds the compiler, completion and context class list.
+     *
+     * @param project the live project snippets compile against
+     */
     public void setProject(ProjectModel project)
     {
         this.project = project;
@@ -165,7 +167,11 @@ public final class LiveScratchPadDialog extends JDialog
         }
     }
 
-    /** Pre-selects {@code internalName} as the context class if present. */
+    /**
+     * Selects the context class snippets run in, if it is in the list.
+     *
+     * @param internalName the class's internal name, or null to leave the selection alone
+     */
     public void setContextClass(String internalName)
     {
         if (internalName != null)

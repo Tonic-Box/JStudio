@@ -23,12 +23,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Shallow Java completion for the scratch pad: keywords and project class names by default, and members after
- * a resolvable receiver ({@code Type.} -> public statics, or a {@code Type var} local -> public instance
- * members, walking superclasses). Receivers resolve against the open project's pulled classes; nothing here is
- * a substitute for a real type system, just a useful aid built from the same bytecode JStudio already holds.
- */
+/** Shallow scratch-pad completion: keywords and project class names, plus public members after a receiver that resolves against the project's classes. */
 public final class ScratchCompletionProvider extends DefaultCompletionProvider
 {
 
@@ -47,6 +42,11 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider
     private final ProjectModel project;
     private final Map<String, String> simpleToInternal = new HashMap<>();
 
+    /**
+     * Creates the provider with keyword and project class name completions.
+     *
+     * @param project the project whose classes are offered and used to resolve receivers
+     */
     public ScratchCompletionProvider(ProjectModel project)
     {
         this.project = project;

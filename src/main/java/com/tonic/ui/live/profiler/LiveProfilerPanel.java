@@ -18,11 +18,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 
-/**
- * Right-dock tool (shown only while attached): live graphs of the target JVM's CPU, heap, metaspace, GC,
- * threads, and loaded classes, sampled once a second from its JMX MXBeans via the agent. Sampling pauses
- * while the tab is not visible, and at most one request is outstanding at a time (the connection is serial).
- */
+/** The live graphs of the attached JVM's CPU, memory, GC, threads and loaded classes, sampled once a second while the panel is in a window. */
 public final class LiveProfilerPanel extends ThemedJPanel
 {
 
@@ -50,6 +46,7 @@ public final class LiveProfilerPanel extends ThemedJPanel
     private long prevGcTimeTotal = -1;
     private long prevUptime = -1;
 
+    /** Builds the charts; sampling starts when the panel is added to a window. */
     public LiveProfilerPanel()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());

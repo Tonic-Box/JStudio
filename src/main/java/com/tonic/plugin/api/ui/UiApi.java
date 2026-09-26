@@ -3,45 +3,71 @@ package com.tonic.plugin.api.ui;
 import javax.swing.Icon;
 import javax.swing.JComponent;
 
-/**
- * The UI contribution surface handed to a {@link UiPlugin} via {@link JStudioHost#ui()}. Every mutator returns a
- * {@link Registration} that removes the contribution; the host also records it and removes it automatically when
- * the plugin is disabled or the app exits. All methods must be called on the Swing event dispatch thread (the
- * host already calls {@link UiPlugin#start(JStudioHost)} on the EDT).
- */
+/** The UI contribution surface a UiPlugin reaches through JStudioHost.ui; call it on the EDT, and every contribution is removed automatically when the plugin is disabled, reloaded or the app exits. */
 public interface UiApi
 {
 
     /**
-     * Adds a right-dock side tab (an IntelliJ-style tool window) showing {@code component}. If the name collides
-     * with an existing tool it is made unique; the returned {@link Registration} removes the actual registered tool.
+     * Adds a tab to the right tool-window dock, themed with the app, renaming it with a " (2)" style suffix when the name is taken.
+     *
+     * @param name the tab's name
+     * @param component the panel to show
+     * @return a handle that removes the tab, safe to call more than once
      */
     Registration addToolWindow(String name, JComponent component);
 
     /**
-     * Opens a custom tab in the center editor area (not tied to a class/resource). {@code id} identifies the tab
-     * for de-duplication and removal; opening an already-open id re-focuses it.
+     * Opens a document tab in the center editor area, or brings the tab forward when one with the id is already open, in which case view is not used.
+     *
+     * @param id identifies the tab for de-duplication and removal
+     * @param title the tab's title and tooltip
+     * @param icon the tab's icon, or null
+     * @param view the panel to show
+     * @return a handle that closes the tab with that id, safe to call more than once
      */
     Registration openCenterView(String id, String title, Icon icon, JComponent view);
 
-    /** Adds a closable tab to the bottom results panel. */
+    /**
+     * Adds a tab to the bottom panel and selects it, making the title unique when it is taken.
+     *
+     * @param title the tab's title
+     * @param component the panel to show
+     * @return a handle that removes the tab, safe to call more than once
+     */
     Registration addBottomTab(String title, JComponent component);
 
     /**
-     * Adds a menu item to the named top-level menu (found case-insensitively, or created if absent). The item runs
-     * {@code action} on the EDT, guarded so a failure surfaces as a dialog rather than an uncaught exception.
+     * Adds an item to the top-level menu with the given name, matched ignoring case and created when absent; a throw from the action shows an error dialog.
+     *
+     * @param menuName the menu's text
+     * @param itemText the item's text
+     * @param action run on the EDT when the item is clicked
+     * @return a handle that removes the item, and the menu too when this API created it and it is now empty; safe to call more than once
      */
     Registration addMenuItem(String menuName, String itemText, Runnable action);
 
-    /** Adds a button to the main toolbar. {@code action} is guarded like {@link #addMenuItem}. */
+    /**
+     * Adds a button to the main toolbar; a throw from the action shows an error dialog.
+     *
+     * @param icon the button's icon
+     * @param tooltip the button's tooltip
+     * @param action run on the EDT when the button is clicked
+     * @return a handle that removes the button, safe to call more than once
+     */
     Registration addToolbarButton(Icon icon, String tooltip, Runnable action);
 
     /**
-     * Contributes context-menu entries to the navigator tree. The provider is consulted each time the menu opens
-     * with the current selection; it may return an empty list to contribute nothing for that selection.
+     * Adds entries to the navigator tree's context menu, asking the provider each time the menu opens; a throw from an entry's action shows an error dialog.
+     *
+     * @param provider supplies the entries for each right-clicked node
+     * @return a handle that removes the provider, safe to call more than once
      */
     Registration addNavigatorAction(NavigatorActionProvider provider);
 
-    /** Shows a transient message in the status bar. */
+    /**
+     * Shows a message in the status bar.
+     *
+     * @param message the text to show
+     */
     void setStatus(String message);
 }

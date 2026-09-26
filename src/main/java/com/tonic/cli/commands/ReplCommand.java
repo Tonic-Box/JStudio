@@ -8,6 +8,7 @@ import picocli.CommandLine.Parameters;
 import java.io.File;
 import java.util.concurrent.Callable;
 
+/** The repl command: starts the interactive REPL, optionally preloading a target and running an init script. */
 @Command(
         name = "repl",
         description = "Start interactive REPL mode for bytecode exploration",

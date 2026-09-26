@@ -7,9 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Tokenizer for JStudio script language.
- */
+/** The tokenizer for the JStudio script language; lexical errors are collected rather than thrown. */
 public class ScriptLexer
 {
 
@@ -50,11 +48,21 @@ public class ScriptLexer
     @Getter
     private final List<String> errors = new ArrayList<>();
 
+    /**
+     * Creates a lexer over source text.
+     *
+     * @param source the script source; null is treated as empty
+     */
     public ScriptLexer(String source)
     {
         this.source = source != null ? source : "";
     }
 
+    /**
+     * Scans the whole source into tokens.
+     *
+     * @return the tokens, ending with an EOF token
+     */
     public List<ScriptToken> tokenize()
     {
         while (!isAtEnd())

@@ -2,11 +2,7 @@ package com.tonic.live.debug;
 
 import lombok.Getter;
 
-/**
- * One variable visible in a frame (a local, an argument, or {@code this}): its name, best-effort JVM type
- * descriptor, current display value, and whether it is a reference (object/array, hence expandable) as opposed
- * to a primitive, {@code null}, or String.
- */
+/** One variable visible in a frame, such as a local, an argument or this, with its display value and whether it is an expandable reference. */
 @Getter
 public final class DebugVariable
 {
@@ -18,9 +14,20 @@ public final class DebugVariable
     private final long refHandle;
     /** True for a non-char array (gets the element tooltip + viewer dialog); char[] is shown as a string. */
     private final boolean array;
-    /** Element count when {@link #array}, else 0. */
+    /** The element count for an array, else 0. */
     private final int arrayLength;
 
+    /**
+     * Creates a variable.
+     *
+     * @param name the variable name
+     * @param typeDescriptor the best-effort JVM type descriptor, or empty when unknown
+     * @param display the current value as display text
+     * @param reference whether it is an object or array that can be expanded, as opposed to a primitive, null or String
+     * @param refHandle the session handle for expanding it, or 0 when it is not a reference
+     * @param array whether it is a non-char array; a char array is shown as a string
+     * @param arrayLength the element count for an array, else 0
+     */
     public DebugVariable(String name, String typeDescriptor, String display, boolean reference, long refHandle, boolean array, int arrayLength)
     {
         this.name = name;

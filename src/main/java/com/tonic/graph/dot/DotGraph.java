@@ -4,19 +4,16 @@ import lombok.Getter;
 
 import java.util.List;
 
-/**
- * A parsed subset of a Graphviz graph: an ordered set of nodes and directed/undirected edges plus a layout
- * direction. Produced by {@link DotParser}; consumed by the UI graph builder. Intentionally small — only the
- * attributes the renderer honors (label, shape, colors, dashed/rounded, rankdir) are modeled.
- */
+/** A parsed subset of a Graphviz graph: ordered nodes and edges plus a layout direction, modeling only the attributes the renderer honors. */
 @Getter
 public final class DotGraph
 {
 
-    /** Layout direction, mapped from the DOT {@code rankdir} attribute. */
+    /** Layout direction, from the DOT rankdir attribute. */
     public enum Rankdir
     {TB, LR, BT, RL}
 
+    /** A graph node: its id and the label, shape, colors and style flags the renderer draws. */
     @Getter
     public static final class Node
     {
@@ -65,6 +62,7 @@ public final class DotGraph
         }
     }
 
+    /** A graph edge between two node ids, directed or not, with an optional label and dashed style. */
     @Getter
     public static final class Edge
     {
@@ -105,6 +103,11 @@ public final class DotGraph
         this.edges = edges;
     }
 
+    /**
+     * Tells whether the graph has no nodes.
+     *
+     * @return true when there are no nodes, even if edges exist
+     */
     public boolean isEmpty()
     {
         return nodes.isEmpty();

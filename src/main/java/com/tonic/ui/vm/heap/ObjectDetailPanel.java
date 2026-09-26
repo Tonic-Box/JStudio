@@ -15,6 +15,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.Map;
 
+/** The heap forensics detail view of one object: its allocation provenance, captured fields and recorded mutations. */
 public class ObjectDetailPanel extends ThemedJPanel
 {
 
@@ -27,6 +28,7 @@ public class ObjectDetailPanel extends ThemedJPanel
 
     private HeapForensicsTracker tracker;
 
+    /** Builds the header, the provenance and fields tab and the mutations tab. */
     public ObjectDetailPanel()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
@@ -79,11 +81,21 @@ public class ObjectDetailPanel extends ThemedJPanel
         add(tabbedPane, BorderLayout.CENTER);
     }
 
+    /**
+     * Sets the tracker; with one set, reference fields show the object they point to.
+     *
+     * @param tracker the tracker, or null
+     */
     public void setTracker(HeapForensicsTracker tracker)
     {
         this.tracker = tracker;
     }
 
+    /**
+     * Shows an object, or clears the view.
+     *
+     * @param object the object to show, or null to clear
+     */
     public void setObject(HeapObject object)
     {
 

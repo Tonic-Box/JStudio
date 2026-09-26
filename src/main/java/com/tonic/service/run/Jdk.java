@@ -13,6 +13,13 @@ public final class Jdk
     private final String label;
     private final int feature;
 
+    /**
+     * Creates a JDK entry.
+     *
+     * @param home the JDK or JRE home directory
+     * @param label the name shown in the Run dialog
+     * @param feature the Java feature version, or 0 if unknown
+     */
     public Jdk(File home, String label, int feature)
     {
         this.home = home;

@@ -1,43 +1,67 @@
 package com.tonic.ui.editor.view;
 
-/**
- * The contract every editor tab content view exposes, so the host ({@code EditorTab}) can drive whichever view is
- * current polymorphically instead of casting per concrete type. Implementations are all {@code JPanel}s. Most views
- * only implement a subset; {@link AbstractEditorView} supplies sensible no-op/fallback defaults for the rest.
- */
+/** The contract every editor tab content view exposes, so the editor tab can drive whichever view is current without casting; implementations are panels. */
 public interface EditorView
 {
 
-    /** (Re)build the view's content; typically a no-op once already loaded. */
+    /** Builds the view's content; usually a no-op once loaded. */
     void refresh();
 
-    /** Force a fresh load, discarding any cached/loaded state. */
+    /** Forces a fresh load, discarding any loaded state. */
     void reload();
 
-    /** The view's full content as text (empty string when not text-backed). */
+    /**
+     * Gets the view's content as text.
+     *
+     * @return the full content, or an empty string when the view is not text-backed
+     */
     String getText();
 
-    /** Copy the current selection to the system clipboard, if any. */
+    /** Copies the current selection, if any, to the system clipboard. */
     void copySelection();
 
-    /** The currently selected text, or null when none / not applicable. */
+    /**
+     * Gets the selected text.
+     *
+     * @return the selection, or null when there is none or the view has no text
+     */
     String getSelectedText();
 
-    /** Move the caret/selection to a 1-based line. */
+    /**
+     * Moves the caret to a line.
+     *
+     * @param line the 1-based line number
+     */
     void goToLine(int line);
 
-    /** Open the view's find UI, if it has one. */
+    /** Opens the view's find panel, if it has one. */
     void showFindDialog();
 
-    /** Scroll to and select the first occurrence of {@code text}, if supported. */
+    /**
+     * Scrolls to and selects the first occurrence of a text, where supported.
+     *
+     * @param text the text to find
+     */
     void scrollToText(String text);
 
-    /** Highlight a line (falls back to {@link #goToLine(int)} when the view has no highlight affordance). */
+    /**
+     * Highlights a line, or moves the caret there when the view cannot highlight.
+     *
+     * @param line the 1-based line number
+     */
     void highlightLine(int line);
 
-    /** Apply a font size to the view's text rendering. */
+    /**
+     * Sets the font size of the view's text.
+     *
+     * @param size the font size in points
+     */
     void setFontSize(int size);
 
-    /** Toggle word wrap, where applicable. */
+    /**
+     * Turns word wrap on or off, where applicable.
+     *
+     * @param enabled whether to wrap
+     */
     void setWordWrap(boolean enabled);
 }

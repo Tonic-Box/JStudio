@@ -15,16 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Builds class bytes with debugger-friendly LocalVariableTables so a live debugger reading the redefined class
- * sees named locals everywhere in a method - not just at the exact pc where javac scoped them. For methods with
- * no LVT it injects the decompiler's recovered one (stripped/obfuscated targets); for methods that already have
- * one it widens each slot's scope to the whole method so out-of-scope locals stay readable at any breakpoint.
- *
- * <p>Widening is "safe": a slot is only collapsed to a single method-wide entry when all its entries share one
- * type, so a slot reused for different-typed variables is never misread (those entries are left untouched). Only
- * the debug attribute changes - the bytecode, offsets, frames, and breakpoints stay valid.
- */
+/** Builds class bytes for a live debugger whose LocalVariableTables name locals across the whole method, recovering a table where none exists. */
 public final class SyntheticLvtInjector
 {
 
@@ -33,8 +24,10 @@ public final class SyntheticLvtInjector
     }
 
     /**
-     * Returns {@code original}'s bytes with every method's LVT recovered (if missing) and safely widened, or null
-     * when nothing changed. Operates on a fresh parse, so the caller's {@link ClassFile} is never mutated.
+     * Rebuilds a class from a fresh parse with each method's LVT recovered if missing and each single-typed slot widened to the whole method; the given class is not modified.
+     *
+     * @param original the class
+     * @return the rebuilt bytes, or null when the class is null, nothing changed, or rebuilding fails
      */
     public static byte[] augment(ClassFile original)
     {

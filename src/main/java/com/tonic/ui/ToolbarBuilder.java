@@ -26,8 +26,7 @@ public class ToolbarBuilder implements ThemeChangeListener
     private final MainFrame mainFrame;
     /**
      * -- GETTER --
-     * The built toolbar (null until
-     *  has run).
+     * The built toolbar; null until build has run.
      */
     @Getter
     private JToolBar toolbar;
@@ -36,6 +35,11 @@ public class ToolbarBuilder implements ThemeChangeListener
     private JButton scratchPadButton;
     private EventBus.EventHandler<LiveSessionEvent> liveSessionHandler;
 
+    /**
+     * Creates the builder and registers it for theme changes.
+     *
+     * @param mainFrame the window whose actions the buttons invoke
+     */
     public ToolbarBuilder(MainFrame mainFrame)
     {
         this.mainFrame = mainFrame;
@@ -77,6 +81,11 @@ public class ToolbarBuilder implements ThemeChangeListener
         }
     }
 
+    /**
+     * Builds the toolbar and subscribes it to live-session events, which toggle the live view modes and the scratch pad button.
+     *
+     * @return the toolbar
+     */
     public JToolBar build()
     {
         toolbar = new JToolBar();
@@ -155,14 +164,23 @@ public class ToolbarBuilder implements ThemeChangeListener
         return button;
     }
 
+    /**
+     * Selects a view mode in the combo box.
+     *
+     * @param mode the mode to select
+     */
     public void setViewMode(ViewMode mode)
     {
         viewModeCombo.setSelectedViewMode(mode);
     }
 
     /**
-     * Appends a plugin-contributed button to the toolbar, styled like the built-in buttons. Returns the button so
-     * it can later be passed to {@link #removePluginButton(JButton)}.
+     * Appends a plugin button to the toolbar, styled like the built-in buttons.
+     *
+     * @param icon the button icon
+     * @param tooltip the tooltip text
+     * @param action what a click runs
+     * @return the button, for a later removePluginButton
      */
     public JButton addPluginButton(Icon icon, String tooltip, ActionListener action)
     {
@@ -173,7 +191,11 @@ public class ToolbarBuilder implements ThemeChangeListener
         return button;
     }
 
-    /** Removes a plugin button previously added with {@link #addPluginButton}. */
+    /**
+     * Removes a button previously added with addPluginButton.
+     *
+     * @param button the button to remove
+     */
     public void removePluginButton(JButton button)
     {
         toolbar.remove(button);

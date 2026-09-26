@@ -4,11 +4,7 @@ import javax.swing.SwingWorker;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
-/**
- * Small helper for the common "run something off the EDT, then update the UI" pattern, removing the
- * repeated {@link SwingWorker} subclass boilerplate. {@code work} runs on a background thread; exactly one
- * of {@code onSuccess}/{@code onError} is then invoked on the EDT (the error receives the unwrapped cause).
- */
+/** Helper for running work off the EDT and then handing its result or failure back to the EDT. */
 public final class SwingWorkers
 {
 
@@ -16,6 +12,14 @@ public final class SwingWorkers
     {
     }
 
+    /**
+     * Runs work on a background thread, then calls exactly one of the two callbacks on the EDT.
+     *
+     * @param <T> the result type
+     * @param work the work to run
+     * @param onSuccess receives the work's result
+     * @param onError receives what the work threw, unwrapped from the execution exception
+     */
     public static <T> void run(Callable<T> work, Consumer<T> onSuccess, Consumer<Throwable> onError)
     {
         new SwingWorker<T, Void>()

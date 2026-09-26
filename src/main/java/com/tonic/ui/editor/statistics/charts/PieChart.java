@@ -14,6 +14,7 @@ import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A titled donut chart with a legend and an optional label in the centre. */
 public class PieChart extends JPanel implements ThemeChangeListener
 {
 
@@ -26,6 +27,11 @@ public class PieChart extends JPanel implements ThemeChangeListener
     private static final int LEGEND_ITEM_HEIGHT = 18;
     private static final float DONUT_THICKNESS = 0.35f;
 
+    /**
+     * Creates an empty chart.
+     *
+     * @param title the heading drawn above the chart
+     */
     public PieChart(String title)
     {
         this.title = title;
@@ -34,12 +40,22 @@ public class PieChart extends JPanel implements ThemeChangeListener
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
+    /**
+     * Replaces the slices.
+     *
+     * @param slices the slices in drawing order, or null for none
+     */
     public void setData(List<PieSlice> slices)
     {
         this.slices = slices != null ? new ArrayList<>(slices) : new ArrayList<>();
         repaint();
     }
 
+    /**
+     * Sets the text drawn in the middle of the donut.
+     *
+     * @param centerLabel the text, or null or empty for none
+     */
     public void setCenterLabel(String centerLabel)
     {
         this.centerLabel = centerLabel;
@@ -187,6 +203,7 @@ public class PieChart extends JPanel implements ThemeChangeListener
         repaint();
     }
 
+    /** One slice: its label, value and colour. */
     @Getter
     @AllArgsConstructor
     public static class PieSlice

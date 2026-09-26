@@ -8,17 +8,29 @@ import javax.swing.Icon;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.List;
 
+/** A tree node wrapping one AST node, optionally labelled with the property of its parent it fills. */
 public abstract class ASTTreeNode extends DefaultMutableTreeNode
 {
 
     protected final ASTNode astNode;
     protected final String propertyName;
 
+    /**
+     * Creates an unlabelled node.
+     *
+     * @param astNode the wrapped AST node
+     */
     public ASTTreeNode(ASTNode astNode)
     {
         this(astNode, null);
     }
 
+    /**
+     * Creates a node labelled with the parent property it fills.
+     *
+     * @param astNode the wrapped AST node
+     * @param propertyName the parent property name, or null for none
+     */
     public ASTTreeNode(ASTNode astNode, String propertyName)
     {
         super(astNode);
@@ -38,6 +50,13 @@ public abstract class ASTTreeNode extends DefaultMutableTreeNode
         }
     }
 
+    /**
+     * Wraps an AST node in the node class for its kind: statement, expression, or a generic node for anything else.
+     *
+     * @param node the AST node to wrap
+     * @param propertyName the parent property name, or null for none
+     * @return the new tree node, with its children built
+     */
     public static ASTTreeNode createNodeFor(ASTNode node, String propertyName)
     {
         if (node instanceof Statement)
@@ -51,24 +70,51 @@ public abstract class ASTTreeNode extends DefaultMutableTreeNode
         return new GenericASTTreeNode(node, propertyName);
     }
 
+    /** @return the wrapped AST node */
     public ASTNode getAstNode()
     {
         return astNode;
     }
 
+    /** @return the parent property name, or null when unlabelled */
     public String getPropertyName()
     {
         return propertyName;
     }
 
+    /**
+     * Names the node's kind.
+     *
+     * @return the kind, shown first in the label
+     */
     public abstract String getNodeTypeName();
 
+    /**
+     * Describes the node briefly.
+     *
+     * @return the description shown in parentheses, or null or empty for none
+     */
     public abstract String getNodeDetails();
 
+    /**
+     * Names the node's type, if it has one.
+     *
+     * @return the type shown after a colon, or null or empty for none
+     */
     public abstract String getTypeAnnotation();
 
+    /**
+     * Picks the node's icon.
+     *
+     * @return the icon, or null for none
+     */
     public abstract Icon getIcon();
 
+    /**
+     * Builds the label: property name, kind, details in parentheses and type annotation, each only when present.
+     *
+     * @return the label text
+     */
     public String getDisplayText()
     {
         StringBuilder sb = new StringBuilder();

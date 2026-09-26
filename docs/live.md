@@ -109,3 +109,40 @@ file records the reasons behind the implementation, which the code no longer car
   matching the decompilation. It is best-effort and attempted once per class per session: skipped when the VM
   cannot HotSwap, the class is not loaded, the project lacks it, or it already has one.
 - The agent's socket thread is kept running during a freeze so it can work against the frozen heap.
+
+## More notes
+
+- Class lists are eager and cheap (names and access flags); class bytes are fetched lazily when needed.
+- The agent is pure `java.lang.instrument`, so it needs no native build on any platform; JStudio's jar bundles it as
+  `agent/live-agent.bin`.
+- The dropbox class lives under `com.tonic.live.agent` so the agent's own-class filter hides it from the class
+  browser and JDI can find it by name on the agent's loader.
+- A blocked thread waits on at most one monitor, so every node in the wait-for graph has at most one outgoing edge
+  and every deadlock is a simple ring found by following successors.
+- Debug frames are identified by index, because JDI frames become invalid when the target resumes; a frame is
+  fetched again from the paused thread when its variables are read.
+- The class-prepare hook is where a synthetic local variable table is injected before a stripped class runs; it
+  fires on the event thread with the prepared thread suspended.
+- `DebugSession.start()` must follow breakpoint installation, so with a `suspend=y` launch the requests are in place
+  before VMStart resumes; that is what lets pre-set breakpoints catch startup. `connectWithRetry` tries 50 times at
+  200 ms because a freshly launched JDWP listener may not be up yet.
+- A breakpoint's bytecode offset is its single source of truth: the source view maps to it through the line maps
+  and the bytecode view through the disassembly index, so a breakpoint set in one appears in the other. Breakpoints
+  can be set before a debugger attaches, persist across sessions and are re-armed on every connect. On the paused
+  line, right-click still removes the breakpoint while left-click resumes.
+- Capture events arrive on the client's reader thread, which must not issue protocol requests, so captured class
+  bytes are parsed on a separate executor.
+- One parsed heap dump serves every class, so switching tabs only re-filters; a new dump is taken only on an explicit
+  refresh or the first entry into Live Instances. At most one HPROF file exists at a time and it is deleted on
+  detach. The HPROF reader indexes object ids to file offsets in one streaming pass and decodes fields by seeking, so
+  memory stays bounded.
+- `redefineClasses` accepts method-body changes only (lambdas and invokedynamic included). The bytecode editor's
+  whole-class path has no decompile round trip, so its member set already matches the running class.
+- Method bodies are compared by their canonical printed AST, so reformatting alone is not a change; methods present
+  in only one revision are member changes, which redefinition cannot apply.
+- The scratch pad's JDK class index covers `java.base` plus a curated set of packages, which keeps it fast and avoids
+  simple-name clashes such as `java.awt.List`. The compiler's project classpath excludes `java.*` and `sun.*` so javac
+  resolves those from its platform classpath. The first scratch-pad run in a session asks for confirmation: running
+  arbitrary code in a live JVM is as powerful as redefinition.
+- JFR event fields are read through `hasField`, because event schemas differ across JDKs (`jdk.ObjectAllocationSample`
+  on 16 and later, TLAB events on 11).

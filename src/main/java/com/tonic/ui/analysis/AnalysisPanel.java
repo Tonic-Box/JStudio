@@ -8,6 +8,7 @@ import lombok.Getter;
 import javax.swing.JTabbedPane;
 import java.awt.BorderLayout;
 
+/** The analysis tool window: similarity, search, strings and code-analysis tabs over one project. */
 public class AnalysisPanel extends ThemedJPanel
 {
 
@@ -21,6 +22,11 @@ public class AnalysisPanel extends ThemedJPanel
     @Getter
     private final SimulationPanel simulationPanel;
 
+    /**
+     * Builds the four tabs.
+     *
+     * @param project the project every tab analyzes
+     */
     public AnalysisPanel(ProjectModel project)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -43,6 +49,7 @@ public class AnalysisPanel extends ThemedJPanel
         add(tabbedPane, BorderLayout.CENTER);
     }
 
+    /** Refreshes every tab. */
     public void refresh()
     {
         searchPanel.refresh();
@@ -51,21 +58,25 @@ public class AnalysisPanel extends ThemedJPanel
         simulationPanel.refresh();
     }
 
+    /** Brings the search tab forward. */
     public void showSearch()
     {
         tabbedPane.setSelectedComponent(searchPanel);
     }
 
+    /** Brings the strings tab forward. */
     public void showStrings()
     {
         tabbedPane.setSelectedComponent(stringsPanel);
     }
 
+    /** Brings the similarity tab forward. */
     public void showSimilarity()
     {
         tabbedPane.setSelectedComponent(similarityPanel);
     }
 
+    /** Brings the code-analysis tab forward. */
     public void showSimulation()
     {
         tabbedPane.setSelectedComponent(simulationPanel);

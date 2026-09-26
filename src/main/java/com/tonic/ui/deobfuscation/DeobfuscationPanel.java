@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+/** The string deobfuscation tool: scans a class for encrypted strings, finds decryptor methods, decrypts and patches the constant pool. */
 public class DeobfuscationPanel extends ThemedJPanel
 {
 
@@ -49,6 +50,11 @@ public class DeobfuscationPanel extends ThemedJPanel
     private List<DecryptorCandidate> decryptorCandidates = new ArrayList<>();
     private final List<DeobfuscationResult> results = new ArrayList<>();
 
+    /**
+     * Builds the panel and lists the project's classes.
+     *
+     * @param project the project to deobfuscate; may be null
+     */
     public DeobfuscationPanel(ProjectModel project)
     {
         super(BackgroundStyle.PRIMARY);
@@ -62,6 +68,11 @@ public class DeobfuscationPanel extends ThemedJPanel
         refreshClassList();
     }
 
+    /**
+     * Switches to another project and relists its classes.
+     *
+     * @param project the project; may be null
+     */
     public void setProject(ProjectModel project)
     {
         this.projectModel = project;
@@ -263,6 +274,7 @@ public class DeobfuscationPanel extends ThemedJPanel
         return statusBar;
     }
 
+    /** Refills the class picker from the project's class pool; leaves it empty without a project. */
     public void refreshClassList()
     {
         classSelector.removeAllItems();

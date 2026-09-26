@@ -4,6 +4,7 @@ import com.tonic.parser.ClassFile;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/** A constant-pool string that looks encrypted or encoded, with the reason and a suspicion score. */
 @Getter
 @RequiredArgsConstructor
 public class SuspiciousString
@@ -15,11 +16,21 @@ public class SuspiciousString
     private final SuspicionReason reason;
     private final double suspicionScore;
 
+    /**
+     * Reads the holding class's name.
+     *
+     * @return the internal name of the class holding the string
+     */
     public String getClassName()
     {
         return classFile.getClassName();
     }
 
+    /**
+     * Shortens the string for display.
+     *
+     * @return the value, cut to 40 characters with an ellipsis when longer
+     */
     public String getDisplayValue()
     {
         if (value.length() > 40)
@@ -29,6 +40,7 @@ public class SuspiciousString
         return value;
     }
 
+    /** Why a string looks encrypted, with a readable description. */
     @Getter
     @RequiredArgsConstructor
     public enum SuspicionReason

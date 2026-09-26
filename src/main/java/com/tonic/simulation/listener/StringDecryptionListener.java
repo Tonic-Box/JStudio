@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/** A simulation listener that records String-returning calls whose result is a non-empty constant, as likely string decryptions. */
 public class StringDecryptionListener extends AbstractListener
 {
 
@@ -171,16 +172,27 @@ public class StringDecryptionListener extends AbstractListener
         return simpleName + "." + invoke.getName();
     }
 
+    /**
+     * Lists the decryptions recorded in the last simulation.
+     *
+     * @return the decryption results, unmodifiable
+     */
     public List<DecryptionResult> getDecryptionResults()
     {
         return Collections.unmodifiableList(decryptionResults);
     }
 
+    /**
+     * Counts the decryptions recorded in the last simulation.
+     *
+     * @return the number of decryption results
+     */
     public int getDecryptedCount()
     {
         return decryptionResults.size();
     }
 
+    /** One decrypted string: the call that produced it, its value, and its constant arguments. */
     @Getter
     public static class DecryptionResult
     {
@@ -189,6 +201,14 @@ public class StringDecryptionListener extends AbstractListener
         private final String encryptedInput;
         private final String methodUsed;
 
+        /**
+         * Creates a decryption result.
+         *
+         * @param instruction the call that returned the string
+         * @param decryptedValue the constant string it returned
+         * @param encryptedInput the call's arguments rendered as text
+         * @param methodUsed the called method as SimpleOwner.name
+         */
         public DecryptionResult(InvokeInstruction instruction, String decryptedValue, String encryptedInput, String methodUsed)
         {
             this.instruction = instruction;
@@ -197,6 +217,11 @@ public class StringDecryptionListener extends AbstractListener
             this.methodUsed = methodUsed;
         }
 
+        /**
+         * Returns the id of the IR block holding the call.
+         *
+         * @return the block id, or -1 if the instruction or its block is missing
+         */
         public int getBlockId()
         {
             if (instruction != null && instruction.getBlock() != null)

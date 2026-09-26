@@ -1,22 +1,14 @@
 package com.tonic.ui.dialog.filechooser;
 
-/**
- * Defines the operation mode for the file chooser dialog.
- */
+/** What a file chooser selects. */
 public enum FileChooserMode
 {
-    /**
-     * Open one or more existing files.
-     */
+    /** Open one or more existing files. */
     OPEN_FILE,
 
-    /**
-     * Save a file (select location and name).
-     */
+    /** Choose a location and name to save a file. */
     SAVE_FILE,
 
-    /**
-     * Select a directory only.
-     */
+    /** Select a single directory. */
     SELECT_DIRECTORY
 }

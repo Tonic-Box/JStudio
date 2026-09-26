@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+/** The batch command: runs one plugin over several targets, optionally in parallel, writing one result file per target. */
 @Command(
         name = "batch",
         description = "Batch process multiple targets with a plugin",

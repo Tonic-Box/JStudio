@@ -19,9 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-/**
- * Dialog for searching text across all decompiled source files.
- */
+/** Non-modal dialog that searches the decompiled source of every project class by plain text, whole word or regex, and opens a match on double-click. */
 public class FindInFilesDialog extends JDialog
 {
 
@@ -38,6 +36,12 @@ public class FindInFilesDialog extends JDialog
     private List<SearchMatch> allMatches = new ArrayList<>();
     private SwingWorker<List<SearchMatch>, SearchMatch> currentWorker;
 
+    /**
+     * Creates the non-modal dialog.
+     *
+     * @param owner the owning window
+     * @param project the project whose sources are searched
+     */
     public FindInFilesDialog(Frame owner, ProjectModel project)
     {
         super(owner, "Find in Files", false);
@@ -299,9 +303,7 @@ public class FindInFilesDialog extends JDialog
         }
     }
 
-    /**
-     * Show the dialog and focus the search field.
-     */
+    /** Shows the dialog and focuses the search field. */
     public void showDialog()
     {
         searchField.requestFocus();
@@ -309,7 +311,9 @@ public class FindInFilesDialog extends JDialog
     }
 
     /**
-     * Show with pre-filled search text.
+     * Shows the dialog with the search field filled and selected.
+     *
+     * @param searchText the initial search text
      */
     public void showDialog(String searchText)
     {

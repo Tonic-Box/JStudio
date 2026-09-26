@@ -11,11 +11,7 @@ import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Builds a laid-out, themed {@link mxGraph} from a parsed {@link DotGraph}, mirroring the call-graph renderer
- * (insert vertices/edges inside a model update, then {@link mxHierarchicalLayout}). Node/edge styles are inline so
- * arbitrary DOT colors are honored; missing colors fall back to the current {@link JStudioTheme}.
- */
+/** Turns a parsed DOT graph into a laid-out, read-only mxGraph with inline styles, so DOT colors are kept and missing ones come from the theme. */
 public final class DotGraphBuilder
 {
 
@@ -30,6 +26,12 @@ public final class DotGraphBuilder
     {
     }
 
+    /**
+     * Inserts the nodes and edges in one model update and applies a hierarchical layout.
+     *
+     * @param dot the parsed graph
+     * @return the laid-out graph
+     */
     public static mxGraph build(DotGraph dot)
     {
         mxGraph graph = new mxGraph();

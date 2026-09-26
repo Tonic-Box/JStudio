@@ -10,9 +10,18 @@ import com.tonic.service.ConsoleLogService;
 
 import java.util.List;
 
+/** Writes decrypted strings back into a class's constant pool by rewriting the UTF8 entry a string constant points to. */
 public class ConstantPoolPatcher
 {
 
+    /**
+     * Replaces the text of a string constant.
+     *
+     * @param classFile the class to patch
+     * @param cpIndex the constant-pool index of the string constant
+     * @param newValue the new text
+     * @throws IllegalArgumentException if the index is out of range, is not a string constant, or the constant does not point to a valid UTF8 entry
+     */
     public void patchString(ClassFile classFile, int cpIndex, String newValue)
     {
         ConstPool cp = classFile.getConstPool();
@@ -47,6 +56,13 @@ public class ConstantPoolPatcher
         utf8.setValue(newValue);
     }
 
+    /**
+     * Patches every successful, not yet applied result that belongs to this class and marks it applied; failures are logged and skipped.
+     *
+     * @param classFile the class to patch
+     * @param results the decryption results, possibly for several classes
+     * @return how many results were applied
+     */
     public int applyResults(ClassFile classFile, List<DeobfuscationResult> results)
     {
         int applied = 0;

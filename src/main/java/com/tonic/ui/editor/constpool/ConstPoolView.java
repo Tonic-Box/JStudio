@@ -13,6 +13,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
 
+/** The constant pool view of a class: a filterable, searchable table of every pool entry. */
 public class ConstPoolView extends AbstractEditorView
 {
 
@@ -37,6 +38,11 @@ public class ConstPoolView extends AbstractEditorView
                     "Package", "Module"
             };
 
+    /**
+     * Creates the view; the table fills on refresh.
+     *
+     * @param classEntry the class to show
+     */
     public ConstPoolView(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;

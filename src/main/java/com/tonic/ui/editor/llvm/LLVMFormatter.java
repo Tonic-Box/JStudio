@@ -7,11 +7,7 @@ import com.tonic.analysis.ssa.llvm.LlvmLoweringConfig;
 import com.tonic.parser.MethodEntry;
 import lombok.Getter;
 
-/**
- * Lowers a single method's SSA IR to textual LLVM IR for display in the UI.
- * Methods outside the lowerer's computational subset are reported as a comment rather than
- * aborting the whole view.
- */
+/** Lowers one method's SSA IR to textual LLVM IR for display; a method the lowerer cannot handle becomes a comment instead of failing the view. */
 public class LLVMFormatter
 {
 
@@ -24,6 +20,12 @@ public class LLVMFormatter
     private final SSA ssa;
     private final LlvmLowering lowering;
 
+    /**
+     * Creates a formatter for one method, lowering with the full object model.
+     *
+     * @param method the method to lower
+     * @param ssa the lifter, bound to the method's constant pool
+     */
     public LLVMFormatter(MethodEntry method, SSA ssa)
     {
         this.method = method;
@@ -32,7 +34,9 @@ public class LLVMFormatter
     }
 
     /**
-     * Format the method's LLVM IR for display.
+     * Lifts and lowers the method to LLVM IR.
+     *
+     * @return the LLVM IR text, or a comment line when the method has no code, is not lowerable, or lowering fails
      */
     public String format()
     {

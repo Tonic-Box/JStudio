@@ -6,15 +6,17 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 
-/**
- * Decorates a base icon with a small green "play" badge in the bottom-right corner, marking a class that has a
- * runnable {@code main} entry point (IntelliJ-style).
- */
+/** An icon with a small green play badge in its bottom-right corner, marking a class with a runnable main method. */
 public final class RunnableOverlayIcon implements Icon
 {
 
     private final Icon base;
 
+    /**
+     * Creates the badged icon.
+     *
+     * @param base the icon to draw under the badge
+     */
     public RunnableOverlayIcon(Icon base)
     {
         this.base = base;

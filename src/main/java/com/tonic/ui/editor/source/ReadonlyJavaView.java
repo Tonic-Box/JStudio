@@ -6,17 +6,17 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
 
-/**
- * A read-only (but selectable), syntax-highlighted, theme-styled Java source view. A thin wrapper over
- * {@link JavaEditorFactory} so callers that cannot depend on {@code RSyntaxTextArea} directly (e.g. plugins,
- * whose classpath excludes the editor library) can still show highlighted Java. Not editable; call
- * {@link #setSource(String)} to replace the displayed text.
- */
+/** A read-only, selectable, syntax-highlighted Java source view for callers that cannot depend on the editor library directly. */
 public final class ReadonlyJavaView extends JPanel
 {
 
     private final RSyntaxTextArea editor;
 
+    /**
+     * Creates the view showing the given source.
+     *
+     * @param source the Java source to show; null shows nothing
+     */
     public ReadonlyJavaView(String source)
     {
         super(new BorderLayout());
@@ -27,7 +27,11 @@ public final class ReadonlyJavaView extends JPanel
         setSource(source);
     }
 
-    /** Replaces the displayed source and scrolls back to the top. */
+    /**
+     * Replaces the displayed source and scrolls back to the top.
+     *
+     * @param source the Java source to show; null shows nothing
+     */
     public void setSource(String source)
     {
         editor.setText(source == null ? "" : source);

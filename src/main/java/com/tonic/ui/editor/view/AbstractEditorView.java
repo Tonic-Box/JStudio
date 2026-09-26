@@ -10,12 +10,7 @@ import javax.swing.SwingWorker;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 
-/**
- * Base for editor tab content views. Provides the theme lifecycle (via {@link ThemedJPanel}: register in ctor,
- * unregister in {@code removeNotify}, re-theme through {@code applyChildThemes}), the shared async-load scaffolding
- * ({@link #loadingOverlay}, the {@link #loaded} flag, {@link #cancelCurrentWorker()}, {@link #overlayWrap}), and
- * no-op/fallback defaults for the whole {@link EditorView} contract so views only implement what they support.
- */
+/** The base for editor tab content views: theme lifecycle, shared async-load scaffolding, and no-op defaults for the whole view contract so each view implements only what it supports. */
 public abstract class AbstractEditorView extends ThemedJPanel implements EditorView
 {
 

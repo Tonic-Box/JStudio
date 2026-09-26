@@ -16,6 +16,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Arc2D;
 
+/** A translucent overlay with a spinning arc, a message and an optional detail line, hidden until showLoading is called. */
 public class LoadingOverlay extends JPanel implements ThemeChangeListener
 {
 
@@ -31,6 +32,7 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener
     @Getter
     private boolean loading = false;
 
+    /** Creates the overlay hidden and registers it for theme changes. */
     public LoadingOverlay()
     {
         setOpaque(false);
@@ -44,6 +46,11 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener
         });
     }
 
+    /**
+     * Shows the overlay, clears the detail line and starts the spinner.
+     *
+     * @param message the message, or null for Loading...
+     */
     public void showLoading(String message)
     {
         this.message = message != null ? message : "Loading...";
@@ -56,8 +63,9 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener
     }
 
     /**
-     * Sets an optional second status line shown under the main message (e.g. a live progress detail). No-op
-     * unless currently loading; pass null/empty to clear it.
+     * Sets the detail line under the message, left-truncated to fit; repaints only while loading.
+     *
+     * @param subMessage the detail, or null or empty to clear it
      */
     public void setSubMessage(String subMessage)
     {
@@ -68,6 +76,7 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener
         }
     }
 
+    /** Hides the overlay, clears the detail line and stops the spinner. */
     public void hideLoading()
     {
         this.loading = false;

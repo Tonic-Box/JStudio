@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.List;
 
+/** Shows a run's console output, coloring stderr lines, with a line count and export to a text file. */
 public class ConsoleOutputPanel extends ThemedJPanel
 {
 
@@ -28,6 +29,7 @@ public class ConsoleOutputPanel extends ThemedJPanel
         return JStudioTheme.getError();
     }
 
+    /** Creates the panel showing no output. */
     public ConsoleOutputPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -88,6 +90,7 @@ public class ConsoleOutputPanel extends ThemedJPanel
         StyleConstants.setFontSize(prefixStyle, 10);
     }
 
+    /** Clears the output and resets the line count. */
     public void showEmpty()
     {
         try
@@ -101,11 +104,17 @@ public class ConsoleOutputPanel extends ThemedJPanel
         lineCountLabel.setText("Lines: 0");
     }
 
+    /** Clears the output and resets the line count. */
     public void clear()
     {
         showEmpty();
     }
 
+    /**
+     * Replaces the shown output; lines tagged or looking like errors are shown as stderr.
+     *
+     * @param output the output lines, or null or empty for none
+     */
     public void update(List<String> output)
     {
         try

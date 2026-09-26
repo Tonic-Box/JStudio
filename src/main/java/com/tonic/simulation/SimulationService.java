@@ -33,10 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Service for running symbolic simulation analysis on bytecode methods.
- * Wraps YABR's simulation engine and provides JStudio-specific analysis features.
- */
+/** The singleton that runs YABR's simulation engine over a method with JStudio's listeners and caches each result. */
 public class SimulationService
 {
 
@@ -48,13 +45,17 @@ public class SimulationService
     {
     }
 
+    /** @return the shared instance */
     public static SimulationService getInstance()
     {
         return INSTANCE;
     }
 
     /**
-     * Runs full simulation analysis on a method and caches the result.
+     * Simulates a method with the opaque-predicate, string-decryption and taint listeners, reusing a cached result unless it is stale.
+     *
+     * @param methodModel the method to analyze
+     * @return the analysis result, or null if the method is null, has no code, cannot be lifted, or the analysis fails
      */
     public SimulationAnalysisResult runAnalysis(MethodEntryModel methodModel)
     {

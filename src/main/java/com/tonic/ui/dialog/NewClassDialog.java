@@ -14,6 +14,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Modal dialog that collects the package, name, kind, access, modifiers, superclass, interfaces and bytecode version for a new class. */
 public class NewClassDialog extends ThemedJDialog
 {
 
@@ -34,6 +35,12 @@ public class NewClassDialog extends ThemedJDialog
     @Getter
     private boolean confirmed = false;
 
+    /**
+     * Creates the dialog with the package field prefilled.
+     *
+     * @param owner the window to center on and block
+     * @param defaultPackage the initial package, in internal or dotted form, or null for none
+     */
     public NewClassDialog(Window owner, String defaultPackage)
     {
         super(owner, "New Class", ModalityType.APPLICATION_MODAL);
@@ -488,6 +495,11 @@ public class NewClassDialog extends ThemedJDialog
         return pkg.equals(DEFAULT_PACKAGE_LABEL) ? "" : pkg;
     }
 
+    /**
+     * Builds creation parameters from the current field values.
+     *
+     * @return the parameters, with internal names, java/lang/Object as the superclass when none is given, and Java 8 when no version is selected
+     */
     public ClassCreationParams getCreationParams()
     {
         String name = nameField.getText().trim();

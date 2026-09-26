@@ -7,14 +7,16 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Window;
 
-/**
- * The expanded, interactive view of a DOT diagram in a popup window. A thin wrapper over {@link DotGraphPanel} (the
- * actual pan/zoom graph + toolbar); opened from {@link DotGraphView} when no in-app open handler is supplied. The
- * AI chat instead embeds {@link DotGraphPanel} directly as an editor tab.
- */
+/** A modeless popup holding the interactive DOT diagram panel, opened from a thumbnail that has no other open handler. */
 public final class DotGraphDialog extends JDialog
 {
 
+    /**
+     * Builds the popup at three quarters of the owner's size, at least 640 by 480.
+     *
+     * @param owner the window it centers on; null gives a fixed 820 by 620 size
+     * @param dotSource the DOT text to draw
+     */
     public DotGraphDialog(Window owner, String dotSource)
     {
         super(owner, "Diagram", ModalityType.MODELESS);

@@ -17,9 +17,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Reads and writes a project database as JSON, with a built-in minimal parser. */
 public class JsonSerializer
 {
 
+    /**
+     * Writes a project database to a file, replacing its contents.
+     *
+     * @param db the database to write
+     * @param file the destination
+     * @throws IOException if the file cannot be written
+     */
     public static void save(ProjectDatabase db, File file) throws IOException
     {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file)))
@@ -28,6 +36,13 @@ public class JsonSerializer
         }
     }
 
+    /**
+     * Reads a project database from a file.
+     *
+     * @param file the JSON file
+     * @return the database, with fields absent from the file left at their defaults
+     * @throws IOException if the file cannot be read
+     */
     public static ProjectDatabase load(File file) throws IOException
     {
         StringBuilder content = new StringBuilder();

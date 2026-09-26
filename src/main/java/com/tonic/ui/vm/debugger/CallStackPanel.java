@@ -11,6 +11,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+/** The debugger's call stack list; the current frame is highlighted and JDK frames are dimmed. */
 public class CallStackPanel extends ThemedJPanel
 {
 
@@ -18,6 +19,7 @@ public class CallStackPanel extends ThemedJPanel
     private final DefaultListModel<FrameEntry> listModel;
     private Consumer<FrameEntry> onFrameSelected;
 
+    /** Builds the empty, themed call stack list. */
     public CallStackPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -53,6 +55,11 @@ public class CallStackPanel extends ThemedJPanel
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    /**
+     * Replaces the listed frames and selects the current one.
+     *
+     * @param frames the frames to show, outermost first as the session supplies them
+     */
     public void updateCallStack(List<FrameEntry> frames)
     {
         listModel.clear();
@@ -73,11 +80,17 @@ public class CallStackPanel extends ThemedJPanel
         }
     }
 
+    /** Removes every listed frame. */
     public void clear()
     {
         listModel.clear();
     }
 
+    /**
+     * Sets what runs when the user selects a frame.
+     *
+     * @param handler receives the selected frame, or null to do nothing
+     */
     public void setOnFrameSelected(Consumer<FrameEntry> handler)
     {
         this.onFrameSelected = handler;

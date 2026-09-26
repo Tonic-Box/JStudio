@@ -24,3 +24,14 @@ its less obvious choices are recorded here.
 - Method arguments for the VM are built recursively from argument specs on the interpreter's heap: boxed
   primitives, object or array instances, or null. A malformed primitive-array element fails with a descriptive
   `IllegalArgumentException` rather than a raw `ClassCastException`.
+- Plugin classes are instantiated off the EDT, so their constructors must be trivial; do Swing work in `start`.
+  Each jar's class loader asks the app loader first, so plugins can use every app class; it is shared by the jar's
+  plugins and closed only on reload or shutdown. Disable keeps the classes loaded; reload re-reads the jar.
+- The plugin context looks up the current project on every call, so nothing goes stale; `host.currentProject()`,
+  which can be null, is the reliable open-project check.
+- The live API borrows the app's live session and never closes it, since closing it would detach the whole app.
+- `JStudioHost` is deliberately small: plugins reach app singletons by importing them, and the host adds only UI
+  contribution plus cleanup helpers (`onEvent`, `track`) that avoid leaks. `Registration.remove` is idempotent
+  because a plugin may remove a registration and the host removes it again on unload.
+- The refactor and script APIs return plain result objects so callers need not depend on the host, YABR or the
+  script engine; they run off the EDT (the AI chat worker), and MainFrame's handlers move UI work onto the EDT.

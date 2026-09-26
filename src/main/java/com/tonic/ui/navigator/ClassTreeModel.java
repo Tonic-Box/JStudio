@@ -22,13 +22,16 @@ public class ClassTreeModel extends DefaultTreeModel
     private String filterText;
     private boolean showMembers = true;
 
+    /** Creates a model showing an empty placeholder project. */
     public ClassTreeModel()
     {
         super(new NavigatorNode.ProjectNode("No Project", 0));
     }
 
     /**
-     * Load a project into the tree model.
+     * Shows a project, clearing any filter.
+     *
+     * @param project the project to show
      */
     public void loadProject(ProjectModel project)
     {
@@ -38,7 +41,9 @@ public class ClassTreeModel extends DefaultTreeModel
     }
 
     /**
-     * Filter classes by name.
+     * Rebuilds the tree showing only entries whose names contain the text, ignoring case.
+     *
+     * @param filterText the text to match; null or empty shows everything
      */
     public void setFilter(String filterText)
     {
@@ -46,9 +51,7 @@ public class ClassTreeModel extends DefaultTreeModel
         rebuildTree();
     }
 
-    /**
-     * Clear the filter.
-     */
+    /** Removes the filter and rebuilds the tree. */
     public void clearFilter()
     {
         this.filterText = null;
@@ -56,7 +59,9 @@ public class ClassTreeModel extends DefaultTreeModel
     }
 
     /**
-     * Set whether to show class members (methods, fields).
+     * Sets whether classes list their methods and fields, and rebuilds the tree.
+     *
+     * @param showMembers true to show members
      */
     public void setShowMembers(boolean showMembers)
     {
@@ -564,7 +569,10 @@ public class ClassTreeModel extends DefaultTreeModel
     }
 
     /**
-     * Find a class node in the tree.
+     * Searches the tree for a class's node.
+     *
+     * @param className the class's internal name, with slashes
+     * @return the node, or null if the class is not in the tree
      */
     public NavigatorNode.ClassNode findClassNode(String className)
     {

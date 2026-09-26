@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/** A simulation listener that reports calls to known sinks (SQL, command, file, network, crypto) reached by tainted values, treating parameters as tainted by default. */
 public class TaintTrackingListener extends AbstractListener
 {
 
@@ -47,6 +48,11 @@ public class TaintTrackingListener extends AbstractListener
         return method.getParameters().size();
     }
 
+    /**
+     * Sets whether method parameters are tainted at the start of the next simulation.
+     *
+     * @param tainted true to treat parameters as untrusted input
+     */
     public void setParametersAreTainted(boolean tainted)
     {
         this.parametersAreTainted = tainted;
@@ -205,11 +211,21 @@ public class TaintTrackingListener extends AbstractListener
         return simpleName + "." + name + "()";
     }
 
+    /**
+     * Lists the taint flows recorded in the last simulation.
+     *
+     * @return the taint flows, unmodifiable
+     */
     public List<TaintFlowResult> getTaintFlows()
     {
         return Collections.unmodifiableList(taintFlows);
     }
 
+    /**
+     * Counts the taint flows recorded in the last simulation.
+     *
+     * @return the number of taint flows
+     */
     public int getTaintFlowCount()
     {
         return taintFlows.size();
@@ -227,6 +243,7 @@ public class TaintTrackingListener extends AbstractListener
         }
     }
 
+    /** One tainted value reaching a sink: the sink call, its category, and the path of sources before it. */
     @Getter
     public static class TaintFlowResult
     {
@@ -236,6 +253,15 @@ public class TaintTrackingListener extends AbstractListener
         private final List<String> flowPath;
         private final TaintFlow.TaintCategory category;
 
+        /**
+         * Creates a taint flow result.
+         *
+         * @param sinkInstruction the sink call
+         * @param sourceDescription where the tainted value came from
+         * @param sinkDescription the sink as SimpleOwner.name()
+         * @param flowPath the sources seen before the sink, ending with the sink
+         * @param category the kind of vulnerability the sink represents
+         */
         public TaintFlowResult(InvokeInstruction sinkInstruction, String sourceDescription, String sinkDescription, List<String> flowPath, TaintFlow.TaintCategory category)
         {
             this.sinkInstruction = sinkInstruction;
@@ -245,6 +271,11 @@ public class TaintTrackingListener extends AbstractListener
             this.category = category;
         }
 
+        /**
+         * Returns the id of the IR block holding the sink call.
+         *
+         * @return the block id, or -1 if the instruction or its block is missing
+         */
         public int getBlockId()
         {
             if (sinkInstruction != null && sinkInstruction.getBlock() != null)

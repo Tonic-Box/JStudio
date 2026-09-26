@@ -4,6 +4,7 @@ import lombok.Getter;
 
 import java.util.Set;
 
+/** The kind of a resource, which picks its icon and viewer. */
 @Getter
 public enum ResourceType
 {
@@ -22,6 +23,13 @@ public enum ResourceType
         this.iconName = iconName;
     }
 
+    /**
+     * Detects a resource's type from its extension, falling back to sniffing the first 8 KB for text.
+     *
+     * @param path the resource's path inside the project
+     * @param data the file bytes, or null
+     * @return IMAGE or TEXT for a known extension, TEXT for content that looks like text, otherwise BINARY
+     */
     public static ResourceType detect(String path, byte[] data)
     {
         String lowerPath = path.toLowerCase();

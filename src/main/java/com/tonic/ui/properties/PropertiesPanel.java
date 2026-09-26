@@ -21,6 +21,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+/** The properties tool window: class, method and field tabs of attributes, over a details area. */
 public class PropertiesPanel extends ThemedJPanel
 {
 
@@ -34,6 +35,7 @@ public class PropertiesPanel extends ThemedJPanel
     private MethodEntryModel currentMethod;
     private FieldEntryModel currentField;
 
+    /** Builds the tabs and details area in their empty state. */
     public PropertiesPanel()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -97,7 +99,9 @@ public class PropertiesPanel extends ThemedJPanel
     }
 
     /**
-     * Show class properties.
+     * Shows a class's properties and brings the class tab forward.
+     *
+     * @param classEntry the class; null shows the empty state
      */
     public void showClass(ClassEntryModel classEntry)
     {
@@ -110,7 +114,9 @@ public class PropertiesPanel extends ThemedJPanel
     }
 
     /**
-     * Show method properties.
+     * Shows a method's properties and brings the method tab forward.
+     *
+     * @param method the method; null shows the empty state
      */
     public void showMethod(MethodEntryModel method)
     {
@@ -122,7 +128,9 @@ public class PropertiesPanel extends ThemedJPanel
     }
 
     /**
-     * Show field properties.
+     * Shows a field's properties and brings the field tab forward.
+     *
+     * @param field the field; null shows the empty state
      */
     public void showField(FieldEntryModel field)
     {

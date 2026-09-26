@@ -25,13 +25,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Renders breakpoint dots in an editor view's gutter and toggles a breakpoint when the gutter's icon strip is
- * left-clicked. The breakpoint the target is currently paused at shows a yellow pause badge instead, and
- * clicking it resumes (right-click still removes it). The view-specific line/offset mapping is supplied by a
- * {@link BreakpointMapper}, so the same controller drives both the source and bytecode views; dots are rendered
- * from the shared {@link BreakpointService}.
- */
+/** Draws breakpoint dots in one editor view's gutter and toggles them on left-click; the paused line shows a pause badge that resumes when clicked. */
 public final class BreakpointGutterController
 {
 
@@ -103,6 +97,13 @@ public final class BreakpointGutterController
     private final EventBus.EventHandler<DebugPausedEvent> pausedHandler = e -> refresh();
     private final EventBus.EventHandler<DebugResumedEvent> resumedHandler = e -> refresh();
 
+    /**
+     * Creates the controller and hooks its click handler into the gutter's icon strip.
+     *
+     * @param textArea the editor whose lines the gutter follows
+     * @param scrollPane the scroll pane that owns the gutter
+     * @param mapper the view's line-to-breakpoint mapping
+     */
     public BreakpointGutterController(RSyntaxTextArea textArea, RTextScrollPane scrollPane, BreakpointMapper mapper)
     {
         this.textArea = textArea;
@@ -138,19 +139,32 @@ public final class BreakpointGutterController
     }
 
     /**
-     * The breakpoint a right-click on {@code line} (1-based) would toggle, or null when the line isn't an
-     * executable location. Breakpoints are settable any time (even before attach) and arm on connect.
+     * Finds the breakpoint a line would toggle.
+     *
+     * @param line the 1-based line in the view
+     * @return the breakpoint, or null if the line is not executable
      */
     public Breakpoint breakpointAt(int line)
     {
         return mapper.breakpointAtLine(line);
     }
 
+    /**
+     * Tells whether a breakpoint is set.
+     *
+     * @param bp the breakpoint
+     * @return true if it is in the shared registry
+     */
     public boolean isSet(Breakpoint bp)
     {
         return BreakpointService.getInstance().contains(bp);
     }
 
+    /**
+     * Toggles a breakpoint in the shared registry.
+     *
+     * @param bp the breakpoint
+     */
     public void toggle(Breakpoint bp)
     {
         BreakpointService.getInstance().toggle(bp);
@@ -166,6 +180,7 @@ public final class BreakpointGutterController
         updateIcons();
     }
 
+    /** Unsubscribes from breakpoint and debug events; call from the host view's removeNotify. */
     public void detach()
     {
         EventBus.getInstance().unregister(BreakpointsChangedEvent.class, bpHandler);
@@ -174,6 +189,7 @@ public final class BreakpointGutterController
         EventBus.getInstance().unregister(DebugResumedEvent.class, resumedHandler);
     }
 
+    /** Redraws the gutter icons for this view's class, placing the pause badge on the paused line in place of its dot. */
     public void updateIcons()
     {
         wireGutter();

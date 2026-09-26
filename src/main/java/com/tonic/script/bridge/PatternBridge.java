@@ -10,11 +10,17 @@ import com.tonic.script.engine.ScriptValue;
 
 import java.util.*;
 
+/** The patterns script global: searches project bytecode for calls, field accesses, allocations, casts, null checks and throws, capped at a settable result limit. */
 public class PatternBridge extends AbstractBridge
 {
 
     private int resultLimit = 100;
 
+    /**
+     * Creates a bridge with a result limit of 100.
+     *
+     * @param projectModel the project to search
+     */
     public PatternBridge(ProjectModel projectModel)
     {
         super(projectModel);
@@ -26,6 +32,11 @@ public class PatternBridge extends AbstractBridge
         return createPatternObject();
     }
 
+    /**
+     * Builds the patterns script object: the result limit and one search function per pattern kind.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createPatternObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

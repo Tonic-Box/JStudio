@@ -94,6 +94,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     private boolean ignoreDocumentChanges = false;
     private Runnable onRecompiled;
 
+    /**
+     * Creates the view for a class; the source is decompiled on the first refresh.
+     *
+     * @param classEntry the class to show
+     */
     public SourceCodeView(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;
@@ -283,7 +288,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         compileToolbar.showWithErrors(errorCount, warningCount);
     }
 
-    /** Sets a callback invoked after a successful recompile (the owning tab refreshes its views). */
+    /**
+     * Sets the callback run after a successful recompile.
+     *
+     * @param onRecompiled the callback, typically the owning tab refreshing its views
+     */
     public void setOnRecompiled(Runnable onRecompiled)
     {
         this.onRecompiled = onRecompiled;
@@ -493,7 +502,11 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         });
     }
 
-    /** Enables or disables the usage-count lenses, recomputing or clearing them immediately. */
+    /**
+     * Enables or disables the usage-count lenses, recomputing or clearing them immediately.
+     *
+     * @param enabled whether to show the lenses
+     */
     public void setUsageLensEnabled(boolean enabled)
     {
         usageLens.setEnabled(enabled);
@@ -767,13 +780,21 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         lineHighlighter.highlightAndScrollToLine(lineNumber);
     }
 
-    /** Highlight a specific line (0-based line number). */
+    /**
+     * Highlights a line.
+     *
+     * @param lineNumber the 0-based line
+     */
     public void highlightLine(int lineNumber)
     {
         lineHighlighter.highlightLine(lineNumber);
     }
 
-    /** Highlight a 0-based line with the dual view's link color, used for cross-pane linking. */
+    /**
+     * Highlights a line in the dual view's link color, for cross-pane linking.
+     *
+     * @param lineNumber the 0-based line
+     */
     public void highlightLinkedLine(int lineNumber)
     {
         lineHighlighter.highlightLinkedLine(lineNumber);
@@ -786,17 +807,15 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     }
 
     /**
-     * Registers a listener fired with the 0-based line on a plain double-click, used by the dual view
-     * to drive cross-pane highlighting. Ctrl+Click navigation and the context menu are unaffected.
+     * Sets the listener fired on a plain double-click, which the dual view uses for cross-pane highlighting.
+     *
+     * @param onLineActivated receives the 0-based line double-clicked
      */
     public void setOnLineActivated(IntConsumer onLineActivated)
     {
         this.onLineActivated = onLineActivated;
     }
 
-    /**
-     * Scroll to and highlight a method declaration line.
-     */
     /**
      * Finds the method whose source contains the caret.
      *
@@ -819,6 +838,12 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         return null;
     }
 
+    /**
+     * Scrolls to and highlights a method's declaration, loading the source first if needed.
+     *
+     * @param methodName the method name
+     * @param methodDesc the method descriptor
+     */
     public void scrollToMethodDeclaration(String methodName, String methodDesc)
     {
         if (!loaded)
@@ -829,7 +854,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     }
 
     /**
-     * Scroll to and highlight a field declaration line.
+     * Scrolls to and highlights a field's declaration, loading the source first if needed.
+     *
+     * @param fieldName the field name
      */
     public void scrollToFieldDeclaration(String fieldName)
     {
@@ -841,7 +868,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     }
 
     /**
-     * Set the project model for navigation.
+     * Sets the project used to resolve navigation into other classes.
+     *
+     * @param projectModel the open project
      */
     public void setProjectModel(ProjectModel projectModel)
     {
@@ -855,11 +884,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         repaint();
     }
 
-    /**
-     * Forces a fresh decompile from the current bytecode, discarding any loaded/cached or edited source. Plain
-     * {@link #refresh()} no-ops once the view has loaded (and re-displays the cache when present), so it cannot show
-     * a class that was mutated externally (an AI rename, a script transform). Use this to rebuild the source view.
-     */
+    /** Discards the cached and edited source and decompiles the class again from its current bytecode. */
     public void reload()
     {
         classEntry.invalidateDecompilationCache();
@@ -868,6 +893,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         refresh();
     }
 
+    /** Shows the cached source if there is one, otherwise decompiles in the background unless already loaded. */
     public void refresh()
     {
         String cachedSource = classEntry.getDecompilationCache();
@@ -960,13 +986,13 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     }
 
     /**
-     * Scrolls to the source line containing the statement at the given bytecode offset and selects
-     * the referenced token on it. Resolution uses the decompiler's per-method offset-to-line map:
-     * the ceiling entry is preferred (inlined expressions are emitted by a later-offset consumer
-     * statement) with the floor entry second, verified by token presence; the lines between the two
-     * candidates are scanned when neither matches. If a decompile is in flight the navigation is
-     * deferred until its text lands. Returns false when no line map is available (plain cached
-     * source, annotation filtering active) so callers can fall back to method-level navigation.
+     * Scrolls to the source line of the statement at a bytecode offset and selects a token on it, deferring until an in-flight decompile finishes.
+     *
+     * @param methodName the method name
+     * @param methodDesc the method descriptor
+     * @param pc the bytecode offset
+     * @param selectToken the text to select on the line
+     * @return false when no line map is available (annotations hidden, or no map for the method), so the caller can fall back to method-level navigation; true otherwise, including when deferred
      */
     public boolean scrollToSourceOffset(String methodName, String methodDesc, int pc, String selectToken)
     {
@@ -1052,7 +1078,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     }
 
     /**
-     * Set whether to omit annotations from decompiled output display.
+     * Sets whether annotations are hidden, re-showing the loaded source and discarding edits.
+     *
+     * @param omit whether to hide annotations
      */
     public void setOmitAnnotations(boolean omit)
     {
@@ -1085,16 +1113,16 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     }
 
     /**
-     * Get the current text.
+     * Returns the editor's text, including unsaved edits.
+     *
+     * @return the current text
      */
     public String getText()
     {
         return textArea.getText();
     }
 
-    /**
-     * Copy current selection to clipboard.
-     */
+    /** Copies the selection to the clipboard, if any. */
     public void copySelection()
     {
         String selected = textArea.getSelectedText();
@@ -1106,7 +1134,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     }
 
     /**
-     * Go to a specific line.
+     * Moves the caret to a line and focuses the editor; an out-of-range line is ignored.
+     *
+     * @param line the 1-based line
      */
     public void goToLine(int line)
     {
@@ -1121,16 +1151,16 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         }
     }
 
-    /**
-     * Show inline search panel.
-     */
+    /** Shows the inline search panel. */
     public void showFindDialog()
     {
         searchPanel.showPanel();
     }
 
     /**
-     * Get the selected text.
+     * Returns the editor's selection.
+     *
+     * @return the selected text, or null when nothing is selected
      */
     public String getSelectedText()
     {
@@ -1138,7 +1168,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     }
 
     /**
-     * Scroll to and highlight text.
+     * Finds and selects the next case-insensitive match of the text.
+     *
+     * @param text the text to find; null or empty does nothing
      */
     public void scrollToText(String text)
     {
@@ -1151,7 +1183,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     }
 
     /**
-     * Set the font size.
+     * Sets the code font size.
+     *
+     * @param size the point size
      */
     public void setFontSize(int size)
     {
@@ -1159,7 +1193,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     }
 
     /**
-     * Set word wrap enabled/disabled.
+     * Turns word wrap on or off.
+     *
+     * @param enabled whether to wrap
      */
     public void setWordWrap(boolean enabled)
     {

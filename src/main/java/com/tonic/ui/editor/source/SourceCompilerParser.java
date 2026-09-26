@@ -13,6 +13,7 @@ import org.fife.ui.rsyntaxtextarea.parser.ParserNotice;
 import java.util.Collections;
 import java.util.List;
 
+/** An editor parser that flags syntax errors in the edited source as the user types, and compiles it against the original class on request. */
 public class SourceCompilerParser extends AbstractParser
 {
 
@@ -23,32 +24,58 @@ public class SourceCompilerParser extends AbstractParser
     @Getter
     private boolean enabled;
 
+    /** Creates the parser, disabled until enabled. */
     public SourceCompilerParser()
     {
         this.compiler = new SourceCompiler();
         this.enabled = false;
     }
 
+    /**
+     * Sets the class that edits compile against; parsing is skipped while none is set.
+     *
+     * @param originalClass the class being edited
+     */
     public void setOriginalClass(ClassFile originalClass)
     {
         this.originalClass = originalClass;
     }
 
+    /**
+     * Turns as-you-type error checking on or off.
+     *
+     * @param enabled whether to check
+     */
     public void setEnabled(boolean enabled)
     {
         this.enabled = enabled;
     }
 
+    /**
+     * Tells whether the last parse found an error.
+     *
+     * @return true when the last parse reported at least one error
+     */
     public boolean hasErrors()
     {
         return lastErrors.stream().anyMatch(CompilationError::isError);
     }
 
+    /**
+     * Counts the errors from the last parse.
+     *
+     * @return the number of errors
+     */
     public int getErrorCount()
     {
         return (int) lastErrors.stream().filter(CompilationError::isError).count();
     }
 
+    /**
+     * Counts the warnings from the last parse.
+     *
+     * @return the number of warnings
+     */
     public int getWarningCount()
     {
         return (int) lastErrors.stream().filter(CompilationError::isWarning).count();
@@ -96,11 +123,26 @@ public class SourceCompilerParser extends AbstractParser
         return result;
     }
 
+    /**
+     * Compiles the whole source against the original class.
+     *
+     * @param source the edited source
+     * @param classPool the pool used to resolve types
+     * @return the result; a failure when no original class is set
+     */
     public CompilationResult compile(String source, ClassPool classPool)
     {
         return compile(source, classPool, null);
     }
 
+    /**
+     * Compiles the source against the original class, re-lowering only the changed methods.
+     *
+     * @param source the edited source
+     * @param classPool the pool used to resolve types
+     * @param changedMethods the name plus descriptor keys of the methods to re-lower, or null for all
+     * @return the result; a failure when no original class is set
+     */
     public CompilationResult compile(String source, ClassPool classPool, java.util.Set<String> changedMethods)
     {
         if (originalClass == null)

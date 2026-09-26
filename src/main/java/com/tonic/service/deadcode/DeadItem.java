@@ -6,15 +6,12 @@ import lombok.Getter;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * One removable item found by {@link DeadCodeAnalyzer}: an entire dead class, a dead method, or a dead field.
- * Owner names are internal form ({@code com/foo/Bar}). For a write-only field, {@link #getWriters()} lists the
- * reachable methods whose store of the field must be patched out before the field is removed.
- */
+/** One removable item found by dead-code analysis: a class, method or field, with owners as internal names; a write-only field lists the writers to patch. */
 @Getter
 public final class DeadItem
 {
 
+    /** What a dead item is. */
     public enum Kind
     {
         CLASS, METHOD, FIELD
@@ -52,7 +49,11 @@ public final class DeadItem
         return new DeadItem(Kind.FIELD, owner, name, desc, writeOnly, writers);
     }
 
-    /** A readable one-line label for the UI, e.g. {@code doWork(I)V} or {@code count : I (write-only)}. */
+    /**
+     * Builds a one-line label for the UI.
+     *
+     * @return the dotted class name, the method name with descriptor, or the field name and descriptor marked when write-only
+     */
     public String displayLabel()
     {
         switch (kind)

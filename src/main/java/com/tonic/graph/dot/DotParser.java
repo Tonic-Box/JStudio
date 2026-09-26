@@ -5,14 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * A small, best-effort parser for the practical subset of Graphviz DOT that an AI assistant emits for diagrams:
- * {@code digraph}/{@code graph}, node and edge statements, edge chains ({@code a -> b -> c}), {@code node}/
- * {@code edge}/{@code graph} attribute defaults, {@code subgraph}/brace blocks (flattened), and the attributes the
- * renderer honors ({@code label}, {@code shape}, {@code color}/{@code fillcolor}, {@code style}, {@code rankdir}).
- * Comments ({@code //}, {@code #}, {@code /* *}{@code /}) and quoted ids/labels are supported. Clusters, ports,
- * ranks, and HTML-label markup are accepted but ignored. Structurally invalid input throws {@link DotParseException}.
- */
+/** A best-effort parser for the practical subset of Graphviz DOT that assistants emit for diagrams; unsupported constructs are accepted and ignored. */
 public final class DotParser
 {
 
@@ -20,6 +13,13 @@ public final class DotParser
     {
     }
 
+    /**
+     * Parses DOT source into a graph, flattening subgraphs and applying node, edge and graph attribute defaults.
+     *
+     * @param source the DOT text
+     * @return the parsed graph
+     * @throws DotParseException if the source is null, blank or structurally invalid
+     */
     public static DotGraph parse(String source)
     {
         if (source == null || source.trim().isEmpty())

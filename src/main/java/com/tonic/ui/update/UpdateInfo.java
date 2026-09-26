@@ -3,10 +3,7 @@ package com.tonic.ui.update;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-/**
- * A resolved GitHub release: its tag, parsed numeric version, release page, and download URLs for the
- * {@code JStudio.jar} asset and its optional {@code JStudio.jar.sha256} checksum.
- */
+/** A GitHub release: its tag, numeric version, page, and download URLs of the JStudio.jar asset and its optional checksum. */
 @Getter
 @RequiredArgsConstructor
 public final class UpdateInfo

@@ -8,35 +8,60 @@ import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.JTextArea;
 
+/** A text area on the tertiary background whose colors and font follow the theme; it uses the code font unless told otherwise. */
 public class ThemedJTextArea extends JTextArea implements ThemeChangeListener
 {
 
     private boolean useCodeFont = true;
 
+    /** Creates an empty text area and registers it for theme changes. */
     public ThemedJTextArea()
     {
         super();
         initialize();
     }
 
+    /**
+     * Creates a text area with initial text and registers it for theme changes.
+     *
+     * @param text the initial text
+     */
     public ThemedJTextArea(String text)
     {
         super(text);
         initialize();
     }
 
+    /**
+     * Creates an empty text area of a given size and registers it for theme changes.
+     *
+     * @param rows the row count
+     * @param cols the column count
+     */
     public ThemedJTextArea(int rows, int cols)
     {
         super(rows, cols);
         initialize();
     }
 
+    /**
+     * Creates a text area with initial text and a given size and registers it for theme changes.
+     *
+     * @param text the initial text
+     * @param rows the row count
+     * @param cols the column count
+     */
     public ThemedJTextArea(String text, int rows, int cols)
     {
         super(text, rows, cols);
         initialize();
     }
 
+    /**
+     * Chooses between the code font and the UI font and reapplies the theme.
+     *
+     * @param useCodeFont true for the code font, false for the UI font
+     */
     public void setUseCodeFont(boolean useCodeFont)
     {
         this.useCodeFont = useCodeFont;

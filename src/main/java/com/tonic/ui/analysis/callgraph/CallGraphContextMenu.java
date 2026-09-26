@@ -12,6 +12,7 @@ import java.awt.Component;
 import java.util.Set;
 import java.util.function.Consumer;
 
+/** The right-click menu on a call graph node: focus it, list its callers or callees, or open it in the editor. */
 public class CallGraphContextMenu
 {
 
@@ -22,6 +23,15 @@ public class CallGraphContextMenu
     private final Consumer<MethodReference> onNavigate;
     private final Consumer<String> statusCallback;
 
+    /**
+     * Builds the menu.
+     *
+     * @param graph the graph whose selected cell the actions apply to
+     * @param model maps the selected cell to its method
+     * @param onFocusMethod focuses the view on a method
+     * @param onNavigate opens a method in the editor
+     * @param statusCallback receives status line text
+     */
     public CallGraphContextMenu(mxGraph graph, CallGraphModel model, Consumer<MethodReference> onFocusMethod, Consumer<MethodReference> onNavigate, Consumer<String> statusCallback)
     {
         this.graph = graph;
@@ -134,6 +144,13 @@ public class CallGraphContextMenu
         return cell != null ? model.getMethodForCell(cell) : null;
     }
 
+    /**
+     * Shows the menu.
+     *
+     * @param invoker the component the coordinates are relative to
+     * @param x the horizontal position
+     * @param y the vertical position
+     */
     public void show(Component invoker, int x, int y)
     {
         menu.show(invoker, x, y);

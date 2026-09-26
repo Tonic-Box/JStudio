@@ -26,13 +26,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.LongFunction;
 
-/**
- * A flame graph (top-down icicle) for a {@link CallTreeNode} call tree: each node is a rounded bar whose width
- * is proportional to its total weight, stacked by call depth (root at the top, callees below). Single-click a
- * bar to zoom in (click the top bar to step back out); hover highlights a bar; double-click activates the frame
- * (source navigation). Weight is rendered via the supplied formatter (samples / bytes / time), so one widget
- * serves the CPU, allocation and lock views.
- */
+/** A top-down flame graph of a call tree where a click zooms into a bar, a click on the top bar steps out, and a double-click activates the frame. */
 public final class FlameGraphPanel extends JComponent implements ThemeChangeListener, Scrollable
 {
 
@@ -51,6 +45,13 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
     private Box pendingZoom;
     private Runnable onZoomChanged;
 
+    /**
+     * Creates the graph showing the whole tree.
+     *
+     * @param root the call tree's synthetic root
+     * @param weightFormat renders a weight as samples, bytes or time
+     * @param onActivate receives a frame the user double-clicks
+     */
     public FlameGraphPanel(CallTreeNode root, LongFunction<String> weightFormat, Consumer<FrameKey> onActivate)
     {
         this.trueRoot = root;
@@ -132,18 +133,31 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
         });
     }
 
-    /** Notified whenever the zoom (breadcrumb path) changes. */
+    /**
+     * Sets the callback run whenever the zoom path changes.
+     *
+     * @param listener the callback
+     */
     public void setOnZoomChanged(Runnable listener)
     {
         this.onZoomChanged = listener;
     }
 
+    /**
+     * Tells whether the graph is zoomed into a frame.
+     *
+     * @return true if the zoom path goes below the root
+     */
     public boolean isZoomed()
     {
         return path.size() > 1;
     }
 
-    /** Breadcrumb of the current zoom path, e.g. {@code All > Bar.run > Baz.work}. */
+    /**
+     * Returns the breadcrumb of the current zoom path.
+     *
+     * @return "All" followed by each zoomed frame's display label
+     */
     public String pathLabel()
     {
         StringBuilder sb = new StringBuilder("All");
@@ -154,6 +168,7 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
         return sb.toString();
     }
 
+    /** Zooms back out to the whole tree. */
     public void reset()
     {
         if (path.size() > 1)

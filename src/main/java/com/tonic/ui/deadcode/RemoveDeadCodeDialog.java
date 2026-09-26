@@ -45,11 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Configure-and-preview dialog for the Remove Dead Code feature: pick entry-point options and keep/skip lists,
- * Analyze to populate a collapsible checkbox tree of everything found dead (classes / methods / fields), then
- * remove the checked items. There is no undo, so the preview is the safety net.
- */
+/** The Remove Dead Code dialog: set entry points and keep and skip lists, analyze, then remove the checked dead classes, methods and fields; there is no undo. */
 public final class RemoveDeadCodeDialog extends JDialog
 {
 
@@ -67,6 +63,11 @@ public final class RemoveDeadCodeDialog extends JDialog
     private final JTree tree = new JTree(treeModel);
     private final Set<DefaultMutableTreeNode> checked = new HashSet<>();
 
+    /**
+     * Builds the modeless dialog with the saved settings.
+     *
+     * @param mainFrame the window it belongs to, refreshed after removal
+     */
     public RemoveDeadCodeDialog(MainFrame mainFrame)
     {
         super(mainFrame, "Remove Dead Code", false);

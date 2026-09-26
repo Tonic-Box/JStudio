@@ -10,12 +10,7 @@ import java.awt.Desktop;
 import java.net.URI;
 import java.nio.file.Path;
 
-/**
- * Coordinates JStudio's self-update: a throttled, opt-out startup check and a manual
- * "Check for Updates" action, both off the EDT. When a newer release is found the user is prompted
- * and may update (download with SHA-256 verification, then swap-and-relaunch via
- * {@link UpdateInstaller}/{@link com.tonic.cli.Updater}), skip the version, or defer.
- */
+/** Runs update checks off the event thread, at startup or on demand, and offers to install, skip or defer a newer release. */
 public final class UpdateManager
 {
 
@@ -25,24 +20,23 @@ public final class UpdateManager
     private final UpdateChecker checker = new UpdateChecker();
     private final UpdateInstaller installer = new UpdateInstaller();
 
+    /**
+     * Creates a manager.
+     *
+     * @param parent the owner of its dialogs
+     */
     public UpdateManager(JFrame parent)
     {
         this.parent = parent;
     }
 
-    /**
-     * Suppresses the automatic startup check for this session (the {@code -dev} launch flag). The
-     * manual "Check for Updates" action is unaffected.
-     */
+    /** Turns off the startup check for this session, as the -dev launch flag does; the manual check still works. */
     public static void disableStartupCheck()
     {
         startupCheckDisabled = true;
     }
 
-    /**
-     * Startup check: silently does nothing in a dev run or when disabled, and only prompts for a
-     * newer, non-skipped release. Runs on every launch.
-     */
+    /** Checks in the background and prompts only for a newer release the user has not skipped; does nothing in a development run or when checks are disabled. */
     public void checkOnStartup()
     {
         if (startupCheckDisabled || !AppVersion.isPackaged() || !Settings.getInstance().isUpdateCheckEnabled())
@@ -52,9 +46,7 @@ public final class UpdateManager
         runCheck(false);
     }
 
-    /**
-     * Manual check (Help menu): ignores the throttle and the opt-out, and always reports a result.
-     */
+    /** Checks in the background regardless of the opt-out and skipped version, and always reports the outcome. */
     public void checkNow()
     {
         if (!AppVersion.isPackaged())

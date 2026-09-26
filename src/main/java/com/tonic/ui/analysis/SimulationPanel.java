@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/** The code-analysis tab: runs the simulation analysis on methods and lists its findings with a filter and details. */
 public class SimulationPanel extends ThemedJPanel
 {
 
@@ -47,6 +48,11 @@ public class SimulationPanel extends ThemedJPanel
     private final List<FindingEntry> filteredFindings = new ArrayList<>();
     private String currentFilter = "All";
 
+    /**
+     * Builds the toolbar, findings table, details and status line.
+     *
+     * @param project the project to analyze
+     */
     public SimulationPanel(ProjectModel project)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -185,6 +191,7 @@ public class SimulationPanel extends ThemedJPanel
         add(statusPanel, BorderLayout.SOUTH);
     }
 
+    /** Redraws the findings table. */
     public void refresh()
     {
         tableModel.fireTableDataChanged();
@@ -195,6 +202,11 @@ public class SimulationPanel extends ThemedJPanel
         statusLabel.setText("Analysis feature - select a method first");
     }
 
+    /**
+     * Analyzes one method in the background and adds its findings.
+     *
+     * @param methodModel the method; null only reports that nothing is selected
+     */
     public void analyzeMethod(MethodEntryModel methodModel)
     {
         if (methodModel == null)
@@ -240,6 +252,11 @@ public class SimulationPanel extends ThemedJPanel
         worker.execute();
     }
 
+    /**
+     * Analyzes every method of a class in the background, advancing the progress bar and adding findings as each finishes.
+     *
+     * @param classModel the class; null only reports that nothing is selected
+     */
     public void analyzeClass(ClassEntryModel classModel)
     {
         if (classModel == null)

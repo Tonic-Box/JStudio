@@ -9,20 +9,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * A {@link SnippetCompiler.Classpath} backed by the open project's classes: scratch snippets compile against
- * the attached JVM's pulled classes. JDK platform packages ({@code java.*}, {@code sun.*}, etc.) are excluded
- * so {@code javac} resolves those from its own platform classpath rather than from project bytes.
- *
- * <p>The package -> class-name index is built once from a snapshot; class bytes are fetched lazily (and live)
- * via {@link ClassEntryModel#getClassFile()} so only the classes javac actually reads get serialized.
- */
+/** The snippet compiler's classpath backed by the open project's classes, excluding JDK platform packages so javac resolves those itself. */
 public final class ProjectClasspath implements SnippetCompiler.Classpath
 {
 
     private final ProjectModel project;
     private final Map<String, Set<String>> packageToBinaryNames;
 
+    /**
+     * Indexes the project's non-platform classes by package.
+     *
+     * @param project the project whose classes snippets compile against
+     */
     public ProjectClasspath(ProjectModel project)
     {
         this.project = project;

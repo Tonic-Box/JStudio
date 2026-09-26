@@ -1,20 +1,29 @@
 package com.tonic.ui.debug;
 
-/**
- * Bridges a specific editor view to {@link BreakpointGutterController}: it maps between the view's 1-based
- * display lines and canonical {@link Breakpoint}s. The source view maps via the decompiler's offset-to-line
- * maps; the bytecode view maps via the disassembly line index. Both resolve to the same bytecode-offset
- * breakpoint, so a breakpoint set in one view appears in the other.
- */
+/** Maps one editor view's 1-based lines to and from bytecode-offset breakpoints, so a breakpoint set in the source view shows in the bytecode view and back. */
 public interface BreakpointMapper
 {
 
-    /** The dotted class name whose breakpoints this view renders. */
+    /**
+     * Names the class this view shows.
+     *
+     * @return the dotted name of the class whose breakpoints this view draws
+     */
     String className();
 
-    /** The breakpoint a click on {@code line} (1-based) would toggle, or null if the line isn't executable. */
+    /**
+     * Finds the breakpoint a click on a line would toggle.
+     *
+     * @param line the 1-based line in this view
+     * @return the breakpoint, or null if the line is not executable
+     */
     Breakpoint breakpointAtLine(int line);
 
-    /** The 1-based line where {@code bp} should be drawn in this view, or -1 if it does not map here. */
+    /**
+     * Finds where a breakpoint is drawn in this view.
+     *
+     * @param bp the breakpoint
+     * @return the 1-based line, or -1 if the breakpoint does not map to this view
+     */
     int lineForBreakpoint(Breakpoint bp);
 }

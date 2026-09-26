@@ -16,17 +16,14 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 
-/**
- * The dedicated "Script Console" output panel (a bottom-panel tab): streams a headless script run's console output
- * (from {@link ScriptConsoleEvent}) with a Clear control and a final "N modifications" status. All updates arrive
- * on the EDT (the MainFrame handler marshals).
- */
+/** The Script Console bottom tab: streams a headless script run's output, with a Clear button and a final modification count; updated on the EDT only. */
 public final class ScriptConsolePanel extends ThemedJPanel
 {
 
     private final JTextPane output = new JTextPane();
     private final JLabel status = new JLabel("Idle.");
 
+    /** Creates an idle, empty console. */
     public ScriptConsolePanel()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -53,7 +50,11 @@ public final class ScriptConsolePanel extends ThemedJPanel
         clearButton.addActionListener(e -> output.setText(""));
     }
 
-    /** Applies one streamed console event (called on the EDT). */
+    /**
+     * Applies one streamed console event: a start clears the output, a line is appended (in the error color if it looks like an error), and done shows the modification count.
+     *
+     * @param event the console event, received on the EDT
+     */
     public void handle(ScriptConsoleEvent event)
     {
         switch (event.getKind())

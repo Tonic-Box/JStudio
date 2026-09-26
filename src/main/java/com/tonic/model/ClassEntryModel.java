@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 
+/** The UI-side model of one class: its parsed class file, member models keyed by name plus descriptor, display data, and the cached decompiled source. */
 @Getter
 public class ClassEntryModel
 {
@@ -45,6 +46,11 @@ public class ClassEntryModel
     private Map<String, DecompileResult.MemberSpan> fieldSpans;
     private DecompileResult.MemberSpan classSpan;
 
+    /**
+     * Wraps a parsed class, building its display data and member models.
+     *
+     * @param classFile the parsed class
+     */
     public ClassEntryModel(ClassFile classFile)
     {
         this.classFile = classFile;
@@ -87,6 +93,7 @@ public class ClassEntryModel
         }
     }
 
+    /** Rebuilds the names and icon from the class file, as after a rename, and drops the decompilation cache. */
     public void refreshDisplayData()
     {
         buildDisplayData();
@@ -110,16 +117,31 @@ public class ClassEntryModel
         }
     }
 
+    /**
+     * The class's name.
+     *
+     * @return the internal name, with slashes
+     */
     public String getClassName()
     {
         return classFile.getClassName();
     }
 
+    /**
+     * The superclass's name.
+     *
+     * @return the superclass's internal name, as the class file records it
+     */
     public String getSuperClassName()
     {
         return classFile.getSuperClassName();
     }
 
+    /**
+     * Resolves the names of the directly implemented interfaces from the constant pool.
+     *
+     * @return a new list of internal names, skipping entries that do not resolve
+     */
     public List<String> getInterfaceNames()
     {
         List<String> names = new ArrayList<>();
@@ -138,51 +160,103 @@ public class ClassEntryModel
         return names;
     }
 
+    /**
+     * The class's access flags.
+     *
+     * @return the raw access flags from the class file
+     */
     public int getAccessFlags()
     {
         return classFile.getAccess();
     }
 
+    /**
+     * Reports whether the class is an interface.
+     *
+     * @return true if the interface flag is set
+     */
     public boolean isInterface()
     {
         return AccessFlags.isInterface(classFile.getAccess());
     }
 
+    /**
+     * Reports whether the class is an enum.
+     *
+     * @return true if the enum flag is set
+     */
     public boolean isEnum()
     {
         return AccessFlags.isEnum(classFile.getAccess());
     }
 
+    /**
+     * Reports whether the class is an annotation type.
+     *
+     * @return true if the annotation flag is set
+     */
     public boolean isAnnotation()
     {
         return AccessFlags.isAnnotation(classFile.getAccess());
     }
 
+    /**
+     * Reports whether the class is abstract.
+     *
+     * @return true if the abstract flag is set
+     */
     public boolean isAbstract()
     {
         return AccessFlags.isAbstract(classFile.getAccess());
     }
 
+    /**
+     * Reports whether the class is public.
+     *
+     * @return true if the public flag is set
+     */
     public boolean isPublic()
     {
         return AccessFlags.isPublic(classFile.getAccess());
     }
 
+    /**
+     * Reports whether the class is final.
+     *
+     * @return true if the final flag is set
+     */
     public boolean isFinal()
     {
         return AccessFlags.isFinal(classFile.getAccess());
     }
 
+    /**
+     * Looks up a method.
+     *
+     * @param name the method name
+     * @param descriptor the method descriptor
+     * @return the method, or null if the class declares none with that name and descriptor
+     */
     public MethodEntryModel getMethod(String name, String descriptor)
     {
         return methods.get(name + descriptor);
     }
 
+    /**
+     * Lists the declared methods, constructors and static initializer included.
+     *
+     * @return a new list of the methods, in no fixed order
+     */
     public List<MethodEntryModel> getMethods()
     {
         return new ArrayList<>(methods.values());
     }
 
+    /**
+     * Lists the declared constructors.
+     *
+     * @return a new list of the constructors, empty if none are declared
+     */
     public List<MethodEntryModel> getConstructors()
     {
         List<MethodEntryModel> constructors = new ArrayList<>();
@@ -196,29 +270,54 @@ public class ClassEntryModel
         return constructors;
     }
 
-    /** The {@code public static void main(String[])} entry point of this class, or null if it has none. */
+    /**
+     * Finds the class's public static main entry point taking a string array.
+     *
+     * @return the main method, or null if the class has none
+     */
     public MethodEntryModel getMainMethod()
     {
         MethodEntryModel main = methods.get("main([Ljava/lang/String;)V");
         return main != null && main.isPublic() && main.isStatic() ? main : null;
     }
 
-    /** Whether this class has a runnable {@code public static void main(String[])} entry point. */
+    /**
+     * Reports whether the class has a runnable public static main entry point.
+     *
+     * @return true if the main method exists
+     */
     public boolean hasMainMethod()
     {
         return getMainMethod() != null;
     }
 
+    /**
+     * Looks up a field.
+     *
+     * @param name the field name
+     * @param descriptor the field descriptor
+     * @return the field, or null if the class declares none with that name and descriptor
+     */
     public FieldEntryModel getField(String name, String descriptor)
     {
         return fields.get(name + descriptor);
     }
 
+    /**
+     * Lists the declared fields.
+     *
+     * @return a new list of the fields, in no fixed order
+     */
     public List<FieldEntryModel> getFields()
     {
         return new ArrayList<>(fields.values());
     }
 
+    /**
+     * Caches decompiled source and stamps the time, clearing the line maps and spans.
+     *
+     * @param decompilationCache the decompiled source
+     */
     public void setDecompilationCache(String decompilationCache)
     {
         this.decompilationCache = decompilationCache;
@@ -230,9 +329,13 @@ public class ClassEntryModel
     }
 
     /**
-     * Caches decompiled source together with its per-member spans and per-method offset-to-line maps,
-     * so PC navigation and declaration lenses can resolve exact source lines. All are invalidated with
-     * the source.
+     * Caches decompiled source with its line maps and member spans, which are invalidated together with it.
+     *
+     * @param decompilationCache the decompiled source
+     * @param sourceLineMaps per method key, the map from bytecode offset to source line
+     * @param methodSpans per method key, the method's line span in the source
+     * @param fieldSpans per field key, the field's line span in the source
+     * @param classSpan the class declaration's line span in the source
      */
     public void setDecompilationCache(String decompilationCache, Map<String, NavigableMap<Integer, Integer>> sourceLineMaps, Map<String, DecompileResult.MethodSpan> methodSpans, Map<String, DecompileResult.MemberSpan> fieldSpans, DecompileResult.MemberSpan classSpan)
     {
@@ -243,6 +346,7 @@ public class ClassEntryModel
         this.classSpan = classSpan;
     }
 
+    /** Drops the cached source, line maps and spans. */
     public void invalidateDecompilationCache()
     {
         this.decompilationCache = null;
@@ -253,6 +357,11 @@ public class ClassEntryModel
         this.classSpan = null;
     }
 
+    /**
+     * Swaps in new bytecode for the class, rebuilding members and display data, dropping the decompilation cache and marking the class dirty.
+     *
+     * @param newClassFile the replacement class file
+     */
     public void updateClassFile(ClassFile newClassFile)
     {
         this.classFile = newClassFile;

@@ -7,6 +7,7 @@ import org.fife.ui.rsyntaxtextarea.TokenMap;
 import javax.swing.text.Segment;
 import java.util.Set;
 
+/** The syntax highlighter for the IR view's text: blocks, phis, values, and opcode keyword groups. */
 public class IRTokenMaker extends AbstractTokenMaker
 {
 

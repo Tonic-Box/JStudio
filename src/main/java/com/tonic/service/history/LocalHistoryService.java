@@ -25,13 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Per-project Local History with <b>save-gated</b> persistence: snapshots and their content-addressed blobs
- * accumulate in memory during a session and are written to the project's {@code <name>.jstudio.history} zip only on
- * {@link #flush()} (invoked when the project is saved). Reopening a saved project restores the last-saved working
- * state (its newest snapshot), so in-memory bytecode edits survive across sessions; an unsaved session leaves no
- * trace. Reads always target the live current project. Snapshots run synchronously to capture pre-mutation bytes.
- */
+/** The per-project local history of class and resource snapshots, kept in memory and written to the project's history zip only on flush, when the project is saved. */
 public final class LocalHistoryService
 {
 
@@ -52,6 +46,7 @@ public final class LocalHistoryService
     {
     }
 
+    /** @return the shared instance */
     public static LocalHistoryService getInstance()
     {
         return INSTANCE;
@@ -62,16 +57,21 @@ public final class LocalHistoryService
         return ProjectService.getInstance().getCurrentProject();
     }
 
-    /** History is available only for file-backed projects (a live-captured project has no source file). */
+    /**
+     * Reports whether a history store is attached; live-captured projects have none since they have no source file.
+     *
+     * @return true if history is available
+     */
     public boolean isEnabled()
     {
         return storeFile != null;
     }
 
     /**
-     * Points the service at {@code project}'s history store, loading the last-saved snapshots from disk. Idempotent
-     * for the project already attached. Returns true when a NEW store was opened (the caller restores the saved
-     * working state, or creates a baseline for a first-time project).
+     * Points the service at a project's history store beside its source file and loads the saved snapshots; attaching the same store again does nothing, and a project with no source file detaches.
+     *
+     * @param project the project, or null to detach
+     * @return true only when a new store was opened, so the caller can restore the saved state or take a baseline
      */
     public synchronized boolean attach(ProjectModel project)
     {
@@ -103,6 +103,7 @@ public final class LocalHistoryService
         return true;
     }
 
+    /** Drops the attached store and its in-memory snapshots and unsaved blobs. */
     public synchronized void detach()
     {
         storeFile = null;
@@ -111,7 +112,11 @@ public final class LocalHistoryService
         notifyListeners();
     }
 
-    /** Snapshots newest-first. */
+    /**
+     * Lists the snapshots newest first.
+     *
+     * @return a copy of the snapshots
+     */
     public synchronized List<Snapshot> list()
     {
         List<Snapshot> copy = new ArrayList<>(snapshots);
@@ -119,13 +124,21 @@ public final class LocalHistoryService
         return copy;
     }
 
-    /** The newest snapshot (the last-saved working state once loaded from disk), or null. */
+    /**
+     * Finds the newest snapshot, which is the last-saved working state right after loading.
+     *
+     * @return the newest snapshot, or null when there are none
+     */
     public synchronized Snapshot newest()
     {
         return latest();
     }
 
-    /** Content hashes of the current project's user classes, for diffing a snapshot against the live project. */
+    /**
+     * Hashes the current project's user classes, for diffing against a snapshot.
+     *
+     * @return the SHA-256 of each user class by class name, skipping classes that fail to write; empty when no project is open
+     */
     public synchronized Map<String, String> currentClassHashes()
     {
         Map<String, String> map = new LinkedHashMap<>();
@@ -148,8 +161,11 @@ public final class LocalHistoryService
     }
 
     /**
-     * Captures the current project state as an in-memory snapshot (persisted on the next {@link #flush()}). Returns
-     * the snapshot, or null if history is disabled or the state is byte-identical to the most recent snapshot.
+     * Captures the current project's user classes and resources as an in-memory snapshot, dropping the oldest beyond 30.
+     *
+     * @param label the name shown for the snapshot
+     * @param trigger what caused it
+     * @return the snapshot, or null when history is disabled, no project is open, or nothing changed since the newest snapshot
      */
     public synchronized Snapshot snapshot(String label, Snapshot.Trigger trigger)
     {
@@ -231,7 +247,12 @@ public final class LocalHistoryService
         }
     }
 
-    /** Restores the whole project to {@code snapshot}; the caller must refresh the UI afterward. */
+    /**
+     * Replaces the current project's user classes and resources with a snapshot's; the caller refreshes the UI.
+     *
+     * @param snapshot the snapshot
+     * @return true if restored; false when no project is open, the snapshot is null, or reading or applying it fails
+     */
     public synchronized boolean restore(Snapshot snapshot)
     {
         ProjectModel project = project();
@@ -260,7 +281,13 @@ public final class LocalHistoryService
         }
     }
 
-    /** Restores a single class from {@code snapshot}; the caller must refresh the UI afterward. */
+    /**
+     * Replaces one class of the current project with its bytes from a snapshot; the caller refreshes the UI.
+     *
+     * @param snapshot the snapshot
+     * @param internalName the class's internal name, with slashes
+     * @return true if restored; false when no project is open, the snapshot lacks the class, or applying it fails
+     */
     public synchronized boolean restoreClass(Snapshot snapshot, String internalName)
     {
         ProjectModel project = project();
@@ -281,7 +308,13 @@ public final class LocalHistoryService
         }
     }
 
-    /** The stored bytes of {@code internalName} as of {@code snapshot} (for the diff view), or null. */
+    /**
+     * Reads a class's stored bytes as of a snapshot, from memory or the history store.
+     *
+     * @param snapshot the snapshot
+     * @param internalName the class's internal name, with slashes
+     * @return the bytes, or null when the snapshot lacks the class or its blob cannot be read
+     */
     public synchronized byte[] classBytes(Snapshot snapshot, String internalName)
     {
         String hash = snapshot.getClasses().get(internalName);
@@ -300,6 +333,12 @@ public final class LocalHistoryService
         }
     }
 
+    /**
+     * Removes a snapshot from memory; the removal reaches disk on the next flush.
+     *
+     * @param snapshot the snapshot, matched by id
+     * @return true if it was present
+     */
     public synchronized boolean delete(Snapshot snapshot)
     {
         if (!snapshots.removeIf(s -> s.getId().equals(snapshot.getId())))
@@ -310,6 +349,11 @@ public final class LocalHistoryService
         return true;
     }
 
+    /**
+     * Registers a listener run on the event dispatch thread whenever the snapshot list or attached store changes, ignoring one already registered.
+     *
+     * @param listener the listener
+     */
     public void addListener(Runnable listener)
     {
         if (!listeners.contains(listener))
@@ -318,12 +362,21 @@ public final class LocalHistoryService
         }
     }
 
+    /**
+     * Unregisters a listener.
+     *
+     * @param listener the listener
+     */
     public void removeListener(Runnable listener)
     {
         listeners.remove(listener);
     }
 
-    /** The number of registered listeners (test-only hook for leak detection). */
+    /**
+     * Counts the registered listeners, for tests that check for listener leaks.
+     *
+     * @return the number of listeners
+     */
     public int getListenerCount()
     {
         return listeners.size();

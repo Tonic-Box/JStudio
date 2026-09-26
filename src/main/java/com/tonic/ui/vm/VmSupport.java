@@ -6,10 +6,7 @@ import com.tonic.analysis.execution.state.ConcreteValue;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 
-/**
- * Shared method-lookup and argument-conversion helpers for the bytecode VM, used by both the default
- * {@link VMExecutionService} path and the isolated per-AI {@link VmInstance} path (one definition, no duplication).
- */
+/** Method lookup and argument conversion shared by VMExecutionService and VmInstance. */
 public final class VmSupport
 {
 
@@ -17,6 +14,14 @@ public final class VmSupport
     {
     }
 
+    /**
+     * Finds a method by name and descriptor.
+     *
+     * @param classFile the class to search
+     * @param methodName the method name
+     * @param descriptor the method descriptor, or null or empty to take the first method with that name
+     * @return the method, or null if none matches
+     */
     public static MethodEntry findMethod(ClassFile classFile, String methodName, String descriptor)
     {
         for (MethodEntry method : classFile.getMethods())
@@ -30,6 +35,13 @@ public final class VmSupport
         return null;
     }
 
+    /**
+     * Converts host values to VM values.
+     *
+     * @param heapManager the heap strings are interned into
+     * @param args the host values; may be null
+     * @return the VM values, empty for null or empty input
+     */
     public static ConcreteValue[] toConcreteValues(SimpleHeapManager heapManager, Object[] args)
     {
         if (args == null || args.length == 0)
@@ -44,6 +56,13 @@ public final class VmSupport
         return result;
     }
 
+    /**
+     * Converts a host value to a VM value: boxed primitives become ints, longs, floats or doubles, strings are interned, VM values and objects pass through.
+     *
+     * @param heapManager the heap strings are interned into
+     * @param value the host value
+     * @return the VM value; a null reference for null or any unsupported type
+     */
     public static ConcreteValue toConcreteValue(SimpleHeapManager heapManager, Object value)
     {
         if (value == null)

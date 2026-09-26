@@ -18,10 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * Bridge between JStudio script and the decompiled AST system.
- * Exposes AST manipulation functionality to scripts via the 'ast' global object.
- */
+/** The ast script global: registers script handlers over decompiled AST nodes and offers node factories and type helpers. */
 public class ASTBridge
 {
 
@@ -31,18 +28,30 @@ public class ASTBridge
     private final List<HandlerRegistration> handlers = new ArrayList<>();
     private Consumer<String> logCallback;
 
+    /**
+     * Creates a bridge with no handlers.
+     *
+     * @param interpreter the interpreter that runs handler functions
+     */
     public ASTBridge(ScriptInterpreter interpreter)
     {
         this.interpreter = interpreter;
     }
 
+    /**
+     * Sets where the bridge's log messages go.
+     *
+     * @param callback receives each log message, or null to drop them
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
     }
 
     /**
-     * Creates the 'ast' object to be registered in the script context.
+     * Builds the ast script object: handler registration, node factories, type helpers and finding helpers.
+     *
+     * @return the object, ready to bind as a global
      */
     public ScriptValue createAstObject()
     {
@@ -379,8 +388,10 @@ public class ASTBridge
     }
 
     /**
-     * Applies all registered handlers to the AST via the given editor.
-     * Returns the number of modifications made.
+     * Installs every registered handler on the editor and applies the edits.
+     *
+     * @param editor the editor over the method body to rewrite
+     * @return how many nodes the handlers replaced or removed
      */
     public int applyTo(ASTEditor editor)
     {

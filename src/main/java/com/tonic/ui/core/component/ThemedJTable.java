@@ -11,27 +11,46 @@ import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
 
+/** A gridless table with the standard row height whose body and header follow the theme. */
 public class ThemedJTable extends JTable implements ThemeChangeListener
 {
 
+    /** Creates an empty table and registers it for theme changes. */
     public ThemedJTable()
     {
         super();
         initialize();
     }
 
+    /**
+     * Creates a table over a model and registers it for theme changes.
+     *
+     * @param dm the model
+     */
     public ThemedJTable(TableModel dm)
     {
         super(dm);
         initialize();
     }
 
+    /**
+     * Creates a table of empty cells and registers it for theme changes.
+     *
+     * @param numRows the row count
+     * @param numColumns the column count
+     */
     public ThemedJTable(int numRows, int numColumns)
     {
         super(numRows, numColumns);
         initialize();
     }
 
+    /**
+     * Creates a table over fixed data and registers it for theme changes.
+     *
+     * @param rowData the cell values, by row
+     * @param columnNames the column headers
+     */
     public ThemedJTable(Object[][] rowData, Object[] columnNames)
     {
         super(rowData, columnNames);

@@ -10,22 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-/**
- * Prepares (and pre-validates) the bytecode for a live patch. HotSpot's {@code redefineClasses} accepts
- * method-<i>body</i> changes only: as long as the class handed to it has the same methods and fields as the
- * running class, redefine succeeds - even for classes using lambdas/invokedynamic. What it cannot do is
- * <b>add or remove</b> methods or fields.
- *
- * <p>Two strategies are offered:
- * <ul>
- *   <li>{@link #buildGraftedRedefineBytes} - for the source-recompile path. Only the methods the user actually
- *       edited are grafted onto the <i>running</i> class, so every untouched method and synthetic member keeps
- *       its exact running bytes. This is robust against a decompile/recompile round-trip perturbing synthetic
- *       members, which would otherwise drift the member set and get the whole class rejected.</li>
- *   <li>{@link #buildRedefineBytes} - for the bytecode-editor path, where the edited class has no decompile
- *       round-trip and so already shares the running member set; it is sent whole after a member-set check.</li>
- * </ul>
- */
+/** Builds the bytecode for a live patch, which HotSpot accepts only when the member set matches the running class. */
 public final class LivePatch
 {
 
@@ -34,15 +19,14 @@ public final class LivePatch
     }
 
     /**
-     * Builds redefine bytes by grafting only the edited method bodies onto the running class. Performs network
-     * I/O (fetches the running class) - call off the EDT. Throws with an actionable message if the edit adds a
-     * member (which live redefine cannot apply).
+     * Fetches the running class and grafts the edited method bodies onto it; call off the EDT.
      *
-     * @param session        the attached session, used to fetch the running class bytes
-     * @param internalName   the class's internal name
-     * @param edited         the recompiled class, source of the new method bodies
-     * @param changedMethods {@code name + descriptor} keys of the methods to graft (see {@link MethodBodyDiff})
+     * @param session the attached session, used to fetch the running class bytes
+     * @param internalName the class's internal name, with slashes
+     * @param edited the recompiled class, source of the new method bodies
+     * @param changedMethods name plus descriptor keys of the methods to graft; keys missing from either class are skipped
      * @return the running class bytes with the edited bodies spliced in
+     * @throws Exception if fetching, parsing, grafting or writing the class fails
      */
     public static byte[] buildGraftedRedefineBytes(LiveSession session, String internalName, ClassFile edited, Set<String> changedMethods) throws Exception
     {
@@ -62,9 +46,14 @@ public final class LivePatch
     }
 
     /**
-     * Validates the edit against the running class and returns the whole edited class's bytes. Performs network
-     * I/O (fetches the running class) - call off the EDT. Throws with an actionable message if the edit changed
-     * the class's member set (which live redefine cannot apply).
+     * Fetches the running class and returns the whole edited class's bytes if its member set matches; call off the EDT.
+     *
+     * @param session the attached session, used to fetch the running class bytes
+     * @param internalName the class's internal name, with slashes
+     * @param edited the edited class
+     * @return the edited class's bytes
+     * @throws IllegalStateException if the edit adds or removes a method or field, with a message listing them
+     * @throws Exception if fetching, parsing or writing the class fails
      */
     public static byte[] buildRedefineBytes(LiveSession session, String internalName, ClassFile edited) throws Exception
     {
@@ -72,8 +61,13 @@ public final class LivePatch
     }
 
     /**
-     * Checks {@code edited}'s member set against the running class bytes and returns {@code edited}'s bytes if
-     * they match. Separated from the network fetch so it can be exercised directly.
+     * Returns the edited class's bytes if its methods and fields match the running class's.
+     *
+     * @param runningBytes the running class's bytes
+     * @param edited the edited class
+     * @return the edited class's bytes
+     * @throws IllegalStateException if the edit adds or removes a method or field, with a message listing them
+     * @throws Exception if parsing or writing a class fails
      */
     public static byte[] validateAgainst(byte[] runningBytes, ClassFile edited) throws Exception
     {

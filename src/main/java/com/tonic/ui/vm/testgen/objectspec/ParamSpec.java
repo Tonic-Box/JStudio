@@ -3,6 +3,7 @@ package com.tonic.ui.vm.testgen.objectspec;
 import lombok.Getter;
 import lombok.Setter;
 
+/** How one parameter gets its values: its name, type descriptor, value mode, and the fixed value, fuzz strategy or nested object spec that mode uses. */
 @Getter
 @Setter
 public class ParamSpec
@@ -16,11 +17,18 @@ public class ParamSpec
     private ObjectSpec nestedObjectSpec;
     private String templateName;
 
+    /** Creates an unnamed fuzzed spec with the default strategy. */
     public ParamSpec()
     {
         this.fuzzStrategy = FuzzStrategy.defaultStrategy();
     }
 
+    /**
+     * Creates a fuzzed spec with the default strategy.
+     *
+     * @param name the parameter's name
+     * @param typeDescriptor the parameter's type descriptor
+     */
     public ParamSpec(String name, String typeDescriptor)
     {
         this.name = name;
@@ -28,6 +36,14 @@ public class ParamSpec
         this.fuzzStrategy = FuzzStrategy.defaultStrategy();
     }
 
+    /**
+     * Creates a spec with a fixed value.
+     *
+     * @param name the parameter's name
+     * @param typeDesc the parameter's type descriptor
+     * @param value the value to pass
+     * @return the new spec
+     */
     public static ParamSpec fixed(String name, String typeDesc, Object value)
     {
         ParamSpec spec = new ParamSpec(name, typeDesc);
@@ -36,6 +52,13 @@ public class ParamSpec
         return spec;
     }
 
+    /**
+     * Creates a fuzzed spec with the default strategy.
+     *
+     * @param name the parameter's name
+     * @param typeDesc the parameter's type descriptor
+     * @return the new spec
+     */
     public static ParamSpec fuzz(String name, String typeDesc)
     {
         ParamSpec spec = new ParamSpec(name, typeDesc);
@@ -43,6 +66,14 @@ public class ParamSpec
         return spec;
     }
 
+    /**
+     * Creates a fuzzed spec with a given strategy.
+     *
+     * @param name the parameter's name
+     * @param typeDesc the parameter's type descriptor
+     * @param strategy how to fuzz the value
+     * @return the new spec
+     */
     public static ParamSpec fuzz(String name, String typeDesc, FuzzStrategy strategy)
     {
         ParamSpec spec = new ParamSpec(name, typeDesc);
@@ -51,6 +82,13 @@ public class ParamSpec
         return spec;
     }
 
+    /**
+     * Creates a spec that passes null.
+     *
+     * @param name the parameter's name
+     * @param typeDesc the parameter's type descriptor
+     * @return the new spec
+     */
     public static ParamSpec nullValue(String name, String typeDesc)
     {
         ParamSpec spec = new ParamSpec(name, typeDesc);
@@ -58,6 +96,14 @@ public class ParamSpec
         return spec;
     }
 
+    /**
+     * Creates a spec whose value is built from an object spec.
+     *
+     * @param name the parameter's name
+     * @param typeDesc the parameter's type descriptor
+     * @param objectSpec how to build the object
+     * @return the new spec
+     */
     public static ParamSpec object(String name, String typeDesc, ObjectSpec objectSpec)
     {
         ParamSpec spec = new ParamSpec(name, typeDesc);
@@ -66,23 +112,43 @@ public class ParamSpec
         return spec;
     }
 
+    /**
+     * Checks for a primitive type.
+     *
+     * @return true if the type is a primitive other than void
+     */
     public boolean isPrimitive()
     {
         if (typeDescriptor == null) return false;
         return typeDescriptor.length() == 1 && "ZBCSIJFD".contains(typeDescriptor);
     }
 
+    /**
+     * Checks for the String type.
+     *
+     * @return true if the type is String
+     */
     public boolean isString()
     {
         return "Ljava/lang/String;".equals(typeDescriptor);
     }
 
+    /**
+     * Checks for a class or array type.
+     *
+     * @return true if the type is a class or array type
+     */
     public boolean isObjectType()
     {
         return typeDescriptor != null &&
                 (typeDescriptor.startsWith("L") || typeDescriptor.startsWith("["));
     }
 
+    /**
+     * Converts the type descriptor to a Java type name.
+     *
+     * @return the Java name of the type, simple for classes and with brackets for arrays, or "?" when no type is set
+     */
     public String getSimpleTypeName()
     {
         if (typeDescriptor == null) return "?";
@@ -135,6 +201,11 @@ public class ParamSpec
         return temp.getSimpleTypeName() + "[]".repeat(dims);
     }
 
+    /**
+     * Describes the spec for display.
+     *
+     * @return a short summary for the mode, such as the quoted fixed value, the fuzz strategy or the nested object's summary
+     */
     public String getSummary()
     {
         switch (mode)
@@ -163,6 +234,11 @@ public class ParamSpec
         }
     }
 
+    /**
+     * Copies the spec, deep-copying the nested object spec; the fuzz strategy is shared.
+     *
+     * @return the copy
+     */
     public ParamSpec copy()
     {
         ParamSpec copy = new ParamSpec(name, typeDescriptor);

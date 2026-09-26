@@ -7,6 +7,7 @@ import org.fife.ui.rsyntaxtextarea.TokenMap;
 import javax.swing.text.Segment;
 import java.util.Set;
 
+/** The syntax highlighter for the AST view's text dump; colours statement, expression and type node names, keywords, literals and dividers. */
 public class ASTTokenMaker extends AbstractTokenMaker
 {
 

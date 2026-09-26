@@ -14,22 +14,18 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.KeyboardFocusManager;
 
-/**
- * Side-by-side bytecode (left) and decompiled-source (right) view with bidirectional double-click
- * line linking, coordinated by a {@link SourceBytecodeLinker}. Hosts its own pane instances rather
- * than reparenting the tab's primary views (which would be error-prone under the tab's CardLayout).
- *
- * <p>Per-view editor operations dispatched by {@code EditorTab} are routed to whichever pane
- * currently holds focus (source by default); font/word-wrap apply to both; method scrolling scrolls
- * both. The source pane keeps annotations on so its line numbers stay aligned with the decompiler's
- * offset/line maps that the linking depends on.
- */
+/** The side-by-side bytecode and decompiled source view, with double-click line linking both ways; editor operations go to the focused pane, source by default. */
 public class DualView extends JPanel implements EditorView
 {
 
     private final BytecodeView bytecodeView;
     private final SourceCodeView sourceView;
 
+    /**
+     * Creates the view with its own bytecode and source panes, linked to each other.
+     *
+     * @param classEntry the class to show
+     */
     public DualView(ClassEntryModel classEntry)
     {
         setLayout(new BorderLayout());
@@ -47,18 +43,21 @@ public class DualView extends JPanel implements EditorView
         add(split, BorderLayout.CENTER);
     }
 
+    /** Refreshes both panes. */
     public void refresh()
     {
         bytecodeView.refresh();
         sourceView.refresh();
     }
 
+    /** Reloads both panes. */
     public void reload()
     {
         bytecodeView.reload();
         sourceView.reload();
     }
 
+    /** Copies the focused pane's selection to the system clipboard. */
     public void copySelection()
     {
         if (isBytecodeFocused())
@@ -71,16 +70,27 @@ public class DualView extends JPanel implements EditorView
         }
     }
 
+    /**
+     * Gets the focused pane's text.
+     *
+     * @return the bytecode pane's text when it has focus, otherwise the source pane's
+     */
     public String getText()
     {
         return isBytecodeFocused() ? bytecodeView.getText() : sourceView.getText();
     }
 
+    /**
+     * Gets the focused pane's selected text.
+     *
+     * @return the selection in the bytecode pane when it has focus, otherwise in the source pane; null when nothing is selected
+     */
     public String getSelectedText()
     {
         return isBytecodeFocused() ? bytecodeView.getSelectedText() : sourceView.getSelectedText();
     }
 
+    /** Opens the focused pane's find panel. */
     public void showFindDialog()
     {
         if (isBytecodeFocused())
@@ -93,6 +103,11 @@ public class DualView extends JPanel implements EditorView
         }
     }
 
+    /**
+     * Moves the focused pane's caret to a line.
+     *
+     * @param line the 1-based line number
+     */
     public void goToLine(int line)
     {
         if (isBytecodeFocused())
@@ -105,6 +120,11 @@ public class DualView extends JPanel implements EditorView
         }
     }
 
+    /**
+     * Scrolls the focused pane to the first occurrence of a text.
+     *
+     * @param text the text to find
+     */
     public void scrollToText(String text)
     {
         if (isBytecodeFocused())
@@ -117,35 +137,65 @@ public class DualView extends JPanel implements EditorView
         }
     }
 
-    /** Highlights a 1-based line in the source pane (the dual view's primary pane). */
+    /**
+     * Highlights a line in the source pane.
+     *
+     * @param line the 1-based line number
+     */
     public void highlightLine(int line)
     {
         sourceView.highlightLine(line - 1);
     }
 
+    /**
+     * Scrolls both panes to a method.
+     *
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
+     */
     public void scrollToMethod(String methodName, String methodDesc)
     {
         bytecodeView.scrollToMethod(methodName, methodDesc);
         sourceView.scrollToMethodDeclaration(methodName, methodDesc);
     }
 
+    /**
+     * Sets the font size of both panes.
+     *
+     * @param size the font size in points
+     */
     public void setFontSize(int size)
     {
         bytecodeView.setFontSize(size);
         sourceView.setFontSize(size);
     }
 
+    /**
+     * Turns word wrap on or off in both panes.
+     *
+     * @param enabled whether to wrap
+     */
     public void setWordWrap(boolean enabled)
     {
         bytecodeView.setWordWrap(enabled);
         sourceView.setWordWrap(enabled);
     }
 
+    /**
+     * Gives the source pane the project it resolves references against.
+     *
+     * @param projectModel the open project
+     */
     public void setProjectModel(ProjectModel projectModel)
     {
         sourceView.setProjectModel(projectModel);
     }
 
+    /**
+     * Turns the source pane's usage lens on or off.
+     *
+     * @param enabled whether to show usage counts
+     */
     public void setUsageLensEnabled(boolean enabled)
     {
         sourceView.setUsageLensEnabled(enabled);

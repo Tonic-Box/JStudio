@@ -29,11 +29,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.List;
 
-/**
- * The Debugger tool window (right dock): a step toolbar (Resume / Stop), the paused thread's call stack, and a
- * read-only Variables table for the selected frame. Driven entirely by EventBus debug events; navigation back
- * into the editor is delegated to {@link MainFrame}. Variable editing and stepping come in later phases.
- */
+/** The Debugger tool window: a Resume toolbar with a status label, the paused thread's call stack, and a read-only variables table, all driven by EventBus debug events. */
 public final class DebuggerPanel extends JPanel
 {
 
@@ -53,6 +49,11 @@ public final class DebuggerPanel extends JPanel
     private final JButton resumeButton = new JButton("Resume");
     private final JLabel status = new JLabel("Running.");
 
+    /**
+     * Builds the panel and subscribes it to debug events.
+     *
+     * @param mainFrame the main window, used to navigate to a selected frame
+     */
     public DebuggerPanel(MainFrame mainFrame)
     {
         super(new BorderLayout());

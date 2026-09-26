@@ -15,12 +15,7 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-/**
- * Loads {@code @JStudioPlugin}-annotated {@link Plugin}s out of a jar. Shared by the CLI {@code PluginLoader}
- * (which takes the first) and the GUI plugin runtime (which takes all and activates the UI ones). Each scan
- * creates one {@link URLClassLoader} (parent-first delegation off the supplied parent) that the caller owns and
- * must {@link #closeQuietly(URLClassLoader) close} once the plugins are disposed.
- */
+/** Loads the JStudioPlugin-annotated Plugin classes out of a jar through a new class loader that the caller owns and must close once the plugins are disposed. */
 public final class JarPluginScanner
 {
 
@@ -42,9 +37,12 @@ public final class JarPluginScanner
     }
 
     /**
-     * Loads every annotated plugin in {@code jarFile}. On success the returned loader stays open (the plugins load
-     * classes lazily through it) and ownership passes to the caller; on any failure the loader is closed before the
-     * exception propagates.
+     * Loads and instantiates every annotated plugin in a jar, skipping classes that fail to load; on success the loader stays open and passes to the caller, on failure it is closed first.
+     *
+     * @param jarFile the jar to scan
+     * @param parent the parent of the new class loader, which delegates to it first
+     * @return the loader and the plugins, which may be empty
+     * @throws RuntimeException if the jar cannot be opened or read, or a plugin cannot be instantiated
      */
     public static ScanResult scan(File jarFile, ClassLoader parent)
     {
@@ -101,7 +99,13 @@ public final class JarPluginScanner
         return new ScanResult(loader, plugins);
     }
 
-    /** Instantiates a plugin via its no-arg constructor (made accessible). */
+    /**
+     * Instantiates a plugin through its no-argument constructor, even a non-public one.
+     *
+     * @param clazz the plugin class
+     * @return the new plugin
+     * @throws RuntimeException if the class has no no-argument constructor or the constructor throws
+     */
     public static Plugin instantiate(Class<?> clazz)
     {
         try
@@ -116,6 +120,11 @@ public final class JarPluginScanner
         }
     }
 
+    /**
+     * Closes a class loader, ignoring I/O errors.
+     *
+     * @param loader the loader to close
+     */
     public static void closeQuietly(URLClassLoader loader)
     {
         try

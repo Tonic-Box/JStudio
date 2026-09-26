@@ -13,11 +13,17 @@ import com.tonic.script.engine.ScriptValue;
 import java.util.*;
 import java.util.regex.Pattern;
 
+/** The strings script global: extracts the project's string constants once and searches them by text, regex, class and category. */
 public class StringBridge extends AbstractBridge
 {
 
     private List<StringEntry> cachedStrings;
 
+    /**
+     * Creates a bridge that has not extracted strings yet.
+     *
+     * @param projectModel the project to read strings from
+     */
     public StringBridge(ProjectModel projectModel)
     {
         super(projectModel);
@@ -29,6 +35,11 @@ public class StringBridge extends AbstractBridge
         return createStringsObject();
     }
 
+    /**
+     * Builds the strings script object: extraction, text and regex search, and URL, path, SQL and secret finders.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createStringsObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

@@ -6,6 +6,7 @@ import com.tonic.ui.theme.JStudioTheme;
 
 import java.awt.*;
 
+/** Renders system dependence graph nodes as HTML labels and picks their styles by node kind. */
 public class SDGVertexRenderer implements GraphVertexRenderer<PDGNode>
 {
 

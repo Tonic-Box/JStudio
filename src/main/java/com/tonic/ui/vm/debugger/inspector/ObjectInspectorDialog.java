@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/** A modal dialog listing a heap object's fields; double-click opens a nested inspector for a reference or edits a primitive, refusing circular references. */
 public class ObjectInspectorDialog extends JDialog
 {
 
@@ -32,12 +33,31 @@ public class ObjectInspectorDialog extends JDialog
 
     private final FieldEditCallback onFieldEdit;
 
+    /** Applies a field edit made in the object inspector. */
     @FunctionalInterface
     public interface FieldEditCallback
     {
+        /**
+         * Sets a field on an object.
+         *
+         * @param object the object
+         * @param owner the internal name of the class declaring the field
+         * @param name the field's name
+         * @param desc the field's descriptor
+         * @param newValue the new value, converted to the field's type
+         */
         void onFieldEdit(ObjectInstance object, String owner, String name, String desc, Object newValue);
     }
 
+    /**
+     * Builds the inspector for an object and records it as visited.
+     *
+     * @param owner the window that owns the dialog
+     * @param object the object to inspect
+     * @param classResolver resolves the object's classes
+     * @param visitedObjectIds the ids of objects already open in parent inspectors, or null for none; the set is modified
+     * @param onFieldEdit applies field edits, or null to make edits do nothing
+     */
     public ObjectInspectorDialog(Window owner, ObjectInstance object, ClassResolver classResolver, Set<Integer> visitedObjectIds, FieldEditCallback onFieldEdit)
     {
         super(owner, buildTitle(object), ModalityType.APPLICATION_MODAL);
@@ -295,11 +315,28 @@ public class ObjectInspectorDialog extends JDialog
         }
     }
 
+    /**
+     * Shows a top-level inspector for an object and waits until it closes.
+     *
+     * @param parent a component in the owning window
+     * @param object the object to inspect
+     * @param classResolver resolves the object's classes
+     * @param onFieldEdit applies field edits, or null
+     */
     public static void showDialog(Component parent, ObjectInstance object, ClassResolver classResolver, FieldEditCallback onFieldEdit)
     {
         showDialog(parent, object, classResolver, null, onFieldEdit);
     }
 
+    /**
+     * Shows an inspector for an object and waits until it closes.
+     *
+     * @param parent a component in the owning window
+     * @param object the object to inspect
+     * @param classResolver resolves the object's classes
+     * @param visitedObjectIds the ids of objects already open in parent inspectors, or null for none; the set is modified
+     * @param onFieldEdit applies field edits, or null
+     */
     public static void showDialog(Component parent, ObjectInstance object, ClassResolver classResolver, Set<Integer> visitedObjectIds, FieldEditCallback onFieldEdit)
     {
         Window window = SwingUtilities.getWindowAncestor(parent);

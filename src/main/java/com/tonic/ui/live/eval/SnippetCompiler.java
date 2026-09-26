@@ -31,16 +31,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Compiles a Java snippet to bytecode with the JDK's {@code javac}, resolving types against the attached JVM's
- * classes via an in-memory file manager (no temp files; class bytes are fetched lazily, only for what javac
- * actually reads). The snippet is wrapped as {@code static Object run()} of a fresh class in the <b>default
- * package</b> (so default-package application classes are directly referenceable); named-package classes used
- * by simple name are auto-imported. The result carries every compiled class (the wrapper plus any
- * anonymous/local classes) so the agent can define them all together.
- *
- * <p>UI-free and pool-agnostic: the application classpath is supplied via {@link Classpath}.
- */
+/** Compiles a Java snippet in memory with javac, wrapped as a static run method of a fresh default-package class, against a supplied application classpath. */
 public final class SnippetCompiler
 {
 
@@ -49,13 +40,27 @@ public final class SnippetCompiler
     /** Supplies application class bytes (the attached JVM's pulled classes) to the compiler. */
     public interface Classpath
     {
-        /** Binary names of all classes directly in {@code packageName} (dot-separated; {@code ""} = default). */
+        /**
+         * Lists the classes directly in a package.
+         *
+         * @param packageName the dot-separated package name; empty for the default package
+         * @return the binary names of the package's classes
+         */
         Set<String> classesInPackage(String packageName);
 
-        /** Raw class bytes for a binary name, or null if unknown. Called lazily, only for read classes. */
+        /**
+         * Returns a class's bytes; called lazily, only for classes javac reads.
+         *
+         * @param binaryName the class's dot-separated binary name
+         * @return the class bytes, or null if unknown
+         */
         byte[] classBytes(String binaryName);
 
-        /** All known class binary names (dot-separated). Used to auto-import classes referenced by simple name. */
+        /**
+         * Lists every known class, used to auto-import classes referenced by simple name.
+         *
+         * @return the dot-separated binary names of all known classes
+         */
         Set<String> allClassNames();
     }
 
@@ -71,8 +76,7 @@ public final class SnippetCompiler
         private final Map<String, byte[]> classes;
         /**
          * -- GETTER --
-         * Binary name of the wrapper class whose
-         *  is invoked.
+         * Binary name of the wrapper class whose run method is invoked.
          */
         private final String mainBinaryName;
         /**
@@ -96,8 +100,10 @@ public final class SnippetCompiler
     private int counter;
 
     /**
-     * @param targetRelease the Java feature version to compile for (e.g. 11), so the snippet's bytecode can be
-     *                      defined by an older target JVM; 0 = use the running JDK's default.
+     * Creates a compiler for one classpath and target release.
+     *
+     * @param classpath supplies the application classes snippets compile against
+     * @param targetRelease the Java feature version to compile for so an older target JVM can define the result; 0 for the running JDK's default
      */
     public SnippetCompiler(Classpath classpath, int targetRelease)
     {
@@ -105,13 +111,23 @@ public final class SnippetCompiler
         this.targetRelease = targetRelease;
     }
 
-    /** Maps a class-file major version (e.g. 55) to its Java feature release (e.g. 11); 0 if too old/unknown. */
+    /**
+     * Maps a class-file major version to its Java feature release, such as 55 to 11.
+     *
+     * @param majorVersion the class-file major version
+     * @return the feature release, or 0 below Java 8
+     */
     public static int releaseForMajorVersion(int majorVersion)
     {
         return majorVersion >= 52 ? majorVersion - 44 : 0;
     }
 
-    /** Compiles {@code snippet} (a sequence of statements, optionally preceded by {@code import} lines). */
+    /**
+     * Compiles a snippet of statements, optionally preceded by import lines.
+     *
+     * @param snippet the snippet source
+     * @return the compiled classes and snippet-relative messages; unsuccessful if no system compiler exists or compilation fails
+     */
     public synchronized Result compile(String snippet)
     {
         JavaCompiler javac = ToolProvider.getSystemJavaCompiler();

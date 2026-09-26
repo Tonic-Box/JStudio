@@ -10,9 +10,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-/**
- * Interpreter for JStudio script language.
- */
+/** The tree-walking interpreter for the JStudio script language, with a global scope of built-ins and collected log, warning and error messages. */
 public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
 {
 
@@ -39,6 +37,7 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
     private boolean continuing = false;
     private int loopDepth = 0;
 
+    /** Creates an interpreter whose global scope holds the built-in functions. */
     public ScriptInterpreter()
     {
         this.globalContext = new ScriptContext();
@@ -114,6 +113,12 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
         return ScriptValue.object(props);
     }
 
+    /**
+     * Runs statements in the current scope, stopping early at a return.
+     *
+     * @param statements the parsed statements
+     * @return the returned value, or else the value of the last statement, or the script null value when there are none
+     */
     public ScriptValue execute(List<ScriptAST> statements)
     {
         ScriptValue result = ScriptValue.NULL;
@@ -131,6 +136,13 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
         return result;
     }
 
+    /**
+     * Runs a node in a given scope, restoring the previous scope afterwards; a block runs its statements in that scope.
+     *
+     * @param node the statement, block or expression to run
+     * @param context the scope to run it in
+     * @return the returned or last value
+     */
     public ScriptValue executeInContext(ScriptAST node, ScriptContext context)
     {
         ScriptContext previous = currentContext;
@@ -1231,24 +1243,45 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
         }
     }
 
+    /** An error raised while running a script. */
     public static class ScriptException extends RuntimeException
     {
+        /**
+         * Creates the exception.
+         *
+         * @param message what went wrong
+         */
         public ScriptException(String message)
         {
             super(message);
         }
     }
 
+    /**
+     * Sets where log output goes as well as the log list.
+     *
+     * @param callback receives each log line, or null for none
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
     }
 
+    /**
+     * Sets where warnings go as well as the warning list; each message is prefixed with WARN and a colon.
+     *
+     * @param callback receives each warning, or null for none
+     */
     public void setWarnCallback(Consumer<String> callback)
     {
         this.warnCallback = callback;
     }
 
+    /**
+     * Sets where errors go as well as the error list; each message is prefixed with ERROR and a colon.
+     *
+     * @param callback receives each error, or null for none
+     */
     public void setErrorCallback(Consumer<String> callback)
     {
         this.errorCallback = callback;
@@ -1281,6 +1314,7 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
         }
     }
 
+    /** Empties the collected logs, warnings and errors. */
     public void clearLogs()
     {
         logs.clear();

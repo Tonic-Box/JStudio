@@ -11,9 +11,11 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.Color;
 import java.awt.Component;
 
+/** The AST tree's cell renderer; draws each node with its icon and theme colours. */
 public class ASTTreeCellRenderer extends DefaultTreeCellRenderer
 {
 
+    /** Creates a transparent renderer. */
     public ASTTreeCellRenderer()
     {
         setOpaque(false);

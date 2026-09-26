@@ -49,13 +49,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
-/**
- * A live view of the instances of one class. The left list shows instances found by walking the live heap;
- * selecting one shows its current field values on the right, read from the real object via a retained handle.
- * Non-final primitive/String fields edit in place (double-click; booleans use a true/false dropdown) and are
- * written straight to the live object; reference fields are click-to-navigate, with a back stack. Refresh
- * re-walks the heap.
- */
+/** The live instances of one class found by walking the target's heap, with each selected instance's fields read and edited on the real object. */
 public final class LiveInstancesView extends AbstractEditorView
 {
 
@@ -94,6 +88,11 @@ public final class LiveInstancesView extends AbstractEditorView
     private final Deque<Long> backStack = new ArrayDeque<>();
     private long currentHandleId;
 
+    /**
+     * Builds the view for one class.
+     *
+     * @param classEntry the class whose instances are listed
+     */
     public LiveInstancesView(ClassEntryModel classEntry)
     {
         super(new BorderLayout());

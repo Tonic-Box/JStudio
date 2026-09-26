@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/** The modal editor for an array argument's elements: add, remove, reorder and edit values, parsed by component type on OK. */
 public class ArrayEditorDialog extends JDialog
 {
 
@@ -32,6 +33,13 @@ public class ArrayEditorDialog extends JDialog
     private JButton cancelBtn;
     private JLabel infoLabel;
 
+    /**
+     * Creates the dialog, centered on its owner.
+     *
+     * @param owner the window the dialog belongs to
+     * @param componentType the element type descriptor, such as I or Ljava/lang/String;
+     * @param initialValues the starting elements, or null for an empty array
+     */
     public ArrayEditorDialog(Window owner, String componentType, Object[] initialValues)
     {
         super(owner, "Edit Array: " + formatComponentType(componentType) + "[]", ModalityType.APPLICATION_MODAL);
@@ -417,6 +425,11 @@ public class ArrayEditorDialog extends JDialog
         moveDownBtn.setEnabled(selected >= 0 && selected < elements.size() - 1);
     }
 
+    /**
+     * Copies out the elements.
+     *
+     * @return the elements as parsed on OK; the initial values if the dialog was cancelled
+     */
     public Object[] getElements()
     {
         return elements.toArray();
@@ -455,6 +468,13 @@ public class ArrayEditorDialog extends JDialog
         }
     }
 
+    /**
+     * Formats elements as a bracketed list, quoting strings and chars, cut short with an ellipsis once past about 50 characters.
+     *
+     * @param elements the elements, or null
+     * @param componentType the element type descriptor; unused
+     * @return the display text, [] when there are no elements
+     */
     public static String formatArrayDisplay(Object[] elements, String componentType)
     {
         if (elements == null || elements.length == 0)

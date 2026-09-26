@@ -13,6 +13,7 @@ import java.awt.BorderLayout;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
+/** Base for analysis panels: a toolbar over a content panel with an optional status log, plus one cancellable background task at a time. */
 public abstract class AnalysisPanelBase extends ThemedJPanel
 {
 
@@ -53,6 +54,7 @@ public abstract class AnalysisPanelBase extends ThemedJPanel
 
     protected abstract void buildToolbar(JPanel toolbar);
 
+    /** Recomputes and redisplays the panel's analysis for the current project. */
     public abstract void refresh();
 
     protected boolean hasStatusArea()

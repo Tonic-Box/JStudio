@@ -15,10 +15,7 @@ import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.function.LongConsumer;
 
-/**
- * Downloads a release jar (verifying its SHA-256 when published) and launches the external
- * {@link com.tonic.cli.Updater} that swaps the running jar and relaunches JStudio.
- */
+/** Downloads a release jar, checking its SHA-256 when published, and starts the external updater that swaps the jar and relaunches. */
 public final class UpdateInstaller
 {
 
@@ -32,10 +29,10 @@ public final class UpdateInstaller
     /**
      * Downloads the update jar to a temp file, verifying its SHA-256 when the release provides one.
      *
-     * @param info     the release to download
-     * @param progress receives download percentage (0-100), or a negative value when total size is unknown
-     * @return the path of the downloaded jar
-     * @throws IOException on network failure or checksum mismatch
+     * @param info the release to download
+     * @param progress receives the percentage downloaded, or -1 when the total size is unknown; may be null
+     * @return the downloaded jar, a temp file
+     * @throws IOException if the release has no jar asset, the download fails or the checksum does not match; the temp file is deleted
      */
     public Path download(UpdateInfo info, LongConsumer progress) throws IOException
     {
@@ -61,8 +58,7 @@ public final class UpdateInstaller
     }
 
     /**
-     * Launches the external updater to replace the running jar with {@code downloadedJar} and relaunch.
-     * The caller must exit the JVM immediately afterwards so the updater can acquire the jar.
+     * Starts the updater from the downloaded jar to replace the running jar and relaunch; the caller must exit right after so the jar is released.
      *
      * @param downloadedJar the verified update jar
      * @throws IOException if not running from a jar or the updater cannot be started

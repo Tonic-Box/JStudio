@@ -6,6 +6,7 @@ import lombok.Getter;
 import java.util.List;
 import java.util.Map;
 
+/** The size, shape and complexity figures computed for one class. */
 @Getter
 @Builder
 public class ClassStatistics
@@ -28,6 +29,7 @@ public class ClassStatistics
     private final int mediumComplexityCount;
     private final int highComplexityCount;
 
+    /** The bytecode size and frame limits of one method. */
     @Getter
     @Builder
     public static class MethodSizeInfo
@@ -38,6 +40,7 @@ public class ClassStatistics
         private final int maxLocals;
     }
 
+    /** The per-method figures shown in the statistics table: size, frame limits, complexity, loops, branches and modifiers. */
     @Getter
     @Builder
     public static class MethodDetailInfo
@@ -55,6 +58,7 @@ public class ClassStatistics
         private final boolean isNative;
     }
 
+    /** The groups instructions are counted in for the opcode distribution, each with a display name and description. */
     @Getter
     public enum OpcodeCategory
     {

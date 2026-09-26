@@ -17,19 +17,42 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/** A debug session over one method run in the VM, with stepping, animated resume, breakpoints and value editing, reported to listeners. */
 public class VMDebugSession
 {
 
+    /** Receives the events of a debug session. */
     public interface DebugListener
     {
+        /**
+         * Called after each step or edit with the new paused state.
+         *
+         * @param state the paused state
+         */
         void onStateChanged(DebugStateModel state);
 
+        /** Called when the session starts. */
         void onSessionStarted();
 
+        /**
+         * Called when the session stops, by the user, on completion or on an error.
+         *
+         * @param reason why it stopped, including the return value or exception where known
+         */
         void onSessionStopped(String reason);
 
+        /**
+         * Called when execution pauses at a breakpoint.
+         *
+         * @param location where the breakpoint is
+         */
         void onBreakpointHit(String location);
 
+        /**
+         * Called when an operation fails or is not allowed in the current state.
+         *
+         * @param message what went wrong
+         */
         void onError(String message);
     }
 
@@ -47,18 +70,31 @@ public class VMDebugSession
     private boolean started;
     private Timer animationTimer;
 
+    /** Creates a session on the shared default VM. */
     public VMDebugSession()
     {
         this(null);
     }
 
-    /** Drives an isolated {@link VmInstance} (its own heap + snapshot pool); null uses the shared default VM. */
+    /**
+     * Creates a session that drives an isolated VM with its own heap and snapshot pool.
+     *
+     * @param vmInstance the VM to use, or null for the shared default VM
+     */
     public VMDebugSession(VmInstance vmInstance)
     {
         this.vmInstance = vmInstance;
         this.started = false;
     }
 
+    /**
+     * Starts debugging a method, paused before its first instruction; on the default VM, initializes the VM if needed.
+     *
+     * @param method the method to run
+     * @param recursive true to step into called methods, false to stub them
+     * @param args the method's arguments
+     * @throws IllegalStateException if the session has already started
+     */
     public void start(MethodEntry method, boolean recursive, Object... args)
     {
         if (started)
@@ -89,6 +125,7 @@ public class VMDebugSession
         updateState();
     }
 
+    /** Stops the animation and the session and notifies listeners; does nothing if the session has not started. */
     public void stop()
     {
         stopAnimation();
@@ -107,6 +144,7 @@ public class VMDebugSession
         notifySessionStopped("User stopped session");
     }
 
+    /** Executes one instruction, entering any called method; notifies listeners of the new state, or that the session stopped if execution finished. */
     public void stepInto()
     {
         if (!canStep())
@@ -157,6 +195,7 @@ public class VMDebugSession
         }
     }
 
+    /** Executes one instruction, running any called method to completion; notifies listeners of the new state, or that the session stopped if execution finished. */
     public void stepOver()
     {
         if (!canStep()) return;
@@ -203,6 +242,7 @@ public class VMDebugSession
         }
     }
 
+    /** Runs until the current method returns; notifies listeners of the new state, or that the session stopped if execution finished. */
     public void stepOut()
     {
         if (!canStep()) return;
@@ -249,6 +289,7 @@ public class VMDebugSession
         }
     }
 
+    /** Steps into repeatedly on a timer, at the animation delay, until execution finishes or the animation is stopped. */
     public void resumeAnimated()
     {
         if (!canStep()) return;
@@ -334,6 +375,7 @@ public class VMDebugSession
         animationTimer.start();
     }
 
+    /** Stops the animated resume, if running. */
     public void stopAnimation()
     {
         if (animationTimer != null)
@@ -343,11 +385,21 @@ public class VMDebugSession
         }
     }
 
+    /**
+     * Returns whether an animated resume is running.
+     *
+     * @return true if the animation timer is running
+     */
     public boolean isAnimating()
     {
         return animationTimer != null && animationTimer.isRunning();
     }
 
+    /**
+     * Sets the delay between animated steps, applied at once to a running animation.
+     *
+     * @param delayMs the delay in milliseconds
+     */
     public void setAnimationDelay(int delayMs)
     {
         this.stepDelayMs = delayMs;
@@ -422,6 +474,11 @@ public class VMDebugSession
         notifySessionStopped(details.toString());
     }
 
+    /**
+     * Runs until execution reaches a bytecode offset in the current method.
+     *
+     * @param pc the bytecode offset to stop at
+     */
     public void runToCursor(int pc)
     {
         if (!canStep()) return;
@@ -437,6 +494,14 @@ public class VMDebugSession
         }
     }
 
+    /**
+     * Adds a breakpoint; ignored if the session has not been started.
+     *
+     * @param className the internal name of the method's class
+     * @param methodName the method's name
+     * @param descriptor the method's descriptor
+     * @param pc the bytecode offset
+     */
     public void addBreakpoint(String className, String methodName, String descriptor, int pc)
     {
         if (yabrSession != null)
@@ -445,6 +510,14 @@ public class VMDebugSession
         }
     }
 
+    /**
+     * Removes a breakpoint; ignored if the session has not been started.
+     *
+     * @param className the internal name of the method's class
+     * @param methodName the method's name
+     * @param descriptor the method's descriptor
+     * @param pc the bytecode offset
+     */
     public void removeBreakpoint(String className, String methodName, String descriptor, int pc)
     {
         if (yabrSession != null)
@@ -454,16 +527,33 @@ public class VMDebugSession
         }
     }
 
+    /**
+     * Returns whether the session is started and paused.
+     *
+     * @return true if paused
+     */
     public boolean isPaused()
     {
         return started && yabrSession != null && yabrSession.isPaused();
     }
 
+    /**
+     * Returns whether the underlying session has stopped.
+     *
+     * @return true if it stopped, false if it is running or was never started
+     */
     public boolean isStopped()
     {
         return yabrSession != null && yabrSession.isStopped();
     }
 
+    /**
+     * Changes a local variable in the current frame while paused and not animating; failures are reported to listeners.
+     *
+     * @param slot the local variable slot
+     * @param value the new value
+     * @return true if the value was set
+     */
     public boolean setLocalValue(int slot, ConcreteValue value)
     {
         if (!isPaused())
@@ -489,6 +579,13 @@ public class VMDebugSession
         }
     }
 
+    /**
+     * Changes an operand stack value in the current frame while paused and not animating; failures are reported to listeners.
+     *
+     * @param index the position on the operand stack
+     * @param value the new value
+     * @return true if the value was set
+     */
     public boolean setStackValue(int index, ConcreteValue value)
     {
         if (!isPaused())
@@ -514,6 +611,16 @@ public class VMDebugSession
         }
     }
 
+    /**
+     * Changes a field of a heap object while paused and not animating; failures are reported to listeners.
+     *
+     * @param obj the object, or null to fail
+     * @param owner the internal name of the class declaring the field
+     * @param name the field's name
+     * @param desc the field's descriptor
+     * @param value the new value
+     * @return true if the value was set
+     */
     public boolean setObjectFieldValue(ObjectInstance obj, String owner, String name, String desc, Object value)
     {
         if (!isPaused())
@@ -544,6 +651,11 @@ public class VMDebugSession
         }
     }
 
+    /**
+     * Adds a listener; null is ignored.
+     *
+     * @param listener the listener
+     */
     public void addListener(DebugListener listener)
     {
         if (listener != null)
@@ -552,6 +664,11 @@ public class VMDebugSession
         }
     }
 
+    /**
+     * Removes a listener; null is ignored.
+     *
+     * @param listener the listener
+     */
     public void removeListener(DebugListener listener)
     {
         if (listener != null)

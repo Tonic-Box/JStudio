@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
 
+/** The application log that fans each message out to console listeners and keeps the last 1000 entries. */
 public class ConsoleLogService
 {
 
@@ -22,6 +23,11 @@ public class ConsoleLogService
     {
     }
 
+    /**
+     * Returns the shared instance, creating it on first use.
+     *
+     * @return the shared instance
+     */
     public static synchronized ConsoleLogService getInstance()
     {
         if (instance == null)
@@ -31,11 +37,22 @@ public class ConsoleLogService
         return instance;
     }
 
+    /**
+     * Registers a listener called with the level and text of every later message; exceptions it throws are swallowed.
+     *
+     * @param listener the listener
+     */
     public void addListener(BiConsumer<LogLevel, String> listener)
     {
         listeners.add(listener);
     }
 
+    /**
+     * Records a message and passes it to every listener.
+     *
+     * @param level the severity
+     * @param message the text
+     */
     public void log(LogLevel level, String message)
     {
         LogEntry entry = new LogEntry(level, message, System.currentTimeMillis());
@@ -43,21 +60,42 @@ public class ConsoleLogService
         notifyListeners(level, message);
     }
 
+    /**
+     * Logs a message at info level.
+     *
+     * @param message the text
+     */
     public void info(String message)
     {
         log(LogLevel.INFO, message);
     }
 
+    /**
+     * Logs a message at warn level.
+     *
+     * @param message the text
+     */
     public void warn(String message)
     {
         log(LogLevel.WARN, message);
     }
 
+    /**
+     * Logs a message at error level.
+     *
+     * @param message the text
+     */
     public void error(String message)
     {
         log(LogLevel.ERROR, message);
     }
 
+    /**
+     * Logs a message and the throwable's message at error level, followed by up to five stack frames.
+     *
+     * @param message the text
+     * @param t the throwable to report
+     */
     public void error(String message, Throwable t)
     {
         log(LogLevel.ERROR, message + ": " + t.getMessage());
@@ -73,6 +111,11 @@ public class ConsoleLogService
         }
     }
 
+    /**
+     * Logs a message at debug level.
+     *
+     * @param message the text
+     */
     public void debug(String message)
     {
         log(LogLevel.DEBUG, message);
@@ -112,6 +155,7 @@ public class ConsoleLogService
         }
     }
 
+    /** One recorded log message. */
     @Getter
     public static class LogEntry
     {
@@ -119,6 +163,13 @@ public class ConsoleLogService
         private final String message;
         private final long timestamp;
 
+        /**
+         * Creates a log entry.
+         *
+         * @param level the severity
+         * @param message the text
+         * @param timestamp when it was logged, in epoch milliseconds
+         */
         public LogEntry(LogLevel level, String message, long timestamp)
         {
             this.level = level;

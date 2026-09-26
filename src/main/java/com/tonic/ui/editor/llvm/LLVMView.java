@@ -19,10 +19,7 @@ import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.Color;
 
-/**
- * Editor view that shows the class lowered to textual LLVM IR. Lowering runs off the EDT; methods
- * outside the lowerer's computational subset are annotated rather than failing the view.
- */
+/** The editor view that shows a class lowered to textual LLVM IR, lowered off the EDT with unlowerable methods annotated rather than failing the view. */
 public class LLVMView extends AbstractTextView
 {
 
@@ -38,6 +35,11 @@ public class LLVMView extends AbstractTextView
 
     private static final String METHOD_DIVIDER = "=========================================================================";
 
+    /**
+     * Creates the view; the LLVM IR is generated on refresh.
+     *
+     * @param classEntry the class to show
+     */
     public LLVMView(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;

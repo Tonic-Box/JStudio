@@ -7,6 +7,7 @@ import com.tonic.ui.theme.JStudioTheme;
 import javax.swing.*;
 import java.awt.*;
 
+/** A row that edits one parameter spec: its value mode, fixed value, and nested object configuration. */
 public class ParamConfigPanel extends ThemedJPanel
 {
 
@@ -18,6 +19,12 @@ public class ParamConfigPanel extends ThemedJPanel
     private JButton configButton;
     private JLabel summaryLabel;
 
+    /**
+     * Creates the row for a spec, editing it in place.
+     *
+     * @param owner the window that owns the object builder dialog
+     * @param spec the spec to edit
+     */
     public ParamConfigPanel(Window owner, ParamSpec spec)
     {
         super(BackgroundStyle.PRIMARY);
@@ -169,6 +176,11 @@ public class ParamConfigPanel extends ThemedJPanel
         }
     }
 
+    /**
+     * Writes the chosen mode, and the parsed fixed value in fixed mode, into the spec.
+     *
+     * @return the edited spec
+     */
     public ParamSpec getParamSpec()
     {
         ValueMode mode = (ValueMode) modeCombo.getSelectedItem();
@@ -183,6 +195,11 @@ public class ParamConfigPanel extends ThemedJPanel
         return spec;
     }
 
+    /**
+     * Replaces the edited spec with a copy of another and refreshes the controls; the name and type labels are not updated.
+     *
+     * @param newSpec the spec to copy and edit
+     */
     public void loadSpec(ParamSpec newSpec)
     {
         this.spec = newSpec.copy();

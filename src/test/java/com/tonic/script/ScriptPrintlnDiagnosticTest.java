@@ -25,11 +25,7 @@ import java.util.jar.JarFile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Proves the "Remove Debug Prints" AST script end-to-end: it matches println calls, removes them, and cements the
- * change to bytecode for methods YABR can round-trip - while the verify-and-restore guard leaves methods it cannot
- * round-trip (complex control flow) untouched instead of corrupting them.
- */
+/** Runs the Remove Debug Prints script end to end: prints are removed where YABR can round-trip the method, and other methods are left untouched. */
 public class ScriptPrintlnDiagnosticTest
 {
 

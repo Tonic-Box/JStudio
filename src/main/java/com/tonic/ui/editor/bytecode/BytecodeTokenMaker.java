@@ -7,6 +7,7 @@ import org.fife.ui.rsyntaxtextarea.TokenMap;
 import javax.swing.text.Segment;
 import java.util.Set;
 
+/** The syntax highlighter for the bytecode view: offsets, opcodes colored by group, and comments. */
 public class BytecodeTokenMaker extends AbstractTokenMaker
 {
 

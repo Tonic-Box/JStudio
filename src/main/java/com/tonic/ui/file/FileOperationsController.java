@@ -36,17 +36,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Handles the main window's file/project I/O: opening JARs/classes/directories (open dialog and drag-and-drop,
- * with append-or-replace), exporting classes/resources, and the JStudio project (.jstudio) open/save/save-as/close
- * lifecycle including the dirty-state confirmation and title-bar text. Constructed with the {@link MainFrame},
- * which owns the workspace it mutates (navigator, editor, console, status bar, bottom dock, navigation history).
- */
+/** The main window's file and project I/O: opening and appending JARs, classes and directories, exporting, and the .jstudio project open, save and close lifecycle; it mutates the workspace the MainFrame owns. */
 public final class FileOperationsController
 {
 
     private final MainFrame mainFrame;
 
+    /**
+     * Creates the controller for a main window.
+     *
+     * @param mainFrame the window whose workspace this controller loads into
+     */
     public FileOperationsController(MainFrame mainFrame)
     {
         this.mainFrame = mainFrame;
@@ -77,6 +77,7 @@ public final class FileOperationsController
         return mainFrame.getSidePanel();
     }
 
+    /** Asks for JAR, class or directory files to open and, when a project is already open, whether to append to it or replace it. */
     public void showOpenDialog()
     {
         FileChooserResult result = FileChooserDialog.showOpenDialog(mainFrame, "Open JAR or Class File", ExtensionFileFilter.javaFiles());
@@ -113,6 +114,11 @@ public final class FileOperationsController
         }
     }
 
+    /**
+     * Loads a JAR, class file or directory as the current project in the background, detaching any live session first; failures are shown to the user.
+     *
+     * @param path the file or directory to load
+     */
     public void openFile(String path)
     {
         File file = new File(path);
@@ -175,6 +181,11 @@ public final class FileOperationsController
         worker.execute();
     }
 
+    /**
+     * Accepts a drop of JARs, class files and directories, ignoring anything else, and opens or appends them as the open dialog does.
+     *
+     * @param dtde the drop event, completed by this method
+     */
     @SuppressWarnings("unchecked")
     public void handleFileDrop(DropTargetDropEvent dtde)
     {
@@ -305,6 +316,7 @@ public final class FileOperationsController
         worker.execute();
     }
 
+    /** Exports the class in the front editor tab to a .class file the user picks, or warns when no class is open. */
     public void exportCurrentClass()
     {
         ClassEntryModel currentClass = editorPanel().getCurrentClass();
@@ -316,6 +328,11 @@ public final class FileOperationsController
         exportClass(currentClass);
     }
 
+    /**
+     * Writes a class to a .class file the user picks; does nothing for null.
+     *
+     * @param classEntry the class to export
+     */
     public void exportClass(ClassEntryModel classEntry)
     {
         if (classEntry == null) return;
@@ -343,6 +360,7 @@ public final class FileOperationsController
         }
     }
 
+    /** Writes every user class as a .class file under a directory the user picks, laid out by package. */
     public void exportAllClasses()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -401,6 +419,7 @@ public final class FileOperationsController
         }
     }
 
+    /** Writes the project's user classes and resources to a JAR the user picks. */
     public void exportAsJar()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -441,6 +460,7 @@ public final class FileOperationsController
         }
     }
 
+    /** Closes the project after offering to save unsaved changes, clearing the navigator, tabs, history and title. */
     public void closeProject()
     {
         if (!confirmCloseIfDirty())
@@ -458,6 +478,7 @@ public final class FileOperationsController
         mainFrame.setTitle(JStudio.APP_NAME + " " + JStudio.APP_VERSION);
     }
 
+    /** Opens a .jstudio project the user picks and loads the file it targets, warning when that file is missing. */
     public void openProjectFile()
     {
         FileChooserResult result = FileChooserDialog.showOpenDialog(mainFrame, "Open JStudio Project", new ExtensionFileFilter("JStudio Project", "jstudio"));
@@ -490,6 +511,7 @@ public final class FileOperationsController
         }
     }
 
+    /** Saves the project database, creating it for the loaded file if none exists, and takes a local history snapshot. */
     public void saveProject()
     {
         ProjectDatabaseService dbService = ProjectDatabaseService.getInstance();
@@ -520,6 +542,7 @@ public final class FileOperationsController
         }
     }
 
+    /** Saves the project database to a .jstudio file the user picks, creating the database for the loaded file if none exists. */
     public void saveProjectAs()
     {
         ProjectDatabaseService dbService = ProjectDatabaseService.getInstance();
@@ -570,8 +593,9 @@ public final class FileOperationsController
     }
 
     /**
-     * Prompts to save when the project database is dirty. Returns {@code true} when it is safe to proceed
-     * (saved, or the user chose not to save), {@code false} when the user cancelled.
+     * Offers to save when the project database has unsaved changes.
+     *
+     * @return true when it is safe to proceed (saved, declined, or nothing to save), false when the user cancelled
      */
     public boolean confirmCloseIfDirty()
     {

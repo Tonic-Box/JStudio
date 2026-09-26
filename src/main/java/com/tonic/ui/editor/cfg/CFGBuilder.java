@@ -8,9 +8,16 @@ import com.tonic.parser.attribute.table.ExceptionTableEntry;
 
 import java.util.*;
 
+/** Splits a method's bytecode into basic blocks linked by branch, switch, fallthrough and exception edges. */
 public class CFGBuilder
 {
 
+    /**
+     * Builds the control flow graph of a method.
+     *
+     * @param method the method
+     * @return the blocks sorted by start offset, or an empty list when the method has no code
+     */
     public List<CFGBlock> buildCFG(MethodEntry method)
     {
         CodeAttribute codeAttr = method.getCodeAttribute();

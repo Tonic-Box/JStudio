@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/** A modal dialog that previews a generated JUnit test for one recorded call or execution and lets the user copy or save it. */
 public class TestGeneratorDialog extends JDialog
 {
 
@@ -31,6 +32,11 @@ public class TestGeneratorDialog extends JDialog
 
     private TestCaseGenerator.GeneratedTest currentTest;
 
+    /**
+     * Creates the dialog; call setMethodCall or setExecutionResult before showing it.
+     *
+     * @param owner the window to center over and block
+     */
     public TestGeneratorDialog(Window owner)
     {
         super(owner, "Generate JUnit Test", ModalityType.APPLICATION_MODAL);
@@ -159,6 +165,11 @@ public class TestGeneratorDialog extends JDialog
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    /**
+     * Sets a recorded method call as the test source, suggests names, and regenerates the preview.
+     *
+     * @param call the recorded call
+     */
     public void setMethodCall(MethodCall call)
     {
         this.methodCall = call;
@@ -175,6 +186,15 @@ public class TestGeneratorDialog extends JDialog
         regeneratePreview();
     }
 
+    /**
+     * Sets a VM execution as the test source, suggests names, and regenerates the preview.
+     *
+     * @param result the execution result
+     * @param className the class's internal name, with slashes
+     * @param methodName the method's name
+     * @param descriptor the method's descriptor
+     * @param args the arguments the method was called with
+     */
     public void setExecutionResult(ExecutionResult result, String className, String methodName, String descriptor, Object[] args)
     {
         this.methodCall = null;

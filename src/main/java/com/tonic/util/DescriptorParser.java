@@ -3,6 +3,7 @@ package com.tonic.util;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Formats JVM type and method descriptors as readable Java type names using simple class names. */
 public class DescriptorParser
 {
 
@@ -10,7 +11,12 @@ public class DescriptorParser
     {
     }
 
-    /** Parses a method descriptor's parameters into a list of readable type names (e.g. {@code [int, String]}). */
+    /**
+     * Splits a method descriptor's parameters into readable type names, such as int and String.
+     *
+     * @param methodDescriptor the method descriptor, or null
+     * @return one name per parameter, empty when the descriptor is null or has no parameter list
+     */
     public static List<String> parseParameterTypes(String methodDescriptor)
     {
         List<String> out = new ArrayList<>();
@@ -44,6 +50,12 @@ public class DescriptorParser
         return out;
     }
 
+    /**
+     * Formats one field descriptor as a readable type name with trailing brackets for each array dimension.
+     *
+     * @param desc the field descriptor
+     * @return the type name, "?" when the descriptor is null or empty, or the descriptor itself when its tag is unknown
+     */
     public static String formatFieldDescriptor(String desc)
     {
         if (desc == null || desc.isEmpty())
@@ -112,6 +124,12 @@ public class DescriptorParser
         return result.toString();
     }
 
+    /**
+     * Formats a method descriptor's return type.
+     *
+     * @param methodDescriptor the method descriptor
+     * @return the readable return type, or "void" when the descriptor is null, empty or has nothing after the parameter list
+     */
     public static String formatReturnType(String methodDescriptor)
     {
         if (methodDescriptor == null || methodDescriptor.isEmpty())
@@ -126,6 +144,12 @@ public class DescriptorParser
         return formatFieldDescriptor(methodDescriptor.substring(parenEnd + 1));
     }
 
+    /**
+     * Formats a method descriptor's parameters as a comma-separated list.
+     *
+     * @param methodDescriptor the method descriptor
+     * @return the readable parameter list, or empty when there are none or the descriptor is malformed
+     */
     public static String formatMethodParams(String methodDescriptor)
     {
         if (methodDescriptor == null || methodDescriptor.isEmpty())
@@ -274,6 +298,12 @@ public class DescriptorParser
         }
     }
 
+    /**
+     * Strips the package from an internal class name.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the part after the last slash, or empty when the name is null or empty
+     */
     public static String extractSimpleName(String internalName)
     {
         if (internalName == null || internalName.isEmpty())

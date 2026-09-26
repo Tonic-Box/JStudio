@@ -16,6 +16,7 @@ import lombok.Getter;
 
 import java.util.*;
 
+/** The types script global: lifts a method to IR, cached per method, and reports its variable types, casts, instanceof checks and allocations. */
 public class TypeBridge extends AbstractBridge
 {
 
@@ -23,6 +24,11 @@ public class TypeBridge extends AbstractBridge
     private IRMethod currentMethod;
     private final Map<String, IRMethod> methodCache = new HashMap<>();
 
+    /**
+     * Creates a bridge with no method analyzed.
+     *
+     * @param projectModel the project whose methods are analyzed
+     */
     public TypeBridge(ProjectModel projectModel)
     {
         super(projectModel);
@@ -34,6 +40,11 @@ public class TypeBridge extends AbstractBridge
         return createTypesObject();
     }
 
+    /**
+     * Builds the types script object: method analysis and type queries over the analyzed method.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createTypesObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

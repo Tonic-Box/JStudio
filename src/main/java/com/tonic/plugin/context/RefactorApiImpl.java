@@ -6,7 +6,6 @@ import com.tonic.model.ClassEntryModel;
 import com.tonic.model.FieldEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
-import com.tonic.parser.ClassPool;
 import com.tonic.plugin.api.RefactorApi;
 import com.tonic.renamer.Renamer;
 import com.tonic.renamer.exception.RenameException;
@@ -15,12 +14,7 @@ import com.tonic.service.ProjectService;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Host-side {@link RefactorApi}: applies class/method/field renames with YABR's {@link Renamer} (which rewrites every
- * reference across the {@link ClassPool}), updates the {@link ProjectModel}, invalidates the affected class's
- * decompile cache, and posts a {@link ProjectRenamedEvent} so {@code MainFrame} refreshes the UI. Resolves the
- * current project live on each call (like {@code ScriptApiImpl}); called off the EDT (the chat worker thread).
- */
+/** The RefactorApi over YABR's Renamer, resolving the current project from ProjectService on every call and invalidating the renamed class's decompile cache. */
 public class RefactorApiImpl implements RefactorApi
 {
 

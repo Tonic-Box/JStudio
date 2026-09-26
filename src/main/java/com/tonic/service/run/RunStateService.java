@@ -3,10 +3,7 @@ package com.tonic.service.run;
 import com.tonic.event.EventBus;
 import com.tonic.event.events.RunStateEvent;
 
-/**
- * Tracks the single in-flight {@link RunService} process so UI can reflect run state (e.g. the editor gutter shows
- * a stop badge while a run is active) and terminate it. Posts a {@link RunStateEvent} on every change. Singleton.
- */
+/** The singleton tracker of the one in-flight run process; posts a RunStateEvent on every change. */
 public final class RunStateService
 {
 
@@ -18,17 +15,27 @@ public final class RunStateService
     {
     }
 
+    /** @return the shared instance */
     public static RunStateService getInstance()
     {
         return INSTANCE;
     }
 
+    /**
+     * Reports whether a run is in progress.
+     *
+     * @return true if a run process is set and still alive
+     */
     public synchronized boolean isRunning()
     {
         return process != null && process.isAlive();
     }
 
-    /** Records the active run process and notifies listeners. */
+    /**
+     * Records the active run process and notifies listeners.
+     *
+     * @param process the new run process, or null for none
+     */
     public void setProcess(Process process)
     {
         synchronized (this)
@@ -38,7 +45,11 @@ public final class RunStateService
         EventBus.getInstance().post(new RunStateEvent(this, process != null && process.isAlive()));
     }
 
-    /** Clears the active process when {@code exited} is still the current one (ignores a superseded run's exit). */
+    /**
+     * Clears the active process if it is still the one that exited, so a superseded run's exit is ignored.
+     *
+     * @param exited the process that exited
+     */
     public void clearIf(Process exited)
     {
         synchronized (this)

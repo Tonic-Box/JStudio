@@ -6,14 +6,7 @@ import com.tonic.ui.live.heap.HprofSnapshot;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Holds the single current heap-dump snapshot shared across all editor tabs. A heap dump is the whole heap,
- * so one parsed {@link HprofSnapshot} serves every class: switching tabs re-filters instantly, and only an
- * explicit refresh (or the first entry into the Live Instances view) takes a fresh dump.
- *
- * <p>At most one HPROF file exists on disk at a time - taking a new snapshot closes and deletes the old one.
- * {@link #clear()} (called on detach) disposes the current snapshot.
- */
+/** The single current heap-dump snapshot shared by every editor tab; taking a new one closes and deletes the old dump. */
 public final class LiveHeapService
 {
 
@@ -25,17 +18,25 @@ public final class LiveHeapService
     {
     }
 
+    /** @return the shared instance */
     public static LiveHeapService get()
     {
         return INSTANCE;
     }
 
+    /** @return the current snapshot, or null if none has been taken */
     public synchronized HprofSnapshot getSnapshot()
     {
         return snapshot;
     }
 
-    /** Take a fresh heap dump from the target, parse it, and replace any previous snapshot. Call off the EDT. */
+    /**
+     * Takes a fresh heap dump from the target, parses it, and replaces the previous snapshot; call off the EDT.
+     *
+     * @param session the session to dump
+     * @return the new snapshot
+     * @throws IOException if the dump or its parsing fails
+     */
     public HprofSnapshot snapshot(LiveSession session) throws IOException
     {
         String path = session.heapDump();
@@ -53,7 +54,13 @@ public final class LiveHeapService
         return fresh;
     }
 
-    /** Return the current snapshot, taking one only if none exists. Call off the EDT. */
+    /**
+     * Returns the current snapshot, taking one only if none exists; call off the EDT.
+     *
+     * @param session the session to dump if no snapshot exists
+     * @return the current or newly taken snapshot
+     * @throws IOException if a needed dump or its parsing fails
+     */
     public HprofSnapshot ensureSnapshot(LiveSession session) throws IOException
     {
         synchronized (this)
@@ -66,7 +73,7 @@ public final class LiveHeapService
         return snapshot(session);
     }
 
-    /** Dispose the current snapshot (close its file handle + delete the dump). */
+    /** Closes the current snapshot and deletes its dump file. */
     public synchronized void clear()
     {
         if (snapshot != null)

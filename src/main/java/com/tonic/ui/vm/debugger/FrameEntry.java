@@ -3,6 +3,7 @@ package com.tonic.ui.vm.debugger;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/** One call stack frame as the debugger shows it; the current frame is marked. */
 @Getter
 @RequiredArgsConstructor
 public class FrameEntry
@@ -14,6 +15,11 @@ public class FrameEntry
     private final int lineNumber;
     private final boolean current;
 
+    /**
+     * Returns the class name without its package.
+     *
+     * @return the part of the internal class name after the last slash
+     */
     public String getSimpleClassName()
     {
         int lastSlash = className.lastIndexOf('/');

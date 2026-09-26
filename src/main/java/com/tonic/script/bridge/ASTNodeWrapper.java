@@ -10,6 +10,7 @@ import lombok.Getter;
 
 import java.util.*;
 
+/** Wraps a decompiled AST node as a script object with its properties, traversal and edit functions. */
 @Getter
 public class ASTNodeWrapper
 {
@@ -49,22 +50,39 @@ public class ASTNodeWrapper
         AST_CLASSES.put("ContinueStmt", ContinueStmt.class);
     }
 
+    /**
+     * Wraps a node without an interpreter, so script callbacks passed to traversal functions cannot be run.
+     *
+     * @param node the AST node
+     */
     public ASTNodeWrapper(Object node)
     {
         this(null, node);
     }
 
+    /**
+     * Wraps a node.
+     *
+     * @param interpreter the interpreter that runs callbacks passed to traversal functions
+     * @param node the AST node
+     */
     public ASTNodeWrapper(ScriptInterpreter interpreter, Object node)
     {
         this.interpreter = interpreter;
         this.node = node;
     }
 
+    /** @return the wrapped node */
     public Object unwrap()
     {
         return node;
     }
 
+    /**
+     * Builds the script object for the node: its type name, traversal and edit functions, and the properties of its node kind.
+     *
+     * @return the script object
+     */
     public ScriptValue toScriptValue()
     {
         Map<String, ScriptValue> props = new HashMap<>();

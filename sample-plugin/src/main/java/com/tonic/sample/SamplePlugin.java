@@ -19,10 +19,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import java.util.Collections;
 
-/**
- * Reference plugin that exercises every UI extension point plus direct app/EventBus access. Dropped into
- * {@code ~/.jstudio/plugins/} (via the {@code copyToPluginsDir} Gradle task) to validate the plugin runtime.
- */
+/** A reference plugin that exercises every UI extension point plus direct app and event bus access, copied into the user plugins directory to validate the plugin runtime. */
 @JStudioPlugin(
         id = "sample-plugin",
         name = "Sample Plugin",

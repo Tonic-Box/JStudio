@@ -16,16 +16,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Applies a selected subset of a {@link DeadCodeReport} to the project: removes dead classes
- * ({@link ProjectModel#removeClass}), dead methods/fields ({@link ClassFile#removeMethod}/{@code removeField}),
- * and - for write-only fields - first rewrites each writer's store into pop(s) so the field can be dropped
- * safely.
- *
- * <p>The write-only rewrite is a same-size in-place byte patch: {@code putstatic}/{@code putfield} are 3 bytes
- * and have identical net stack effect to {@code pop}/{@code pop2} (+ a second {@code pop} for the object ref on
- * {@code putfield}) padded with {@code nop}, so offsets, branches, frames, and maxStack are untouched.
- */
+/** Removes selected dead classes, methods and fields from a project, first patching stores to write-only fields into same-size pops. */
 public final class DeadCodeRemover
 {
 
@@ -65,6 +56,13 @@ public final class DeadCodeRemover
 
     }
 
+    /**
+     * Removes the given items: patches writers of write-only fields, drops methods and fields, then whole classes, and invalidates decompilation of touched classes.
+     *
+     * @param project the project to modify
+     * @param items the dead items to remove
+     * @return the removal counts and the touched and removed classes
+     */
     public static Result apply(ProjectModel project, List<DeadItem> items)
     {
         Set<String> touched = new LinkedHashSet<>();

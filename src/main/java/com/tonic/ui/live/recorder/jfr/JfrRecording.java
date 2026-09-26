@@ -21,24 +21,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-/**
- * Parses a {@code .jfr} recording (one streaming pass over {@link RecordingFile}) into the aggregates the
- * analysis window renders: an event-type overview, a CPU call tree + hot methods, an allocation call tree +
- * by-type breakdown, lock contention, and thrown exceptions. UI-free.
- *
- * <p>Field access is guarded by {@link RecordedEvent#hasField} so it stays robust across JDK versions whose
- * JFR event schemas differ (e.g. {@code jdk.ObjectAllocationSample} on 16+ vs the TLAB events on 11).
- */
+/** The aggregates of one JFR recording parsed in a single pass: event counts, CPU and allocation call trees, lock contention and exceptions. */
 @Getter
 public final class JfrRecording
 {
 
     private final Duration duration;
     private final long totalEvents;
-    /**
-     * -- GETTER --
-     * Event-type name -> count, sorted by name.
-     */
+    /** The count of events per event type name, sorted by name. */
     private final Map<String, Long> eventCounts;
 
     private final CallTreeNode cpuTree;
@@ -74,7 +64,13 @@ public final class JfrRecording
         this.exceptionCount = b.exceptionCount;
     }
 
-    /** Reads and aggregates {@code jfr} in a single pass. */
+    /**
+     * Reads and aggregates a recording in a single pass.
+     *
+     * @param jfr the recording file
+     * @return the aggregates
+     * @throws IOException if the file cannot be read as a recording
+     */
     public static JfrRecording parse(File jfr) throws IOException
     {
         Builder b = new Builder();
@@ -88,21 +84,41 @@ public final class JfrRecording
         return new JfrRecording(b);
     }
 
+    /**
+     * Tells whether the recording has CPU samples.
+     *
+     * @return true if any were recorded
+     */
     public boolean hasCpu()
     {
         return cpuSamples > 0;
     }
 
+    /**
+     * Tells whether the recording has allocation data.
+     *
+     * @return true if any allocated bytes or types were recorded
+     */
     public boolean hasAllocations()
     {
         return allocBytes > 0 || !allocByType.isEmpty();
     }
 
+    /**
+     * Tells whether the recording has lock contention.
+     *
+     * @return true if any contended lock was recorded
+     */
     public boolean hasLocks()
     {
         return !lockContention.isEmpty();
     }
 
+    /**
+     * Tells whether the recording has thrown exceptions.
+     *
+     * @return true if any were recorded
+     */
     public boolean hasExceptions()
     {
         return exceptionCount > 0;
@@ -334,7 +350,7 @@ public final class JfrRecording
         }
     }
 
-    /** A method's self vs total weight (CPU samples). Carries a {@link FrameKey} for source navigation. */
+    /** A method's self and total CPU samples, with its frame for source navigation. */
     @Getter
     public static final class MethodStat
     {

@@ -55,8 +55,49 @@ no comments; the reasons behind its less obvious choices are recorded here.
 ## Profiler and recorder
 
 - The profiler polls whether or not its tab is visible, so sampling starts as soon as the panel is added on attach;
-  metrics are JVM-wide, not view-specific. The timer stops on detach.
+  metrics are JVM-wide, not view-specific. The timer starts and stops as the panel is added to and removed from a
+  window, and at most one metrics request is in flight.
 - Charts keep 180 samples per series, about three minutes at one sample a second.
 - Flame graph frames narrower than three pixels are not drawn; zooming reveals them. Colour hue follows the package
   so a package reads as one family, with brightness varied per method.
 - The recorder disables every action while a request is in flight, because the connection is serial.
+
+## VM isolation
+
+- `SnapshotClassPool` serves user classes from a frozen byte snapshot parsed on first access, so edits to the live
+  project cannot disturb a running VM; JDK and library classes are never edited and come from the live pool. The
+  YABR engine has no global mutable state, so separate `VmInstance`s, one per AI session, do not interfere.
+  `VmSupport` is shared by that path and `VMExecutionService`.
+- The debugger's source view shows only the current method, cut from the decompiled class by the per-method spans.
+  The executing statement comes from the PC through the offset-to-line maps and breakpoints go back through them;
+  text, maps and spans are shared with the editor through the class model's cache. Stepping into another method
+  re-cuts the view first.
+
+## Graphs, queries and updates
+
+- `DotParser` supports `digraph` and `graph`, node and edge statements and edge chains, node, edge and graph
+  attribute defaults, subgraphs and brace blocks (flattened), the attributes label, shape, color, fillcolor, style
+  and rankdir, all three comment forms and quoted ids. Clusters, ports, ranks and HTML labels are accepted and
+  ignored; `DotGraph` models only what the renderer honours.
+- `DotGraphBuilder` mirrors the call-graph renderer (insert in one model update, then a hierarchical layout) with
+  inline styles so DOT colours survive. `DotGraphView.render` is the only entry point, keeping `com.mxgraph` out of
+  callers' APIs. `DotGraphPanel` rebuilds from the DOT source; the AI chat embeds it as a tab and `DotGraphDialog`
+  is the popup fallback.
+- The query highlighter leaves accessor names plain so it never drifts from the accessor registry; keywords are
+  case-insensitive to match the lexer.
+- Line diffs trim the common prefix and suffix first; only the middle goes through LCS, capped at four million
+  cells, beyond which it becomes plain delete and insert blocks.
+- Remove Dead Code has no undo, so its preview tree is the safety net.
+- `AppVersion` reads `Implementation-Version`, which only a release jar has; in development runs it is null and
+  update checks are skipped. After `UpdateInstaller.applyAndRestart` the caller must exit at once so the updater can
+  replace the jar.
+
+## Theme helpers
+
+- `ThemeStyles` helpers copy existing inline styling exactly, changing how a colour is applied but never when; live
+  re-theming stays with the `Themed*` base classes. The dual view's link highlight is separate from the current-line
+  highlight so a linked line stands out from the caret line.
+- `WrapLayout` exists because `FlowLayout` always reports a single-row preferred height, clipping wrapped rows.
+- `SwingWorkers` hands the error callback the unwrapped cause, not the `ExecutionException`.
+- Listener-count getters on `ThemeManager`, `ProjectDatabaseService` and `LocalHistoryService` exist only for leak
+  tests.

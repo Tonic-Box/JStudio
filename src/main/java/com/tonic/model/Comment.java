@@ -5,11 +5,13 @@ import lombok.Setter;
 
 import java.util.UUID;
 
+/** A user comment attached to a class, member or line. */
 @Getter
 @Setter
 public class Comment
 {
 
+    /** Where a comment is placed relative to the code. */
     public enum Type
     {
         LINE,
@@ -27,6 +29,7 @@ public class Comment
     private Type type;
     private long timestamp;
 
+    /** Creates an empty line comment with a fresh id and the current time. */
     public Comment()
     {
         this.id = UUID.randomUUID().toString();
@@ -35,6 +38,13 @@ public class Comment
         this.timestamp = System.currentTimeMillis();
     }
 
+    /**
+     * Creates a line comment.
+     *
+     * @param className the class's internal name, with slashes
+     * @param lineNumber the source line, or -1 for none
+     * @param text the comment text
+     */
     public Comment(String className, int lineNumber, String text)
     {
         this();
@@ -43,12 +53,22 @@ public class Comment
         this.text = text;
     }
 
+    /**
+     * Replaces the text and updates the timestamp.
+     *
+     * @param text the new text
+     */
     public void setText(String text)
     {
         this.text = text;
         this.timestamp = System.currentTimeMillis();
     }
 
+    /**
+     * Builds the location key: the class, then #member and :line when set.
+     *
+     * @return the location key
+     */
     public String getLocationKey()
     {
         StringBuilder key = new StringBuilder(className);

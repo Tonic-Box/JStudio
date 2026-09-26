@@ -38,18 +38,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-/**
- * Unified live-search panel for all RSyntaxTextArea-based editor views.
- * Design:
- *  - Typing debounces 200 ms, then kicks off a SwingWorker that scans off the EDT
- *  - All match offsets are stored in a sorted List<int[]>; navigation is O(log N)
- *  - Highlighting uses textArea.markAll(List<DocumentRange>) — RSyntaxTextArea's
- *    native API — but restricted to the visible viewport ± a 2-screen buffer.
- *    This keeps the per-search createPosition() cost to ~O(200²) ≈ 1 ms regardless
- *    of how many total matches exist (e.g., spaces in a 50k-line file).
- *  - The viewport highlight set is refreshed via a 50 ms debounced scroll listener.
- *  - No SearchEngine / SearchContext calls anywhere; those are O(K²) for K matches.
- */
+/** The find bar shared by every syntax-text editor view: searches off the EDT after a debounce and highlights only matches near the viewport. */
 public class SearchPanel extends ThemedJPanel
 {
 
@@ -79,6 +68,12 @@ public class SearchPanel extends ThemedJPanel
     private int currentMatchIndex = -1;
     private Object currentMatchTag;
 
+    /**
+     * Creates a hidden find bar for a text area.
+     *
+     * @param textArea the text to search and highlight
+     * @param scrollPane the scroll pane around the text, whose viewport bounds the highlights
+     */
     public SearchPanel(RSyntaxTextArea textArea, RTextScrollPane scrollPane)
     {
         super(BackgroundStyle.SECONDARY);
@@ -202,6 +197,7 @@ public class SearchPanel extends ThemedJPanel
         add(closeBtn);
     }
 
+    /** Shows the bar and focuses it, prefilling a single-line editor selection and searching when there is text. */
     public void showPanel()
     {
         setVisible(true);
@@ -219,6 +215,7 @@ public class SearchPanel extends ThemedJPanel
         }
     }
 
+    /** Hides the bar, cancels any search in flight, clears highlights and matches, and returns focus to the text. */
     public void hidePanel()
     {
         cancelWorker();

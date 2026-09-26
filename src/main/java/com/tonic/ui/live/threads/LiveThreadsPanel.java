@@ -25,11 +25,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-/**
- * Right-dock tool (shown only while attached) listing the target JVM's threads with their current stacks.
- * Each thread expands to its frames; double-clicking a frame opens the declaring class's decompiled source
- * at that method. The stacks are a point-in-time sample - Refresh takes a fresh one.
- */
+/** The attached JVM's threads with a point-in-time sample of their stacks, where double-clicking a frame opens its method's source. */
 public final class LiveThreadsPanel extends ThemedJPanel
 {
 
@@ -42,6 +38,11 @@ public final class LiveThreadsPanel extends ThemedJPanel
     private final DefaultTreeModel treeModel = new DefaultTreeModel(root);
     private final JTree tree = new JTree(treeModel);
 
+    /**
+     * Builds the panel with an empty thread tree.
+     *
+     * @param mainFrame the main window, used to open a frame's source
+     */
     public LiveThreadsPanel(MainFrame mainFrame)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -80,6 +81,7 @@ public final class LiveThreadsPanel extends ThemedJPanel
         add(south, BorderLayout.SOUTH);
     }
 
+    /** Samples the threads' stacks off the EDT and rebuilds the tree; clears it if not attached. */
     public void refresh()
     {
         LiveSession session = LiveAttachService.getInstance().getSession();

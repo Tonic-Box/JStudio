@@ -7,6 +7,7 @@ import com.tonic.analysis.ssa.ir.IRInstruction;
 import com.tonic.analysis.ssa.ir.SwitchInstruction;
 import lombok.Getter;
 
+/** Structural complexity figures for one IR method: cyclomatic complexity, blocks, edges, branches, loops and nesting. */
 @Getter
 public class ComplexityMetrics
 {
@@ -20,6 +21,11 @@ public class ComplexityMetrics
     private final int maxNestingDepth;
     private final int instructionCount;
 
+    /**
+     * Measures a method; a null method gets complexity 1 and zero for everything else.
+     *
+     * @param method the lifted method to measure, or null
+     */
     public ComplexityMetrics(IRMethod method)
     {
         if (method == null)
@@ -103,6 +109,11 @@ public class ComplexityMetrics
         return Math.min(maxDepth, 10);
     }
 
+    /**
+     * Rates the cyclomatic complexity.
+     *
+     * @return Simple up to 5, Moderate up to 10, Complex up to 20, otherwise Very Complex
+     */
     public String getComplexityRating()
     {
         if (cyclomaticComplexity <= 5)
@@ -123,6 +134,11 @@ public class ComplexityMetrics
         }
     }
 
+    /**
+     * Formats the headline figures on one line.
+     *
+     * @return the complexity, rating, block, branch and loop counts
+     */
     public String getSummary()
     {
         return String.format("CC=%d (%s), Blocks=%d, Branches=%d, Loops=%d", cyclomaticComplexity, getComplexityRating(), blockCount, branchCount, loopCount);

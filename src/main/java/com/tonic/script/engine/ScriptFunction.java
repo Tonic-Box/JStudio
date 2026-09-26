@@ -7,20 +7,20 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-/**
- * Represents a callable function in the script runtime.
- */
+/** A callable value in the script runtime: a user-written function or a native Java one. */
 public abstract class ScriptFunction
 {
 
     /**
-     * Calls this function with the given arguments.
+     * Calls the function.
+     *
+     * @param interpreter the interpreter to evaluate a user function body in
+     * @param args the arguments, in order
+     * @return the function result
      */
     public abstract ScriptValue call(ScriptInterpreter interpreter, List<ScriptValue> args);
 
-    /**
-     * User-defined arrow function from script.
-     */
+    /** A function written in script, closing over the scope it was defined in; missing arguments are null. */
     @Getter
     public static class UserFunction extends ScriptFunction
     {
@@ -28,6 +28,13 @@ public abstract class ScriptFunction
         private final ScriptAST body;
         private final ScriptContext closure;
 
+        /**
+         * Creates a user function.
+         *
+         * @param parameters the parameter names, in order
+         * @param body the function body, a block or a single expression
+         * @param closure the scope it was defined in
+         */
         public UserFunction(List<String> parameters, ScriptAST body, ScriptContext closure)
         {
             this.parameters = parameters;
@@ -50,14 +57,18 @@ public abstract class ScriptFunction
         }
     }
 
-    /**
-     * Native Java function exposed to script.
-     */
+    /** A Java function exposed to scripts under a name. */
     public static class NativeFunction extends ScriptFunction
     {
         private final String name;
         private final Function<List<ScriptValue>, ScriptValue> impl;
 
+        /**
+         * Creates a native function.
+         *
+         * @param name the name shown when the function is printed
+         * @param impl the Java implementation, given the argument list
+         */
         public NativeFunction(String name, Function<List<ScriptValue>, ScriptValue> impl)
         {
             this.name = name;
@@ -78,7 +89,11 @@ public abstract class ScriptFunction
     }
 
     /**
-     * Creates a native function with 0 arguments.
+     * Wraps a Java supplier as a function that ignores its arguments.
+     *
+     * @param name the function name
+     * @param fn the implementation
+     * @return the function
      */
     public static ScriptFunction native0(String name, Supplier<ScriptValue> fn)
     {
@@ -86,7 +101,11 @@ public abstract class ScriptFunction
     }
 
     /**
-     * Creates a native function with 1 argument.
+     * Wraps a one-argument Java function; a missing argument is null and extra ones are ignored.
+     *
+     * @param name the function name
+     * @param fn the implementation
+     * @return the function
      */
     public static ScriptFunction native1(String name, Function<ScriptValue, ScriptValue> fn)
     {
@@ -98,7 +117,11 @@ public abstract class ScriptFunction
     }
 
     /**
-     * Creates a native function with 2 arguments.
+     * Wraps a two-argument Java function; missing arguments are null and extra ones are ignored.
+     *
+     * @param name the function name
+     * @param fn the implementation
+     * @return the function
      */
     public static ScriptFunction native2(String name, BiFunction<ScriptValue, ScriptValue, ScriptValue> fn)
     {
@@ -111,7 +134,11 @@ public abstract class ScriptFunction
     }
 
     /**
-     * Creates a native function with variable arguments.
+     * Wraps a Java function that takes the whole argument list.
+     *
+     * @param name the function name
+     * @param fn the implementation
+     * @return the function
      */
     public static ScriptFunction nativeN(String name, Function<List<ScriptValue>, ScriptValue> fn)
     {

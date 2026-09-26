@@ -13,11 +13,7 @@ import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
 import lombok.Getter;
 
-/**
- * One isolated bytecode-VM instance: its own heap, resolver, and class pool, driving at most one debug session at a
- * time. The YABR engine holds no global mutable state, so independent instances run without interfering - each AI
- * subagent can own one, backed by a {@link SnapshotClassPool} that is immune to concurrent project edits.
- */
+/** One isolated bytecode VM with its own heap, resolver and class pool, driving at most one debug session at a time. */
 public final class VmInstance
 {
 
@@ -32,6 +28,13 @@ public final class VmInstance
     @Getter
     private DebugSession currentDebugSession;
 
+    /**
+     * Creates a VM with a fresh heap over the given class pool.
+     *
+     * @param classPool the classes the VM resolves against
+     * @param maxCallDepth the call depth limit for every run
+     * @param maxInstructions the instruction limit for every run
+     */
     public VmInstance(ClassPool classPool, int maxCallDepth, int maxInstructions)
     {
         this.classPool = classPool;
@@ -42,12 +45,31 @@ public final class VmInstance
         this.maxInstructions = maxInstructions;
     }
 
+    /**
+     * Finds a method in this VM's class pool.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method name
+     * @param descriptor the method descriptor, or null or empty to take the first method with that name
+     * @return the method, or null if the class or method is not found
+     */
     public MethodEntry findMethod(String className, String methodName, String descriptor)
     {
         ClassFile classFile = classPool.get(className);
         return classFile == null ? null : VmSupport.findMethod(classFile, methodName, descriptor);
     }
 
+    /**
+     * Starts a debug session on a method, stopping any session still running.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method name
+     * @param descriptor the method descriptor, or null or empty to take the first method with that name
+     * @param recursive true to step into callees, false to delegate calls
+     * @param args the arguments, converted to VM values
+     * @return the started session, also kept as the current session
+     * @throws IllegalArgumentException if the class or method is not found
+     */
     public DebugSession createDebugSession(String className, String methodName, String descriptor, boolean recursive, Object... args)
     {
         ClassFile classFile = classPool.get(className);
@@ -76,7 +98,17 @@ public final class VmInstance
         return currentDebugSession;
     }
 
-    /** Runs a method to completion on this instance's heap (used to construct object arguments via a constructor). */
+    /**
+     * Runs a method to completion on this VM's heap, in recursive mode; used to construct object arguments.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method name
+     * @param descriptor the method descriptor, or null or empty to take the first method with that name
+     * @param receiver the instance to call on, or null for a static method
+     * @param args the arguments, converted to VM values
+     * @return the engine's result
+     * @throws IllegalArgumentException if the class or method is not found
+     */
     public BytecodeResult executeMethod(String className, String methodName, String descriptor, Object receiver, Object... args)
     {
         ClassFile classFile = classPool.get(className);
@@ -111,6 +143,7 @@ public final class VmInstance
         return new BytecodeEngine(context).execute(method, vmArgs);
     }
 
+    /** Stops the current debug session if it is running and forgets it. */
     public void dispose()
     {
         if (currentDebugSession != null && !currentDebugSession.isStopped())

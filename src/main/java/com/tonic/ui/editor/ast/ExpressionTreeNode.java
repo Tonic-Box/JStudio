@@ -8,9 +8,16 @@ import com.tonic.ui.theme.Icons;
 import javax.swing.Icon;
 import java.util.List;
 
+/** A tree node for an expression, with its operands as labelled children. */
 public class ExpressionTreeNode extends ASTTreeNode
 {
 
+    /**
+     * Creates the node and builds its labelled children.
+     *
+     * @param expr the expression
+     * @param propertyName the parent property name, or null for none
+     */
     public ExpressionTreeNode(Expression expr, String propertyName)
     {
         super(expr, propertyName);

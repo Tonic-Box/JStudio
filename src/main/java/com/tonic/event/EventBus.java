@@ -7,10 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * Central event bus for JStudio.
- * Thread-safe and ensures event handlers are called on the EDT.
- */
+/** The application-wide event bus; handlers are keyed by exact event class and always run on the EDT. */
 public class EventBus
 {
 
@@ -22,13 +19,18 @@ public class EventBus
     {
     }
 
+    /** @return the shared bus */
     public static EventBus getInstance()
     {
         return INSTANCE;
     }
 
     /**
-     * Register a handler for a specific event type.
+     * Registers a handler for one event class.
+     *
+     * @param <T> the event type
+     * @param eventType the exact event class to receive; subclasses are not delivered
+     * @param handler the handler to call
      */
     public <T extends Event> void register(Class<T> eventType, EventHandler<T> handler)
     {
@@ -40,7 +42,11 @@ public class EventBus
     }
 
     /**
-     * Unregister a handler.
+     * Removes a handler; does nothing if it was not registered.
+     *
+     * @param <T> the event type
+     * @param eventType the event class it was registered for
+     * @param handler the handler to remove
      */
     public <T extends Event> void unregister(Class<T> eventType, EventHandler<T> handler)
     {
@@ -55,8 +61,9 @@ public class EventBus
     }
 
     /**
-     * Post an event to all registered handlers.
-     * Handlers are invoked on the Swing EDT.
+     * Delivers an event to every handler of its exact class, directly when on the EDT and otherwise queued to it.
+     *
+     * @param event the event to deliver
      */
     @SuppressWarnings("unchecked")
     public void post(Event event)
@@ -86,9 +93,7 @@ public class EventBus
         }
     }
 
-    /**
-     * Clear all handlers. Useful for testing.
-     */
+    /** Removes every registered handler. */
     public void clear()
     {
         synchronized (handlers)
@@ -103,6 +108,11 @@ public class EventBus
     @FunctionalInterface
     public interface EventHandler<T extends Event>
     {
+        /**
+         * Handles one posted event, on the EDT.
+         *
+         * @param event the posted event
+         */
         void handle(T event);
     }
 }

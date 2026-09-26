@@ -20,17 +20,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Whole-project reachability analysis that finds unused methods, fields, and entire classes (inheritance-aware,
- * reflection-unaware). A member is dead if it is unreachable from the entry-point roots: every {@code main} and
- * {@code <clinit>}, every method that overrides one declared outside the user code base (JDK/library - so
- * framework callbacks like {@code KeyListener.keyPressed} are never removed), the configured keep-list, and
- * optionally all {@code public} members.
- *
- * <p>Reuses YABR's {@link CallGraph} (virtual-dispatch-aware reachability) and {@link XrefDatabase} (field
- * read/write + type references), and {@code ClassPool.loadSystemClass}/{@code loadPlatformClass} to resolve
- * external supertypes for the override rule.
- */
+/** Whole-project reachability analysis that finds dead classes, methods and fields; inheritance-aware but blind to reflection. */
 public final class DeadCodeAnalyzer
 {
 
@@ -44,6 +34,12 @@ public final class DeadCodeAnalyzer
     {
     };
 
+    /**
+     * Creates an analyzer over a project.
+     *
+     * @param project the project to analyze
+     * @param config the entry-point, keep and skip settings
+     */
     public DeadCodeAnalyzer(ProjectModel project, DeadCodeConfig config)
     {
         this.project = project;
@@ -53,7 +49,11 @@ public final class DeadCodeAnalyzer
         this.skip = config.skipClasses();
     }
 
-    /** Sets a listener notified of each analysis phase (fired off the EDT; marshal to the EDT to display). */
+    /**
+     * Sets the listener told of each analysis phase; it is called on the analysis thread.
+     *
+     * @param listener receives each phase's description, or null for none
+     */
     public void setProgressListener(Consumer<String> listener)
     {
         this.progress = listener != null ? listener : m ->
@@ -61,7 +61,11 @@ public final class DeadCodeAnalyzer
         };
     }
 
-    /** Runs the analysis. Builds the call graph + xref database, so call off the EDT. */
+    /**
+     * Runs the analysis; builds the call graph and xref database, so call it off the EDT.
+     *
+     * @return the dead classes, methods and fields found
+     */
     public DeadCodeReport analyze()
     {
         progress.accept("Building call graph...");

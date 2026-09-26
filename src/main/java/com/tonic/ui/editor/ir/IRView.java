@@ -19,6 +19,7 @@ import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.Color;
 
+/** The editor view that shows every method of a class lifted to SSA IR, lifted off the EDT and cached per method. */
 public class IRView extends AbstractTextView
 {
 
@@ -34,6 +35,11 @@ public class IRView extends AbstractTextView
 
     private static final String METHOD_DIVIDER = "=========================================================================";
 
+    /**
+     * Creates the view; the IR is generated on refresh.
+     *
+     * @param classEntry the class to show
+     */
     public IRView(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;

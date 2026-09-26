@@ -6,6 +6,7 @@ import lombok.Getter;
 import java.util.Collections;
 import java.util.Map;
 
+/** A plugin's immutable metadata: id, name, version, description, author and free-form string metadata. */
 @Getter
 public class PluginInfo
 {
@@ -28,11 +29,17 @@ public class PluginInfo
                 Collections.unmodifiableMap(builder.metadata) : Collections.emptyMap();
     }
 
+    /**
+     * Starts a builder with the JStudio version and empty description and author.
+     *
+     * @return a new builder
+     */
     public static Builder builder()
     {
         return new Builder();
     }
 
+    /** The builder for PluginInfo; only the name is required, and the id is derived from it when not set. */
     public static class Builder
     {
         private String id;
@@ -42,42 +49,84 @@ public class PluginInfo
         private String author = "";
         private Map<String, String> metadata;
 
+        /**
+         * Sets the id the GUI uses to remember a plugin's enabled state and to name its directory.
+         *
+         * @param id the id; null or empty derives it from the name at build time
+         * @return this builder
+         */
         public Builder id(String id)
         {
             this.id = id;
             return this;
         }
 
+        /**
+         * Sets the display name.
+         *
+         * @param name the name, required and non-empty by build time
+         * @return this builder
+         */
         public Builder name(String name)
         {
             this.name = name;
             return this;
         }
 
+        /**
+         * Sets the version.
+         *
+         * @param version the version text
+         * @return this builder
+         */
         public Builder version(String version)
         {
             this.version = version;
             return this;
         }
 
+        /**
+         * Sets the description.
+         *
+         * @param description a short description
+         * @return this builder
+         */
         public Builder description(String description)
         {
             this.description = description;
             return this;
         }
 
+        /**
+         * Sets the author.
+         *
+         * @param author the author
+         * @return this builder
+         */
         public Builder author(String author)
         {
             this.author = author;
             return this;
         }
 
+        /**
+         * Sets free-form metadata; the map is wrapped read-only, not copied.
+         *
+         * @param metadata the entries, or null for none
+         * @return this builder
+         */
         public Builder metadata(Map<String, String> metadata)
         {
             this.metadata = metadata;
             return this;
         }
 
+        /**
+         * Builds the info, deriving a missing id from the name by lowercasing it and replacing every character outside a to z and 0 to 9 with a dash.
+         *
+         * @return the info
+         * @throws IllegalStateException if the name is null or empty
+         */
         public PluginInfo build()
         {
             if (name == null || name.isEmpty())

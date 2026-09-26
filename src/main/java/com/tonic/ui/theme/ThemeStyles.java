@@ -14,12 +14,7 @@ import java.awt.Color;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-/**
- * Stateless static styling facade over {@link JStudioTheme} tokens: one-shot appliers for the recurring
- * button / text-field / table / combo / border / hover shapes that were copy-pasted across the UI. Each method
- * reproduces an existing inline block verbatim, so it changes only HOW a color is applied, never WHEN - live
- * re-theming stays owned by the {@code Themed*} base classes (their {@code applyChildThemes()} can call these too).
- */
+/** Static one-shot styling helpers for the recurring button, text field, table, combo, border and hover shapes; they set colors once and do not follow theme switches. */
 public final class ThemeStyles
 {
 
@@ -28,8 +23,10 @@ public final class ThemeStyles
     }
 
     /**
-     * Styles a button. {@code primary} gives the accent background with white text; otherwise the secondary surface.
-     * Mirrors {@code Rename*Dialog.styleButton} (including the {@link Color#WHITE} literal on primary).
+     * Styles a button with the themed button border and no focus paint.
+     *
+     * @param button the button
+     * @param primary true for the accent background with white text, false for the secondary background
      */
     public static void styleButton(JButton button, boolean primary)
     {
@@ -47,7 +44,11 @@ public final class ThemeStyles
         button.setBorder(themedButtonBorder());
     }
 
-    /** Styles a single-line input field (secondary surface, code font, themed input border). */
+    /**
+     * Styles a single-line input field with the secondary background, code font and themed field border.
+     *
+     * @param field the field
+     */
     public static void styleTextField(JTextField field)
     {
         field.setBackground(JStudioTheme.getBgSecondary());
@@ -57,7 +58,11 @@ public final class ThemeStyles
         field.setFont(JStudioTheme.getCodeFont(12));
     }
 
-    /** Body styling matching {@link com.tonic.ui.core.component.ThemedJTable}; pair with {@link #styleTableHeader}. */
+    /**
+     * Styles a table body to match ThemedJTable; pair with styleTableHeader.
+     *
+     * @param table the table
+     */
     public static void styleTable(JTable table)
     {
         table.setBackground(JStudioTheme.getBgSecondary());
@@ -68,7 +73,11 @@ public final class ThemeStyles
         table.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
     }
 
-    /** Header styling matching {@link com.tonic.ui.core.component.ThemedJTable}; no-op when the table has no header. */
+    /**
+     * Styles a table's header to match ThemedJTable; does nothing if the table has no header.
+     *
+     * @param table the table
+     */
     public static void styleTableHeader(JTable table)
     {
         JTableHeader header = table.getTableHeader();
@@ -80,34 +89,57 @@ public final class ThemeStyles
         }
     }
 
-    /** Styles a combo box (tertiary surface), matching {@code ToolbarBuilder.themeViewModeCombo}. */
+    /**
+     * Styles a combo box with the tertiary background.
+     *
+     * @param combo the combo box
+     */
     public static void styleComboBox(JComboBox<?> combo)
     {
         combo.setBackground(JStudioTheme.getBgTertiary());
         combo.setForeground(JStudioTheme.getTextPrimary());
     }
 
-    /** The compound (line + 5,8,5,8 padding) border used by input fields. */
+    /**
+     * Creates the border used by input fields: a theme line plus 5, 8, 5, 8 padding.
+     *
+     * @return a new border
+     */
     public static Border themedFieldBorder()
     {
         return themedInputBorder(5, 8, 5, 8);
     }
 
-    /** The compound (line + 6,16,6,16 padding) border used by buttons. */
+    /**
+     * Creates the border used by buttons: a theme line plus 6, 16, 6, 16 padding.
+     *
+     * @return a new border
+     */
     public static Border themedButtonBorder()
     {
         return themedInputBorder(6, 16, 6, 16);
     }
 
-    /** A compound border: a 1px theme line plus the given empty padding. */
+    /**
+     * Creates a 1 pixel theme-colored line border with empty padding inside it.
+     *
+     * @param top the top padding
+     * @param left the left padding
+     * @param bottom the bottom padding
+     * @param right the right padding
+     * @return a new border
+     */
     public static Border themedInputBorder(int top, int left, int bottom, int right)
     {
         return BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(top, left, bottom, right));
     }
 
     /**
-     * Adds a background hover effect: paints {@code hover} on enter, restores {@code restoreBg} on exit. Returns the
-     * installed adapter so a caller that needs symmetric teardown can detach it.
+     * Adds a listener that paints the hover color on mouse enter and restores a background on exit.
+     *
+     * @param button the button
+     * @param restoreBg the background to restore on exit
+     * @return the installed listener, for callers that need to remove it
      */
     public static MouseAdapter addHoverEffect(AbstractButton button, Color restoreBg)
     {
@@ -130,8 +162,10 @@ public final class ThemeStyles
     }
 
     /**
-     * Adds an icon-button hover effect: fills the content area with the hover color on enter and clears it on exit
-     * (the borderless-button idiom from {@code ToolbarBuilder.createButton}). Returns the installed adapter.
+     * Adds a listener for borderless icon buttons that fills the content area with the hover color on mouse enter and unfills it on exit.
+     *
+     * @param button the button
+     * @return the installed listener, for callers that need to remove it
      */
     public static MouseAdapter addFillHoverEffect(AbstractButton button)
     {

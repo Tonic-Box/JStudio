@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/** The AnalysisApi over one fixed project model; the call graph and registered patterns are kept per instance. */
 public class AnalysisApiImpl implements AnalysisApi
 {
 
@@ -47,6 +48,11 @@ public class AnalysisApiImpl implements AnalysisApi
     private final QueryApiImpl queryApi;
     private final DeadCodeApiImpl deadCodeApi;
 
+    /**
+     * Creates the API over a project.
+     *
+     * @param projectModel the project to analyse
+     */
     public AnalysisApiImpl(ProjectModel projectModel)
     {
         this.projectModel = projectModel;

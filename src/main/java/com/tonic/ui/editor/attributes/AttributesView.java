@@ -19,6 +19,7 @@ import java.awt.datatransfer.StringSelection;
 import java.util.Enumeration;
 import java.util.List;
 
+/** The attributes view of a class: its class, field and method attributes as a tree. */
 public class AttributesView extends AbstractEditorView
 {
 
@@ -30,6 +31,11 @@ public class AttributesView extends AbstractEditorView
 
     private String lastSearch;
 
+    /**
+     * Creates the view; the tree fills on refresh.
+     *
+     * @param classEntry the class to show
+     */
     public AttributesView(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;

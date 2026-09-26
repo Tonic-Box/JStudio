@@ -8,11 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Discovers installed JDKs/JREs to offer in the Run dialog (IntelliJ-style): the JVM running JStudio first,
- * then {@code JAVA_HOME} and JDKs found under common install directories (Adoptium/Corretto/Zulu/..., plus
- * {@code ~/.jdks} and {@code ~/.sdkman}). Users can also browse to any JDK home.
- */
+/** Discovers installed JDKs and JREs for the Run dialog: the running JVM first, then JAVA_HOME and common install directories. */
 public final class JdkDetector
 {
 
@@ -20,7 +16,11 @@ public final class JdkDetector
     {
     }
 
-    /** All detected JDKs, the running JVM first; de-duplicated by canonical path. */
+    /**
+     * Detects installed JDKs.
+     *
+     * @return the detected JDKs, the running JVM first, de-duplicated by canonical path
+     */
     public static List<Jdk> detect()
     {
         Map<String, Jdk> byPath = new LinkedHashMap<>();
@@ -47,7 +47,12 @@ public final class JdkDetector
         return new ArrayList<>(byPath.values());
     }
 
-    /** Builds a {@link Jdk} for a home directory you browsed to, or null if it isn't a JDK/JRE home. */
+    /**
+     * Builds a JDK entry for a directory the user browsed to.
+     *
+     * @param home the chosen directory, a JDK or JRE home
+     * @return the JDK, or null if the directory is not a JDK or JRE home
+     */
     public static Jdk fromHome(File home)
     {
         File resolved = normalizeHome(home);

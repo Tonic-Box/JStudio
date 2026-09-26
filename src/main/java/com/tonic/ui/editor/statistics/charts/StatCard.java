@@ -11,6 +11,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 
+/** A rounded card showing one figure and its label, with an accent colour and a hover highlight. */
 public class StatCard extends JPanel implements ThemeChangeListener
 {
 
@@ -21,6 +22,13 @@ public class StatCard extends JPanel implements ThemeChangeListener
 
     private static final int ARC_SIZE = 12;
 
+    /**
+     * Creates a card.
+     *
+     * @param value the figure shown large
+     * @param label the caption under the figure
+     * @param accentColor the card's accent colour
+     */
     public StatCard(String value, String label, Color accentColor)
     {
         this.value = value;
@@ -51,18 +59,33 @@ public class StatCard extends JPanel implements ThemeChangeListener
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
+    /**
+     * Replaces the figure.
+     *
+     * @param value the figure shown large
+     */
     public void setValue(String value)
     {
         this.value = value;
         repaint();
     }
 
+    /**
+     * Replaces the caption.
+     *
+     * @param label the caption under the figure
+     */
     public void setLabel(String label)
     {
         this.label = label;
         repaint();
     }
 
+    /**
+     * Replaces the accent colour.
+     *
+     * @param accentColor the new accent colour
+     */
     public void setAccentColor(Color accentColor)
     {
         this.accentColor = accentColor;

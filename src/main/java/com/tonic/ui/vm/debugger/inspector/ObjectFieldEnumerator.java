@@ -10,6 +10,7 @@ import com.tonic.service.ConsoleLogService;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Lists a heap object's fields through its class hierarchy, skipping synthetic and static fields unless asked. */
 public class ObjectFieldEnumerator
 {
 
@@ -21,11 +22,23 @@ public class ObjectFieldEnumerator
     private final boolean includeSynthetic;
     private final boolean includeStatic;
 
+    /**
+     * Creates an enumerator that skips synthetic and static fields.
+     *
+     * @param classResolver resolves the object's classes
+     */
     public ObjectFieldEnumerator(ClassResolver classResolver)
     {
         this(classResolver, false, false);
     }
 
+    /**
+     * Creates an enumerator.
+     *
+     * @param classResolver resolves the object's classes
+     * @param includeSynthetic whether to include synthetic fields and compiler-named ones such as this$0
+     * @param includeStatic whether to include static fields
+     */
     public ObjectFieldEnumerator(ClassResolver classResolver, boolean includeSynthetic, boolean includeStatic)
     {
         this.classResolver = classResolver;
@@ -33,6 +46,12 @@ public class ObjectFieldEnumerator
         this.includeStatic = includeStatic;
     }
 
+    /**
+     * Lists the object's fields, its own class first and then each superclass up to but excluding Object; classes that fail to resolve are logged and cut the walk short.
+     *
+     * @param obj the object, or null
+     * @return the fields, empty if the object is null
+     */
     public List<FieldInfo> enumerate(ObjectInstance obj)
     {
         List<FieldInfo> fields = new ArrayList<>();

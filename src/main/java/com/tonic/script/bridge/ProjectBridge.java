@@ -18,9 +18,16 @@ import com.tonic.script.engine.ScriptValue;
 
 import java.util.*;
 
+/** The project script global: lists, iterates and searches the project's classes, methods, fields and packages. */
 public class ProjectBridge extends AbstractBridge
 {
 
+    /**
+     * Creates a bridge over a project.
+     *
+     * @param interpreter the interpreter that runs script callbacks
+     * @param projectModel the project to expose
+     */
     public ProjectBridge(ScriptInterpreter interpreter, ProjectModel projectModel)
     {
         super(interpreter, projectModel);
@@ -32,6 +39,11 @@ public class ProjectBridge extends AbstractBridge
         return createProjectObject();
     }
 
+    /**
+     * Builds the project script object: class, method and field iteration, searches, lookups and packages.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createProjectObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

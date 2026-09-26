@@ -26,6 +26,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
 
+/** A searchable class tree of the current project for picking one method; selecting a method records it, double-clicking also notifies the listener. */
 public class MethodSelectorPanel extends ThemedJPanel
 {
 
@@ -37,11 +38,17 @@ public class MethodSelectorPanel extends ThemedJPanel
     private MethodEntryModel selectedMethod;
     private Consumer<MethodEntryModel> onMethodSelected;
 
+    /** Creates an untitled selector loaded with the current project. */
     public MethodSelectorPanel()
     {
         this(null);
     }
 
+    /**
+     * Creates a selector loaded with the current project.
+     *
+     * @param title the border title, or null for no border
+     */
     public MethodSelectorPanel(String title)
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
@@ -210,6 +217,11 @@ public class MethodSelectorPanel extends ThemedJPanel
         }
     }
 
+    /**
+     * Loads a project into the tree.
+     *
+     * @param project the project to show, or null to clear the tree
+     */
     public void setProject(ProjectModel project)
     {
         if (project != null)
@@ -222,6 +234,7 @@ public class MethodSelectorPanel extends ThemedJPanel
         }
     }
 
+    /** Reloads the tree from the current project. */
     public void refresh()
     {
         loadCurrentProject();
@@ -245,11 +258,17 @@ public class MethodSelectorPanel extends ThemedJPanel
         }
     }
 
+    /**
+     * Sets the listener told when a method is chosen by double-click.
+     *
+     * @param callback receives the chosen method; null for none
+     */
     public void setOnMethodSelected(Consumer<MethodEntryModel> callback)
     {
         this.onMethodSelected = callback;
     }
 
+    /** Clears the tree selection and the selected method. */
     public void clearSelection()
     {
         tree.clearSelection();

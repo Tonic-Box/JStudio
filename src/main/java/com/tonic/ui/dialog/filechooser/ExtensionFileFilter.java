@@ -4,9 +4,7 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * File filter based on file extensions.
- */
+/** A file chooser filter that accepts directories and files whose extension is in a set, ignoring case; the extension * accepts every file. */
 public class ExtensionFileFilter
 {
 
@@ -14,10 +12,10 @@ public class ExtensionFileFilter
     private final Set<String> extensions;
 
     /**
-     * Create a filter for the specified extensions.
+     * Creates a filter.
      *
-     * @param description Human-readable description (e.g., "Java Files")
-     * @param extensions  File extensions without dots (e.g., "jar", "class")
+     * @param description the name shown to the user, such as Java Files
+     * @param extensions the accepted extensions without dots, such as jar; stored lower-cased
      */
     public ExtensionFileFilter(String description, String... extensions)
     {
@@ -30,7 +28,9 @@ public class ExtensionFileFilter
     }
 
     /**
-     * Create an "All Files" filter that accepts everything.
+     * Creates the All Files filter.
+     *
+     * @return a filter that accepts every file
      */
     public static ExtensionFileFilter allFiles()
     {
@@ -38,7 +38,10 @@ public class ExtensionFileFilter
     }
 
     /**
-     * Check if the filter accepts the given file.
+     * Checks whether the filter lets a file through.
+     *
+     * @param file the file
+     * @return true for a directory, for any file under the All Files filter, or for a file with an accepted extension; false for null
      */
     public boolean accept(File file)
     {
@@ -69,7 +72,9 @@ public class ExtensionFileFilter
     }
 
     /**
-     * Get the description for display (includes extensions).
+     * The name followed by the accepted patterns, such as Java Files (*.jar, *.class).
+     *
+     * @return the display text
      */
     public String getDescription()
     {
@@ -94,16 +99,16 @@ public class ExtensionFileFilter
         return sb.toString();
     }
 
-    /**
-     * Get the raw description without extensions.
-     */
+    /** @return the name without the extension patterns */
     public String getRawDescription()
     {
         return description;
     }
 
     /**
-     * Get the extensions this filter accepts.
+     * The accepted extensions.
+     *
+     * @return an unmodifiable view of the lower-cased extensions
      */
     public Set<String> getExtensions()
     {
@@ -111,7 +116,9 @@ public class ExtensionFileFilter
     }
 
     /**
-     * Check if this filter accepts all files.
+     * Checks whether this is an All Files filter.
+     *
+     * @return true if the extensions include *
      */
     public boolean isAllFiles()
     {
@@ -125,7 +132,9 @@ public class ExtensionFileFilter
     }
 
     /**
-     * Filter for Java archive and class files.
+     * Creates a filter for jar and class files.
+     *
+     * @return a new filter
      */
     public static ExtensionFileFilter javaFiles()
     {
@@ -133,7 +142,9 @@ public class ExtensionFileFilter
     }
 
     /**
-     * Filter for JAR files only.
+     * Creates a filter for jar files.
+     *
+     * @return a new filter
      */
     public static ExtensionFileFilter jarFiles()
     {
@@ -141,7 +152,9 @@ public class ExtensionFileFilter
     }
 
     /**
-     * Filter for class files only.
+     * Creates a filter for class files.
+     *
+     * @return a new filter
      */
     public static ExtensionFileFilter classFiles()
     {

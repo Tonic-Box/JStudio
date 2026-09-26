@@ -12,9 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Handles async file system operations to keep the UI responsive.
- */
+/** File system helpers for the file chooser: background directory listing with a five-second cache, plus roots, special folders and system names and icons. */
 public class FileSystemWorker
 {
 
@@ -23,18 +21,32 @@ public class FileSystemWorker
     private static final Map<String, CachedListing> cache = new ConcurrentHashMap<>();
     private static final long CACHE_EXPIRY_MS = 5000;
 
-    /**
-     * Listener for directory listing results.
-     */
+    /** A callback for a directory listing. */
     public interface DirectoryListingListener
     {
+        /**
+         * Called with a directory's filtered contents.
+         *
+         * @param directory the directory listed
+         * @param files its entries, directories first, then by name ignoring case
+         */
         void onListingComplete(File directory, List<File> files);
 
+        /**
+         * Called when listing fails.
+         *
+         * @param directory the directory listed
+         * @param error what went wrong
+         */
         void onListingError(File directory, Exception error);
     }
 
     /**
-     * List files in a directory asynchronously.
+     * Lists a directory, answering at once from the cache when fresh and otherwise on a background thread with the result delivered on the EDT.
+     *
+     * @param directory the directory
+     * @param filter the filter to apply, or null for none
+     * @param listener receives the result; an unreadable directory gives an empty list, not an error
      */
     public static void listDirectory(File directory, ExtensionFileFilter filter, DirectoryListingListener listener)
     {
@@ -116,7 +128,9 @@ public class FileSystemWorker
     }
 
     /**
-     * Get the system file roots (drives on Windows).
+     * Lists the file system roots, which are drives on Windows.
+     *
+     * @return the roots
      */
     public static File[] getRoots()
     {
@@ -124,7 +138,9 @@ public class FileSystemWorker
     }
 
     /**
-     * Get special system folders (Desktop, Documents, etc.).
+     * Finds the home directory and the Desktop, Documents and Downloads folders under it that exist.
+     *
+     * @return the folders by label, empty if user.home is not set
      */
     public static Map<String, File> getSpecialFolders()
     {
@@ -159,7 +175,10 @@ public class FileSystemWorker
     }
 
     /**
-     * Get display name for a file (using FileSystemView).
+     * The name the operating system shows for a file.
+     *
+     * @param file the file
+     * @return the system display name, the file name if there is none, or an empty string for null
      */
     public static String getDisplayName(File file)
     {
@@ -172,7 +191,10 @@ public class FileSystemWorker
     }
 
     /**
-     * Get system icon for a file.
+     * The icon the operating system shows for a file.
+     *
+     * @param file the file
+     * @return the icon, or null if there is none
      */
     public static Icon getSystemIcon(File file)
     {
@@ -180,7 +202,10 @@ public class FileSystemWorker
     }
 
     /**
-     * Check if a file is a file system root (drive).
+     * Checks whether a file is a file system root.
+     *
+     * @param file the file
+     * @return true for a root such as a drive
      */
     public static boolean isRoot(File file)
     {
@@ -188,7 +213,10 @@ public class FileSystemWorker
     }
 
     /**
-     * Get the parent directory, handling roots specially.
+     * The parent directory of a file.
+     *
+     * @param file the file
+     * @return the parent, or null for null or a root
      */
     public static File getParent(File file)
     {
@@ -205,7 +233,10 @@ public class FileSystemWorker
     }
 
     /**
-     * Check if a path is valid and exists.
+     * Checks whether a path names an existing file or directory.
+     *
+     * @param path the path, trimmed before use
+     * @return true if it exists; false for null or blank
      */
     public static boolean isValidPath(String path)
     {
@@ -218,7 +249,9 @@ public class FileSystemWorker
     }
 
     /**
-     * Invalidate cache for a specific directory.
+     * Drops the cached listing of one directory.
+     *
+     * @param directory the directory, or null to do nothing
      */
     public static void invalidateCache(File directory)
     {
@@ -228,9 +261,7 @@ public class FileSystemWorker
         }
     }
 
-    /**
-     * Clear all cached listings.
-     */
+    /** Drops every cached listing. */
     public static void clearCache()
     {
         cache.clear();

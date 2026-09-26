@@ -16,10 +16,7 @@ import com.tonic.script.engine.ScriptValue;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Bridge for abstract interpretation and simulation.
- * Exposes a 'simulation' global object for stepping through IR execution.
- */
+/** The simulation script global: loads a method's IR and steps through it with script callbacks on instructions, invokes, field access and branches. */
 public class SimulationBridge
 {
 
@@ -38,12 +35,23 @@ public class SimulationBridge
     private final List<ScriptFunction> onBranchCallbacks = new ArrayList<>();
     private boolean stopped = false;
 
+    /**
+     * Creates a bridge with no method loaded.
+     *
+     * @param interpreter the interpreter that runs script callbacks
+     * @param projectModel the project whose methods are simulated
+     */
     public SimulationBridge(ScriptInterpreter interpreter, ProjectModel projectModel)
     {
         this.interpreter = interpreter;
         this.projectModel = projectModel;
     }
 
+    /**
+     * Sets where the bridge's log messages go.
+     *
+     * @param callback receives each log message, or null to drop them
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
@@ -57,6 +65,11 @@ public class SimulationBridge
         }
     }
 
+    /**
+     * Builds the simulation script object: load, run, step and stop, event callbacks, and state inspection.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createSimulationObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

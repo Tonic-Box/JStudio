@@ -11,11 +11,17 @@ import javax.swing.BorderFactory;
 import java.awt.BorderLayout;
 import java.nio.charset.StandardCharsets;
 
+/** A read-only text view of a resource decoded as UTF-8, highlighted by file extension. */
 public class TextResourceView extends AbstractTextView
 {
 
     private final ResourceEntryModel resource;
 
+    /**
+     * Creates the view and loads the resource's text.
+     *
+     * @param resource the resource to show
+     */
     public TextResourceView(ResourceEntryModel resource)
     {
         this.resource = resource;

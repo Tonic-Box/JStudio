@@ -40,19 +40,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/** Parses edited Java source and lowers it into a class file based on the original class, verifying the recompiled methods. */
 public class SourceCompiler
 {
 
+    /**
+     * Recompiles every method of the source.
+     *
+     * @param source the edited source
+     * @param originalClass the class the source was decompiled from
+     * @param classPool the pool used to resolve types
+     * @return the result, carrying parse, lowering or verify errors on failure
+     */
     public CompilationResult compile(String source, ClassFile originalClass, ClassPool classPool)
     {
         return compile(source, originalClass, classPool, null);
     }
 
     /**
-     * Recompiles {@code source}. When {@code changedMethods} is non-null (the {@code name+descriptor} keys from
-     * {@link com.tonic.ui.live.MethodBodyDiff}), only those methods are re-lowered and the rest keep their original
-     * bytecode - so editing one method never perturbs the others. After lowering, the (re)compiled methods are
-     * verified; a method that fails to verify fails the recompile rather than silently shipping invalid bytecode.
+     * Recompiles the source, re-lowering only the changed methods; a recompiled method that fails verification fails the whole compile.
+     *
+     * @param source the edited source
+     * @param originalClass the class the source was decompiled from
+     * @param classPool the pool used to resolve types; the working copy replaces the original in it only on success
+     * @param changedMethods the name plus descriptor keys of the methods to re-lower, or null for all
+     * @return the result, carrying parse, lowering or verify errors on failure and any method warnings on success
      */
     public CompilationResult compile(String source, ClassFile originalClass, ClassPool classPool, Set<String> changedMethods)
     {
@@ -163,6 +175,12 @@ public class SourceCompiler
         pool.put(original);
     }
 
+    /**
+     * Parses the source without compiling it.
+     *
+     * @param source the edited source
+     * @return the parse errors, empty when it parses cleanly
+     */
     public List<CompilationError> parseOnly(String source)
     {
         List<CompilationError> errors = new ArrayList<>();

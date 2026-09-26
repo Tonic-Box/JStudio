@@ -22,10 +22,7 @@ import java.awt.Frame;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-/**
- * Lists the GUI plugins discovered from {@code ~/.jstudio/plugins/} and lets the user enable, disable, or reload
- * them and inspect load errors. Reachable from the Plugins menu.
- */
+/** The modal dialog listing the GUI plugins, where the user enables, disables or reloads them and reads load errors. */
 public final class PluginManagerDialog extends ThemedJDialog
 {
 
@@ -36,6 +33,11 @@ public final class PluginManagerDialog extends ThemedJDialog
     private final JButton disableButton = new JButton("Disable");
     private final JButton reloadButton = new JButton("Reload");
 
+    /**
+     * Creates the dialog, filled with the current plugins and centred on its owner.
+     *
+     * @param owner the window the dialog is modal to
+     */
     public PluginManagerDialog(Frame owner)
     {
         super(owner, "Plugins", true);

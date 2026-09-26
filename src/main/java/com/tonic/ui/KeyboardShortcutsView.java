@@ -20,16 +20,13 @@ import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The keyboard-shortcuts reference shown as a center editor tab: each category is a small block (a bold header over
- * shortcut/action rows), and the blocks are greedily packed into balanced columns so the page reads as a few adjacent
- * tables rather than one very tall column.
- */
+/** The keyboard-shortcuts reference tab; each category is a block, and the blocks are packed greedily into balanced columns. */
 public final class KeyboardShortcutsView extends ThemedJPanel
 {
 
     private static final int COLUMNS = 3;
 
+    /** Builds the reference, using Cmd or Ctrl as the modifier name depending on the platform. */
     public KeyboardShortcutsView()
     {
         super(ThemedJPanel.BackgroundStyle.PRIMARY, new BorderLayout());

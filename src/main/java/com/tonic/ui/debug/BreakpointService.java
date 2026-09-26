@@ -8,13 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Registry of breakpoints (keyed by class + method + bytecode offset). Breakpoints are settable any time -
- * including before a debugger is attached - and persist across sessions: {@link #reinstall} arms them whenever
- * a session connects. The source and bytecode gutters render from this single set, so a breakpoint set in one
- * view appears in the other; mutations install/remove in the live session immediately and post a
- * {@link BreakpointsChangedEvent} so the gutters refresh.
- */
+/** The registry of breakpoints shared by the source and bytecode gutters; settable before a debugger attaches and re-armed on each connect. */
 public final class BreakpointService
 {
 
@@ -26,16 +20,29 @@ public final class BreakpointService
     {
     }
 
+    /** @return the shared registry */
     public static BreakpointService getInstance()
     {
         return INSTANCE;
     }
 
+    /**
+     * Tells whether a breakpoint is set.
+     *
+     * @param bp the breakpoint
+     * @return true if it is in the registry
+     */
     public synchronized boolean contains(Breakpoint bp)
     {
         return breakpoints.contains(bp);
     }
 
+    /**
+     * Lists the breakpoints in one class.
+     *
+     * @param className the dotted class name
+     * @return a new list of the class's breakpoints, empty if none
+     */
     public synchronized List<Breakpoint> forClass(String className)
     {
         List<Breakpoint> out = new ArrayList<>();
@@ -49,12 +56,22 @@ public final class BreakpointService
         return out;
     }
 
+    /**
+     * Lists every breakpoint in the order it was set.
+     *
+     * @return a new list of all breakpoints
+     */
     public synchronized List<Breakpoint> all()
     {
         return new ArrayList<>(breakpoints);
     }
 
-    /** Toggles a breakpoint; returns true if it is now set. Installs/removes in the live session immediately. */
+    /**
+     * Toggles a breakpoint, installs or removes it in the live session, and posts a breakpoints-changed event.
+     *
+     * @param bp the breakpoint
+     * @return true if it is now set
+     */
     public boolean toggle(Breakpoint bp)
     {
         boolean nowSet;
@@ -93,6 +110,7 @@ public final class BreakpointService
         }
     }
 
+    /** Removes every breakpoint from the registry and posts a breakpoints-changed event if there were any; the live session is not touched. */
     public void clear()
     {
         synchronized (this)

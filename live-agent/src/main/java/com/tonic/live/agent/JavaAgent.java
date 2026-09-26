@@ -38,15 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The JStudio Live agent, built on {@link java.lang.instrument} - pure Java, so it works on any OS/arch
- * with no native build. It supports class browse, get-bytes, live method-body patch (redefine), runtime
- * class capture, the thread list, and deadlock detection. JStudio's {@code LiveAgentClient} speaks the same
- * wire protocol.
- *
- * <p>Loaded via {@code VirtualMachine.loadAgent} (agentmain, the attach path) or
- * {@code -javaagent:live-agent.jar=port=N} (premain). Bundled in JStudio.jar as {@code agent/live-agent.bin}.
- */
+/** The pure-Java JStudio Live agent: loaded at startup or by attach, it serves the Live wire protocol on the loopback port given as port=N in its arguments. */
 public final class JavaAgent
 {
 
@@ -65,11 +57,23 @@ public final class JavaAgent
     {
     }
 
+    /**
+     * Starts the agent when loaded with -javaagent at JVM startup.
+     *
+     * @param args the agent arguments, carrying port=N
+     * @param instrumentation the JVM's instrumentation handle
+     */
     public static void premain(String args, Instrumentation instrumentation)
     {
         start(args, instrumentation);
     }
 
+    /**
+     * Starts the agent when loaded by attach into a running JVM.
+     *
+     * @param args the agent arguments, carrying port=N
+     * @param instrumentation the JVM's instrumentation handle
+     */
     public static void agentmain(String args, Instrumentation instrumentation)
     {
         start(args, instrumentation);

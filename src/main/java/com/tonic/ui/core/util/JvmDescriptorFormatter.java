@@ -1,9 +1,6 @@
 package com.tonic.ui.core.util;
 
-/**
- * Pure helpers for turning JVM internal names and method descriptors into human-readable form. Centralizes the
- * simple-name slicing and descriptor parameter formatting that several UI panels each reinvented.
- */
+/** Helpers that turn JVM internal names and method descriptors into readable form. */
 public final class JvmDescriptorFormatter
 {
 
@@ -11,7 +8,12 @@ public final class JvmDescriptorFormatter
     {
     }
 
-    /** The simple (unqualified) name of an internal class name: {@code java/lang/String -> String}. */
+    /**
+     * Strips the package from an internal class name, so java/lang/String gives String.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the part after the last slash, or the whole name if it has none
+     */
     public static String getSimpleClassName(String internalName)
     {
         int lastSlash = internalName.lastIndexOf('/');
@@ -19,9 +21,10 @@ public final class JvmDescriptorFormatter
     }
 
     /**
-     * Formats a method descriptor's parameter list with simple type names, e.g.
-     * {@code (ILjava/lang/String;)V -> (int, String)}. Returns {@code ()} for a null, empty, parameterless or
-     * malformed descriptor.
+     * Formats a method descriptor's parameters with simple type names, so (ILjava/lang/String;)V gives (int, String).
+     *
+     * @param descriptor the method descriptor
+     * @return the parenthesized list, or () for a null, parameterless or malformed descriptor
      */
     public static String formatDescriptorParams(String descriptor)
     {

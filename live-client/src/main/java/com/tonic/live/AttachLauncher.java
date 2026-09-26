@@ -7,13 +7,7 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Discovers local JVMs and loads the pure-Java JStudio Live agent into one via the Attach API
- * ({@code jdk.attach}). The agent's {@code agentmain} starts its TCP server on the given port; the caller
- * then connects with {@link LiveAgentClient}.
- *
- * <p>Note: on JDK 21+ dynamic agent loading prints a warning (JEP 451) but is still permitted.
- */
+/** Discovers local JVMs and loads agents into them through the Attach API; on JDK 21 and later dynamic loading prints a warning but is still allowed. */
 public final class AttachLauncher
 {
 
@@ -28,6 +22,12 @@ public final class AttachLauncher
         private final String id;
         private final String displayName;
 
+        /**
+         * Creates a process entry.
+         *
+         * @param id the process id
+         * @param displayName the JVM's display name
+         */
         public JvmProcess(String id, String displayName)
         {
             this.id = id;
@@ -41,6 +41,11 @@ public final class AttachLauncher
         }
     }
 
+    /**
+     * Lists the JVMs attachable on this machine.
+     *
+     * @return the processes, with "(unknown)" for a missing display name
+     */
     public static List<JvmProcess> listJvms()
     {
         List<JvmProcess> result = new ArrayList<>();
@@ -53,8 +58,12 @@ public final class AttachLauncher
     }
 
     /**
-     * Attaches to {@code pid}, loads the Java agent jar ({@code java.lang.instrument}), and tells it to
-     * listen on {@code port}. Detaches once loaded (the agent keeps running in the target).
+     * Attaches to a process, loads the Java agent jar told to listen on a port, and detaches; the agent keeps running.
+     *
+     * @param pid the target process id
+     * @param agentJarPath the agent jar's path
+     * @param port the loopback port the agent should listen on
+     * @throws Exception if the attach or the agent load fails
      */
     public static void loadAgent(String pid, String agentJarPath, int port) throws Exception
     {
@@ -70,8 +79,11 @@ public final class AttachLauncher
     }
 
     /**
-     * Late-loads the JDK's JDWP agent into {@code pid} so a JDI debugger can attach, telling it to serve the
-     * {@code dt_socket} transport on {@code 127.0.0.1:port}. May fail on hardened JVMs that block agent loading.
+     * Late-loads the JDK's JDWP agent into a process so a JDI debugger can attach over a loopback socket.
+     *
+     * @param pid the target process id
+     * @param port the loopback port JDWP should serve
+     * @throws Exception if the attach or the load fails, as on JVMs that block agent loading
      */
     public static void loadJdwp(String pid, int port) throws Exception
     {

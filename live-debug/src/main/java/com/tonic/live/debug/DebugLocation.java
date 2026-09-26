@@ -2,10 +2,7 @@ package com.tonic.live.debug;
 
 import lombok.Getter;
 
-/**
- * A resolved code location: the declaring class (dotted), the method (name + JVM descriptor), the bytecode
- * index, and the source line (-1 when no line information is available).
- */
+/** A resolved code location: the declaring class, the method, the bytecode index, and the source line. */
 @Getter
 public final class DebugLocation
 {
@@ -15,6 +12,15 @@ public final class DebugLocation
     private final long codeIndex;
     private final int lineNumber;
 
+    /**
+     * Creates a location.
+     *
+     * @param className the declaring class's binary name, with dots
+     * @param methodName the method name
+     * @param methodDescriptor the method's JVM descriptor
+     * @param codeIndex the bytecode index within the method
+     * @param lineNumber the source line, or -1 when there is no line information
+     */
     public DebugLocation(String className, String methodName, String methodDescriptor, long codeIndex, int lineNumber)
     {
         this.className = className;

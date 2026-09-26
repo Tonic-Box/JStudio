@@ -25,6 +25,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 
+/** The panel showing a selected control flow block's bytecode or IR. */
 public class CFGBlockDetailPanel extends ThemedJPanel
 {
 
@@ -44,6 +45,7 @@ public class CFGBlockDetailPanel extends ThemedJPanel
 
     private boolean currentShowIR = false;
 
+    /** Creates an empty panel. */
     public CFGBlockDetailPanel()
     {
         super(BackgroundStyle.TERTIARY, new BorderLayout());
@@ -69,6 +71,11 @@ public class CFGBlockDetailPanel extends ThemedJPanel
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    /**
+     * Shows a block's header and its bytecode or IR, whichever the vertex was built for.
+     *
+     * @param vertex the selected block vertex
+     */
     public void showBlock(CFGBlockVertex vertex)
     {
         CFGBlock block = vertex.getBlock();

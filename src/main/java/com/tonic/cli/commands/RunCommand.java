@@ -12,6 +12,7 @@ import picocli.CommandLine.Parameters;
 import java.io.File;
 import java.util.concurrent.Callable;
 
+/** The run command: executes a plugin or script on one target and writes the result in the chosen format. */
 @Command(
         name = "run",
         description = "Execute a plugin or script on target files",

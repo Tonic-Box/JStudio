@@ -27,9 +27,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
-/**
- * Service for loading and managing projects (JARs, directories, class files).
- */
+/** The holder of the current project, loading it from a jar, class file, directory or live JVM and appending to it. */
 @Getter
 public class ProjectService
 {
@@ -46,13 +44,17 @@ public class ProjectService
     {
     }
 
+    /** @return the shared instance */
     public static ProjectService getInstance()
     {
         return INSTANCE;
     }
 
     /**
-     * Create a new empty project.
+     * Replaces the current project with a new empty one.
+     *
+     * @param name the project name
+     * @return the new project
      */
     public ProjectModel createProject(String name)
     {
@@ -63,7 +65,12 @@ public class ProjectService
     }
 
     /**
-     * Load a JAR file into a new project.
+     * Replaces the current project with the classes and resources of a jar, logging entries that fail to load.
+     *
+     * @param jarFile the jar
+     * @param progress receives a call per entry, or null
+     * @return the new project
+     * @throws IOException if the file does not exist or the jar cannot be opened
      */
     public ProjectModel loadJar(File jarFile, ProgressCallback progress) throws IOException
     {
@@ -174,7 +181,11 @@ public class ProjectService
     }
 
     /**
-     * Load a single class file.
+     * Replaces the current project with one holding a single class.
+     *
+     * @param classFile the class file
+     * @return the new project
+     * @throws IOException if the file does not exist or cannot be read or parsed
      */
     public ProjectModel loadClassFile(File classFile) throws IOException
     {
@@ -203,7 +214,12 @@ public class ProjectService
     }
 
     /**
-     * Load a directory of class files.
+     * Replaces the current project with every class file found under a directory, logging files that fail to load.
+     *
+     * @param directory the root directory
+     * @param progress receives a call per class file, or null
+     * @return the new project
+     * @throws IOException if the path is not an existing directory or cannot be walked
      */
     public ProjectModel loadDirectory(File directory, ProgressCallback progress) throws IOException
     {
@@ -266,7 +282,12 @@ public class ProjectService
     }
 
     /**
-     * Append a JAR file to the current project.
+     * Adds a jar's classes and resources to the current project, or loads it as a new project when none is open.
+     *
+     * @param jarFile the jar
+     * @param progress receives a call per entry, or null
+     * @return the number of classes added, or the new project's class count when none was open
+     * @throws IOException if the file does not exist or the jar cannot be opened
      */
     public int appendJar(File jarFile, ProgressCallback progress) throws IOException
     {
@@ -364,7 +385,11 @@ public class ProjectService
     }
 
     /**
-     * Append a single class file to the current project.
+     * Adds a class file to the current project, or loads it as a new project when none is open.
+     *
+     * @param classFile the class file
+     * @return 1
+     * @throws IOException if the file does not exist or cannot be read or parsed
      */
     public int appendClassFile(File classFile) throws IOException
     {
@@ -391,7 +416,12 @@ public class ProjectService
     }
 
     /**
-     * Append a directory of class files to the current project.
+     * Adds every class file under a directory to the current project, or loads it as a new project when none is open.
+     *
+     * @param directory the root directory
+     * @param progress receives a call per class file, or null
+     * @return the number of classes added, or the new project's class count when none was open
+     * @throws IOException if the path is not an existing directory or cannot be walked
      */
     public int appendDirectory(File directory, ProgressCallback progress) throws IOException
     {
@@ -447,9 +477,13 @@ public class ProjectService
     }
 
     /**
-     * Build a fresh project from a live JVM session, pulling each loaded class's current bytecode
-     * (eager, with progress). Replaces any current project. Bootstrap/JDK classes can be excluded to
-     * keep the navigator manageable; pass {@code includeJdk=true} to pull everything.
+     * Closes the current project and builds a new one from the bytecode of every class loaded in a live JVM, skipping hidden classes.
+     *
+     * @param session the attached live session
+     * @param includeJdk whether to pull JDK and other bootstrap-package classes too
+     * @param progress receives a call per class, or null
+     * @return the new project
+     * @throws IOException if the session cannot enumerate its classes
      */
     public ProjectModel loadLiveProject(LiveSession session, boolean includeJdk, ProgressCallback progress) throws IOException
     {
@@ -504,8 +538,13 @@ public class ProjectService
     }
 
     /**
-     * Add classes newly loaded in the target since the project was built (on-demand refresh). Returns
-     * the number added.
+     * Pulls classes loaded in the live JVM since the current project was built.
+     *
+     * @param session the attached live session
+     * @param includeJdk whether to pull JDK and other bootstrap-package classes too
+     * @param progress receives a call per new class, or null
+     * @return the number of classes added, 0 when no project is open
+     * @throws IOException if the session cannot enumerate its classes
      */
     public int refreshLiveProject(LiveSession session, boolean includeJdk, ProgressCallback progress) throws IOException
     {
@@ -559,8 +598,11 @@ public class ProjectService
     }
 
     /**
-     * Adds a runtime-captured class (streamed via a CLASS_LOADED event) into the current live project.
-     * No-op if there is no project or the class is already present. Returns the added entry, or null.
+     * Adds a class captured from a live class-load event to the current project.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @param classBytes the class bytecode
+     * @return the added entry, or null when there is no project, no bytes, the class is bootstrap, hidden or already present, or it fails to parse
      */
     public ClassEntryModel addCapturedLiveClass(String internalName, byte[] classBytes)
     {
@@ -602,9 +644,7 @@ public class ProjectService
         return internalName.contains("/0x");
     }
 
-    /**
-     * Close the current project.
-     */
+    /** Clears and drops the current project; safe to call when none is open. */
     public void closeProject()
     {
         if (currentProject != null)
@@ -615,7 +655,9 @@ public class ProjectService
     }
 
     /**
-     * Check if there is a project open.
+     * Reports whether a project with at least one class is open.
+     *
+     * @return true if such a project is open
      */
     public boolean hasProject()
     {
@@ -639,12 +681,17 @@ public class ProjectService
         }
     }
 
-    /**
-     * Progress callback interface.
-     */
+    /** A receiver for load progress. */
     @FunctionalInterface
     public interface ProgressCallback
     {
+        /**
+         * Reports progress after one item.
+         *
+         * @param current how many items are done
+         * @param total how many items there are
+         * @param message what was just processed
+         */
         void onProgress(int current, int total, String message);
     }
 }

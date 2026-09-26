@@ -8,10 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * Common API utilities shared between AST and IR modes.
- * Provides logging, context access, and shared utilities.
- */
+/** The globals shared by AST and IR script modes: the context object for the current method, print, type checks, and object and math helpers. */
 public class CommonAPI
 {
 
@@ -22,12 +19,17 @@ public class CommonAPI
     private Consumer<String> warnCallback;
     private Consumer<String> errorCallback;
 
+    /** Creates an API with no context and no callbacks. */
     public CommonAPI()
     {
     }
 
     /**
-     * Sets the current context information.
+     * Sets the method the script is running against.
+     *
+     * @param className the class name, internal or dotted
+     * @param methodName the method name
+     * @param methodDescriptor the method descriptor
      */
     public void setContext(String className, String methodName, String methodDescriptor)
     {
@@ -37,7 +39,11 @@ public class CommonAPI
     }
 
     /**
-     * Sets the log callbacks.
+     * Sets the log, warn and error callbacks passed to the interpreter on registration.
+     *
+     * @param log receives log messages, or null to leave the interpreter's as is
+     * @param warn receives warnings, or null to leave the interpreter's as is
+     * @param error receives errors, or null to leave the interpreter's as is
      */
     public void setCallbacks(Consumer<String> log, Consumer<String> warn, Consumer<String> error)
     {
@@ -47,7 +53,9 @@ public class CommonAPI
     }
 
     /**
-     * Creates the 'context' object to be registered in the script context.
+     * Builds the context object from the current context; missing names become empty strings.
+     *
+     * @return an object with the class, method and descriptor names plus the simple class name and dotted package name
      */
     public ScriptValue createContextObject()
     {
@@ -86,7 +94,9 @@ public class CommonAPI
     }
 
     /**
-     * Registers common utility functions in the interpreter's global context.
+     * Binds context, print, the type checks and the helper objects as globals, and hands the set callbacks to the interpreter.
+     *
+     * @param interpreter the interpreter to register in
      */
     public void registerIn(ScriptInterpreter interpreter)
     {

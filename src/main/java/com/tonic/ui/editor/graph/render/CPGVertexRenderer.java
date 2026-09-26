@@ -5,6 +5,7 @@ import com.tonic.ui.theme.JStudioTheme;
 
 import java.awt.*;
 
+/** Renders code property graph nodes as HTML labels and picks their styles by node kind. */
 public class CPGVertexRenderer implements GraphVertexRenderer<CPGNode>
 {
 

@@ -8,16 +8,7 @@ import com.tonic.ui.editor.source.SourceCodeView;
 import java.util.Map;
 import java.util.NavigableMap;
 
-/**
- * Links a bytecode pane and a source pane so a double-click on either highlights the corresponding
- * line(s) on the other, clearing the previous highlight on both sides. This is the single home for
- * the cross-pane translation; neither view references the other — they only emit line-activation
- * events that this class wires together using the decompiler's per-method offset/line maps
- * (via {@link SourceLineMaps}) and the bytecode pane's offset/line index.
- *
- * <p>Resolution is many-to-one in both directions and degrades gracefully: missing maps (plain
- * cached source, decompile failure) or unmapped lines simply highlight one side without the other.
- */
+/** The link between a bytecode pane and a source pane: a double-click on either highlights the matching lines on the other, or only its own line when no mapping exists. */
 public final class SourceBytecodeLinker
 {
 
@@ -25,6 +16,13 @@ public final class SourceBytecodeLinker
     private final BytecodeView bytecodeView;
     private final SourceCodeView sourceView;
 
+    /**
+     * Links two panes by installing line-activation handlers on both.
+     *
+     * @param classEntry the class both panes show, whose decompiler line maps drive the link
+     * @param bytecodeView the bytecode pane
+     * @param sourceView the source pane
+     */
     public SourceBytecodeLinker(ClassEntryModel classEntry, BytecodeView bytecodeView, SourceCodeView sourceView)
     {
         this.classEntry = classEntry;

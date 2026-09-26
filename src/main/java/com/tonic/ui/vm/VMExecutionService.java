@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/** The shared bytecode VM over the current project's class pool, initialized on first use and shut down when another project loads; runs one execution at a time. */
 public class VMExecutionService
 {
 
@@ -75,11 +76,17 @@ public class VMExecutionService
         }
     }
 
+    /** @return the single service instance */
     public static VMExecutionService getInstance()
     {
         return INSTANCE;
     }
 
+    /**
+     * Creates the heap, resolver and context over the current project's class pool; does nothing if already initialized.
+     *
+     * @throws IllegalStateException if no project is loaded
+     */
     public synchronized void initialize()
     {
         if (initialized.get())
@@ -104,6 +111,7 @@ public class VMExecutionService
         EventBus.getInstance().post(new StatusMessageEvent(this, "VM initialized with " + classPool.getClasses().size() + " classes"));
     }
 
+    /** Interrupts any running execution, stops the debug session and drops the VM state; does nothing if not initialized. */
     public synchronized void shutdown()
     {
         if (!initialized.get())
@@ -135,22 +143,47 @@ public class VMExecutionService
         EventBus.getInstance().post(new StatusMessageEvent(this, "VM shutdown"));
     }
 
+    /**
+     * Shuts the VM down and initializes it again with a fresh heap.
+     *
+     * @throws IllegalStateException if no project is loaded
+     */
     public synchronized void reset()
     {
         shutdown();
         initialize();
     }
 
+    /**
+     * Tells whether the VM is initialized.
+     *
+     * @return true once initialized and until shut down
+     */
     public boolean isInitialized()
     {
         return initialized.get();
     }
 
+    /**
+     * Tells whether an execution is running.
+     *
+     * @return true while a run is in progress
+     */
     public boolean isExecuting()
     {
         return executing.get();
     }
 
+    /**
+     * Runs a static method to completion, initializing the VM first if needed.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method name
+     * @param descriptor the method descriptor, or null or empty to take the first method with that name
+     * @param args the arguments, converted to VM values
+     * @return the result; a failed result carrying the exception if another execution is running, the class or method is missing, the method is not static, or the run throws
+     * @throws IllegalStateException if the VM is not initialized and no project is loaded
+     */
     public ExecutionResult executeStaticMethod(String className, String methodName, String descriptor, Object... args)
     {
         ensureInitialized();
@@ -213,6 +246,17 @@ public class VMExecutionService
         }
     }
 
+    /**
+     * Runs an instance method to completion on a receiver, initializing the VM first if needed.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method name
+     * @param descriptor the method descriptor, or null or empty to take the first method with that name
+     * @param receiver the instance to call on
+     * @param args the arguments, converted to VM values
+     * @return the result; a failed result carrying the exception if another execution is running, the class or method is missing, the method is static, or the run throws
+     * @throws IllegalStateException if the VM is not initialized and no project is loaded
+     */
     public ExecutionResult executeMethod(String className, String methodName, String descriptor, Object receiver, Object... args)
     {
         ensureInitialized();
@@ -281,6 +325,17 @@ public class VMExecutionService
         }
     }
 
+    /**
+     * Runs a method to completion in recursive mode with a listener attached, initializing the VM first if needed.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method name
+     * @param descriptor the method descriptor, or null or empty to take the first method with that name
+     * @param args the arguments, converted to VM values
+     * @param listener told about each instruction, or null for none
+     * @return the result; a failed result carrying the exception if another execution is running, the class or method is missing, or the run throws
+     * @throws IllegalStateException if the VM is not initialized and no project is loaded
+     */
     public ExecutionResult executeStaticMethodWithListener(String className, String methodName, String descriptor, Object[] args, BytecodeListener listener)
     {
         ensureInitialized();
@@ -351,6 +406,15 @@ public class VMExecutionService
         }
     }
 
+    /**
+     * Runs a method to completion in recursive mode with a listener attached, initializing the VM first if needed.
+     *
+     * @param method the method to run
+     * @param args the arguments, converted to VM values
+     * @param listener told about each instruction, or null for none
+     * @return the engine's result
+     * @throws IllegalStateException if another execution is running, or if the VM is not initialized and no project is loaded
+     */
     public BytecodeResult executeMethodWithListener(MethodEntry method, Object[] args, BytecodeListener listener)
     {
         ensureInitialized();
@@ -392,6 +456,16 @@ public class VMExecutionService
         }
     }
 
+    /**
+     * Runs a static method to completion in recursive mode, recording every call it makes with its arguments, return value and timing.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method name
+     * @param descriptor the method descriptor, or null or empty to take the first method with that name
+     * @param args the arguments, converted to VM values
+     * @return the result with the recorded calls; a failed result carrying the exception and the calls so far if another execution is running, the class or method is missing, or the run throws
+     * @throws IllegalStateException if the VM is not initialized and no project is loaded
+     */
     public ExecutionResult traceStaticMethod(String className, String methodName, String descriptor, Object... args)
     {
         ensureInitialized();
@@ -538,6 +612,7 @@ public class VMExecutionService
         }
     }
 
+    /** Interrupts the running execution and stops the debug session if either is active. */
     public void interrupt()
     {
         if (currentEngine != null)
@@ -550,6 +625,18 @@ public class VMExecutionService
         }
     }
 
+    /**
+     * Starts a debug session on a method, stopping any session still running, initializing the VM first if needed.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method name
+     * @param descriptor the method descriptor, or null or empty to take the first method with that name
+     * @param recursive true to step into callees, false to delegate calls
+     * @param args the arguments, converted to VM values
+     * @return the started session, also kept as the current session
+     * @throws IllegalArgumentException if the class or method is not found
+     * @throws IllegalStateException if the VM is not initialized and no project is loaded
+     */
     public DebugSession createDebugSession(String className, String methodName, String descriptor, boolean recursive, Object... args)
     {
         ensureInitialized();
@@ -587,9 +674,10 @@ public class VMExecutionService
     }
 
     /**
-     * Mints a fresh, isolated {@link VmInstance} backed by a defensive snapshot of the project's user classes. The
-     * frozen byte set is cached and reused across instances until the project's bytecode changes, so many AI sessions
-     * starting with no edits between them don't repeat the serialize cost.
+     * Creates an isolated VM over a snapshot of the project's user classes, reusing the cached snapshot until the project's bytecode changes.
+     *
+     * @return the new VM
+     * @throws IllegalStateException if no project is loaded
      */
     public synchronized VmInstance createSnapshotInstance()
     {
@@ -619,6 +707,15 @@ public class VMExecutionService
         return new VmInstance(pool, maxCallDepth, maxInstructions);
     }
 
+    /**
+     * Finds a method in the VM's class pool, initializing the VM first if needed.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method name
+     * @param descriptor the method descriptor, or null or empty to take the first method with that name
+     * @return the method, or null if the class or method is not found
+     * @throws IllegalStateException if the VM is not initialized and no project is loaded
+     */
     public MethodEntry findMethod(String className, String methodName, String descriptor)
     {
         ensureInitialized();
@@ -631,6 +728,11 @@ public class VMExecutionService
         return findMethod(classFile, methodName, descriptor);
     }
 
+    /**
+     * Sets the call depth limit, applying it to the shared context if the VM is initialized.
+     *
+     * @param maxCallDepth the new limit
+     */
     public void setMaxCallDepth(int maxCallDepth)
     {
         this.maxCallDepth = maxCallDepth;
@@ -640,6 +742,11 @@ public class VMExecutionService
         }
     }
 
+    /**
+     * Sets the instruction limit, applying it to the shared context if the VM is initialized.
+     *
+     * @param maxInstructions the new limit
+     */
     public void setMaxInstructions(int maxInstructions)
     {
         this.maxInstructions = maxInstructions;
@@ -649,6 +756,11 @@ public class VMExecutionService
         }
     }
 
+    /**
+     * Describes the VM's state: initialization, execution, class and heap counts, limits and debug session state.
+     *
+     * @return a multi-line status report
+     */
     public String getVMStatus()
     {
         StringBuilder sb = new StringBuilder();

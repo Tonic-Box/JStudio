@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+/** The debugger's operand stack table; double-clicking a value edits it, or inspects it if it is an object. */
 public class StackPanel extends ThemedJPanel
 {
 
@@ -32,6 +33,7 @@ public class StackPanel extends ThemedJPanel
     private ObjectInspectorDialog.FieldEditCallback onObjectFieldEdit;
     private ClassResolver classResolver;
 
+    /** Builds the empty, themed operand stack table. */
     public StackPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -74,16 +76,31 @@ public class StackPanel extends ThemedJPanel
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    /**
+     * Sets what runs when the user edits a stack value.
+     *
+     * @param callback receives the stack index and the new value
+     */
     public void setOnValueEdit(BiConsumer<Integer, ConcreteValue> callback)
     {
         this.onValueEdit = callback;
     }
 
+    /**
+     * Sets what runs when the user edits a field in the object inspector.
+     *
+     * @param callback receives the object, field and new value
+     */
     public void setOnObjectFieldEdit(ObjectInspectorDialog.FieldEditCallback callback)
     {
         this.onObjectFieldEdit = callback;
     }
 
+    /**
+     * Sets the resolver the object inspector uses; without one, objects cannot be inspected.
+     *
+     * @param classResolver the resolver, or null
+     */
     public void setClassResolver(ClassResolver classResolver)
     {
         this.classResolver = classResolver;
@@ -137,11 +154,17 @@ public class StackPanel extends ThemedJPanel
         }
     }
 
+    /**
+     * Replaces the listed stack entries.
+     *
+     * @param entries the stack entries to show
+     */
     public void updateStack(List<StackEntry> entries)
     {
         tableModel.setEntries(entries);
     }
 
+    /** Removes every listed stack entry. */
     public void clear()
     {
         tableModel.clear();

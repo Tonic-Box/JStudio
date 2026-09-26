@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+/** The bytecode listener that feeds a heap forensics tracker: it records allocations and field and array writes with their provenance. */
 public class HeapForensicsListener implements BytecodeListener
 {
 
@@ -40,11 +41,21 @@ public class HeapForensicsListener implements BytecodeListener
     @Getter
     private long instructionCount = 0;
 
+    /**
+     * Creates a listener that records into a tracker.
+     *
+     * @param tracker the tracker to record into
+     */
     public HeapForensicsListener(HeapForensicsTracker tracker)
     {
         this.tracker = tracker;
     }
 
+    /**
+     * Sets how many frames of provenance to capture: 0 for none, 1 for the current frame only, more to add callers.
+     *
+     * @param depth the frame count, clamped to 0 through 10
+     */
     public void setProvenanceDepth(int depth)
     {
         this.provenanceDepth = Math.max(0, Math.min(depth, 10));
@@ -330,6 +341,7 @@ public class HeapForensicsListener implements BytecodeListener
         }
     }
 
+    /** Clears the instruction count and the tracked call stack. */
     public void reset()
     {
         instructionCount = 0;

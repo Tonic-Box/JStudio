@@ -16,6 +16,7 @@ import javax.swing.JTextPane;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 
+/** A read-only hex dump of a resource, 16 bytes per line with offsets and an ASCII column. */
 public class HexResourceView extends AbstractEditorView
 {
 
@@ -32,6 +33,11 @@ public class HexResourceView extends AbstractEditorView
     private static final String STYLE_ASCII = "ascii";
     private static final String STYLE_SEPARATOR = "separator";
 
+    /**
+     * Creates the view and renders the resource's bytes.
+     *
+     * @param resource the resource to show
+     */
     public HexResourceView(ResourceEntryModel resource)
     {
         this.resource = resource;

@@ -17,16 +17,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Determines which methods of a class actually changed between two revisions of its source, keyed by JVM
- * signature ({@code name + descriptor}). A live patch grafts only these bodies onto the running class, leaving
- * every untouched method - and the class's synthetic members - byte-identical, which is what lets a JVMTI
- * redefine accept the result (it can change method bodies but never the member set).
- *
- * <p>Bodies are compared by their canonical {@link ASTPrinter} rendering, so reformatting alone is not a
- * change. The descriptor is derived with the same front end {@code SourceCompiler} uses, so the keys line up
- * with the recompiled {@code ClassFile}'s methods exactly (including overloads).
- */
+/** Finds the methods whose bodies changed between two revisions of a class's source, keyed by name plus descriptor; reformatting alone is not a change. */
 public final class MethodBodyDiff
 {
 
@@ -35,15 +26,13 @@ public final class MethodBodyDiff
     }
 
     /**
-     * Returns the {@code name + descriptor} keys of the primary type's methods whose body differs between
-     * {@code baseline} and {@code edited}. Methods present in only one revision are added/removed members,
-     * not body changes, and are handled at the bytecode level by {@link LivePatch}.
+     * Returns the name plus descriptor keys of the primary type's methods present in both revisions whose bodies differ.
      *
-     * @param baseline   the source as it was before the edit (e.g. the original decompilation)
-     * @param edited     the source the user just compiled
-     * @param classPool  the project's class pool, used to resolve reference types in signatures (may be null)
+     * @param baseline the source before the edit, such as the original decompilation
+     * @param edited the source the user just compiled
+     * @param classPool the project's class pool, used to resolve reference types in signatures; may be null
      * @param ownerClass the internal name of the class being patched
-     * @return the signatures of changed methods (empty if nothing comparable changed or parsing fails)
+     * @return the keys of changed methods; empty if either source is null, nothing comparable changed, or parsing fails
      */
     public static Set<String> changedMethods(String baseline, String edited, ClassPool classPool, String ownerClass)
     {

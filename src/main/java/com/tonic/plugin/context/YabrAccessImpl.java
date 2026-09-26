@@ -24,12 +24,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/** The YabrAccess over one fixed project model. */
 public class YabrAccessImpl implements YabrAccess
 {
 
     private final ProjectModel projectModel;
     private final ClassPoolImpl classPoolWrapper;
 
+    /**
+     * Creates the access over a project.
+     *
+     * @param projectModel the project to expose
+     */
     public YabrAccessImpl(ProjectModel projectModel)
     {
         this.projectModel = projectModel;

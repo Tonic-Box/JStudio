@@ -5,9 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
-/**
- * Manages pinned and recent directories for the file chooser using Java Preferences API.
- */
+/** The file chooser's pinned and recent directories, persisted in user preferences; at most ten recent ones are kept. */
 public class QuickAccessManager
 {
 
@@ -23,10 +21,21 @@ public class QuickAccessManager
     private final List<File> recentDirectories;
     private final List<QuickAccessListener> listeners;
 
+    /** Hears about changes to the pinned or recent directories. */
     public interface QuickAccessListener
     {
+        /**
+         * Called after the pinned directories change.
+         *
+         * @param pinned the pinned directories that still exist, in order
+         */
         void onPinnedChanged(List<File> pinned);
 
+        /**
+         * Called after the recent directories change.
+         *
+         * @param recent the recent directories that still exist, newest first
+         */
         void onRecentChanged(List<File> recent);
     }
 
@@ -39,6 +48,11 @@ public class QuickAccessManager
         loadFromPreferences();
     }
 
+    /**
+     * Gives the shared manager, loading it from preferences on first use.
+     *
+     * @return the manager
+     */
     public static synchronized QuickAccessManager getInstance()
     {
         if (instance == null)
@@ -48,6 +62,11 @@ public class QuickAccessManager
         return instance;
     }
 
+    /**
+     * Pins a directory at the end of the list; does nothing for null, a non-directory or one already pinned.
+     *
+     * @param dir the directory to pin
+     */
     public void addPinned(File dir)
     {
         if (dir == null || !dir.isDirectory())
@@ -65,6 +84,11 @@ public class QuickAccessManager
         notifyPinnedChanged();
     }
 
+    /**
+     * Unpins a directory, matched by absolute path.
+     *
+     * @param dir the directory to unpin; null does nothing
+     */
     public void removePinned(File dir)
     {
         if (dir == null)
@@ -81,6 +105,12 @@ public class QuickAccessManager
         }
     }
 
+    /**
+     * Moves a pinned directory to another position; does nothing if either index is out of range.
+     *
+     * @param fromIndex the directory's current position
+     * @param toIndex its new position
+     */
     public void reorderPinned(int fromIndex, int toIndex)
     {
         if (fromIndex < 0 || fromIndex >= pinnedDirectories.size() ||
@@ -95,6 +125,11 @@ public class QuickAccessManager
         notifyPinnedChanged();
     }
 
+    /**
+     * Moves a pinned directory one place earlier; does nothing if it is first or not pinned.
+     *
+     * @param dir the pinned directory
+     */
     public void movePinnedUp(File dir)
     {
         int index = indexOfPinned(dir);
@@ -104,6 +139,11 @@ public class QuickAccessManager
         }
     }
 
+    /**
+     * Moves a pinned directory one place later; does nothing if it is last or not pinned.
+     *
+     * @param dir the pinned directory
+     */
     public void movePinnedDown(File dir)
     {
         int index = indexOfPinned(dir);
@@ -126,6 +166,12 @@ public class QuickAccessManager
         return -1;
     }
 
+    /**
+     * Tells whether a directory is pinned, matched by absolute path.
+     *
+     * @param dir the directory
+     * @return true if pinned; false for null
+     */
     public boolean isPinned(File dir)
     {
         if (dir == null) return false;
@@ -133,6 +179,11 @@ public class QuickAccessManager
                 .anyMatch(f -> f.getAbsolutePath().equals(dir.getAbsolutePath()));
     }
 
+    /**
+     * Lists the pinned directories that still exist.
+     *
+     * @return a new list, in pinned order
+     */
     public List<File> getPinnedDirectories()
     {
         List<File> result = new ArrayList<>();
@@ -146,6 +197,11 @@ public class QuickAccessManager
         return result;
     }
 
+    /**
+     * Moves a directory to the front of the recent list, dropping the oldest past ten; ignores null, non-directories and pinned directories.
+     *
+     * @param dir the directory just used
+     */
     public void addRecent(File dir)
     {
         if (dir == null || !dir.isDirectory())
@@ -171,6 +227,11 @@ public class QuickAccessManager
         notifyRecentChanged();
     }
 
+    /**
+     * Removes a directory from the recent list, matched by absolute path.
+     *
+     * @param dir the directory; null does nothing
+     */
     public void removeRecent(File dir)
     {
         if (dir == null)
@@ -187,6 +248,7 @@ public class QuickAccessManager
         }
     }
 
+    /** Empties the recent list. */
     public void clearRecent()
     {
         recentDirectories.clear();
@@ -194,6 +256,11 @@ public class QuickAccessManager
         notifyRecentChanged();
     }
 
+    /**
+     * Lists the recent directories that still exist.
+     *
+     * @return a new list, newest first
+     */
     public List<File> getRecentDirectories()
     {
         List<File> result = new ArrayList<>();
@@ -207,6 +274,11 @@ public class QuickAccessManager
         return result;
     }
 
+    /**
+     * Registers a listener; registering the same one twice has no effect.
+     *
+     * @param listener the listener to add
+     */
     public void addListener(QuickAccessListener listener)
     {
         if (!listeners.contains(listener))
@@ -215,6 +287,11 @@ public class QuickAccessManager
         }
     }
 
+    /**
+     * Unregisters a listener.
+     *
+     * @param listener the listener to remove
+     */
     public void removeListener(QuickAccessListener listener)
     {
         listeners.remove(listener);

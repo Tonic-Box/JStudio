@@ -11,6 +11,14 @@ public final class StackFrame
     private final String file;
     private final int line;
 
+    /**
+     * Creates a frame.
+     *
+     * @param declaringClass the declaring class's internal name
+     * @param method the method name
+     * @param file the source file name
+     * @param line the source line number
+     */
     public StackFrame(String declaringClass, String method, String file, int line)
     {
         this.declaringClass = declaringClass;

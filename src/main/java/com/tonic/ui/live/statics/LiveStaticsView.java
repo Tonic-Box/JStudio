@@ -41,12 +41,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A per-class view (under the "Live" section, shown only while attached) of the class's live static state:
- * the top table lists static fields with their current values - primitives and Strings are editable inline,
- * reference fields can only be set to null, and {@code final} fields are read-only. The bottom list shows
- * static methods that can be invoked with primitive/String/null arguments.
- */
+/** A class's live static fields, editable when primitive or String, and its static methods, invokable with primitive, String or null arguments. */
 public final class LiveStaticsView extends AbstractEditorView
 {
 
@@ -90,6 +85,11 @@ public final class LiveStaticsView extends AbstractEditorView
     private final JList<StaticMethod> methodList = new JList<>(methodModel);
     private JButton invokeButton;
 
+    /**
+     * Builds the view for one class.
+     *
+     * @param classEntry the class whose statics are shown
+     */
     public LiveStaticsView(ClassEntryModel classEntry)
     {
         super(new BorderLayout());

@@ -17,9 +17,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 
-/**
- * Status bar component showing messages, progress, and memory usage.
- */
+/** The window's bottom status bar: a message that clears after five seconds, cursor position, view mode, a progress bar and heap usage. */
 public class StatusBar extends ThemedJPanel
 {
 
@@ -32,6 +30,7 @@ public class StatusBar extends ThemedJPanel
     private final Timer memoryTimer;
     private Timer clearMessageTimer;
 
+    /** Builds the bar, starts the two-second memory timer and subscribes to status message events. */
     public StatusBar()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -138,7 +137,9 @@ public class StatusBar extends ThemedJPanel
     }
 
     /**
-     * Set the status message.
+     * Shows an info message.
+     *
+     * @param message the text; null shows nothing
      */
     public void setMessage(String message)
     {
@@ -146,7 +147,10 @@ public class StatusBar extends ThemedJPanel
     }
 
     /**
-     * Set the status message with type.
+     * Shows a message colored by its severity and restarts the clear timer.
+     *
+     * @param message the text; null shows nothing
+     * @param type the severity, which picks the color
      */
     public void setMessage(String message, StatusMessageEvent.MessageType type)
     {
@@ -169,7 +173,9 @@ public class StatusBar extends ThemedJPanel
     }
 
     /**
-     * Set the position label (e.g., "Line 42, Col 10").
+     * Sets the position label.
+     *
+     * @param position the text, such as "Line 42, Col 10"
      */
     public void setPosition(String position)
     {
@@ -177,7 +183,9 @@ public class StatusBar extends ThemedJPanel
     }
 
     /**
-     * Set the mode label (e.g., "Source", "Bytecode", "IR").
+     * Sets the mode label.
+     *
+     * @param mode the text, such as "Source" or "Bytecode"
      */
     public void setMode(String mode)
     {
@@ -185,7 +193,9 @@ public class StatusBar extends ThemedJPanel
     }
 
     /**
-     * Show the progress bar with indeterminate state.
+     * Shows the progress bar in its indeterminate state.
+     *
+     * @param message the text drawn on the bar
      */
     public void showProgress(String message)
     {
@@ -195,7 +205,11 @@ public class StatusBar extends ThemedJPanel
     }
 
     /**
-     * Show the progress bar with determinate state.
+     * Shows the progress bar filled to current out of total.
+     *
+     * @param current the work done so far
+     * @param total the total amount of work
+     * @param message the text drawn on the bar, followed by the counts
      */
     public void showProgress(int current, int total, String message)
     {
@@ -206,9 +220,7 @@ public class StatusBar extends ThemedJPanel
         progressBar.setVisible(true);
     }
 
-    /**
-     * Hide the progress bar.
-     */
+    /** Hides the progress bar. */
     public void hideProgress()
     {
         progressBar.setVisible(false);

@@ -17,16 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Loads, activates, and manages GUI plugins from {@code ~/.jstudio/plugins/}. Jars are discovered and their
- * plugin classes instantiated off the EDT (constructors must be trivial); activation (init + start) and every
- * later mutation happen on the EDT. One {@link URLClassLoader} is created per jar (parent-first off the app
- * loader, so plugins see every app class), shared by all plugins in that jar and closed only on reload/shutdown.
- * <p>
- * Lifecycle: <b>disable</b> removes a plugin's contributions (reverse order) then calls {@code dispose()} but
- * keeps its classes loaded; <b>enable</b> re-activates it; <b>reload</b> tears down a jar, closes its loader, and
- * re-scans it from disk (picking up a new build). Failures in one plugin never affect the app or its siblings.
- */
+/** The singleton that loads, activates and manages GUI plugins from ~/.jstudio/plugins, with one class loader per jar; discovery runs off the EDT and everything else on it. */
 public final class GuiPluginManager
 {
 
@@ -39,12 +30,17 @@ public final class GuiPluginManager
     {
     }
 
+    /** @return the shared manager */
     public static GuiPluginManager getInstance()
     {
         return INSTANCE;
     }
 
-    /** The plugins directory, created if absent. */
+    /**
+     * Returns the plugins directory, creating it when absent.
+     *
+     * @return the plugins folder under ~/.jstudio
+     */
     public File pluginsDir()
     {
         File dir = new File(System.getProperty("user.home"), ".jstudio" + File.separator + "plugins");
@@ -55,15 +51,20 @@ public final class GuiPluginManager
         return dir;
     }
 
-    /** A snapshot of the currently tracked plugins, for the manager UI. */
+    /**
+     * Returns the tracked plugins, for the manager UI.
+     *
+     * @return a new list, including ones that failed to load
+     */
     public List<LoadedPlugin> getPlugins()
     {
         return new ArrayList<>(loaded);
     }
 
     /**
-     * Called once from the main window. Discovers and instantiates plugins on a background thread, then activates
-     * them on the EDT. Never throws into the caller.
+     * Scans the plugin jars on a background thread, then registers and activates the plugins on the EDT; later calls do nothing and nothing is thrown to the caller.
+     *
+     * @param mainFrame the main window the plugins contribute to
      */
     public void bootstrap(MainFrame mainFrame)
     {
@@ -81,7 +82,7 @@ public final class GuiPluginManager
         loader.start();
     }
 
-    /** Tears down all plugins and closes all loaders. Called on application exit (EDT). */
+    /** Tears down every enabled plugin and closes every class loader; called on the EDT at exit. */
     public void shutdown()
     {
         Set<URLClassLoader> loaders = new HashSet<>();
@@ -103,6 +104,11 @@ public final class GuiPluginManager
         }
     }
 
+    /**
+     * Removes a plugin from the persisted disabled set and activates it when it is a UI plugin; call on the EDT.
+     *
+     * @param lp the plugin to enable
+     */
     public void enable(LoadedPlugin lp)
     {
         Set<String> disabled = Settings.getInstance().getDisabledPlugins();
@@ -118,6 +124,11 @@ public final class GuiPluginManager
         }
     }
 
+    /**
+     * Removes a plugin's contributions, disposes it and adds it to the persisted disabled set, keeping its classes loaded; call on the EDT.
+     *
+     * @param lp the plugin to disable
+     */
     public void disable(LoadedPlugin lp)
     {
         if (lp.state == LoadedPlugin.State.ENABLED)
@@ -130,13 +141,17 @@ public final class GuiPluginManager
         Settings.getInstance().setDisabledPlugins(disabled);
     }
 
-    /** Reloads the jar a plugin came from, re-reading it from disk. */
+    /**
+     * Tears down every plugin from the same jar, closes its class loader and rescans the jar from disk; call on the EDT.
+     *
+     * @param lp a plugin from the jar to reload
+     */
     public void reload(LoadedPlugin lp)
     {
         reloadJar(lp.jar);
     }
 
-    /** Tears everything down, closes all loaders, and re-discovers from disk. */
+    /** Tears everything down, closes all class loaders and rescans the plugins directory, on the calling thread, which should be the EDT. */
     public void reloadAll()
     {
         Set<URLClassLoader> loaders = new HashSet<>();

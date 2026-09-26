@@ -32,6 +32,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
+/** The bookmarks list of the project database; double-clicking one opens its class. */
 public class BookmarksPanel extends ThemedJPanel
 {
 
@@ -40,6 +41,11 @@ public class BookmarksPanel extends ThemedJPanel
     private final DefaultListModel<Bookmark> listModel;
     private final JLabel statusLabel;
 
+    /**
+     * Builds the toolbar, list and status line.
+     *
+     * @param project the project whose classes bookmarks resolve against; may be null
+     */
     public BookmarksPanel(ProjectModel project)
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -124,6 +130,7 @@ public class BookmarksPanel extends ThemedJPanel
         return button;
     }
 
+    /** Reloads the list from the project database. */
     public void refresh()
     {
         listModel.clear();
@@ -169,6 +176,7 @@ public class BookmarksPanel extends ThemedJPanel
         return project.getClass(className);
     }
 
+    /** Prompts for a class name and a bookmark name, then stores the bookmark; warns and stops if no classes are loaded or the class is not found. */
     public void addBookmark()
     {
         if (project == null || project.getClassCount() == 0)

@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** How to build one object argument: the construction mode plus its constructor, factory, expression, template or field values. */
 @Getter
 @Setter
 public class ObjectSpec
@@ -24,15 +25,27 @@ public class ObjectSpec
     private String templateName;
     private Map<String, ParamSpec> fieldOverrides = new LinkedHashMap<>();
 
+    /** Creates an empty spec using the constructor mode. */
     public ObjectSpec()
     {
     }
 
+    /**
+     * Creates a spec for a type using the constructor mode.
+     *
+     * @param typeName the class's internal name, with slashes
+     */
     public ObjectSpec(String typeName)
     {
         this.typeName = typeName;
     }
 
+    /**
+     * Creates a spec that passes null.
+     *
+     * @param typeName the class's internal name, with slashes
+     * @return the new spec
+     */
     public static ObjectSpec nullSpec(String typeName)
     {
         ObjectSpec spec = new ObjectSpec(typeName);
@@ -40,6 +53,13 @@ public class ObjectSpec
         return spec;
     }
 
+    /**
+     * Creates a spec that calls a constructor.
+     *
+     * @param typeName the class's internal name, with slashes
+     * @param constructorDesc the constructor's descriptor
+     * @return the new spec, with no arguments yet
+     */
     public static ObjectSpec withConstructor(String typeName, String constructorDesc)
     {
         ObjectSpec spec = new ObjectSpec(typeName);
@@ -48,6 +68,14 @@ public class ObjectSpec
         return spec;
     }
 
+    /**
+     * Creates a spec that calls a static factory method.
+     *
+     * @param typeName the class's internal name, with slashes
+     * @param methodName the factory method's name
+     * @param methodDesc the factory method's descriptor
+     * @return the new spec, with no arguments yet
+     */
     public static ObjectSpec withFactory(String typeName, String methodName, String methodDesc)
     {
         ObjectSpec spec = new ObjectSpec(typeName);
@@ -57,6 +85,13 @@ public class ObjectSpec
         return spec;
     }
 
+    /**
+     * Creates a spec given by a Java expression.
+     *
+     * @param typeName the class's internal name, with slashes
+     * @param expr the expression's source text
+     * @return the new spec
+     */
     public static ObjectSpec withExpression(String typeName, String expr)
     {
         ObjectSpec spec = new ObjectSpec(typeName);
@@ -65,6 +100,13 @@ public class ObjectSpec
         return spec;
     }
 
+    /**
+     * Creates a spec that uses a saved template.
+     *
+     * @param typeName the class's internal name, with slashes
+     * @param templateName the template's name
+     * @return the new spec
+     */
     public static ObjectSpec fromTemplate(String typeName, String templateName)
     {
         ObjectSpec spec = new ObjectSpec(typeName);
@@ -73,21 +115,42 @@ public class ObjectSpec
         return spec;
     }
 
+    /**
+     * Appends a constructor argument.
+     *
+     * @param arg the argument's spec
+     */
     public void addConstructorArg(ParamSpec arg)
     {
         constructorArgs.add(arg);
     }
 
+    /**
+     * Appends a factory method argument.
+     *
+     * @param arg the argument's spec
+     */
     public void addFactoryArg(ParamSpec arg)
     {
         factoryArgs.add(arg);
     }
 
+    /**
+     * Sets the value for a field, replacing any earlier one.
+     *
+     * @param fieldName the field's name
+     * @param value the value's spec
+     */
     public void setFieldOverride(String fieldName, ParamSpec value)
     {
         fieldOverrides.put(fieldName, value);
     }
 
+    /**
+     * Strips the package from the type name.
+     *
+     * @return the type's simple name, or "?" when no type is set
+     */
     public String getSimpleTypeName()
     {
         if (typeName == null) return "?";
@@ -96,6 +159,11 @@ public class ObjectSpec
         return lastDot >= 0 ? name.substring(lastDot + 1) : name;
     }
 
+    /**
+     * Describes the spec for display.
+     *
+     * @return a short summary for the mode, such as Point(2 args), a shortened expression, or "null"
+     */
     public String getSummary()
     {
         switch (mode)
@@ -122,6 +190,11 @@ public class ObjectSpec
         }
     }
 
+    /**
+     * Checks whether any argument or field value is fuzzed, following nested object specs of constructor arguments only.
+     *
+     * @return true if a value is fuzzed
+     */
     public boolean hasAnyFuzzParams()
     {
         for (ParamSpec arg : constructorArgs)
@@ -145,6 +218,11 @@ public class ObjectSpec
         return false;
     }
 
+    /**
+     * Copies the spec, deep-copying the argument and field specs.
+     *
+     * @return the copy
+     */
     public ObjectSpec copy()
     {
         ObjectSpec copy = new ObjectSpec(typeName);

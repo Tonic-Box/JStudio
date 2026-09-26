@@ -10,50 +10,72 @@ import com.tonic.plugin.api.PluginLogger;
 import javax.swing.JFrame;
 import java.util.function.Consumer;
 
-/**
- * The handle a {@link UiPlugin} receives in {@link UiPlugin#start(JStudioHost)}. It is the curated entry point to
- * the running application: the UI contribution surface ({@link #ui()}), the live analysis context
- * ({@link #context()}), the current project, the event bus, and the main window.
- * <p>
- * This interface is intentionally small. Plugins have full, direct access to every app singleton
- * ({@code ProjectService}, {@code EventBus}, {@code JStudioTheme}, {@code ThemeManager}, {@code Settings}, the
- * YABR {@code ClassPool}, etc.) simply by importing them - the parent class loader makes them resolvable. The
- * host exists only to expose the things a plugin can't otherwise reach (UI contribution) and to offer leak-safe
- * conveniences ({@link #onEvent}, {@link #track}).
- */
+/** The handle a UiPlugin receives in start: the UI contribution surface, the live plugin context, the current project, the event bus and the main window, with cleanup tracked for unload. */
 public interface JStudioHost
 {
 
-    /** Live analysis context (logger, config, project/analysis/YABR access, results) for this plugin. */
+    /**
+     * Returns this plugin's context, whose project-bound APIs follow the currently open project.
+     *
+     * @return the context, the same one passed to init
+     */
     PluginContext context();
 
-    /** The UI contribution surface: add tool windows, views, menu items, toolbar buttons, navigator actions. */
+    /**
+     * Returns the surface for adding tool windows, views, menu items, toolbar buttons and navigator actions.
+     *
+     * @return the UI API, the same one for the plugin's lifetime
+     */
     UiApi ui();
 
-    /** The application event bus ({@code EventBus.getInstance()}). Prefer {@link #onEvent} for auto-cleanup. */
+    /**
+     * Returns the application event bus; prefer onEvent, which unsubscribes on unload.
+     *
+     * @return the shared event bus
+     */
     EventBus events();
 
-    /** The main application window - use as a dialog owner. */
+    /**
+     * Returns the main application window, for use as a dialog owner.
+     *
+     * @return the main window
+     */
     JFrame frame();
 
-    /** The currently loaded project, or {@code null} if none is open. The authoritative nullable source of truth. */
+    /**
+     * Returns the project open right now, read afresh on each call; the authoritative check for whether a project is open.
+     *
+     * @return the current project, or null when none is open
+     */
     ProjectModel currentProject();
 
-    /** This plugin's metadata. */
+    /**
+     * Returns this plugin's metadata.
+     *
+     * @return the info from the plugin's getInfo
+     */
     PluginInfo info();
 
-    /** This plugin's logger. */
+    /**
+     * Returns this plugin's logger.
+     *
+     * @return the logger of the plugin's context
+     */
     PluginLogger log();
 
     /**
-     * Subscribes to an event bus type. The subscription is unregistered automatically when the plugin is
-     * disabled/unloaded, so plugins need not track it themselves.
+     * Subscribes to events of exactly the given class; the handler runs on the EDT and is unsubscribed automatically when the plugin is disabled, reloaded or the app exits.
+     *
+     * @param <T> the event type
+     * @param type the event class, matched exactly, not by subclass
+     * @param handler called with each event
      */
     <T extends Event> void onEvent(Class<T> type, Consumer<T> handler);
 
     /**
-     * Hands the host a cleanup action to run on unload (in addition to the {@link Registration}s returned by
-     * {@link #ui()}). Use it for things the host can't see: background threads, timers, extra windows, raw listeners.
+     * Hands the host a cleanup to run on unload, for things it cannot see such as threads, timers, extra windows and raw listeners; cleanups run in reverse order of registration, before dispose.
+     *
+     * @param cleanup the action to run once on unload
      */
     void track(Registration cleanup);
 }

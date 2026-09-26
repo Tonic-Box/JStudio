@@ -11,11 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
-/**
- * Writes the current (in-memory, possibly edited) state of a project - its user classes and resources - to a
- * jar file. Shared by "Export as JAR" and the Run feature (which exports to a temp jar to launch), so both
- * reflect transforms/edits.
- */
+/** Writes a project's current in-memory classes and resources to a jar; shared by Export as JAR and Run so both reflect edits. */
 public final class ProjectJarExporter
 {
 
@@ -25,6 +21,13 @@ public final class ProjectJarExporter
     {
     }
 
+    /**
+     * Writes the project's user classes and resources to a jar, keeping its manifest or writing a minimal one.
+     *
+     * @param project the project to export
+     * @param output the jar file to write
+     * @throws IOException if the jar cannot be written
+     */
     public static void export(ProjectModel project, File output) throws IOException
     {
         try (JarOutputStream jar = new JarOutputStream(new FileOutputStream(output)))

@@ -38,9 +38,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * A single editor tab that can show source, bytecode, or IR view.
- */
+/** The editor tab for one class, switchable between view modes; source, bytecode, constant pool and hex are built up front, the rest load in the background on first use. */
 public class EditorTab extends JPanel
 {
 
@@ -93,6 +91,11 @@ public class EditorTab extends JPanel
     private ViewMode currentMode = ViewMode.SOURCE;
     private ProjectModel projectModel;
 
+    /**
+     * Creates the tab in source mode.
+     *
+     * @param classEntry the class to show
+     */
     public EditorTab(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;
@@ -255,11 +258,17 @@ public class EditorTab extends JPanel
         }
     }
 
+    /** @return the view mode the tab is showing */
     public ViewMode getViewMode()
     {
         return currentMode;
     }
 
+    /**
+     * Switches to a view mode, showing a loading card while that view is built for the first time.
+     *
+     * @param mode the mode to show
+     */
     public void setViewMode(ViewMode mode)
     {
         this.currentMode = mode;
@@ -277,7 +286,9 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Set whether to omit annotations from decompiled output display.
+     * Sets whether the source view omits annotations.
+     *
+     * @param omit true to hide annotations
      */
     public void setOmitAnnotations(boolean omit)
     {
@@ -285,7 +296,9 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Enable or disable usage-count lenses in the source view (and the dual view's source pane).
+     * Turns usage-count lenses on or off in the source view and the dual view's source pane.
+     *
+     * @param enabled true to show the lenses
      */
     public void setUsageLensEnabled(boolean enabled)
     {
@@ -296,6 +309,7 @@ public class EditorTab extends JPanel
         }
     }
 
+    /** Refreshes the showing view, if it has loaded. */
     public void refresh()
     {
         if (isViewReady(currentMode))
@@ -317,11 +331,7 @@ public class EditorTab extends JPanel
         }
     }
 
-    /**
-     * Forces a full reload after the underlying class was mutated externally (e.g. an AI rename or script run):
-     * drops the decompilation cache and refreshes every instantiated view - including the source view, whose
-     * {@code refresh()} otherwise re-displays the now-stale cached source - so nothing keeps showing old output.
-     */
+    /** Drops the class's decompilation cache and reloads every loaded view, for use after the class was changed from outside the tab. */
     public void reload()
     {
         classEntry.invalidateDecompilationCache();
@@ -362,7 +372,9 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Get the title for this tab.
+     * Returns the tab title, HTML-escaped.
+     *
+     * @return the class's simple name, or empty when it has none
      */
     public String getTitle()
     {
@@ -370,7 +382,9 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Get the tooltip for this tab.
+     * Returns the tab tooltip, HTML-escaped.
+     *
+     * @return the class's internal name, or empty when it has none
      */
     public String getTooltip()
     {
@@ -386,6 +400,7 @@ public class EditorTab extends JPanel
                 .replace(">", "&gt;");
     }
 
+    /** Copies the showing view's selection to the clipboard. */
     public void copySelection()
     {
         EditorView view = views.get(currentMode);
@@ -395,12 +410,22 @@ public class EditorTab extends JPanel
         }
     }
 
+    /**
+     * Returns the showing view's text.
+     *
+     * @return the text, or empty while the view is loading
+     */
     public String getText()
     {
         EditorView view = views.get(currentMode);
         return view != null ? view.getText() : "";
     }
 
+    /**
+     * Moves the showing view to a line.
+     *
+     * @param line the line number
+     */
     public void goToLine(int line)
     {
         EditorView view = views.get(currentMode);
@@ -411,7 +436,9 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Highlight a specific line, scroll to it, and place caret one line above.
+     * Highlights a line in the showing view and scrolls to it.
+     *
+     * @param line the line number; the source view is passed one less than the other views
      */
     public void highlightLine(int line)
     {
@@ -422,6 +449,7 @@ public class EditorTab extends JPanel
         }
     }
 
+    /** Opens the showing view's find bar. */
     public void showFindDialog()
     {
         EditorView view = views.get(currentMode);
@@ -441,12 +469,22 @@ public class EditorTab extends JPanel
         return currentMode == ViewMode.SOURCE ? sourceView.methodAtCaret() : null;
     }
 
+    /**
+     * Returns the showing view's selected text.
+     *
+     * @return the selection, or null when nothing is selected or the view is loading
+     */
     public String getSelectedText()
     {
         EditorView view = views.get(currentMode);
         return view != null ? view.getSelectedText() : null;
     }
 
+    /**
+     * Scrolls the showing view to a method's declaration; views without method navigation search for its name.
+     *
+     * @param method the method
+     */
     public void scrollToMethod(MethodEntryModel method)
     {
         String methodName = method.getMethodEntry().getName();
@@ -472,8 +510,9 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Scroll to and highlight a specific field declaration.
-     * Only highlights in SOURCE and BYTECODE views.
+     * Scrolls to and highlights a field's declaration in the source or bytecode view; other views are left as they are.
+     *
+     * @param field the field
      */
     public void scrollToField(FieldEntryModel field)
     {
@@ -492,7 +531,9 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Set font size for all views.
+     * Sets the font size of every view, including those loaded later.
+     *
+     * @param size the font size in points
      */
     public void setFontSize(int size)
     {
@@ -504,7 +545,9 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Set word wrap for all views.
+     * Sets word wrap in every view, including those loaded later.
+     *
+     * @param enabled true to wrap lines
      */
     public void setWordWrap(boolean enabled)
     {
@@ -516,7 +559,9 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Set the project model for navigation features.
+     * Sets the project the views navigate within.
+     *
+     * @param projectModel the open project
      */
     public void setProjectModel(ProjectModel projectModel)
     {
@@ -533,12 +578,12 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Navigate to a specific bytecode offset within a method.
-     * Automatically switches to bytecode view.
-     * @param methodName the method name
-     * @param methodDesc the method descriptor
+     * Switches to the bytecode view and highlights the instruction at a bytecode offset.
+     *
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
      * @param pc the bytecode offset
-     * @return true if navigation succeeded
+     * @return false when the method is not found in the bytecode
      */
     public boolean navigateToPC(String methodName, String methodDesc, int pc)
     {
@@ -546,12 +591,28 @@ public class EditorTab extends JPanel
         return bytecodeView.highlightPC(methodName, methodDesc, pc);
     }
 
+    /**
+     * Switches to the source view and scrolls to the statement at a bytecode offset, selecting a token on that line.
+     *
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
+     * @param pc the bytecode offset
+     * @param selectToken the text to select on the line
+     * @return false when the source has no line map, so the caller can fall back to method navigation
+     */
     public boolean navigateToSourceOffset(String methodName, String methodDesc, int pc, String selectToken)
     {
         setViewMode(ViewMode.SOURCE);
         return sourceView.scrollToSourceOffset(methodName, methodDesc, pc, selectToken);
     }
 
+    /**
+     * Scrolls the showing view to a method; views without method navigation search for its name.
+     *
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
+     * @return true if the view moved, false in the hex view or while the view is loading
+     */
     public boolean navigateToMethod(String methodName, String methodDesc)
     {
         switch (currentMode)

@@ -19,11 +19,7 @@ import java.awt.Window;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-/**
- * Base for the simple single-field rename dialogs (field, method): a "Current: …" label, a styled name input,
- * Cancel/Rename buttons, and Enter/Escape handling. Subclasses supply the title, the current-value label, the
- * initial name, and the entity word used in validation messages.
- */
+/** Base for the modal single-field rename dialogs: a current-value label, a name field, Cancel and Rename, with Enter and Escape bound; Rename closes only on a valid Java identifier. */
 public abstract class AbstractRenameDialog extends ThemedJDialog
 {
 
@@ -142,12 +138,22 @@ public abstract class AbstractRenameDialog extends ThemedJDialog
         JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    /**
+     * The name as currently typed.
+     *
+     * @return the field's text, trimmed
+     */
     public String getNewName()
     {
         return nameField.getText().trim();
     }
 
-    /** Whether {@code s} is a valid Java identifier (shared by the rename dialogs). */
+    /**
+     * Checks whether a string is a valid Java identifier; keywords are not rejected.
+     *
+     * @param s the candidate
+     * @return true if s is non-empty and every character is legal in its position
+     */
     public static boolean isValidJavaIdentifier(String s)
     {
         if (s == null || s.isEmpty())

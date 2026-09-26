@@ -7,6 +7,7 @@ import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/** The view mode picker for class tabs, grouping modes under unselectable headers, with optional Live modes while attached. */
 public class ViewModeComboBox extends JComboBox<Object>
 {
 
@@ -23,6 +24,7 @@ public class ViewModeComboBox extends JComboBox<Object>
         SHORTCUTS.put(ViewMode.HEX, "");
     }
 
+    /** Creates the picker with every static view mode, Source selected. */
     public ViewModeComboBox()
     {
         setFont(JStudioTheme.getCodeFont(11));
@@ -68,9 +70,9 @@ public class ViewModeComboBox extends JComboBox<Object>
     private static final String LIVE_HEADER = HEADER_PREFIX + "Live";
 
     /**
-     * Shows or hides the Live view modes ({@link ViewMode#LIVE_INSTANCES}, {@link ViewMode#LIVE_STATICS}) under
-     * a "Live" header at the top of the list. Only meaningful while attached to a live JVM. Removing them while
-     * one is selected resets the selection to {@link ViewMode#SOURCE}.
+     * Shows or hides the Live Instances and Live Statics modes under a Live header at the top; hiding them while one is selected selects Source.
+     *
+     * @param available whether a live JVM is attached
      */
     public void setLiveViewsAvailable(boolean available)
     {
@@ -102,6 +104,11 @@ public class ViewModeComboBox extends JComboBox<Object>
         }
     }
 
+    /**
+     * Returns the selected view mode.
+     *
+     * @return the selected mode, or Source when none is selected
+     */
     public ViewMode getSelectedViewMode()
     {
         Object selected = getSelectedItem();
@@ -112,6 +119,11 @@ public class ViewModeComboBox extends JComboBox<Object>
         return ViewMode.SOURCE;
     }
 
+    /**
+     * Selects a view mode.
+     *
+     * @param mode the mode to select
+     */
     public void setSelectedViewMode(ViewMode mode)
     {
         setSelectedItem(mode);

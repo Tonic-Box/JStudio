@@ -7,6 +7,7 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A method suspected of decrypting strings, with its signature type, a confidence from 0 to 1, and the indicators behind it. */
 @Getter
 public class DecryptorCandidate
 {
@@ -17,6 +18,14 @@ public class DecryptorCandidate
     private final double confidence;
     private final List<String> indicators;
 
+    /**
+     * Creates a candidate with no indicators.
+     *
+     * @param classFile the class declaring the method
+     * @param method the suspected decryptor
+     * @param type its signature pattern
+     * @param confidence how likely it is a decryptor, from 0 to 1
+     */
     public DecryptorCandidate(ClassFile classFile, MethodEntry method, DecryptorType type, double confidence)
     {
         this.classFile = classFile;
@@ -26,21 +35,41 @@ public class DecryptorCandidate
         this.indicators = new ArrayList<>();
     }
 
+    /**
+     * Records one reason the method looks like a decryptor.
+     *
+     * @param indicator a short human-readable reason
+     */
     public void addIndicator(String indicator)
     {
         indicators.add(indicator);
     }
 
+    /**
+     * Reads the declaring class's name.
+     *
+     * @return the internal name of the declaring class
+     */
     public String getClassName()
     {
         return classFile.getClassName();
     }
 
+    /**
+     * Reads the method's name.
+     *
+     * @return the method name
+     */
     public String getMethodName()
     {
         return method.getName();
     }
 
+    /**
+     * Formats the method as its simple class name, a dot, the method name and empty parentheses.
+     *
+     * @return the short label, for example Foo.a()
+     */
     public String getSimpleSignature()
     {
         String className = getClassName();
@@ -49,6 +78,7 @@ public class DecryptorCandidate
         return simpleName + "." + getMethodName() + "()";
     }
 
+    /** A decryptor signature pattern, with a readable description and the method descriptor it matches. */
     @Getter
     public enum DecryptorType
     {
@@ -69,6 +99,12 @@ public class DecryptorCandidate
             this.expectedDescriptor = expectedDescriptor;
         }
 
+        /**
+         * Finds the pattern whose descriptor matches exactly.
+         *
+         * @param descriptor a method descriptor
+         * @return the matching type, or UNKNOWN when none matches
+         */
         public static DecryptorType fromDescriptor(String descriptor)
         {
             for (DecryptorType type : values())

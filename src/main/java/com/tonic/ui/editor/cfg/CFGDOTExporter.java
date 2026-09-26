@@ -2,9 +2,17 @@ package com.tonic.ui.editor.cfg;
 
 import java.util.List;
 
+/** Writes a control flow graph as Graphviz DOT. */
 public class CFGDOTExporter
 {
 
+    /**
+     * Writes the blocks and their edges as a DOT digraph.
+     *
+     * @param blocks the blocks
+     * @param methodName the graph title, or null or empty for none
+     * @return the DOT source
+     */
     public String export(List<CFGBlock> blocks, String methodName)
     {
         StringBuilder sb = new StringBuilder();

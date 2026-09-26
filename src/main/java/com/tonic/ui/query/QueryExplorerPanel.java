@@ -33,6 +33,7 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
+/** The query explorer: a highlighted editor for the query language, run in the background with a time budget, and a results table. */
 public class QueryExplorerPanel extends JPanel
 {
 
@@ -60,6 +61,11 @@ public class QueryExplorerPanel extends JPanel
     private volatile boolean running;
     private final MainFrame mainFrame;
 
+    /**
+     * Builds the panel; results are cleared whenever a project loads.
+     *
+     * @param mainFrame the window that navigates to a result
+     */
     public QueryExplorerPanel(MainFrame mainFrame)
     {
         this.mainFrame = mainFrame;

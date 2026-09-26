@@ -21,14 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * A live debugging session against one target JVM: loads the pure-Java agent (via attach) and holds the
- * connected {@link LiveAgentClient}. The Java agent supports class browse, live method-body patch
- * (redefine), runtime class capture, the thread list, and deadlock detection.
- *
- * <p>Byte fetching is lazy by design (callers pull a class's bytes on demand); enumeration is eager and
- * cheap (names + access flags). Not thread-safe - the underlying connection is serial.
- */
+/** A live session against one target JVM, holding the connected agent client; not thread-safe, since the connection is serial. */
 @Getter
 public final class LiveSession implements Closeable
 {
@@ -45,8 +38,12 @@ public final class LiveSession implements Closeable
     }
 
     /**
-     * Attaches to {@code pid}, loads the Java agent jar (via {@code java.lang.instrument}), connects, and
-     * performs the handshake. A free loopback port is chosen automatically.
+     * Loads the Java agent into a process on a free loopback port, then connects and handshakes.
+     *
+     * @param pid the target process id
+     * @param agentJarPath the agent jar's path
+     * @return the connected session
+     * @throws Exception if the attach, the agent load, or the connection fails
      */
     public static LiveSession attach(String pid, String agentJarPath) throws Exception
     {
@@ -56,8 +53,12 @@ public final class LiveSession implements Closeable
     }
 
     /**
-     * Connects to an agent that is already loaded (e.g. via {@code -javaagent:agent.jar=port=N} in a JVM we
-     * launched) and listening on {@code port}. Skips the attach/loadAgent step; the connect is retry-safe.
+     * Connects to an agent already loaded and listening, retrying until a 10 second deadline, then handshakes.
+     *
+     * @param pid the target process id, recorded for display
+     * @param port the loopback port the agent listens on
+     * @return the connected session
+     * @throws Exception if the connection or the handshake fails
      */
     public static LiveSession connect(String pid, int port) throws Exception
     {
@@ -74,140 +75,296 @@ public final class LiveSession implements Closeable
         }
     }
 
-    /** Eagerly enumerate all loaded classes (names + access flags); cheap, no bytecode transferred. */
+    /**
+     * Lists every loaded class by name and access flags, without bytecode.
+     *
+     * @return the loaded classes
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public List<LoadedClass> enumerateClasses() throws IOException
     {
         return client.listClasses();
     }
 
-    /** Pull one class's current bytecode from the target ("com/foo/Bar"). */
+    /**
+     * Fetches one class's current bytecode from the target.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the class file bytes
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public byte[] fetchClassBytes(String internalName) throws IOException
     {
         return client.getClassBytes(internalName);
     }
 
+    /**
+     * Replaces every registered event listener with one.
+     *
+     * @param listener the listener, or null to leave none
+     */
     public void setEventListener(Consumer<LiveEvent> listener)
     {
         client.setEventListener(listener);
     }
 
+    /**
+     * Registers an event listener alongside any others.
+     *
+     * @param listener the listener; null is ignored
+     */
     public void addEventListener(Consumer<LiveEvent> listener)
     {
         client.addEventListener(listener);
     }
 
+    /**
+     * Unregisters an event listener.
+     *
+     * @param listener the listener to remove
+     */
     public void removeEventListener(Consumer<LiveEvent> listener)
     {
         client.removeEventListener(listener);
     }
 
+    /**
+     * Lists the target's live threads.
+     *
+     * @return the threads
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public List<ThreadInfo> getThreads() throws IOException
     {
         return client.getThreads();
     }
 
-    /** Live method-body redefinition: replace {@code internalName}'s bytecode in the target. */
+    /**
+     * Replaces a class's bytecode in the target.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @param classBytes the new class file bytes
+     * @throws IOException if the request fails or the agent rejects the redefinition
+     */
     public void redefineClass(String internalName, byte[] classBytes) throws IOException
     {
         client.redefineClass(internalName, classBytes);
     }
 
-    /** Arm/disarm streaming of runtime class loads (CLASS_LOADED events with real bytes). */
+    /**
+     * Turns streaming of runtime class loads, as class-loaded events carrying bytes, on or off.
+     *
+     * @param on whether to stream loads
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public void setCaptureLoads(boolean on) throws IOException
     {
         client.setCaptureLoads(on);
     }
 
-    /** Snapshot the wait-for graph for deadlock detection ({@link Deadlocks#find}). */
+    /**
+     * Snapshots the monitor wait-for graph, for deadlock detection.
+     *
+     * @return one edge per blocked thread, from the waiter to the monitor's owner
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public List<ContentionEdge> getContention() throws IOException
     {
         return client.getContention();
     }
 
-    /** Triggers a HotSpot heap dump in the target; returns the local .hprof file path. */
+    /**
+     * Triggers a HotSpot heap dump in the target.
+     *
+     * @return the local path of the .hprof file
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public String heapDump() throws IOException
     {
         return client.heapDump();
     }
 
-    /** Whether the target's agent can drive Flight Recorder (JFR present on the target runtime). */
+    /**
+     * Reports whether the target's agent can drive Flight Recorder.
+     *
+     * @return true when the target runtime has JFR
+     */
     public boolean supportsJfr()
     {
         return (info.getCapabilities() & com.tonic.live.protocol.LiveProtocol.CAP_JFR) != 0;
     }
 
-    /** Starts a JFR recording (base {@code profile} plus category bits; {@code maxSizeMb} 0 = unbounded). */
+    /**
+     * Starts a JFR recording.
+     *
+     * @param profile the base JFR settings profile
+     * @param categoryMask the extra event categories to enable, as bits
+     * @param maxSizeMb the recording's size cap in megabytes, or 0 for unbounded
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public void startRecording(String profile, int categoryMask, int maxSizeMb) throws IOException
     {
         client.jfrStart(profile, categoryMask, maxSizeMb);
     }
 
-    /** Stops the active JFR recording and returns the local {@code .jfr} path. */
+    /**
+     * Stops the active JFR recording and dumps it.
+     *
+     * @return the local path of the .jfr file
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public String stopRecording() throws IOException
     {
         return client.jfrStop();
     }
 
-    /** Dumps the in-progress recording without stopping it; returns the local {@code .jfr} path. */
+    /**
+     * Dumps the active JFR recording without stopping it.
+     *
+     * @return the local path of the .jfr file
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public String snapshotRecording() throws IOException
     {
         return client.jfrSnapshot();
     }
 
-    /** Reads the live static fields of a class. */
+    /**
+     * Reads the live static fields of a class.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the fields with their current values
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public List<StaticField> getStatics(String internalName) throws IOException
     {
         return client.getStatics(internalName);
     }
 
-    /** Sets a static field's value (or to null); returns the field's re-read value. */
+    /**
+     * Sets a static field's value, or sets it to null.
+     *
+     * @param className the declaring class's internal name
+     * @param field the field name
+     * @param setNull whether to set null and ignore value
+     * @param value the new value as text
+     * @return the field's value as re-read after the change
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public String setStatic(String className, String field, boolean setNull, String value) throws IOException
     {
         return client.setStatic(className, field, setNull, value);
     }
 
-    /** First scan: walk app roots, retaining matching field locations as the new candidate set. */
+    /**
+     * Runs a first value scan over the app's roots, keeping the matching field locations as the new candidate set.
+     *
+     * @param valueType the value type, one of the protocol's SCAN_ constants
+     * @param scanKind how to match, one of the protocol's SCANKIND_ constants
+     * @param value the value to match, as text
+     * @param value2 the upper bound for a between scan
+     * @param pkgFilter the package prefix to restrict the walk to, or empty for all
+     * @param userClassesOnly whether to skip JDK classes
+     * @param maxVisited the cap on objects visited
+     * @param maxMatches the cap on matches retained
+     * @param limit how many matches to return in the first page
+     * @return the first page of matches
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches, int limit) throws IOException
     {
         return scanFirst(valueType, scanKind, value, value2, pkgFilter, userClassesOnly, maxVisited, maxMatches, limit, false, false);
     }
 
     /**
-     * First scan with JDI-reach flags. {@code useDropbox} adds the JDI-parked objects as extra roots;
-     * {@code rootsOnly} scans ONLY those (the class-scoped path). The caller must park the set first.
+     * Runs a first value scan, optionally seeded with the object set parked by JDI.
+     *
+     * @param valueType the value type, one of the protocol's SCAN_ constants
+     * @param scanKind how to match, one of the protocol's SCANKIND_ constants
+     * @param value the value to match, as text
+     * @param value2 the upper bound for a between scan
+     * @param pkgFilter the package prefix to restrict the walk to, or empty for all
+     * @param userClassesOnly whether to skip JDK classes
+     * @param maxVisited the cap on objects visited
+     * @param maxMatches the cap on matches retained
+     * @param limit how many matches to return in the first page
+     * @param useDropbox whether to add the parked objects as extra roots; the caller must park them first
+     * @param rootsOnly whether to scan only the parked objects
+     * @return the first page of matches
+     * @throws IOException if the request fails or the agent reports an error
      */
     public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches, int limit, boolean useDropbox, boolean rootsOnly) throws IOException
     {
         return client.scanFirst(valueType, scanKind, value, value2, pkgFilter, userClassesOnly, maxVisited, maxMatches, limit, useDropbox, rootsOnly);
     }
 
-    /** Next scan: re-read the retained set and narrow it by the comparator (changed/increased/...). */
+    /**
+     * Re-reads the retained candidates and narrows them by a comparison.
+     *
+     * @param comparator the comparison, one of the protocol's CMP_ constants
+     * @param value the value compared against, as text
+     * @param value2 the upper bound for a between comparison
+     * @param offset the index of the first match to return
+     * @param limit how many matches to return
+     * @return a page of the narrowed matches
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public ScanPage scanNext(int comparator, String value, String value2, int offset, int limit) throws IOException
     {
         return client.scanNext(comparator, value, value2, offset, limit);
     }
 
-    /** Re-reads current values of the active (or pinned) set for live refresh. */
+    /**
+     * Re-reads the current values of the candidate set, for live refresh.
+     *
+     * @param pinnedOnly whether to read only the pinned locations
+     * @param offset the index of the first location to return
+     * @param limit how many locations to return
+     * @return a page of locations with current values
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public ScanPage scanRead(boolean pinnedOnly, int offset, int limit) throws IOException
     {
         return client.scanRead(pinnedOnly, offset, limit);
     }
 
-    /** Writes a value into a scanned field; returns the re-read value. */
+    /**
+     * Writes a value into a scanned field.
+     *
+     * @param id the scanned location's id
+     * @param isNull whether to write null and ignore value
+     * @param value the new value as text
+     * @return the field's value as re-read after the write
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public String scanWrite(long id, boolean isNull, String value) throws IOException
     {
         return client.scanWrite(id, isNull, value);
     }
 
-    /** Walks the heap for live instances of a class; their fields can then be read/written by handle. */
+    /**
+     * Walks the heap for live instances of a class.
+     *
+     * @param className the class's internal name
+     * @param maxInstances the cap on instances returned
+     * @param maxVisited the cap on objects visited
+     * @return handles to the instances found
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public List<LiveInstance> listInstances(String className, int maxInstances, int maxVisited) throws IOException
     {
         return listInstances(className, maxInstances, maxVisited, false);
     }
 
     /**
-     * Lists live instances of a class. When {@code fromDropbox} is set the agent consumes the JDI-parked object
-     * set (complete reach) instead of walking the heap; the caller must have parked it first.
+     * Lists live instances of a class, by heap walk or from the object set parked by JDI.
+     *
+     * @param className the class's internal name
+     * @param maxInstances the cap on instances returned
+     * @param maxVisited the cap on objects visited
+     * @param fromDropbox whether to take the parked set instead of walking; the caller must park it first
+     * @return handles to the instances found
+     * @throws IOException if the request fails or the agent reports an error
      */
     public List<LiveInstance> listInstances(String className, int maxInstances, int maxVisited, boolean fromDropbox)
             throws IOException
@@ -215,62 +372,127 @@ public final class LiveSession implements Closeable
         return client.listInstances(className, maxInstances, maxVisited, fromDropbox);
     }
 
+    /**
+     * Reads the fields of a live instance.
+     *
+     * @param handleId the instance's handle
+     * @return the fields with their current values
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public List<LiveField> instanceFields(long handleId) throws IOException
     {
         return client.instanceFields(handleId);
     }
 
+    /**
+     * Sets a field of a live instance.
+     *
+     * @param handleId the instance's handle
+     * @param field the field name
+     * @param isNull whether to set null and ignore value
+     * @param value the new value as text
+     * @return the field's value as re-read after the change
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public String setInstanceField(long handleId, String field, boolean isNull, String value) throws IOException
     {
         return client.setInstanceField(handleId, field, isNull, value);
     }
 
-    /** Freezes (re-applies on a timer) or unfreezes a scanned field at {@code value}. */
+    /**
+     * Freezes a scanned field at a value, re-applied on a timer, or unfreezes it.
+     *
+     * @param id the scanned location's id
+     * @param on whether to freeze
+     * @param value the value to hold
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public void scanFreeze(long id, boolean on, String value) throws IOException
     {
         client.scanFreeze(id, on, value);
     }
 
-    /** Pins/unpins a location onto the watch list (survives narrowing). */
+    /**
+     * Pins a location to the watch list, where it survives narrowing, or unpins it.
+     *
+     * @param id the scanned location's id
+     * @param on whether to pin
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public void scanPin(long id, boolean on) throws IOException
     {
         client.scanPin(id, on);
     }
 
-    /** Clears the scan session (active + pinned + freezes). */
+    /**
+     * Clears the scan session: candidates, pins and freezes.
+     *
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public void scanClear() throws IOException
     {
         client.scanClear();
     }
 
-    /** Lists the static methods of a class. */
+    /**
+     * Lists the static methods of a class.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the methods by name and descriptor
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public List<StaticMethod> listStaticMethods(String internalName) throws IOException
     {
         return client.listStaticMethods(internalName);
     }
 
-    /** Invokes a static method (args marshalled from strings); returns the formatted result. */
+    /**
+     * Invokes a static method in the target, marshalling the arguments from text.
+     *
+     * @param className the declaring class's internal name
+     * @param name the method name
+     * @param desc the method's JVM descriptor
+     * @param args the arguments as text
+     * @return the formatted result
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public String invokeStatic(String className, String name, String desc, List<String> args) throws IOException
     {
         return client.invokeStatic(className, name, desc, args);
     }
 
     /**
-     * Compiles-then-runs: defines a snippet class (its {@code static Object run()}) in the target, in a
-     * throwaway child of {@code contextClass}'s classloader, and returns the captured output + result.
+     * Defines compiled snippet classes in a throwaway child of a class's loader and runs the wrapper's static run method.
+     *
+     * @param classes the compiled class files by binary name
+     * @param mainBinaryName the binary name of the wrapper class to run
+     * @param contextClass the internal name of the class whose loader scopes visibility, or empty
+     * @return the captured output and the result or exception
+     * @throws IOException if the request fails or the agent reports an error
      */
     public String eval(Map<String, byte[]> classes, String mainBinaryName, String contextClass) throws IOException
     {
         return client.eval(classes, mainBinaryName, contextClass);
     }
 
-    /** Snapshots all threads with their current stacks. */
+    /**
+     * Snapshots every thread with its current stack.
+     *
+     * @param maxDepth the cap on frames per thread
+     * @return the threads with their stacks
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public List<ThreadStack> getThreadStacks(int maxDepth) throws IOException
     {
         return client.getThreadStacks(maxDepth);
     }
 
-    /** Reads a snapshot of the target JVM's runtime metrics (memory, GC, CPU, threads, classes). */
+    /**
+     * Reads the target's runtime metrics: memory, GC, CPU, threads and classes.
+     *
+     * @return the snapshot
+     * @throws IOException if the request fails or the agent reports an error
+     */
     public MetricsSnapshot getMetrics() throws IOException
     {
         return client.getMetrics();

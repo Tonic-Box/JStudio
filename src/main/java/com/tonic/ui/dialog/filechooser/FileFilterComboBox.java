@@ -13,23 +13,25 @@ import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Combo box for file type filters.
- */
+/** A themed combo box of file filters that always ends with All Files. */
 public class FileFilterComboBox extends JComboBox<ExtensionFileFilter>
 {
 
-    /**
-     * Listener for filter changes.
-     */
+    /** A callback for filter selection changes. */
     public interface FilterChangeListener
     {
+        /**
+         * Called when the selected filter changes.
+         *
+         * @param filter the newly selected filter, or null if the list was emptied
+         */
         void onFilterChanged(ExtensionFileFilter filter);
     }
 
     private final DefaultComboBoxModel<ExtensionFileFilter> model;
     private FilterChangeListener listener;
 
+    /** Creates a combo box holding only All Files. */
     public FileFilterComboBox()
     {
         model = new DefaultComboBoxModel<>();
@@ -56,7 +58,9 @@ public class FileFilterComboBox extends JComboBox<ExtensionFileFilter>
     }
 
     /**
-     * Set the filter change listener.
+     * Sets the listener told about selection changes, replacing any previous one.
+     *
+     * @param listener the listener, or null for none
      */
     public void setFilterChangeListener(FilterChangeListener listener)
     {
@@ -64,7 +68,9 @@ public class FileFilterComboBox extends JComboBox<ExtensionFileFilter>
     }
 
     /**
-     * Set the available filters.
+     * Replaces the filters, drops nulls and All Files filters, appends All Files and selects the first.
+     *
+     * @param filters the filters, or null for All Files alone
      */
     public void setFilters(ExtensionFileFilter... filters)
     {
@@ -90,7 +96,9 @@ public class FileFilterComboBox extends JComboBox<ExtensionFileFilter>
     }
 
     /**
-     * Get the currently selected filter.
+     * The selected filter.
+     *
+     * @return the filter, or null if none is selected
      */
     public ExtensionFileFilter getSelectedFilter()
     {
@@ -98,7 +106,9 @@ public class FileFilterComboBox extends JComboBox<ExtensionFileFilter>
     }
 
     /**
-     * Get all available filters.
+     * Lists the filters in display order.
+     *
+     * @return a new list, ending with All Files
      */
     public List<ExtensionFileFilter> getFilters()
     {

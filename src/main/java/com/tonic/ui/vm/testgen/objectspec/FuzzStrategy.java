@@ -3,11 +3,13 @@ package com.tonic.ui.vm.testgen.objectspec;
 import lombok.Getter;
 import lombok.Setter;
 
+/** How to fuzz one value: a strategy type plus its range, string set, pattern or collection size bounds. */
 @Getter
 @Setter
 public class FuzzStrategy
 {
 
+    /** A fuzzing strategy type. */
     @Getter
     public enum Type
     {
@@ -43,20 +45,38 @@ public class FuzzStrategy
     private boolean includeNull = true;
     private int sampleCount = 5;
 
+    /** Creates a strategy of the default type for the value's type. */
     public FuzzStrategy()
     {
     }
 
+    /**
+     * Creates a strategy of the given type with default bounds.
+     *
+     * @param type the strategy type
+     */
     public FuzzStrategy(Type type)
     {
         this.type = type;
     }
 
+    /**
+     * Creates a strategy of the default type for the value's type.
+     *
+     * @return the new strategy
+     */
     public static FuzzStrategy defaultStrategy()
     {
         return new FuzzStrategy(Type.DEFAULT);
     }
 
+    /**
+     * Creates an integer range strategy.
+     *
+     * @param min the lowest value
+     * @param max the highest value
+     * @return the new strategy
+     */
     public static FuzzStrategy intRange(int min, int max)
     {
         FuzzStrategy s = new FuzzStrategy(Type.INT_RANGE);
@@ -65,6 +85,13 @@ public class FuzzStrategy
         return s;
     }
 
+    /**
+     * Creates a double range strategy.
+     *
+     * @param min the lowest value
+     * @param max the highest value
+     * @return the new strategy
+     */
     public static FuzzStrategy doubleRange(double min, double max)
     {
         FuzzStrategy s = new FuzzStrategy(Type.DOUBLE_RANGE);
@@ -73,6 +100,12 @@ public class FuzzStrategy
         return s;
     }
 
+    /**
+     * Creates a strategy that picks from fixed strings.
+     *
+     * @param values the strings to pick from
+     * @return the new strategy
+     */
     public static FuzzStrategy stringSet(String... values)
     {
         FuzzStrategy s = new FuzzStrategy(Type.STRING_SET);
@@ -80,6 +113,11 @@ public class FuzzStrategy
         return s;
     }
 
+    /**
+     * Describes the strategy for display.
+     *
+     * @return a short description such as int[0..10], or "default"
+     */
     public String getDescription()
     {
         switch (type)

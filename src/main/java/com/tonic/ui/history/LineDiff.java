@@ -3,22 +3,17 @@ package com.tonic.ui.history;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Minimal line diff producing aligned rows for a side-by-side view. Common prefix/suffix are trimmed first (cheap),
- * then an LCS aligns the differing middle; adjacent deletes/inserts are paired into CHANGE rows so a modified line
- * shows old vs new on the same row. A size cap on the LCS keeps huge files from blowing up (the middle then degrades
- * to plain delete+insert blocks).
- */
+/** A line diff that yields aligned rows for a side-by-side view, pairing adjacent deletes and inserts into change rows. */
 public final class LineDiff
 {
 
-    /** EQUAL = unchanged; DELETE = left only; INSERT = right only; CHANGE = paired modification (both sides). */
+    /** What a row is: unchanged, left only, right only, or a modified line with both sides. */
     public enum Type
     {
         EQUAL, DELETE, INSERT, CHANGE
     }
 
-    /** One aligned row. {@code left}/{@code right} are null on the filler side of a DELETE/INSERT. */
+    /** One aligned row; the side a delete or insert lacks is null. */
     public static final class Row
     {
         public final Type type;
@@ -39,6 +34,13 @@ public final class LineDiff
     {
     }
 
+    /**
+     * Aligns two line lists: trims the common prefix and suffix, then aligns the rest by longest common subsequence.
+     *
+     * @param left the old lines
+     * @param right the new lines
+     * @return the rows, top to bottom
+     */
     public static List<Row> diff(List<String> left, List<String> right)
     {
         int n = left.size();

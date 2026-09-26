@@ -15,6 +15,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Set;
 
+/** The bytecode debugger view: method browser, bytecode and source views, stack, locals, call stack and an arguments and output area, driving one debug session. */
 public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugListener
 {
 
@@ -43,6 +44,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
     private static final int TAB_ARGUMENTS = 0;
     private static final int TAB_OUTPUT = 1;
 
+    /** Builds the debugger view with a fresh debug session and no method loaded. */
     public DebuggerPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout(5, 5));
@@ -193,6 +195,11 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         }
     }
 
+    /**
+     * Makes a method the one to debug and shows its bytecode and source.
+     *
+     * @param method the method
+     */
     public void setMethod(MethodEntry method)
     {
         this.currentMethod = method;
@@ -289,6 +296,11 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         }
     }
 
+    /**
+     * Makes a method the one to debug, clears breakpoints and shows its bytecode; does nothing if the model is null.
+     *
+     * @param methodModel the method, or null
+     */
     public void loadMethod(MethodEntryModel methodModel)
     {
         if (methodModel == null) return;
@@ -330,6 +342,11 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         sourceView.showMethod(method, breakpoints());
     }
 
+    /**
+     * Starts a debug session on the loaded method, initializing the VM if needed; failures are shown in the output and a dialog.
+     *
+     * @param args the arguments to pass, or none to use those configured in the arguments panel
+     */
     public void startDebugging(Object... args)
     {
         if (currentMethod == null)
@@ -396,6 +413,7 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         }
     }
 
+    /** Stops the debug session and clears the execution highlight. */
     public void stopDebugging()
     {
         session.stop();
@@ -406,6 +424,11 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         traceRecorder.onManualStop();
     }
 
+    /**
+     * Returns whether a debug session is running.
+     *
+     * @return true if the session has started and not stopped
+     */
     public boolean isDebugging()
     {
         return session.isStarted();

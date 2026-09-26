@@ -13,9 +13,16 @@ import com.tonic.simulation.metrics.ComplexityMetrics;
 
 import java.util.*;
 
+/** Computes a class's statistics from its methods' bytecode. */
 public class StatisticsCalculator
 {
 
+    /**
+     * Computes the statistics of a class; methods with complexity up to 5 count as low, up to 10 as medium, the rest as high.
+     *
+     * @param classEntry the class
+     * @return the statistics, all zero when the class has no class file
+     */
     public ClassStatistics calculate(ClassEntryModel classEntry)
     {
         ClassFile cf = classEntry.getClassFile();

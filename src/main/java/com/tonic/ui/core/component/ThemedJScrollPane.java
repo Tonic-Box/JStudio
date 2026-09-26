@@ -9,27 +9,47 @@ import javax.swing.BorderFactory;
 import javax.swing.JScrollPane;
 import java.awt.Component;
 
+/** A borderless scroll pane whose background and viewport follow the theme's primary background. */
 public class ThemedJScrollPane extends JScrollPane implements ThemeChangeListener
 {
 
+    /** Creates an empty scroll pane and registers it for theme changes. */
     public ThemedJScrollPane()
     {
         super();
         initialize();
     }
 
+    /**
+     * Creates a scroll pane over a view and registers it for theme changes.
+     *
+     * @param view the component to scroll
+     */
     public ThemedJScrollPane(Component view)
     {
         super(view);
         initialize();
     }
 
+    /**
+     * Creates an empty scroll pane with the given scrollbar policies and registers it for theme changes.
+     *
+     * @param vsbPolicy the vertical scrollbar policy
+     * @param hsbPolicy the horizontal scrollbar policy
+     */
     public ThemedJScrollPane(int vsbPolicy, int hsbPolicy)
     {
         super(vsbPolicy, hsbPolicy);
         initialize();
     }
 
+    /**
+     * Creates a scroll pane over a view with the given scrollbar policies and registers it for theme changes.
+     *
+     * @param view the component to scroll
+     * @param vsbPolicy the vertical scrollbar policy
+     * @param hsbPolicy the horizontal scrollbar policy
+     */
     public ThemedJScrollPane(Component view, int vsbPolicy, int hsbPolicy)
     {
         super(view, vsbPolicy, hsbPolicy);

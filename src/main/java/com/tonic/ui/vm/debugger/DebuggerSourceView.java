@@ -30,14 +30,7 @@ import java.util.NavigableMap;
 import java.util.Set;
 import java.util.function.IntConsumer;
 
-/**
- * Read-only decompiled-source companion to the debugger's bytecode table, showing only the
- * displayed method (sliced from the class source using the decompiler's exact per-method text
- * spans, with gutter numbering kept in whole-document coordinates). Tracks the executing statement
- * during stepping by resolving the current PC through the per-method bytecode-offset-to-line maps,
- * and supports toggling breakpoints from source lines by inverting the same map. Decompiled text,
- * line maps and spans are shared with the editor through the {@link ClassEntryModel} cache.
- */
+/** The debugger's read-only decompiled source for the displayed method; highlights the executing statement and toggles breakpoints from source lines. */
 public class DebuggerSourceView extends JPanel
 {
 
@@ -58,6 +51,7 @@ public class DebuggerSourceView extends JPanel
     private SwingWorker<DecompileResult, Void> decompileWorker;
     private Runnable pendingUpdate;
 
+    /** Builds the empty source view with its breakpoint gutter and context menu. */
     public DebuggerSourceView()
     {
         super(new BorderLayout());
@@ -107,13 +101,21 @@ public class DebuggerSourceView extends JPanel
         ThemeManager.getInstance().addThemeChangeListener(t -> SwingUtilities.invokeLater(this::applyTheme));
     }
 
+    /**
+     * Sets what runs when the user toggles a breakpoint on a source line.
+     *
+     * @param breakpointToggler receives the bytecode offset of the line's first statement
+     */
     public void setBreakpointToggler(IntConsumer breakpointToggler)
     {
         this.breakpointToggler = breakpointToggler;
     }
 
     /**
-     * Shows the method's source without an execution highlight (initial method load).
+     * Shows the method's source without an execution highlight, decompiling its class first if needed; does nothing if the method is null.
+     *
+     * @param method the method to show, or null
+     * @param breakpointPcs the bytecode offsets of the method's breakpoints
      */
     public void showMethod(MethodEntry method, Set<Integer> breakpointPcs)
     {
@@ -131,8 +133,11 @@ public class DebuggerSourceView extends JPanel
     }
 
     /**
-     * Highlights the statement executing at the given PC, re-slicing to the new method first when
-     * stepping crossed a method boundary.
+     * Highlights the statement executing at a bytecode offset, switching to the method first if it is not the one shown; does nothing if the method is null.
+     *
+     * @param method the executing method, or null
+     * @param pc the executing bytecode offset
+     * @param breakpointPcs the bytecode offsets of the method's breakpoints
      */
     public void showExecutionPoint(MethodEntry method, int pc, Set<Integer> breakpointPcs)
     {
@@ -148,6 +153,7 @@ public class DebuggerSourceView extends JPanel
         });
     }
 
+    /** Removes the execution highlight, if any. */
     public void clearExecutionHighlight()
     {
         if (executionHighlight != null)
@@ -159,7 +165,9 @@ public class DebuggerSourceView extends JPanel
     }
 
     /**
-     * Re-renders the breakpoint gutter dots from the displayed method's breakpoint PCs.
+     * Redraws the breakpoint markers in the gutter for the displayed method.
+     *
+     * @param breakpointPcs the bytecode offsets of the method's breakpoints
      */
     public void refreshBreakpoints(Set<Integer> breakpointPcs)
     {

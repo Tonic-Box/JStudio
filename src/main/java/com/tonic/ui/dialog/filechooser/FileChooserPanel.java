@@ -31,25 +31,27 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+/** The body of the file chooser: path bar, quick access list, file list, file name field, filter combo and action buttons. */
 public class FileChooserPanel extends ThemedJPanel
 {
 
-    /**
-     * Listener for file chooser completion events.
-     */
+    /** A callback for the chooser being approved or cancelled. */
     public interface FileChooserListener
     {
+        /**
+         * Called when the user approves a selection.
+         *
+         * @param files the chosen files, never empty
+         */
         void onFilesSelected(List<File> files);
 
+        /** Called when the user cancels. */
         void onCancelled();
     }
 
     private FileChooserMode mode = FileChooserMode.OPEN_FILE;
     private FileChooserListener listener;
-    /**
-     * -- GETTER --
-     *  Get the current directory.
-     */
+    /** The directory being shown, or null before the first navigation. */
     @Getter
     private File currentDirectory;
 
@@ -65,6 +67,7 @@ public class FileChooserPanel extends ThemedJPanel
     private boolean isLoading = false;
     private ExtensionFileFilter currentFilter;
 
+    /** Creates the panel in open-file mode with no directory shown. */
     public FileChooserPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -280,7 +283,9 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Navigate to a directory.
+     * Lists a directory in the background and shows it, recording it as a recent location; ignored while another listing is loading or if the directory does not exist.
+     *
+     * @param directory the directory
      */
     public void navigateTo(File directory)
     {
@@ -346,9 +351,7 @@ public class FileChooserPanel extends ThemedJPanel
         return files;
     }
 
-    /**
-     * Refresh the current file list.
-     */
+    /** Drops the cached listing of the current directory and lists it again. */
     public void refreshFileList()
     {
         if (currentDirectory != null)
@@ -577,7 +580,9 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Set the file chooser mode.
+     * Sets what the chooser selects, relabels the action button and relists the directory.
+     *
+     * @param mode the mode
      */
     public void setMode(FileChooserMode mode)
     {
@@ -601,7 +606,9 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Set the file chooser listener.
+     * Sets the listener told about approval and cancellation, replacing any previous one.
+     *
+     * @param listener the listener
      */
     public void setFileChooserListener(FileChooserListener listener)
     {
@@ -609,7 +616,9 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Set the initial directory.
+     * Shows a directory, as navigateTo does.
+     *
+     * @param directory the directory
      */
     public void setCurrentDirectory(File directory)
     {
@@ -617,7 +626,9 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Set the initial file name (for save mode).
+     * Fills the file name field.
+     *
+     * @param name the file name
      */
     public void setSelectedFileName(String name)
     {
@@ -625,7 +636,9 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Get the selected file name.
+     * The file name as currently typed.
+     *
+     * @return the field's text, trimmed
      */
     public String getSelectedFileName()
     {
@@ -633,7 +646,9 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Set the available file filters.
+     * Sets the filters offered, selecting the first.
+     *
+     * @param filters the filters, in order; All Files is always added
      */
     public void setFileFilters(ExtensionFileFilter... filters)
     {
@@ -645,7 +660,9 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Get the selected filter.
+     * The selected filter.
+     *
+     * @return the filter, or null if none is selected
      */
     public ExtensionFileFilter getSelectedFilter()
     {
@@ -653,7 +670,9 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Get the selected files.
+     * The files selected in the list.
+     *
+     * @return the selected files, empty if none
      */
     public List<File> getSelectedFiles()
     {
@@ -661,7 +680,9 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Get the selected file.
+     * The file named in the file name field, resolved against the current directory; for a list of quoted names, the first one.
+     *
+     * @return the file, or null if the field is empty
      */
     public File getSelectedFile()
     {
@@ -684,18 +705,14 @@ public class FileChooserPanel extends ThemedJPanel
         return new File(currentDirectory, text);
     }
 
-    /**
-     * Focus the file name field.
-     */
+    /** Focuses the file name field and selects its text. */
     public void focusFileNameField()
     {
         fileNameField.requestFocusInWindow();
         fileNameField.selectAll();
     }
 
-    /**
-     * Focus the file list.
-     */
+    /** Focuses the file list. */
     public void focusFileList()
     {
         fileListPanel.focusTable();

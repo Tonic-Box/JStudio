@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** A modal dialog for picking a static method, entering or configuring its arguments, and running it in the VM, traced or with invokes stubbed. */
 public class ExecuteMethodDialog extends JDialog
 {
 
@@ -43,11 +44,22 @@ public class ExecuteMethodDialog extends JDialog
     private final JLabel signatureLabel;
     private final JLabel statusLabel;
 
+    /**
+     * Creates the dialog with no method selected.
+     *
+     * @param parent the owning frame
+     */
     public ExecuteMethodDialog(Frame parent)
     {
         this(parent, null);
     }
 
+    /**
+     * Creates the dialog, preselecting a method if one is given.
+     *
+     * @param parent the owning frame
+     * @param methodModel the method to preselect, or null for none
+     */
     public ExecuteMethodDialog(Frame parent, MethodEntryModel methodModel)
     {
         super(parent, "Execute Method", true);

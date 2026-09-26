@@ -18,6 +18,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/** An interactive console for the bytecode VM that runs slash commands and ClassName.method(args) calls, with command history. */
 public class VMConsolePanel extends ThemedJPanel
 {
 
@@ -38,6 +39,7 @@ public class VMConsolePanel extends ThemedJPanel
     private Style infoStyle;
     private Style promptStyle;
 
+    /** Creates the console and prints the welcome text. */
     public VMConsolePanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -488,6 +490,7 @@ public class VMConsolePanel extends ThemedJPanel
         }
     }
 
+    /** Moves keyboard focus to the input field. */
     public void focusInput()
     {
         inputField.requestFocusInWindow();

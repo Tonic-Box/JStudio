@@ -25,6 +25,7 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.File;
 
+/** The script editor: a library of built-in and user scripts, a code editor, run targets and a console. */
 public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListener
 {
 
@@ -42,6 +43,7 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
     private Script currentScript;
     private Runnable onTransformComplete;
 
+    /** Builds the panel with an empty untitled AST script. */
     public ScriptEditorPanel()
     {
         super(BackgroundStyle.TERTIARY, new BorderLayout());
@@ -429,14 +431,18 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         statusLabel.setText("Loaded: " + script.getName());
     }
 
-    /** Rebuilds the list from the built-ins + the (possibly just-changed) user scripts directory. */
+    /** Rebuilds the script list from the built-ins and the user scripts directory. */
     public void reloadUserScripts()
     {
         scriptListModel.clear();
         loadBuiltInScripts();
     }
 
-    /** Reloads the list and selects/opens the user script with this name (e.g. one the AI just wrote). */
+    /**
+     * Reloads the list, then selects and opens the user script with this name, such as one just written by the assistant.
+     *
+     * @param name the script name; null only reloads
+     */
     public void selectScriptByName(String name)
     {
         reloadUserScripts();
@@ -557,6 +563,11 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         }
     }
 
+    /**
+     * Fills the class picker from a project.
+     *
+     * @param model the project; null empties the picker
+     */
     public void setProjectModel(ProjectModel model)
     {
         classComboBox.removeAllItems();
@@ -569,6 +580,11 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         }
     }
 
+    /**
+     * Selects the class scripts run against.
+     *
+     * @param classEntry the class; null leaves the selection unchanged
+     */
     public void setClass(ClassEntryModel classEntry)
     {
         if (classEntry != null)
@@ -577,6 +593,11 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         }
     }
 
+    /**
+     * Sets what runs after a script transforms code.
+     *
+     * @param callback the callback, or null for none
+     */
     public void setOnTransformComplete(Runnable callback)
     {
         this.onTransformComplete = callback;

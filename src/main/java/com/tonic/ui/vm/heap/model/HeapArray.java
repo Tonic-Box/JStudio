@@ -6,6 +6,7 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A heap array captured in a snapshot: its component type, length and copied element values. */
 @Getter
 public class HeapArray extends HeapObject
 {
@@ -31,6 +32,12 @@ public class HeapArray extends HeapObject
                 c == 'I' || c == 'J' || c == 'S' || c == 'Z';
     }
 
+    /**
+     * Reads one captured element.
+     *
+     * @param index the element index
+     * @return the element, or null when the index is out of range or no elements were captured
+     */
     public Object getElement(int index)
     {
         if (elements != null && index >= 0 && index < elements.length)
@@ -40,6 +47,11 @@ public class HeapArray extends HeapObject
         return null;
     }
 
+    /**
+     * Copies a byte array's elements out as bytes.
+     *
+     * @return the bytes, or null when this is not a byte array or has no captured elements
+     */
     public byte[] asByteArray()
     {
         if (!"B".equals(componentType) || elements == null)
@@ -57,6 +69,11 @@ public class HeapArray extends HeapObject
         return bytes;
     }
 
+    /**
+     * Copies a char array's elements out as chars.
+     *
+     * @return the chars, or null when this is not a char array or has no captured elements
+     */
     public char[] asCharArray()
     {
         if (!"C".equals(componentType) || elements == null)
@@ -78,12 +95,22 @@ public class HeapArray extends HeapObject
         return chars;
     }
 
+    /**
+     * Reads a char array as a string.
+     *
+     * @return the string, or null when this is not a char array or has no captured elements
+     */
     public String asString()
     {
         char[] chars = asCharArray();
         return chars != null ? new String(chars) : null;
     }
 
+    /**
+     * Converts the component descriptor to a short readable type name.
+     *
+     * @return the primitive name, the simple class name, a name with bracket pairs for nested arrays, or ? when unknown
+     */
     public String getComponentTypeName()
     {
         if (componentType == null || componentType.isEmpty()) return "?";
@@ -143,6 +170,15 @@ public class HeapArray extends HeapObject
         return elementName + "[]".repeat(dims);
     }
 
+    /**
+     * Captures an array instance, copying every element.
+     *
+     * @param instance the live array
+     * @param allocationTime the instruction count at which the array was allocated
+     * @param provenance where the array was allocated, or null if unknown
+     * @param mutations the writes recorded against the array, or null for none
+     * @return the captured array; an element that cannot be read is null
+     */
     public static HeapArray fromArrayInstance(ArrayInstance instance, long allocationTime, ProvenanceInfo provenance, List<MutationEvent> mutations)
     {
         Object[] elements = new Object[instance.getLength()];
@@ -205,29 +241,53 @@ public class HeapArray extends HeapObject
         return getComponentTypeName() + "[" + length + "] #" + getId();
     }
 
+    /**
+     * Starts a new array builder.
+     *
+     * @return an empty builder
+     */
     public static Builder builder()
     {
         return new Builder();
     }
 
+    /** Builder for heap arrays; the component type defaults to empty. */
     public static class Builder extends HeapObject.Builder
     {
         private String componentType = "";
         private int length;
         private Object[] elements;
 
+        /**
+         * Sets the component type.
+         *
+         * @param componentType the element type descriptor
+         * @return this builder
+         */
         public Builder componentType(String componentType)
         {
             this.componentType = componentType;
             return this;
         }
 
+        /**
+         * Sets the array length.
+         *
+         * @param length the number of elements
+         * @return this builder
+         */
         public Builder length(int length)
         {
             this.length = length;
             return this;
         }
 
+        /**
+         * Sets the captured elements.
+         *
+         * @param elements the element values, boxed for primitives
+         * @return this builder
+         */
         public Builder elements(Object[] elements)
         {
             this.elements = elements;

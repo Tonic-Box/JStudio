@@ -11,22 +11,20 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * One plugin tracked by the {@link GuiPluginManager}: its metadata, the jar/class-loader it came from, its current
- * lifecycle state, and the list of UI contributions to undo when it is disabled or the app exits. EDT-confined.
- */
+/** One plugin the GuiPluginManager tracks: its metadata, the jar and class loader it came from, its state, and the contributions to undo when it is torn down; used on the EDT. */
 public final class LoadedPlugin
 {
 
+    /** Where a plugin is in its lifecycle. */
     public enum State
     {
-        /** Active: its contributions are live. */
+        /** Started; its contributions are live. */
         ENABLED,
-        /** Loaded but not started (user-disabled, or a non-active sibling). */
+        /** Loaded but not started, because the user disabled it. */
         DISABLED,
-        /** init/start threw; see {@link #error}. */
+        /** Loading, init or start threw; the error holds why. */
         ERROR,
-        /** A non-UI {@code @JStudioPlugin} found in a GUI-dropped jar; inert here. */
+        /** A plugin that does not implement UiPlugin; the GUI never runs it. */
         NOT_UI
     }
 

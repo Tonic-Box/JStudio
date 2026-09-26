@@ -1,15 +1,10 @@
 package com.tonic.plugin.api.ui;
 
-/**
- * A handle to something a plugin contributed to the UI (a tab, a menu item, an event subscription, a thread).
- * Calling {@link #remove()} undoes the contribution. Implementations must be idempotent: calling it more than
- * once (e.g. the plugin removes it itself and the host later removes it again on unload) is a no-op after the
- * first call.
- */
+/** A handle that undoes one UI contribution; the ones UiApi returns are safe to remove more than once, and a plugin's own ones passed to track should be too. */
 @FunctionalInterface
 public interface Registration
 {
 
-    /** Undoes the contribution. Idempotent. */
+    /** Undoes the contribution. */
     void remove();
 }

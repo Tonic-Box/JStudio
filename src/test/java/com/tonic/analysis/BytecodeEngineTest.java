@@ -15,6 +15,7 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/** Runs ArrayList's static initializer and constructor in the bytecode engine against a class pool that includes the JDK. */
 public class BytecodeEngineTest
 {
 

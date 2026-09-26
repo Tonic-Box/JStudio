@@ -12,6 +12,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+/** Shows a run's timing, instruction count, call analysis and the most-called methods. */
 public class StatisticsPanel extends ThemedJPanel
 {
 
@@ -24,6 +25,7 @@ public class StatisticsPanel extends ThemedJPanel
 
     private final DefaultTableModel hotMethodsModel;
 
+    /** Creates the panel with every metric at zero. */
     public StatisticsPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_MEDIUM + 2, UIConstants.SPACING_MEDIUM + 2));
@@ -115,6 +117,7 @@ public class StatisticsPanel extends ThemedJPanel
         label.setText("  " + name + "  " + value);
     }
 
+    /** Resets every metric and empties the hot-methods table. */
     public void showEmpty()
     {
         updateMetricLabel(totalTimeLabel, "Total time:", "0ms");
@@ -126,6 +129,11 @@ public class StatisticsPanel extends ThemedJPanel
         hotMethodsModel.setRowCount(0);
     }
 
+    /**
+     * Computes and shows a run's metrics from its recorded calls.
+     *
+     * @param result the run's outcome
+     */
     public void update(ExecutionResult result)
     {
         updateMetricLabel(totalTimeLabel, "Total time:", result.getExecutionTimeMs() + "ms");

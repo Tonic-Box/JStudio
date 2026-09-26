@@ -8,6 +8,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+/** The top-level jstudio command; with no subcommand it prints a usage summary. */
 @Command(
         name = "jstudio",
         mixinStandardHelpOptions = true,

@@ -6,22 +6,14 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Result from a file chooser dialog operation.
- */
+/** The outcome of a file chooser: whether it was approved and the chosen files. */
 @Getter
 public class FileChooserResult
 {
 
-    /**
-     * -- GETTER --
-     *  Whether the user approved the selection (clicked Open/Save).
-     */
+    /** Whether the user approved the selection with Open or Save. */
     private final boolean approved;
-    /**
-     * -- GETTER --
-     *  Get all selected files.
-     */
+    /** The chosen files, unmodifiable and empty when cancelled. */
     private final List<File> selectedFiles;
 
     private FileChooserResult(boolean approved, List<File> selectedFiles)
@@ -33,7 +25,10 @@ public class FileChooserResult
     }
 
     /**
-     * Create a result for when the user approved (clicked Open/Save).
+     * Creates an approved result with one file.
+     *
+     * @param file the chosen file
+     * @return the result
      */
     public static FileChooserResult approved(File file)
     {
@@ -41,7 +36,10 @@ public class FileChooserResult
     }
 
     /**
-     * Create a result for when the user approved with multiple files.
+     * Creates an approved result with several files.
+     *
+     * @param files the chosen files, copied; null for none
+     * @return the result
      */
     public static FileChooserResult approved(List<File> files)
     {
@@ -49,7 +47,9 @@ public class FileChooserResult
     }
 
     /**
-     * Create a result for when the user cancelled.
+     * Creates a cancelled result with no files.
+     *
+     * @return the result
      */
     public static FileChooserResult cancelled()
     {
@@ -57,7 +57,9 @@ public class FileChooserResult
     }
 
     /**
-     * Whether the user cancelled the dialog.
+     * Checks whether the user cancelled.
+     *
+     * @return true if the selection was not approved
      */
     public boolean isCancelled()
     {
@@ -65,7 +67,9 @@ public class FileChooserResult
     }
 
     /**
-     * Get the selected file (first file if multiple were selected).
+     * The first chosen file.
+     *
+     * @return the file, or null if none was chosen
      */
     public File getSelectedFile()
     {

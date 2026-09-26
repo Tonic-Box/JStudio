@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/** The bytecode search tab: finds method calls, field accesses, allocations, casts and similar patterns across the project. */
 public class SearchPanel extends ThemedJPanel
 {
 
@@ -45,6 +46,11 @@ public class SearchPanel extends ThemedJPanel
 
     private List<SearchResult> lastResults;
 
+    /**
+     * Builds the search controls and results list.
+     *
+     * @param project the project to search
+     */
     public SearchPanel(ProjectModel project)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -275,15 +281,15 @@ public class SearchPanel extends ThemedJPanel
         return className;
     }
 
-    /**
-     * Refresh the panel.
-     */
+    /** Does nothing; the search runs on demand. */
     public void refresh()
     {
     }
 
     /**
-     * Get the selected search result.
+     * Finds the result behind the list selection.
+     *
+     * @return the selected result, or null if nothing is selected
      */
     public SearchResult getSelectedResult()
     {

@@ -20,18 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * A {@link PluginContext} for resident GUI plugins. Unlike {@link PluginContextImpl}, which binds one fixed
- * {@link ProjectModel}, this resolves the project <em>live</em> on every access: the desktop's current project
- * changes as the user opens/closes files. The project-bound APIs ({@link #getProject()}/{@link #getAnalysis()}/
- * {@link #getYabr()}) are constructed on demand from {@link ProjectService}'s current project, so there is nothing
- * to invalidate and no staleness window.
- * <p>
- * When no project is loaded the getters operate on an empty sentinel model rather than throwing, so a
- * background-polling plugin never sees an exception from a getter. {@code host.currentProject()} (nullable) is the
- * authoritative way to check whether a project is actually open. Per-plugin state (logger, config, results,
- * environment) is stable for the plugin's lifetime.
- */
+/** The PluginContext for resident GUI plugins, whose project-bound APIs are built on each call from the currently open project, or from an empty project when none is open, so they never go stale or throw. */
 public class LiveGuiPluginContext implements PluginContext
 {
 
@@ -42,6 +31,11 @@ public class LiveGuiPluginContext implements PluginContext
     private File exportDir;
     private ProjectModel emptyProject;
 
+    /**
+     * Creates a context with its own logger, empty configuration and results.
+     *
+     * @param pluginName the name that prefixes log lines and labels findings
+     */
     public LiveGuiPluginContext(String pluginName)
     {
         this.logger = new ConsolePluginLogger(pluginName);
@@ -147,6 +141,11 @@ public class LiveGuiPluginContext implements PluginContext
         return exportDir;
     }
 
+    /**
+     * Sets the directory getExportDir reports.
+     *
+     * @param exportDir the output directory, or null for none
+     */
     public void setExportDir(File exportDir)
     {
         this.exportDir = exportDir;

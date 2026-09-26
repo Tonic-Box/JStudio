@@ -13,25 +13,46 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * Launches a project's {@code main} entry point in a <b>separate JVM process</b>, so the target's
- * {@code System.exit}, an uncaught exception, or a native crash cannot take down JStudio. The current (edited)
- * project state is staged to a temp jar; stdout/stderr stream back through {@link RunOutput}.
- */
+/** Launches a project's main method in a separate JVM from a temp jar of its current state, so the target cannot take down JStudio. */
 public final class RunService
 {
 
-    /** Callbacks for a run; the stream/exit callbacks fire off the EDT, so implementations must marshal. */
+    /** Callbacks for a run; the output and exit callbacks fire off the EDT. */
     public interface RunOutput
     {
+        /**
+         * Called once the child process has started.
+         *
+         * @param commandLine the launch command, space-joined
+         */
         void onStarted(String commandLine);
 
+        /**
+         * Called for each line the child writes to stdout.
+         *
+         * @param line the line, without its terminator
+         */
         void onStdout(String line);
 
+        /**
+         * Called for each line the child writes to stderr.
+         *
+         * @param line the line, without its terminator
+         */
         void onStderr(String line);
 
+        /**
+         * Called when the child process exits.
+         *
+         * @param exitCode the process exit code
+         */
         void onFinished(int exitCode);
 
+        /**
+         * Called when staging or launching fails.
+         *
+         * @param message the failure, for display
+         */
         void onError(String message);
     }
 
@@ -40,8 +61,16 @@ public final class RunService
     }
 
     /**
-     * Stages the project and launches {@code mainClassInternal}'s {@code main} in a child JVM. Returns the
-     * {@link Process} (for {@link #terminate}), or null if staging/launch failed (reported via {@code out}).
+     * Stages the project to a temp jar and launches a class's main method in a child JVM.
+     *
+     * @param project the project to run
+     * @param mainClassInternal the main class's internal name, with slashes
+     * @param programArgs arguments passed to main
+     * @param vmOptions options passed to the JVM before the classpath
+     * @param workingDir the process working directory, or null to inherit JStudio's
+     * @param javaHome the JDK home to launch with, or null for the running JVM
+     * @param out receives the process's output, exit and errors
+     * @return the child process, or null if staging or launch failed (reported to out)
      */
     public static Process run(ProjectModel project, String mainClassInternal, List<String> programArgs, List<String> vmOptions, File workingDir, File javaHome, RunOutput out)
     {
@@ -94,7 +123,11 @@ public final class RunService
         return process;
     }
 
-    /** Forcibly terminates a process and any child processes it spawned. */
+    /**
+     * Forcibly terminates a process and every process it spawned; does nothing for null.
+     *
+     * @param process the process to kill
+     */
     public static void terminate(Process process)
     {
         if (process == null)

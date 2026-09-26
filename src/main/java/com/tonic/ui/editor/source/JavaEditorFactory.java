@@ -10,11 +10,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 
 import java.awt.Color;
 
-/**
- * Builds and themes Java {@link RSyntaxTextArea} editors so the source view and the live scratch pad share one
- * definition of "JStudio's Java editor" (syntax style, fonts, and the token-color scheme) rather than each
- * carrying its own copy.
- */
+/** Builds and themes Java syntax editors, so the source view and the live scratch pad share one definition of the editor's style, font and token colors. */
 public final class JavaEditorFactory
 {
 
@@ -22,7 +18,12 @@ public final class JavaEditorFactory
     {
     }
 
-    /** A fresh Java RSyntaxTextArea with JStudio's syntax style, font, and editing options. */
+    /**
+     * Creates a Java editor with JStudio's syntax style, font and editing options.
+     *
+     * @param editable whether the user can edit the text
+     * @return the new editor, not yet themed
+     */
     public static RSyntaxTextArea createEditor(boolean editable)
     {
         RSyntaxTextArea editor = new RSyntaxTextArea();
@@ -34,7 +35,12 @@ public final class JavaEditorFactory
         return editor;
     }
 
-    /** A line-numbered scroll pane wrapping {@code editor}. */
+    /**
+     * Wraps an editor in a borderless, line-numbered scroll pane.
+     *
+     * @param editor the editor to wrap
+     * @return the scroll pane
+     */
     public static RTextScrollPane createScrollPane(RSyntaxTextArea editor)
     {
         RTextScrollPane scrollPane = new RTextScrollPane(editor);
@@ -44,8 +50,10 @@ public final class JavaEditorFactory
     }
 
     /**
-     * Applies JStudio's current theme colors (editor surface, gutter, and the Java token-color scheme) to an
-     * editor and its scroll pane. Safe to call repeatedly (e.g. on theme changes).
+     * Applies the current theme's surface, gutter and token colors; safe to call again on each theme change.
+     *
+     * @param editor the editor to color
+     * @param scrollPane the editor's scroll pane, whose gutter is colored; may be null
      */
     public static void applyTheme(RSyntaxTextArea editor, RTextScrollPane scrollPane)
     {

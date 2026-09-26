@@ -26,10 +26,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A small modal dialog gathering a run configuration (JDK, program arguments, VM options, working directory)
- * before launching a {@code main} class. Theme-aware; last-used values persist via {@link Settings}.
- */
+/** The modal dialog that gathers a run configuration (JDK, program arguments, VM options, working directory) before launching a main class; last-used values persist in Settings. */
 public final class RunConfigDialog extends ThemedJDialog
 {
 
@@ -97,7 +94,14 @@ public final class RunConfigDialog extends ThemedJDialog
         setLocationRelativeTo(owner);
     }
 
-    /** Shows the dialog; returns the chosen config, or null if cancelled. */
+    /**
+     * Shows the dialog and blocks until it closes.
+     *
+     * @param owner the frame the dialog is modal to
+     * @param className the class being run, shown in the title
+     * @param defaultWorkingDir the working directory to offer when none was saved, or null
+     * @return the chosen configuration, or null if cancelled
+     */
     public static RunConfig show(Frame owner, String className, File defaultWorkingDir)
     {
         RunConfigDialog dialog = new RunConfigDialog(owner, className, defaultWorkingDir);

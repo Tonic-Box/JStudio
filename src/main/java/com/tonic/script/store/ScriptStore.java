@@ -11,10 +11,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Handles persistence of JStudio scripts.
- * Scripts are stored as JSON files with .yabr-script extension.
- */
+/** Saves and loads scripts: JSON .yabr-script files and plain .js files, with a per-user scripts directory under .yabr in the home directory. */
 public class ScriptStore
 {
 
@@ -22,7 +19,9 @@ public class ScriptStore
             File.separator + ".yabr" + File.separator + "scripts";
 
     /**
-     * Gets the user scripts directory, creating it if necessary.
+     * Gets the user scripts directory, creating it if missing; a failure to create it is logged, not thrown.
+     *
+     * @return the directory path, which may not exist if creation failed
      */
     public static Path getUserScriptsDirectory()
     {
@@ -42,7 +41,11 @@ public class ScriptStore
     }
 
     /**
-     * Saves a script to a file.
+     * Writes a script as JSON, replacing the file.
+     *
+     * @param script the script to save
+     * @param file the file to write
+     * @throws IOException if the file cannot be written
      */
     public static void saveScript(Script script, File file) throws IOException
     {
@@ -59,7 +62,11 @@ public class ScriptStore
     }
 
     /**
-     * Loads a script from a file.
+     * Reads a JSON script file; missing fields take defaults and the name defaults to the file name.
+     *
+     * @param file the .yabr-script file
+     * @return the script, marked not built in
+     * @throws IOException if the file cannot be read
      */
     public static Script loadScript(File file) throws IOException
     {
@@ -78,7 +85,11 @@ public class ScriptStore
     }
 
     /**
-     * Loads a script from plain text (for .js files).
+     * Reads a plain .js script, taking its name and mode from header comments in the content.
+     *
+     * @param file the script file
+     * @return the script, marked not built in
+     * @throws IOException if the file cannot be read
      */
     public static Script loadPlainScript(File file) throws IOException
     {
@@ -94,7 +105,9 @@ public class ScriptStore
     }
 
     /**
-     * Loads all user scripts from the scripts directory.
+     * Loads every .yabr-script and .js file in the user scripts directory, logging and skipping files that fail.
+     *
+     * @return the loaded scripts; empty when there are none
      */
     public static List<Script> loadUserScripts()
     {
@@ -149,7 +162,10 @@ public class ScriptStore
     }
 
     /**
-     * Saves a script to the user scripts directory.
+     * Saves a script into the user scripts directory, named after the script with unsafe characters replaced by underscores.
+     *
+     * @param script the script to save
+     * @throws IOException if the file cannot be written
      */
     public static void saveToUserDirectory(Script script) throws IOException
     {
@@ -160,7 +176,10 @@ public class ScriptStore
     }
 
     /**
-     * Deletes a script from the user scripts directory.
+     * Deletes a script's file from the user scripts directory; a failure is logged.
+     *
+     * @param script the script whose file to delete
+     * @return true if a file was deleted, false if none existed or deletion failed
      */
     public static boolean deleteFromUserDirectory(Script script)
     {

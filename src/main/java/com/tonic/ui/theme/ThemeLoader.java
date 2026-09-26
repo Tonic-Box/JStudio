@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Loads the built-in themes from JSON resources under /themes/, caching each by name. */
 public class ThemeLoader
 {
 
@@ -31,6 +32,11 @@ public class ThemeLoader
     {
     }
 
+    /**
+     * Loads every built-in theme, skipping any that fail to load.
+     *
+     * @return the themes, in built-in order
+     */
     public static List<Theme> loadAllThemes()
     {
         List<Theme> themes = new ArrayList<>();
@@ -45,6 +51,12 @@ public class ThemeLoader
         return themes;
     }
 
+    /**
+     * Loads a theme from its JSON resource, or returns the cached copy; failures are logged to the console.
+     *
+     * @param name the theme's key, which is also its resource file name
+     * @return the theme, or null if the resource is missing or cannot be parsed
+     */
     public static Theme loadTheme(String name)
     {
         if (themeCache.containsKey(name))
@@ -131,6 +143,7 @@ public class ThemeLoader
         }
     }
 
+    /** Drops every cached theme so the next load rereads its resource. */
     public static void clearCache()
     {
         themeCache.clear();

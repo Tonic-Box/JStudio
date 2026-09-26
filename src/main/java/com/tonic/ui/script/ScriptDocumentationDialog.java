@@ -12,6 +12,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 
+/** The modeless script language reference: a section tree beside the selected page, re-rendered on theme change. */
 public class ScriptDocumentationDialog extends JDialog
 {
 
@@ -19,6 +20,11 @@ public class ScriptDocumentationDialog extends JDialog
     private JEditorPane contentPane;
     private JSplitPane splitPane;
 
+    /**
+     * Builds the dialog showing the overview.
+     *
+     * @param owner the window it centers on
+     */
     public ScriptDocumentationDialog(Window owner)
     {
         super(owner, "Script Language Reference", ModalityType.MODELESS);

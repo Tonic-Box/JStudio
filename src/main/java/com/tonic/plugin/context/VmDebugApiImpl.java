@@ -21,12 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Drives JStudio's bytecode interpreter/debugger for plugins. Each {@link #start} mints a fresh isolated
- * {@link VmInstance} (its own heap over a defensive bytecode snapshot) wrapped in a {@link VMDebugSession}, keyed by
- * an opaque handle, so concurrent callers (e.g. subagents) run independent sessions that don't disturb each other or
- * the Bytecode Debugger UI. Maps YABR debug state to the public DTOs.
- */
+/** The VmDebugApi over VMDebugSession, keeping up to 16 sessions keyed by random handles, each on its own snapshot VM; thread-safe. */
 public class VmDebugApiImpl implements VmDebugApi
 {
 

@@ -6,6 +6,7 @@ import com.tonic.ui.vm.model.ExecutionResult;
 import javax.swing.*;
 import java.awt.*;
 
+/** A one-row summary of a run: success or failure, return value or exception, time, instruction and call counts, with an expandable stack trace. */
 public class SummaryBar extends JPanel
 {
 
@@ -33,6 +34,7 @@ public class SummaryBar extends JPanel
         return new Color(error.getRed() / 4, error.getGreen() / 8, error.getBlue() / 8);
     }
 
+    /** Creates the bar showing no result. */
     public SummaryBar()
     {
         setLayout(new BorderLayout());
@@ -109,6 +111,7 @@ public class SummaryBar extends JPanel
         return sep;
     }
 
+    /** Shows the no-result state. */
     public void showEmpty()
     {
         statusIcon.setText("");
@@ -124,6 +127,7 @@ public class SummaryBar extends JPanel
         setBackground(JStudioTheme.getBgSecondary());
     }
 
+    /** Shows the running state. */
     public void showExecuting()
     {
         statusIcon.setText("...");
@@ -140,6 +144,11 @@ public class SummaryBar extends JPanel
         setBackground(JStudioTheme.getBgSecondary());
     }
 
+    /**
+     * Shows a run's outcome, tinting the bar green or red and offering the stack trace when the run threw.
+     *
+     * @param result the run's outcome
+     */
     public void update(ExecutionResult result)
     {
         if (result.isSuccess())

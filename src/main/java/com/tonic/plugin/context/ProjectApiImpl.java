@@ -16,11 +16,17 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/** The ProjectApi over one fixed project model. */
 public class ProjectApiImpl implements ProjectApi
 {
 
     private final ProjectModel projectModel;
 
+    /**
+     * Creates the API over a project.
+     *
+     * @param projectModel the project to read
+     */
     public ProjectApiImpl(ProjectModel projectModel)
     {
         this.projectModel = projectModel;

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+/** The debugger's local variables table; double-clicking a value edits it, or inspects it if it is an object. */
 public class LocalsPanel extends ThemedJPanel
 {
 
@@ -32,6 +33,7 @@ public class LocalsPanel extends ThemedJPanel
     private ObjectInspectorDialog.FieldEditCallback onObjectFieldEdit;
     private ClassResolver classResolver;
 
+    /** Builds the empty, themed locals table. */
     public LocalsPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -75,16 +77,31 @@ public class LocalsPanel extends ThemedJPanel
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    /**
+     * Sets what runs when the user edits a local's value.
+     *
+     * @param callback receives the slot and the new value
+     */
     public void setOnValueEdit(BiConsumer<Integer, ConcreteValue> callback)
     {
         this.onValueEdit = callback;
     }
 
+    /**
+     * Sets what runs when the user edits a field in the object inspector.
+     *
+     * @param callback receives the object, field and new value
+     */
     public void setOnObjectFieldEdit(ObjectInspectorDialog.FieldEditCallback callback)
     {
         this.onObjectFieldEdit = callback;
     }
 
+    /**
+     * Sets the resolver the object inspector uses; without one, objects cannot be inspected.
+     *
+     * @param classResolver the resolver, or null
+     */
     public void setClassResolver(ClassResolver classResolver)
     {
         this.classResolver = classResolver;
@@ -138,11 +155,17 @@ public class LocalsPanel extends ThemedJPanel
         }
     }
 
+    /**
+     * Replaces the listed locals.
+     *
+     * @param entries the locals to show
+     */
     public void updateLocals(List<LocalEntry> entries)
     {
         tableModel.setEntries(entries);
     }
 
+    /** Removes every listed local. */
     public void clear()
     {
         tableModel.clear();

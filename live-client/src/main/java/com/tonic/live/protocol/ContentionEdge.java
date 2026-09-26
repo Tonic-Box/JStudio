@@ -2,10 +2,7 @@ package com.tonic.live.protocol;
 
 import lombok.Getter;
 
-/**
- * One edge of the live wait-for graph: a thread blocked entering a monitor, and the thread that currently
- * owns that monitor. A cycle among these edges is a deadlock (see {@link com.tonic.live.Deadlocks}).
- */
+/** One edge of the live wait-for graph: a thread blocked entering a monitor, and the thread that owns it. */
 @Getter
 public final class ContentionEdge
 {
@@ -15,6 +12,15 @@ public final class ContentionEdge
     private final long ownerThreadId;
     private final String ownerThreadName;
 
+    /**
+     * Creates an edge.
+     *
+     * @param threadId the blocked thread's id
+     * @param threadName the blocked thread's name
+     * @param monitorClass the class of the monitor object
+     * @param ownerThreadId the owning thread's id
+     * @param ownerThreadName the owning thread's name
+     */
     public ContentionEdge(long threadId, String threadName, String monitorClass, long ownerThreadId, String ownerThreadName)
     {
         this.threadId = threadId;

@@ -24,13 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * App-side owner of the optional JDI debug session (the control-plane counterpart to
- * {@link com.tonic.ui.live.LiveAttachService}, which owns the instrument agent). Holds the single
- * {@link DebugSession}, marshals its off-EDT callbacks onto the EDT as EventBus events, and exposes
- * connect/disconnect, breakpoint install, resume, and paused-frame inspection. Breakpoints are session-scoped;
- * the {@link BreakpointService} re-installs them on connect and clears them on disconnect.
- */
+/** The owner of the single optional JDI debug session; it relays the session's callbacks onto the EDT as EventBus events. */
 public final class DebugManager implements DebugListener
 {
 
@@ -51,23 +45,40 @@ public final class DebugManager implements DebugListener
     {
     }
 
+    /** @return the shared manager */
     public static DebugManager getInstance()
     {
         return INSTANCE;
     }
 
+    /**
+     * Tells whether a debug session is open.
+     *
+     * @return true if connected
+     */
     public boolean isConnected()
     {
         return session != null;
     }
 
+    /**
+     * Tells whether the target is suspended at a breakpoint.
+     *
+     * @return true if connected and paused
+     */
     public boolean isPaused()
     {
         DebugSession s = session;
         return s != null && s.isPaused();
     }
 
-    /** Connects JDI to a target already serving JDWP at {@code host:port} (a JStudio-launched JVM). */
+    /**
+     * Drops any current session, connects JDI to a target already serving JDWP, and installs the registered breakpoints.
+     *
+     * @param host the target's host
+     * @param port the target's JDWP port
+     * @throws IOException if the connection fails
+     */
     public synchronized void connect(String host, int port) throws IOException
     {
         disconnect();
@@ -77,7 +88,13 @@ public final class DebugManager implements DebugListener
         postSession(true);
     }
 
-    /** Like {@link #connect} but retries briefly, since a freshly launched JDWP listener may not be up yet. */
+    /**
+     * Connects like connect, retrying for about ten seconds while a freshly launched JDWP listener comes up.
+     *
+     * @param host the target's host
+     * @param port the target's JDWP port
+     * @throws IOException if every attempt fails, or if interrupted while waiting
+     */
     public void connectWithRetry(String host, int port) throws IOException
     {
         IOException last = null;
@@ -105,13 +122,20 @@ public final class DebugManager implements DebugListener
         throw last;
     }
 
-    /** Late-loads the JDWP agent into an externally-attached {@code pid}, then connects JDI (with retry). */
+    /**
+     * Loads the JDWP agent into an already running JVM, then connects JDI with retry.
+     *
+     * @param pid the target's process id
+     * @param port the port for the JDWP agent to listen on
+     * @throws Exception if loading the agent or connecting fails
+     */
     public void connectExternal(String pid, int port) throws Exception
     {
         AttachLauncher.loadJdwp(pid, port);
         connectWithRetry("127.0.0.1", port);
     }
 
+    /** Disposes the session and posts a disconnected event; does nothing when not connected. */
     public synchronized void disconnect()
     {
         DebugSession s = session;
@@ -125,11 +149,21 @@ public final class DebugManager implements DebugListener
         }
     }
 
+    /**
+     * Tells whether a breakpoint hit suspends every thread rather than just the hitting one.
+     *
+     * @return the saved suspend-all setting
+     */
     public boolean isSuspendAll()
     {
         return Settings.getInstance().isDebuggerSuspendAll();
     }
 
+    /**
+     * Saves the suspend-all setting and applies it to the open session, if any.
+     *
+     * @param suspendAll true to suspend every thread on a breakpoint hit
+     */
     public void setSuspendAll(boolean suspendAll)
     {
         Settings.getInstance().setDebuggerSuspendAll(suspendAll);
@@ -140,6 +174,14 @@ public final class DebugManager implements DebugListener
         }
     }
 
+    /**
+     * Installs a breakpoint in the open session and, once per class, injects a synthetic local variable table in the background; does nothing when not connected.
+     *
+     * @param className the declaring class, dotted
+     * @param methodName the method's name
+     * @param methodDesc the method's JVM descriptor
+     * @param pc the bytecode offset within the method
+     */
     public void addBreakpoint(String className, String methodName, String methodDesc, long pc)
     {
         DebugSession s = session;
@@ -156,6 +198,14 @@ public final class DebugManager implements DebugListener
         }
     }
 
+    /**
+     * Removes a breakpoint from the open session; does nothing when not connected.
+     *
+     * @param className the declaring class, dotted
+     * @param methodName the method's name
+     * @param methodDesc the method's JVM descriptor
+     * @param pc the bytecode offset within the method
+     */
     public void removeBreakpoint(String className, String methodName, String methodDesc, long pc)
     {
         DebugSession s = session;
@@ -165,6 +215,7 @@ public final class DebugManager implements DebugListener
         }
     }
 
+    /** Resumes the paused target; does nothing when not connected. */
     public void resume()
     {
         DebugSession s = session;
@@ -175,8 +226,11 @@ public final class DebugManager implements DebugListener
     }
 
     /**
-     * Parks (via JDI) up to {@code max} live instances of {@code className} into the agent's dropbox for the
-     * agent to consume. Returns the count parked, or -1 if unavailable (so callers fall back to the agent walk).
+     * Parks live instances of a class into the agent's dropbox through JDI for the agent to consume.
+     *
+     * @param className the class, dotted
+     * @param max the most instances to park
+     * @return the number parked, or -1 if not connected or parking failed
      */
     public int parkInstances(String className, int max)
     {
@@ -185,8 +239,10 @@ public final class DebugManager implements DebugListener
     }
 
     /**
-     * Parks (via JDI) up to {@code max} objects held by the target's thread stacks into the agent's dropbox, to
-     * be used as extra scan roots. Returns the count parked, or -1 if unavailable.
+     * Parks objects held by the target's thread stacks into the agent's dropbox through JDI, for use as extra scan roots.
+     *
+     * @param max the most objects to park
+     * @return the number parked, or -1 if not connected or parking failed
      */
     public int parkStackRoots(int max)
     {
@@ -194,26 +250,48 @@ public final class DebugManager implements DebugListener
         return s != null ? s.parkStackRoots(DROPBOX_CLASS, DROPBOX_FIELD, max) : -1;
     }
 
+    /**
+     * Lists the paused thread's call stack.
+     *
+     * @return the frames, or an empty list when not connected
+     */
     public List<DebugFrame> frames()
     {
         DebugSession s = session;
         return s != null ? s.frames() : Collections.emptyList();
     }
 
+    /**
+     * Lists the visible variables of one paused frame.
+     *
+     * @param frameIndex the frame's index in the call stack
+     * @return the variables, or an empty list when not connected
+     */
     public List<DebugVariable> variables(int frameIndex)
     {
         DebugSession s = session;
         return s != null ? s.variables(frameIndex) : Collections.emptyList();
     }
 
-    /** Fields/elements of a reference value handed out by {@link #variables} (click-to-expand). */
+    /**
+     * Lists the fields or elements of a reference value from an earlier variables call.
+     *
+     * @param refHandle the value's reference handle
+     * @return the fields or elements, or an empty list when not connected
+     */
     public List<DebugVariable> objectFields(long refHandle)
     {
         DebugSession s = session;
         return s != null ? s.objectFields(refHandle) : Collections.emptyList();
     }
 
-    /** The first {@code max} elements of an array reference (for the hover preview / element viewer). */
+    /**
+     * Lists the leading elements of an array reference.
+     *
+     * @param refHandle the array's reference handle
+     * @param max the most elements to return
+     * @return the elements, or an empty list when not connected
+     */
     public List<DebugVariable> arrayElements(long refHandle, int max)
     {
         DebugSession s = session;

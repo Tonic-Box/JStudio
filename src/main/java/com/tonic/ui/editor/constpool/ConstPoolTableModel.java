@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/** The table model of the constant pool view: every entry of a class's pool, narrowed by a type filter and a search text. */
 public class ConstPoolTableModel extends AbstractTableModel
 {
 
@@ -67,6 +68,12 @@ public class ConstPoolTableModel extends AbstractTableModel
         }
     }
 
+    /**
+     * Gets the entry shown at a row.
+     *
+     * @param rowIndex the row in the filtered table
+     * @return the entry, or null when the row is out of range
+     */
     public ConstPoolEntry getEntryAt(int rowIndex)
     {
         if (rowIndex < 0 || rowIndex >= filteredEntries.size())
@@ -76,12 +83,23 @@ public class ConstPoolTableModel extends AbstractTableModel
         return filteredEntries.get(rowIndex);
     }
 
+    /**
+     * Replaces the entries with those of a class's constant pool.
+     *
+     * @param classEntry the class
+     */
     public void loadFromClassEntry(ClassEntryModel classEntry)
     {
         List<ConstPoolEntry> entries = buildEntries(classEntry);
         setEntries(entries);
     }
 
+    /**
+     * Reads a class's constant pool into entries, skipping unused slots.
+     *
+     * @param classEntry the class, or null
+     * @return the entries in index order, empty when there is no class or pool
+     */
     public static List<ConstPoolEntry> buildEntries(ClassEntryModel classEntry)
     {
         List<ConstPoolEntry> entries = new ArrayList<>();
@@ -113,29 +131,54 @@ public class ConstPoolTableModel extends AbstractTableModel
         return entries;
     }
 
+    /**
+     * Replaces the entries and reapplies the filters.
+     *
+     * @param entries the new entries
+     */
     public void setEntries(List<ConstPoolEntry> entries)
     {
         allEntries = new ArrayList<>(entries);
         applyFilters();
     }
 
+    /**
+     * Shows only entries of one type and refreshes the table.
+     *
+     * @param type the type name to keep, or All for every type
+     */
     public void setTypeFilter(String type)
     {
         this.typeFilter = type;
         applyFilters();
     }
 
+    /**
+     * Shows only entries whose value, raw value or index contains the text, ignoring case.
+     *
+     * @param text the search text, or null or empty to match everything
+     */
     public void setSearchText(String text)
     {
         this.searchText = text != null ? text.toLowerCase() : "";
         applyFilters();
     }
 
+    /**
+     * Counts every loaded entry.
+     *
+     * @return the number of entries before filtering
+     */
     public int getTotalCount()
     {
         return allEntries.size();
     }
 
+    /**
+     * Counts the entries that pass the filters.
+     *
+     * @return the number of rows shown
+     */
     public int getFilteredCount()
     {
         return filteredEntries.size();

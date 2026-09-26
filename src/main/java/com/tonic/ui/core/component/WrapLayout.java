@@ -8,15 +8,17 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Insets;
 
-/**
- * A {@link FlowLayout} that wraps its rows like normal but, unlike {@code FlowLayout}, reports a
- * preferred/minimum height that accounts for the wrapping at the target's actual width. Plain
- * {@code FlowLayout} always reports a single-row height, so a parent layout under-allocates space
- * and clips the wrapped rows; this fixes that, keeping all components visible in narrow containers.
- */
+/** A flow layout whose preferred and minimum heights account for rows wrapped at the container's current width. */
 public class WrapLayout extends FlowLayout
 {
 
+    /**
+     * Creates the layout.
+     *
+     * @param align the row alignment, one of the FlowLayout alignment constants
+     * @param hgap the horizontal gap between components
+     * @param vgap the vertical gap between rows
+     */
     public WrapLayout(int align, int hgap, int vgap)
     {
         super(align, hgap, vgap);

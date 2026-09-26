@@ -8,9 +8,16 @@ import com.tonic.ui.theme.Icons;
 import javax.swing.Icon;
 import java.util.List;
 
+/** A tree node for a statement, with its parts as labelled children. */
 public class StatementTreeNode extends ASTTreeNode
 {
 
+    /**
+     * Creates the node and builds its labelled children.
+     *
+     * @param stmt the statement
+     * @param propertyName the parent property name, or null for none
+     */
     public StatementTreeNode(Statement stmt, String propertyName)
     {
         super(stmt, propertyName);

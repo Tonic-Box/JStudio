@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** A bytecode listener that records the branch decisions taken during one execution, capping each branch site at 100 recorded visits so loops do not flood the path. */
 public class BranchTrackingListener implements BytecodeListener
 {
 
@@ -26,6 +27,7 @@ public class BranchTrackingListener implements BytecodeListener
     private int pendingBranchPC = -1;
     private String pendingMethodKey = null;
 
+    /** One branch decision: the method, the branch instruction's pc, and the pc execution actually continued at. */
     @Getter
     public static class BranchDecision
     {
@@ -33,6 +35,13 @@ public class BranchTrackingListener implements BytecodeListener
         private final int branchPC;
         private final int targetPC;
 
+        /**
+         * Creates a branch decision.
+         *
+         * @param methodKey the method as owner.name plus descriptor
+         * @param branchPC the pc of the branch instruction
+         * @param targetPC the pc execution continued at
+         */
         public BranchDecision(String methodKey, int branchPC, int targetPC)
         {
             this.methodKey = methodKey;
@@ -96,16 +105,31 @@ public class BranchTrackingListener implements BytecodeListener
                 instr instanceof LookupSwitchInstruction;
     }
 
+    /**
+     * Copies the recorded decisions.
+     *
+     * @return a copy of the recorded decisions, in execution order
+     */
     public List<BranchDecision> getBranchPath()
     {
         return new ArrayList<>(branchPath);
     }
 
+    /**
+     * Counts the recorded decisions.
+     *
+     * @return the number of recorded decisions
+     */
     public int getBranchCount()
     {
         return branchPath.size();
     }
 
+    /**
+     * Counts the distinct branch sites visited.
+     *
+     * @return the number of distinct branch sites among the recorded decisions
+     */
     public int getUniqueBranchPoints()
     {
         return (int) branchPath.stream()
@@ -114,6 +138,11 @@ public class BranchTrackingListener implements BytecodeListener
                 .count();
     }
 
+    /**
+     * Builds a signature identifying the path taken.
+     *
+     * @return the decisions joined with a bar, a 16-hex-digit hash when that exceeds 200 characters, or NO_BRANCHES when none were recorded
+     */
     public String getPathSignature()
     {
         if (branchPath.isEmpty())
@@ -136,6 +165,11 @@ public class BranchTrackingListener implements BytecodeListener
         return sb.toString();
     }
 
+    /**
+     * Hashes the path signature.
+     *
+     * @return a 16-hex-digit hash of the path signature
+     */
     public String getPathHash()
     {
         return computeHash(getPathSignature());
@@ -160,6 +194,7 @@ public class BranchTrackingListener implements BytecodeListener
         }
     }
 
+    /** Clears the recorded path and visit counts so the listener can track a new execution. */
     public void reset()
     {
         branchPath.clear();
@@ -168,6 +203,11 @@ public class BranchTrackingListener implements BytecodeListener
         pendingMethodKey = null;
     }
 
+    /**
+     * Describes the recorded path for display.
+     *
+     * @return the branch point and decision counts, with per-method counts when three or fewer methods branched, or "No branches taken"
+     */
     public String getSummary()
     {
         if (branchPath.isEmpty())

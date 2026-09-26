@@ -8,6 +8,7 @@ import com.tonic.ui.theme.Theme;
 import javax.swing.*;
 import java.awt.*;
 
+/** The strip of buttons along the bottom of the main window that open the console, history, bookmarks and comments views. */
 public class BottomToolbar extends ThemedJPanel
 {
 
@@ -21,6 +22,7 @@ public class BottomToolbar extends ThemedJPanel
     private Runnable onCommentsClicked;
     private Runnable onLocalHistoryClicked;
 
+    /** Creates the toolbar with its four buttons; each does nothing until its callback is set. */
     public BottomToolbar()
     {
         super(BackgroundStyle.SECONDARY, new FlowLayout(FlowLayout.RIGHT, 4, 2));
@@ -66,21 +68,41 @@ public class BottomToolbar extends ThemedJPanel
         return button;
     }
 
+    /**
+     * Sets what the Console button runs.
+     *
+     * @param callback the action to run on click, or null for none
+     */
     public void setOnConsoleClicked(Runnable callback)
     {
         this.onConsoleClicked = callback;
     }
 
+    /**
+     * Sets what the Bookmarks button runs.
+     *
+     * @param callback the action to run on click, or null for none
+     */
     public void setOnBookmarksClicked(Runnable callback)
     {
         this.onBookmarksClicked = callback;
     }
 
+    /**
+     * Sets what the Comments button runs.
+     *
+     * @param callback the action to run on click, or null for none
+     */
     public void setOnCommentsClicked(Runnable callback)
     {
         this.onCommentsClicked = callback;
     }
 
+    /**
+     * Sets what the History button runs.
+     *
+     * @param callback the action to run on click, or null for none
+     */
     public void setOnLocalHistoryClicked(Runnable callback)
     {
         this.onLocalHistoryClicked = callback;

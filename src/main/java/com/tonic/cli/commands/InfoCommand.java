@@ -12,6 +12,7 @@ import picocli.CommandLine.Parameters;
 import java.io.File;
 import java.util.concurrent.Callable;
 
+/** The info command: prints statistics, a package overview, or one class's fields and methods for a target. */
 @Command(
         name = "info",
         description = "Display information about target files",

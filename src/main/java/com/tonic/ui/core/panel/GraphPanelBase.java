@@ -18,6 +18,7 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/** Base for analysis panels that draw a JGraphX graph. */
 public abstract class GraphPanelBase extends AnalysisPanelBase
 {
 

@@ -2,6 +2,7 @@ package com.tonic.ui.vm.testgen.objectspec;
 
 import lombok.Getter;
 
+/** How a parameter gets its values: one fixed value, fuzzed variants, a configured object, or null. */
 @Getter
 public enum ValueMode
 {

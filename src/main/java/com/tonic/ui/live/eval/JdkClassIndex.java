@@ -12,16 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-/**
- * Index of common JDK classes (simple name -> fully-qualified name) built once by scanning the running
- * runtime's {@code jrt:} image (the {@code java.base} module), restricted to a curated set of everyday
- * packages. Used to offer JDK types in scratch-pad completion and to auto-import them when referenced by
- * simple name. Scoping to {@code java.base} keeps the scan fast and avoids cross-module simple-name clashes
- * (e.g. {@code java.awt.List}), so the common names resolve unambiguously.
- *
- * <p>If the {@code jrt} image is unavailable (non-modular runtime), the index is empty and the feature simply
- * degrades to project-only completion.
- */
+/** A lazily built index from simple name to fully qualified names of everyday java.base classes; empty on a runtime without a jrt image. */
 public final class JdkClassIndex
 {
 
@@ -33,7 +24,11 @@ public final class JdkClassIndex
     {
     }
 
-    /** Simple class name -> matching fully-qualified names (usually one) across the curated packages. */
+    /**
+     * Returns the index, building it on first use.
+     *
+     * @return a map from simple class name to its fully qualified names, usually one; empty if the jrt image is unavailable
+     */
     public static Map<String, List<String>> simpleToFqn()
     {
         Map<String, List<String>> local = index;

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/** Modal dialog that renames the project's classes, methods and fields to sequential names such as Class1, method1 and field1, logging each rename. */
 public class DeobfuscateNamesDialog extends ThemedJDialog
 {
 
@@ -39,6 +40,11 @@ public class DeobfuscateNamesDialog extends ThemedJDialog
     private int methodCounter = 1;
     private int fieldCounter = 1;
 
+    /**
+     * Creates the dialog with every option checked.
+     *
+     * @param mainFrame the main window, which owns the dialog and has its navigator refreshed after a rename
+     */
     public DeobfuscateNamesDialog(MainFrame mainFrame)
     {
         super(mainFrame, "Deobfuscate Names", ModalityType.APPLICATION_MODAL);

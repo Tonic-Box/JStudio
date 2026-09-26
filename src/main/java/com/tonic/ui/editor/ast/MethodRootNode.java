@@ -8,6 +8,7 @@ import lombok.Getter;
 import javax.swing.Icon;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+/** The tree node for one method; its only child is the method's recovered body, if any. */
 public class MethodRootNode extends DefaultMutableTreeNode
 {
 
@@ -19,6 +20,12 @@ public class MethodRootNode extends DefaultMutableTreeNode
     @Getter
     private final BlockStmt body;
 
+    /**
+     * Creates the node, adding the body as a child when present.
+     *
+     * @param method the method
+     * @param body the recovered body, or null when it could not be recovered
+     */
     public MethodRootNode(MethodEntry method, BlockStmt body)
     {
         super(method.getName() + method.getDesc());
@@ -33,11 +40,21 @@ public class MethodRootNode extends DefaultMutableTreeNode
         }
     }
 
+    /**
+     * Tells whether the method's body was recovered.
+     *
+     * @return true when a body is present
+     */
     public boolean hasBody()
     {
         return body != null;
     }
 
+    /**
+     * Builds the label from the access modifiers, name and a Java-style rendering of the descriptor.
+     *
+     * @return the label text
+     */
     public String getDisplayText()
     {
         return formatAccessFlags() +
@@ -146,6 +163,11 @@ public class MethodRootNode extends DefaultMutableTreeNode
         return idx;
     }
 
+    /**
+     * Picks the method icon for the visibility.
+     *
+     * @return the private, protected, public or package method icon
+     */
     public Icon getIcon()
     {
         if ((accessFlags & 0x0002) != 0)

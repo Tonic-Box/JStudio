@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/** A control flow graph vertex for one block; its label is the block's bytecode or IR as HTML, built on first use. */
 @Getter
 public class CFGBlockVertex
 {
@@ -25,6 +26,14 @@ public class CFGBlockVertex
     private String cachedHtml;
     private IRMethod irMethod;
 
+    /**
+     * Creates the vertex, lifting the method to IR when IR is shown; a failed lift leaves no IR.
+     *
+     * @param block the block
+     * @param method the method the block belongs to
+     * @param showIR true to label the vertex with IR, false for bytecode
+     * @param constPool the class constant pool, used for lifting
+     */
     public CFGBlockVertex(CFGBlock block, MethodEntry method, boolean showIR, ConstPool constPool)
     {
         this.block = block;

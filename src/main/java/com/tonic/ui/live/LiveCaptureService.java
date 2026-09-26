@@ -9,15 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-/**
- * Arms runtime class-load capture on a live session and feeds each captured class (a CLASS_LOADED event
- * carrying real bytes) into the live project. This surfaces runtime-generated classes - packer output,
- * {@code defineHiddenClass}, ASM-emitted glue - that never existed on disk.
- *
- * <p>Threading: the capture event arrives on the client's reader thread, which must not issue protocol
- * requests. Adding a class uses only the bytes already delivered (no request), but ClassFile parsing is
- * offloaded to a single-thread executor to keep the reader thread responsive.
- */
+/** Streams classes the target loads at runtime into the live project, so generated classes that never existed on disk show up. */
 public final class LiveCaptureService
 {
 
@@ -34,18 +26,31 @@ public final class LiveCaptureService
     @Getter
     private volatile boolean armed;
 
+    /**
+     * Creates a disarmed capture service.
+     *
+     * @param session the session whose class loads are captured
+     */
     public LiveCaptureService(LiveSession session)
     {
         this.session = session;
     }
 
-    /** Optional callback (internal class name) invoked after a captured class is added to the project. */
+    /**
+     * Sets the callback run after a captured class is added to the project.
+     *
+     * @param onCaptured receives the captured class's internal name, or null for none
+     */
     public void setOnCaptured(Consumer<String> onCaptured)
     {
         this.onCaptured = onCaptured;
     }
 
-    /** Begin streaming runtime class loads into the project. */
+    /**
+     * Starts streaming runtime class loads into the project; does nothing if already armed.
+     *
+     * @throws Exception if the target cannot be told to capture loads
+     */
     public void arm() throws Exception
     {
         if (armed)
@@ -57,7 +62,7 @@ public final class LiveCaptureService
         armed = true;
     }
 
-    /** Stop streaming runtime class loads. */
+    /** Stops streaming runtime class loads; does nothing if not armed. */
     public void disarm()
     {
         if (!armed)
@@ -75,6 +80,7 @@ public final class LiveCaptureService
         session.removeEventListener(hook);
     }
 
+    /** Disarms capture and stops the parsing worker. */
     public void dispose()
     {
         disarm();

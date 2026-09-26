@@ -23,6 +23,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 
+/** A zoomable view of an image resource over a checkerboard, with zoom controls and a size readout. */
 public class ImageResourceView extends AbstractEditorView
 {
 
@@ -38,6 +39,11 @@ public class ImageResourceView extends AbstractEditorView
     private static final double MIN_ZOOM = 0.1;
     private static final double MAX_ZOOM = 10.0;
 
+    /**
+     * Creates the view and decodes the resource's image at 100 percent.
+     *
+     * @param resource the image resource to show
+     */
     public ImageResourceView(ResourceEntryModel resource)
     {
         this.resource = resource;
@@ -177,6 +183,7 @@ public class ImageResourceView extends AbstractEditorView
         }
     }
 
+    /** Zooms in one 25 percent step, up to 1000 percent. */
     public void zoomIn()
     {
         if (zoomFactor < MAX_ZOOM)
@@ -187,6 +194,7 @@ public class ImageResourceView extends AbstractEditorView
         }
     }
 
+    /** Zooms out one 25 percent step, down to 10 percent. */
     public void zoomOut()
     {
         if (zoomFactor > MIN_ZOOM)
@@ -197,6 +205,7 @@ public class ImageResourceView extends AbstractEditorView
         }
     }
 
+    /** Zooms so the whole image fits the viewport with a small margin; does nothing when no image loaded. */
     public void fitToWindow()
     {
         if (originalImage == null) return;
@@ -210,6 +219,7 @@ public class ImageResourceView extends AbstractEditorView
         updateInfoLabel();
     }
 
+    /** Resets the zoom to 100 percent. */
     public void actualSize()
     {
         zoomFactor = 1.0;

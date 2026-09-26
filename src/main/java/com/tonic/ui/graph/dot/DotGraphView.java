@@ -27,12 +27,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
 
-/**
- * Renders a Graphviz DOT string as an inline, themed graph thumbnail scaled to the host's width; clicking opens an
- * interactive {@link DotGraphDialog}. The single entry point {@link #render(String)} returns a ready-to-embed
- * component (this view on success, or a raw-DOT fallback panel when the string can't be parsed), keeping
- * {@code com.mxgraph.*} off the caller's API. Self-themes via {@link ThemeManager}.
- */
+/** An inline, themed thumbnail of a DOT diagram scaled to the host's width; clicking it opens the interactive view. */
 public final class DotGraphView extends JPanel implements ThemeChangeListener
 {
 
@@ -40,16 +35,23 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener
     private static final int PAD = 6;
     private static final double EXPORT_SCALE = 2.0;
 
-    /** Renders {@code dot} as an inline interactive thumbnail (click opens a popup window), or a raw-source fallback. */
+    /**
+     * Renders DOT text as a thumbnail whose click opens a popup window.
+     *
+     * @param dot the DOT text
+     * @return the thumbnail, or a panel showing the raw text if it cannot be parsed or is empty
+     */
     public static JComponent render(String dot)
     {
         return render(dot, null);
     }
 
     /**
-     * Renders {@code dot} as an inline thumbnail whose click is handled by {@code onOpen} (given the DOT source) - e.g.
-     * to open the diagram as an editor tab instead of a popup. When {@code onOpen} is null the click opens the default
-     * {@link DotGraphDialog} window. Returns a raw-source fallback panel if the DOT can't be parsed.
+     * Renders DOT text as a thumbnail with a custom click handler, such as one opening the diagram as an editor tab.
+     *
+     * @param dot the DOT text
+     * @param onOpen receives the DOT text on click; null opens the popup window
+     * @return the thumbnail, or a panel showing the raw text if it cannot be parsed or is empty
      */
     public static JComponent render(String dot, Consumer<String> onOpen)
     {
@@ -68,7 +70,12 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener
         }
     }
 
-    /** The full interactive (pan/zoom + toolbar) view of {@code dot}, for embedding as a tab/panel instead of a popup. */
+    /**
+     * Builds the full interactive view, for embedding as a tab instead of a popup.
+     *
+     * @param dot the DOT text
+     * @return the pan and zoom panel
+     */
     public static JComponent interactiveComponent(String dot)
     {
         return new DotGraphPanel(dot);

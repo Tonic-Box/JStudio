@@ -12,6 +12,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A modal dialog that edits how each fuzzed parameter's values are produced, one row per parameter. */
 public class ParameterConfigDialog extends JDialog
 {
 
@@ -19,6 +20,12 @@ public class ParameterConfigDialog extends JDialog
     private List<ParamSpec> resultSpecs;
     private final List<ParamRow> paramRows = new ArrayList<>();
 
+    /**
+     * Creates the dialog with a row for each spec.
+     *
+     * @param owner the window to center over and block
+     * @param specs the parameter specs to edit, in parameter order
+     */
     public ParameterConfigDialog(Window owner, List<ParamSpec> specs)
     {
         super(owner, "Configure Parameters", ModalityType.APPLICATION_MODAL);
@@ -103,6 +110,7 @@ public class ParameterConfigDialog extends JDialog
         dispose();
     }
 
+    /** @return the edited specs in parameter order, or null if the dialog was not confirmed */
     public List<ParamSpec> getResult()
     {
         return resultSpecs;

@@ -9,13 +9,7 @@ import javax.swing.text.Segment;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * RSyntaxTextArea token maker for the Query DSL. Highlights the closed grammar — clause and
- * structural keywords, word operators, symbol operators, separators, and literals (string, regex,
- * number, boolean/null) — while leaving the open accessor vocabulary ({@code name}, {@code value},
- * {@code arg}, {@code call}, ...) as plain identifiers, so it never drifts from the registry. Keyword
- * matching is case-insensitive, mirroring the lexer.
- */
+/** The query language highlighter: colors keywords, operators and literals case-insensitively, and leaves accessor names plain. */
 public class QueryTokenMaker extends AbstractTokenMaker
 {
 

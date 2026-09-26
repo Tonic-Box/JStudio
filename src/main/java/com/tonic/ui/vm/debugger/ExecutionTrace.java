@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A recorded sequence of executed steps for one method run, exportable as Markdown or compact text. */
 @Getter
 public class ExecutionTrace
 {
@@ -20,6 +21,13 @@ public class ExecutionTrace
     private String finalResult;
     private boolean completedNormally;
 
+    /**
+     * Starts a trace timed from now.
+     *
+     * @param className the internal name of the traced method's class
+     * @param methodName the traced method's name
+     * @param descriptor the traced method's descriptor
+     */
     public ExecutionTrace(String className, String methodName, String descriptor)
     {
         this.className = className;
@@ -30,11 +38,22 @@ public class ExecutionTrace
         this.completedNormally = false;
     }
 
+    /**
+     * Appends a step to the trace.
+     *
+     * @param step the step
+     */
     public void addStep(ExecutionStep step)
     {
         steps.add(step);
     }
 
+    /**
+     * Records the end time and outcome of the run.
+     *
+     * @param result the result or exception text
+     * @param normal true if the method returned normally, false if it threw
+     */
     public void complete(String result, boolean normal)
     {
         this.endTime = LocalDateTime.now();
@@ -42,6 +61,11 @@ public class ExecutionTrace
         this.completedNormally = normal;
     }
 
+    /**
+     * Renders the whole trace as a Markdown report, with a heading each time execution enters a different method.
+     *
+     * @return the Markdown text
+     */
     public String toMarkdown()
     {
         StringBuilder sb = new StringBuilder();
@@ -127,6 +151,11 @@ public class ExecutionTrace
         return sb.toString();
     }
 
+    /**
+     * Renders the trace one line per step, with the stack after each step.
+     *
+     * @return the plain text
+     */
     public String toCompactText()
     {
         StringBuilder sb = new StringBuilder();

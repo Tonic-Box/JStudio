@@ -8,14 +8,7 @@ import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Resolves the running build's version and jar location from the packaged manifest.
- *
- * <p>The {@code Implementation-Version} manifest attribute is written by the Gradle build, so it is
- * present only when JStudio runs from a release jar; in a dev/IDE run {@link #current()} and
- * {@link #runningJar()} return {@code null}, which the update machinery treats as "not packaged" and
- * skips all checks.
- */
+/** The running build's version and jar location, read from the release jar's manifest; both are null in a development run. */
 public final class AppVersion
 {
 
@@ -26,7 +19,9 @@ public final class AppVersion
     }
 
     /**
-     * @return the running jar's {@code Implementation-Version}, or {@code null} when not run from a jar.
+     * Reads the Implementation-Version attribute of the running jar's manifest.
+     *
+     * @return the version, or null when not run from a jar or the manifest cannot be read
      */
     public static String current()
     {
@@ -47,7 +42,9 @@ public final class AppVersion
     }
 
     /**
-     * @return the jar file JStudio is running from, or {@code null} when running from classes (dev/IDE).
+     * Locates the jar this class was loaded from.
+     *
+     * @return the jar file, or null when running from a classes directory
      */
     public static File runningJar()
     {
@@ -68,7 +65,9 @@ public final class AppVersion
     }
 
     /**
-     * @return {@code true} when running from a packaged release jar with a version manifest.
+     * Tells whether this is a packaged release build.
+     *
+     * @return true when running from a jar whose manifest has a version
      */
     public static boolean isPackaged()
     {
@@ -76,10 +75,10 @@ public final class AppVersion
     }
 
     /**
-     * Extracts the leading integer of a version or release tag.
+     * Extracts the first integer of a version or release tag.
      *
-     * @param version e.g. {@code "v11"} or {@code "10.0-SNAPSHOT"}
-     * @return the leading integer ({@code 11}, {@code 10}), or {@code -1} if none
+     * @param version the version or tag, such as v11 or 10.0-SNAPSHOT
+     * @return the first integer, such as 11 or 10, or -1 if there is none or version is null
      */
     public static int parse(String version)
     {

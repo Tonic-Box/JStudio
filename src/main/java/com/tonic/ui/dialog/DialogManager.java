@@ -23,12 +23,7 @@ import java.util.Collection;
 
 import lombok.Getter;
 
-/**
- * Owns the lazily-created, cached tool dialogs hung off the main window (analysis, transform, find-in-files,
- * script editor, preferences, deobfuscation, remove-dead-code, VM console, bytecode debugger, heap forensics)
- * and their show/toFront lifecycle. Constructed with the {@link MainFrame} (dialog parent + facade for the
- * console, status bar, warning popups, and post-mutation refreshes) and its {@link EditorPanel}.
- */
+/** Owns the main window's tool dialogs, creating each on first use and reusing it after, and brings them forward on request. */
 public final class DialogManager
 {
 
@@ -42,11 +37,7 @@ public final class DialogManager
     private JDialog transformDialog;
     private TransformPanel transformPanel;
     private FindInFilesDialog findInFilesDialog;
-    /**
-     * -- GETTER --
-     * The Script Editor dialog instance, or
-     *  if it has not been opened yet.
-     */
+    /** The script editor dialog, or null if it has not been opened yet. */
     @Getter
     private ScriptEditorDialog scriptEditorDialog;
     private PreferencesDialog preferencesDialog;
@@ -60,13 +51,19 @@ public final class DialogManager
     private DeobfuscationPanel deobfuscationPanel;
     private RemoveDeadCodeDialog removeDeadCodeDialog;
 
+    /**
+     * Creates the manager; no dialog is created until first shown.
+     *
+     * @param mainFrame the main window, which parents the dialogs and supplies the console, status bar and refreshes
+     * @param editorPanel the editor, which supplies the current class, method and selection
+     */
     public DialogManager(MainFrame mainFrame, EditorPanel editorPanel)
     {
         this.mainFrame = mainFrame;
         this.editorPanel = editorPanel;
     }
 
-    /** Disposes the cached analysis dialog (e.g. when the project is replaced/closed). No-op when absent. */
+    /** Disposes the cached analysis dialog, for when the project is closed or replaced; does nothing if there is none. */
     public void disposeAnalysisDialog()
     {
         if (analysisDialog != null)
@@ -78,6 +75,7 @@ public final class DialogManager
         }
     }
 
+    /** Logs the current class and opens the analysis dialog; warns if no project is loaded. */
     public void runAnalysis()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -127,6 +125,7 @@ public final class DialogManager
         analysisDialog.toFront();
     }
 
+    /** Opens the analysis dialog on its similarity tab; warns if no project is loaded. */
     public void showSimilarityAnalysis()
     {
         if (openAnalysisDialog())
@@ -135,6 +134,7 @@ public final class DialogManager
         }
     }
 
+    /** Opens the analysis dialog on its search tab; warns if no project is loaded. */
     public void showSearchAnalysis()
     {
         if (openAnalysisDialog())
@@ -143,6 +143,7 @@ public final class DialogManager
         }
     }
 
+    /** Opens the analysis dialog on its strings tab; warns if no project is loaded. */
     public void showStringsAnalysis()
     {
         if (openAnalysisDialog())
@@ -162,9 +163,7 @@ public final class DialogManager
         return true;
     }
 
-    /**
-     * Run simulation analysis on the current method or class.
-     */
+    /** Opens the simulation tab and simulates the current method, or the current class if no method is selected; warns if no project is loaded. */
     public void runCodeAnalysis()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -196,7 +195,7 @@ public final class DialogManager
         }
     }
 
-    /** Opens (reusing one instance) the Remove Dead Code analysis dialog. */
+    /** Opens the remove dead code dialog; warns if no project is loaded. */
     public void showRemoveDeadCodeDialog()
     {
         if (ProjectService.getInstance().getCurrentProject() == null)
@@ -212,7 +211,11 @@ public final class DialogManager
         removeDeadCodeDialog.toFront();
     }
 
-    /** After dead-code removal: close tabs of removed classes and reload the navigator/editor. */
+    /**
+     * Closes the tabs of removed classes, posts a project update and refreshes the current view.
+     *
+     * @param removedClassesInternal the removed classes' internal names, with slashes
+     */
     public void refreshAfterDeadCodeRemoval(Collection<String> removedClassesInternal)
     {
         for (String internal : removedClassesInternal)
@@ -227,6 +230,7 @@ public final class DialogManager
         mainFrame.refreshCurrentView();
     }
 
+    /** Opens the SSA transforms dialog on the current class; warns if no project is loaded. */
     public void showTransformDialog()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -256,9 +260,7 @@ public final class DialogManager
         transformDialog.toFront();
     }
 
-    /**
-     * Shows the script editor dialog.
-     */
+    /** Opens the script editor on the current project and class; warns if no project is loaded. */
     public void showScriptEditor()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -286,6 +288,7 @@ public final class DialogManager
         scriptEditorDialog.toFront();
     }
 
+    /** Opens the string deobfuscation dialog on the current project; warns if no project is loaded. */
     public void showDeobfuscationPanel()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -314,6 +317,11 @@ public final class DialogManager
         mainFrame.getStatusBar().setMessage("String Deobfuscation");
     }
 
+    /**
+     * Logs the transform against the current class and opens the SSA transforms dialog; warns if no class is open.
+     *
+     * @param transformName the transform's name, used only in the log line
+     */
     public void applyTransform(String transformName)
     {
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
@@ -328,6 +336,7 @@ public final class DialogManager
         showTransformDialog();
     }
 
+    /** Opens the find in files dialog, prefilled with the editor selection when it is shorter than 100 characters; warns if no project is loaded. */
     public void showFindInProjectDialog()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -353,6 +362,7 @@ public final class DialogManager
         }
     }
 
+    /** Opens the preferences dialog, which reapplies the font size to the main window when settings are applied. */
     public void showPreferencesDialog()
     {
         if (preferencesDialog == null)
@@ -363,6 +373,7 @@ public final class DialogManager
         preferencesDialog.setVisible(true);
     }
 
+    /** Opens the VM console and focuses its input; warns if no project is loaded. */
     public void showVMConsole()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -386,6 +397,7 @@ public final class DialogManager
         vmConsolePanel.focusInput();
     }
 
+    /** Opens the bytecode debugger window on the current method, if any; warns if no project is loaded. */
     public void showBytecodeDebugger()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -422,6 +434,7 @@ public final class DialogManager
         mainFrame.getStatusBar().setMessage("Bytecode Debugger opened");
     }
 
+    /** Opens the heap forensics dialog. */
     public void showHeapForensics()
     {
         if (heapForensicsDialog == null || heapForensicsPanel == null)

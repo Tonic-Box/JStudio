@@ -41,15 +41,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Right-dock tool (shown only while attached): a Cheat-Engine-style value scanner over the target JVM. A
- * first scan walks the app roots retaining matching field locations; successive next-scans narrow that set
- * by a comparator (changed/increased/...). Matches can be written, frozen, or pinned to a watch list, and
- * each result's owning field links back into the static tools (usages/rename/decompile/call graph).
- *
- * <p>All agent calls go through {@link SwingWorkers} off the EDT (the connection is serial); a ~700ms timer
- * re-reads the active set and the pinned set in place while no scan is in flight.
- */
+/** A Cheat-Engine-style value scanner over the attached JVM whose matches narrow scan by scan and can be written, frozen or pinned. */
 public final class LiveValueScannerPanel extends ThemedJPanel
 {
 
@@ -133,6 +125,11 @@ public final class LiveValueScannerPanel extends ThemedJPanel
     private boolean scanInFlight;
     private boolean refreshInFlight;
 
+    /**
+     * Builds the scanner; results refresh on a timer while the panel is in a window.
+     *
+     * @param mainFrame the main window, used to link a match's field into the static tools
+     */
     public LiveValueScannerPanel(MainFrame mainFrame)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -351,7 +348,13 @@ public final class LiveValueScannerPanel extends ThemedJPanel
         super.removeNotify();
     }
 
-    /** Pre-fills the scan bar for the seeding entry points (heap/statics "Scan for this value"). */
+    /**
+     * Pre-fills the scan bar with a value to scan for.
+     *
+     * @param valueType the protocol value type to select; left unchanged if unknown
+     * @param value the value text, or null for none
+     * @param pkgFilter the package filter, or null for none
+     */
     public void seed(int valueType, String value, String pkgFilter)
     {
         for (int i = 0; i < VALUE_TYPES.length; i++)

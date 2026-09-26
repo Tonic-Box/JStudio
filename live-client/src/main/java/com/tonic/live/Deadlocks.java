@@ -9,11 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Detects deadlocks from a live wait-for graph (a list of {@link ContentionEdge}: thread -> owner of the
- * monitor it blocks on). A cycle in that graph is a deadlock. Each thread blocks on at most one monitor,
- * so the graph has out-degree <= 1 and every cycle is a simple ring found by walking successors.
- */
+/** Finds deadlocks as cycles in a live wait-for graph; each thread blocks on at most one monitor, so every cycle is a simple ring. */
 public final class Deadlocks
 {
 
@@ -21,7 +17,12 @@ public final class Deadlocks
     {
     }
 
-    /** Returns each deadlock cycle as the ordered list of edges forming the ring. */
+    /**
+     * Finds every deadlock cycle in a wait-for graph.
+     *
+     * @param edges the graph, one edge per blocked thread to its monitor's owner
+     * @return each cycle as the ordered edges forming the ring; empty when there is none
+     */
     public static List<List<ContentionEdge>> find(List<ContentionEdge> edges)
     {
         Map<Long, ContentionEdge> byThread = new HashMap<>();

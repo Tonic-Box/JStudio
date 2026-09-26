@@ -22,6 +22,7 @@ import java.awt.FlowLayout;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/** The log console: timestamped, level-colored lines appended on the event thread, trimmed to the newest thousand by default. */
 public class ConsolePanel extends ThemedJPanel
 {
 
@@ -40,6 +41,7 @@ public class ConsolePanel extends ThemedJPanel
     private boolean showTimestamps = true;
     private int maxLines = 1000;
 
+    /** Builds the console and logs a startup line. */
     public ConsolePanel()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -95,6 +97,12 @@ public class ConsolePanel extends ThemedJPanel
         return style;
     }
 
+    /**
+     * Appends a line on the event thread, trimming the oldest lines past the limit and scrolling to the end; safe from any thread.
+     *
+     * @param level the severity, which picks the prefix and color
+     * @param message the text
+     */
     public void log(LogLevel level, String message)
     {
         SwingUtilities.invokeLater(() ->
@@ -144,36 +152,72 @@ public class ConsolePanel extends ThemedJPanel
         });
     }
 
+    /**
+     * Appends an info line.
+     *
+     * @param message the text
+     */
     public void log(String message)
     {
         log(LogLevel.INFO, message);
     }
 
+    /**
+     * Appends an error line.
+     *
+     * @param message the text
+     */
     public void logError(String message)
     {
         log(LogLevel.ERROR, message);
     }
 
+    /**
+     * Appends an info line.
+     *
+     * @param message the text
+     */
     public void info(String message)
     {
         log(LogLevel.INFO, message);
     }
 
+    /**
+     * Appends a warning line.
+     *
+     * @param message the text
+     */
     public void warn(String message)
     {
         log(LogLevel.WARN, message);
     }
 
+    /**
+     * Appends an error line.
+     *
+     * @param message the text
+     */
     public void error(String message)
     {
         log(LogLevel.ERROR, message);
     }
 
+    /**
+     * Appends a debug line.
+     *
+     * @param message the text
+     */
     public void debug(String message)
     {
         log(LogLevel.DEBUG, message);
     }
 
+    /**
+     * Appends an error line with the throwable's message, then its stack frames, abbreviated when there are more than five.
+     *
+     * @param message the text
+     * @param t the throwable to report
+     */
     public void error(String message, Throwable t)
     {
         log(LogLevel.ERROR, message + ": " + t.getMessage());
@@ -188,6 +232,7 @@ public class ConsolePanel extends ThemedJPanel
         }
     }
 
+    /** Removes all text. */
     public void clear()
     {
         try
@@ -232,16 +277,31 @@ public class ConsolePanel extends ThemedJPanel
         }
     }
 
+    /**
+     * Sets whether later lines start with a timestamp.
+     *
+     * @param show true to show timestamps
+     */
     public void setShowTimestamps(boolean show)
     {
         this.showTimestamps = show;
     }
 
+    /**
+     * Sets how many lines are kept; takes effect on the next append.
+     *
+     * @param max the line limit
+     */
     public void setMaxLines(int max)
     {
         this.maxLines = max;
     }
 
+    /**
+     * Gives the console contents.
+     *
+     * @return all text, as plain text
+     */
     public String getText()
     {
         return textPane.getText();

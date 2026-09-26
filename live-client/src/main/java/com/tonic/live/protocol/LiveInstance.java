@@ -2,17 +2,19 @@ package com.tonic.live.protocol;
 
 import lombok.Getter;
 
-/**
- * A live instance of a class in the target JVM, identified by an agent-held handle (a weak reference). Reads
- * and writes of its fields go to the real, live object via {@link LiveProtocol#MSG_INSTANCE_FIELDS} and
- * {@link LiveProtocol#MSG_SET_INSTANCE_FIELD}.
- */
+/** A live instance of a class in the target JVM, identified by a handle the agent holds as a weak reference. */
 @Getter
 public final class LiveInstance
 {
     private final long handleId;
     private final String label;
 
+    /**
+     * Creates an instance entry.
+     *
+     * @param handleId the agent's handle for the object
+     * @param label the object's display label
+     */
     public LiveInstance(long handleId, String label)
     {
         this.handleId = handleId;

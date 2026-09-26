@@ -5,13 +5,7 @@ import com.tonic.analysis.source.decompile.DecompileResult;
 import java.util.Map;
 import java.util.NavigableMap;
 
-/**
- * Pure helpers translating between bytecode offsets and decompiled-source line numbers using the
- * per-method maps the decompiler produces ({@link ClassEntryModel#getSourceLineMaps()} and
- * {@link ClassEntryModel#getMethodSpans()}). Centralizing the math here keeps the source view, the
- * dual view, and any future consumer on one implementation rather than duplicating ceiling/floor
- * and inversion logic per call site.
- */
+/** Pure helpers translating between bytecode offsets and decompiled-source lines using the per-method maps the decompiler produces. */
 public final class SourceLineMaps
 {
 
@@ -20,9 +14,11 @@ public final class SourceLineMaps
     }
 
     /**
-     * The 1-based source line for a bytecode offset, or -1 when the map is null or empty. Prefers
-     * the ceiling entry (an inlined expression is emitted by its later-offset consumer statement)
-     * and falls back to the floor entry.
+     * Maps a bytecode offset to its source line, preferring the next mapped offset at or after it and falling back to the one before.
+     *
+     * @param offsetToLine the method's map from bytecode offset to 1-based source line
+     * @param pc the bytecode offset
+     * @return the 1-based source line, or -1 when the map is null or empty
      */
     public static int sourceLineForPc(NavigableMap<Integer, Integer> offsetToLine, int pc)
     {
@@ -40,12 +36,11 @@ public final class SourceLineMaps
     }
 
     /**
-     * The inclusive bytecode-offset span {@code [lo, hi]} a 1-based source line owns, or null when
-     * no offset maps to that line. A statement is anchored at its <em>defining</em> instruction (e.g.
-     * the {@code ireturn} of {@code return f(x)}), so the instructions that evaluate its sub-expressions
-     * sit before that anchor: the span runs from just after the previous statement's anchor up to and
-     * including this line's last anchor. This mirrors the ceiling attribution of {@link #sourceLineForPc}
-     * — every offset in {@code [lo, hi]} resolves back to this line — so the two directions stay consistent.
+     * Finds the bytecode offsets a source line owns: from just after the previous line's last anchor through this line's last anchor.
+     *
+     * @param offsetToLine the method's map from bytecode offset to 1-based source line
+     * @param oneBasedLine the 1-based source line
+     * @return the inclusive span as a two-element array of low and high offsets, or null when no offset maps to the line
      */
     public static int[] pcSpanForSourceLine(NavigableMap<Integer, Integer> offsetToLine, int oneBasedLine)
     {
@@ -76,9 +71,11 @@ public final class SourceLineMaps
     }
 
     /**
-     * The {@code name + desc} key of the method whose source span contains the given 1-based line,
-     * or null when the line falls outside every method (class header, fields, blank lines). The
-     * innermost containing span wins when spans overlap.
+     * Finds the method whose source span contains a line, the innermost one when spans nest.
+     *
+     * @param methodSpans the method spans, keyed by name plus descriptor
+     * @param oneBasedLine the 1-based source line
+     * @return the method's name plus descriptor key, or null when the line is outside every method or the map is null
      */
     public static String methodKeyForSourceLine(Map<String, DecompileResult.MethodSpan> methodSpans, int oneBasedLine)
     {

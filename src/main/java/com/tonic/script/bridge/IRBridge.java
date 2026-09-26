@@ -9,10 +9,7 @@ import com.tonic.script.engine.*;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Bridge between JStudio script and the SSA IR system.
- * Exposes IR manipulation functionality to scripts via the 'ir' global object.
- */
+/** The ir script global: registers script handlers over SSA IR instructions and blocks and offers constant factories. */
 public class IRBridge
 {
 
@@ -22,18 +19,30 @@ public class IRBridge
     private final List<HandlerRegistration> handlers = new ArrayList<>();
     private Consumer<String> logCallback;
 
+    /**
+     * Creates a bridge with no handlers.
+     *
+     * @param interpreter the interpreter that runs handler functions
+     */
     public IRBridge(ScriptInterpreter interpreter)
     {
         this.interpreter = interpreter;
     }
 
+    /**
+     * Sets where the bridge's log messages go.
+     *
+     * @param callback receives each log message, or null to drop them
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
     }
 
     /**
-     * Creates the 'ir' object to be registered in the script context.
+     * Builds the ir script object: handler registration per instruction kind, block and instruction iteration, and constant factories.
+     *
+     * @return the object, ready to bind as a global
      */
     public ScriptValue createIRObject()
     {
@@ -207,8 +216,10 @@ public class IRBridge
     }
 
     /**
-     * Runs all registered handlers on the given method.
-     * Returns the number of modifications made.
+     * Runs every registered handler over the method, in registration order.
+     *
+     * @param method the IR method to process
+     * @return how many instructions the handlers replaced or removed
      */
     public int applyTo(IRMethod method)
     {

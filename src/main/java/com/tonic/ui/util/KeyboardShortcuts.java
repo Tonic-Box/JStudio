@@ -21,7 +21,9 @@ public class KeyboardShortcuts
     private static final int MENU_SHORTCUT_MASK = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
 
     /**
-     * Register all keyboard shortcuts for the main frame.
+     * Binds every global shortcut on the window's root pane, active while the window has focus.
+     *
+     * @param mainFrame the window whose actions the shortcuts invoke
      */
     public static void register(MainFrame mainFrame)
     {

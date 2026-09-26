@@ -6,6 +6,11 @@ import com.tonic.event.Event;
 public class DebugResumedEvent extends Event
 {
 
+    /**
+     * Creates the event.
+     *
+     * @param source the poster
+     */
     public DebugResumedEvent(Object source)
     {
         super(source);

@@ -3,6 +3,7 @@ package com.tonic.ui.theme;
 import java.awt.Color;
 import java.util.Map;
 
+/** A theme backed by a map of color keys, falling back to a built-in dark color for each missing key. */
 public class ConfigurableTheme extends AbstractTheme
 {
 
@@ -10,6 +11,13 @@ public class ConfigurableTheme extends AbstractTheme
     private final String displayName;
     private final Map<String, Color> colors;
 
+    /**
+     * Creates a theme over the given colors.
+     *
+     * @param name the theme's key
+     * @param displayName the name shown to the user
+     * @param colors the colors by key, such as bgPrimary or javaKeyword; not copied
+     */
     public ConfigurableTheme(String name, String displayName, Map<String, Color> colors)
     {
         this.name = name;

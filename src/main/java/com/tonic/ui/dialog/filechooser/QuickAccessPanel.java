@@ -29,11 +29,18 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+/** The file chooser's sidebar of pinned, special, recent and drive locations, kept in sync with QuickAccessManager. */
 public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager.QuickAccessListener
 {
 
+    /** A callback for a location being picked. */
     public interface LocationListener
     {
+        /**
+         * Called when the user picks a location.
+         *
+         * @param location the location's directory
+         */
         void onLocationSelected(File location);
     }
 
@@ -53,6 +60,11 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
     private final JLabel pinnedHeader;
     private final JLabel recentHeader;
 
+    /**
+     * Creates the panel filled from QuickAccessManager and registers it for changes there.
+     *
+     * @param listener told when a location is picked
+     */
     public QuickAccessPanel(LocationListener listener)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -322,6 +334,11 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         }
     }
 
+    /**
+     * Records a directory as recently visited; ignores null and non-directories.
+     *
+     * @param location the directory
+     */
     public void addRecentLocation(File location)
     {
         if (location == null || !location.isDirectory())
@@ -331,6 +348,7 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         manager.addRecent(location);
     }
 
+    /** Clears the selection in every section. */
     public void clearSelection()
     {
         clearAllSelections();

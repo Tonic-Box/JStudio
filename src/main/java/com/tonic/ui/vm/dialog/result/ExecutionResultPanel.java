@@ -11,6 +11,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 
+/** Shows one VM run's outcome: a summary bar above call trace, console and statistics tabs, with buttons to save the run as a test or fuzz the method. */
 public class ExecutionResultPanel extends ThemedJPanel
 {
 
@@ -28,6 +29,7 @@ public class ExecutionResultPanel extends ThemedJPanel
     private String executionDescriptor;
     private Object[] executionArgs;
 
+    /** Creates the panel showing no result. */
     public ExecutionResultPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout(0, UIConstants.SPACING_MEDIUM));
@@ -80,6 +82,11 @@ public class ExecutionResultPanel extends ThemedJPanel
         add(detailsTabs, BorderLayout.CENTER);
     }
 
+    /**
+     * Shows a run's outcome in every view and selects the most informative tab: call trace, else console, else statistics.
+     *
+     * @param result the run's outcome
+     */
     public void displayResult(ExecutionResult result)
     {
         this.currentResult = result;
@@ -104,6 +111,13 @@ public class ExecutionResultPanel extends ThemedJPanel
         }
     }
 
+    /**
+     * Sets the method the next result belongs to, enabling fuzzing, without changing the recorded arguments.
+     *
+     * @param className the class's internal name, with slashes, or null to disable fuzzing
+     * @param methodName the method name
+     * @param descriptor the method descriptor
+     */
     public void setMethodContext(String className, String methodName, String descriptor)
     {
         this.executionClassName = className;
@@ -112,6 +126,14 @@ public class ExecutionResultPanel extends ThemedJPanel
         fuzzTestButton.setEnabled(className != null);
     }
 
+    /**
+     * Sets the method and arguments the next result belongs to, enabling fuzzing.
+     *
+     * @param className the class's internal name, with slashes, or null to disable fuzzing
+     * @param methodName the method name
+     * @param descriptor the method descriptor
+     * @param args the arguments the method ran with, copied; null for none
+     */
     public void setExecutionContext(String className, String methodName, String descriptor, Object[] args)
     {
         this.executionClassName = className;
@@ -147,6 +169,7 @@ public class ExecutionResultPanel extends ThemedJPanel
         dialog.setVisible(true);
     }
 
+    /** Puts every view into its running state. */
     public void showExecuting()
     {
         summaryBar.showExecuting();
@@ -155,6 +178,7 @@ public class ExecutionResultPanel extends ThemedJPanel
         statsPanel.showEmpty();
     }
 
+    /** Clears the shown result, keeping the method context. */
     public void clear()
     {
         currentResult = null;
@@ -165,6 +189,7 @@ public class ExecutionResultPanel extends ThemedJPanel
         saveAsTestButton.setEnabled(false);
     }
 
+    /** Clears the shown result and the method context. */
     public void clearAll()
     {
         clear();

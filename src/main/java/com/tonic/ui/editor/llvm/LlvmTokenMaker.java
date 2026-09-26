@@ -7,10 +7,7 @@ import org.fife.ui.rsyntaxtextarea.TokenMap;
 import javax.swing.text.Segment;
 import java.util.Set;
 
-/**
- * Syntax highlighter for textual LLVM IR: {@code ;} comments, {@code %local} / {@code @global}
- * identifiers (including quoted symbols), instruction keywords, types, and compare predicates.
- */
+/** The syntax highlighter for textual LLVM IR: semicolon comments, local and global identifiers including quoted symbols, instruction keywords, types, and compare predicates. */
 public class LlvmTokenMaker extends AbstractTokenMaker
 {
 

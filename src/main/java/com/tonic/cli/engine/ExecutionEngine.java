@@ -14,16 +14,24 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+/** Runs one plugin over one loaded target for the command line and turns the outcome into an execution result. */
 public class ExecutionEngine
 {
 
     private final PluginLoader pluginLoader;
 
+    /** Creates an engine with its own plugin loader. */
     public ExecutionEngine()
     {
         this.pluginLoader = new PluginLoader();
     }
 
+    /**
+     * Loads the target and plugin, runs the plugin (or only initializes it on a dry run), exports classes when an export directory is set, and reports the outcome.
+     *
+     * @param config what to load, run and export
+     * @return a success result with counts and findings, or a failure result carrying the error message; never throws
+     */
     public ExecutionResult execute(ExecutionConfig config)
     {
         long startTime = System.currentTimeMillis();

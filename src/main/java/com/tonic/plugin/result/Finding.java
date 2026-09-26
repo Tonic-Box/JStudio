@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+/** One immutable plugin finding: severity, category, title, message, location, metadata, time and the reporting plugin; findings are equal when their ids are. */
 @Getter
 public class Finding
 {
@@ -37,6 +38,14 @@ public class Finding
         this.pluginId = builder.pluginId;
     }
 
+    /**
+     * Reads a metadata value of an expected type.
+     *
+     * @param <T> the expected type
+     * @param key the metadata key
+     * @param type the type the value must have
+     * @return the value, or null when it is absent or of another type
+     */
     @SuppressWarnings("unchecked")
     public <T> T getMetadata(String key, Class<T> type)
     {
@@ -48,31 +57,65 @@ public class Finding
         return null;
     }
 
+    /**
+     * Starts a builder; unset parts default to a random id, INFO, the "general" category, the build time and no metadata.
+     *
+     * @return a new builder
+     */
     public static Builder builder()
     {
         return new Builder();
     }
 
+    /**
+     * Creates an INFO finding.
+     *
+     * @param message what was found, required and non-empty
+     * @param location where, or null
+     * @return the finding
+     */
     public static Finding info(String message, Location location)
     {
         return builder().severity(Severity.INFO).message(message).location(location).build();
     }
 
+    /**
+     * Creates a MEDIUM finding.
+     *
+     * @param message what was found, required and non-empty
+     * @param location where, or null
+     * @return the finding
+     */
     public static Finding warning(String message, Location location)
     {
         return builder().severity(Severity.MEDIUM).message(message).location(location).build();
     }
 
+    /**
+     * Creates a HIGH finding.
+     *
+     * @param message what was found, required and non-empty
+     * @param location where, or null
+     * @return the finding
+     */
     public static Finding error(String message, Location location)
     {
         return builder().severity(Severity.HIGH).message(message).location(location).build();
     }
 
+    /**
+     * Creates a CRITICAL finding.
+     *
+     * @param message what was found, required and non-empty
+     * @param location where, or null
+     * @return the finding
+     */
     public static Finding critical(String message, Location location)
     {
         return builder().severity(Severity.CRITICAL).message(message).location(location).build();
     }
 
+    /** The builder for Finding; only the message is required. */
     public static class Builder
     {
         private String id;
@@ -85,48 +128,97 @@ public class Finding
         private Instant timestamp;
         private String pluginId;
 
+        /**
+         * Sets the id.
+         *
+         * @param id the id, or null for a random one
+         * @return this builder
+         */
         public Builder id(String id)
         {
             this.id = id;
             return this;
         }
 
+        /**
+         * Sets the severity.
+         *
+         * @param severity the severity, or null for INFO
+         * @return this builder
+         */
         public Builder severity(Severity severity)
         {
             this.severity = severity;
             return this;
         }
 
+        /**
+         * Sets the category.
+         *
+         * @param category the category, or null for "general"
+         * @return this builder
+         */
         public Builder category(String category)
         {
             this.category = category;
             return this;
         }
 
+        /**
+         * Sets a short title.
+         *
+         * @param title the title, or null for none
+         * @return this builder
+         */
         public Builder title(String title)
         {
             this.title = title;
             return this;
         }
 
+        /**
+         * Sets the message.
+         *
+         * @param message what was found, required and non-empty by build time
+         * @return this builder
+         */
         public Builder message(String message)
         {
             this.message = message;
             return this;
         }
 
+        /**
+         * Sets where the finding is.
+         *
+         * @param location the location, or null
+         * @return this builder
+         */
         public Builder location(Location location)
         {
             this.location = location;
             return this;
         }
 
+        /**
+         * Replaces the metadata; later addMetadata calls write into this map.
+         *
+         * @param metadata the entries, with no null keys or values, or null for none
+         * @return this builder
+         */
         public Builder metadata(Map<String, Object> metadata)
         {
             this.metadata = metadata;
             return this;
         }
 
+        /**
+         * Adds one metadata entry.
+         *
+         * @param key the entry's key, not null
+         * @param value the entry's value, not null
+         * @return this builder
+         */
         public Builder addMetadata(String key, Object value)
         {
             if (this.metadata == null)
@@ -137,18 +229,36 @@ public class Finding
             return this;
         }
 
+        /**
+         * Sets when the finding was made.
+         *
+         * @param timestamp the time, or null for the build time
+         * @return this builder
+         */
         public Builder timestamp(Instant timestamp)
         {
             this.timestamp = timestamp;
             return this;
         }
 
+        /**
+         * Sets the reporting plugin.
+         *
+         * @param pluginId the plugin's identifier, or null to let a ResultCollector fill it in
+         * @return this builder
+         */
         public Builder pluginId(String pluginId)
         {
             this.pluginId = pluginId;
             return this;
         }
 
+        /**
+         * Builds the finding, copying the metadata.
+         *
+         * @return the finding
+         * @throws IllegalStateException if the message is null or empty
+         */
         public Finding build()
         {
             if (message == null || message.isEmpty())

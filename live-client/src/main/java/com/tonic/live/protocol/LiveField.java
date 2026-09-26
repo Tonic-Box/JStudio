@@ -2,11 +2,7 @@ package com.tonic.live.protocol;
 
 import lombok.Getter;
 
-/**
- * One field of a live instance: its name, JVM type descriptor, current display value, and (for reference
- * fields) a {@code refHandleId} the UI can navigate into. {@code editable} is true for a non-final primitive
- * or String field, which the UI may edit in place.
- */
+/** One field of a live instance, with its current display value and, for a reference, a handle the UI can navigate into. */
 @Getter
 public final class LiveField
 {
@@ -16,6 +12,15 @@ public final class LiveField
     private final long refHandleId;
     private final boolean editable;
 
+    /**
+     * Creates a field entry.
+     *
+     * @param name the field name
+     * @param typeDesc the field's JVM type descriptor
+     * @param display the current value as display text
+     * @param refHandleId the handle of the referenced object, or 0 for a primitive or null
+     * @param editable whether it is a non-final primitive or String field the UI may edit in place
+     */
     public LiveField(String name, String typeDesc, String display, long refHandleId, boolean editable)
     {
         this.name = name;
@@ -25,12 +30,21 @@ public final class LiveField
         this.editable = editable;
     }
 
+    /**
+     * Reports whether the field refers to an object the UI can navigate into.
+     *
+     * @return true when there is a reference handle
+     */
     public boolean isReference()
     {
         return refHandleId != 0;
     }
 
-    /** True when the field is a boolean (descriptor {@code Z}) — the UI offers a true/false dropdown. */
+    /**
+     * Reports whether the field is a boolean, for which the UI offers a true or false dropdown.
+     *
+     * @return true when the descriptor is Z
+     */
     public boolean isBoolean()
     {
         return "Z".equals(typeDesc);

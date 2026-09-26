@@ -10,9 +10,11 @@ import lombok.Getter;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+/** Runs a static method in the VM over generated inputs and records each outcome with the branch path it took. */
 public class MethodFuzzer
 {
 
+    /** One fuzz run: the inputs, the execution result, and the branch path, keyed by path plus a coarse category of the return value or exception. */
     public static class FuzzResult
     {
         private final Object[] inputs;
@@ -27,11 +29,26 @@ public class MethodFuzzer
         @Getter
         private final int uniqueBranchPoints;
 
+        /**
+         * Creates a result with no branch tracking.
+         *
+         * @param inputs the arguments passed, copied
+         * @param result the execution result
+         */
         public FuzzResult(Object[] inputs, ExecutionResult result)
         {
             this(inputs, result, "NO_BRANCHES", "No branches tracked", 0);
         }
 
+        /**
+         * Creates a result with its branch path.
+         *
+         * @param inputs the arguments passed, copied
+         * @param result the execution result
+         * @param branchPathSignature the signature of the branch path taken
+         * @param branchSummary a readable summary of the branch path
+         * @param uniqueBranchPoints the number of distinct branch sites visited
+         */
         public FuzzResult(Object[] inputs, ExecutionResult result, String branchPathSignature, String branchSummary, int uniqueBranchPoints)
         {
             this.inputs = inputs.clone();
@@ -92,11 +109,21 @@ public class MethodFuzzer
             return "POSITIVE";
         }
 
+        /**
+         * Copies the arguments passed.
+         *
+         * @return a copy of the arguments passed
+         */
         public Object[] getInputs()
         {
             return inputs.clone();
         }
 
+        /**
+         * Describes the outcome for display.
+         *
+         * @return "Throws" with the exception's simple name, or "Returns" with the value, quoting strings and cutting them at 27 characters
+         */
         public String getOutcomeDescription()
         {
             if (result.getException() != null)
@@ -141,6 +168,7 @@ public class MethodFuzzer
         }
     }
 
+    /** The fuzzing options: random values per parameter and whether to include edge cases, nulls and random values. */
     @Getter
     public static class FuzzConfig
     {
@@ -149,21 +177,41 @@ public class MethodFuzzer
         private boolean includeNulls = true;
         private boolean includeRandom = true;
 
+        /**
+         * Sets how many random values to generate per parameter; combinations of several parameters are capped at three times this.
+         *
+         * @param n the number of random values per parameter
+         */
         public void setIterationsPerType(int n)
         {
             this.iterationsPerType = n;
         }
 
+        /**
+         * Sets whether to include edge-case values.
+         *
+         * @param v true to include them
+         */
         public void setIncludeEdgeCases(boolean v)
         {
             this.includeEdgeCases = v;
         }
 
+        /**
+         * Sets whether to include null for reference parameters.
+         *
+         * @param v true to include it
+         */
         public void setIncludeNulls(boolean v)
         {
             this.includeNulls = v;
         }
 
+        /**
+         * Sets whether to include random values.
+         *
+         * @param v true to include them
+         */
         public void setIncludeRandom(boolean v)
         {
             this.includeRandom = v;
@@ -177,6 +225,14 @@ public class MethodFuzzer
     private final FuzzConfig config;
     private List<ParamSpec> paramSpecs;
 
+    /**
+     * Creates a fuzzer for a static method.
+     *
+     * @param className the class's internal name, with slashes
+     * @param methodName the method's name
+     * @param descriptor the method's descriptor, parsed for parameter types
+     * @param config the fuzzing options, or null for the defaults
+     */
     public MethodFuzzer(String className, String methodName, String descriptor, FuzzConfig config)
     {
         this.className = className;
@@ -186,16 +242,31 @@ public class MethodFuzzer
         this.config = config != null ? config : new FuzzConfig();
     }
 
+    /**
+     * Sets per-parameter specs; they are used only when there is one for each parameter.
+     *
+     * @param specs the specs in parameter order, or null to generate by type
+     */
     public void setParameterSpecs(List<ParamSpec> specs)
     {
         this.paramSpecs = specs;
     }
 
+    /**
+     * Copies the parameter types.
+     *
+     * @return a copy of the parameter type descriptors, in order
+     */
     public List<String> getParamTypes()
     {
         return new ArrayList<>(paramTypes);
     }
 
+    /**
+     * Builds a fuzz spec for each parameter, named arg0, arg1 and so on.
+     *
+     * @return the specs in parameter order
+     */
     public List<ParamSpec> getDefaultParamSpecs()
     {
         List<ParamSpec> specs = new ArrayList<>();
@@ -209,6 +280,11 @@ public class MethodFuzzer
         return specs;
     }
 
+    /**
+     * Generates the argument sets to run: every value for a single parameter, and for several all combinations or a random sample of distinct ones when there are more than three times the per-type count.
+     *
+     * @return the argument sets, or one empty set when the method takes no parameters
+     */
     public List<Object[]> generateInputSets()
     {
         List<Object[]> inputSets = new ArrayList<>();
@@ -589,6 +665,12 @@ public class MethodFuzzer
         }
     }
 
+    /**
+     * Runs the method once per generated argument set, initializing the VM service first if needed; an execution that throws is recorded as a failed result.
+     *
+     * @param callback receives progress and completion, or null
+     * @return one result per argument set, in order
+     */
     public List<FuzzResult> runFuzz(ProgressCallback callback)
     {
         List<Object[]> inputSets = generateInputSets();
@@ -641,6 +723,12 @@ public class MethodFuzzer
         return results;
     }
 
+    /**
+     * Groups results by outcome key.
+     *
+     * @param results the results to group
+     * @return the groups in first-seen order
+     */
     public Map<String, List<FuzzResult>> groupByOutcome(List<FuzzResult> results)
     {
         Map<String, List<FuzzResult>> grouped = new LinkedHashMap<>();
@@ -651,6 +739,12 @@ public class MethodFuzzer
         return grouped;
     }
 
+    /**
+     * Groups results by branch path signature.
+     *
+     * @param results the results to group
+     * @return the groups in first-seen order
+     */
     public Map<String, List<FuzzResult>> groupByBranchPath(List<FuzzResult> results)
     {
         Map<String, List<FuzzResult>> grouped = new LinkedHashMap<>();
@@ -661,6 +755,12 @@ public class MethodFuzzer
         return grouped;
     }
 
+    /**
+     * Counts the distinct branch paths.
+     *
+     * @param results the results to count
+     * @return the number of distinct branch path signatures
+     */
     public int countUniqueBranchPaths(List<FuzzResult> results)
     {
         Set<String> paths = new HashSet<>();
@@ -671,6 +771,13 @@ public class MethodFuzzer
         return paths.size();
     }
 
+    /**
+     * Picks, for each branch path, the first result of each distinct return category.
+     *
+     * @param results the results to pick from
+     * @param maxPerCategory the most results to keep per branch path
+     * @return the picked results, grouped by path in first-seen order
+     */
     public List<FuzzResult> selectDiverseResults(List<FuzzResult> results, int maxPerCategory)
     {
         Map<String, List<FuzzResult>> groupedByPath = groupByBranchPath(results);
@@ -777,10 +884,23 @@ public class MethodFuzzer
         return types;
     }
 
+    /** Receives progress from runFuzz. */
     public interface ProgressCallback
     {
+        /**
+         * Called before each run.
+         *
+         * @param current the zero-based index of the run about to start
+         * @param total the number of runs
+         * @param message a status line for display
+         */
         void onProgress(int current, int total, String message);
 
+        /**
+         * Called once all runs are done.
+         *
+         * @param totalResults the number of results produced
+         */
         void onComplete(int totalResults);
     }
 }

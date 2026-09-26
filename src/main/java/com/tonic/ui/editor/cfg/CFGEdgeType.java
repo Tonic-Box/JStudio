@@ -2,6 +2,7 @@ package com.tonic.ui.editor.cfg;
 
 import lombok.Getter;
 
+/** The kinds of control flow edge, each with the colour it is drawn in. */
 @Getter
 public enum CFGEdgeType
 {

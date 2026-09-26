@@ -15,11 +15,20 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/** Saves the call graph view as a PNG at twice screen scale. */
 public class CallGraphExporter
 {
 
     private static final int EXPORT_SCALE = 2;
 
+    /**
+     * Asks for a file and writes the graph to it as a PNG, adding the .png extension if missing.
+     *
+     * @param parent the owner of the file chooser
+     * @param graph the graph to draw
+     * @param focusMethod the focus method, used for the suggested file name; null reports that there is nothing to export
+     * @param statusCallback receives the outcome, including write failures
+     */
     public void exportAsPng(Component parent, mxGraph graph, MethodReference focusMethod, Consumer<String> statusCallback)
     {
         if (focusMethod == null)

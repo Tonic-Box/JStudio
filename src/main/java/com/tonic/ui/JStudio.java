@@ -9,19 +9,18 @@ import com.tonic.util.Settings;
 import java.awt.EventQueue;
 import java.util.Arrays;
 
-/**
- * JStudio - Java Reverse Engineering Suite
- * <p>
- * A professional reverse engineering and analysis tool for Java bytecode,
- * featuring decompilation, SSA IR visualization, call graph analysis,
- * and bytecode transformation capabilities.
- */
+/** The JStudio entry point: runs the headless CLI when given --cli, otherwise starts the Swing workbench. */
 public class JStudio
 {
 
     public static final String APP_NAME = "JStudio";
     public static final String APP_VERSION = "24.0.0";
 
+    /**
+     * Runs the headless CLI when --cli is present, otherwise opens the main window on the event thread; -dev disables the startup update check.
+     *
+     * @param args the command line; the first remaining argument, if any, is a file to open
+     */
     public static void main(String[] args)
     {
         if (hasCliFlag(args))

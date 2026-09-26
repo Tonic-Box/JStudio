@@ -11,6 +11,7 @@ import lombok.Setter;
 public class Script
 {
 
+    /** Which representation a script transforms: the decompiled AST, the SSA IR, or both. */
     public enum Mode
     {
         AST,
@@ -26,6 +27,7 @@ public class Script
     private String content;
     private boolean builtIn;
 
+    /** Creates an empty, untitled AST script at version 1.0. */
     public Script()
     {
         this.name = "Untitled";
@@ -37,6 +39,13 @@ public class Script
         this.builtIn = false;
     }
 
+    /**
+     * Creates a script with the given name, mode and source and default metadata.
+     *
+     * @param name the display name
+     * @param mode which representation it transforms
+     * @param content the script source
+     */
     public Script(String name, Mode mode, String content)
     {
         this();
@@ -46,8 +55,10 @@ public class Script
     }
 
     /**
-     * Parses mode from script content annotations.
-     * Looks for: // @mode: ast|ir|both
+     * Reads the mode from the first line comment of the form // @mode: ast, ir or both.
+     *
+     * @param content the script source, or null
+     * @return the declared mode, or AST when there is none or it is not recognized
      */
     public static Mode parseModeFromContent(String content)
     {
@@ -74,8 +85,10 @@ public class Script
     }
 
     /**
-     * Parses name from script content annotations.
-     * Looks for: // @name: Script Name
+     * Reads the name from the first line comment of the form // @name: followed by the name.
+     *
+     * @param content the script source, or null
+     * @return the declared name, or Untitled when there is none
      */
     public static String parseNameFromContent(String content)
     {

@@ -6,18 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-/**
- * External update applier, launched as a separate JVM by {@link com.tonic.ui.update.UpdateInstaller}
- * just before JStudio exits.
- *
- * <p>It runs from the downloaded jar (not the locked, running one), waits for the target jar's file
- * lock to release once the old JVM exits, copies the new jar over it (keeping a {@code .bak} for
- * rollback), and relaunches JStudio. Copy-with-retry is the lock probe: on Windows the running JVM
- * holds the jar without write-sharing, so the copy fails until exit; on other platforms it succeeds
- * immediately. On failure the target is left untouched and the existing version is relaunched.
- *
- * <p>Usage: {@code java -cp <downloaded.jar> com.tonic.cli.Updater <targetJar> <downloadedJar>}
- */
+/** The external update applier, run as its own JVM from the downloaded jar: it swaps the new jar over the target once the old JVM releases it, then relaunches JStudio. */
 public final class Updater
 {
 
@@ -28,6 +17,11 @@ public final class Updater
     {
     }
 
+    /**
+     * Backs up the target jar, copies the downloaded jar over it with retries until the lock releases, and relaunches the target; on failure the target is left as it was and relaunched.
+     *
+     * @param args the target jar path, then the downloaded jar path; with fewer than two it does nothing
+     */
     public static void main(String[] args)
     {
         if (args.length < 2)

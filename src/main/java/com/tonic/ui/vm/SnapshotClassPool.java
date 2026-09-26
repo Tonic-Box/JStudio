@@ -6,18 +6,19 @@ import com.tonic.parser.ClassPool;
 import java.io.ByteArrayInputStream;
 import java.util.Map;
 
-/**
- * A defensive, lazily-materialized {@link ClassPool} for an isolated VM instance. User classes are served from a
- * frozen byte snapshot - parsed on first access and cached in this pool - so later in-place edits to the live
- * project cannot perturb a running VM. JDK / library classes (never edited) are delegated read-only to the live
- * project pool, so only the project's own classes are copied.
- */
+/** A class pool for an isolated VM that serves project classes from a frozen byte snapshot, parsed lazily, and delegates library classes to the live project pool. */
 public final class SnapshotClassPool extends ClassPool
 {
 
     private final Map<String, byte[]> frozenUserClasses;
     private final ClassPool delegate;
 
+    /**
+     * Creates a pool over a snapshot of the project's classes.
+     *
+     * @param frozenUserClasses class bytes keyed by internal name, captured before the VM runs
+     * @param delegate the live project pool, read for every class not in the snapshot
+     */
     public SnapshotClassPool(Map<String, byte[]> frozenUserClasses, ClassPool delegate)
     {
         super(true);

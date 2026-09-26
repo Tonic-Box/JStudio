@@ -5,9 +5,7 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Recursive descent parser for JStudio script language.
- */
+/** The recursive descent parser for the JStudio script language; syntax errors are collected and parsing resumes at the next statement. */
 public class ScriptParser
 {
 
@@ -16,11 +14,21 @@ public class ScriptParser
     @Getter
     private final List<String> errors = new ArrayList<>();
 
+    /**
+     * Creates a parser over tokens.
+     *
+     * @param tokens the lexer output, ending with an EOF token
+     */
     public ScriptParser(List<ScriptToken> tokens)
     {
         this.tokens = tokens;
     }
 
+    /**
+     * Parses every statement, recording errors and skipping the statements they occur in.
+     *
+     * @return the statements that parsed
+     */
     public List<ScriptAST> parse()
     {
         List<ScriptAST> statements = new ArrayList<>();

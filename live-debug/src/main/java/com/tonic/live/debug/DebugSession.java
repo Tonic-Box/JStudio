@@ -36,14 +36,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * A live JDI debug session: owns the attached {@link VirtualMachine}, pumps its event queue on a daemon thread,
- * installs breakpoints (resolving them now or deferring via class-prepare until the class loads), and exposes
- * resume plus read-only call-stack / variable inspection. Phase 1 scope; stepping and edits come later.
- *
- * <p>All target interaction happens while the VM is suspended at a breakpoint. The event-thread callbacks on
- * {@link DebugListener} are invoked off the EDT.
- */
+/** A live JDI debug session: owns the attached VM, pumps its events on a daemon thread, installs breakpoints now or when their class loads, and inspects the paused thread. */
 public final class DebugSession
 {
 
@@ -74,20 +67,22 @@ public final class DebugSession
         this.pump.setDaemon(true);
     }
 
-    /**
-     * Starts the event pump. Call after breakpoints are installed so that a suspend-on-start launch
-     * (jdwp {@code suspend=y}) gets its requests in place before the initial VMStart event is resumed - which
-     * is what lets pre-set breakpoints catch application startup.
-     */
+    /** Starts the event pump; call it after installing breakpoints so they catch the startup of a target launched suspended. */
     public void start()
     {
         pump.start();
     }
 
     /**
-     * Attaches JDI to a target serving JDWP at {@code host:port} and starts pumping events. {@code
-     * agentThreadPrefix} names the in-process agent's thread(s) to keep running during a suspend-all pause so
-     * the agent can scan/read/edit the frozen heap; pass null to leave them suspended with everything else.
+     * Attaches JDI to a target serving JDWP; the event pump starts only on start.
+     *
+     * @param host the target's host
+     * @param port the JDWP port
+     * @param listener receives the session's events on the event thread
+     * @param suspendAll whether new breakpoints suspend every thread rather than only the one that hit
+     * @param agentThreadPrefix the name prefix of agent threads to keep running during a suspend-all pause, or null to suspend them too
+     * @return the session
+     * @throws IOException if the attach fails
      */
     public static DebugSession attach(String host, int port, DebugListener listener, boolean suspendAll, String agentThreadPrefix) throws IOException
     {
@@ -95,22 +90,34 @@ public final class DebugSession
         return new DebugSession(vm, listener, suspendAll, agentThreadPrefix);
     }
 
+    /**
+     * Reports whether the target is paused at a breakpoint.
+     *
+     * @return true while a thread is paused
+     */
     public boolean isPaused()
     {
         return pausedThread != null;
     }
 
-    /** Updates the suspend policy applied to breakpoints installed from now on (existing ones keep theirs). */
+    /**
+     * Sets the suspend policy for breakpoints installed from now on; installed ones keep theirs.
+     *
+     * @param suspendAll whether to suspend every thread rather than only the one that hit
+     */
     public void setSuspendAll(boolean suspendAll)
     {
         this.suspendAll = suspendAll;
     }
 
     /**
-     * Suspends the VM, enumerates up to {@code max} live instances of {@code className}, parks them in the
-     * agent's dropbox static field ({@code dropBoxClass#boxField}), and resumes. Returns the count parked, or
-     * -1 if JDI can't do it (no instance-info capability, unavailable types) so the caller falls back to the
-     * agent walk. The parked array strong-holds the set so it survives the resume until the agent consumes it.
+     * Suspends the VM, parks up to a cap of a class's live instances in the agent's dropbox field, and resumes.
+     *
+     * @param dropBoxClass the binary name of the agent's dropbox class
+     * @param boxField the static field in it that holds the parked array
+     * @param className the binary name of the class whose instances to park
+     * @param max the cap on instances parked
+     * @return the count parked, or -1 when JDI cannot do it and the caller should fall back to the agent walk
      */
     public synchronized int parkInstances(String dropBoxClass, String boxField, String className, int max)
     {
@@ -154,9 +161,12 @@ public final class DebugSession
     }
 
     /**
-     * Suspends the VM, harvests the object references held by every thread's stack frames (the objects the
-     * agent's reachability walk can't reach), parks them in the dropbox as extra scan roots, and resumes.
-     * Returns the count parked, or -1 on failure (caller falls back to the agent-only roots).
+     * Suspends the VM, parks the objects held by every thread's stack frames in the agent's dropbox field as extra scan roots, and resumes.
+     *
+     * @param dropBoxClass the binary name of the agent's dropbox class
+     * @param boxField the static field in it that holds the parked array
+     * @param max the cap on objects parked
+     * @return the count parked, or -1 on failure, when the caller should fall back to the agent's own roots
      */
     public synchronized int parkStackRoots(String dropBoxClass, String boxField, int max)
     {
@@ -280,7 +290,14 @@ public final class DebugSession
         return refs.size();
     }
 
-    /** Adds a breakpoint at a bytecode offset; installs on already-loaded classes and arms a class-prepare hook. */
+    /**
+     * Adds a breakpoint at a bytecode offset, installing it on loaded classes and arming a class-prepare hook for later loads.
+     *
+     * @param className the declaring class's binary name
+     * @param methodName the method name
+     * @param methodDesc the method's JVM descriptor
+     * @param pc the bytecode offset
+     */
     public synchronized void addBreakpoint(String className, String methodName, String methodDesc, long pc)
     {
         BreakpointSpec spec = new BreakpointSpec(className, methodName, methodDesc, pc);
@@ -299,6 +316,14 @@ public final class DebugSession
         });
     }
 
+    /**
+     * Removes a breakpoint at a bytecode offset and deletes its installed requests.
+     *
+     * @param className the declaring class's binary name
+     * @param methodName the method name
+     * @param methodDesc the method's JVM descriptor
+     * @param pc the bytecode offset
+     */
     public synchronized void removeBreakpoint(String className, String methodName, String methodDesc, long pc)
     {
         breakpoints.removeIf(s -> s.matches(className, methodName, methodDesc, pc));
@@ -389,6 +414,11 @@ public final class DebugSession
         pump.interrupt();
     }
 
+    /**
+     * Reads the paused thread's call stack.
+     *
+     * @return the frames, top first; empty when not paused or the stack cannot be read
+     */
     public List<DebugFrame> frames()
     {
         List<DebugFrame> out = new ArrayList<>();
@@ -412,6 +442,12 @@ public final class DebugSession
         return out;
     }
 
+    /**
+     * Reads the variables visible in a frame of the paused thread, falling back to numbered arguments when the method has no local variable table.
+     *
+     * @param frameIndex the frame's depth, 0 for the top
+     * @return this, then the locals or arguments; empty when not paused or the frame cannot be read
+     */
     public List<DebugVariable> variables(int frameIndex)
     {
         List<DebugVariable> out = new ArrayList<>();
@@ -551,22 +587,33 @@ public final class DebugSession
         return hadBreakpoint;
     }
 
-    /** Whether the target VM supports {@link #redefineClasses} (HotSwap). */
+    /**
+     * Reports whether the target supports HotSwap class redefinition.
+     *
+     * @return true when the VM can redefine classes
+     */
     public boolean canRedefineClasses()
     {
         return vm.canRedefineClasses();
     }
 
-    /** Whether {@code className} (a binary/dotted name) is loaded in the target. */
+    /**
+     * Reports whether a class is loaded in the target.
+     *
+     * @param className the class's binary name, with dots
+     * @return true when at least one loaded type has the name
+     */
     public boolean isClassLoaded(String className)
     {
         return !vm.classesByName(className).isEmpty();
     }
 
     /**
-     * Redefines every loaded type named {@code className} with {@code bytes} (HotSwap). Used to install a
-     * synthetic LocalVariableTable onto otherwise-unchanged bytecode. Returns false (without throwing) when the
-     * VM can't redefine, the class is not loaded, or JDI rejects the bytes - so debugging continues regardless.
+     * Redefines every loaded type with a name by HotSwap and reinstalls its breakpoints; used to install a synthetic local variable table.
+     *
+     * @param className the class's binary name, with dots
+     * @param bytes the new class file bytes
+     * @return true on success; false when the VM cannot redefine, the class is not loaded, or JDI rejects the bytes
      */
     public synchronized boolean redefineClasses(String className, byte[] bytes)
     {
@@ -692,7 +739,12 @@ public final class DebugSession
         return id;
     }
 
-    /** Fields (or array elements) of a previously-handed-out reference value, for click-to-expand drilling. */
+    /**
+     * Reads the instance fields, or the first 200 elements, of a reference handed out since the last pause.
+     *
+     * @param handle the reference's handle
+     * @return the fields or elements; empty when the handle is unknown or cannot be read
+     */
     public List<DebugVariable> objectFields(long handle)
     {
         List<DebugVariable> out = new ArrayList<>();
@@ -727,7 +779,13 @@ public final class DebugSession
         return out;
     }
 
-    /** The first {@code max} elements of an array reference, index-labelled ({@code [0]}, {@code [1]}, ...). */
+    /**
+     * Reads the first elements of an array reference, labelled by index.
+     *
+     * @param handle the array's handle
+     * @param max the cap on elements read
+     * @return the elements; empty when the handle is unknown, not an array, or cannot be read
+     */
     public List<DebugVariable> arrayElements(long handle, int max)
     {
         List<DebugVariable> out = new ArrayList<>();

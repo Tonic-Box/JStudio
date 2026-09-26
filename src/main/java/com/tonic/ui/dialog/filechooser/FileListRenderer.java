@@ -9,14 +9,17 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.Component;
 
-/**
- * Custom renderer for file list cells with proper styling.
- */
+/** Cell renderer for the file list, with striped rows, formatted sizes and dates, and muted text for types and directory sizes. */
 public class FileListRenderer extends DefaultTableCellRenderer
 {
 
     private final FileListModel model;
 
+    /**
+     * Creates the renderer.
+     *
+     * @param model the model whose entries supply the formatted values
+     */
     public FileListRenderer(FileListModel model)
     {
         this.model = model;

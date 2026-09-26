@@ -17,10 +17,7 @@ import lombok.Getter;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Bridge for data flow analysis.
- * Exposes a 'dataflow' global object for building and querying data flow graphs.
- */
+/** The dataflow script global: builds a method's data flow graph, cached per method, and answers source, sink, reachability and taint queries on it. */
 public class DataFlowBridge
 {
 
@@ -30,11 +27,21 @@ public class DataFlowBridge
     private DataFlowGraph currentGraph;
     private Consumer<String> logCallback;
 
+    /**
+     * Creates a bridge with no graph built.
+     *
+     * @param projectModel the project whose methods are analyzed
+     */
     public DataFlowBridge(ProjectModel projectModel)
     {
         this.projectModel = projectModel;
     }
 
+    /**
+     * Sets where the bridge's log messages go.
+     *
+     * @param callback receives each log message, or null to drop them
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
@@ -48,6 +55,11 @@ public class DataFlowBridge
         }
     }
 
+    /**
+     * Builds the dataflow script object: graph building, node and edge queries, reachability and taint analysis.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createDataFlowObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

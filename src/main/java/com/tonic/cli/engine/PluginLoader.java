@@ -15,9 +15,17 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Loads command-line plugins from a jar, a Groovy script, or a directory of either; Java sources are not supported. */
 public class PluginLoader
 {
 
+    /**
+     * Loads a plugin by file extension: the first plugin in a jar, or a Groovy script wrapped as a plugin.
+     *
+     * @param file the jar or .groovy file
+     * @return the loaded plugin
+     * @throws IllegalArgumentException if the extension is not .jar, .groovy or .java
+     */
     public Plugin load(File file)
     {
         String name = file.getName().toLowerCase();
@@ -38,6 +46,12 @@ public class PluginLoader
         throw new IllegalArgumentException("Unsupported plugin format: " + name);
     }
 
+    /**
+     * Loads every plugin file directly in a directory, skipping files that fail to load.
+     *
+     * @param dir the directory to scan
+     * @return the only plugin found, a composite running all of them in order, or null when none loaded
+     */
     public Plugin loadFromDirectory(File dir)
     {
         List<Plugin> plugins = new ArrayList<>();

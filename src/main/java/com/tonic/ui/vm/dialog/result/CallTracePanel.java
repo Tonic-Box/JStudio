@@ -15,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
+/** Shows a traced run's calls as a filterable tree or indented list, with a context menu to generate a test from one call. */
 public class CallTracePanel extends ThemedJPanel
 {
 
@@ -49,6 +50,7 @@ public class CallTracePanel extends ThemedJPanel
         return JStudioTheme.getError();
     }
 
+    /** Creates the panel showing no trace. */
     public CallTracePanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -159,6 +161,7 @@ public class CallTracePanel extends ThemedJPanel
         StyleConstants.setBold(exceptionStyle, true);
     }
 
+    /** Clears both views and forgets the current calls. */
     public void showEmpty()
     {
         rootNode.removeAllChildren();
@@ -174,6 +177,11 @@ public class CallTracePanel extends ThemedJPanel
         currentCalls = new ArrayList<>();
     }
 
+    /**
+     * Shows a traced run's calls in both views.
+     *
+     * @param calls the calls in the order they started, or null for none
+     */
     public void update(List<MethodCall> calls)
     {
         this.currentCalls = calls != null ? new ArrayList<>(calls) : new ArrayList<>();

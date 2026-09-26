@@ -3,14 +3,12 @@ package com.tonic.event.events;
 import com.tonic.event.Event;
 import lombok.Getter;
 
-/**
- * Streams a headless script run's console output to the bottom Script Console tab: {@code START} opens/clears the
- * tab, {@code LINE} appends a line of output, {@code DONE} reports the final modification count.
- */
+/** Streams a headless script run's output to the Script Console tab: START opens and clears it, LINE appends output, DONE reports the modification count. */
 @Getter
 public class ScriptConsoleEvent extends Event
 {
 
+    /** The stage of a script run being reported. */
     public enum Kind
     {
         START, LINE, DONE
@@ -20,6 +18,14 @@ public class ScriptConsoleEvent extends Event
     private final String text;
     private final int modifications;
 
+    /**
+     * Creates the event.
+     *
+     * @param source the poster
+     * @param kind the stage being reported
+     * @param text the output line, for LINE
+     * @param modifications the final modification count, for DONE
+     */
     public ScriptConsoleEvent(Object source, Kind kind, String text, int modifications)
     {
         super(source);

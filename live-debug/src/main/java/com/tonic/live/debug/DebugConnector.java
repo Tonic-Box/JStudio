@@ -8,7 +8,7 @@ import com.sun.jdi.connect.Connector;
 import java.io.IOException;
 import java.util.Map;
 
-/** Opens a JDI connection to a JVM already listening for JDWP over a socket (the {@code dt_socket} transport). */
+/** Opens JDI connections to JVMs already serving JDWP over the socket transport. */
 public final class DebugConnector
 {
 
@@ -16,7 +16,14 @@ public final class DebugConnector
     {
     }
 
-    /** Attaches JDI to {@code host:port} (a JDWP {@code dt_socket} address the target is serving). */
+    /**
+     * Attaches JDI to a JDWP socket address the target is serving.
+     *
+     * @param host the target's host
+     * @param port the JDWP port
+     * @return the attached virtual machine
+     * @throws IOException if this JDK has no socket attach connector, or the attach fails
+     */
     public static VirtualMachine attach(String host, int port) throws IOException
     {
         AttachingConnector connector = socketAttachConnector();

@@ -4,11 +4,7 @@ import lombok.Getter;
 
 import java.util.Map;
 
-/**
- * One Local History restore point: a labeled, timestamped manifest mapping each user class (and resource) to the
- * content hash of its stored bytes. The bytes themselves live as deduplicated blobs in the project's history store;
- * a snapshot only references them, so an unchanged class costs nothing across snapshots.
- */
+/** One Local History restore point: a labeled, timestamped manifest mapping each user class and resource to the content hash of its stored bytes. */
 @Getter
 public final class Snapshot
 {
@@ -42,6 +38,16 @@ public final class Snapshot
     private final Map<String, String> classes;
     private final Map<String, String> resources;
 
+    /**
+     * Creates a snapshot record.
+     *
+     * @param id the snapshot's id
+     * @param timestampMs when it was taken, in epoch milliseconds
+     * @param label the label shown in the history panel
+     * @param trigger what caused it
+     * @param classes the content hash of each user class's bytes, keyed by internal name
+     * @param resources the content hash of each resource's bytes, keyed by path
+     */
     public Snapshot(String id, long timestampMs, String label, Trigger trigger, Map<String, String> classes, Map<String, String> resources)
     {
         this.id = id;

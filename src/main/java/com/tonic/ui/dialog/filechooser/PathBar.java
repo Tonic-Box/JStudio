@@ -24,18 +24,18 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Path bar with breadcrumb navigation and editable path input.
- * Click path segments to navigate, click empty area to edit path directly.
- */
+/** The file chooser's navigation bar: back, forward and up buttons plus clickable breadcrumbs that switch to an editable path field. */
 public class PathBar extends JPanel
 {
 
-    /**
-     * Listener for navigation events.
-     */
+    /** A callback for navigation requests. */
     public interface NavigationListener
     {
+        /**
+         * Called when the user asks to go to a directory.
+         *
+         * @param directory the directory
+         */
         void onNavigate(File directory);
     }
 
@@ -52,14 +52,16 @@ public class PathBar extends JPanel
     private final JPanel breadcrumbPanel;
     private final JTextField pathTextField;
 
-    /**
-     * -- GETTER --
-     *  Get the current directory.
-     */
+    /** The directory shown, or null before one is set. */
     @Getter
     private File currentDirectory;
     private boolean inEditMode = false;
 
+    /**
+     * Creates the bar with no directory shown.
+     *
+     * @param listener told about every navigation request
+     */
     public PathBar(NavigationListener listener)
     {
         this.listener = listener;
@@ -176,7 +178,9 @@ public class PathBar extends JPanel
     }
 
     /**
-     * Set the current directory and update breadcrumbs.
+     * Shows a directory, adding it to the history after the current point unless it is already the current entry; ignores null and missing paths.
+     *
+     * @param directory the directory
      */
     public void setCurrentDirectory(File directory)
     {
@@ -294,9 +298,7 @@ public class PathBar extends JPanel
         return sep;
     }
 
-    /**
-     * Enter edit mode to type/paste a path.
-     */
+    /** Swaps the breadcrumbs for a path field holding the current path, focused and selected. */
     public void enterEditMode()
     {
         if (inEditMode)
@@ -367,9 +369,7 @@ public class PathBar extends JPanel
         upButton.setEnabled(currentDirectory != null && currentDirectory.getParentFile() != null);
     }
 
-    /**
-     * Navigate back in history.
-     */
+    /** Moves back one step in the history and asks the listener to go there; does nothing at the start. */
     public void goBack()
     {
         if (historyIndex > 0)
@@ -386,9 +386,7 @@ public class PathBar extends JPanel
         }
     }
 
-    /**
-     * Navigate forward in history.
-     */
+    /** Moves forward one step in the history and asks the listener to go there; does nothing at the end. */
     public void goForward()
     {
         if (historyIndex < history.size() - 1)
@@ -405,9 +403,7 @@ public class PathBar extends JPanel
         }
     }
 
-    /**
-     * Navigate to parent directory.
-     */
+    /** Asks the listener to go to the parent of the current directory; does nothing at a root. */
     public void goUp()
     {
         if (currentDirectory != null)
@@ -420,9 +416,7 @@ public class PathBar extends JPanel
         }
     }
 
-    /**
-     * Focus the path bar for editing (Ctrl+L shortcut).
-     */
+    /** Switches to the editable path field, as the Ctrl+L shortcut does. */
     public void focusPathBar()
     {
         enterEditMode();

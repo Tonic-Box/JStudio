@@ -15,12 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Paints usage-count lens entries as small ghost text over the source text area and resolves
- * clicks against the painted bounds. Above-line entries align with the declaration's indentation;
- * end-of-line entries trail the declaration text. Purely visual — the document is never modified,
- * so the decompiler's line maps stay valid.
- */
+/** Paints usage-count lenses as ghost text over the source text area and resolves clicks against their painted bounds, never modifying the document. */
 public final class UsageLensOverlay
 {
 
@@ -29,22 +24,38 @@ public final class UsageLensOverlay
 
     private List<UsageLens.LensEntry> entries = Collections.emptyList();
 
+    /**
+     * Replaces the lenses to paint.
+     *
+     * @param entries the lenses; null clears them
+     */
     public void setEntries(List<UsageLens.LensEntry> entries)
     {
         this.entries = entries != null ? entries : Collections.emptyList();
     }
 
+    /** Removes all lenses. */
     public void clear()
     {
         entries = Collections.emptyList();
     }
 
+    /**
+     * Tells whether there are no lenses to paint.
+     *
+     * @return true when there are no lenses
+     */
     public boolean isEmpty()
     {
         return entries.isEmpty();
     }
 
-    /** The lens whose painted bounds contain the point, or null. */
+    /**
+     * Finds the lens under a point.
+     *
+     * @param p the point in text area coordinates
+     * @return the lens whose last painted bounds contain the point, or null
+     */
     public UsageLens.LensEntry hitTest(Point p)
     {
         for (UsageLens.LensEntry entry : entries)
@@ -57,7 +68,12 @@ public final class UsageLensOverlay
         return null;
     }
 
-    /** Paints all entries; call after the text area's own painting. */
+    /**
+     * Paints all lenses and records their bounds for hit-testing; call after the text area's own painting.
+     *
+     * @param g the graphics to paint with
+     * @param textArea the text area the lenses sit over
+     */
     public void paint(Graphics2D g, RSyntaxTextArea textArea)
     {
         if (entries.isEmpty())

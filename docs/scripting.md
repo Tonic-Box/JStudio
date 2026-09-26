@@ -26,6 +26,11 @@ are recorded here.
   caches are invalidated so every view regenerates from the new bytecode. A frame computation failure is
   reported and does not stop the run.
 
+- `ScriptRunner` was extracted from the Script Editor so the editor and the AI assistant share one implementation
+  with no UI code: the editor's output sink appends to its console on the EDT, the assistant's streams to the Script
+  Console tab. Each sink call receives one newline-terminated line, and runs are synchronous.
+- `live` bridge operations are synchronous protocol calls on the script thread.
+
 ## Language
 
 - Semicolons are optional wherever a statement can end.

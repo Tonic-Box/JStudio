@@ -5,6 +5,7 @@ import lombok.Getter;
 import java.util.Collections;
 import java.util.List;
 
+/** A finding for tainted data reaching a sensitive sink; severity follows the sink's category. */
 @Getter
 public class TaintFlow extends SimulationFinding
 {
@@ -15,6 +16,7 @@ public class TaintFlow extends SimulationFinding
     private final int blockId;
     private final TaintCategory category;
 
+    /** The kind of sink a taint flow reaches. */
     public enum TaintCategory
     {
         SQL_INJECTION,
@@ -26,6 +28,18 @@ public class TaintFlow extends SimulationFinding
         GENERAL
     }
 
+    /**
+     * Creates a taint-flow finding.
+     *
+     * @param className the owning class's internal name
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
+     * @param sinkInstr the sink call, or null
+     * @param sourceDescription where the tainted value came from
+     * @param sinkDescription the sink, for display
+     * @param flowPath the steps from source to sink, or null for none
+     * @param category the kind of sink
+     */
     public TaintFlow(String className, String methodName, String methodDesc, IRInstruction sinkInstr, String sourceDescription, String sinkDescription, List<String> flowPath, TaintCategory category)
     {
         super(className, methodName, methodDesc, FindingType.TAINTED_VALUE, getSeverityForCategory(category), sinkInstr != null && sinkInstr.getBlock() != null ? sinkInstr.getBlock().getBytecodeOffset() : -1);

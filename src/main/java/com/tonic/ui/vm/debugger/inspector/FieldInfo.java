@@ -3,6 +3,7 @@ package com.tonic.ui.vm.debugger.inspector;
 import com.tonic.analysis.execution.state.ValueTag;
 import lombok.Getter;
 
+/** One field of an inspected object: its declaration, current value and value kind. */
 public class FieldInfo
 {
 
@@ -19,6 +20,17 @@ public class FieldInfo
     private final boolean isFinal;
     private final boolean isStatic;
 
+    /**
+     * Creates the field description.
+     *
+     * @param name the field's name
+     * @param descriptor the field's descriptor
+     * @param ownerClass the internal name of the declaring class
+     * @param value the field's current value
+     * @param valueTag the kind of value, or null if unknown
+     * @param isFinal whether the field is final
+     * @param isStatic whether the field is static
+     */
     public FieldInfo(String name, String descriptor, String ownerClass, Object value, ValueTag valueTag, boolean isFinal, boolean isStatic)
     {
         this.name = name;
@@ -30,26 +42,43 @@ public class FieldInfo
         this.isStatic = isStatic;
     }
 
+    /** @return whether the field is final */
     public boolean isFinal()
     {
         return isFinal;
     }
 
+    /** @return whether the field is static */
     public boolean isStatic()
     {
         return isStatic;
     }
 
+    /**
+     * Returns whether the field can be edited.
+     *
+     * @return true if it is not final and its value kind is known
+     */
     public boolean isEditable()
     {
         return !isFinal && valueTag != null;
     }
 
+    /**
+     * Returns the field's type as a short readable name.
+     *
+     * @return the type, such as int, String or int[], or unknown if there is no descriptor
+     */
     public String getTypeName()
     {
         return descriptorToTypeName(descriptor);
     }
 
+    /**
+     * Returns the value as display text.
+     *
+     * @return the value's text, or "null"
+     */
     public String getValueString()
     {
         if (value == null)

@@ -12,6 +12,7 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.util.List;
 
+/** A titled table of per-method statistics. */
 public class StatTable extends JPanel implements ThemeChangeListener
 {
 
@@ -22,6 +23,11 @@ public class StatTable extends JPanel implements ThemeChangeListener
     private static final String[] COLUMN_NAMES = {"Method", "Size", "Stack", "Locals", "CCN", "Loops", "Branches"};
     private static final int[] COLUMN_WIDTHS = {180, 60, 50, 50, 45, 50, 60};
 
+    /**
+     * Creates an empty table.
+     *
+     * @param title the heading drawn above the table
+     */
     public StatTable(String title)
     {
         this.title = title;
@@ -97,6 +103,11 @@ public class StatTable extends JPanel implements ThemeChangeListener
         }
     }
 
+    /**
+     * Replaces the rows.
+     *
+     * @param methods one row per method, or null for none
+     */
     public void setData(List<ClassStatistics.MethodDetailInfo> methods)
     {
         tableModel.setData(methods);

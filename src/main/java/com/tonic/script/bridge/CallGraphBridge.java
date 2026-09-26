@@ -12,12 +12,19 @@ import lombok.Getter;
 
 import java.util.*;
 
+/** The callgraph script global: builds the project call graph on demand and answers caller, callee, reachability and dead-code queries. */
 @Getter
 public class CallGraphBridge extends AbstractBridge
 {
 
     private CallGraph callGraph;
 
+    /**
+     * Creates a bridge whose graph is not built yet.
+     *
+     * @param interpreter the interpreter that runs script callbacks
+     * @param projectModel the project to graph
+     */
     public CallGraphBridge(ScriptInterpreter interpreter, ProjectModel projectModel)
     {
         super(interpreter, projectModel);
@@ -29,6 +36,11 @@ public class CallGraphBridge extends AbstractBridge
         return createCallGraphObject();
     }
 
+    /**
+     * Builds the callgraph script object: build, caller and callee queries, reachability, entry points and dead methods.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createCallGraphObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

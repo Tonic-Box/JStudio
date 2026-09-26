@@ -27,6 +27,7 @@ import java.awt.*;
 import java.io.File;
 import java.util.List;
 
+/** The heap forensics tab: pick a method, run it in the VM with allocation and mutation tracking, then browse classes, objects and snapshots. */
 public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTracker.ForensicsEventListener
 {
 
@@ -56,6 +57,7 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
     private int spinnerFrame = 0;
     private static final String[] SPINNER_FRAMES = {"|", "/", "-", "\\"};
 
+    /** Builds the tab with a fresh heap, tracker and listener. */
     public HeapForensicsPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
@@ -507,6 +509,7 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         JOptionPane.showMessageDialog(this, "Snapshot taken: " + lastSnapshot.getTotalObjects() + " objects", "Snapshot", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    /** Reloads the class table from the tracker against the last snapshot and selects the first class. */
     public void refresh()
     {
         classSummaryPanel.update(tracker.getClassCounts(), lastSnapshot);
@@ -567,6 +570,7 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         SwingUtilities.invokeLater(this::refresh);
     }
 
+    /** Discards all tracked data by replacing the heap, tracker and listener, and clears the views. */
     public void reset()
     {
         SimpleHeapManager newHeap = new SimpleHeapManager();

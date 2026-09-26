@@ -54,6 +54,11 @@ public class StringsPanel extends ThemedJPanel
 
     private List<StringEntry> allStrings = new ArrayList<>();
 
+    /**
+     * Builds the filter bar, strings table and status line.
+     *
+     * @param project the project whose constant pools are listed
+     */
     public StringsPanel(ProjectModel project)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());

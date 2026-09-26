@@ -4,7 +4,7 @@ import lombok.Getter;
 
 import java.util.List;
 
-/** A thread in the target JVM with a point-in-time stack: id, name, {@link Thread.State} ordinal, frames. */
+/** A thread in the target JVM with a point-in-time stack: its id, name, Thread.State ordinal and frames. */
 @Getter
 public final class ThreadStack
 {
@@ -13,6 +13,14 @@ public final class ThreadStack
     private final int state;
     private final List<StackFrame> frames;
 
+    /**
+     * Creates a thread stack.
+     *
+     * @param id the thread id
+     * @param name the thread name
+     * @param state the Thread.State ordinal
+     * @param frames the stack frames, innermost first
+     */
     public ThreadStack(long id, String name, int state, List<StackFrame> frames)
     {
         this.id = id;
@@ -21,6 +29,11 @@ public final class ThreadStack
         this.frames = frames;
     }
 
+    /**
+     * Maps the state ordinal to a thread state.
+     *
+     * @return the state, or RUNNABLE when the ordinal is out of range
+     */
     public Thread.State getStateEnum()
     {
         Thread.State[] values = Thread.State.values();

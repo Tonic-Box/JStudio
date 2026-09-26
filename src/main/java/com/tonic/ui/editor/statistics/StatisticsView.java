@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/** The statistics view of a class: summary cards, charts of method size, complexity and opcode use, and a per-method table. */
 public class StatisticsView extends AbstractEditorView
 {
 
@@ -33,6 +34,11 @@ public class StatisticsView extends AbstractEditorView
     private BarChart opcodeChart;
     private StatTable methodTable;
 
+    /**
+     * Creates the view; the figures fill on refresh.
+     *
+     * @param classEntry the class to show
+     */
     public StatisticsView(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;

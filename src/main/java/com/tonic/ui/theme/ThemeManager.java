@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** The singleton holder of the registered themes and the current one; switching themes saves the choice, reapplies the look and feel and notifies listeners. */
 public class ThemeManager
 {
 
@@ -30,6 +31,11 @@ public class ThemeManager
         currentTheme = themes.getOrDefault(savedTheme, themes.get("jstudio-dark"));
     }
 
+    /**
+     * Returns the manager, creating it on first use with the built-in themes and the saved theme (or jstudio-dark) current.
+     *
+     * @return the manager
+     */
     public static synchronized ThemeManager getInstance()
     {
         if (instance == null)
@@ -47,11 +53,21 @@ public class ThemeManager
         }
     }
 
+    /**
+     * Registers a theme, replacing any with the same name.
+     *
+     * @param theme the theme
+     */
     public void registerTheme(Theme theme)
     {
         themes.put(theme.getName(), theme);
     }
 
+    /**
+     * Makes a registered theme current, saves it to settings, applies it and notifies listeners; does nothing if the name is unknown or already current.
+     *
+     * @param themeName the theme's key
+     */
     public void setTheme(String themeName)
     {
         Theme newTheme = themes.get(themeName);
@@ -64,11 +80,17 @@ public class ThemeManager
         }
     }
 
+    /**
+     * Lists the registered themes.
+     *
+     * @return a copy of the themes, in registration order
+     */
     public List<Theme> getAvailableThemes()
     {
         return new ArrayList<>(themes.values());
     }
 
+    /** Pushes the current theme's colors into the UIManager defaults and refreshes every window. */
     public void applyTheme()
     {
         Theme theme = currentTheme;
@@ -182,17 +204,31 @@ public class ThemeManager
         return new Color(Math.max((int) (color.getRed() * factor), 0), Math.max((int) (color.getGreen() * factor), 0), Math.max((int) (color.getBlue() * factor), 0), color.getAlpha());
     }
 
+    /**
+     * Adds a listener for theme switches.
+     *
+     * @param listener the listener
+     */
     public void addThemeChangeListener(ThemeChangeListener listener)
     {
         listeners.add(listener);
     }
 
+    /**
+     * Removes a listener added earlier.
+     *
+     * @param listener the listener
+     */
     public void removeThemeChangeListener(ThemeChangeListener listener)
     {
         listeners.remove(listener);
     }
 
-    /** The number of registered theme listeners (test-only hook for leak detection). */
+    /**
+     * The number of registered theme listeners, used by tests to detect leaks.
+     *
+     * @return the count
+     */
     public int getListenerCount()
     {
         return listeners.size();

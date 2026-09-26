@@ -2,6 +2,7 @@ package com.tonic.model;
 
 import lombok.Getter;
 
+/** A non-class file in the project: its path, bytes and detected type. */
 @Getter
 public class ResourceEntryModel
 {
@@ -13,6 +14,12 @@ public class ResourceEntryModel
     private final ResourceType resourceType;
     private final long size;
 
+    /**
+     * Wraps a resource and detects its type.
+     *
+     * @param path the path inside the project, with slashes
+     * @param data the file bytes
+     */
     public ResourceEntryModel(String path, byte[] data)
     {
         this.path = path;
@@ -35,11 +42,21 @@ public class ResourceEntryModel
         return lastSlash >= 0 ? path.substring(0, lastSlash) : "";
     }
 
+    /**
+     * The icon to show for the resource.
+     *
+     * @return the icon name of its type
+     */
     public String getIconKey()
     {
         return resourceType.getIconName();
     }
 
+    /**
+     * Formats the size for display.
+     *
+     * @return the size in B, KB or MB
+     */
     public String getFormattedSize()
     {
         if (size < 1024)

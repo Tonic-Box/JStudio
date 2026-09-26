@@ -3,6 +3,7 @@ package com.tonic.ui.vm.debugger;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/** One operand stack row in the debugger, already formatted for display. */
 @Getter
 @RequiredArgsConstructor
 public class StackEntry

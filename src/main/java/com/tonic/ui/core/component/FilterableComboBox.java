@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+/** An editable combo box whose list narrows to items containing the typed text, ignoring case; Escape restores the last selection. */
 public class FilterableComboBox<T> extends JComboBox<T>
 {
 
@@ -24,6 +25,11 @@ public class FilterableComboBox<T> extends JComboBox<T>
     private boolean editorFocused = false;
     private T lastSelectedItem = null;
 
+    /**
+     * Creates an empty combo box.
+     *
+     * @param textExtractor gives the text an item is shown and matched by
+     */
     public FilterableComboBox(Function<T, String> textExtractor)
     {
         super(new DefaultComboBoxModel<>());
@@ -32,6 +38,11 @@ public class FilterableComboBox<T> extends JComboBox<T>
         setupFilter();
     }
 
+    /**
+     * Replaces the full item list and selects the first item, or clears the editor if the list is empty.
+     *
+     * @param items the items; copied
+     */
     public void setAllItems(List<T> items)
     {
         filtering = true;

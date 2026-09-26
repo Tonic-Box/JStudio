@@ -45,11 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-/**
- * Bottom-tab browser for Local History. Lists snapshots newest-first; expanding a snapshot shows the classes it
- * changed (vs the previous snapshot), each a clickable link that opens a "Current vs Snapshot" diff in a center tab.
- * Snapshots can be restored (whole-project or per-class) and deleted. Reads the {@link LocalHistoryService} live.
- */
+/** The local history browser: snapshots newest first, each expanding to the classes it changed, with diff, restore and delete. */
 public final class LocalHistoryPanel extends ThemedJPanel
 {
 
@@ -59,6 +55,7 @@ public final class LocalHistoryPanel extends ThemedJPanel
     private final JTree tree;
     private final JLabel statusLabel;
 
+    /** Builds the toolbar, snapshot tree and status line. */
     public LocalHistoryPanel()
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());

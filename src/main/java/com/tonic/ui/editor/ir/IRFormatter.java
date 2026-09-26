@@ -9,10 +9,7 @@ import com.tonic.analysis.ssa.ir.PhiInstruction;
 import com.tonic.parser.MethodEntry;
 import lombok.Getter;
 
-/**
- * Formats SSA IR for display in the UI.
- * Uses IRPrinter for instruction formatting but adds structure for UI display.
- */
+/** Formats one method's lifted SSA IR as block-structured text for the IR view. */
 public class IRFormatter
 {
 
@@ -24,6 +21,12 @@ public class IRFormatter
     private final MethodEntry method;
     private final SSA ssa;
 
+    /**
+     * Creates a formatter for one method.
+     *
+     * @param method the method to lift and format
+     * @param ssa the lifter, bound to the method's constant pool
+     */
     public IRFormatter(MethodEntry method, SSA ssa)
     {
         this.method = method;
@@ -31,7 +34,9 @@ public class IRFormatter
     }
 
     /**
-     * Format the method's IR for display.
+     * Lifts the method to SSA IR and formats it.
+     *
+     * @return the IR text, or a comment line when the method has no code or lifting fails
      */
     public String format()
     {

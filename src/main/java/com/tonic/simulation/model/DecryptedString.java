@@ -3,6 +3,7 @@ package com.tonic.simulation.model;
 import com.tonic.analysis.ssa.ir.InvokeInstruction;
 import lombok.Getter;
 
+/** An informational finding for a string that a call produced as a constant during simulation. */
 @Getter
 public class DecryptedString extends SimulationFinding
 {
@@ -12,6 +13,17 @@ public class DecryptedString extends SimulationFinding
     private final String decryptionMethod;
     private final int blockId;
 
+    /**
+     * Creates a decrypted-string finding.
+     *
+     * @param className the owning class's internal name
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
+     * @param invokeInstr the call that returned the string, or null
+     * @param decryptedValue the string it returned
+     * @param encryptedInput the call's arguments rendered as text
+     * @param decryptionMethod the called method as SimpleOwner.name
+     */
     public DecryptedString(String className, String methodName, String methodDesc, InvokeInstruction invokeInstr, String decryptedValue, String encryptedInput, String decryptionMethod)
     {
         super(className, methodName, methodDesc, FindingType.DECRYPTED_STRING, Severity.INFO, invokeInstr != null && invokeInstr.getBlock() != null ? invokeInstr.getBlock().getBytecodeOffset() : -1);

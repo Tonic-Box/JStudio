@@ -6,6 +6,7 @@ import lombok.Getter;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+/** Generates argument values from parameter and object specs; objects come back as descriptions of how to build them, not live instances. */
 public class ObjectFactory
 {
 
@@ -15,11 +16,19 @@ public class ObjectFactory
     {
     }
 
+    /** @return the shared factory */
     public static ObjectFactory getInstance()
     {
         return INSTANCE;
     }
 
+    /**
+     * Generates candidate values for a parameter according to its mode.
+     *
+     * @param spec the parameter's spec
+     * @param count how many fuzzed values to aim for, and the cap on object combinations
+     * @return one value for fixed or null mode, the fuzzed values, or the built object descriptions, null when no object spec is set
+     */
     public List<Object> generateValues(ParamSpec spec, int count)
     {
         List<Object> values = new ArrayList<>();
@@ -54,6 +63,13 @@ public class ObjectFactory
         return values;
     }
 
+    /**
+     * Generates object descriptions from a spec, resolving templates first.
+     *
+     * @param spec the object's spec, or null
+     * @param count how many values to aim for per argument or field, and the cap on combinations
+     * @return constructor calls, field injections, or an expression placeholder; a single null for null specs, missing templates and the factory-method and null modes
+     */
     public List<Object> generateObjectValues(ObjectSpec spec, int count)
     {
         ObjectSpec resolved = ObjectTemplateManager.getInstance().resolveSpec(spec);
@@ -509,6 +525,7 @@ public class ObjectFactory
         return result;
     }
 
+    /** A description of an object built by calling a constructor with given arguments. */
     @Getter
     @AllArgsConstructor
     public static class ConstructorCall
@@ -545,6 +562,7 @@ public class ObjectFactory
         }
     }
 
+    /** A description of an object built by setting field values directly. */
     @Getter
     @AllArgsConstructor
     public static class FieldInjection
@@ -573,6 +591,7 @@ public class ObjectFactory
         }
     }
 
+    /** A stand-in for an object that cannot be built here, such as one given by an expression. */
     @Getter
     @AllArgsConstructor
     public static class PlaceholderObject

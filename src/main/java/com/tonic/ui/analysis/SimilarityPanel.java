@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+/** The method-similarity tab: builds a similarity index, lists similar or duplicate method pairs and shows the pair side by side. */
 public class SimilarityPanel extends ThemedJPanel
 {
 
@@ -55,6 +56,11 @@ public class SimilarityPanel extends ThemedJPanel
 
     private JLabel statusLabel;
 
+    /**
+     * Builds the controls, results table, comparison view and status line.
+     *
+     * @param project the project whose methods are compared
+     */
     public SimilarityPanel(ProjectModel project)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());

@@ -25,31 +25,39 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.List;
 
+/** The file chooser's sortable file table, with type-ahead search, double-click to open and a context menu for pinning, new folders and deletion. */
 public class FileListPanel extends ThemedJPanel
 {
 
-    /**
-     * Listener for file list events.
-     */
+    /** A callback for file list activity. */
     public interface FileListListener
     {
+        /**
+         * Called when a file, not a directory, is double-clicked.
+         *
+         * @param file the file
+         */
         void onFileDoubleClicked(File file);
 
+        /**
+         * Called when the selection settles.
+         *
+         * @param selectedFiles the selected files, empty if none
+         */
         void onSelectionChanged(List<File> selectedFiles);
 
+        /**
+         * Called when a directory is opened, or the current one must be relisted after a folder is created or files are deleted.
+         *
+         * @param directory the directory to show
+         */
         void onDirectoryEntered(File directory);
     }
 
-    /**
-     * -- GETTER --
-     *  Get the model.
-     */
+    /** The table model. */
     @Getter
     private final FileListModel model;
-    /**
-     * -- GETTER --
-     *  Get the table.
-     */
+    /** The table. */
     @Getter
     private final JTable table;
     private final TableRowSorter<FileListModel> sorter;
@@ -63,6 +71,7 @@ public class FileListPanel extends ThemedJPanel
     private long lastKeyTime = 0;
     private static final long TYPE_AHEAD_TIMEOUT = 1000;
 
+    /** Creates an empty list in open-file mode. */
     public FileListPanel()
     {
         super(BackgroundStyle.TERTIARY, new BorderLayout());
@@ -444,7 +453,9 @@ public class FileListPanel extends ThemedJPanel
     }
 
     /**
-     * Set the file list listener.
+     * Sets the listener told about list activity, replacing any previous one.
+     *
+     * @param listener the listener
      */
     public void setFileListListener(FileListListener listener)
     {
@@ -452,7 +463,9 @@ public class FileListPanel extends ThemedJPanel
     }
 
     /**
-     * Set the chooser mode (affects selection behavior).
+     * Sets the chooser mode, allowing multiple selection only when opening files.
+     *
+     * @param mode the mode
      */
     public void setMode(FileChooserMode mode)
     {
@@ -473,7 +486,10 @@ public class FileListPanel extends ThemedJPanel
     }
 
     /**
-     * Set the files to display.
+     * Replaces the listed files, clears the selection and scrolls to the top.
+     *
+     * @param files the files, or null for none
+     * @param directory the directory they belong to
      */
     public void setFiles(List<File> files, File directory)
     {
@@ -490,7 +506,9 @@ public class FileListPanel extends ThemedJPanel
     }
 
     /**
-     * Get the selected file (first if multiple).
+     * The first selected file.
+     *
+     * @return the file, or null if nothing is selected
      */
     public File getSelectedFile()
     {
@@ -504,7 +522,9 @@ public class FileListPanel extends ThemedJPanel
     }
 
     /**
-     * Get all selected files.
+     * The selected files.
+     *
+     * @return a new list in view order, empty if nothing is selected
      */
     public List<File> getSelectedFiles()
     {
@@ -518,7 +538,9 @@ public class FileListPanel extends ThemedJPanel
     }
 
     /**
-     * Select a file by name.
+     * Selects and scrolls to the first file with a name, ignoring case; does nothing if none matches.
+     *
+     * @param name the file name
      */
     public void selectFile(String name)
     {
@@ -535,9 +557,7 @@ public class FileListPanel extends ThemedJPanel
         }
     }
 
-    /**
-     * Request focus on the table.
-     */
+    /** Focuses the table. */
     public void focusTable()
     {
         table.requestFocusInWindow();

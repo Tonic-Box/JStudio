@@ -37,6 +37,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.List;
 
+/** Modal preferences dialog for the editor font and size, theme, JDK class loading and update checks, with a live code preview. */
 public class PreferencesDialog extends JDialog implements ThemeChangeListener
 {
 
@@ -58,6 +59,11 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener
 
     private Runnable onApply;
 
+    /**
+     * Creates the dialog filled from the saved settings and registers it for theme changes until disposed.
+     *
+     * @param owner the owning window
+     */
     public PreferencesDialog(Frame owner)
     {
         super(owner, "Preferences", true);
@@ -549,6 +555,11 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener
         }
     }
 
+    /**
+     * Sets the callback run on the EDT after settings are applied.
+     *
+     * @param onApply the callback, or null for none
+     */
     public void setOnApply(Runnable onApply)
     {
         this.onApply = onApply;

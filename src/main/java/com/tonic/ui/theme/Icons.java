@@ -14,20 +14,30 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.util.function.Supplier;
 
-/**
- * Icon provider for JStudio.
- * Uses programmatically drawn icons that fetch colors at paint time for theme support.
- */
+/** Factory for the programmatically drawn icons, which read theme colors at paint time so they follow theme switches. */
 public class Icons
 {
 
     private static final int DEFAULT_SIZE = 16;
 
+    /**
+     * Creates the named icon at the default 16 pixel size.
+     *
+     * @param name the icon name, such as open, class or method_public
+     * @return a new icon, or a placeholder icon for an unknown name
+     */
     public static Icon getIcon(String name)
     {
         return getIcon(name, DEFAULT_SIZE);
     }
 
+    /**
+     * Creates the named icon at a given size.
+     *
+     * @param name the icon name, such as open, class or method_public
+     * @param size the width and height in pixels
+     * @return a new icon, or a placeholder icon for an unknown name
+     */
     public static Icon getIcon(String name, int size)
     {
         return createIcon(name, size);

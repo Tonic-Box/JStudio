@@ -3,14 +3,7 @@ package com.tonic.service.deadcode;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-/**
- * Configuration for {@link DeadCodeAnalyzer}: whether {@code public} members are treated as entry points, a
- * keep-list of fully-qualified members that are forced live (and seed reachability), and a skip-list of
- * fully-qualified classes excluded from analysis and removal entirely.
- *
- * <p>Keep entries are {@code com.foo.Bar#member} (name only, keeps all overloads) or
- * {@code com.foo.Bar#method(descriptor)} for a specific overload. Skip entries are {@code com.foo.Bar}.
- */
+/** Dead-code analysis settings: whether public members are entry points, a keep-list of members forced live, and a skip-list of classes left alone. */
 public final class DeadCodeConfig
 {
 
@@ -18,6 +11,13 @@ public final class DeadCodeConfig
     private final Set<String> keep;
     private final Set<String> skipClassesInternal;
 
+    /**
+     * Creates a configuration; blank entries are dropped.
+     *
+     * @param publicAsEntryPoints whether every public member counts as an entry point
+     * @param keepEntries members forced live, as com.foo.Bar#name for all overloads or com.foo.Bar#name(descriptor) for one
+     * @param skipClasses dotted class names excluded from analysis and removal
+     */
     public DeadCodeConfig(boolean publicAsEntryPoints, Set<String> keepEntries, Set<String> skipClasses)
     {
         this.publicAsEntryPoints = publicAsEntryPoints;

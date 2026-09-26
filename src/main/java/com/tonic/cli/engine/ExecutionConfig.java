@@ -6,6 +6,7 @@ import lombok.Getter;
 
 import java.io.File;
 
+/** The settings for one headless run: target, plugin source, output, class and method filters, and run flags; built with its builder. */
 @Getter
 @Builder
 public class ExecutionConfig

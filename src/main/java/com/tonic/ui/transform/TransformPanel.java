@@ -32,14 +32,14 @@ import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
 
+/** The transform tool window: pick a class and method, tick transforms, and preview or apply them with before and after views. */
 public class TransformPanel extends ThemedJPanel
 {
 
-    /**
-     * Callback interface for transform completion.
-     */
+    /** Hears when transforms have been applied. */
     public interface TransformCallback
     {
+        /** Called after transforms are applied. */
         void onTransformComplete();
     }
 
@@ -57,6 +57,11 @@ public class TransformPanel extends ThemedJPanel
 
     private TransformCallback transformCallback;
 
+    /**
+     * Builds the target picker, transform list, before and after views and status line.
+     *
+     * @param project the project the transforms change
+     */
     public TransformPanel(ProjectModel project)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -304,7 +309,9 @@ public class TransformPanel extends ThemedJPanel
     }
 
     /**
-     * Set the class to transform (and populate method dropdown).
+     * Targets a class, filling the method picker with its methods that have code and selecting the first.
+     *
+     * @param classEntry the class, or null for none
      */
     public void setClass(ClassEntryModel classEntry)
     {
@@ -343,7 +350,9 @@ public class TransformPanel extends ThemedJPanel
     }
 
     /**
-     * Set the method to transform (legacy method for compatibility).
+     * Targets a method, selecting it in the picker if it is listed there, and clears the previews.
+     *
+     * @param method the method, or null for none
      */
     public void setMethod(MethodEntryModel method)
     {
@@ -365,7 +374,9 @@ public class TransformPanel extends ThemedJPanel
     }
 
     /**
-     * Set the callback to be invoked when transforms are applied.
+     * Sets what runs after transforms are applied.
+     *
+     * @param callback the callback, or null for none
      */
     public void setTransformCallback(TransformCallback callback)
     {

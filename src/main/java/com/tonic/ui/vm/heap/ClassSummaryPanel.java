@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+/** The heap forensics class table: each class with its live object count and the change since the last snapshot, filterable by name. */
 public class ClassSummaryPanel extends ThemedJPanel
 {
 
@@ -27,6 +28,7 @@ public class ClassSummaryPanel extends ThemedJPanel
     private Map<String, Integer> currentCounts = new HashMap<>();
     private Map<String, Integer> snapshotCounts = new HashMap<>();
 
+    /** Builds the filter field, class table and totals line. */
     public ClassSummaryPanel()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
@@ -94,11 +96,17 @@ public class ClassSummaryPanel extends ThemedJPanel
         add(totalsLabel, BorderLayout.SOUTH);
     }
 
+    /**
+     * Sets what runs when a class row is selected.
+     *
+     * @param callback receives the selected class's internal name
+     */
     public void setOnClassSelected(Consumer<String> callback)
     {
         this.onClassSelected = callback;
     }
 
+    /** Selects the first row, if there is one. */
     public void selectFirstRow()
     {
         if (table.getRowCount() > 0)
@@ -107,6 +115,12 @@ public class ClassSummaryPanel extends ThemedJPanel
         }
     }
 
+    /**
+     * Replaces the counts and the snapshot baseline the deltas are measured from.
+     *
+     * @param counts the current object count per class; copied
+     * @param snapshot the baseline snapshot, or null for a zero baseline
+     */
     public void update(Map<String, Integer> counts, HeapSnapshot snapshot)
     {
         this.currentCounts = new HashMap<>(counts);
@@ -115,6 +129,11 @@ public class ClassSummaryPanel extends ThemedJPanel
         updateTotals();
     }
 
+    /**
+     * Adds one object to a class's count.
+     *
+     * @param className the class's internal name
+     */
     public void incrementClass(String className)
     {
         currentCounts.merge(className, 1, Integer::sum);
@@ -122,6 +141,7 @@ public class ClassSummaryPanel extends ThemedJPanel
         updateTotals();
     }
 
+    /** Clears the counts, the baseline and the table. */
     public void clear()
     {
         currentCounts.clear();

@@ -8,10 +8,7 @@ import lombok.Getter;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Multi-stage pipeline for script execution.
- * Allows defining and running sequential analysis workflows.
- */
+/** The pipeline script global: named stages run in order over a shared context object, stopping at the first failure unless told otherwise. */
 public class ScriptPipeline
 {
 
@@ -23,12 +20,22 @@ public class ScriptPipeline
     private ScriptValue context;
     private long totalExecutionTimeMs;
 
+    /**
+     * Creates an empty pipeline with an empty context.
+     *
+     * @param interpreter the interpreter that runs stage functions
+     */
     public ScriptPipeline(ScriptInterpreter interpreter)
     {
         this.interpreter = interpreter;
         this.context = ScriptValue.object(new HashMap<>());
     }
 
+    /**
+     * Sets where the pipeline's log messages go.
+     *
+     * @param callback receives each log message, or null to drop them
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
@@ -42,6 +49,11 @@ public class ScriptPipeline
         }
     }
 
+    /**
+     * Builds the pipeline script object: stage definition, run, status and results queries, error policy, the shared context, and creating a new pipeline.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createPipelineObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

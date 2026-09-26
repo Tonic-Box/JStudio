@@ -16,6 +16,7 @@ public class ClassTreeCellRenderer extends DefaultTreeCellRenderer
     private final Font normalFont;
     private final Font italicFont;
 
+    /** Creates the renderer with theme colors and the plain and italic UI fonts. */
     public ClassTreeCellRenderer()
     {
         this.normalFont = JStudioTheme.getUIFont(12);

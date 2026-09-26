@@ -37,6 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+/** The comments list of the project database, newest first, with a preview of the selected comment. */
 public class CommentsPanel extends ThemedJPanel
 {
 
@@ -46,6 +47,11 @@ public class CommentsPanel extends ThemedJPanel
     private final JTextArea previewArea;
     private final JLabel statusLabel;
 
+    /**
+     * Builds the toolbar, list, preview and status line.
+     *
+     * @param project the project whose classes comments resolve against; may be null
+     */
     public CommentsPanel(ProjectModel project)
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -158,6 +164,7 @@ public class CommentsPanel extends ThemedJPanel
         return button;
     }
 
+    /** Reloads the list from the project database, newest first, and clears the preview. */
     public void refresh()
     {
         listModel.clear();
@@ -229,6 +236,7 @@ public class CommentsPanel extends ThemedJPanel
         return project.getClass(className);
     }
 
+    /** Prompts for a class name and comment text, then stores a class-level comment; warns and stops if no classes are loaded or the class is not found. */
     public void addCommentAtCurrentLocation()
     {
         if (project == null || project.getClassCount() == 0)

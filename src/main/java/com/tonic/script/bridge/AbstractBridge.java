@@ -6,6 +6,7 @@ import com.tonic.script.engine.ScriptValue;
 
 import java.util.function.Consumer;
 
+/** The base of script bridges that expose one project-backed global object, with an optional log callback. */
 public abstract class AbstractBridge
 {
 
@@ -24,6 +25,11 @@ public abstract class AbstractBridge
         this.projectModel = projectModel;
     }
 
+    /**
+     * Sets where the bridge's log messages go.
+     *
+     * @param callback receives each log message, or null to drop them
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
@@ -37,5 +43,10 @@ public abstract class AbstractBridge
         }
     }
 
+    /**
+     * Builds the object this bridge exposes to scripts.
+     *
+     * @return the object, ready to bind as a global
+     */
     public abstract ScriptValue createBridgeObject();
 }

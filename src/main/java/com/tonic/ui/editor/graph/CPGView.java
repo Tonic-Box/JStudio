@@ -14,6 +14,7 @@ import com.tonic.model.ClassEntryModel;
 import java.util.HashMap;
 import java.util.Map;
 
+/** The code property graph view of a class. */
 public class CPGView extends BaseGraphView
 {
 
@@ -21,6 +22,11 @@ public class CPGView extends BaseGraphView
     private String prepareError = null;
     private final CPGVertexRenderer renderer = new CPGVertexRenderer();
 
+    /**
+     * Creates the view.
+     *
+     * @param classEntry the class to graph
+     */
     public CPGView(ClassEntryModel classEntry)
     {
         super(classEntry);

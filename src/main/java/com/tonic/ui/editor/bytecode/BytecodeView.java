@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntConsumer;
 
+/** The editor view that shows every method of a class disassembled, with a breakpoint gutter, click-to-highlight lines, and offset lookups for linking. */
 public class BytecodeView extends AbstractTextView
 {
 
@@ -54,6 +55,11 @@ public class BytecodeView extends AbstractTextView
     private BytecodeLineIndex lineIndex;
     private final BreakpointGutterController breakpointGutter;
 
+    /**
+     * Creates the view; the disassembly loads on refresh.
+     *
+     * @param classEntry the class to show
+     */
     public BytecodeView(ClassEntryModel classEntry)
     {
         this.classEntry = classEntry;
@@ -82,13 +88,19 @@ public class BytecodeView extends AbstractTextView
         super.removeNotify();
     }
 
-    /** Re-renders breakpoint dots and re-arms the gutter; called when the debug session connects/disconnects. */
+    /** Redraws the breakpoint gutter icons; called when a debug session connects or disconnects. */
     public void refreshBreakpointGutter()
     {
         breakpointGutter.updateIcons();
     }
 
-    /** The 0-based display line for the instruction at {@code pc} in the {@code name+desc} method, or -1. */
+    /**
+     * Finds the display line of an instruction.
+     *
+     * @param methodKey the method's name followed by its descriptor
+     * @param pc the instruction's bytecode offset
+     * @return the 0-based display line, or -1 when no instruction starts at that offset
+     */
     public int displayLineForPc(String methodKey, int pc)
     {
         List<Integer> lines = ensureLineIndex().displayLinesForPcRange(methodKey, pc, pc);
@@ -351,9 +363,12 @@ public class BytecodeView extends AbstractTextView
     }
 
     /**
-     * Highlights the instruction at the given PC. Loading is asynchronous: if a refresh worker is
-     * in flight, its completion replaces the document and resets the caret, which would wipe a
-     * highlight applied now — so the highlight is deferred and applied when that load finishes.
+     * Highlights and selects an instruction, deferring until an in-flight load finishes.
+     *
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
+     * @param pc the instruction's bytecode offset
+     * @return false when the method is not found; true when highlighted, deferred, or only the method was found
      */
     public boolean highlightPC(String methodName, String methodDesc, int pc)
     {
@@ -424,6 +439,13 @@ public class BytecodeView extends AbstractTextView
         return true;
     }
 
+    /**
+     * Highlights and moves the caret to a method's first textual occurrence, starting a load if none has completed.
+     *
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor, or null to match on the name alone
+     * @return whether the method was found in the current text
+     */
     public boolean scrollToMethod(String methodName, String methodDesc)
     {
         if (!loaded)
@@ -454,6 +476,12 @@ public class BytecodeView extends AbstractTextView
         return false;
     }
 
+    /**
+     * Highlights and moves the caret to a field name's first textual occurrence, starting a load if none has completed.
+     *
+     * @param fieldName the field's name
+     * @return whether the name was found in the current text
+     */
     public boolean scrollToField(String fieldName)
     {
         if (!loaded)
@@ -483,6 +511,7 @@ public class BytecodeView extends AbstractTextView
         return false;
     }
 
+    /** Removes every line highlight. */
     public void clearHighlights()
     {
         for (Object tag : highlightedLines.values())
@@ -498,6 +527,11 @@ public class BytecodeView extends AbstractTextView
         highlightedLines.clear();
     }
 
+    /**
+     * Highlights a line, if not already highlighted.
+     *
+     * @param lineNumber the 0-based line
+     */
     public void addHighlight(int lineNumber)
     {
         if (!highlightedLines.containsKey(lineNumber))
@@ -515,6 +549,11 @@ public class BytecodeView extends AbstractTextView
         }
     }
 
+    /**
+     * Removes a line's highlight, if any.
+     *
+     * @param lineNumber the 0-based line
+     */
     public void removeHighlight(int lineNumber)
     {
         Object tag = highlightedLines.remove(lineNumber);
@@ -530,6 +569,11 @@ public class BytecodeView extends AbstractTextView
         }
     }
 
+    /**
+     * Highlights a line, or removes its highlight when it has one.
+     *
+     * @param lineNumber the 0-based line
+     */
     public void toggleHighlight(int lineNumber)
     {
         if (highlightedLines.containsKey(lineNumber))
@@ -542,6 +586,12 @@ public class BytecodeView extends AbstractTextView
         }
     }
 
+    /**
+     * Highlights every line between two lines, inclusive, in either order.
+     *
+     * @param fromLine one end, 0-based
+     * @param toLine the other end, 0-based
+     */
     public void highlightRange(int fromLine, int toLine)
     {
         int start = Math.min(fromLine, toLine);
@@ -553,8 +603,9 @@ public class BytecodeView extends AbstractTextView
     }
 
     /**
-     * Registers a listener fired with the 0-based display line on a double-click, used by the dual
-     * view to drive cross-pane highlighting. Single/ctrl/shift-click behavior is unchanged.
+     * Sets the listener fired on a double-click; the dual view uses it for cross-pane highlighting.
+     *
+     * @param onLineActivated receives the 0-based display line double-clicked, or null for none
      */
     public void setOnLineActivated(IntConsumer onLineActivated)
     {
@@ -562,7 +613,10 @@ public class BytecodeView extends AbstractTextView
     }
 
     /**
-     * The instruction location at a 0-based display line, or null when the line is not an instruction.
+     * Finds the instruction shown on a display line.
+     *
+     * @param displayLine the 0-based display line
+     * @return the instruction's location, or null when the line is not an instruction
      */
     public BcLocation locationAtLine(int displayLine)
     {
@@ -570,8 +624,12 @@ public class BytecodeView extends AbstractTextView
     }
 
     /**
-     * Clears existing highlights, highlights every instruction line whose offset is in {@code [pcLo, pcHi]}
-     * for the given {@code name+desc} method, scrolls the first into view, and returns whether any matched.
+     * Replaces the highlights with every instruction line of a method in an offset range, and scrolls the first into view.
+     *
+     * @param methodKey the method's name followed by its descriptor
+     * @param pcLo the lowest offset, inclusive
+     * @param pcHi the highest offset, inclusive
+     * @return whether any instruction matched; when none does the existing highlights are kept
      */
     public boolean highlightPcSpan(String methodKey, int pcLo, int pcHi)
     {

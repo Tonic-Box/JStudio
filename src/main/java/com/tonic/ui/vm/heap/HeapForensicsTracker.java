@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+/** The record of one execution's heap activity: every allocation and field write, the objects still reachable by id, and the snapshots taken; thread-safe. */
 public class HeapForensicsTracker
 {
 
@@ -32,6 +33,11 @@ public class HeapForensicsTracker
 
     private final List<ForensicsEventListener> listeners;
 
+    /**
+     * Creates an empty tracker with tracking on.
+     *
+     * @param heapManager the heap the traced execution allocates in
+     */
     public HeapForensicsTracker(HeapManager heapManager)
     {
         this.heapManager = heapManager;
@@ -47,17 +53,29 @@ public class HeapForensicsTracker
         this.listeners = new CopyOnWriteArrayList<>();
     }
 
+    /** Resets the current instruction count for a new run. */
     public void onExecutionStart()
     {
         lastInstructionCount = 0;
     }
 
+    /**
+     * Records the final instruction count and notifies listeners that execution ended.
+     *
+     * @param instructionCount the instructions executed
+     */
     public void onExecutionEnd(long instructionCount)
     {
         lastInstructionCount = instructionCount;
         fireExecutionEnded(instructionCount);
     }
 
+    /**
+     * Records an allocation and starts tracking the new object; ignored while tracking is off.
+     *
+     * @param event the allocation
+     * @param instance the allocated object
+     */
     public void recordAllocation(AllocationEvent event, ObjectInstance instance)
     {
         if (!tracking) return;
@@ -76,6 +94,11 @@ public class HeapForensicsTracker
         fireAllocationRecorded(event);
     }
 
+    /**
+     * Records a field write and updates the written object's captured field value; ignored while tracking is off.
+     *
+     * @param event the write
+     */
     public void recordMutation(MutationEvent event)
     {
         if (!tracking) return;
@@ -96,6 +119,12 @@ public class HeapForensicsTracker
         fireMutationRecorded(event);
     }
 
+    /**
+     * Captures every tracked object with its recorded fields and mutations, keeps the snapshot and notifies listeners.
+     *
+     * @param label the snapshot's name
+     * @return the snapshot, stamped with the last recorded instruction count
+     */
     public HeapSnapshot takeSnapshot(String label)
     {
         HeapSnapshot.Builder builder = HeapSnapshot.builder()
@@ -152,11 +181,24 @@ public class HeapForensicsTracker
         return builder.build();
     }
 
+    /**
+     * Compares two snapshots.
+     *
+     * @param before the earlier snapshot
+     * @param after the later snapshot
+     * @return the diff
+     */
     public HeapDiff compareSnapshots(HeapSnapshot before, HeapSnapshot after)
     {
         return HeapDiff.compare(before, after);
     }
 
+    /**
+     * Captures the tracked objects of one class.
+     *
+     * @param className the class's internal name
+     * @return the objects, possibly empty
+     */
     public List<HeapObject> getObjectsByClass(String className)
     {
         List<HeapObject> result = new ArrayList<>();
@@ -185,6 +227,11 @@ public class HeapForensicsTracker
         return result;
     }
 
+    /**
+     * Counts the tracked objects per class.
+     *
+     * @return a new map from class name to object count
+     */
     public Map<String, Integer> getClassCounts()
     {
         Map<String, Integer> counts = new HashMap<>();
@@ -195,6 +242,11 @@ public class HeapForensicsTracker
         return counts;
     }
 
+    /**
+     * Lists the tracked classes, most objects first.
+     *
+     * @return the class names sorted by descending object count
+     */
     public List<String> getClassesSortedByCount()
     {
         return getClassCounts().entrySet().stream()
@@ -203,6 +255,13 @@ public class HeapForensicsTracker
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Lists the allocations within an instruction count range.
+     *
+     * @param start the first instruction count, inclusive
+     * @param end the last instruction count, inclusive
+     * @return the allocations in the range
+     */
     public List<AllocationEvent> getAllocationsInRange(long start, long end)
     {
         return allocations.stream()
@@ -210,6 +269,12 @@ public class HeapForensicsTracker
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Lists the allocations of one class.
+     *
+     * @param className the class's internal name
+     * @return the allocations, possibly empty
+     */
     public List<AllocationEvent> getAllocationsForClass(String className)
     {
         return allocations.stream()
@@ -217,11 +282,24 @@ public class HeapForensicsTracker
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Lists the writes to one object.
+     *
+     * @param objectId the object's heap id, or -1 for static fields
+     * @return the tracker's own list of writes, or an empty list when none were recorded
+     */
     public List<MutationEvent> getMutationsForObject(int objectId)
     {
         return objectMutations.getOrDefault(objectId, Collections.emptyList());
     }
 
+    /**
+     * Lists the writes within an instruction count range.
+     *
+     * @param start the first instruction count, inclusive
+     * @param end the last instruction count, inclusive
+     * @return the writes in the range
+     */
     public List<MutationEvent> getMutationsInRange(long start, long end)
     {
         return mutations.stream()
@@ -229,6 +307,11 @@ public class HeapForensicsTracker
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Merges allocations, writes and snapshots into one timeline.
+     *
+     * @return the events sorted by instruction count
+     */
     public List<TimelineEvent> getTimeline()
     {
         List<TimelineEvent> events = new ArrayList<>();
@@ -252,61 +335,115 @@ public class HeapForensicsTracker
         return events;
     }
 
+    /**
+     * Counts the tracked objects.
+     *
+     * @return the number of objects allocated and not cleared by reset
+     */
     public int getTotalObjectCount()
     {
         return liveObjects.size();
     }
 
+    /**
+     * Counts the recorded allocations.
+     *
+     * @return the number of allocations
+     */
     public int getTotalAllocationCount()
     {
         return allocations.size();
     }
 
+    /**
+     * Counts the recorded field writes.
+     *
+     * @return the number of writes
+     */
     public int getTotalMutationCount()
     {
         return mutations.size();
     }
 
+    /** @return the instruction count recorded at the last execution end, 0 during a run */
     public long getCurrentInstructionCount()
     {
         return lastInstructionCount;
     }
 
+    /**
+     * Lists every recorded allocation.
+     *
+     * @return the allocations in record order, unmodifiable
+     */
     public List<AllocationEvent> getAllocations()
     {
         return Collections.unmodifiableList(allocations);
     }
 
+    /**
+     * Lists every recorded field write.
+     *
+     * @return the writes in record order, unmodifiable
+     */
     public List<MutationEvent> getMutations()
     {
         return Collections.unmodifiableList(mutations);
     }
 
+    /**
+     * Lists every snapshot taken.
+     *
+     * @return the snapshots in order taken, unmodifiable
+     */
     public List<HeapSnapshot> getSnapshots()
     {
         return Collections.unmodifiableList(snapshots);
     }
 
+    /**
+     * Gets the most recent snapshot.
+     *
+     * @return the last snapshot, or null when none has been taken
+     */
     public HeapSnapshot getLatestSnapshot()
     {
         return snapshots.isEmpty() ? null : snapshots.get(snapshots.size() - 1);
     }
 
+    /**
+     * Looks up a tracked object.
+     *
+     * @param objectId the object's heap id
+     * @return the live object, or null when not tracked
+     */
     public ObjectInstance getLiveObject(int objectId)
     {
         return liveObjects.get(objectId);
     }
 
+    /**
+     * Looks up where a tracked object was allocated.
+     *
+     * @param objectId the object's heap id
+     * @return the allocation site, or null when unknown
+     */
     public ProvenanceInfo getProvenance(int objectId)
     {
         return provenanceMap.get(objectId);
     }
 
+    /**
+     * Turns recording of allocations and writes on or off.
+     *
+     * @param tracking true to record
+     */
     public void setTracking(boolean tracking)
     {
         this.tracking = tracking;
     }
 
+    /** Discards all recorded events, objects and snapshots; listeners and the tracking flag are kept. */
     public void reset()
     {
         allocations.clear();
@@ -321,11 +458,21 @@ public class HeapForensicsTracker
         lastInstructionCount = 0;
     }
 
+    /**
+     * Registers a listener for recorded events.
+     *
+     * @param listener the listener
+     */
     public void addListener(ForensicsEventListener listener)
     {
         listeners.add(listener);
     }
 
+    /**
+     * Unregisters a listener.
+     *
+     * @param listener the listener
+     */
     public void removeListener(ForensicsEventListener listener)
     {
         listeners.remove(listener);
@@ -387,20 +534,41 @@ public class HeapForensicsTracker
         }
     }
 
+    /** Receives the tracker's events; exceptions it throws are swallowed. */
     public interface ForensicsEventListener
     {
+        /**
+         * Called after an allocation is recorded.
+         *
+         * @param event the allocation
+         */
         default void onAllocationRecorded(AllocationEvent event)
         {
         }
 
+        /**
+         * Called after a field write is recorded.
+         *
+         * @param event the write
+         */
         default void onMutationRecorded(MutationEvent event)
         {
         }
 
+        /**
+         * Called after a snapshot is taken.
+         *
+         * @param snapshot the snapshot
+         */
         default void onSnapshotTaken(HeapSnapshot snapshot)
         {
         }
 
+        /**
+         * Called when the traced execution ends.
+         *
+         * @param instructionCount the instructions executed
+         */
         default void onExecutionEnded(long instructionCount)
         {
         }

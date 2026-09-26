@@ -10,9 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Contains the complete results of simulation analysis for a single method.
- */
+/** The results of simulating one method: its findings, dead blocks and engine statistics. */
 public class SimulationAnalysisResult
 {
 
@@ -27,6 +25,16 @@ public class SimulationAnalysisResult
     @Getter
     private final int branchCount;
 
+    /**
+     * Creates a result; null findings or dead blocks become empty.
+     *
+     * @param method the analyzed method
+     * @param engineResult the simulation engine's raw result, or null
+     * @param findings the findings raised, or null for none
+     * @param deadBlocks the blocks never reached, or null for none
+     * @param blocksVisited how many blocks the simulation visited
+     * @param branchCount how many branches the simulation saw
+     */
     public SimulationAnalysisResult(MethodEntryModel method, SimulationResult engineResult, List<SimulationFinding> findings, Set<IRBlock> deadBlocks, int blocksVisited, int branchCount)
     {
         this.method = method;
@@ -37,21 +45,41 @@ public class SimulationAnalysisResult
         this.branchCount = branchCount;
     }
 
+    /**
+     * Returns the findings raised.
+     *
+     * @return the findings, unmodifiable
+     */
     public List<SimulationFinding> getFindings()
     {
         return Collections.unmodifiableList(findings);
     }
 
+    /**
+     * Returns the blocks the simulation never reached.
+     *
+     * @return the dead blocks, unmodifiable
+     */
     public Set<IRBlock> getDeadBlocks()
     {
         return Collections.unmodifiableSet(deadBlocks);
     }
 
+    /**
+     * Reports whether the analysis found anything.
+     *
+     * @return true if there are findings or dead blocks
+     */
     public boolean hasFindings()
     {
         return !findings.isEmpty() || !deadBlocks.isEmpty();
     }
 
+    /**
+     * Counts the opaque-predicate findings.
+     *
+     * @return the number of findings of type OPAQUE_PREDICATE
+     */
     public int getOpaquePredicateCount()
     {
         return (int) findings.stream()
@@ -59,21 +87,41 @@ public class SimulationAnalysisResult
                 .count();
     }
 
+    /**
+     * Counts the unreached blocks.
+     *
+     * @return the number of dead blocks
+     */
     public int getDeadBlockCount()
     {
         return deadBlocks.size();
     }
 
+    /**
+     * Reports how many instructions the simulation executed.
+     *
+     * @return the instruction count, or 0 without an engine result
+     */
     public int getTotalInstructions()
     {
         return engineResult != null ? engineResult.getTotalInstructions() : 0;
     }
 
+    /**
+     * Reports the deepest operand stack seen during simulation.
+     *
+     * @return the maximum stack depth, or 0 without an engine result
+     */
     public int getMaxStackDepth()
     {
         return engineResult != null ? engineResult.getMaxStackDepth() : 0;
     }
 
+    /**
+     * Reports how long the simulation took.
+     *
+     * @return the simulation time in milliseconds, or 0 without an engine result
+     */
     public double getSimulationTimeMillis()
     {
         return engineResult != null ? engineResult.getSimulationTimeMillis() : 0;

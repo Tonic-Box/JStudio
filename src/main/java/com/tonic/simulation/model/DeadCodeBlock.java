@@ -3,6 +3,7 @@ package com.tonic.simulation.model;
 import com.tonic.analysis.ssa.cfg.IRBlock;
 import lombok.Getter;
 
+/** A finding for an IR block the simulation never reached; low severity for an exception handler, otherwise informational. */
 @Getter
 public class DeadCodeBlock extends SimulationFinding
 {
@@ -12,6 +13,15 @@ public class DeadCodeBlock extends SimulationFinding
     private final String blockLabel;
     private final boolean exceptionHandler;
 
+    /**
+     * Creates a dead-block finding.
+     *
+     * @param className the owning class's internal name
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
+     * @param block the unreached block
+     * @param isExceptionHandler whether the block is an exception handler
+     */
     public DeadCodeBlock(String className, String methodName, String methodDesc, IRBlock block, boolean isExceptionHandler)
     {
         super(className, methodName, methodDesc, FindingType.DEAD_CODE, isExceptionHandler ? Severity.LOW : Severity.INFO, -1);

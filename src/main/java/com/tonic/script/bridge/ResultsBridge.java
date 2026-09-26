@@ -9,10 +9,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Bridge for collecting and managing script findings/results.
- * Exposes a 'results' global object for accumulating analysis findings.
- */
+/** The results script global: accumulates findings a script reports and filters, groups, sorts and exports them. */
 public class ResultsBridge
 {
 
@@ -20,11 +17,21 @@ public class ResultsBridge
     private final List<ScriptValue> findings = new ArrayList<>();
     private Consumer<String> logCallback;
 
+    /**
+     * Creates a bridge with no findings.
+     *
+     * @param interpreter the interpreter that runs script callbacks
+     */
     public ResultsBridge(ScriptInterpreter interpreter)
     {
         this.interpreter = interpreter;
     }
 
+    /**
+     * Sets where the bridge's log messages go.
+     *
+     * @param callback receives each log message, or null to drop them
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
@@ -38,6 +45,11 @@ public class ResultsBridge
         }
     }
 
+    /**
+     * Builds the results script object: adding, counting, filtering, grouping, sorting and exporting findings.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createResultsObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

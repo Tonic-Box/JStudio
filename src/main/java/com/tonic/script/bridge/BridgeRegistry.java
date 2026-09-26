@@ -8,10 +8,7 @@ import lombok.Getter;
 
 import java.util.function.Consumer;
 
-/**
- * Central registry for all script bridges.
- * Provides unified registration of global objects into the interpreter.
- */
+/** Creates the project and analysis bridges and binds each as a global constant in an interpreter. */
 public class BridgeRegistry
 {
 
@@ -44,17 +41,29 @@ public class BridgeRegistry
     @Getter
     private LiveBridge liveBridge;
 
+    /**
+     * Creates a registry that has registered nothing yet.
+     *
+     * @param interpreter the interpreter to bind globals in
+     * @param projectModel the project the bridges read, or null to skip the project-backed bridges
+     */
     public BridgeRegistry(ScriptInterpreter interpreter, ProjectModel projectModel)
     {
         this.interpreter = interpreter;
         this.projectModel = projectModel;
     }
 
+    /**
+     * Sets the log callback handed to bridges registered after this call.
+     *
+     * @param log receives each log message, or null for none
+     */
     public void setLogCallback(Consumer<String> log)
     {
         this.logCallback = log;
     }
 
+    /** Registers every bridge except live: results and pipeline always, and the project-backed bridges when a project is set. */
     public void registerAll()
     {
         registerResultsBridge();
@@ -70,7 +79,11 @@ public class BridgeRegistry
         registerPipeline();
     }
 
-    /** Registers the {@code live} binding for the attached JVM. Call only when a session exists. */
+    /**
+     * Binds the live global to an attached JVM; does nothing when the session is null.
+     *
+     * @param session the live session, or null
+     */
     public void registerLiveBridge(LiveSession session)
     {
         if (session != null)
@@ -84,6 +97,7 @@ public class BridgeRegistry
         }
     }
 
+    /** Binds the results global. */
     public void registerResultsBridge()
     {
         resultsBridge = new ResultsBridge(interpreter);
@@ -94,6 +108,7 @@ public class BridgeRegistry
         interpreter.getGlobalContext().defineConstant("results", resultsBridge.createResultsObject());
     }
 
+    /** Binds the project global when a project is set. */
     public void registerProjectBridge()
     {
         if (projectModel != null)
@@ -107,6 +122,7 @@ public class BridgeRegistry
         }
     }
 
+    /** Binds the callgraph global when a project is set. */
     public void registerCallGraphBridge()
     {
         if (projectModel != null)
@@ -120,6 +136,7 @@ public class BridgeRegistry
         }
     }
 
+    /** Binds the dataflow global when a project is set. */
     public void registerDataFlowBridge()
     {
         if (projectModel != null)
@@ -133,6 +150,7 @@ public class BridgeRegistry
         }
     }
 
+    /** Binds the dependencies global when a project is set. */
     public void registerDependencyBridge()
     {
         if (projectModel != null)
@@ -146,6 +164,7 @@ public class BridgeRegistry
         }
     }
 
+    /** Binds the simulation global when a project is set. */
     public void registerSimulationBridge()
     {
         if (projectModel != null)
@@ -159,6 +178,7 @@ public class BridgeRegistry
         }
     }
 
+    /** Binds the instrument global when a project is set. */
     public void registerInstrumentationBridge()
     {
         if (projectModel != null)
@@ -172,6 +192,7 @@ public class BridgeRegistry
         }
     }
 
+    /** Binds the patterns global when a project is set. */
     public void registerPatternBridge()
     {
         if (projectModel != null)
@@ -185,6 +206,7 @@ public class BridgeRegistry
         }
     }
 
+    /** Binds the types global when a project is set. */
     public void registerTypeBridge()
     {
         if (projectModel != null)
@@ -198,6 +220,7 @@ public class BridgeRegistry
         }
     }
 
+    /** Binds the strings global when a project is set. */
     public void registerStringBridge()
     {
         if (projectModel != null)
@@ -211,6 +234,7 @@ public class BridgeRegistry
         }
     }
 
+    /** Binds the pipeline global. */
     public void registerPipeline()
     {
         scriptPipeline = new ScriptPipeline(interpreter);

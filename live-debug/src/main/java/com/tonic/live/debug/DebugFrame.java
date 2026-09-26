@@ -2,11 +2,7 @@ package com.tonic.live.debug;
 
 import lombok.Getter;
 
-/**
- * One call-stack frame as display data. JDI {@code StackFrame}s are invalidated when the target resumes, so a
- * frame is identified by its {@link #index} (0 = top) and re-fetched from the paused thread when its variables
- * are read.
- */
+/** One call-stack frame as display data, identified by its index from the top because JDI frames are invalidated when the target resumes. */
 @Getter
 public final class DebugFrame
 {
@@ -14,6 +10,13 @@ public final class DebugFrame
     private final DebugLocation location;
     private final String display;
 
+    /**
+     * Creates a frame.
+     *
+     * @param index the frame's depth, 0 for the top
+     * @param location where the frame is executing
+     * @param display the frame's display text
+     */
     public DebugFrame(int index, DebugLocation location, String display)
     {
         this.index = index;

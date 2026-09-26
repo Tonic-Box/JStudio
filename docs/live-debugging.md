@@ -35,7 +35,7 @@ Scriptable via the `live` binding: `live.threads()`, `live.deadlocks()`, `live.c
    snapshot), **Statics** (view/edit static fields, invoke static methods), and **Threads**. Editing in the
    source view and recompiling live-patches the running class (see the patch row above).
 5. The **Profiler** right-dock tool shows live graphs (CPU, heap, metaspace, GC, threads, loaded classes),
-   sampled once a second; it pauses while its tab is hidden.
+   sampled once a second while the panel is on the window.
 6. The **Recorder** right-dock tool (shown when the target JVM supports JFR) records a Flight Recorder
    session: pick a profile (low-overhead or detailed) and event categories (CPU, allocations, locks,
    exceptions), **Start**, **Snapshot** the in-progress buffer at any time, then **Stop**. Captured `.jfr`

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/** The system dependence graph view of a class: its methods' dependence graphs joined by call and parameter edges. */
 public class SDGView extends BaseGraphView
 {
 
@@ -28,6 +29,11 @@ public class SDGView extends BaseGraphView
     private String prepareError = null;
     private final SDGVertexRenderer renderer = new SDGVertexRenderer();
 
+    /**
+     * Creates the view and fills the method filter from the class.
+     *
+     * @param classEntry the class to graph
+     */
     public SDGView(ClassEntryModel classEntry)
     {
         super(classEntry);

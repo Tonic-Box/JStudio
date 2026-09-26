@@ -17,6 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+/** Draws the call graph around the focus method: its callers and callees up to the model's depth, laid out as a hierarchy. */
 public class CallGraphRenderer
 {
 
@@ -32,6 +33,13 @@ public class CallGraphRenderer
     private final CallGraphModel model;
     private final CallGraphStyleFactory styleFactory;
 
+    /**
+     * Creates a renderer.
+     *
+     * @param graph the graph to draw into
+     * @param model the state to draw, whose cell map this renderer fills
+     * @param styleFactory picks the style of each node and edge
+     */
     public CallGraphRenderer(mxGraph graph, CallGraphModel model, CallGraphStyleFactory styleFactory)
     {
         this.graph = graph;
@@ -39,6 +47,7 @@ public class CallGraphRenderer
         this.styleFactory = styleFactory;
     }
 
+    /** Clears the graph and redraws it around the focus method; does nothing without a graph or a focus method. */
     public void render()
     {
         CallGraph callGraph = model.getCallGraph();
@@ -78,6 +87,11 @@ public class CallGraphRenderer
         }
     }
 
+    /**
+     * Counts the callers and callees the current state shows, recomputing them from the model.
+     *
+     * @return the counts, both zero without a graph or a focus method
+     */
     public RenderStats getLastRenderStats()
     {
         CallGraph callGraph = model.getCallGraph();
@@ -348,12 +362,19 @@ public class CallGraphRenderer
         return text.substring(0, maxLength - 3) + "...";
     }
 
+    /** How many callers and callees a render shows. */
     @Getter
     public static class RenderStats
     {
         private final int callerCount;
         private final int calleeCount;
 
+        /**
+         * Creates the counts.
+         *
+         * @param callerCount the number of callers shown
+         * @param calleeCount the number of callees shown
+         */
         public RenderStats(int callerCount, int calleeCount)
         {
             this.callerCount = callerCount;

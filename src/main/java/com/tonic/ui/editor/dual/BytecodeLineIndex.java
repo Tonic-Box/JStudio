@@ -9,23 +9,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Parses the rendered bytecode text produced by {@code BytecodeView}/{@code BytecodeFormatter} into a
- * bidirectional map between display lines and bytecode offsets, grouped per method. This is the only
- * place that depends on the disassembly text format, so the dual view's cross-pane linking has a
- * single, testable point of coupling to that format.
- *
- * <p>Line shapes (display lines are 0-based):
- * <ul>
- *   <li><b>Method header</b> — emitted by {@code BytecodeView} at column 0 as {@code // <flags> name+desc};
- *       recognized by a leading {@code //} with no indentation whose last token contains {@code '('}.
- *       Every verbose disassembly comment ({@code // line}, {@code // frame}, {@code // signature},
- *       exception table, etc.) is indented by {@code BytecodeFormatter}, so it never matches.</li>
- *   <li><b>Instruction</b> — {@code <indent><offset>: <mnemonic> ...}; recognized by leading whitespace,
- *       decimal offset, immediate colon. Switch continuation lines ({@code case[..] => ...}) and verbose
- *       comments do not match.</li>
- * </ul>
- */
+/** A per-method, two-way map between bytecode view display lines and bytecode offsets, parsed from the rendered text; the one place that depends on the disassembly text format. */
 public final class BytecodeLineIndex
 {
 
@@ -56,6 +40,12 @@ public final class BytecodeLineIndex
     {
     }
 
+    /**
+     * Parses rendered bytecode view text into an index.
+     *
+     * @param bytecodeText the bytecode view's full text; null or empty gives an empty index
+     * @return the index
+     */
     public static BytecodeLineIndex parse(String bytecodeText)
     {
         BytecodeLineIndex index = new BytecodeLineIndex();
@@ -115,8 +105,10 @@ public final class BytecodeLineIndex
     }
 
     /**
-     * The instruction location at a 0-based display line, or null when the line is not an instruction
-     * line (header, comment, blank, or outside any method).
+     * Finds the instruction shown on a display line.
+     *
+     * @param displayLine the 0-based display line
+     * @return the instruction's location, or null when the line is a header, comment, blank, or outside any method
      */
     public BcLocation locationAtLine(int displayLine)
     {
@@ -139,9 +131,12 @@ public final class BytecodeLineIndex
     }
 
     /**
-     * The 0-based display lines of the instructions whose offset falls in {@code [pcLo, pcHi]} for the
-     * method keyed by {@code name+desc}, in ascending offset order. Empty when the method or range has
-     * no mapped instructions.
+     * Finds the display lines of a method's instructions within an offset range.
+     *
+     * @param methodKey the method's name followed by its descriptor
+     * @param pcLo the lowest offset, inclusive
+     * @param pcHi the highest offset, inclusive
+     * @return the 0-based display lines in ascending offset order; empty when the method or range has no mapped instructions
      */
     public List<Integer> displayLinesForPcRange(String methodKey, int pcLo, int pcHi)
     {

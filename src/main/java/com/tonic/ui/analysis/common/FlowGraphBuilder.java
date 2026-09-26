@@ -13,6 +13,7 @@ import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
+/** Builds a read-only, themed mxGraph with a hierarchical layout, for flow-style diagrams. */
 public class FlowGraphBuilder
 {
 
@@ -21,17 +22,35 @@ public class FlowGraphBuilder
     private int intraCellSpacing = 30;
     private boolean orthogonalEdges = true;
 
+    /**
+     * Starts a builder with a top-down layout, spacing 60 by 30 and orthogonal edges.
+     *
+     * @return the builder
+     */
     public static FlowGraphBuilder create()
     {
         return new FlowGraphBuilder();
     }
 
+    /**
+     * Sets the layout direction.
+     *
+     * @param orientation a SwingConstants compass direction the ranks flow from
+     * @return this builder
+     */
     public FlowGraphBuilder withOrientation(int orientation)
     {
         this.orientation = orientation;
         return this;
     }
 
+    /**
+     * Sets the layout spacing.
+     *
+     * @param interRank the gap between ranks, in pixels
+     * @param intraCell the gap between cells in one rank, in pixels
+     * @return this builder
+     */
     public FlowGraphBuilder withSpacing(int interRank, int intraCell)
     {
         this.interRankSpacing = interRank;
@@ -39,12 +58,23 @@ public class FlowGraphBuilder
         return this;
     }
 
+    /**
+     * Sets whether edges are routed at right angles.
+     *
+     * @param orthogonal true for orthogonal routing
+     * @return this builder
+     */
     public FlowGraphBuilder withOrthogonalEdges(boolean orthogonal)
     {
         this.orthogonalEdges = orthogonal;
         return this;
     }
 
+    /**
+     * Creates the graph with theme-colored default styles and HTML labels.
+     *
+     * @return the graph with its layout settings
+     */
     public FlowGraph build()
     {
         mxGraph graph = new mxGraph();
@@ -89,6 +119,7 @@ public class FlowGraphBuilder
         return String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue());
     }
 
+    /** A built graph with the layout settings it was built with. */
     @Getter
     public static class FlowGraph
     {
@@ -105,6 +136,11 @@ public class FlowGraphBuilder
             this.intraCellSpacing = intraCell;
         }
 
+        /**
+         * Creates a borderless, theme-colored component showing the graph, with tooltips on.
+         *
+         * @return the component
+         */
         public mxGraphComponent createComponent()
         {
             mxGraphComponent component = new mxGraphComponent(graph);
@@ -115,11 +151,17 @@ public class FlowGraphBuilder
             return component;
         }
 
+        /** Lays out the whole graph. */
         public void applyLayout()
         {
             applyLayout(graph.getDefaultParent());
         }
 
+        /**
+         * Lays out the children of one cell hierarchically.
+         *
+         * @param parent the cell whose children are laid out
+         */
         public void applyLayout(Object parent)
         {
             mxHierarchicalLayout layout = new mxHierarchicalLayout(graph, orientation);
@@ -129,11 +171,23 @@ public class FlowGraphBuilder
             layout.execute(parent);
         }
 
+        /**
+         * Registers a named vertex style.
+         *
+         * @param name the style name cells refer to
+         * @param style the style properties
+         */
         public void addVertexStyle(String name, Map<String, Object> style)
         {
             graph.getStylesheet().putCellStyle(name, style);
         }
 
+        /**
+         * Registers a named edge style, adding the theme's edge color to the given map if it has no stroke color.
+         *
+         * @param name the style name cells refer to
+         * @param style the style properties
+         */
         public void addEdgeStyle(String name, Map<String, Object> style)
         {
             if (!style.containsKey(mxConstants.STYLE_STROKECOLOR))

@@ -16,16 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * A parsed HPROF heap-dump snapshot. The dump file stays on disk; one streaming pass builds an in-memory
- * index (string table, class field layouts, and an object index of {@code objId -> class + file offset}),
- * and an instance's field values are decoded on demand by seeking into the file. So memory stays bounded
- * regardless of heap size, and listing instances of a class is an index lookup.
- *
- * <p>Supports browsing instances of a class, decoding their fields (primitives, references, and
- * {@code java.lang.String} text), and resolving references for navigation. {@link #close()} closes the file
- * and deletes it (the snapshot owns the temp dump).
- */
+/** A parsed HPROF heap dump that indexes the file in one pass and decodes instance fields on demand, so memory stays bounded; it owns and deletes the dump on close. */
 public final class HprofSnapshot implements Closeable
 {
 
@@ -82,6 +73,12 @@ public final class HprofSnapshot implements Closeable
         }
     }
 
+    /**
+     * Indexes a heap dump and keeps the file open for field decoding.
+     *
+     * @param hprof the HPROF file, deleted when the snapshot is closed
+     * @throws IOException if the file cannot be read or parsed
+     */
     public HprofSnapshot(File hprof) throws IOException
     {
         this.file = hprof;
@@ -95,7 +92,12 @@ public final class HprofSnapshot implements Closeable
         this.raf = new RandomAccessFile(hprof, "r");
     }
 
-    /** Instance object ids of {@code internalName} (exact class, slashed form). */
+    /**
+     * Lists the instances of exactly one class, not its subclasses.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the instances' object ids; empty if the class is not in the dump
+     */
     public List<Long> instancesOf(String internalName)
     {
         Long cid = nameToClassObjId.get(internalName);
@@ -106,12 +108,24 @@ public final class HprofSnapshot implements Closeable
         return instancesByClass.getOrDefault(cid, Collections.emptyList());
     }
 
+    /**
+     * Counts the instances of exactly one class, not its subclasses.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the instance count; 0 if the class is not in the dump
+     */
     public int countOf(String internalName)
     {
         return instancesOf(internalName).size();
     }
 
-    /** Decode an instance's fields (walking the superclass chain). */
+    /**
+     * Decodes an instance's fields, including those declared by its superclasses.
+     *
+     * @param objId the instance's object id
+     * @return the instance's class name and field values; no fields if the id is not an indexed instance
+     * @throws IOException if reading the dump fails
+     */
     public synchronized InstanceData decode(long objId) throws IOException
     {
         long[] idx = instanceIndex.get(objId);
@@ -140,7 +154,12 @@ public final class HprofSnapshot implements Closeable
         return new InstanceData(classNameByObjId.getOrDefault(idx[0], "?"), out);
     }
 
-    /** A short label for an instance (class@hexId, or the text for java.lang.String). */
+    /**
+     * Returns a short display label for an object.
+     *
+     * @param objId the object id
+     * @return "null" for 0, quoted text for a string, a type and length for a primitive array, else the simple class name and hex id
+     */
     public String labelFor(long objId)
     {
         if (objId == 0)

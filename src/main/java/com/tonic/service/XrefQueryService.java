@@ -10,11 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Shared access point for the project's cross-reference database: lazy building and the
- * user-class-filtered usage queries. Both the Find Usages results panel and the editor's
- * usage-count lenses go through here, so their numbers always agree.
- */
+/** The single access point for a project's cross-reference database and its user-class usage queries, so Find Usages and the usage-count lenses agree. */
 public final class XrefQueryService
 {
 
@@ -23,8 +19,10 @@ public final class XrefQueryService
     }
 
     /**
-     * The project's xref database, building and caching it on the project when absent or empty.
-     * Building scans every class, so callers should invoke this off the EDT.
+     * Returns the project's xref database, building it by scanning every class and caching it on the project when absent or empty.
+     *
+     * @param project the project
+     * @return the database
      */
     public static XrefDatabase ensureDatabase(ProjectModel project)
     {
@@ -38,9 +36,14 @@ public final class XrefQueryService
     }
 
     /**
-     * All references to the given member from user classes (JDK callers and synthetic class-level
-     * refs without a source method are excluded). Returns an empty list when no database exists;
-     * callers wanting a build should use {@link #ensureDatabase} first.
+     * Lists the references to a class, method or field made from methods of user classes; a class query leaves out references to its members.
+     *
+     * @param project the project
+     * @param targetType whether the target is a class, method or field
+     * @param className the target class's internal name, with slashes
+     * @param memberName the method or field name; unused for a class
+     * @param memberDescriptor the method or field descriptor; unused for a class
+     * @return the references, or an empty list when the project has no database yet
      */
     public static List<Xref> getUsages(ProjectModel project, FindUsagesEvent.TargetType targetType, String className, String memberName, String memberDescriptor)
     {

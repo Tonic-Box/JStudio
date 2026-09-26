@@ -8,14 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Reassembles a full class source from independently-cleaned pieces, using the decompiler's per-method line
- * spans ({@link ClassEntryModel#getMethodSpans()}). A cleaned "shell" replaces the region before the first
- * method (class declaration + fields), each cleaned method body replaces its span, and every other line (imports,
- * gaps between members, any method without a cleaned body) is kept verbatim from the original - so a failed or
- * skipped piece never drops a member. Plugin-safe: takes only {@link ClassEntryModel} + Strings (spans are YABR
- * types the plugin can't reach directly).
- */
+/** Splits a decompiled class source into header and per-method slices by the decompiler's method line spans, and reassembles it from cleaned pieces, keeping the original text wherever a piece is missing. */
 public final class SourceAssembler
 {
 
@@ -23,7 +16,13 @@ public final class SourceAssembler
     {
     }
 
-    /** The region before the first method (package/imports/class decl + fields), or the whole source if no methods. */
+    /**
+     * Returns the region before the first method: package, imports, class declaration and fields.
+     *
+     * @param classEntry the class whose method spans locate the first method
+     * @param source the class's decompiled source
+     * @return the header text, or the whole source when the class has no method spans
+     */
     public static String headerSource(ClassEntryModel classEntry, String source)
     {
         String[] lines = source.split("\n", -1);
@@ -31,7 +30,15 @@ public final class SourceAssembler
         return join(lines, 1, firstStart - 1);
     }
 
-    /** One method's full source slice (declaration through closing brace), or null when it has no span. */
+    /**
+     * Returns one method's source, from declaration through closing brace.
+     *
+     * @param classEntry the class whose method spans locate the method
+     * @param source the class's decompiled source
+     * @param name the method name
+     * @param desc the method descriptor
+     * @return the method's slice, or null when it has no span
+     */
     public static String methodSource(ClassEntryModel classEntry, String source, String name, String desc)
     {
         Map<String, DecompileResult.MethodSpan> spans = classEntry.getMethodSpans();
@@ -48,9 +55,13 @@ public final class SourceAssembler
     }
 
     /**
-     * Reassembles the class: {@code cleanedShell} replaces the header region, each cleaned body (keyed by
-     * {@code name + descriptor}) replaces its method span, and everything else is kept from {@code source}. A
-     * method with no entry in {@code cleanedBodiesByKey} keeps its original slice.
+     * Reassembles the class from cleaned pieces, keeping the original lines for any missing piece and for text between members.
+     *
+     * @param classEntry the class whose method spans locate each method
+     * @param source the class's decompiled source
+     * @param cleanedShell the replacement header region, or null to keep the original
+     * @param cleanedBodiesByKey replacement method slices keyed by name plus descriptor; may be null
+     * @return the reassembled source
      */
     public static String assemble(ClassEntryModel classEntry, String source, String cleanedShell, Map<String, String> cleanedBodiesByKey)
     {

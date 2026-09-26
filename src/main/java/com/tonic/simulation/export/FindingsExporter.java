@@ -7,9 +7,17 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
+/** Exports simulation findings as JSON or HTML reports. */
 public class FindingsExporter
 {
 
+    /**
+     * Writes the findings to a JSON file.
+     *
+     * @param findings the findings to export
+     * @param filePath the file to write
+     * @throws IOException if the file cannot be written
+     */
     public static void exportToJson(List<SimulationFinding> findings, String filePath) throws IOException
     {
         try (FileWriter writer = new FileWriter(filePath))
@@ -18,6 +26,12 @@ public class FindingsExporter
         }
     }
 
+    /**
+     * Renders the findings as JSON with a per-severity summary.
+     *
+     * @param findings the findings to render
+     * @return the JSON text
+     */
     public static String toJsonString(List<SimulationFinding> findings)
     {
         StringBuilder sb = new StringBuilder();
@@ -83,6 +97,13 @@ public class FindingsExporter
                 .replace("\t", "\\t");
     }
 
+    /**
+     * Writes the findings to an HTML report file.
+     *
+     * @param findings the findings to export
+     * @param filePath the file to write
+     * @throws IOException if the file cannot be written
+     */
     public static void exportToHtml(List<SimulationFinding> findings, String filePath) throws IOException
     {
         try (FileWriter writer = new FileWriter(filePath))

@@ -16,12 +16,18 @@ import com.tonic.model.MethodEntryModel;
 import java.util.HashMap;
 import java.util.Map;
 
+/** The program dependence graph view: one graph per method, or all methods at once. */
 public class PDGView extends BaseGraphView
 {
 
     private final Map<MethodEntryModel, PDG> methodPDGs = new HashMap<>();
     private final PDGVertexRenderer renderer = new PDGVertexRenderer();
 
+    /**
+     * Creates the view and fills the method filter from the class.
+     *
+     * @param classEntry the class to graph
+     */
     public PDGView(ClassEntryModel classEntry)
     {
         super(classEntry);

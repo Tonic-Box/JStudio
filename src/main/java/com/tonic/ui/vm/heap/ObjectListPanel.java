@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
+/** The heap forensics object table: id, class, age and provenance for a list of objects, sortable by id, age or class. */
 public class ObjectListPanel extends ThemedJPanel
 {
 
@@ -25,6 +26,7 @@ public class ObjectListPanel extends ThemedJPanel
     private Consumer<HeapObject> onObjectSelected;
     private List<HeapObject> allObjects = new ArrayList<>();
 
+    /** Builds the sort selector and the object table. */
     public ObjectListPanel()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
@@ -73,11 +75,21 @@ public class ObjectListPanel extends ThemedJPanel
         add(scroll, BorderLayout.CENTER);
     }
 
+    /**
+     * Sets what runs when an object row is selected.
+     *
+     * @param callback receives the selected object
+     */
     public void setOnObjectSelected(Consumer<HeapObject> callback)
     {
         this.onObjectSelected = callback;
     }
 
+    /**
+     * Replaces the listed objects, sorts them and selects the first.
+     *
+     * @param objects the objects to list; copied
+     */
     public void setObjects(List<HeapObject> objects)
     {
         this.allObjects = new ArrayList<>(objects);

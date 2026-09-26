@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/** Flags constant-pool strings that look encrypted or encoded: Base64, hex, high entropy or non-printable text. */
 @SuppressWarnings("FieldCanBeLocal")
 public class EncryptedStringDetector
 {
@@ -27,6 +28,12 @@ public class EncryptedStringDetector
     private final boolean detectNonPrintable = true;
     private final boolean detectHex = true;
 
+    /**
+     * Checks every string constant in a class.
+     *
+     * @param classFile the class to scan
+     * @return the suspicious strings, highest score first; empty when none
+     */
     public List<SuspiciousString> scan(ClassFile classFile)
     {
         List<SuspiciousString> suspicious = new ArrayList<>();

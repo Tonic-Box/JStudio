@@ -28,6 +28,7 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
+/** The find-usages results tree, grouped by reference type; double-clicking a usage navigates to it. */
 public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeListener
 {
 
@@ -46,6 +47,7 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
     @Getter
     private String tabTitle = "Find Usages";
 
+    /** Builds the empty results tree and status line. */
     public FindUsagesResultsPanel()
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
@@ -89,6 +91,11 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
         setMinimumSize(new Dimension(0, 100));
     }
 
+    /**
+     * Retitles the panel and queries the xref database in the background for usages of the event's target.
+     *
+     * @param event the find-usages request naming the target
+     */
     public void showUsages(FindUsagesEvent event)
     {
         this.tabTitle = event.getTargetDisplay();

@@ -12,10 +12,7 @@ import lombok.Getter;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Bridge for class dependency analysis.
- * Exposes a 'dependencies' global object for analyzing class relationships.
- */
+/** The dependencies script global: builds the class dependency graph on demand and answers dependency, dependent and cycle queries. */
 public class DependencyBridge
 {
 
@@ -24,11 +21,21 @@ public class DependencyBridge
     private DependencyAnalyzer analyzer;
     private Consumer<String> logCallback;
 
+    /**
+     * Creates a bridge whose graph is not built yet.
+     *
+     * @param projectModel the project to analyze
+     */
     public DependencyBridge(ProjectModel projectModel)
     {
         this.projectModel = projectModel;
     }
 
+    /**
+     * Sets where the bridge's log messages go.
+     *
+     * @param callback receives each log message, or null to drop them
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
@@ -42,6 +49,11 @@ public class DependencyBridge
         }
     }
 
+    /**
+     * Builds the dependencies script object: graph building, direct and transitive dependency queries, cycles, leaves and roots.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createDependencyObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();

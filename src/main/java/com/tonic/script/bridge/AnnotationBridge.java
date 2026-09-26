@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/** The annotations script global: registers script handlers for class, method and field annotations, which may inspect or remove them. */
 public class AnnotationBridge
 {
 
@@ -33,16 +34,31 @@ public class AnnotationBridge
     private final List<AnnotationHandler> fieldAnnotationHandlers = new ArrayList<>();
     private Consumer<String> logCallback;
 
+    /**
+     * Creates a bridge with no handlers.
+     *
+     * @param interpreter the interpreter that runs handler functions
+     */
     public AnnotationBridge(ScriptInterpreter interpreter)
     {
         this.interpreter = interpreter;
     }
 
+    /**
+     * Sets where the bridge's log messages go.
+     *
+     * @param callback receives each log message, or null to drop them
+     */
     public void setLogCallback(Consumer<String> callback)
     {
         this.logCallback = callback;
     }
 
+    /**
+     * Builds the annotations script object: handler registration for each annotation target and a remove marker.
+     *
+     * @return the object, ready to bind as a global
+     */
     public ScriptValue createAnnotationObject()
     {
         Map<String, ScriptValue> props = new HashMap<>();
@@ -88,6 +104,12 @@ public class AnnotationBridge
         return ScriptValue.NULL;
     }
 
+    /**
+     * Runs the registered handlers over the visible annotations of a class and its methods and fields.
+     *
+     * @param classEntry the class to process
+     * @return how many annotations the handlers removed or changed
+     */
     public int applyToClass(ClassEntryModel classEntry)
     {
         int modCount = 0;
@@ -332,6 +354,11 @@ public class AnnotationBridge
         }
     }
 
+    /**
+     * Tells whether any annotation handler is registered.
+     *
+     * @return true when at least one handler is registered
+     */
     public boolean hasHandlers()
     {
         return !classAnnotationHandlers.isEmpty() ||

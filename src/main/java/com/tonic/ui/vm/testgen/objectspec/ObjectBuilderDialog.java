@@ -12,6 +12,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A modal dialog that configures how an object argument is built, reading the type's constructors and fields from the VM class pool and saving reusable templates. */
 public class ObjectBuilderDialog extends JDialog
 {
 
@@ -31,6 +32,12 @@ public class ObjectBuilderDialog extends JDialog
     private CardLayout cardLayout;
     private JPanel cardPanel;
 
+    /**
+     * Creates the dialog and loads the type's constructors and fields.
+     *
+     * @param owner the window to center over and block
+     * @param typeName the class's internal name, with slashes
+     */
     public ObjectBuilderDialog(Window owner, String typeName)
     {
         super(owner, "Configure Object: " + getSimpleName(typeName), ModalityType.APPLICATION_MODAL);
@@ -447,11 +454,19 @@ public class ObjectBuilderDialog extends JDialog
         JOptionPane.showMessageDialog(this, "Template saved: " + name, "Template Saved", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    /** @return the configured spec, or null if the dialog was cancelled or closed */
     public ObjectSpec getResult()
     {
         return resultSpec;
     }
 
+    /**
+     * Shows the dialog for a new spec and waits for it to close.
+     *
+     * @param owner the window to center over and block
+     * @param typeName the class's internal name, with slashes
+     * @return the configured spec, or null if cancelled
+     */
     public static ObjectSpec showDialog(Window owner, String typeName)
     {
         ObjectBuilderDialog dialog = new ObjectBuilderDialog(owner, typeName);
@@ -459,6 +474,14 @@ public class ObjectBuilderDialog extends JDialog
         return dialog.getResult();
     }
 
+    /**
+     * Shows the dialog prefilled from an existing spec and waits for it to close.
+     *
+     * @param owner the window to center over and block
+     * @param typeName the class's internal name, with slashes
+     * @param existing the spec to prefill from, or null for none
+     * @return the configured spec, or null if cancelled
+     */
     public static ObjectSpec showDialog(Window owner, String typeName, ObjectSpec existing)
     {
         ObjectBuilderDialog dialog = new ObjectBuilderDialog(owner, typeName);

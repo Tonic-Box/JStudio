@@ -30,12 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * A resizable, reused window that visualizes one captured {@code .jfr}: a dashboard Overview plus per-category
- * tabs (CPU, Allocations, Locks, Exceptions), each combining a {@link FlameGraphPanel} (with a zoom breadcrumb)
- * and a ranked, data-bar table. Tabs appear only for categories that have data. Double-clicking a flame-graph
- * frame or a hot-method row opens that method's decompiled source via {@link MainFrame#openLiveFrame}.
- */
+/** The reused window that analyzes one JFR recording in an overview tab plus a flame graph and table tab per category that has data. */
 public final class JfrAnalysisWindow extends JFrame
 {
 
@@ -44,6 +39,11 @@ public final class JfrAnalysisWindow extends JFrame
     private final JTabbedPane tabs = new JTabbedPane();
     private String fileName = "";
 
+    /**
+     * Creates the empty window; closing it hides it for reuse.
+     *
+     * @param mainFrame the main window, used for placement and to open a frame's source
+     */
     public JfrAnalysisWindow(MainFrame mainFrame)
     {
         super("JFR Analysis");
@@ -69,7 +69,11 @@ public final class JfrAnalysisWindow extends JFrame
         setContentPane(content);
     }
 
-    /** Loads and analyzes {@code jfr} (parsing off the EDT), rebuilding the tabs. */
+    /**
+     * Parses a recording off the EDT and rebuilds the tabs from it, reporting a failure in the header.
+     *
+     * @param jfr the recording file
+     */
     public void load(File jfr)
     {
         fileName = jfr.getName();

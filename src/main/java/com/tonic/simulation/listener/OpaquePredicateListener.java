@@ -15,15 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Listener that detects opaque predicates - branch conditions that always
- * evaluate to the same value (always true or always false).
- * <p>
- * Opaque predicates are commonly used in obfuscation to:
- * - Confuse static analysis tools
- * - Add dead code paths
- * - Implement anti-tampering checks
- */
+/** A simulation listener that flags opaque predicates: branches whose condition evaluated the same way on every execution. */
 public class OpaquePredicateListener extends AbstractListener
 {
 
@@ -73,21 +65,41 @@ public class OpaquePredicateListener extends AbstractListener
         }
     }
 
+    /**
+     * Lists every branch seen during the last simulation.
+     *
+     * @return a copy of the per-branch analyses
+     */
     public List<BranchAnalysis> getAnalyzedBranches()
     {
         return List.copyOf(branchAnalyses.values());
     }
 
+    /**
+     * Lists the branches confirmed opaque when the last simulation ended.
+     *
+     * @return the opaque branches, unmodifiable
+     */
     public List<BranchAnalysis> getOpaquePredicates()
     {
         return Collections.unmodifiableList(confirmedOpaquePredicates);
     }
 
+    /**
+     * Counts the confirmed opaque branches.
+     *
+     * @return the number of opaque predicates
+     */
     public int getOpaquePredicateCount()
     {
         return confirmedOpaquePredicates.size();
     }
 
+    /**
+     * Reports whether any opaque branch was confirmed.
+     *
+     * @return true if at least one opaque predicate was found
+     */
     public boolean hasOpaquePredicates()
     {
         return !confirmedOpaquePredicates.isEmpty();
@@ -165,9 +177,7 @@ public class OpaquePredicateListener extends AbstractListener
         }
     }
 
-    /**
-     * Tracks the analysis state of a single branch instruction.
-     */
+    /** The recorded outcomes of one branch instruction across a simulation. */
     @Getter
     public static class BranchAnalysis
     {
@@ -176,11 +186,21 @@ public class OpaquePredicateListener extends AbstractListener
         private int falseCount = 0;
         private int executionCount = 0;
 
+        /**
+         * Creates an empty record for a branch.
+         *
+         * @param instruction the branch instruction
+         */
         public BranchAnalysis(BranchInstruction instruction)
         {
             this.instruction = instruction;
         }
 
+        /**
+         * Records one execution of the branch.
+         *
+         * @param conditionResult whether the condition evaluated true
+         */
         public void recordExecution(boolean conditionResult)
         {
             executionCount++;
@@ -194,6 +214,11 @@ public class OpaquePredicateListener extends AbstractListener
             }
         }
 
+        /**
+         * Reports whether the branch executed and always went the same way.
+         *
+         * @return true if executed at least once with only true or only false outcomes
+         */
         public boolean isOpaque()
         {
             if (executionCount == 0)
@@ -203,16 +228,31 @@ public class OpaquePredicateListener extends AbstractListener
             return trueCount == 0 || falseCount == 0;
         }
 
+        /**
+         * Reports whether the branch executed and was never false.
+         *
+         * @return true if executed at least once with no false outcome
+         */
         public boolean isAlwaysTrue()
         {
             return executionCount > 0 && falseCount == 0;
         }
 
+        /**
+         * Reports whether the branch executed and was never true.
+         *
+         * @return true if executed at least once with no true outcome
+         */
         public boolean isAlwaysFalse()
         {
             return executionCount > 0 && trueCount == 0;
         }
 
+        /**
+         * Returns the id of the IR block holding the branch.
+         *
+         * @return the block id, or -1 if the instruction or its block is missing
+         */
         public int getBlockId()
         {
             if (instruction != null && instruction.getBlock() != null)
@@ -222,6 +262,11 @@ public class OpaquePredicateListener extends AbstractListener
             return -1;
         }
 
+        /**
+         * Returns the branch instruction's IR id, used as its offset.
+         *
+         * @return the instruction id, or -1 if there is no instruction
+         */
         public int getBytecodeOffset()
         {
             if (instruction != null)

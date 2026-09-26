@@ -13,6 +13,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A titled horizontal bar chart that shows the first eight bars unless told to show all. */
 public class BarChart extends JPanel implements ThemeChangeListener
 {
 
@@ -30,6 +31,11 @@ public class BarChart extends JPanel implements ThemeChangeListener
     private static final int TITLE_HEIGHT = 28;
     private static final int BAR_RADIUS = 4;
 
+    /**
+     * Creates an empty chart.
+     *
+     * @param title the heading drawn above the bars
+     */
     public BarChart(String title)
     {
         this.title = title;
@@ -37,6 +43,11 @@ public class BarChart extends JPanel implements ThemeChangeListener
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
+    /**
+     * Replaces the bars and resizes the chart to fit.
+     *
+     * @param entries the bars in drawing order, or null for none
+     */
     public void setData(List<BarEntry> entries)
     {
         this.entries = entries != null ? new ArrayList<>(entries) : new ArrayList<>();
@@ -44,12 +55,22 @@ public class BarChart extends JPanel implements ThemeChangeListener
         repaint();
     }
 
+    /**
+     * Switches the value column between raw values and percentages of the total.
+     *
+     * @param percentageMode true to show percentages
+     */
     public void setPercentageMode(boolean percentageMode)
     {
         this.percentageMode = percentageMode;
         repaint();
     }
 
+    /**
+     * Shows every bar, or only the first eight with a count of the rest.
+     *
+     * @param showAll true to show every bar
+     */
     public void setShowAllEntries(boolean showAll)
     {
         this.showAllEntries = showAll;
@@ -224,6 +245,7 @@ public class BarChart extends JPanel implements ThemeChangeListener
         repaint();
     }
 
+    /** One bar: its label, value and colour. */
     @Getter
     @AllArgsConstructor
     public static class BarEntry
@@ -232,6 +254,12 @@ public class BarChart extends JPanel implements ThemeChangeListener
         private final double value;
         private final Color color;
 
+        /**
+         * Creates a bar drawn in the theme's accent colour.
+         *
+         * @param label the text beside the bar
+         * @param value the bar's value
+         */
         public BarEntry(String label, double value)
         {
             this(label, value, null);

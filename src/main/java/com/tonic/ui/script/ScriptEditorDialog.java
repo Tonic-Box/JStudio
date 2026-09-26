@@ -23,6 +23,11 @@ public class ScriptEditorDialog extends JDialog
      */
     private final ScriptEditorPanel editorPanel;
 
+    /**
+     * Builds the modeless editor window, which hides rather than closes.
+     *
+     * @param parent the window it belongs to and centers on
+     */
     public ScriptEditorDialog(MainFrame parent)
     {
         super(parent, "JStudio Script Editor", false);
@@ -46,7 +51,9 @@ public class ScriptEditorDialog extends JDialog
     }
 
     /**
-     * Sets the project model for the editor.
+     * Fills the editor's class picker from a project.
+     *
+     * @param model the project; null empties the picker
      */
     public void setProjectModel(ProjectModel model)
     {
@@ -54,7 +61,9 @@ public class ScriptEditorDialog extends JDialog
     }
 
     /**
-     * Sets the current class for targeting.
+     * Selects the class scripts run against.
+     *
+     * @param classEntry the class; null leaves the selection unchanged
      */
     public void setClass(ClassEntryModel classEntry)
     {
@@ -62,7 +71,9 @@ public class ScriptEditorDialog extends JDialog
     }
 
     /**
-     * Sets a callback to run when transforms complete.
+     * Sets what runs after a script transforms code.
+     *
+     * @param callback the callback, or null for none
      */
     public void setOnTransformComplete(Runnable callback)
     {

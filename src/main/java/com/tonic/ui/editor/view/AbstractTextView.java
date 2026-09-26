@@ -5,12 +5,7 @@ import com.tonic.ui.theme.JStudioTheme;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
-/**
- * Base for {@link org.fife.ui.rsyntaxtextarea.RSyntaxTextArea}-backed editor views. Owns the read-only code text
- * area, its line-numbered scroll pane and a find panel, the shared code-area setup + theming, and the text-backed
- * implementations of the common {@link EditorView} text operations. Subclasses add their own syntax/token styling
- * (in {@code applyChildThemes}, after calling {@link #applyTextTheme()}) and override the ops that differ.
- */
+/** The base for syntax-text-area editor views: owns the read-only code area, its line-numbered scroll pane and find panel, and the text-backed view operations; subclasses add token styling after applyTextTheme. */
 public abstract class AbstractTextView extends AbstractEditorView
 {
 

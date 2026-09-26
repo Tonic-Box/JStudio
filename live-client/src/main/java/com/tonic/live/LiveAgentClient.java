@@ -38,12 +38,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-/**
- * Client side of the JStudio Live wire protocol against the pure-Java agent. A dedicated reader thread
- * demultiplexes the single TCP stream into <b>responses</b> (handed to the in-flight request) and
- * asynchronous <b>events</b> (runtime class loads / VM death, dispatched to registered listeners).
- * Requests are serialized - one in flight at a time.
- */
+/** The client side of the Live wire protocol: a reader thread splits the one TCP stream into responses for the single in-flight request and asynchronous events for listeners. */
 public final class LiveAgentClient implements Closeable
 {
 
@@ -73,6 +68,15 @@ public final class LiveAgentClient implements Closeable
         this.reader.start();
     }
 
+    /**
+     * Connects to an agent, retrying every 200 ms until the timeout.
+     *
+     * @param host the agent's host
+     * @param port the agent's port
+     * @param timeoutMillis how long to keep retrying
+     * @return the connected client
+     * @throws IOException if no connection succeeds before the timeout, or the thread is interrupted
+     */
     public static LiveAgentClient connect(String host, int port, int timeoutMillis) throws IOException
     {
         final long deadline = System.currentTimeMillis() + timeoutMillis;
@@ -102,7 +106,11 @@ public final class LiveAgentClient implements Closeable
         throw new IOException("could not connect to live agent at " + host + ":" + port, last);
     }
 
-    /** Register an event listener; multiple may be registered. */
+    /**
+     * Registers an event listener alongside any others.
+     *
+     * @param listener the listener; null is ignored
+     */
     public void addEventListener(Consumer<LiveEvent> listener)
     {
         if (listener != null)
@@ -111,11 +119,21 @@ public final class LiveAgentClient implements Closeable
         }
     }
 
+    /**
+     * Unregisters an event listener.
+     *
+     * @param listener the listener to remove
+     */
     public void removeEventListener(Consumer<LiveEvent> listener)
     {
         listeners.remove(listener);
     }
 
+    /**
+     * Replaces every registered event listener with one.
+     *
+     * @param listener the listener, or null to leave none
+     */
     public void setEventListener(Consumer<LiveEvent> listener)
     {
         listeners.clear();
@@ -136,6 +154,12 @@ public final class LiveAgentClient implements Closeable
         }
     }
 
+    /**
+     * Performs the handshake.
+     *
+     * @return the agent's version and capabilities
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public AgentInfo hello() throws IOException
     {
         DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_HELLO});
@@ -143,6 +167,12 @@ public final class LiveAgentClient implements Closeable
         return new AgentInfo(r.readInt(), r.readInt(), r.readInt());
     }
 
+    /**
+     * Lists every loaded class by name and access flags, without bytecode.
+     *
+     * @return the loaded classes
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public List<LoadedClass> listClasses() throws IOException
     {
         DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_LIST_CLASSES});
@@ -156,6 +186,13 @@ public final class LiveAgentClient implements Closeable
         return classes;
     }
 
+    /**
+     * Fetches one class's current bytecode from the target.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the class file bytes
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public byte[] getClassBytes(String internalName) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_GET_CLASS_BYTES, b -> writeString(b, internalName)));
@@ -165,6 +202,12 @@ public final class LiveAgentClient implements Closeable
         return bytes;
     }
 
+    /**
+     * Lists the target's live threads.
+     *
+     * @return the threads
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public List<ThreadInfo> getThreads() throws IOException
     {
         DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_GET_THREADS});
@@ -178,7 +221,13 @@ public final class LiveAgentClient implements Closeable
         return threads;
     }
 
-    /** Live method-body redefinition: replace {@code internalName}'s bytecode in the target. */
+    /**
+     * Replaces a class's bytecode in the target.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @param classBytes the new class file bytes
+     * @throws IOException if the request fails or the agent rejects the redefinition
+     */
     public void redefineClass(String internalName, byte[] classBytes) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_REDEFINE_CLASS, b ->
@@ -190,14 +239,24 @@ public final class LiveAgentClient implements Closeable
         skipType(r, LiveProtocol.MSG_REDEFINE_CLASS);
     }
 
-    /** Arm/disarm streaming of runtime class loads as {@link LiveEvent.Kind#CLASS_LOADED} events. */
+    /**
+     * Turns streaming of runtime class loads, as class-loaded events carrying bytes, on or off.
+     *
+     * @param on whether to stream loads
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public void setCaptureLoads(boolean on) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_SET_CAPTURE_LOADS, b -> b.writeByte(on ? 1 : 0)));
         skipType(r, LiveProtocol.MSG_SET_CAPTURE_LOADS);
     }
 
-    /** Triggers a HotSpot heap dump in the target and returns the local file path of the .hprof. */
+    /**
+     * Triggers a HotSpot heap dump in the target.
+     *
+     * @return the local path of the .hprof file
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public String heapDump() throws IOException
     {
         DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_HEAP_DUMP});
@@ -205,7 +264,14 @@ public final class LiveAgentClient implements Closeable
         return readString(r);
     }
 
-    /** Starts a JFR recording (base {@code profile} plus category bits; {@code maxSizeMb} 0 = unbounded). */
+    /**
+     * Starts a JFR recording.
+     *
+     * @param profile the base JFR settings profile
+     * @param categoryMask the extra event categories to enable, as bits
+     * @param maxSizeMb the recording's size cap in megabytes, or 0 for unbounded
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public void jfrStart(String profile, int categoryMask, int maxSizeMb) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_JFR_START, b ->
@@ -217,7 +283,12 @@ public final class LiveAgentClient implements Closeable
         skipType(r, LiveProtocol.MSG_JFR_START);
     }
 
-    /** Stops the active JFR recording, dumping it; returns the local {@code .jfr} path. */
+    /**
+     * Stops the active JFR recording and dumps it.
+     *
+     * @return the local path of the .jfr file
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public String jfrStop() throws IOException
     {
         DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_JFR_STOP});
@@ -225,7 +296,12 @@ public final class LiveAgentClient implements Closeable
         return readString(r);
     }
 
-    /** Dumps the in-progress recording's buffer without stopping it; returns the local {@code .jfr} path. */
+    /**
+     * Dumps the active JFR recording without stopping it.
+     *
+     * @return the local path of the .jfr file
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public String jfrSnapshot() throws IOException
     {
         DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_JFR_SNAPSHOT});
@@ -233,7 +309,13 @@ public final class LiveAgentClient implements Closeable
         return readString(r);
     }
 
-    /** Reads the live static fields of a class (name, type descriptor, current value, edit kind). */
+    /**
+     * Reads the live static fields of a class.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the fields with their current values
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public List<StaticField> getStatics(String internalName) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_GET_STATICS, b -> writeString(b, internalName)));
@@ -247,7 +329,16 @@ public final class LiveAgentClient implements Closeable
         return fields;
     }
 
-    /** Sets a static field's value (or to null); returns the field's value as re-read after the change. */
+    /**
+     * Sets a static field's value, or sets it to null.
+     *
+     * @param className the declaring class's internal name
+     * @param field the field name
+     * @param setNull whether to set null and ignore value
+     * @param value the new value as text
+     * @return the field's value as re-read after the change
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public String setStatic(String className, String field, boolean setNull, String value) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_SET_STATIC, b ->
@@ -261,6 +352,23 @@ public final class LiveAgentClient implements Closeable
         return readString(r);
     }
 
+    /**
+     * Runs a first value scan, optionally seeded with the object set parked by JDI.
+     *
+     * @param valueType the value type, one of the protocol's SCAN_ constants
+     * @param scanKind how to match, one of the protocol's SCANKIND_ constants
+     * @param value the value to match, as text
+     * @param value2 the upper bound for a between scan
+     * @param pkgFilter the package prefix to restrict the walk to, or empty for all
+     * @param userClassesOnly whether to skip JDK classes
+     * @param maxVisited the cap on objects visited
+     * @param maxMatches the cap on matches retained
+     * @param limit how many matches to return in the first page
+     * @param useDropbox whether to add the parked objects as extra roots; the caller must park them first
+     * @param rootsOnly whether to scan only the parked objects
+     * @return the first page of matches
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches, int limit, boolean useDropbox, boolean rootsOnly) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_FIRST, b ->
@@ -281,6 +389,17 @@ public final class LiveAgentClient implements Closeable
         return readPage(r);
     }
 
+    /**
+     * Re-reads the retained candidates and narrows them by a comparison.
+     *
+     * @param comparator the comparison, one of the protocol's CMP_ constants
+     * @param value the value compared against, as text
+     * @param value2 the upper bound for a between comparison
+     * @param offset the index of the first match to return
+     * @param limit how many matches to return
+     * @return a page of the narrowed matches
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public ScanPage scanNext(int comparator, String value, String value2, int offset, int limit) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_NEXT, b ->
@@ -295,6 +414,15 @@ public final class LiveAgentClient implements Closeable
         return readPage(r);
     }
 
+    /**
+     * Re-reads the current values of the candidate set, for live refresh.
+     *
+     * @param pinnedOnly whether to read only the pinned locations
+     * @param offset the index of the first location to return
+     * @param limit how many locations to return
+     * @return a page of locations with current values
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public ScanPage scanRead(boolean pinnedOnly, int offset, int limit) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_READ, b ->
@@ -307,6 +435,15 @@ public final class LiveAgentClient implements Closeable
         return readPage(r);
     }
 
+    /**
+     * Writes a value into a scanned field.
+     *
+     * @param id the scanned location's id
+     * @param isNull whether to write null and ignore value
+     * @param value the new value as text
+     * @return the field's value as re-read after the write
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public String scanWrite(long id, boolean isNull, String value) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_WRITE, b ->
@@ -319,6 +456,16 @@ public final class LiveAgentClient implements Closeable
         return readString(r);
     }
 
+    /**
+     * Lists live instances of a class, by heap walk or from the object set parked by JDI.
+     *
+     * @param className the class's internal name
+     * @param maxInstances the cap on instances returned
+     * @param maxVisited the cap on objects visited
+     * @param fromDropbox whether to take the parked set instead of walking; the caller must park it first
+     * @return handles to the instances found
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public List<LiveInstance> listInstances(String className, int maxInstances, int maxVisited, boolean fromDropbox)
             throws IOException
     {
@@ -340,6 +487,13 @@ public final class LiveAgentClient implements Closeable
         return out;
     }
 
+    /**
+     * Reads the fields of a live instance.
+     *
+     * @param handleId the instance's handle
+     * @return the fields with their current values
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public List<LiveField> instanceFields(long handleId) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_INSTANCE_FIELDS, b -> b.writeLong(handleId)));
@@ -358,6 +512,16 @@ public final class LiveAgentClient implements Closeable
         return out;
     }
 
+    /**
+     * Sets a field of a live instance.
+     *
+     * @param handleId the instance's handle
+     * @param field the field name
+     * @param isNull whether to set null and ignore value
+     * @param value the new value as text
+     * @return the field's value as re-read after the change
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public String setInstanceField(long handleId, String field, boolean isNull, String value) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_SET_INSTANCE_FIELD, b ->
@@ -371,6 +535,14 @@ public final class LiveAgentClient implements Closeable
         return readString(r);
     }
 
+    /**
+     * Freezes a scanned field at a value, re-applied on a timer, or unfreezes it.
+     *
+     * @param id the scanned location's id
+     * @param on whether to freeze
+     * @param value the value to hold
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public void scanFreeze(long id, boolean on, String value) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_FREEZE, b ->
@@ -383,6 +555,13 @@ public final class LiveAgentClient implements Closeable
         r.readUnsignedByte();
     }
 
+    /**
+     * Pins a location to the watch list, where it survives narrowing, or unpins it.
+     *
+     * @param id the scanned location's id
+     * @param on whether to pin
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public void scanPin(long id, boolean on) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_PIN, b ->
@@ -394,6 +573,11 @@ public final class LiveAgentClient implements Closeable
         r.readUnsignedByte();
     }
 
+    /**
+     * Clears the scan session: candidates, pins and freezes.
+     *
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public void scanClear() throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_SCAN_CLEAR, b ->
@@ -416,7 +600,13 @@ public final class LiveAgentClient implements Closeable
         return new ScanPage(total, truncated, locations);
     }
 
-    /** Lists the static methods of a class (name + JVM descriptor). */
+    /**
+     * Lists the static methods of a class.
+     *
+     * @param internalName the class's internal name, with slashes
+     * @return the methods by name and descriptor
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public List<StaticMethod> listStaticMethods(String internalName) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_LIST_STATIC_METHODS, b -> writeString(b, internalName)));
@@ -431,13 +621,13 @@ public final class LiveAgentClient implements Closeable
     }
 
     /**
-     * Defines a freshly-compiled snippet (its wrapper class plus any anonymous/local classes) in the target,
-     * in a throwaway child of {@code contextClass}'s classloader, invokes the wrapper's {@code static Object
-     * run()}, and returns the captured output + result/exception.
+     * Defines compiled snippet classes in a throwaway child of a class's loader and runs the wrapper's static run method.
      *
-     * @param classes        all compiled classes, by binary name (e.g. {@code jstudio.scratch.Scratch_3})
-     * @param mainBinaryName the wrapper class to invoke {@code run()} on
-     * @param contextClass   internal name of the class whose loader scopes runtime visibility (may be empty)
+     * @param classes the compiled class files by binary name
+     * @param mainBinaryName the binary name of the wrapper class to run
+     * @param contextClass the internal name of the class whose loader scopes visibility, or empty
+     * @return the captured output and the result or exception
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
      */
     public String eval(Map<String, byte[]> classes, String mainBinaryName, String contextClass) throws IOException
     {
@@ -457,7 +647,16 @@ public final class LiveAgentClient implements Closeable
         return readString(r);
     }
 
-    /** Invokes a static method (args marshalled from strings); returns the formatted result. */
+    /**
+     * Invokes a static method in the target, marshalling the arguments from text.
+     *
+     * @param className the declaring class's internal name
+     * @param name the method name
+     * @param desc the method's JVM descriptor
+     * @param args the arguments as text
+     * @return the formatted result
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public String invokeStatic(String className, String name, String desc, List<String> args) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_INVOKE_STATIC, b ->
@@ -475,7 +674,12 @@ public final class LiveAgentClient implements Closeable
         return readString(r);
     }
 
-    /** Reads a snapshot of the target JVM's runtime metrics (memory, GC, CPU, threads, classes). */
+    /**
+     * Reads the target's runtime metrics: memory, GC, CPU, threads and classes.
+     *
+     * @return the snapshot
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public MetricsSnapshot getMetrics() throws IOException
     {
         DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_GET_METRICS});
@@ -505,7 +709,13 @@ public final class LiveAgentClient implements Closeable
         return new MetricsSnapshot(uptime, heapUsed, heapCommitted, heapMax, nhUsed, nhCommitted, nhMax, procCpu, sysCpu, procs, threads, daemon, peak, totalStarted, loaded, totalLoaded, unloaded, pools, gcs);
     }
 
-    /** Snapshots all threads with their current stacks (up to {@code maxDepth} frames each). */
+    /**
+     * Snapshots every thread with its current stack.
+     *
+     * @param maxDepth the cap on frames per thread
+     * @return the threads with their stacks
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public List<ThreadStack> getThreadStacks(int maxDepth) throws IOException
     {
         DataInputStream r = request(payload(LiveProtocol.MSG_GET_THREAD_STACKS, b -> b.writeInt(maxDepth)));
@@ -528,7 +738,12 @@ public final class LiveAgentClient implements Closeable
         return threads;
     }
 
-    /** Snapshot the wait-for graph (blocked thread -> monitor owner) for deadlock detection. */
+    /**
+     * Snapshots the monitor wait-for graph, for deadlock detection.
+     *
+     * @return one edge per blocked thread, from the waiter to the monitor's owner
+     * @throws IOException if the connection is closed, the request fails or times out, or the agent reports an error
+     */
     public List<ContentionEdge> getContention() throws IOException
     {
         DataInputStream r = request(new byte[]{(byte) LiveProtocol.MSG_GET_CONTENTION});

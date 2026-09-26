@@ -20,11 +20,14 @@ public class RecentFilesManager
     private final List<File> recentFiles;
     private final List<RecentFilesListener> listeners;
 
-    /**
-     * Listener interface for recent files changes.
-     */
+    /** Hears about changes to the recent files list. */
     public interface RecentFilesListener
     {
+        /**
+         * Called after the list changes.
+         *
+         * @param recentFiles the recent files that still exist, newest first
+         */
         void onRecentFilesChanged(List<File> recentFiles);
     }
 
@@ -37,7 +40,9 @@ public class RecentFilesManager
     }
 
     /**
-     * Get the singleton instance.
+     * Gives the shared manager, loading it from preferences on first use.
+     *
+     * @return the manager
      */
     public static synchronized RecentFilesManager getInstance()
     {
@@ -49,7 +54,9 @@ public class RecentFilesManager
     }
 
     /**
-     * Add a file to the recent files list.
+     * Moves a file to the front of the list, dropping the oldest past ten.
+     *
+     * @param file the file just opened; null or a missing file does nothing
      */
     public void addFile(File file)
     {
@@ -72,7 +79,9 @@ public class RecentFilesManager
     }
 
     /**
-     * Get the list of recent files.
+     * Lists the recent files that still exist.
+     *
+     * @return a new list, newest first
      */
     public List<File> getRecentFiles()
     {
@@ -88,7 +97,9 @@ public class RecentFilesManager
     }
 
     /**
-     * Get the most recently opened file.
+     * Finds the newest recent file that still exists.
+     *
+     * @return the file, or null if none exists
      */
     public File getMostRecent()
     {
@@ -102,9 +113,7 @@ public class RecentFilesManager
         return null;
     }
 
-    /**
-     * Clear all recent files.
-     */
+    /** Empties the list. */
     public void clear()
     {
         recentFiles.clear();
@@ -113,7 +122,9 @@ public class RecentFilesManager
     }
 
     /**
-     * Add a listener for recent files changes.
+     * Registers a listener; registering the same one twice has no effect.
+     *
+     * @param listener the listener to add
      */
     public void addListener(RecentFilesListener listener)
     {
@@ -124,7 +135,9 @@ public class RecentFilesManager
     }
 
     /**
-     * Remove a listener.
+     * Unregisters a listener.
+     *
+     * @param listener the listener to remove
      */
     public void removeListener(RecentFilesListener listener)
     {
