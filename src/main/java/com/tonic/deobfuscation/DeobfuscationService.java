@@ -18,7 +18,8 @@ import lombok.Getter;
 
 import java.util.*;
 
-public class DeobfuscationService {
+public class DeobfuscationService
+{
 
     private static final DeobfuscationService INSTANCE = new DeobfuscationService();
 
@@ -31,16 +32,20 @@ public class DeobfuscationService {
     private final int maxInstructions = 1_000_000;
     private final int maxCallDepth = 100;
 
-    private DeobfuscationService() {
+    private DeobfuscationService()
+    {
     }
 
-    public static DeobfuscationService getInstance() {
+    public static DeobfuscationService getInstance()
+    {
         return INSTANCE;
     }
 
-    public void initialize() {
+    public void initialize()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassPool() == null) {
+        if (project == null || project.getClassPool() == null)
+        {
             throw new IllegalStateException("No project loaded");
         }
 
@@ -49,120 +54,140 @@ public class DeobfuscationService {
         resetHeap();
     }
 
-    public void resetHeap() {
+    public void resetHeap()
+    {
         this.heapManager = new SimpleHeapManager();
         this.heapManager.setClassResolver(classResolver);
     }
 
-    public boolean isInitialized() {
+    public boolean isInitialized()
+    {
         return classPool != null;
     }
 
-    public String executeDecryptor(MethodEntry decryptor, String encryptedValue) {
-        if (!isInitialized()) {
+    public String executeDecryptor(MethodEntry decryptor, String encryptedValue)
+    {
+        if (!isInitialized())
+        {
             initialize();
         }
 
         resetHeap();
 
         BytecodeContext ctx = new BytecodeContext.Builder()
-            .heapManager(heapManager)
-            .classResolver(classResolver)
-            .mode(ExecutionMode.RECURSIVE)
-            .maxInstructions(maxInstructions)
-            .maxCallDepth(maxCallDepth)
-            .build();
+                .heapManager(heapManager)
+                .classResolver(classResolver)
+                .mode(ExecutionMode.RECURSIVE)
+                .maxInstructions(maxInstructions)
+                .maxCallDepth(maxCallDepth)
+                .build();
 
         BytecodeEngine engine = new BytecodeEngine(ctx);
 
-        try {
+        try
+        {
             ObjectInstance stringArg = heapManager.internString(encryptedValue);
-            ConcreteValue[] args = new ConcreteValue[] { ConcreteValue.reference(stringArg) };
+            ConcreteValue[] args = new ConcreteValue[]{ConcreteValue.reference(stringArg)};
 
             BytecodeResult result = engine.execute(decryptor, args);
 
-            if (!result.isSuccess()) {
-                throw new RuntimeException("Execution failed: " +
-                    (result.getException() != null ? result.getException().toString() : "Unknown error"));
+            if (!result.isSuccess())
+            {
+                throw new RuntimeException("Execution failed: " + (result.getException() != null ? result.getException().toString() : "Unknown error"));
             }
 
             ConcreteValue returnVal = result.getReturnValue();
-            if (returnVal == null || returnVal.isNull()) {
+            if (returnVal == null || returnVal.isNull())
+            {
                 return null;
             }
 
             ObjectInstance returnObj = returnVal.asReference();
             return heapManager.extractString(returnObj);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException("Decryption failed: " + e.getMessage(), e);
         }
     }
 
-    public String executeDecryptor(MethodEntry decryptor, int index) {
-        if (!isInitialized()) {
+    public String executeDecryptor(MethodEntry decryptor, int index)
+    {
+        if (!isInitialized())
+        {
             initialize();
         }
 
         resetHeap();
 
         BytecodeContext ctx = new BytecodeContext.Builder()
-            .heapManager(heapManager)
-            .classResolver(classResolver)
-            .mode(ExecutionMode.RECURSIVE)
-            .maxInstructions(maxInstructions)
-            .maxCallDepth(maxCallDepth)
-            .build();
+                .heapManager(heapManager)
+                .classResolver(classResolver)
+                .mode(ExecutionMode.RECURSIVE)
+                .maxInstructions(maxInstructions)
+                .maxCallDepth(maxCallDepth)
+                .build();
 
         BytecodeEngine engine = new BytecodeEngine(ctx);
 
-        try {
-            ConcreteValue[] args = new ConcreteValue[] { ConcreteValue.intValue(index) };
+        try
+        {
+            ConcreteValue[] args = new ConcreteValue[]{ConcreteValue.intValue(index)};
 
             BytecodeResult result = engine.execute(decryptor, args);
 
-            if (!result.isSuccess()) {
-                throw new RuntimeException("Execution failed: " +
-                    (result.getException() != null ? result.getException().toString() : "Unknown error"));
+            if (!result.isSuccess())
+            {
+                throw new RuntimeException("Execution failed: " + (result.getException() != null ? result.getException().toString() : "Unknown error"));
             }
 
             ConcreteValue returnVal = result.getReturnValue();
-            if (returnVal == null || returnVal.isNull()) {
+            if (returnVal == null || returnVal.isNull())
+            {
                 return null;
             }
 
             ObjectInstance returnObj = returnVal.asReference();
             return heapManager.extractString(returnObj);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException("Decryption failed: " + e.getMessage(), e);
         }
     }
 
-    public DeobfuscationResult decryptString(String className, int cpIndex,
-                                              String encryptedValue,
-                                              DecryptorCandidate decryptor) {
+    public DeobfuscationResult decryptString(String className, int cpIndex, String encryptedValue, DecryptorCandidate decryptor)
+    {
         long startTime = System.currentTimeMillis();
 
-        try {
+        try
+        {
             String decrypted;
-            if (Objects.requireNonNull(decryptor.getType()) == DecryptorCandidate.DecryptorType.INT_TO_STRING) {
+            if (Objects.requireNonNull(decryptor.getType()) == DecryptorCandidate.DecryptorType.INT_TO_STRING)
+            {
                 decrypted = executeDecryptor(decryptor.getMethod(), cpIndex);
-            } else {
+            }
+            else
+            {
                 decrypted = executeDecryptor(decryptor.getMethod(), encryptedValue);
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
 
-            if (decrypted != null) {
-                return DeobfuscationResult.success(className, cpIndex, encryptedValue,
-                    decrypted, decryptor.getMethod(), elapsed);
-            } else {
-                return DeobfuscationResult.failure(className, cpIndex, encryptedValue,
-                    "Decryptor returned null");
+            if (decrypted != null)
+            {
+                return DeobfuscationResult.success(className, cpIndex, encryptedValue, decrypted, decryptor.getMethod(), elapsed);
+            }
+            else
+            {
+                return DeobfuscationResult.failure(className, cpIndex, encryptedValue, "Decryptor returned null");
             }
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return DeobfuscationResult.failure(className, cpIndex, encryptedValue, e.getMessage());
         }
     }

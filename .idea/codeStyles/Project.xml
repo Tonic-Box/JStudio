@@ -1,0 +1,47 @@
+<component name="ProjectCodeStyleConfiguration">
+  <code_scheme name="Project" version="173">
+    <option name="RIGHT_MARGIN" value="1000" />
+    <JavaCodeStyleSettings>
+      <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="999" />
+      <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="999" />
+      <option name="ENABLE_JAVADOC_FORMATTING" value="false" />
+      <option name="LAYOUT_STATIC_IMPORTS_SEPARATELY" value="false" />
+      <option name="IMPORT_LAYOUT_TABLE">
+        <value>
+          <package name="" withSubpackages="true" static="false" />
+        </value>
+      </option>
+    </JavaCodeStyleSettings>
+    <codeStyleSettings language="JAVA">
+      <option name="KEEP_LINE_BREAKS" value="true" />
+      <option name="KEEP_BLANK_LINES_IN_DECLARATIONS" value="99" />
+      <option name="KEEP_BLANK_LINES_IN_CODE" value="99" />
+      <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="99" />
+      <option name="KEEP_FIRST_COLUMN_COMMENT" value="true" />
+      <option name="KEEP_CONTROL_STATEMENT_IN_ONE_LINE" value="true" />
+      <option name="BLANK_LINES_AFTER_CLASS_HEADER" value="0" />
+      <option name="BRACE_STYLE" value="2" />
+      <option name="CLASS_BRACE_STYLE" value="2" />
+      <option name="METHOD_BRACE_STYLE" value="2" />
+      <option name="LAMBDA_BRACE_STYLE" value="2" />
+      <option name="ELSE_ON_NEW_LINE" value="true" />
+      <option name="WHILE_ON_NEW_LINE" value="true" />
+      <option name="CATCH_ON_NEW_LINE" value="true" />
+      <option name="FINALLY_ON_NEW_LINE" value="true" />
+      <option name="ARRAY_INITIALIZER_LBRACE_ON_NEXT_LINE" value="true" />
+      <option name="ARRAY_INITIALIZER_RBRACE_ON_NEXT_LINE" value="true" />
+      <option name="CALL_PARAMETERS_WRAP" value="0" />
+      <option name="METHOD_PARAMETERS_WRAP" value="0" />
+      <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
+      <option name="ALIGN_MULTILINE_PARAMETERS_IN_CALLS" value="false" />
+      <option name="KEEP_SIMPLE_BLOCKS_IN_ONE_LINE" value="false" />
+      <option name="KEEP_SIMPLE_METHODS_IN_ONE_LINE" value="false" />
+      <option name="KEEP_SIMPLE_LAMBDAS_IN_ONE_LINE" value="false" />
+      <option name="KEEP_SIMPLE_CLASSES_IN_ONE_LINE" value="false" />
+      <option name="WRAP_COMMENTS" value="false" />
+      <indentOptions>
+        <option name="CONTINUATION_INDENT_SIZE" value="8" />
+      </indentOptions>
+    </codeStyleSettings>
+  </code_scheme>
+</component>

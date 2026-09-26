@@ -21,7 +21,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
-public class PropertiesPanel extends ThemedJPanel {
+public class PropertiesPanel extends ThemedJPanel
+{
 
     private final JTabbedPane tabbedPane;
     private final JPanel classPanel;
@@ -33,7 +34,8 @@ public class PropertiesPanel extends ThemedJPanel {
     private MethodEntryModel currentMethod;
     private FieldEntryModel currentField;
 
-    public PropertiesPanel() {
+    public PropertiesPanel()
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -71,7 +73,8 @@ public class PropertiesPanel extends ThemedJPanel {
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         tabbedPane.setBackground(JStudioTheme.getBgSecondary());
         tabbedPane.setForeground(JStudioTheme.getTextPrimary());
 
@@ -84,21 +87,24 @@ public class PropertiesPanel extends ThemedJPanel {
         detailsArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
     }
 
-    private JPanel createPropertiesGrid() {
+    private JPanel createPropertiesGrid()
+    {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(JStudioTheme.getBgSecondary());
         panel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         return panel;
     }
 
-    private void showEmptyState() {
+    private void showEmptyState()
+    {
         detailsArea.setText("Select a class, method, or field to view properties.");
     }
 
     /**
      * Show class properties.
      */
-    public void showClass(ClassEntryModel classEntry) {
+    public void showClass(ClassEntryModel classEntry)
+    {
         this.currentClass = classEntry;
         this.currentMethod = null;
         this.currentField = null;
@@ -110,7 +116,8 @@ public class PropertiesPanel extends ThemedJPanel {
     /**
      * Show method properties.
      */
-    public void showMethod(MethodEntryModel method) {
+    public void showMethod(MethodEntryModel method)
+    {
         this.currentMethod = method;
         this.currentField = null;
 
@@ -121,7 +128,8 @@ public class PropertiesPanel extends ThemedJPanel {
     /**
      * Show field properties.
      */
-    public void showField(FieldEntryModel field) {
+    public void showField(FieldEntryModel field)
+    {
         this.currentField = field;
         this.currentMethod = null;
 
@@ -129,10 +137,12 @@ public class PropertiesPanel extends ThemedJPanel {
         tabbedPane.setSelectedComponent(fieldPanel);
     }
 
-    private void updateClassPanel(ClassEntryModel classEntry) {
+    private void updateClassPanel(ClassEntryModel classEntry)
+    {
         classPanel.removeAll();
 
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             addProperty(classPanel, 0, "No class selected", "");
             return;
         }
@@ -142,8 +152,7 @@ public class PropertiesPanel extends ThemedJPanel {
         addProperty(classPanel, row++, "Super", classEntry.getSuperClassName());
         addProperty(classPanel, row++, "Interfaces", String.join(", ", classEntry.getInterfaceNames()));
         addProperty(classPanel, row++, "Access", formatAccessFlags(classEntry.getClassFile().getAccess(), AccessContext.CLASS));
-        addProperty(classPanel, row++, "Version", classEntry.getClassFile().getMajorVersion() + "." +
-                classEntry.getClassFile().getMinorVersion());
+        addProperty(classPanel, row++, "Version", classEntry.getClassFile().getMajorVersion() + "." + classEntry.getClassFile().getMinorVersion());
         addProperty(classPanel, row++, "Methods", String.valueOf(classEntry.getMethods().size()));
         addProperty(classPanel, row++, "Fields", String.valueOf(classEntry.getFields().size()));
         addProperty(classPanel, row++, "Const Pool", String.valueOf(classEntry.getClassFile().getConstPool().getItems().size()));
@@ -153,7 +162,10 @@ public class PropertiesPanel extends ThemedJPanel {
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weighty = 1;
-        classPanel.add(new JPanel() {{ setBackground(JStudioTheme.getBgSecondary()); }}, gbc);
+        classPanel.add(new JPanel()
+        {{
+            setBackground(JStudioTheme.getBgSecondary());
+        }}, gbc);
 
         classPanel.revalidate();
         classPanel.repaint();
@@ -164,10 +176,12 @@ public class PropertiesPanel extends ThemedJPanel {
         detailsArea.setText(sb);
     }
 
-    private void updateMethodPanel(MethodEntryModel method) {
+    private void updateMethodPanel(MethodEntryModel method)
+    {
         methodPanel.removeAll();
 
-        if (method == null) {
+        if (method == null)
+        {
             addProperty(methodPanel, 0, "No method selected", "");
             return;
         }
@@ -179,20 +193,23 @@ public class PropertiesPanel extends ThemedJPanel {
         addProperty(methodPanel, row++, "Access", formatAccessFlags(entry.getAccess(), AccessContext.METHOD));
 
         CodeAttribute code = entry.getCodeAttribute();
-        if (code != null) {
+        if (code != null)
+        {
             addProperty(methodPanel, row++, "Max Stack", String.valueOf(code.getMaxStack()));
             addProperty(methodPanel, row++, "Max Locals", String.valueOf(code.getMaxLocals()));
             addProperty(methodPanel, row++, "Code Length", String.valueOf(code.getCode().length));
             addProperty(methodPanel, row++, "Exceptions", String.valueOf(code.getExceptionTable().size()));
-        } else {
+        }
+        else
+        {
             addProperty(methodPanel, row++, "Code", "None (abstract/native)");
         }
 
         ComplexityMetrics metrics = method.getComplexityMetrics();
-        if (metrics != null) {
+        if (metrics != null)
+        {
             row = addSeparator(methodPanel, row, "Complexity");
-            addProperty(methodPanel, row++, "Cyclomatic",
-                    metrics.getCyclomaticComplexity() + " (" + metrics.getComplexityRating() + ")");
+            addProperty(methodPanel, row++, "Cyclomatic", metrics.getCyclomaticComplexity() + " (" + metrics.getComplexityRating() + ")");
             addProperty(methodPanel, row++, "Blocks", String.valueOf(metrics.getBlockCount()));
             addProperty(methodPanel, row++, "Branches", String.valueOf(metrics.getBranchCount()));
             addProperty(methodPanel, row++, "Loops", String.valueOf(metrics.getLoopCount()));
@@ -204,7 +221,10 @@ public class PropertiesPanel extends ThemedJPanel {
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weighty = 1;
-        methodPanel.add(new JPanel() {{ setBackground(JStudioTheme.getBgSecondary()); }}, gbc);
+        methodPanel.add(new JPanel()
+        {{
+            setBackground(JStudioTheme.getBgSecondary());
+        }}, gbc);
 
         methodPanel.revalidate();
         methodPanel.repaint();
@@ -216,10 +236,12 @@ public class PropertiesPanel extends ThemedJPanel {
         detailsArea.setText(sb);
     }
 
-    private void updateFieldPanel(FieldEntryModel field) {
+    private void updateFieldPanel(FieldEntryModel field)
+    {
         fieldPanel.removeAll();
 
-        if (field == null) {
+        if (field == null)
+        {
             addProperty(fieldPanel, 0, "No field selected", "");
             return;
         }
@@ -236,7 +258,10 @@ public class PropertiesPanel extends ThemedJPanel {
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weighty = 1;
-        fieldPanel.add(new JPanel() {{ setBackground(JStudioTheme.getBgSecondary()); }}, gbc);
+        fieldPanel.add(new JPanel()
+        {{
+            setBackground(JStudioTheme.getBgSecondary());
+        }}, gbc);
 
         fieldPanel.revalidate();
         fieldPanel.repaint();
@@ -245,7 +270,8 @@ public class PropertiesPanel extends ThemedJPanel {
         detailsArea.setText("Full signature: " + entry.getName() + " : " + entry.getDesc() + "\n");
     }
 
-    private void addProperty(JPanel panel, int row, String label, String value) {
+    private void addProperty(JPanel panel, int row, String label, String value)
+    {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(2, 4, 2, 4);
         gbc.anchor = GridBagConstraints.WEST;
@@ -265,7 +291,8 @@ public class PropertiesPanel extends ThemedJPanel {
         panel.add(valueComp, gbc);
     }
 
-    private int addSeparator(JPanel panel, int row, String title) {
+    private int addSeparator(JPanel panel, int row, String title)
+    {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 4, 4, 4);
         gbc.gridx = 0;
@@ -281,7 +308,8 @@ public class PropertiesPanel extends ThemedJPanel {
         return row + 1;
     }
 
-    private String sanitize(String text) {
+    private String sanitize(String text)
+    {
         if (text == null) return "";
         return text
                 .replace("&", "&amp;")
@@ -289,7 +317,8 @@ public class PropertiesPanel extends ThemedJPanel {
                 .replace(">", "&gt;");
     }
 
-    private String formatAccessFlags(int flags, AccessContext context) {
+    private String formatAccessFlags(int flags, AccessContext context)
+    {
         StringBuilder sb = new StringBuilder();
         if ((flags & 0x0001) != 0) sb.append("public ");
         if ((flags & 0x0002) != 0) sb.append("private ");
@@ -297,22 +326,32 @@ public class PropertiesPanel extends ThemedJPanel {
         if ((flags & 0x0008) != 0) sb.append("static ");
         if ((flags & 0x0010) != 0) sb.append("final ");
 
-        if ((flags & 0x0020) != 0) {
-            if (context == AccessContext.METHOD) {
+        if ((flags & 0x0020) != 0)
+        {
+            if (context == AccessContext.METHOD)
+            {
                 sb.append("synchronized ");
             }
         }
-        if ((flags & 0x0040) != 0) {
-            if (context == AccessContext.FIELD) {
+        if ((flags & 0x0040) != 0)
+        {
+            if (context == AccessContext.FIELD)
+            {
                 sb.append("volatile ");
-            } else if (context == AccessContext.METHOD) {
+            }
+            else if (context == AccessContext.METHOD)
+            {
                 sb.append("bridge ");
             }
         }
-        if ((flags & 0x0080) != 0) {
-            if (context == AccessContext.FIELD) {
+        if ((flags & 0x0080) != 0)
+        {
+            if (context == AccessContext.FIELD)
+            {
                 sb.append("transient ");
-            } else if (context == AccessContext.METHOD) {
+            }
+            else if (context == AccessContext.METHOD)
+            {
                 sb.append("varargs ");
             }
         }
@@ -326,22 +365,27 @@ public class PropertiesPanel extends ThemedJPanel {
         return sb.toString().trim();
     }
 
-    private enum AccessContext {
+    private enum AccessContext
+    {
         CLASS, METHOD, FIELD
     }
 
-    private String parseReturnType(String desc) {
+    private String parseReturnType(String desc)
+    {
         int parenClose = desc.indexOf(')');
-        if (parenClose >= 0 && parenClose < desc.length() - 1) {
+        if (parenClose >= 0 && parenClose < desc.length() - 1)
+        {
             return parseType(desc.substring(parenClose + 1));
         }
         return "?";
     }
 
-    private String parseParameters(String desc) {
+    private String parseParameters(String desc)
+    {
         int parenOpen = desc.indexOf('(');
         int parenClose = desc.indexOf(')');
-        if (parenOpen >= 0 && parenClose > parenOpen) {
+        if (parenOpen >= 0 && parenClose > parenOpen)
+        {
             String params = desc.substring(parenOpen + 1, parenClose);
             if (params.isEmpty()) return "none";
             return params;
@@ -349,47 +393,66 @@ public class PropertiesPanel extends ThemedJPanel {
         return "?";
     }
 
-    private String parseFieldType(String desc) {
+    private String parseFieldType(String desc)
+    {
         return parseType(desc);
     }
 
-    private String parseType(String desc) {
+    private String parseType(String desc)
+    {
         if (desc.isEmpty()) return "void";
         char c = desc.charAt(0);
-        switch (c) {
-            case 'V': return "void";
-            case 'Z': return "boolean";
-            case 'B': return "byte";
-            case 'C': return "char";
-            case 'S': return "short";
-            case 'I': return "int";
-            case 'J': return "long";
-            case 'F': return "float";
-            case 'D': return "double";
-            case '[': return parseType(desc.substring(1)) + "[]";
+        switch (c)
+        {
+            case 'V':
+                return "void";
+            case 'Z':
+                return "boolean";
+            case 'B':
+                return "byte";
+            case 'C':
+                return "char";
+            case 'S':
+                return "short";
+            case 'I':
+                return "int";
+            case 'J':
+                return "long";
+            case 'F':
+                return "float";
+            case 'D':
+                return "double";
+            case '[':
+                return parseType(desc.substring(1)) + "[]";
             case 'L':
                 int semi = desc.indexOf(';');
-                if (semi > 1) {
+                if (semi > 1)
+                {
                     String className = desc.substring(1, semi);
                     int lastSlash = className.lastIndexOf('/');
                     return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
                 }
                 return desc;
-            default: return desc;
+            default:
+                return desc;
         }
     }
 
     /**
      * Refresh the panel.
      */
-    public void refresh() {
-        if (currentClass != null) {
+    public void refresh()
+    {
+        if (currentClass != null)
+        {
             updateClassPanel(currentClass);
         }
-        if (currentMethod != null) {
+        if (currentMethod != null)
+        {
             updateMethodPanel(currentMethod);
         }
-        if (currentField != null) {
+        if (currentField != null)
+        {
             updateFieldPanel(currentField);
         }
     }

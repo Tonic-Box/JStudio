@@ -8,11 +8,13 @@ import lombok.Getter;
  * gutters, the Debugger tool window, the suspend toggle) can show or tear down.
  */
 @Getter
-public class DebugSessionEvent extends Event {
+public class DebugSessionEvent extends Event
+{
 
     private final boolean connected;
 
-    public DebugSessionEvent(Object source, boolean connected) {
+    public DebugSessionEvent(Object source, boolean connected)
+    {
         super(source);
         this.connected = connected;
     }

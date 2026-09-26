@@ -7,20 +7,25 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
-public class FindingsExporter {
+public class FindingsExporter
+{
 
-    public static void exportToJson(List<SimulationFinding> findings, String filePath) throws IOException {
-        try (FileWriter writer = new FileWriter(filePath)) {
+    public static void exportToJson(List<SimulationFinding> findings, String filePath) throws IOException
+    {
+        try (FileWriter writer = new FileWriter(filePath))
+        {
             writeJson(findings, writer);
         }
     }
 
-    public static String toJsonString(List<SimulationFinding> findings) {
+    public static String toJsonString(List<SimulationFinding> findings)
+    {
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
         sb.append("  \"findings\": [\n");
 
-        for (int i = 0; i < findings.size(); i++) {
+        for (int i = 0; i < findings.size(); i++)
+        {
             SimulationFinding finding = findings.get(i);
             sb.append("    {\n");
             sb.append("      \"type\": \"").append(escapeJson(finding.getType().name())).append("\",\n");
@@ -34,7 +39,8 @@ public class FindingsExporter {
             sb.append("      \"bytecodeOffset\": ").append(finding.getBytecodeOffset()).append("\n");
             sb.append("    }");
 
-            if (i < findings.size() - 1) {
+            if (i < findings.size() - 1)
+            {
                 sb.append(",");
             }
             sb.append("\n");
@@ -54,17 +60,20 @@ public class FindingsExporter {
         return sb.toString();
     }
 
-    private static void writeJson(List<SimulationFinding> findings, Writer writer) throws IOException {
+    private static void writeJson(List<SimulationFinding> findings, Writer writer) throws IOException
+    {
         writer.write(toJsonString(findings));
     }
 
-    private static int countBySeverity(List<SimulationFinding> findings, SimulationFinding.Severity severity) {
+    private static int countBySeverity(List<SimulationFinding> findings, SimulationFinding.Severity severity)
+    {
         return (int) findings.stream()
                 .filter(f -> f.getSeverity() == severity)
                 .count();
     }
 
-    private static String escapeJson(String input) {
+    private static String escapeJson(String input)
+    {
         if (input == null) return "";
         return input
                 .replace("\\", "\\\\")
@@ -74,13 +83,16 @@ public class FindingsExporter {
                 .replace("\t", "\\t");
     }
 
-    public static void exportToHtml(List<SimulationFinding> findings, String filePath) throws IOException {
-        try (FileWriter writer = new FileWriter(filePath)) {
+    public static void exportToHtml(List<SimulationFinding> findings, String filePath) throws IOException
+    {
+        try (FileWriter writer = new FileWriter(filePath))
+        {
             writeHtml(findings, writer);
         }
     }
 
-    private static void writeHtml(List<SimulationFinding> findings, Writer writer) throws IOException {
+    private static void writeHtml(List<SimulationFinding> findings, Writer writer) throws IOException
+    {
         writer.write("<!DOCTYPE html>\n");
         writer.write("<html>\n<head>\n");
         writer.write("<title>Simulation Analysis Report</title>\n");
@@ -114,7 +126,8 @@ public class FindingsExporter {
         writer.write("<table>\n");
         writer.write("<tr><th>Type</th><th>Severity</th><th>Class</th><th>Method</th><th>Title</th></tr>\n");
 
-        for (SimulationFinding finding : findings) {
+        for (SimulationFinding finding : findings)
+        {
             String severityClass = "severity-" + finding.getSeverity().name().toLowerCase();
             writer.write("<tr>\n");
             writer.write("<td>" + escapeHtml(finding.getType().name()) + "</td>\n");
@@ -129,13 +142,15 @@ public class FindingsExporter {
         writer.write("</body>\n</html>\n");
     }
 
-    private static String getSimpleClassName(String className) {
+    private static String getSimpleClassName(String className)
+    {
         if (className == null) return "";
         int lastSlash = className.lastIndexOf('/');
         return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
     }
 
-    private static String escapeHtml(String input) {
+    private static String escapeHtml(String input)
+    {
         if (input == null) return "";
         return input
                 .replace("&", "&amp;")

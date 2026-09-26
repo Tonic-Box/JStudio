@@ -4,125 +4,160 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class BookmarkStore {
+public class BookmarkStore
+{
 
     private final Map<String, Bookmark> bookmarksById;
     private final Bookmark[] quickSlots;
 
-    public BookmarkStore() {
+    public BookmarkStore()
+    {
         this.bookmarksById = new ConcurrentHashMap<>();
         this.quickSlots = new Bookmark[10];
     }
 
-    public void addBookmark(Bookmark bookmark) {
-        if (bookmark == null || bookmark.getClassName() == null) {
+    public void addBookmark(Bookmark bookmark)
+    {
+        if (bookmark == null || bookmark.getClassName() == null)
+        {
             return;
         }
         bookmarksById.put(bookmark.getId(), bookmark);
-        if (bookmark.hasSlot()) {
+        if (bookmark.hasSlot())
+        {
             quickSlots[bookmark.getSlot()] = bookmark;
         }
     }
 
-    public void removeBookmark(String id) {
+    public void removeBookmark(String id)
+    {
         Bookmark bookmark = bookmarksById.remove(id);
-        if (bookmark != null && bookmark.hasSlot()) {
-            if (quickSlots[bookmark.getSlot()] == bookmark) {
+        if (bookmark != null && bookmark.hasSlot())
+        {
+            if (quickSlots[bookmark.getSlot()] == bookmark)
+            {
                 quickSlots[bookmark.getSlot()] = null;
             }
         }
     }
 
-    public void setQuickSlot(int slot, Bookmark bookmark) {
-        if (slot < 0 || slot > 9) {
+    public void setQuickSlot(int slot, Bookmark bookmark)
+    {
+        if (slot < 0 || slot > 9)
+        {
             return;
         }
         Bookmark old = quickSlots[slot];
-        if (old != null) {
+        if (old != null)
+        {
             old.setSlot(Bookmark.NO_SLOT);
         }
         quickSlots[slot] = bookmark;
-        if (bookmark != null) {
+        if (bookmark != null)
+        {
             int oldSlot = bookmark.getSlot();
-            if (oldSlot >= 0 && oldSlot <= 9 && oldSlot != slot) {
+            if (oldSlot >= 0 && oldSlot <= 9 && oldSlot != slot)
+            {
                 quickSlots[oldSlot] = null;
             }
             bookmark.setSlot(slot);
         }
     }
 
-    public void clearQuickSlot(int slot) {
-        if (slot < 0 || slot > 9) {
+    public void clearQuickSlot(int slot)
+    {
+        if (slot < 0 || slot > 9)
+        {
             return;
         }
         Bookmark bookmark = quickSlots[slot];
-        if (bookmark != null) {
+        if (bookmark != null)
+        {
             bookmark.setSlot(Bookmark.NO_SLOT);
         }
         quickSlots[slot] = null;
     }
 
-    public Bookmark getQuickSlot(int slot) {
-        if (slot < 0 || slot > 9) {
+    public Bookmark getQuickSlot(int slot)
+    {
+        if (slot < 0 || slot > 9)
+        {
             return null;
         }
         return quickSlots[slot];
     }
 
-    public List<Bookmark> getAll() {
+    public List<Bookmark> getAll()
+    {
         List<Bookmark> list = new ArrayList<>(bookmarksById.values());
         list.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
         return list;
     }
 
-    public List<Bookmark> getForClass(String className) {
+    public List<Bookmark> getForClass(String className)
+    {
         return bookmarksById.values().stream()
-            .filter(b -> className.equals(b.getClassName()))
-            .sorted(Comparator.comparingInt(Bookmark::getLineNumber))
-            .collect(Collectors.toList());
+                .filter(b -> className.equals(b.getClassName()))
+                .sorted(Comparator.comparingInt(Bookmark::getLineNumber))
+                .collect(Collectors.toList());
     }
 
-    public int getBookmarkCount() {
+    public int getBookmarkCount()
+    {
         return bookmarksById.size();
     }
 
-    public void clear() {
+    public void clear()
+    {
         bookmarksById.clear();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             quickSlots[i] = null;
         }
     }
 
-    public void setBookmarks(List<Bookmark> bookmarks) {
+    public void setBookmarks(List<Bookmark> bookmarks)
+    {
         clear();
-        if (bookmarks != null) {
-            for (Bookmark bookmark : bookmarks) {
+        if (bookmarks != null)
+        {
+            for (Bookmark bookmark : bookmarks)
+            {
                 addBookmark(bookmark);
             }
         }
     }
 
-    public Map<Integer, String> getQuickSlotIds() {
+    public Map<Integer, String> getQuickSlotIds()
+    {
         Map<Integer, String> result = new HashMap<>();
-        for (int i = 0; i < 10; i++) {
-            if (quickSlots[i] != null) {
+        for (int i = 0; i < 10; i++)
+        {
+            if (quickSlots[i] != null)
+            {
                 result.put(i, quickSlots[i].getId());
             }
         }
         return result;
     }
 
-    public void restoreQuickSlots(Map<Integer, String> slotIds) {
-        for (int i = 0; i < 10; i++) {
+    public void restoreQuickSlots(Map<Integer, String> slotIds)
+    {
+        for (int i = 0; i < 10; i++)
+        {
             quickSlots[i] = null;
         }
-        if (slotIds != null) {
-            for (Map.Entry<Integer, String> entry : slotIds.entrySet()) {
+        if (slotIds != null)
+        {
+            for (Map.Entry<Integer, String> entry : slotIds.entrySet())
+            {
                 int slot = entry.getKey();
                 String id = entry.getValue();
-                if (slot >= 0 && slot <= 9) {
+                if (slot >= 0 && slot <= 9)
+                {
                     Bookmark bookmark = bookmarksById.get(id);
-                    if (bookmark != null) {
+                    if (bookmark != null)
+                    {
                         quickSlots[slot] = bookmark;
                         bookmark.setSlot(slot);
                     }

@@ -16,25 +16,32 @@ import java.util.regex.Pattern;
  * {@link #runningJar()} return {@code null}, which the update machinery treats as "not packaged" and
  * skips all checks.
  */
-public final class AppVersion {
+public final class AppVersion
+{
 
     private static final Pattern LEADING_INT = Pattern.compile("(\\d+)");
 
-    private AppVersion() {
+    private AppVersion()
+    {
     }
 
     /**
      * @return the running jar's {@code Implementation-Version}, or {@code null} when not run from a jar.
      */
-    public static String current() {
+    public static String current()
+    {
         File jar = runningJar();
-        if (jar == null) {
+        if (jar == null)
+        {
             return null;
         }
-        try (JarFile jarFile = new JarFile(jar)) {
+        try (JarFile jarFile = new JarFile(jar))
+        {
             Manifest manifest = jarFile.getManifest();
             return manifest != null ? manifest.getMainAttributes().getValue("Implementation-Version") : null;
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             return null;
         }
     }
@@ -42,15 +49,20 @@ public final class AppVersion {
     /**
      * @return the jar file JStudio is running from, or {@code null} when running from classes (dev/IDE).
      */
-    public static File runningJar() {
-        try {
+    public static File runningJar()
+    {
+        try
+        {
             URL location = AppVersion.class.getProtectionDomain().getCodeSource().getLocation();
-            if (location == null) {
+            if (location == null)
+            {
                 return null;
             }
             File file = new File(location.toURI());
             return file.isFile() && file.getName().endsWith(".jar") ? file : null;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return null;
         }
     }
@@ -58,7 +70,8 @@ public final class AppVersion {
     /**
      * @return {@code true} when running from a packaged release jar with a version manifest.
      */
-    public static boolean isPackaged() {
+    public static boolean isPackaged()
+    {
         return current() != null;
     }
 
@@ -68,8 +81,10 @@ public final class AppVersion {
      * @param version e.g. {@code "v11"} or {@code "10.0-SNAPSHOT"}
      * @return the leading integer ({@code 11}, {@code 10}), or {@code -1} if none
      */
-    public static int parse(String version) {
-        if (version == null) {
+    public static int parse(String version)
+    {
+        if (version == null)
+        {
             return -1;
         }
         Matcher matcher = LEADING_INT.matcher(version);

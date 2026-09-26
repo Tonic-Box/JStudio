@@ -14,39 +14,49 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ThemeLoader {
+public class ThemeLoader
+{
 
     private static final String THEMES_PATH = "/themes/";
-    private static final String[] BUILT_IN_THEMES = {
-        "darcula", "dracula", "monokai", "nord",
-        "github-light", "jstudio-dark", "solarized-dark", "vscode-dark"
-    };
+    private static final String[] BUILT_IN_THEMES =
+            {
+                    "darcula", "dracula", "monokai", "nord",
+                    "github-light", "jstudio-dark", "solarized-dark", "vscode-dark"
+            };
 
     private static final Map<String, Theme> themeCache = new HashMap<>();
     private static final Gson gson = new Gson();
 
-    private ThemeLoader() {
+    private ThemeLoader()
+    {
     }
 
-    public static List<Theme> loadAllThemes() {
+    public static List<Theme> loadAllThemes()
+    {
         List<Theme> themes = new ArrayList<>();
-        for (String themeName : BUILT_IN_THEMES) {
+        for (String themeName : BUILT_IN_THEMES)
+        {
             Theme theme = loadTheme(themeName);
-            if (theme != null) {
+            if (theme != null)
+            {
                 themes.add(theme);
             }
         }
         return themes;
     }
 
-    public static Theme loadTheme(String name) {
-        if (themeCache.containsKey(name)) {
+    public static Theme loadTheme(String name)
+    {
+        if (themeCache.containsKey(name))
+        {
             return themeCache.get(name);
         }
 
         String resourcePath = THEMES_PATH + name + ".json";
-        try (InputStream is = ThemeLoader.class.getResourceAsStream(resourcePath)) {
-            if (is == null) {
+        try (InputStream is = ThemeLoader.class.getResourceAsStream(resourcePath))
+        {
+            if (is == null)
+            {
                 return null;
             }
 
@@ -59,26 +69,33 @@ public class ThemeLoader {
             Theme theme = new ConfigurableTheme(name, displayName, colors);
             themeCache.put(name, theme);
             return theme;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             ConsoleLogService.getInstance().error("Failed to load theme: " + name + " - " + e.getMessage());
             return null;
         }
     }
 
-    private static Map<String, Color> parseColors(JsonObject json) {
+    private static Map<String, Color> parseColors(JsonObject json)
+    {
         Map<String, Color> colors = new HashMap<>();
 
-        for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+        for (Map.Entry<String, JsonElement> entry : json.entrySet())
+        {
             String key = entry.getKey();
-            if ("name".equals(key) || "displayName".equals(key)) {
+            if ("name".equals(key) || "displayName".equals(key))
+            {
                 continue;
             }
 
             JsonElement value = entry.getValue();
-            if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isString()) {
+            if (value.isJsonPrimitive() && value.getAsJsonPrimitive().isString())
+            {
                 String colorStr = value.getAsString();
                 Color color = parseColor(colorStr);
-                if (color != null) {
+                if (color != null)
+                {
                     colors.put(key, color);
                 }
             }
@@ -87,26 +104,35 @@ public class ThemeLoader {
         return colors;
     }
 
-    private static Color parseColor(String colorStr) {
-        if (colorStr == null || colorStr.isEmpty()) {
+    private static Color parseColor(String colorStr)
+    {
+        if (colorStr == null || colorStr.isEmpty())
+        {
             return null;
         }
 
-        try {
-            if (colorStr.startsWith("#")) {
+        try
+        {
+            if (colorStr.startsWith("#"))
+            {
                 colorStr = colorStr.substring(1);
-            } else if (colorStr.startsWith("0x") || colorStr.startsWith("0X")) {
+            }
+            else if (colorStr.startsWith("0x") || colorStr.startsWith("0X"))
+            {
                 colorStr = colorStr.substring(2);
             }
 
             int rgb = Integer.parseInt(colorStr, 16);
             return new Color(rgb);
-        } catch (NumberFormatException e) {
+        }
+        catch (NumberFormatException e)
+        {
             return null;
         }
     }
 
-    public static void clearCache() {
+    public static void clearCache()
+    {
         themeCache.clear();
     }
 }

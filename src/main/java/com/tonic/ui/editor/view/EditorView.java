@@ -5,7 +5,8 @@ package com.tonic.ui.editor.view;
  * current polymorphically instead of casting per concrete type. Implementations are all {@code JPanel}s. Most views
  * only implement a subset; {@link AbstractEditorView} supplies sensible no-op/fallback defaults for the rest.
  */
-public interface EditorView {
+public interface EditorView
+{
 
     /** (Re)build the view's content; typically a no-op once already loaded. */
     void refresh();

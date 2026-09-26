@@ -10,11 +10,13 @@ import java.util.Map;
 /**
  * Tokenizer for JStudio script language.
  */
-public class ScriptLexer {
+public class ScriptLexer
+{
 
     private static final Map<String, ScriptToken.Type> KEYWORDS = new HashMap<>();
 
-    static {
+    static
+    {
         KEYWORDS.put("let", ScriptToken.Type.LET);
         KEYWORDS.put("const", ScriptToken.Type.CONST);
         KEYWORDS.put("if", ScriptToken.Type.IF);
@@ -48,12 +50,15 @@ public class ScriptLexer {
     @Getter
     private final List<String> errors = new ArrayList<>();
 
-    public ScriptLexer(String source) {
+    public ScriptLexer(String source)
+    {
         this.source = source != null ? source : "";
     }
 
-    public List<ScriptToken> tokenize() {
-        while (!isAtEnd()) {
+    public List<ScriptToken> tokenize()
+    {
+        while (!isAtEnd())
+        {
             start = current;
             scanToken();
         }
@@ -62,64 +67,112 @@ public class ScriptLexer {
         return tokens;
     }
 
-    private void scanToken() {
+    private void scanToken()
+    {
         char c = advance();
 
-        switch (c) {
-            case '(': addToken(ScriptToken.Type.LPAREN); break;
-            case ')': addToken(ScriptToken.Type.RPAREN); break;
-            case '{': addToken(ScriptToken.Type.LBRACE); break;
-            case '}': addToken(ScriptToken.Type.RBRACE); break;
-            case '[': addToken(ScriptToken.Type.LBRACKET); break;
-            case ']': addToken(ScriptToken.Type.RBRACKET); break;
-            case ',': addToken(ScriptToken.Type.COMMA); break;
-            case ';': addToken(ScriptToken.Type.SEMICOLON); break;
-            case '.': addToken(ScriptToken.Type.DOT); break;
+        switch (c)
+        {
+            case '(':
+                addToken(ScriptToken.Type.LPAREN);
+                break;
+            case ')':
+                addToken(ScriptToken.Type.RPAREN);
+                break;
+            case '{':
+                addToken(ScriptToken.Type.LBRACE);
+                break;
+            case '}':
+                addToken(ScriptToken.Type.RBRACE);
+                break;
+            case '[':
+                addToken(ScriptToken.Type.LBRACKET);
+                break;
+            case ']':
+                addToken(ScriptToken.Type.RBRACKET);
+                break;
+            case ',':
+                addToken(ScriptToken.Type.COMMA);
+                break;
+            case ';':
+                addToken(ScriptToken.Type.SEMICOLON);
+                break;
+            case '.':
+                addToken(ScriptToken.Type.DOT);
+                break;
             case '+':
-                if (match('+')) {
+                if (match('+'))
+                {
                     addToken(ScriptToken.Type.PLUS_PLUS);
-                } else if (match('=')) {
+                }
+                else if (match('='))
+                {
                     addToken(ScriptToken.Type.PLUS_EQUALS);
-                } else {
+                }
+                else
+                {
                     addToken(ScriptToken.Type.PLUS);
                 }
                 break;
             case '-':
-                if (match('-')) {
+                if (match('-'))
+                {
                     addToken(ScriptToken.Type.MINUS_MINUS);
-                } else if (match('=')) {
+                }
+                else if (match('='))
+                {
                     addToken(ScriptToken.Type.MINUS_EQUALS);
-                } else {
+                }
+                else
+                {
                     addToken(ScriptToken.Type.MINUS);
                 }
                 break;
             case '*':
                 addToken(match('=') ? ScriptToken.Type.STAR_EQUALS : ScriptToken.Type.STAR);
                 break;
-            case '%': addToken(ScriptToken.Type.PERCENT); break;
-            case ':': addToken(ScriptToken.Type.COLON); break;
-            case '?': addToken(ScriptToken.Type.QUESTION); break;
+            case '%':
+                addToken(ScriptToken.Type.PERCENT);
+                break;
+            case ':':
+                addToken(ScriptToken.Type.COLON);
+                break;
+            case '?':
+                addToken(ScriptToken.Type.QUESTION);
+                break;
 
             case '/':
-                if (match('/')) {
+                if (match('/'))
+                {
                     // Single-line comment
                     while (peek() != '\n' && !isAtEnd()) advance();
-                } else if (match('*')) {
+                }
+                else if (match('*'))
+                {
                     // Multi-line comment
                     blockComment();
-                } else if (match('=')) {
+                }
+                else if (match('='))
+                {
                     addToken(ScriptToken.Type.SLASH_EQUALS);
-                } else {
+                }
+                else
+                {
                     addToken(ScriptToken.Type.SLASH);
                 }
                 break;
 
             case '=':
-                if (match('>')) {
+                if (match('>'))
+                {
                     addToken(ScriptToken.Type.ARROW);
-                } else if (match('=')) {
+                }
+                else if (match('='))
+                {
                     addToken(ScriptToken.Type.EQUALS_EQUALS);
-                } else {
+                }
+                else
+                {
                     addToken(ScriptToken.Type.EQUALS);
                 }
                 break;
@@ -137,17 +190,23 @@ public class ScriptLexer {
                 break;
 
             case '&':
-                if (match('&')) {
+                if (match('&'))
+                {
                     addToken(ScriptToken.Type.AND);
-                } else {
+                }
+                else
+                {
                     error("Unexpected character '&'. Did you mean '&&'?");
                 }
                 break;
 
             case '|':
-                if (match('|')) {
+                if (match('|'))
+                {
                     addToken(ScriptToken.Type.OR);
-                } else {
+                }
+                else
+                {
                     error("Unexpected character '|'. Did you mean '||'?");
                 }
                 break;
@@ -164,34 +223,51 @@ public class ScriptLexer {
                 break;
 
             // Strings
-            case '"': string('"'); break;
-            case '\'': string('\''); break;
+            case '"':
+                string('"');
+                break;
+            case '\'':
+                string('\'');
+                break;
 
             default:
-                if (isDigit(c)) {
+                if (isDigit(c))
+                {
                     number();
-                } else if (isAlpha(c)) {
+                }
+                else if (isAlpha(c))
+                {
                     identifier();
-                } else {
+                }
+                else
+                {
                     error("Unexpected character '" + c + "'");
                 }
                 break;
         }
     }
 
-    private void blockComment() {
+    private void blockComment()
+    {
         int nesting = 1;
-        while (nesting > 0 && !isAtEnd()) {
-            if (peek() == '/' && peekNext() == '*') {
+        while (nesting > 0 && !isAtEnd())
+        {
+            if (peek() == '/' && peekNext() == '*')
+            {
                 advance();
                 advance();
                 nesting++;
-            } else if (peek() == '*' && peekNext() == '/') {
+            }
+            else if (peek() == '*' && peekNext() == '/')
+            {
                 advance();
                 advance();
                 nesting--;
-            } else {
-                if (peek() == '\n') {
+            }
+            else
+            {
+                if (peek() == '\n')
+                {
                     line++;
                     column = 0;
                 }
@@ -200,34 +276,56 @@ public class ScriptLexer {
         }
     }
 
-    private void string(char quote) {
+    private void string(char quote)
+    {
         int startLine = line;
         int startCol = column;
         StringBuilder sb = new StringBuilder();
 
-        while (peek() != quote && !isAtEnd()) {
-            if (peek() == '\n') {
+        while (peek() != quote && !isAtEnd())
+        {
+            if (peek() == '\n')
+            {
                 line++;
                 column = 0;
             }
-            if (peek() == '\\') {
+            if (peek() == '\\')
+            {
                 advance();
                 char escaped = advance();
-                switch (escaped) {
-                    case 'n': sb.append('\n'); break;
-                    case 't': sb.append('\t'); break;
-                    case 'r': sb.append('\r'); break;
-                    case '\\': sb.append('\\'); break;
-                    case '"': sb.append('"'); break;
-                    case '\'': sb.append('\''); break;
-                    default: sb.append(escaped); break;
+                switch (escaped)
+                {
+                    case 'n':
+                        sb.append('\n');
+                        break;
+                    case 't':
+                        sb.append('\t');
+                        break;
+                    case 'r':
+                        sb.append('\r');
+                        break;
+                    case '\\':
+                        sb.append('\\');
+                        break;
+                    case '"':
+                        sb.append('"');
+                        break;
+                    case '\'':
+                        sb.append('\'');
+                        break;
+                    default:
+                        sb.append(escaped);
+                        break;
                 }
-            } else {
+            }
+            else
+            {
                 sb.append(advance());
             }
         }
 
-        if (isAtEnd()) {
+        if (isAtEnd())
+        {
             error("Unterminated string starting at " + startLine + ":" + startCol);
             return;
         }
@@ -236,17 +334,20 @@ public class ScriptLexer {
         tokens.add(new ScriptToken(ScriptToken.Type.STRING, sb.toString(), startLine, startCol));
     }
 
-    private void number() {
+    private void number()
+    {
         while (isDigit(peek())) advance();
 
         // Decimal
-        if (peek() == '.' && isDigit(peekNext())) {
+        if (peek() == '.' && isDigit(peekNext()))
+        {
             advance(); // Consume '.'
             while (isDigit(peek())) advance();
         }
 
         // Exponent
-        if (peek() == 'e' || peek() == 'E') {
+        if (peek() == 'e' || peek() == 'E')
+        {
             advance();
             if (peek() == '+' || peek() == '-') advance();
             while (isDigit(peek())) advance();
@@ -255,7 +356,8 @@ public class ScriptLexer {
         addToken(ScriptToken.Type.NUMBER);
     }
 
-    private void identifier() {
+    private void identifier()
+    {
         while (isAlphaNumeric(peek())) advance();
 
         String text = source.substring(start, current);
@@ -263,14 +365,16 @@ public class ScriptLexer {
         addToken(type);
     }
 
-    private char advance() {
+    private char advance()
+    {
         char c = source.charAt(current);
         current++;
         column++;
         return c;
     }
 
-    private boolean match(char expected) {
+    private boolean match(char expected)
+    {
         if (isAtEnd()) return false;
         if (source.charAt(current) != expected) return false;
         current++;
@@ -278,40 +382,48 @@ public class ScriptLexer {
         return true;
     }
 
-    private char peek() {
+    private char peek()
+    {
         if (isAtEnd()) return '\0';
         return source.charAt(current);
     }
 
-    private char peekNext() {
+    private char peekNext()
+    {
         if (current + 1 >= source.length()) return '\0';
         return source.charAt(current + 1);
     }
 
-    private boolean isAtEnd() {
+    private boolean isAtEnd()
+    {
         return current >= source.length();
     }
 
-    private boolean isDigit(char c) {
+    private boolean isDigit(char c)
+    {
         return c >= '0' && c <= '9';
     }
 
-    private boolean isAlpha(char c) {
+    private boolean isAlpha(char c)
+    {
         return (c >= 'a' && c <= 'z') ||
-               (c >= 'A' && c <= 'Z') ||
-               c == '_' || c == '$';
+                (c >= 'A' && c <= 'Z') ||
+                c == '_' || c == '$';
     }
 
-    private boolean isAlphaNumeric(char c) {
+    private boolean isAlphaNumeric(char c)
+    {
         return isAlpha(c) || isDigit(c);
     }
 
-    private void addToken(ScriptToken.Type type) {
+    private void addToken(ScriptToken.Type type)
+    {
         String text = source.substring(start, current);
         tokens.add(new ScriptToken(type, text, line, column - text.length()));
     }
 
-    private void error(String message) {
+    private void error(String message)
+    {
         errors.add("Line " + line + ", column " + column + ": " + message);
         tokens.add(new ScriptToken(ScriptToken.Type.ERROR, message, line, column));
     }

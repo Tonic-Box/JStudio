@@ -16,7 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ControlFlowView extends BaseGraphView {
+public class ControlFlowView extends BaseGraphView
+{
 
     private final CFGBuilder cfgBuilder;
 
@@ -26,7 +27,8 @@ public class ControlFlowView extends BaseGraphView {
     private List<CFGBlock> currentBlocks;
     private boolean showIR = false;
 
-    public ControlFlowView(ClassEntryModel classEntry) {
+    public ControlFlowView(ClassEntryModel classEntry)
+    {
         super(classEntry);
         this.cfgBuilder = new CFGBuilder();
         hideMethodFilter();
@@ -34,7 +36,8 @@ public class ControlFlowView extends BaseGraphView {
     }
 
     @Override
-    protected void createAdditionalToolbarItems() {
+    protected void createAdditionalToolbarItems()
+    {
         toolbar.add(new JLabel(" Method: "));
         cfgMethodSelector = new FilterableComboBox<>(m -> m.getName() + m.getMethodEntry().getDesc());
         cfgMethodSelector.setFont(JStudioTheme.getCodeFont(11));
@@ -48,9 +51,11 @@ public class ControlFlowView extends BaseGraphView {
         ButtonGroup modeGroup = new ButtonGroup();
         JToggleButton bytecodeToggle = new JToggleButton("Bytecode", true);
         bytecodeToggle.setFont(JStudioTheme.getCodeFont(11));
-        bytecodeToggle.addActionListener(e -> {
+        bytecodeToggle.addActionListener(e ->
+        {
             showIR = false;
-            if (currentBlocks != null) {
+            if (currentBlocks != null)
+            {
                 rebuildGraphInternal();
             }
         });
@@ -59,9 +64,11 @@ public class ControlFlowView extends BaseGraphView {
 
         JToggleButton irToggle = new JToggleButton("IR");
         irToggle.setFont(JStudioTheme.getCodeFont(11));
-        irToggle.addActionListener(e -> {
+        irToggle.addActionListener(e ->
+        {
             showIR = true;
-            if (currentBlocks != null) {
+            if (currentBlocks != null)
+            {
                 rebuildGraphInternal();
             }
         });
@@ -71,20 +78,25 @@ public class ControlFlowView extends BaseGraphView {
         toolbar.addSeparator();
     }
 
-    private void populateCFGMethodSelector() {
+    private void populateCFGMethodSelector()
+    {
         List<MethodEntryModel> methods = new ArrayList<>();
-        for (MethodEntryModel method : classEntry.getMethods()) {
-            if (method.getMethodEntry().getCodeAttribute() != null) {
+        for (MethodEntryModel method : classEntry.getMethods())
+        {
+            if (method.getMethodEntry().getCodeAttribute() != null)
+            {
                 methods.add(method);
             }
         }
         cfgMethodSelector.setAllItems(methods);
     }
 
-    private void onCFGMethodSelected() {
+    private void onCFGMethodSelected()
+    {
         if (cfgMethodSelector.isFiltering()) return;
         Object selected = cfgMethodSelector.getSelectedItem();
-        if (!(selected instanceof MethodEntryModel)) {
+        if (!(selected instanceof MethodEntryModel))
+        {
             return;
         }
         currentMethod = (MethodEntryModel) selected;
@@ -93,33 +105,39 @@ public class ControlFlowView extends BaseGraphView {
     }
 
     @Override
-    protected void prepareGraphData() {
+    protected void prepareGraphData()
+    {
         currentBlocks = null;
-        if (currentMethod != null) {
+        if (currentMethod != null)
+        {
             currentBlocks = cfgBuilder.buildCFG(currentMethod.getMethodEntry());
         }
     }
 
     @Override
-    protected void rebuildGraph() {
+    protected void rebuildGraph()
+    {
         rebuildGraphInternal();
     }
 
-    private void rebuildGraphInternal() {
+    private void rebuildGraphInternal()
+    {
         clearGraph();
 
-        if (currentBlocks == null || currentBlocks.isEmpty()) {
+        if (currentBlocks == null || currentBlocks.isEmpty())
+        {
             return;
         }
 
         graph.getModel().beginUpdate();
-        try {
+        try
+        {
             Map<CFGBlock, Object> cellMap = new HashMap<>();
             Object parent = graph.getDefaultParent();
 
-            for (CFGBlock block : currentBlocks) {
-                CFGBlockVertex vertex = new CFGBlockVertex(block, currentMethod.getMethodEntry(),
-                        showIR, classEntry.getClassFile().getConstPool());
+            for (CFGBlock block : currentBlocks)
+            {
+                CFGBlockVertex vertex = new CFGBlockVertex(block, currentMethod.getMethodEntry(), showIR, classEntry.getClassFile().getConstPool());
 
                 String style = getBlockStyle(block);
                 Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 60, style);
@@ -127,11 +145,14 @@ public class ControlFlowView extends BaseGraphView {
                 cellMap.put(block, cell);
             }
 
-            for (CFGBlock block : currentBlocks) {
+            for (CFGBlock block : currentBlocks)
+            {
                 Object source = cellMap.get(block);
-                for (CFGEdge edge : block.getOutEdges()) {
+                for (CFGEdge edge : block.getOutEdges())
+                {
                     Object target = cellMap.get(edge.getTarget());
-                    if (target != null) {
+                    if (target != null)
+                    {
                         String edgeStyle = "strokeColor=" + edge.getType().getColor();
                         graph.insertEdge(parent, null, null, source, target, edgeStyle);
                     }
@@ -139,26 +160,35 @@ public class ControlFlowView extends BaseGraphView {
             }
 
             applyHierarchicalLayout();
-        } finally {
+        }
+        finally
+        {
             graph.getModel().endUpdate();
         }
     }
 
-    private String getBlockStyle(CFGBlock block) {
-        if (block.getStartOffset() == 0) {
+    private String getBlockStyle(CFGBlock block)
+    {
+        if (block.getStartOffset() == 0)
+        {
             return "ENTRY";
-        } else if (block.isExceptionHandler()) {
+        }
+        else if (block.isExceptionHandler())
+        {
             return "HANDLER";
         }
         return "BLOCK";
     }
 
     @Override
-    protected void handleDoubleClick(MouseEvent e) {
+    protected void handleDoubleClick(MouseEvent e)
+    {
         Object cell = graphComponent.getCellAt(e.getX(), e.getY());
-        if (cell != null) {
+        if (cell != null)
+        {
             Object value = graph.getModel().getValue(cell);
-            if (value instanceof CFGBlockVertex) {
+            if (value instanceof CFGBlockVertex)
+            {
                 CFGBlockVertex vertex = (CFGBlockVertex) value;
                 EventBus.getInstance().post(new CFGBlockSelectedEvent(vertex));
             }
@@ -166,24 +196,30 @@ public class ControlFlowView extends BaseGraphView {
     }
 
     @Override
-    protected String generateDOT() {
-        if (currentBlocks == null || currentBlocks.isEmpty()) {
+    protected String generateDOT()
+    {
+        if (currentBlocks == null || currentBlocks.isEmpty())
+        {
             return "// No CFG data available\n// Select a method to build the graph";
         }
 
         String methodName = currentMethod != null
-            ? currentMethod.getName() + currentMethod.getMethodEntry().getDesc()
-            : null;
+                ? currentMethod.getName() + currentMethod.getMethodEntry().getDesc()
+                : null;
 
         CFGDOTExporter exporter = new CFGDOTExporter();
         return exporter.export(currentBlocks, methodName);
     }
 
     @Override
-    public void refresh() {
-        if (!loaded && cfgMethodSelector.getItemCount() > 0 && currentMethod == null) {
+    public void refresh()
+    {
+        if (!loaded && cfgMethodSelector.getItemCount() > 0 && currentMethod == null)
+        {
             cfgMethodSelector.setSelectedIndex(0);
-        } else {
+        }
+        else
+        {
             super.refresh();
         }
     }

@@ -10,7 +10,8 @@ import java.util.List;
  * APPLIES the script's transforms to the loaded project (it mutates bytecode) and streams its console output to the
  * bottom Script Console tab. Returns plain DTOs so callers need no engine dependency.
  */
-public interface ScriptApi {
+public interface ScriptApi
+{
 
     /**
      * Saves (or overwrites, when the name already exists) a user script and opens the Script Editor to it. {@code
@@ -30,17 +31,18 @@ public interface ScriptApi {
      * the narrower scopes), APPLYING its transforms. Streams output to the Script Console tab; returns the captured
      * output + modification count.
      */
-    RunResult run(String name, String content, String mode, String scope,
-                  String className, String methodName, String methodDescriptor);
+    RunResult run(String name, String content, String mode, String scope, String className, String methodName, String methodDescriptor);
 
     /** Metadata for a saved script. */
     @Getter
-    final class ScriptInfo {
+    final class ScriptInfo
+    {
         private final String name;
         private final String mode;
         private final String description;
 
-        public ScriptInfo(String name, String mode, String description) {
+        public ScriptInfo(String name, String mode, String description)
+        {
             this.name = name;
             this.mode = mode;
             this.description = description;
@@ -49,12 +51,14 @@ public interface ScriptApi {
 
     /** The outcome of a run: total modifications applied, the captured console output, and whether it errored. */
     @Getter
-    final class RunResult {
+    final class RunResult
+    {
         private final int modifications;
         private final String output;
         private final boolean error;
 
-        public RunResult(int modifications, String output, boolean error) {
+        public RunResult(int modifications, String output, boolean error)
+        {
             this.modifications = modifications;
             this.output = output;
             this.error = error;

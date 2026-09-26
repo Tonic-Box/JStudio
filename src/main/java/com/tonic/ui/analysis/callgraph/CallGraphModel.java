@@ -8,7 +8,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CallGraphModel {
+public class CallGraphModel
+{
 
     @Getter
     private CallGraph callGraph;
@@ -18,43 +19,53 @@ public class CallGraphModel {
     private int maxDepth = 3;
     private final Map<Object, MethodReference> cellToMethodMap = new HashMap<>();
 
-    public void setCallGraph(CallGraph callGraph) {
+    public void setCallGraph(CallGraph callGraph)
+    {
         this.callGraph = callGraph;
     }
 
-    public void setFocusMethod(MethodReference focusMethod) {
+    public void setFocusMethod(MethodReference focusMethod)
+    {
         this.focusMethod = focusMethod;
     }
 
-    public void setMaxDepth(int maxDepth) {
+    public void setMaxDepth(int maxDepth)
+    {
         this.maxDepth = maxDepth;
     }
 
-    public void clearCellMap() {
+    public void clearCellMap()
+    {
         cellToMethodMap.clear();
     }
 
-    public void mapCellToMethod(Object cell, MethodReference method) {
+    public void mapCellToMethod(Object cell, MethodReference method)
+    {
         cellToMethodMap.put(cell, method);
     }
 
-    public MethodReference getMethodForCell(Object cell) {
+    public MethodReference getMethodForCell(Object cell)
+    {
         return cellToMethodMap.get(cell);
     }
 
-    public boolean hasCellMapping(Object cell) {
+    public boolean hasCellMapping(Object cell)
+    {
         return cellToMethodMap.containsKey(cell);
     }
 
-    public Map<Object, MethodReference> getCellToMethodMap() {
+    public Map<Object, MethodReference> getCellToMethodMap()
+    {
         return Collections.unmodifiableMap(cellToMethodMap);
     }
 
-    public boolean hasCallGraph() {
+    public boolean hasCallGraph()
+    {
         return callGraph != null;
     }
 
-    public boolean hasFocusMethod() {
+    public boolean hasFocusMethod()
+    {
         return focusMethod != null;
     }
 }

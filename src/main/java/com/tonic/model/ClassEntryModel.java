@@ -17,7 +17,8 @@ import java.util.Map;
 import java.util.NavigableMap;
 
 @Getter
-public class ClassEntryModel {
+public class ClassEntryModel
+{
 
     private ClassFile classFile;
     private final Map<String, MethodEntryModel> methods = new HashMap<>();
@@ -47,51 +48,67 @@ public class ClassEntryModel {
     private Map<String, DecompileResult.MemberSpan> fieldSpans;
     private DecompileResult.MemberSpan classSpan;
 
-    public ClassEntryModel(ClassFile classFile) {
+    public ClassEntryModel(ClassFile classFile)
+    {
         this.classFile = classFile;
         buildDisplayData();
         buildMemberModels();
     }
 
-    private void buildDisplayData() {
+    private void buildDisplayData()
+    {
         String className = classFile.getClassName();
         int lastSlash = className.lastIndexOf('/');
-        if (lastSlash >= 0) {
+        if (lastSlash >= 0)
+        {
             this.packageName = className.substring(0, lastSlash).replace('/', '.');
             this.simpleName = className.substring(lastSlash + 1);
-        } else {
+        }
+        else
+        {
             this.packageName = "";
             this.simpleName = className;
         }
         this.displayName = simpleName;
 
         int access = classFile.getAccess();
-        if (AccessFlags.isInterface(access)) {
+        if (AccessFlags.isInterface(access))
+        {
             this.iconKey = "interface";
-        } else if (AccessFlags.isEnum(access)) {
+        }
+        else if (AccessFlags.isEnum(access))
+        {
             this.iconKey = "enum";
-        } else if (AccessFlags.isAnnotation(access)) {
+        }
+        else if (AccessFlags.isAnnotation(access))
+        {
             this.iconKey = "annotation";
-        } else {
+        }
+        else
+        {
             this.iconKey = "class";
         }
     }
 
-    public void refreshDisplayData() {
+    public void refreshDisplayData()
+    {
         buildDisplayData();
         invalidateDecompilationCache();
     }
 
-    private void buildMemberModels() {
+    private void buildMemberModels()
+    {
         // Build method models
-        for (MethodEntry method : classFile.getMethods()) {
+        for (MethodEntry method : classFile.getMethods())
+        {
             String key = method.getName() + method.getDesc();
             MethodEntryModel model = new MethodEntryModel(method, this);
             methods.put(key, model);
         }
 
         // Build field models
-        for (FieldEntry field : classFile.getFields()) {
+        for (FieldEntry field : classFile.getFields())
+        {
             String key = field.getName() + field.getDesc();
             FieldEntryModel model = new FieldEntryModel(field, this);
             fields.put(key, model);
@@ -100,22 +117,28 @@ public class ClassEntryModel {
 
     // ClassFile delegated methods
 
-    public String getClassName() {
+    public String getClassName()
+    {
         return classFile.getClassName();
     }
 
-    public String getSuperClassName() {
+    public String getSuperClassName()
+    {
         return classFile.getSuperClassName();
     }
 
-    public List<String> getInterfaceNames() {
+    public List<String> getInterfaceNames()
+    {
         // Resolve interface indices to names from constant pool
         List<String> names = new ArrayList<>();
-        for (Integer ifaceIndex : classFile.getInterfaces()) {
+        for (Integer ifaceIndex : classFile.getInterfaces())
+        {
             ClassRefItem classRef = (ClassRefItem) classFile.getConstPool().getItem(ifaceIndex);
-            if (classRef != null) {
+            if (classRef != null)
+            {
                 Utf8Item nameItem = (Utf8Item) classFile.getConstPool().getItem(classRef.getValue());
-                if (nameItem != null) {
+                if (nameItem != null)
+                {
                     names.add(nameItem.getValue());
                 }
             }
@@ -123,48 +146,60 @@ public class ClassEntryModel {
         return names;
     }
 
-    public int getAccessFlags() {
+    public int getAccessFlags()
+    {
         return classFile.getAccess();
     }
 
-    public boolean isInterface() {
+    public boolean isInterface()
+    {
         return AccessFlags.isInterface(classFile.getAccess());
     }
 
-    public boolean isEnum() {
+    public boolean isEnum()
+    {
         return AccessFlags.isEnum(classFile.getAccess());
     }
 
-    public boolean isAnnotation() {
+    public boolean isAnnotation()
+    {
         return AccessFlags.isAnnotation(classFile.getAccess());
     }
 
-    public boolean isAbstract() {
+    public boolean isAbstract()
+    {
         return AccessFlags.isAbstract(classFile.getAccess());
     }
 
-    public boolean isPublic() {
+    public boolean isPublic()
+    {
         return AccessFlags.isPublic(classFile.getAccess());
     }
 
-    public boolean isFinal() {
+    public boolean isFinal()
+    {
         return AccessFlags.isFinal(classFile.getAccess());
     }
 
     // Member access
 
-    public MethodEntryModel getMethod(String name, String descriptor) {
+    public MethodEntryModel getMethod(String name, String descriptor)
+    {
         return methods.get(name + descriptor);
     }
 
-    public List<MethodEntryModel> getMethods() {
+    public List<MethodEntryModel> getMethods()
+    {
         return new ArrayList<>(methods.values());
     }
 
-    public List<MethodEntryModel> getConstructors() {
+    public List<MethodEntryModel> getConstructors()
+    {
         List<MethodEntryModel> constructors = new ArrayList<>();
-        for (MethodEntryModel method : methods.values()) {
-            if (method.getName().equals("<init>")) {
+        for (MethodEntryModel method : methods.values())
+        {
+            if (method.getName().equals("<init>"))
+            {
                 constructors.add(method);
             }
         }
@@ -172,25 +207,30 @@ public class ClassEntryModel {
     }
 
     /** The {@code public static void main(String[])} entry point of this class, or null if it has none. */
-    public MethodEntryModel getMainMethod() {
+    public MethodEntryModel getMainMethod()
+    {
         MethodEntryModel main = methods.get("main([Ljava/lang/String;)V");
         return main != null && main.isPublic() && main.isStatic() ? main : null;
     }
 
     /** Whether this class has a runnable {@code public static void main(String[])} entry point. */
-    public boolean hasMainMethod() {
+    public boolean hasMainMethod()
+    {
         return getMainMethod() != null;
     }
 
-    public FieldEntryModel getField(String name, String descriptor) {
+    public FieldEntryModel getField(String name, String descriptor)
+    {
         return fields.get(name + descriptor);
     }
 
-    public List<FieldEntryModel> getFields() {
+    public List<FieldEntryModel> getFields()
+    {
         return new ArrayList<>(fields.values());
     }
 
-    public void setDecompilationCache(String decompilationCache) {
+    public void setDecompilationCache(String decompilationCache)
+    {
         this.decompilationCache = decompilationCache;
         this.decompilationTimestamp = System.currentTimeMillis();
         this.sourceLineMaps = null;
@@ -204,11 +244,8 @@ public class ClassEntryModel {
      * so PC navigation and declaration lenses can resolve exact source lines. All are invalidated with
      * the source.
      */
-    public void setDecompilationCache(String decompilationCache,
-                                      Map<String, NavigableMap<Integer, Integer>> sourceLineMaps,
-                                      Map<String, DecompileResult.MethodSpan> methodSpans,
-                                      Map<String, DecompileResult.MemberSpan> fieldSpans,
-                                      DecompileResult.MemberSpan classSpan) {
+    public void setDecompilationCache(String decompilationCache, Map<String, NavigableMap<Integer, Integer>> sourceLineMaps, Map<String, DecompileResult.MethodSpan> methodSpans, Map<String, DecompileResult.MemberSpan> fieldSpans, DecompileResult.MemberSpan classSpan)
+    {
         setDecompilationCache(decompilationCache);
         this.sourceLineMaps = sourceLineMaps;
         this.methodSpans = methodSpans;
@@ -216,7 +253,8 @@ public class ClassEntryModel {
         this.classSpan = classSpan;
     }
 
-    public void invalidateDecompilationCache() {
+    public void invalidateDecompilationCache()
+    {
         this.decompilationCache = null;
         this.decompilationTimestamp = 0;
         this.sourceLineMaps = null;
@@ -225,7 +263,8 @@ public class ClassEntryModel {
         this.classSpan = null;
     }
 
-    public void updateClassFile(ClassFile newClassFile) {
+    public void updateClassFile(ClassFile newClassFile)
+    {
         this.classFile = newClassFile;
         this.methods.clear();
         this.fields.clear();
@@ -236,12 +275,14 @@ public class ClassEntryModel {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return displayName;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(Object obj)
+    {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         ClassEntryModel other = (ClassEntryModel) obj;
@@ -249,7 +290,8 @@ public class ClassEntryModel {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return getClassName().hashCode();
     }
 }

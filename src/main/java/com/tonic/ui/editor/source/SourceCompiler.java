@@ -40,9 +40,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class SourceCompiler {
+public class SourceCompiler
+{
 
-    public CompilationResult compile(String source, ClassFile originalClass, ClassPool classPool) {
+    public CompilationResult compile(String source, ClassFile originalClass, ClassPool classPool)
+    {
         return compile(source, originalClass, classPool, null);
     }
 
@@ -52,8 +54,8 @@ public class SourceCompiler {
      * bytecode - so editing one method never perturbs the others. After lowering, the (re)compiled methods are
      * verified; a method that fails to verify fails the recompile rather than silently shipping invalid bytecode.
      */
-    public CompilationResult compile(String source, ClassFile originalClass, ClassPool classPool,
-                                     Set<String> changedMethods) {
+    public CompilationResult compile(String source, ClassFile originalClass, ClassPool classPool, Set<String> changedMethods)
+    {
         long startTime = System.currentTimeMillis();
         List<CompilationError> errors = new ArrayList<>();
 
@@ -61,23 +63,31 @@ public class SourceCompiler {
         JavaParser parser = JavaParser.withErrorListener(listener);
 
         CompilationUnit cu;
-        try {
+        try
+        {
             cu = parser.parse(source);
-        } catch (ParseException e) {
+        }
+        catch (ParseException e)
+        {
             collectParseErrors(listener, source, errors);
-            if (errors.isEmpty()) {
+            if (errors.isEmpty())
+            {
                 errors.add(createErrorFromException(e, source));
             }
             return CompilationResult.failure(errors, source, elapsed(startTime));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             collectParseErrors(listener, source, errors);
-            if (errors.isEmpty()) {
+            if (errors.isEmpty())
+            {
                 errors.add(CompilationError.error(1, 1, 0, 1, "Parse error: " + e.getMessage()));
             }
             return CompilationResult.failure(errors, source, elapsed(startTime));
         }
 
-        if (listener.hasErrors()) {
+        if (listener.hasErrors())
+        {
             collectParseErrors(listener, source, errors);
             return CompilationResult.failure(errors, source, elapsed(startTime));
         }
@@ -90,11 +100,13 @@ public class SourceCompiler {
         ClassFile working = workingCopy(originalClass);
         boolean swappedIn = swapInPool(classPool, originalClass, working);
         boolean committed = false;
-        try {
+        try
+        {
             List<CompilationError> methodWarnings = new ArrayList<>();
             ClassFile newClass = lowerToClassFile(cu, working, classPool, methodWarnings, changedMethods);
             List<CompilationError> verifyErrors = gateVerify(newClass, classPool, changedMethods, memberLines);
-            if (!verifyErrors.isEmpty()) {
+            if (!verifyErrors.isEmpty())
+            {
                 verifyErrors.addAll(methodWarnings);
                 return CompilationResult.failure(verifyErrors, source, elapsed(startTime));
             }
@@ -106,14 +118,21 @@ public class SourceCompiler {
                     .errors(methodWarnings)
                     .compilationTimeMs(elapsed(startTime))
                     .build();
-        } catch (LoweringException e) {
+        }
+        catch (LoweringException e)
+        {
             errors.add(CompilationError.error(1, 1, 0, 1, "Lowering error: " + e.getMessage()));
             return CompilationResult.failure(errors, source, elapsed(startTime));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             errors.add(CompilationError.error(1, 1, 0, 1, "Compilation error: " + e.getMessage()));
             return CompilationResult.failure(errors, source, elapsed(startTime));
-        } finally {
-            if (swappedIn && !committed) {
+        }
+        finally
+        {
+            if (swappedIn && !committed)
+            {
                 restoreInPool(classPool, working, originalClass);
             }
         }
@@ -124,17 +143,23 @@ public class SourceCompiler {
      * ClassFile) is untouched unless the recompile succeeds. Falls back to the original itself only if the
      * copy cannot be made (a write failure), preserving prior behavior in that rare case.
      */
-    private ClassFile workingCopy(ClassFile original) {
-        try {
+    private ClassFile workingCopy(ClassFile original)
+    {
+        try
+        {
             return new ClassFile(new java.io.ByteArrayInputStream(original.write()));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return original;
         }
     }
 
     /** Replaces {@code original} with {@code working} in the pool so in-progress resolution sees the copy. */
-    private boolean swapInPool(ClassPool pool, ClassFile original, ClassFile working) {
-        if (pool == null || working == original) {
+    private boolean swapInPool(ClassPool pool, ClassFile original, ClassFile working)
+    {
+        if (pool == null || working == original)
+        {
             return false;
         }
         pool.remove(original.getClassName());
@@ -143,46 +168,58 @@ public class SourceCompiler {
     }
 
     /** Restores {@code original} in the pool (failed recompile): drop the working copy, put the original back. */
-    private void restoreInPool(ClassPool pool, ClassFile working, ClassFile original) {
+    private void restoreInPool(ClassPool pool, ClassFile working, ClassFile original)
+    {
         pool.remove(working.getClassName());
         pool.put(original);
     }
 
-    public List<CompilationError> parseOnly(String source) {
+    public List<CompilationError> parseOnly(String source)
+    {
         List<CompilationError> errors = new ArrayList<>();
 
         ParseErrorListener.CollectingErrorListener listener = ParseErrorListener.collecting();
         JavaParser parser = JavaParser.withErrorListener(listener);
 
-        try {
+        try
+        {
             parser.parse(source);
-        } catch (ParseException e) {
+        }
+        catch (ParseException e)
+        {
             collectParseErrors(listener, source, errors);
-            if (errors.isEmpty()) {
+            if (errors.isEmpty())
+            {
                 errors.add(createErrorFromException(e, source));
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             collectParseErrors(listener, source, errors);
-            if (errors.isEmpty()) {
+            if (errors.isEmpty())
+            {
                 errors.add(CompilationError.error(1, 1, 0, 1, "Parse error: " + e.getMessage()));
             }
         }
 
-        if (listener.hasErrors()) {
+        if (listener.hasErrors())
+        {
             collectParseErrors(listener, source, errors);
         }
 
         return errors;
     }
 
-    private ClassFile lowerToClassFile(CompilationUnit cu, ClassFile original, ClassPool classPool,
-                                       List<CompilationError> warnings, Set<String> changedMethods) {
+    private ClassFile lowerToClassFile(CompilationUnit cu, ClassFile original, ClassPool classPool, List<CompilationError> warnings, Set<String> changedMethods)
+    {
         TypeDecl primaryType = cu.getPrimaryType();
-        if (primaryType == null) {
+        if (primaryType == null)
+        {
             throw new LoweringException("No type declaration found in source");
         }
 
-        if (!(primaryType instanceof ClassDecl)) {
+        if (!(primaryType instanceof ClassDecl))
+        {
             throw new LoweringException("Only class types are currently supported for recompilation");
         }
 
@@ -197,8 +234,10 @@ public class SourceCompiler {
 
         syncNewFields(classDecl, original, warnings);
 
-        for (MethodDecl methodDecl : classDecl.getMethods()) {
-            if (methodDecl.getBody() == null) {
+        for (MethodDecl methodDecl : classDecl.getMethods())
+        {
+            if (methodDecl.getBody() == null)
+            {
                 continue;
             }
 
@@ -209,40 +248,45 @@ public class SourceCompiler {
             // Method-scoped recompile: an existing method whose body did not change keeps its original bytecode,
             // so editing one method never re-lowers (and risks perturbing) the others.
             if (changedMethods != null && targetMethod != null
-                    && !changedMethods.contains(methodName + descriptor)) {
+                    && !changedMethods.contains(methodName + descriptor))
+            {
                 continue;
             }
             boolean isNew = targetMethod == null;
-            if (isNew) {
-                try {
-                    original.createNewMethodWithDescriptor(
-                        accessFromModifiers(methodDecl.getModifiers()), methodName, descriptor);
+            if (isNew)
+            {
+                try
+                {
+                    original.createNewMethodWithDescriptor(accessFromModifiers(methodDecl.getModifiers()), methodName, descriptor);
                     targetMethod = findMethod(original, methodName, descriptor);
-                } catch (Exception e) {
-                    warnings.add(CompilationError.warning(1, 1, 0, 1,
-                        "Could not add new method '" + methodName + descriptor + "': " + e.getMessage()));
+                }
+                catch (Exception e)
+                {
+                    warnings.add(CompilationError.warning(1, 1, 0, 1, "Could not add new method '" + methodName + descriptor + "': " + e.getMessage()));
                     continue;
                 }
             }
-            if (targetMethod == null) {
-                warnings.add(CompilationError.warning(1, 1, 0, 1,
-                    "Could not locate method '" + methodName + descriptor + "' after creating it."));
+            if (targetMethod == null)
+            {
+                warnings.add(CompilationError.warning(1, 1, 0, 1, "Could not locate method '" + methodName + descriptor + "' after creating it."));
                 continue;
             }
 
             // Per-method resilience: a method that cannot be lowered keeps its original bytecode (or,
             // for a newly added method, is reported) instead of aborting the whole-class recompile,
             // which would discard edits to every other, lowerable method.
-            try {
+            try
+            {
                 IRMethod irMethod = lowerer.lower(methodDecl, ownerClass);
                 ssa.lower(irMethod, targetMethod);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 String prefix = isNew
-                    ? "Could not compile new method '"
-                    : "Could not recompile method '";
+                        ? "Could not compile new method '"
+                        : "Could not recompile method '";
                 String suffix = isNew ? "': " : "' (kept original): ";
-                warnings.add(CompilationError.warning(lineOf(methodDecl.getLocation()), 1, 0, 1,
-                    prefix + methodName + descriptor + suffix + e.getMessage()));
+                warnings.add(CompilationError.warning(lineOf(methodDecl.getLocation()), 1, 0, 1, prefix + methodName + descriptor + suffix + e.getMessage()));
             }
         }
 
@@ -254,9 +298,12 @@ public class SourceCompiler {
 
         removeDeletedMethods(classDecl, original, typeResolver);
 
-        try {
+        try
+        {
             original.rebuild();
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             throw new LoweringException("Failed to rebuild class file: " + e.getMessage(), e);
         }
         return original;
@@ -270,48 +317,57 @@ public class SourceCompiler {
      * fails keeps its original bytecode (the {@code catch} below). The ASTLowerer maps the
      * {@code ConstructorDecl} body to {@code <init>}, synthesizing the implicit {@code super(...)} call.
      */
-    private void lowerConstructors(ClassDecl classDecl, ClassFile original, ASTLowerer lowerer, SSA ssa,
-                                   TypeResolver typeResolver, String ownerClass, Set<String> changedMethods,
-                                   List<CompilationError> warnings) {
-        for (ConstructorDecl ctorDecl : classDecl.getConstructors()) {
-            if (ctorDecl.getBody() == null) {
+    private void lowerConstructors(ClassDecl classDecl, ClassFile original, ASTLowerer lowerer, SSA ssa, TypeResolver typeResolver, String ownerClass, Set<String> changedMethods, List<CompilationError> warnings)
+    {
+        for (ConstructorDecl ctorDecl : classDecl.getConstructors())
+        {
+            if (ctorDecl.getBody() == null)
+            {
                 continue;
             }
             String descriptor = ctorDescriptor(ctorDecl, typeResolver);
             String key = "<init>" + descriptor;
-            if (changedMethods != null && !changedMethods.contains(key)) {
+            if (changedMethods != null && !changedMethods.contains(key))
+            {
                 continue;
             }
             MethodEntry targetMethod = findMethod(original, "<init>", descriptor);
-            if (targetMethod == null) {
+            if (targetMethod == null)
+            {
                 continue;
             }
-            try {
+            try
+            {
                 IRMethod irMethod = lowerer.lower(toInitMethodDecl(ctorDecl), ownerClass);
                 ssa.lower(irMethod, targetMethod);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 String detail = e.getMessage() != null ? e.getMessage()
-                    : e.getClass().getSimpleName()
+                        : e.getClass().getSimpleName()
                         + (e.getStackTrace().length > 0 ? " at " + e.getStackTrace()[0] : "");
-                warnings.add(CompilationError.warning(lineOf(ctorDecl.getLocation()), 1, 0, 1,
-                    "Could not recompile constructor '" + key + "' (kept original): " + detail));
+                warnings.add(CompilationError.warning(lineOf(ctorDecl.getLocation()), 1, 0, 1, "Could not recompile constructor '" + key + "' (kept original): " + detail));
             }
         }
     }
 
     /** A constructor's JVM descriptor: its parameters (resolved via {@code resolver}) and void return. */
-    private String ctorDescriptor(ConstructorDecl ctorDecl, TypeResolver resolver) {
+    private String ctorDescriptor(ConstructorDecl ctorDecl, TypeResolver resolver)
+    {
         StringBuilder sb = new StringBuilder("(");
-        for (var param : ctorDecl.getParameters()) {
+        for (var param : ctorDecl.getParameters())
+        {
             sb.append(typeDescriptor(param.getType(), resolver));
         }
         return sb.append(")V").toString();
     }
 
     /** Wraps a ConstructorDecl as an {@code <init>} MethodDecl so the method lowering path can lower it. */
-    private MethodDecl toInitMethodDecl(ConstructorDecl ctorDecl) {
+    private MethodDecl toInitMethodDecl(ConstructorDecl ctorDecl)
+    {
         MethodDecl methodDecl = new MethodDecl("<init>", VoidSourceType.INSTANCE).withModifiers(ctorDecl.getModifiers());
-        for (var param : ctorDecl.getParameters()) {
+        for (var param : ctorDecl.getParameters())
+        {
             methodDecl.addParameter(param);
         }
         return methodDecl.withBody(ctorDecl.getBody());
@@ -327,46 +383,52 @@ public class SourceCompiler {
      * synthetics — from freshly written or edited code — are generated. Generation is best-effort:
      * failures are reported as warnings rather than aborting the recompile.
      */
-    private void emitPendingSynthetics(ASTLowerer lowerer, SSA ssa, ClassFile original,
-                                       String ownerClass, List<CompilationError> warnings) {
+    private void emitPendingSynthetics(ASTLowerer lowerer, SSA ssa, ClassFile original, String ownerClass, List<CompilationError> warnings)
+    {
         int guard = 0;
-        while (lowerer.hasPendingSynthetics() && guard++ < 1000) {
-            for (SyntheticLambdaMethod synthetic : lowerer.drainPendingLambdas()) {
-                if (findMethod(original, synthetic.getName(), synthetic.getDescriptor()) != null) {
+        while (lowerer.hasPendingSynthetics() && guard++ < 1000)
+        {
+            for (SyntheticLambdaMethod synthetic : lowerer.drainPendingLambdas())
+            {
+                if (findMethod(original, synthetic.getName(), synthetic.getDescriptor()) != null)
+                {
                     continue;
                 }
-                if (!synthetic.isStatic()) {
-                    warnings.add(CompilationError.warning(1, 1, 0, 1,
-                        "Lambda '" + synthetic.getName() + "' captures 'this' and could not be generated; "
-                            + "its call site may not resolve."));
+                if (!synthetic.isStatic())
+                {
+                    warnings.add(CompilationError.warning(1, 1, 0, 1, "Lambda '" + synthetic.getName() + "' captures 'this' and could not be generated; " + "its call site may not resolve."));
                     continue;
                 }
-                try {
-                    original.createNewMethodWithDescriptor(
-                        SYNTHETIC_METHOD_ACCESS, synthetic.getName(), synthetic.getDescriptor());
+                try
+                {
+                    original.createNewMethodWithDescriptor(SYNTHETIC_METHOD_ACCESS, synthetic.getName(), synthetic.getDescriptor());
                     MethodEntry entry = findMethod(original, synthetic.getName(), synthetic.getDescriptor());
                     IRMethod irMethod = lowerer.lowerSyntheticLambda(synthetic, ownerClass);
                     ssa.lower(irMethod, entry);
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     original.removeMethod(synthetic.getName(), synthetic.getDescriptor());
-                    warnings.add(CompilationError.warning(1, 1, 0, 1,
-                        "Could not generate lambda method '" + synthetic.getName() + "': " + e.getMessage()));
+                    warnings.add(CompilationError.warning(1, 1, 0, 1, "Could not generate lambda method '" + synthetic.getName() + "': " + e.getMessage()));
                 }
             }
-            for (SyntheticArrayConstructor constructor : lowerer.drainPendingArrayConstructors()) {
-                if (findMethod(original, constructor.getName(), constructor.getDescriptor()) != null) {
+            for (SyntheticArrayConstructor constructor : lowerer.drainPendingArrayConstructors())
+            {
+                if (findMethod(original, constructor.getName(), constructor.getDescriptor()) != null)
+                {
                     continue;
                 }
-                try {
-                    original.createNewMethodWithDescriptor(
-                        SYNTHETIC_METHOD_ACCESS, constructor.getName(), constructor.getDescriptor());
+                try
+                {
+                    original.createNewMethodWithDescriptor(SYNTHETIC_METHOD_ACCESS, constructor.getName(), constructor.getDescriptor());
                     MethodEntry entry = findMethod(original, constructor.getName(), constructor.getDescriptor());
                     IRMethod irMethod = lowerer.lowerSyntheticArrayConstructor(constructor, ownerClass);
                     ssa.lower(irMethod, entry);
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     original.removeMethod(constructor.getName(), constructor.getDescriptor());
-                    warnings.add(CompilationError.warning(1, 1, 0, 1,
-                        "Could not generate array constructor '" + constructor.getName() + "': " + e.getMessage()));
+                    warnings.add(CompilationError.warning(1, 1, 0, 1, "Could not generate array constructor '" + constructor.getName() + "': " + e.getMessage()));
                 }
             }
         }
@@ -378,39 +440,49 @@ public class SourceCompiler {
      * {@code access$} / {@code $deserializeLambda$} names) are never removed, since the decompiled
      * source represents them implicitly and removing them would break their call sites.
      */
-    private void removeDeletedMethods(ClassDecl classDecl, ClassFile original, TypeResolver typeResolver) {
+    private void removeDeletedMethods(ClassDecl classDecl, ClassFile original, TypeResolver typeResolver)
+    {
         Set<String> sourceMethods = new HashSet<>();
-        for (MethodDecl methodDecl : classDecl.getMethods()) {
-            if (methodDecl.getBody() == null) {
+        for (MethodDecl methodDecl : classDecl.getMethods())
+        {
+            if (methodDecl.getBody() == null)
+            {
                 continue;
             }
             sourceMethods.add(methodDecl.getName() + buildDescriptor(methodDecl, typeResolver));
         }
 
         List<MethodEntry> toRemove = new ArrayList<>();
-        for (MethodEntry method : original.getMethods()) {
+        for (MethodEntry method : original.getMethods())
+        {
             String name = method.getName();
-            if (name.equals("<init>") || name.equals("<clinit>")) {
+            if (name.equals("<init>") || name.equals("<clinit>"))
+            {
                 continue;
             }
-            if (isCompilerGenerated(name, method.getAccess())) {
+            if (isCompilerGenerated(name, method.getAccess()))
+            {
                 continue;
             }
-            if (!sourceMethods.contains(name + method.getDesc())) {
+            if (!sourceMethods.contains(name + method.getDesc()))
+            {
                 toRemove.add(method);
             }
         }
-        for (MethodEntry method : toRemove) {
+        for (MethodEntry method : toRemove)
+        {
             original.removeMethod(method.getName(), method.getDesc());
         }
     }
 
-    private boolean isCompilerGenerated(String name, int access) {
-        if ((access & 0x1000) != 0) {
+    private boolean isCompilerGenerated(String name, int access)
+    {
+        if ((access & 0x1000) != 0)
+        {
             return true;
         }
         return name.startsWith("lambda$") || name.startsWith("access$")
-            || name.equals("$deserializeLambda$");
+                || name.equals("$deserializeLambda$");
     }
 
     /**
@@ -418,18 +490,22 @@ public class SourceCompiler {
      * original class, so that newly declared fields exist (with their JVM default value) and
      * any references to them resolve. Existing fields are left untouched.
      */
-    private void syncNewFields(ClassDecl classDecl, ClassFile original, List<CompilationError> warnings) {
-        for (FieldDecl field : classDecl.getFields()) {
-            if (fieldExists(original, field.getName())) {
+    private void syncNewFields(ClassDecl classDecl, ClassFile original, List<CompilationError> warnings)
+    {
+        for (FieldDecl field : classDecl.getFields())
+        {
+            if (fieldExists(original, field.getName()))
+            {
                 continue;
             }
-            try {
+            try
+            {
                 String descriptor = field.getType().toIRType().getDescriptor();
-                original.createNewField(accessFromModifiers(field.getModifiers()),
-                    field.getName(), descriptor, new ArrayList<>());
-            } catch (Exception e) {
-                warnings.add(CompilationError.warning(1, 1, 0, 1,
-                    "Could not add new field '" + field.getName() + "': " + e.getMessage()));
+                original.createNewField(accessFromModifiers(field.getModifiers()), field.getName(), descriptor, new ArrayList<>());
+            }
+            catch (Exception e)
+            {
+                warnings.add(CompilationError.warning(1, 1, 0, 1, "Could not add new field '" + field.getName() + "': " + e.getMessage()));
             }
         }
     }
@@ -440,42 +516,47 @@ public class SourceCompiler {
      * initializers run first, then static initializer blocks in declaration order. Does nothing
      * when the source declares no static initialization.
      */
-    private void synthesizeStaticInitializer(ClassDecl classDecl, ClassFile original,
-                                             ASTLowerer lowerer, SSA ssa, String ownerClass,
-                                             List<CompilationError> warnings) {
+    private void synthesizeStaticInitializer(ClassDecl classDecl, ClassFile original, ASTLowerer lowerer, SSA ssa, String ownerClass, List<CompilationError> warnings)
+    {
         List<Statement> initStatements = new ArrayList<>();
-        for (FieldDecl field : classDecl.getFields()) {
+        for (FieldDecl field : classDecl.getFields())
+        {
             // A static field that the original class represents with a ConstantValue attribute (a compile-time
             // constant) is initialized by the class loader from the attribute - synthesizing a <clinit> putstatic for
             // it would fabricate a spurious static block on every round-trip, so skip it.
-            if (field.isStatic() && field.hasInitializer() && !hasConstantValue(original, field.getName())) {
+            if (field.isStatic() && field.hasInitializer() && !hasConstantValue(original, field.getName()))
+            {
                 VarRefExpr ref = new VarRefExpr(field.getName(), field.getType());
-                BinaryExpr assign = new BinaryExpr(
-                    BinaryOperator.ASSIGN, ref, field.getInitializer(), field.getType());
+                BinaryExpr assign = new BinaryExpr(BinaryOperator.ASSIGN, ref, field.getInitializer(), field.getType());
                 initStatements.add(new ExprStmt(assign));
             }
         }
-        for (BlockStmt block : classDecl.getStaticInitializers()) {
+        for (BlockStmt block : classDecl.getStaticInitializers())
+        {
             initStatements.addAll(block.getStatements());
         }
-        if (initStatements.isEmpty()) {
+        if (initStatements.isEmpty())
+        {
             return;
         }
 
-        try {
+        try
+        {
             MethodDecl clinit = new MethodDecl("<clinit>", VoidSourceType.INSTANCE)
-                .addModifier(Modifier.STATIC)
-                .withBody(new BlockStmt(initStatements));
+                    .addModifier(Modifier.STATIC)
+                    .withBody(new BlockStmt(initStatements));
             MethodEntry entry = findMethod(original, "<clinit>", "()V");
-            if (entry == null) {
+            if (entry == null)
+            {
                 original.createNewMethodWithDescriptor(0x0008, "<clinit>", "()V");
                 entry = findMethod(original, "<clinit>", "()V");
             }
             IRMethod irMethod = lowerer.lower(clinit, ownerClass);
             ssa.lower(irMethod, entry);
-        } catch (Exception e) {
-            warnings.add(CompilationError.warning(1, 1, 0, 1,
-                "Could not synthesize static initializer: " + e.getMessage()));
+        }
+        catch (Exception e)
+        {
+            warnings.add(CompilationError.warning(1, 1, 0, 1, "Could not synthesize static initializer: " + e.getMessage()));
         }
     }
 
@@ -484,26 +565,31 @@ public class SourceCompiler {
      * re-lowered ({@code changedMethods}) so a pre-existing quirk in an untouched method never blocks an edit. An
      * empty list means the recompile passed verification and is safe to apply.
      */
-    private List<CompilationError> gateVerify(ClassFile compiled, ClassPool classPool, Set<String> changedMethods,
-                                              Map<String, Integer> memberLines) {
+    private List<CompilationError> gateVerify(ClassFile compiled, ClassPool classPool, Set<String> changedMethods, Map<String, Integer> memberLines)
+    {
         List<CompilationError> errors = new ArrayList<>();
-        try {
+        try
+        {
             com.tonic.analysis.verifier.VerificationResult result =
                     com.tonic.analysis.verifier.Verifier.builder().classPool(classPool).build().verify(compiled);
-            for (com.tonic.analysis.verifier.VerificationError err : result.getErrors()) {
-                if (!err.isError()) {
+            for (com.tonic.analysis.verifier.VerificationError err : result.getErrors())
+            {
+                if (!err.isError())
+                {
                     continue;
                 }
                 if (changedMethods != null && err.getMethodName() != null
-                        && !changedMethods.contains(err.getMethodName())) {
+                        && !changedMethods.contains(err.getMethodName()))
+                {
                     continue;
                 }
                 String where = err.getMethodName() != null ? " in " + err.getMethodName() : "";
                 int line = err.getMethodName() != null ? memberLines.getOrDefault(err.getMethodName(), 1) : 1;
-                errors.add(CompilationError.error(line, 1, 0, 1,
-                        "Verification failed" + where + ": " + err.getMessage()));
+                errors.add(CompilationError.error(line, 1, 0, 1, "Verification failed" + where + ": " + err.getMessage()));
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             // A failure inside the verifier itself must not block an otherwise-valid recompile.
         }
         return errors;
@@ -513,21 +599,27 @@ public class SourceCompiler {
      * Maps each source member's {@code name + descriptor} key (matching {@code VerificationError.getMethodName})
      * to its source declaration line, so a verify failure points at the offending member rather than line 1.
      */
-    private Map<String, Integer> buildMemberLineMap(CompilationUnit cu, ClassFile original, ClassPool classPool) {
+    private Map<String, Integer> buildMemberLineMap(CompilationUnit cu, ClassFile original, ClassPool classPool)
+    {
         Map<String, Integer> map = new HashMap<>();
         TypeDecl primary = cu.getPrimaryType();
-        if (!(primary instanceof ClassDecl)) {
+        if (!(primary instanceof ClassDecl))
+        {
             return map;
         }
         ClassDecl classDecl = (ClassDecl) primary;
         TypeResolver resolver = descriptorResolver(classPool, original.getClassName(), classDecl, cu);
-        for (MethodDecl m : classDecl.getMethods()) {
-            if (m.getBody() != null) {
+        for (MethodDecl m : classDecl.getMethods())
+        {
+            if (m.getBody() != null)
+            {
                 map.put(m.getName() + buildDescriptor(m, resolver), lineOf(m.getLocation()));
             }
         }
-        for (ConstructorDecl c : classDecl.getConstructors()) {
-            if (c.getBody() != null) {
+        for (ConstructorDecl c : classDecl.getConstructors())
+        {
+            if (c.getBody() != null)
+            {
                 map.put("<init>" + ctorDescriptor(c, resolver), lineOf(c.getLocation()));
             }
         }
@@ -535,7 +627,8 @@ public class SourceCompiler {
     }
 
     /** The source line of {@code location}, or 1 when unknown. */
-    private int lineOf(SourceLocation location) {
+    private int lineOf(SourceLocation location)
+    {
         return location != null && location.hasLineNumber() ? location.lineNumber() : 1;
     }
 
@@ -543,11 +636,16 @@ public class SourceCompiler {
      * Whether the original class's field {@code name} carries a {@code ConstantValue} attribute - i.e. a compile-time
      * constant the class loader initializes directly, needing no {@code <clinit>} assignment.
      */
-    private boolean hasConstantValue(ClassFile classFile, String name) {
-        for (FieldEntry field : classFile.getFields()) {
-            if (field.getName().equals(name)) {
-                for (com.tonic.parser.attribute.Attribute attr : field.getAttributes()) {
-                    if (attr instanceof com.tonic.parser.attribute.ConstantValueAttribute) {
+    private boolean hasConstantValue(ClassFile classFile, String name)
+    {
+        for (FieldEntry field : classFile.getFields())
+        {
+            if (field.getName().equals(name))
+            {
+                for (com.tonic.parser.attribute.Attribute attr : field.getAttributes())
+                {
+                    if (attr instanceof com.tonic.parser.attribute.ConstantValueAttribute)
+                    {
                         return true;
                     }
                 }
@@ -557,9 +655,12 @@ public class SourceCompiler {
         return false;
     }
 
-    private boolean fieldExists(ClassFile classFile, String name) {
-        for (FieldEntry field : classFile.getFields()) {
-            if (field.getName().equals(name)) {
+    private boolean fieldExists(ClassFile classFile, String name)
+    {
+        for (FieldEntry field : classFile.getFields())
+        {
+            if (field.getName().equals(name))
+            {
                 return true;
             }
         }
@@ -569,29 +670,38 @@ public class SourceCompiler {
     /**
      * Translates source-level modifiers into JVM access flags for created members.
      */
-    private int accessFromModifiers(Set<Modifier> modifiers) {
+    private int accessFromModifiers(Set<Modifier> modifiers)
+    {
         int flags = 0;
-        if (modifiers.contains(Modifier.PUBLIC)) {
+        if (modifiers.contains(Modifier.PUBLIC))
+        {
             flags |= 0x0001;
         }
-        if (modifiers.contains(Modifier.PRIVATE)) {
+        if (modifiers.contains(Modifier.PRIVATE))
+        {
             flags |= 0x0002;
         }
-        if (modifiers.contains(Modifier.PROTECTED)) {
+        if (modifiers.contains(Modifier.PROTECTED))
+        {
             flags |= 0x0004;
         }
-        if (modifiers.contains(Modifier.STATIC)) {
+        if (modifiers.contains(Modifier.STATIC))
+        {
             flags |= 0x0008;
         }
-        if (modifiers.contains(Modifier.FINAL)) {
+        if (modifiers.contains(Modifier.FINAL))
+        {
             flags |= 0x0010;
         }
         return flags;
     }
 
-    private MethodEntry findMethod(ClassFile classFile, String name, String descriptor) {
-        for (MethodEntry method : classFile.getMethods()) {
-            if (method.getName().equals(name) && method.getDesc().equals(descriptor)) {
+    private MethodEntry findMethod(ClassFile classFile, String name, String descriptor)
+    {
+        for (MethodEntry method : classFile.getMethods())
+        {
+            if (method.getName().equals(name) && method.getDesc().equals(descriptor))
+            {
                 return method;
             }
         }
@@ -604,9 +714,11 @@ public class SourceCompiler {
      * descriptor would not match the original method and the method would be wrongly treated as added/removed.
      * Falls back to the unresolved descriptor when no resolver (i.e. no class pool) is available.
      */
-    private String buildDescriptor(MethodDecl methodDecl, TypeResolver resolver) {
+    private String buildDescriptor(MethodDecl methodDecl, TypeResolver resolver)
+    {
         StringBuilder sb = new StringBuilder("(");
-        for (var param : methodDecl.getParameters()) {
+        for (var param : methodDecl.getParameters())
+        {
             sb.append(typeDescriptor(param.getType(), resolver));
         }
         sb.append(")");
@@ -614,14 +726,16 @@ public class SourceCompiler {
         return sb.toString();
     }
 
-    private String typeDescriptor(SourceType type, TypeResolver resolver) {
+    private String typeDescriptor(SourceType type, TypeResolver resolver)
+    {
         return resolver != null ? resolver.descriptorOf(type) : type.toIRType().getDescriptor();
     }
 
     /** A type resolver for descriptor building, or null when there is no class pool to resolve against. */
-    private TypeResolver descriptorResolver(ClassPool classPool, String ownerClass, ClassDecl classDecl,
-                                            CompilationUnit cu) {
-        if (classPool == null) {
+    private TypeResolver descriptorResolver(ClassPool classPool, String ownerClass, ClassDecl classDecl, CompilationUnit cu)
+    {
+        if (classPool == null)
+        {
             return null;
         }
         TypeResolver resolver = new TypeResolver(classPool, ownerClass);
@@ -630,14 +744,16 @@ public class SourceCompiler {
         return resolver;
     }
 
-    private void collectParseErrors(ParseErrorListener.CollectingErrorListener listener,
-                                     String source, List<CompilationError> errors) {
-        for (ParseException pe : listener.getErrors()) {
+    private void collectParseErrors(ParseErrorListener.CollectingErrorListener listener, String source, List<CompilationError> errors)
+    {
+        for (ParseException pe : listener.getErrors())
+        {
             errors.add(createErrorFromException(pe, source));
         }
     }
 
-    private CompilationError createErrorFromException(ParseException e, String source) {
+    private CompilationError createErrorFromException(ParseException e, String source)
+    {
         int line = e.getLine();
         int column = e.getColumn();
         int offset = calculateOffset(source, line, column);
@@ -645,51 +761,61 @@ public class SourceCompiler {
         return CompilationError.error(line, column, offset, length, e.getMessage());
     }
 
-    private int calculateOffset(String source, int line, int column) {
-        if (line <= 0 || column <= 0) {
+    private int calculateOffset(String source, int line, int column)
+    {
+        if (line <= 0 || column <= 0)
+        {
             return 0;
         }
 
         String[] lines = source.split("\n", -1);
         int offset = 0;
 
-        for (int i = 0; i < line - 1 && i < lines.length; i++) {
+        for (int i = 0; i < line - 1 && i < lines.length; i++)
+        {
             offset += lines[i].length() + 1;
         }
 
-        if (line - 1 < lines.length) {
+        if (line - 1 < lines.length)
+        {
             offset += Math.min(column - 1, lines[line - 1].length());
         }
 
         return offset;
     }
 
-    private int calculateErrorLength(String source, int line, int column) {
-        if (line <= 0) {
+    private int calculateErrorLength(String source, int line, int column)
+    {
+        if (line <= 0)
+        {
             return 1;
         }
 
         String[] lines = source.split("\n", -1);
-        if (line - 1 >= lines.length) {
+        if (line - 1 >= lines.length)
+        {
             return 1;
         }
 
         String errorLine = lines[line - 1];
         int startCol = Math.max(0, column - 1);
 
-        if (startCol >= errorLine.length()) {
+        if (startCol >= errorLine.length())
+        {
             return 1;
         }
 
         int endCol = startCol;
-        while (endCol < errorLine.length() && !Character.isWhitespace(errorLine.charAt(endCol))) {
+        while (endCol < errorLine.length() && !Character.isWhitespace(errorLine.charAt(endCol)))
+        {
             endCol++;
         }
 
         return Math.max(1, endCol - startCol);
     }
 
-    private long elapsed(long startTime) {
+    private long elapsed(long startTime)
+    {
         return System.currentTimeMillis() - startTime;
     }
 }

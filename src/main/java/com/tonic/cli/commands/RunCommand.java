@@ -13,11 +13,12 @@ import java.io.File;
 import java.util.concurrent.Callable;
 
 @Command(
-    name = "run",
-    description = "Execute a plugin or script on target files",
-    mixinStandardHelpOptions = true
+        name = "run",
+        description = "Execute a plugin or script on target files",
+        mixinStandardHelpOptions = true
 )
-public class RunCommand implements Callable<Integer> {
+public class RunCommand implements Callable<Integer>
+{
 
     @Parameters(index = "0", description = "Target JAR file, class file, or directory")
     private File target;
@@ -53,39 +54,44 @@ public class RunCommand implements Callable<Integer> {
     private File exportDir;
 
     @Override
-    public Integer call() {
-        if (target == null || !target.exists()) {
+    public Integer call()
+    {
+        if (target == null || !target.exists())
+        {
             System.err.println("Error: Target file not found: " + target);
             return 1;
         }
 
-        if (plugin == null && pluginDir == null) {
+        if (plugin == null && pluginDir == null)
+        {
             System.err.println("Error: Must specify --plugin or --plugin-dir");
             return 1;
         }
 
         ExecutionConfig config = ExecutionConfig.builder()
-            .target(target)
-            .plugin(plugin)
-            .pluginDir(pluginDir)
-            .outputFile(output)
-            .outputFormat(format)
-            .classPattern(classPattern)
-            .methodPattern(methodPattern)
-            .verbose(verbose)
-            .quiet(quiet)
-            .dryRun(dryRun)
-            .exportDir(exportDir)
-            .build();
+                .target(target)
+                .plugin(plugin)
+                .pluginDir(pluginDir)
+                .outputFile(output)
+                .outputFormat(format)
+                .classPattern(classPattern)
+                .methodPattern(methodPattern)
+                .verbose(verbose)
+                .quiet(quiet)
+                .dryRun(dryRun)
+                .exportDir(exportDir)
+                .build();
 
-        try {
+        try
+        {
             ExecutionEngine engine = new ExecutionEngine();
             ExecutionResult result = engine.execute(config);
 
             OutputHandler handler = OutputHandler.forFormat(format, output);
             handler.writeResult(result);
 
-            if (!quiet) {
+            if (!quiet)
+            {
                 System.out.println();
                 System.out.println("Execution completed in " + result.getDurationMs() + "ms");
                 System.out.println("Classes processed: " + result.getClassesProcessed());
@@ -93,9 +99,12 @@ public class RunCommand implements Callable<Integer> {
             }
 
             return result.isSuccess() ? 0 : 1;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.err.println("Error: " + e.getMessage());
-            if (verbose) {
+            if (verbose)
+            {
                 e.printStackTrace();
             }
             return 1;

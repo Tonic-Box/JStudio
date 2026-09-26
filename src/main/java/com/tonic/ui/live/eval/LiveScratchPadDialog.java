@@ -44,14 +44,10 @@ import java.util.List;
  * <p>Stateless per run (each Run is a fresh class). Running arbitrary code in a live JVM is as powerful as
  * live redefinition, so the first run in a session asks for confirmation.
  */
-public final class LiveScratchPadDialog extends JDialog {
+public final class LiveScratchPadDialog extends JDialog
+{
 
-    private static final String DEFAULT_SNIPPET = String.join("\n",
-            "// Write Java statements; a trailing 'return <expr>;' becomes the result (no return -> true).",
-            "// 'import' lines at the top are supported. Public members of the context class's",
-            "// classloader are visible. Ctrl+Space completes; Ctrl+Enter runs.",
-            "",
-            "return 2 + 2;");
+    private static final String DEFAULT_SNIPPET = String.join("\n", "// Write Java statements; a trailing 'return <expr>;' becomes the result (no return -> true).", "// 'import' lines at the top are supported. Public members of the context class's", "// classloader are visible. Ctrl+Space completes; Ctrl+Enter runs.", "", "return 2 + 2;");
 
     private static boolean accepted;
 
@@ -65,7 +61,8 @@ public final class LiveScratchPadDialog extends JDialog {
     private SnippetCompiler compiler;
     private AutoCompletion autoCompletion;
 
-    public LiveScratchPadDialog(Frame owner) {
+    public LiveScratchPadDialog(Frame owner)
+    {
         super(owner, "Java Scratch Pad", false);
         editor = JavaEditorFactory.createEditor(true);
         editor.setText(DEFAULT_SNIPPET);
@@ -79,7 +76,8 @@ public final class LiveScratchPadDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    private void buildUi() {
+    private void buildUi()
+    {
         JPanel content = new JPanel(new BorderLayout());
         content.setBackground(JStudioTheme.getBgTertiary());
         content.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
@@ -123,23 +121,28 @@ public final class LiveScratchPadDialog extends JDialog {
         setContentPane(content);
     }
 
-    private void installRunShortcut() {
+    private void installRunShortcut()
+    {
         KeyStroke ctrlEnter = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK);
         editor.getInputMap().put(ctrlEnter, "scratch-run");
-        editor.getActionMap().put("scratch-run", new AbstractAction() {
+        editor.getActionMap().put("scratch-run", new AbstractAction()
+        {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e)
+            {
                 runSnippet();
             }
         });
     }
 
     /** Binds the dialog to {@code project}: rebuilds the compiler, completion, and context list. */
-    public void setProject(ProjectModel project) {
+    public void setProject(ProjectModel project)
+    {
         this.project = project;
         this.compiler = new SnippetCompiler(new ProjectClasspath(project), targetRelease(project));
 
-        if (autoCompletion != null) {
+        if (autoCompletion != null)
+        {
             autoCompletion.uninstall();
         }
         ScratchCompletionProvider provider = new ScratchCompletionProvider(project);
@@ -156,14 +159,17 @@ public final class LiveScratchPadDialog extends JDialog {
         List<String> names = new ArrayList<>(project.getUserClassNames());
         names.sort(String::compareTo);
         contextSelector.removeAllItems();
-        for (String name : names) {
+        for (String name : names)
+        {
             contextSelector.addItem(name);
         }
     }
 
     /** Pre-selects {@code internalName} as the context class if present. */
-    public void setContextClass(String internalName) {
-        if (internalName != null) {
+    public void setContextClass(String internalName)
+    {
+        if (internalName != null)
+        {
             contextSelector.setSelectedItem(internalName);
         }
     }
@@ -173,29 +179,36 @@ public final class LiveScratchPadDialog extends JDialog {
      * pulled classes (which is at most the target JVM's runtime version), so a compiled snippet can always be
      * defined by the attached JVM even when it is older than the JDK running JStudio.
      */
-    private static int targetRelease(ProjectModel project) {
+    private static int targetRelease(ProjectModel project)
+    {
         int maxMajor = 0;
-        for (ClassEntryModel entry : project.getAllClasses()) {
+        for (ClassEntryModel entry : project.getAllClasses())
+        {
             int major = entry.getClassFile().getMajorVersion();
-            if (major > maxMajor) {
+            if (major > maxMajor)
+            {
                 maxMajor = major;
             }
         }
         return SnippetCompiler.releaseForMajorVersion(maxMajor);
     }
 
-    private void runSnippet() {
+    private void runSnippet()
+    {
         LiveAttachService service = LiveAttachService.getInstance();
-        if (!service.isAttached() || project == null || compiler == null) {
+        if (!service.isAttached() || project == null || compiler == null)
+        {
             appendln("Not attached to a live JVM.");
             return;
         }
         String contextClass = (String) contextSelector.getSelectedItem();
-        if (contextClass == null) {
+        if (contextClass == null)
+        {
             appendln("Pick a context class first.");
             return;
         }
-        if (!confirmFirstRun()) {
+        if (!confirmFirstRun())
+        {
             return;
         }
         String snippet = editor.getText();
@@ -203,42 +216,44 @@ public final class LiveScratchPadDialog extends JDialog {
 
         runButton.setEnabled(false);
         appendln("> running...");
-        SwingWorkers.run(
-                () -> {
-                    SnippetCompiler.Result result = compiler.compile(snippet);
-                    if (!result.isSuccess()) {
-                        return "compile failed:\n" + String.join("\n", result.getMessages());
-                    }
-                    return session.eval(result.getClasses(), result.getMainBinaryName(), contextClass);
-                },
-                output -> {
-                    appendln(output);
-                    runButton.setEnabled(true);
-                },
-                error -> {
-                    appendln("eval error: " + error.getMessage());
-                    runButton.setEnabled(true);
-                });
+        SwingWorkers.run(() ->
+        {
+            SnippetCompiler.Result result = compiler.compile(snippet);
+            if (!result.isSuccess())
+            {
+                return "compile failed:\n" + String.join("\n", result.getMessages());
+            }
+            return session.eval(result.getClasses(), result.getMainBinaryName(), contextClass);
+        }, output ->
+        {
+            appendln(output);
+            runButton.setEnabled(true);
+        }, error ->
+        {
+            appendln("eval error: " + error.getMessage());
+            runButton.setEnabled(true);
+        });
     }
 
-    private boolean confirmFirstRun() {
-        if (accepted) {
+    private boolean confirmFirstRun()
+    {
+        if (accepted)
+        {
             return true;
         }
-        int choice = JOptionPane.showConfirmDialog(this,
-                "This runs arbitrary Java inside the attached JVM - as powerful and risky as live class\n"
-                        + "redefinition. It executes on the live connection thread, so a blocking or looping\n"
-                        + "snippet stalls the connection until it returns. Continue?",
-                "Run code in attached JVM?", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (choice == JOptionPane.OK_OPTION) {
+        int choice = JOptionPane.showConfirmDialog(this, "This runs arbitrary Java inside the attached JVM - as powerful and risky as live class\n" + "redefinition. It executes on the live connection thread, so a blocking or looping\n" + "snippet stalls the connection until it returns. Continue?", "Run code in attached JVM?", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (choice == JOptionPane.OK_OPTION)
+        {
             accepted = true;
             return true;
         }
         return false;
     }
 
-    private void appendln(String text) {
-        if (console.getDocument().getLength() > 0) {
+    private void appendln(String text)
+    {
+        if (console.getDocument().getLength() > 0)
+        {
             console.append("\n");
         }
         console.append(text);
@@ -246,10 +261,11 @@ public final class LiveScratchPadDialog extends JDialog {
     }
 
     /** Renders class items in readable dotted form while keeping internal names as the item values. */
-    private static final class BinaryNameRenderer extends DefaultListCellRenderer {
+    private static final class BinaryNameRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             String text = value instanceof String ? ((String) value).replace('/', '.') : "";
             Component c = super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus);
             setHorizontalAlignment(SwingConstants.LEFT);

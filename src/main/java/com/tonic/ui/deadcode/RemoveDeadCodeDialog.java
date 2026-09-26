@@ -50,7 +50,8 @@ import java.util.Set;
  * Analyze to populate a collapsible checkbox tree of everything found dead (classes / methods / fields), then
  * remove the checked items. There is no undo, so the preview is the safety net.
  */
-public final class RemoveDeadCodeDialog extends JDialog {
+public final class RemoveDeadCodeDialog extends JDialog
+{
 
     private final MainFrame mainFrame;
     private final JCheckBox publicBox = new JCheckBox("Treat public methods/fields as entry points");
@@ -66,7 +67,8 @@ public final class RemoveDeadCodeDialog extends JDialog {
     private final JTree tree = new JTree(treeModel);
     private final Set<DefaultMutableTreeNode> checked = new HashSet<>();
 
-    public RemoveDeadCodeDialog(MainFrame mainFrame) {
+    public RemoveDeadCodeDialog(MainFrame mainFrame)
+    {
         super(mainFrame, "Remove Dead Code", false);
         this.mainFrame = mainFrame;
 
@@ -80,7 +82,8 @@ public final class RemoveDeadCodeDialog extends JDialog {
         removeButton.setEnabled(false);
     }
 
-    private JPanel buildUi() {
+    private JPanel buildUi()
+    {
         JPanel content = new JPanel(new BorderLayout(0, 6));
         content.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
@@ -97,9 +100,11 @@ public final class RemoveDeadCodeDialog extends JDialog {
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.setCellRenderer(new CheckboxRenderer());
         tree.setToggleClickCount(0);
-        tree.addMouseListener(new MouseAdapter() {
+        tree.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 onTreeClick(e);
             }
         });
@@ -119,7 +124,8 @@ public final class RemoveDeadCodeDialog extends JDialog {
         return content;
     }
 
-    private JPanel labeledArea(String label, JTextArea area) {
+    private JPanel labeledArea(String label, JTextArea area)
+    {
         JPanel panel = new JPanel(new BorderLayout(0, 2));
         panel.add(new JLabel(label), BorderLayout.NORTH);
         area.setLineWrap(false);
@@ -127,152 +133,178 @@ public final class RemoveDeadCodeDialog extends JDialog {
         return panel;
     }
 
-    private void loadSettings() {
+    private void loadSettings()
+    {
         Settings s = Settings.getInstance();
         publicBox.setSelected(s.isDeadCodePublicEntryPoints());
         keepArea.setText(s.getDeadCodeKeepList());
         skipArea.setText(s.getDeadCodeSkipList());
     }
 
-    private void saveSettings() {
+    private void saveSettings()
+    {
         Settings s = Settings.getInstance();
         s.setDeadCodePublicEntryPoints(publicBox.isSelected());
         s.setDeadCodeKeepList(keepArea.getText());
         s.setDeadCodeSkipList(skipArea.getText());
     }
 
-    private void analyze() {
+    private void analyze()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             status.setText("No project loaded.");
             return;
         }
         saveSettings();
-        DeadCodeConfig config = new DeadCodeConfig(publicBox.isSelected(),
-                toSet(keepArea.getText()), toSet(skipArea.getText()));
+        DeadCodeConfig config = new DeadCodeConfig(publicBox.isSelected(), toSet(keepArea.getText()), toSet(skipArea.getText()));
         DeadCodeAnalyzer analyzer = new DeadCodeAnalyzer(project, config);
         analyzer.setProgressListener(msg -> SwingUtilities.invokeLater(() -> status.setText(msg)));
         analyzeButton.setEnabled(false);
         removeButton.setEnabled(false);
         progressBar.setVisible(true);
         status.setText("Analyzing...");
-        SwingWorkers.run(
-                analyzer::analyze,
-                report -> {
-                    progressBar.setVisible(false);
-                    populate(report);
-                },
-                err -> {
-                    progressBar.setVisible(false);
-                    analyzeButton.setEnabled(true);
-                    status.setText("Analysis failed: " + err.getMessage());
-                });
+        SwingWorkers.run(analyzer::analyze, report ->
+        {
+            progressBar.setVisible(false);
+            populate(report);
+        }, err ->
+        {
+            progressBar.setVisible(false);
+            analyzeButton.setEnabled(true);
+            status.setText("Analysis failed: " + err.getMessage());
+        });
     }
 
-    private void populate(DeadCodeReport report) {
+    private void populate(DeadCodeReport report)
+    {
         analyzeButton.setEnabled(true);
         checked.clear();
         root.removeAllChildren();
 
-        if (!report.getDeadClasses().isEmpty()) {
+        if (!report.getDeadClasses().isEmpty())
+        {
             DefaultMutableTreeNode group = group("Dead classes (" + report.getDeadClasses().size() + ")");
-            for (DeadItem item : report.getDeadClasses()) {
+            for (DeadItem item : report.getDeadClasses())
+            {
                 addLeaf(group, item);
             }
         }
         Map<String, List<DeadItem>> byOwner = new LinkedHashMap<>();
-        for (DeadItem item : report.getDeadMethods()) {
+        for (DeadItem item : report.getDeadMethods())
+        {
             byOwner.computeIfAbsent(item.getOwner(), k -> new ArrayList<>()).add(item);
         }
-        for (DeadItem item : report.getDeadFields()) {
+        for (DeadItem item : report.getDeadFields())
+        {
             byOwner.computeIfAbsent(item.getOwner(), k -> new ArrayList<>()).add(item);
         }
-        for (Map.Entry<String, List<DeadItem>> e : byOwner.entrySet()) {
+        for (Map.Entry<String, List<DeadItem>> e : byOwner.entrySet())
+        {
             DefaultMutableTreeNode group = group(e.getKey().replace('/', '.') + "  (" + e.getValue().size() + ")");
-            for (DeadItem item : e.getValue()) {
+            for (DeadItem item : e.getValue())
+            {
                 addLeaf(group, item);
             }
         }
 
         treeModel.reload();
         removeButton.setEnabled(!report.isEmpty());
-        status.setText(report.isEmpty() ? "No dead code found."
-                : report.getDeadClasses().size() + " classes, " + report.getDeadMethods().size()
-                + " methods, " + report.getDeadFields().size() + " fields");
+        status.setText(report.isEmpty() ? "No dead code found." : report.getDeadClasses().size() + " classes, " + report.getDeadMethods().size() + " methods, " + report.getDeadFields().size() + " fields");
     }
 
-    private DefaultMutableTreeNode group(String label) {
+    private DefaultMutableTreeNode group(String label)
+    {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(label);
         root.add(node);
         checked.add(node);
         return node;
     }
 
-    private void addLeaf(DefaultMutableTreeNode group, DeadItem item) {
+    private void addLeaf(DefaultMutableTreeNode group, DeadItem item)
+    {
         DefaultMutableTreeNode leaf = new DefaultMutableTreeNode(item);
         group.add(leaf);
         checked.add(leaf);
     }
 
-    private void onTreeClick(MouseEvent e) {
+    private void onTreeClick(MouseEvent e)
+    {
         TreePath path = tree.getPathForLocation(e.getX(), e.getY());
-        if (path == null) {
+        if (path == null)
+        {
             return;
         }
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-        if (e.getClickCount() == 2 && node.getUserObject() instanceof DeadItem) {
+        if (e.getClickCount() == 2 && node.getUserObject() instanceof DeadItem)
+        {
             navigate((DeadItem) node.getUserObject());
             return;
         }
         Rectangle bounds = tree.getPathBounds(path);
-        if (bounds != null && e.getX() <= bounds.x + 18) {
+        if (bounds != null && e.getX() <= bounds.x + 18)
+        {
             setChecked(node, !checked.contains(node));
             tree.repaint();
         }
     }
 
-    private void setChecked(DefaultMutableTreeNode node, boolean state) {
-        if (state) {
+    private void setChecked(DefaultMutableTreeNode node, boolean state)
+    {
+        if (state)
+        {
             checked.add(node);
-        } else {
+        }
+        else
+        {
             checked.remove(node);
         }
-        for (int i = 0; i < node.getChildCount(); i++) {
+        for (int i = 0; i < node.getChildCount(); i++)
+        {
             setChecked((DefaultMutableTreeNode) node.getChildAt(i), state);
         }
     }
 
-    private void navigate(DeadItem item) {
+    private void navigate(DeadItem item)
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             return;
         }
         ClassEntryModel entry = project.getClass(item.getOwner());
-        if (entry == null) {
+        if (entry == null)
+        {
             return;
         }
-        if (item.getKind() == DeadItem.Kind.METHOD) {
+        if (item.getKind() == DeadItem.Kind.METHOD)
+        {
             EventBus.getInstance().post(new ClassSelectedEvent(this, entry, item.getName(), -1));
-        } else {
+        }
+        else
+        {
             EventBus.getInstance().post(new ClassSelectedEvent(this, entry));
         }
     }
 
-    private void removeChecked() {
+    private void removeChecked()
+    {
         List<DeadItem> items = new ArrayList<>();
         collectChecked(root, items);
-        if (items.isEmpty()) {
+        if (items.isEmpty())
+        {
             status.setText("Nothing checked.");
             return;
         }
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             return;
         }
-        int choice = JOptionPane.showConfirmDialog(this,
-                "Remove " + items.size() + " checked item(s)? This cannot be undone - export/save your work first.",
-                "Remove Dead Code", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (choice != JOptionPane.OK_OPTION) {
+        int choice = JOptionPane.showConfirmDialog(this, "Remove " + items.size() + " checked item(s)? This cannot be undone - export/save your work first.", "Remove Dead Code", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (choice != JOptionPane.OK_OPTION)
+        {
             return;
         }
         com.tonic.service.history.LocalHistoryService.getInstance()
@@ -284,24 +316,29 @@ public final class RemoveDeadCodeDialog extends JDialog {
         root.removeAllChildren();
         treeModel.reload();
         removeButton.setEnabled(false);
-        status.setText("Removed " + result.getClassesRemoved() + " classes, "
-                + result.getMethodsRemoved() + " methods, " + result.getFieldsRemoved() + " fields.");
+        status.setText("Removed " + result.getClassesRemoved() + " classes, " + result.getMethodsRemoved() + " methods, " + result.getFieldsRemoved() + " fields.");
     }
 
-    private void collectChecked(DefaultMutableTreeNode node, List<DeadItem> out) {
-        if (node.isLeaf() && node.getUserObject() instanceof DeadItem && checked.contains(node)) {
+    private void collectChecked(DefaultMutableTreeNode node, List<DeadItem> out)
+    {
+        if (node.isLeaf() && node.getUserObject() instanceof DeadItem && checked.contains(node))
+        {
             out.add((DeadItem) node.getUserObject());
         }
-        for (int i = 0; i < node.getChildCount(); i++) {
+        for (int i = 0; i < node.getChildCount(); i++)
+        {
             collectChecked((DefaultMutableTreeNode) node.getChildAt(i), out);
         }
     }
 
-    private static Set<String> toSet(String text) {
+    private static Set<String> toSet(String text)
+    {
         Set<String> set = new HashSet<>();
-        for (String line : text.split("\\R")) {
+        for (String line : text.split("\\R"))
+        {
             String t = line.trim();
-            if (!t.isEmpty()) {
+            if (!t.isEmpty())
+            {
                 set.add(t);
             }
         }
@@ -309,11 +346,13 @@ public final class RemoveDeadCodeDialog extends JDialog {
     }
 
     /** Renders each node as a checkbox + label, reflecting the {@link #checked} state. */
-    private final class CheckboxRenderer extends JPanel implements TreeCellRenderer {
+    private final class CheckboxRenderer extends JPanel implements TreeCellRenderer
+    {
         private final JCheckBox box = new JCheckBox();
         private final JLabel label = new JLabel();
 
-        CheckboxRenderer() {
+        CheckboxRenderer()
+        {
             super(new BorderLayout(2, 0));
             setOpaque(false);
             box.setOpaque(false);
@@ -322,18 +361,18 @@ public final class RemoveDeadCodeDialog extends JDialog {
         }
 
         @Override
-        public Component getTreeCellRendererComponent(JTree t, Object value, boolean selected, boolean expanded,
-                                                      boolean leaf, int row, boolean hasFocus) {
+        public Component getTreeCellRendererComponent(JTree t, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus)
+        {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             box.setSelected(checked.contains(node));
             Object userObject = node.getUserObject();
-            label.setText(userObject instanceof DeadItem ? ((DeadItem) userObject).displayLabel()
-                    : String.valueOf(userObject));
+            label.setText(userObject instanceof DeadItem ? ((DeadItem) userObject).displayLabel() : String.valueOf(userObject));
             return this;
         }
 
         @Override
-        public Dimension getPreferredSize() {
+        public Dimension getPreferredSize()
+        {
             Dimension d = super.getPreferredSize();
             return new Dimension(d.width + 8, Math.max(d.height, box.getPreferredSize().height));
         }

@@ -33,14 +33,16 @@ import java.util.function.Consumer;
  * component (this view on success, or a raw-DOT fallback panel when the string can't be parsed), keeping
  * {@code com.mxgraph.*} off the caller's API. Self-themes via {@link ThemeManager}.
  */
-public final class DotGraphView extends JPanel implements ThemeChangeListener {
+public final class DotGraphView extends JPanel implements ThemeChangeListener
+{
 
     private static final int MAX_INLINE_HEIGHT = 360;
     private static final int PAD = 6;
     private static final double EXPORT_SCALE = 2.0;
 
     /** Renders {@code dot} as an inline interactive thumbnail (click opens a popup window), or a raw-source fallback. */
-    public static JComponent render(String dot) {
+    public static JComponent render(String dot)
+    {
         return render(dot, null);
     }
 
@@ -49,20 +51,26 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener {
      * to open the diagram as an editor tab instead of a popup. When {@code onOpen} is null the click opens the default
      * {@link DotGraphDialog} window. Returns a raw-source fallback panel if the DOT can't be parsed.
      */
-    public static JComponent render(String dot, Consumer<String> onOpen) {
-        try {
+    public static JComponent render(String dot, Consumer<String> onOpen)
+    {
+        try
+        {
             DotGraph model = DotParser.parse(dot);
-            if (model.isEmpty()) {
+            if (model.isEmpty())
+            {
                 return fallback(dot);
             }
             return new DotGraphView(dot, model, onOpen);
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e)
+        {
             return fallback(dot);
         }
     }
 
     /** The full interactive (pan/zoom + toolbar) view of {@code dot}, for embedding as a tab/panel instead of a popup. */
-    public static JComponent interactiveComponent(String dot) {
+    public static JComponent interactiveComponent(String dot)
+    {
         return new DotGraphPanel(dot);
     }
 
@@ -72,7 +80,8 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener {
     private BufferedImage image;
     private int lastLayoutWidth = -1;
 
-    private DotGraphView(String dotSource, DotGraph model, Consumer<String> onOpen) {
+    private DotGraphView(String dotSource, DotGraph model, Consumer<String> onOpen)
+    {
         this.dotSource = dotSource;
         this.model = model;
         this.onOpen = onOpen;
@@ -81,25 +90,33 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener {
         setToolTipText("Click to open the diagram");
         setBorder(BorderFactory.createEmptyBorder(PAD, 0, PAD, 0));
         renderImage();
-        addMouseListener(new MouseAdapter() {
+        addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 openDiagram();
             }
         });
     }
 
-    private void renderImage() {
-        try {
+    private void renderImage()
+    {
+        try
+        {
             mxGraph graph = DotGraphBuilder.build(model);
             image = mxCellRenderer.createBufferedImage(graph, null, EXPORT_SCALE, null, true, null);
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e)
+        {
             image = null;
         }
     }
 
-    private void openDiagram() {
-        if (onOpen != null) {
+    private void openDiagram()
+    {
+        if (onOpen != null)
+        {
             onOpen.accept(dotSource);
             return;
         }
@@ -108,44 +125,53 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public Dimension getPreferredSize() {
+    public Dimension getPreferredSize()
+    {
         int width = currentWidth();
-        if (image == null || width <= 0) {
+        if (image == null || width <= 0)
+        {
             return new Dimension(Math.max(1, width), 40);
         }
         return new Dimension(width, scaledHeight(width) + 2 * PAD);
     }
 
     @Override
-    public Dimension getMaximumSize() {
+    public Dimension getMaximumSize()
+    {
         return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
     }
 
-    private int currentWidth() {
-        if (getWidth() > 0) {
+    private int currentWidth()
+    {
+        if (getWidth() > 0)
+        {
             return getWidth();
         }
         return getParent() != null ? getParent().getWidth() : 0;
     }
 
     /** Height the scaled image occupies at {@code width} (downscale only, capped). */
-    private int scaledHeight(int width) {
+    private int scaledHeight(int width)
+    {
         double scale = Math.min(1.0, (double) width / image.getWidth());
         int height = (int) Math.round(image.getHeight() * scale);
         return Math.min(height, MAX_INLINE_HEIGHT);
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g)
+    {
         super.paintComponent(g);
-        if (image == null) {
+        if (image == null)
+        {
             return;
         }
         int width = getWidth();
         double scale = Math.min(1.0, (double) width / image.getWidth());
         int drawW = (int) Math.round(image.getWidth() * scale);
         int drawH = (int) Math.round(image.getHeight() * scale);
-        if (drawH > MAX_INLINE_HEIGHT) {
+        if (drawH > MAX_INLINE_HEIGHT)
+        {
             double cap = (double) MAX_INLINE_HEIGHT / drawH;
             drawW = (int) Math.round(drawW * cap);
             drawH = MAX_INLINE_HEIGHT;
@@ -164,47 +190,50 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public void doLayout() {
+    public void doLayout()
+    {
         super.doLayout();
-        if (getWidth() != lastLayoutWidth) {
+        if (getWidth() != lastLayoutWidth)
+        {
             lastLayoutWidth = getWidth();
             revalidate();
         }
     }
 
     @Override
-    public void addNotify() {
+    public void addNotify()
+    {
         super.addNotify();
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         ThemeManager.getInstance().removeThemeChangeListener(this);
         super.removeNotify();
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         renderImage();
         revalidate();
         repaint();
     }
 
     /** A code-block-styled panel showing the raw DOT when it can't be rendered, so nothing is lost. */
-    private static JComponent fallback(String dot) {
+    private static JComponent fallback(String dot)
+    {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(JStudioTheme.getBgTertiary());
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getError(), 1),
-                BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+        panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getError(), 1), BorderFactory.createEmptyBorder(6, 8, 6, 8)));
         JTextArea area = new JTextArea(dot == null ? "" : dot.trim());
         area.setEditable(false);
         area.setOpaque(false);
         area.setFont(JStudioTheme.getCodeFont(12));
         area.setForeground(JStudioTheme.getTextPrimary());
-        JScrollPane scroll = new JScrollPane(area,
-                JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        JScrollPane scroll = new JScrollPane(area, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scroll.setBorder(null);
         scroll.setOpaque(false);
         scroll.getViewport().setOpaque(false);
@@ -213,7 +242,8 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener {
         return panel;
     }
 
-    private static JComponent label(String text) {
+    private static JComponent label(String text)
+    {
         JTextArea l = new JTextArea(text);
         l.setEditable(false);
         l.setOpaque(false);

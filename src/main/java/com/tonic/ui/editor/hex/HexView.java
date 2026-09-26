@@ -13,7 +13,8 @@ import java.awt.datatransfer.StringSelection;
 /**
  * Hex view showing raw class file bytes in traditional hex dump format.
  */
-public class HexView extends AbstractEditorView {
+public class HexView extends AbstractEditorView
+{
 
     private final ClassEntryModel classEntry;
     private final JTextPane textPane;
@@ -30,7 +31,8 @@ public class HexView extends AbstractEditorView {
     private static final String STYLE_SEPARATOR = "separator";
     private static final String STYLE_HIGHLIGHT = "highlight";
 
-    public HexView(ClassEntryModel classEntry) {
+    public HexView(ClassEntryModel classEntry)
+    {
         this.classEntry = classEntry;
 
         textPane = new JTextPane();
@@ -59,7 +61,8 @@ public class HexView extends AbstractEditorView {
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         textPane.setBackground(JStudioTheme.getBgTertiary());
         textPane.setForeground(JStudioTheme.getTextPrimary());
         textPane.setCaretColor(JStudioTheme.getTextPrimary());
@@ -74,7 +77,8 @@ public class HexView extends AbstractEditorView {
         repaint();
     }
 
-    private void setupStyles() {
+    private void setupStyles()
+    {
         StyledDocument doc = textPane.getStyledDocument();
 
         // Offset style (address column)
@@ -99,8 +103,10 @@ public class HexView extends AbstractEditorView {
     }
 
     @Override
-    public void refresh() {
-        if (loaded) {
+    public void refresh()
+    {
+        if (loaded)
+        {
             return;
         }
 
@@ -109,37 +115,53 @@ public class HexView extends AbstractEditorView {
         textPane.setText("");
         loadingOverlay.showLoading("Loading hex dump...");
 
-        SwingWorker<byte[], Void> worker = new SwingWorker<>() {
+        SwingWorker<byte[], Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected byte[] doInBackground() {
-                try {
+            protected byte[] doInBackground()
+            {
+                try
+                {
                     ClassFile cf = classEntry.getClassFile();
                     return cf.write();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     return null;
                 }
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 loadingOverlay.hideLoading();
-                if (isCancelled()) {
+                if (isCancelled())
+                {
                     return;
                 }
-                try {
+                try
+                {
                     byte[] bytes = get();
-                    if (bytes != null) {
+                    if (bytes != null)
+                    {
                         displayHexDump(bytes);
                         loaded = true;
-                    } else {
+                    }
+                    else
+                    {
                         StyledDocument doc = textPane.getStyledDocument();
                         doc.insertString(0, "Failed to read class file bytes", null);
                     }
-                } catch (Exception e) {
-                    try {
+                }
+                catch (Exception e)
+                {
+                    try
+                    {
                         StyledDocument doc = textPane.getStyledDocument();
                         doc.insertString(0, "Failed to read class file bytes: " + e.getMessage(), null);
-                    } catch (BadLocationException ex) {
+                    }
+                    catch (BadLocationException ex)
+                    {
                         // Ignore
                     }
                 }
@@ -149,11 +171,14 @@ public class HexView extends AbstractEditorView {
         worker.execute();
     }
 
-    private void displayHexDump(byte[] bytes) {
+    private void displayHexDump(byte[] bytes)
+    {
         StyledDocument doc = textPane.getStyledDocument();
 
-        try {
-            for (int offset = 0; offset < bytes.length; offset += BYTES_PER_LINE) {
+        try
+        {
+            for (int offset = 0; offset < bytes.length; offset += BYTES_PER_LINE)
+            {
                 // Offset column
                 String offsetStr = String.format("%08X  ", offset);
                 doc.insertString(doc.getLength(), offsetStr, doc.getStyle(STYLE_OFFSET));
@@ -162,25 +187,33 @@ public class HexView extends AbstractEditorView {
                 StringBuilder hexPart = new StringBuilder();
                 StringBuilder asciiPart = new StringBuilder();
 
-                for (int i = 0; i < BYTES_PER_LINE; i++) {
+                for (int i = 0; i < BYTES_PER_LINE; i++)
+                {
                     int byteOffset = offset + i;
-                    if (byteOffset < bytes.length) {
+                    if (byteOffset < bytes.length)
+                    {
                         int b = bytes[byteOffset] & 0xFF;
                         hexPart.append(String.format("%02X ", b));
 
                         // ASCII representation
-                        if (b >= 32 && b < 127) {
+                        if (b >= 32 && b < 127)
+                        {
                             asciiPart.append((char) b);
-                        } else {
+                        }
+                        else
+                        {
                             asciiPart.append('.');
                         }
-                    } else {
+                    }
+                    else
+                    {
                         hexPart.append("   ");
                         asciiPart.append(' ');
                     }
 
                     // Add extra space after 8 bytes for readability
-                    if (i == 7) {
+                    if (i == 7)
+                    {
                         hexPart.append(' ');
                     }
                 }
@@ -202,7 +235,9 @@ public class HexView extends AbstractEditorView {
             // Scroll to top
             textPane.setCaretPosition(0);
 
-        } catch (BadLocationException e) {
+        }
+        catch (BadLocationException e)
+        {
             // Ignore
         }
     }
@@ -211,7 +246,8 @@ public class HexView extends AbstractEditorView {
      * Get the current text.
      */
     @Override
-    public String getText() {
+    public String getText()
+    {
         return textPane.getText();
     }
 
@@ -219,9 +255,11 @@ public class HexView extends AbstractEditorView {
      * Copy current selection to clipboard.
      */
     @Override
-    public void copySelection() {
+    public void copySelection()
+    {
         String selected = textPane.getSelectedText();
-        if (selected != null && !selected.isEmpty()) {
+        if (selected != null && !selected.isEmpty())
+        {
             StringSelection selection = new StringSelection(selected);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
         }
@@ -231,12 +269,16 @@ public class HexView extends AbstractEditorView {
      * Go to a specific line.
      */
     @Override
-    public void goToLine(int line) {
-        try {
+    public void goToLine(int line)
+    {
+        try
+        {
             int offset = textPane.getDocument().getDefaultRootElement().getElement(line - 1).getStartOffset();
             textPane.setCaretPosition(offset);
             textPane.requestFocus();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             // Line out of range
         }
     }
@@ -245,14 +287,16 @@ public class HexView extends AbstractEditorView {
      * Show find dialog.
      */
     @Override
-    public void showFindDialog() {
-        String input = JOptionPane.showInputDialog(this, "Find (hex bytes like 'CA FE'):", "Find",
-                JOptionPane.PLAIN_MESSAGE);
-        if (input != null && !input.isEmpty()) {
+    public void showFindDialog()
+    {
+        String input = JOptionPane.showInputDialog(this, "Find (hex bytes like 'CA FE'):", "Find", JOptionPane.PLAIN_MESSAGE);
+        if (input != null && !input.isEmpty())
+        {
             String text = textPane.getText().toUpperCase();
             String searchUpper = input.toUpperCase();
             int pos = text.indexOf(searchUpper);
-            if (pos >= 0) {
+            if (pos >= 0)
+            {
                 textPane.setCaretPosition(pos);
                 textPane.select(pos, pos + input.length());
             }
@@ -263,7 +307,8 @@ public class HexView extends AbstractEditorView {
      * Get the selected text.
      */
     @Override
-    public String getSelectedText() {
+    public String getSelectedText()
+    {
         return textPane.getSelectedText();
     }
 
@@ -271,13 +316,15 @@ public class HexView extends AbstractEditorView {
      * Scroll to text.
      */
     @Override
-    public void scrollToText(String text) {
+    public void scrollToText(String text)
+    {
         if (text == null || text.isEmpty()) return;
 
         String content = textPane.getText().toUpperCase();
         String searchUpper = text.toUpperCase();
         int pos = content.indexOf(searchUpper);
-        if (pos >= 0) {
+        if (pos >= 0)
+        {
             textPane.setCaretPosition(pos);
             textPane.select(pos, pos + text.length());
         }
@@ -287,7 +334,8 @@ public class HexView extends AbstractEditorView {
      * Set the font size.
      */
     @Override
-    public void setFontSize(int size) {
+    public void setFontSize(int size)
+    {
         textPane.setFont(JStudioTheme.getCodeFont(size));
     }
 }

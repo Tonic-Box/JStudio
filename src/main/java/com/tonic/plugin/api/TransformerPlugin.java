@@ -4,50 +4,60 @@ import lombok.Getter;
 
 import java.util.List;
 
-public interface TransformerPlugin extends Plugin {
+public interface TransformerPlugin extends Plugin
+{
 
     TransformResult transform(TransformScope scope);
 
     @Override
-    default void execute() {
+    default void execute()
+    {
         transform(TransformScope.all());
     }
 
     @Getter
-    final class TransformScope {
+    final class TransformScope
+    {
         private final List<String> targetClasses;
         private final List<String> targetMethods;
         private final boolean dryRun;
 
-        public TransformScope(List<String> targetClasses, List<String> targetMethods, boolean dryRun) {
+        public TransformScope(List<String> targetClasses, List<String> targetMethods, boolean dryRun)
+        {
             this.targetClasses = targetClasses;
             this.targetMethods = targetMethods;
             this.dryRun = dryRun;
         }
 
-        public static TransformScope all() {
+        public static TransformScope all()
+        {
             return new TransformScope(List.of(), List.of(), false);
         }
 
-        public static TransformScope classes(List<String> classPatterns) {
+        public static TransformScope classes(List<String> classPatterns)
+        {
             return new TransformScope(classPatterns, List.of(), false);
         }
 
-        public static TransformScope methods(List<String> methodPatterns) {
+        public static TransformScope methods(List<String> methodPatterns)
+        {
             return new TransformScope(List.of(), methodPatterns, false);
         }
 
-        public static TransformScope dryRun() {
+        public static TransformScope dryRun()
+        {
             return new TransformScope(List.of(), List.of(), true);
         }
 
-        public TransformScope withDryRun(boolean dryRun) {
+        public TransformScope withDryRun(boolean dryRun)
+        {
             return new TransformScope(targetClasses, targetMethods, dryRun);
         }
     }
 
     @Getter
-    final class TransformResult {
+    final class TransformResult
+    {
         private final boolean success;
         private final int classesModified;
         private final int methodsModified;
@@ -55,8 +65,8 @@ public interface TransformerPlugin extends Plugin {
         private final String summary;
         private final List<TransformAction> actions;
 
-        public TransformResult(boolean success, int classesModified, int methodsModified,
-                               long durationMs, String summary, List<TransformAction> actions) {
+        public TransformResult(boolean success, int classesModified, int methodsModified, long durationMs, String summary, List<TransformAction> actions)
+        {
             this.success = success;
             this.classesModified = classesModified;
             this.methodsModified = methodsModified;
@@ -65,34 +75,38 @@ public interface TransformerPlugin extends Plugin {
             this.actions = actions;
         }
 
-        public static TransformResult success(int classes, int methods, long durationMs,
-                                              String summary, List<TransformAction> actions) {
+        public static TransformResult success(int classes, int methods, long durationMs, String summary, List<TransformAction> actions)
+        {
             return new TransformResult(true, classes, methods, durationMs, summary, actions);
         }
 
-        public static TransformResult failure(String reason) {
+        public static TransformResult failure(String reason)
+        {
             return new TransformResult(false, 0, 0, 0, reason, List.of());
         }
 
-        public static TransformResult dryRun(List<TransformAction> plannedActions) {
-            return new TransformResult(true, 0, 0, 0,
-                "Dry run: " + plannedActions.size() + " actions planned", plannedActions);
+        public static TransformResult dryRun(List<TransformAction> plannedActions)
+        {
+            return new TransformResult(true, 0, 0, 0, "Dry run: " + plannedActions.size() + " actions planned", plannedActions);
         }
     }
 
     @Getter
-    final class TransformAction {
+    final class TransformAction
+    {
         private final ActionType type;
         private final String target;
         private final String description;
 
-        public TransformAction(ActionType type, String target, String description) {
+        public TransformAction(ActionType type, String target, String description)
+        {
             this.type = type;
             this.target = target;
             this.description = description;
         }
 
-        public enum ActionType {
+        public enum ActionType
+        {
             ADD_INSTRUCTION,
             REMOVE_INSTRUCTION,
             MODIFY_INSTRUCTION,

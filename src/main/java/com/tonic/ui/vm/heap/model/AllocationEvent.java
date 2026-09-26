@@ -3,9 +3,11 @@ package com.tonic.ui.vm.heap.model;
 import lombok.Getter;
 
 @Getter
-public class AllocationEvent {
+public class AllocationEvent
+{
     @Getter
-    public enum AllocationType {
+    public enum AllocationType
+    {
         NEW(0xBB),
         NEWARRAY(0xBC),
         ANEWARRAY(0xBD),
@@ -13,13 +15,17 @@ public class AllocationEvent {
 
         private final int opcode;
 
-        AllocationType(int opcode) {
+        AllocationType(int opcode)
+        {
             this.opcode = opcode;
         }
 
-        public static AllocationType fromOpcode(int opcode) {
-            for (AllocationType type : values()) {
-                if (type.opcode == opcode) {
+        public static AllocationType fromOpcode(int opcode)
+        {
+            for (AllocationType type : values())
+            {
+                if (type.opcode == opcode)
+                {
                     return type;
                 }
             }
@@ -36,7 +42,8 @@ public class AllocationEvent {
     private final int arrayLength;
     private final int[] arrayDimensions;
 
-    private AllocationEvent(Builder builder) {
+    private AllocationEvent(Builder builder)
+    {
         this.objectId = builder.objectId;
         this.className = builder.className;
         this.allocationType = builder.allocationType;
@@ -47,33 +54,39 @@ public class AllocationEvent {
         this.arrayDimensions = builder.arrayDimensions;
     }
 
-    public boolean isArray() {
+    public boolean isArray()
+    {
         return allocationType != AllocationType.NEW;
     }
 
-    public String getShortDescription() {
-        if (isArray()) {
+    public String getShortDescription()
+    {
+        if (isArray())
+        {
             return className + "[" + arrayLength + "]";
         }
         return className;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "AllocationEvent{" +
-            "objectId=" + objectId +
-            ", className='" + className + '\'' +
-            ", type=" + allocationType +
-            ", at=" + instructionCount +
-            ", provenance=" + (provenance != null ? provenance.getShortLocation() : "unknown") +
-            '}';
+                "objectId=" + objectId +
+                ", className='" + className + '\'' +
+                ", type=" + allocationType +
+                ", at=" + instructionCount +
+                ", provenance=" + (provenance != null ? provenance.getShortLocation() : "unknown") +
+                '}';
     }
 
-    public static Builder builder() {
+    public static Builder builder()
+    {
         return new Builder();
     }
 
-    public static class Builder {
+    public static class Builder
+    {
         private int objectId;
         private String className = "";
         private AllocationType allocationType = AllocationType.NEW;
@@ -83,48 +96,57 @@ public class AllocationEvent {
         private int arrayLength = -1;
         private int[] arrayDimensions;
 
-        public Builder objectId(int objectId) {
+        public Builder objectId(int objectId)
+        {
             this.objectId = objectId;
             return this;
         }
 
-        public Builder className(String className) {
+        public Builder className(String className)
+        {
             this.className = className;
             return this;
         }
 
-        public Builder allocationType(AllocationType allocationType) {
+        public Builder allocationType(AllocationType allocationType)
+        {
             this.allocationType = allocationType;
             return this;
         }
 
-        public Builder opcode(int opcode) {
+        public Builder opcode(int opcode)
+        {
             this.opcode = opcode;
             this.allocationType = AllocationType.fromOpcode(opcode);
             return this;
         }
 
-        public Builder instructionCount(long instructionCount) {
+        public Builder instructionCount(long instructionCount)
+        {
             this.instructionCount = instructionCount;
             return this;
         }
 
-        public Builder provenance(ProvenanceInfo provenance) {
+        public Builder provenance(ProvenanceInfo provenance)
+        {
             this.provenance = provenance;
             return this;
         }
 
-        public Builder arrayLength(int arrayLength) {
+        public Builder arrayLength(int arrayLength)
+        {
             this.arrayLength = arrayLength;
             return this;
         }
 
-        public Builder arrayDimensions(int[] arrayDimensions) {
+        public Builder arrayDimensions(int[] arrayDimensions)
+        {
             this.arrayDimensions = arrayDimensions;
             return this;
         }
 
-        public AllocationEvent build() {
+        public AllocationEvent build()
+        {
             return new AllocationEvent(this);
         }
     }

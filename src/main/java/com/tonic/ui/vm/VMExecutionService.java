@@ -35,7 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class VMExecutionService {
+public class VMExecutionService
+{
 
     private static final VMExecutionService INSTANCE = new VMExecutionService();
 
@@ -63,27 +64,34 @@ public class VMExecutionService {
     private long cachedSnapshotVersion = -1;
     private Map<String, byte[]> cachedFrozenClasses;
 
-    private VMExecutionService() {
+    private VMExecutionService()
+    {
         EventBus.getInstance().register(ProjectLoadedEvent.class, this::onProjectLoaded);
     }
 
-    private void onProjectLoaded(ProjectLoadedEvent event) {
-        if (initialized.get()) {
+    private void onProjectLoaded(ProjectLoadedEvent event)
+    {
+        if (initialized.get())
+        {
             shutdown();
         }
     }
 
-    public static VMExecutionService getInstance() {
+    public static VMExecutionService getInstance()
+    {
         return INSTANCE;
     }
 
-    public synchronized void initialize() {
-        if (initialized.get()) {
+    public synchronized void initialize()
+    {
+        if (initialized.get())
+        {
             return;
         }
 
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassPool() == null) {
+        if (project == null || project.getClassPool() == null)
+        {
             throw new IllegalStateException("No project loaded. Load a project before initializing the VM.");
         }
 
@@ -98,18 +106,23 @@ public class VMExecutionService {
         EventBus.getInstance().post(new StatusMessageEvent(this, "VM initialized with " + classPool.getClasses().size() + " classes"));
     }
 
-    public synchronized void shutdown() {
-        if (!initialized.get()) {
+    public synchronized void shutdown()
+    {
+        if (!initialized.get())
+        {
             return;
         }
 
-        if (currentEngine != null) {
+        if (currentEngine != null)
+        {
             currentEngine.interrupt();
             currentEngine = null;
         }
 
-        if (currentDebugSession != null) {
-            if (!currentDebugSession.isStopped()) {
+        if (currentDebugSession != null)
+        {
+            if (!currentDebugSession.isStopped())
+            {
                 currentDebugSession.stop();
             }
             currentDebugSession = null;
@@ -124,45 +137,54 @@ public class VMExecutionService {
         EventBus.getInstance().post(new StatusMessageEvent(this, "VM shutdown"));
     }
 
-    public synchronized void reset() {
+    public synchronized void reset()
+    {
         shutdown();
         initialize();
     }
 
-    public boolean isInitialized() {
+    public boolean isInitialized()
+    {
         return initialized.get();
     }
 
-    public boolean isExecuting() {
+    public boolean isExecuting()
+    {
         return executing.get();
     }
 
-    public ExecutionResult executeStaticMethod(String className, String methodName, String descriptor, Object... args) {
+    public ExecutionResult executeStaticMethod(String className, String methodName, String descriptor, Object... args)
+    {
         ensureInitialized();
 
-        if (executing.get()) {
+        if (executing.get())
+        {
             return ExecutionResult.builder()
-                .success(false)
-                .exception(new IllegalStateException("Another execution is in progress"))
-                .build();
+                    .success(false)
+                    .exception(new IllegalStateException("Another execution is in progress"))
+                    .build();
         }
 
         executing.set(true);
         long startTime = System.currentTimeMillis();
 
-        try {
+        try
+        {
             ClassFile classFile = classPool.get(className);
-            if (classFile == null) {
+            if (classFile == null)
+            {
                 throw new IllegalArgumentException("Class not found: " + className);
             }
 
             MethodEntry method = findMethod(classFile, methodName, descriptor);
-            if (method == null) {
+            if (method == null)
+            {
                 throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
             }
 
             int access = method.getAccess();
-            if ((access & 0x0008) == 0) {
+            if ((access & 0x0008) == 0)
+            {
                 throw new IllegalArgumentException("Method is not static: " + methodName);
             }
 
@@ -176,52 +198,62 @@ public class VMExecutionService {
 
             return buildExecutionResult(result, endTime - startTime);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             long endTime = System.currentTimeMillis();
             return ExecutionResult.builder()
-                .success(false)
-                .exception(e)
-                .executionTimeMs(endTime - startTime)
-                .build();
-        } finally {
+                    .success(false)
+                    .exception(e)
+                    .executionTimeMs(endTime - startTime)
+                    .build();
+        }
+        finally
+        {
             currentEngine = null;
             executing.set(false);
         }
     }
 
-    public ExecutionResult executeMethod(String className, String methodName, String descriptor,
-                                         Object receiver, Object... args) {
+    public ExecutionResult executeMethod(String className, String methodName, String descriptor, Object receiver, Object... args)
+    {
         ensureInitialized();
 
-        if (executing.get()) {
+        if (executing.get())
+        {
             return ExecutionResult.builder()
-                .success(false)
-                .exception(new IllegalStateException("Another execution is in progress"))
-                .build();
+                    .success(false)
+                    .exception(new IllegalStateException("Another execution is in progress"))
+                    .build();
         }
 
         executing.set(true);
         long startTime = System.currentTimeMillis();
 
-        try {
+        try
+        {
             ClassFile classFile = classPool.get(className);
-            if (classFile == null) {
+            if (classFile == null)
+            {
                 throw new IllegalArgumentException("Class not found: " + className);
             }
 
             MethodEntry method = findMethod(classFile, methodName, descriptor);
-            if (method == null) {
+            if (method == null)
+            {
                 throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
             }
 
             int access = method.getAccess();
-            if ((access & 0x0008) != 0) {
+            if ((access & 0x0008) != 0)
+            {
                 throw new IllegalArgumentException("Method is static, use executeStaticMethod instead");
             }
 
             ConcreteValue[] allArgs = new ConcreteValue[args.length + 1];
             allArgs[0] = convertToConcreteValue(receiver);
-            for (int i = 0; i < args.length; i++) {
+            for (int i = 0; i < args.length; i++)
+            {
                 allArgs[i + 1] = convertToConcreteValue(args[i]);
             }
 
@@ -234,59 +266,67 @@ public class VMExecutionService {
 
             return buildExecutionResult(result, endTime - startTime);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             long endTime = System.currentTimeMillis();
             return ExecutionResult.builder()
-                .success(false)
-                .exception(e)
-                .executionTimeMs(endTime - startTime)
-                .build();
-        } finally {
+                    .success(false)
+                    .exception(e)
+                    .executionTimeMs(endTime - startTime)
+                    .build();
+        }
+        finally
+        {
             currentEngine = null;
             executing.set(false);
         }
     }
 
-    public ExecutionResult executeStaticMethodWithListener(String className, String methodName,
-                                                           String descriptor, Object[] args,
-                                                           BytecodeListener listener) {
+    public ExecutionResult executeStaticMethodWithListener(String className, String methodName, String descriptor, Object[] args, BytecodeListener listener)
+    {
         ensureInitialized();
 
-        if (executing.get()) {
+        if (executing.get())
+        {
             return ExecutionResult.builder()
-                .success(false)
-                .exception(new IllegalStateException("Another execution is in progress"))
-                .build();
+                    .success(false)
+                    .exception(new IllegalStateException("Another execution is in progress"))
+                    .build();
         }
 
         executing.set(true);
         long startTime = System.currentTimeMillis();
 
-        try {
+        try
+        {
             ClassFile classFile = classPool.get(className);
-            if (classFile == null) {
+            if (classFile == null)
+            {
                 throw new IllegalArgumentException("Class not found: " + className);
             }
 
             MethodEntry method = findMethod(classFile, methodName, descriptor);
-            if (method == null) {
+            if (method == null)
+            {
                 throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
             }
 
             ConcreteValue[] vmArgs = convertToConcreteValues(args);
 
             BytecodeContext execContext = new BytecodeContext.Builder()
-                .heapManager(heapManager)
-                .classResolver(classResolver)
-                .mode(ExecutionMode.RECURSIVE)
-                .maxCallDepth(maxCallDepth)
-                .maxInstructions(maxInstructions)
-                .build();
+                    .heapManager(heapManager)
+                    .classResolver(classResolver)
+                    .mode(ExecutionMode.RECURSIVE)
+                    .maxCallDepth(maxCallDepth)
+                    .maxInstructions(maxInstructions)
+                    .build();
 
             BytecodeEngine engine = new BytecodeEngine(execContext);
             currentEngine = engine;
 
-            if (listener != null) {
+            if (listener != null)
+            {
                 engine.addListener(listener);
             }
 
@@ -296,106 +336,125 @@ public class VMExecutionService {
 
             return buildExecutionResult(result, endTime - startTime);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             long endTime = System.currentTimeMillis();
             return ExecutionResult.builder()
-                .success(false)
-                .exception(e)
-                .executionTimeMs(endTime - startTime)
-                .build();
-        } finally {
+                    .success(false)
+                    .exception(e)
+                    .executionTimeMs(endTime - startTime)
+                    .build();
+        }
+        finally
+        {
             currentEngine = null;
             executing.set(false);
         }
     }
 
-    public BytecodeResult executeMethodWithListener(MethodEntry method, Object[] args,
-                                                      BytecodeListener listener) {
+    public BytecodeResult executeMethodWithListener(MethodEntry method, Object[] args, BytecodeListener listener)
+    {
         ensureInitialized();
 
-        if (executing.get()) {
+        if (executing.get())
+        {
             throw new IllegalStateException("Another execution is in progress");
         }
 
         executing.set(true);
 
-        try {
+        try
+        {
             ConcreteValue[] vmArgs = convertToConcreteValues(args);
 
             BytecodeContext execContext = new BytecodeContext.Builder()
-                .heapManager(heapManager)
-                .classResolver(classResolver)
-                .mode(ExecutionMode.RECURSIVE)
-                .maxCallDepth(maxCallDepth)
-                .maxInstructions(maxInstructions)
-                .build();
+                    .heapManager(heapManager)
+                    .classResolver(classResolver)
+                    .mode(ExecutionMode.RECURSIVE)
+                    .maxCallDepth(maxCallDepth)
+                    .maxInstructions(maxInstructions)
+                    .build();
 
             BytecodeEngine engine = new BytecodeEngine(execContext);
             currentEngine = engine;
 
-            if (listener != null) {
+            if (listener != null)
+            {
                 engine.addListener(listener);
             }
 
             return engine.execute(method, vmArgs);
 
-        } finally {
+        }
+        finally
+        {
             currentEngine = null;
             executing.set(false);
         }
     }
 
-    public ExecutionResult traceStaticMethod(String className, String methodName, String descriptor, Object... args) {
+    public ExecutionResult traceStaticMethod(String className, String methodName, String descriptor, Object... args)
+    {
         ensureInitialized();
 
-        if (executing.get()) {
+        if (executing.get())
+        {
             return ExecutionResult.builder()
-                .success(false)
-                .exception(new IllegalStateException("Another execution is in progress"))
-                .build();
+                    .success(false)
+                    .exception(new IllegalStateException("Another execution is in progress"))
+                    .build();
         }
 
         executing.set(true);
         long startTime = System.currentTimeMillis();
         List<MethodCall> methodCalls = new ArrayList<>();
 
-        try {
+        try
+        {
             ClassFile classFile = classPool.get(className);
-            if (classFile == null) {
+            if (classFile == null)
+            {
                 throw new IllegalArgumentException("Class not found: " + className);
             }
 
             MethodEntry method = findMethod(classFile, methodName, descriptor);
-            if (method == null) {
+            if (method == null)
+            {
                 throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
             }
 
             ConcreteValue[] vmArgs = convertToConcreteValues(args);
 
             BytecodeContext traceContext = new BytecodeContext.Builder()
-                .heapManager(heapManager)
-                .classResolver(classResolver)
-                .mode(ExecutionMode.RECURSIVE)
-                .maxCallDepth(maxCallDepth)
-                .maxInstructions(maxInstructions)
-                .build();
+                    .heapManager(heapManager)
+                    .classResolver(classResolver)
+                    .mode(ExecutionMode.RECURSIVE)
+                    .maxCallDepth(maxCallDepth)
+                    .maxInstructions(maxInstructions)
+                    .build();
 
             BytecodeEngine engine = new BytecodeEngine(traceContext);
             currentEngine = engine;
 
             Deque<MethodCall> callStack = new ArrayDeque<>();
 
-            engine.addListener(new BytecodeListener() {
+            engine.addListener(new BytecodeListener()
+            {
                 private int lastStackDepth = 0;
 
                 @Override
-                public void beforeInstruction(StackFrame frame, Instruction instruction) {
-                    try {
+                public void beforeInstruction(StackFrame frame, Instruction instruction)
+                {
+                    try
+                    {
                         int currentDepth = engine.getCallStack().depth();
 
-                        if (currentDepth > lastStackDepth) {
+                        if (currentDepth > lastStackDepth)
+                        {
                             StackFrame topFrame = engine.getCallStack().peek();
-                            if (topFrame != null) {
+                            if (topFrame != null)
+                            {
                                 MethodEntry methodEntry = topFrame.getMethod();
                                 String owner = methodEntry.getOwnerName();
                                 String name = methodEntry.getName();
@@ -409,29 +468,38 @@ public class VMExecutionService {
                             }
                             lastStackDepth = currentDepth;
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         ConsoleLogService.getInstance().error("[VMExecutionService] Listener error in beforeInstruction", e);
                     }
                 }
 
                 @Override
-                public void afterInstruction(StackFrame frame, Instruction instruction) {
-                    try {
+                public void afterInstruction(StackFrame frame, Instruction instruction)
+                {
+                    try
+                    {
                         int currentDepth = engine.getCallStack().depth();
 
-                        if (currentDepth < lastStackDepth && !callStack.isEmpty()) {
+                        if (currentDepth < lastStackDepth && !callStack.isEmpty())
+                        {
                             MethodCall call = callStack.pop();
                             call.setEndTimeNanos(System.nanoTime());
 
-                            if (frame.isCompleted() && frame.getReturnValue() != null) {
+                            if (frame.isCompleted() && frame.getReturnValue() != null)
+                            {
                                 call.setReturnValue(convertFromConcreteValue(frame.getReturnValue()));
                             }
-                            if (frame.getException() != null) {
+                            if (frame.getException() != null)
+                            {
                                 call.setExceptional(true);
                             }
                             lastStackDepth = currentDepth;
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         ConsoleLogService.getInstance().error("[VMExecutionService] Listener error in afterInstruction", e);
                     }
                 }
@@ -439,10 +507,12 @@ public class VMExecutionService {
 
             BytecodeResult result = engine.execute(method, vmArgs);
 
-            if (!callStack.isEmpty()) {
+            if (!callStack.isEmpty())
+            {
                 MethodCall call = callStack.pop();
                 call.setEndTimeNanos(System.nanoTime());
-                if (result.getReturnValue() != null) {
+                if (result.getReturnValue() != null)
+                {
                     call.setReturnValue(convertFromConcreteValue(result.getReturnValue()));
                 }
             }
@@ -451,57 +521,65 @@ public class VMExecutionService {
 
             return buildExecutionResult(result, endTime - startTime, methodCalls);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             ConsoleLogService.getInstance().error("[VMExecutionService] traceStaticMethod error", e);
             long endTime = System.currentTimeMillis();
             return ExecutionResult.builder()
-                .success(false)
-                .exception(e)
-                .executionTimeMs(endTime - startTime)
-                .methodCalls(methodCalls)
-                .build();
-        } finally {
+                    .success(false)
+                    .exception(e)
+                    .executionTimeMs(endTime - startTime)
+                    .methodCalls(methodCalls)
+                    .build();
+        }
+        finally
+        {
             currentEngine = null;
             executing.set(false);
         }
     }
 
-    public void interrupt() {
-        if (currentEngine != null) {
+    public void interrupt()
+    {
+        if (currentEngine != null)
+        {
             currentEngine.interrupt();
         }
-        if (currentDebugSession != null && !currentDebugSession.isStopped()) {
+        if (currentDebugSession != null && !currentDebugSession.isStopped())
+        {
             currentDebugSession.stop();
         }
     }
 
-    public DebugSession createDebugSession(String className, String methodName, String descriptor,
-                                            boolean recursive, Object... args) {
+    public DebugSession createDebugSession(String className, String methodName, String descriptor, boolean recursive, Object... args)
+    {
         ensureInitialized();
 
         ClassFile classFile = classPool.get(className);
-        if (classFile == null) {
+        if (classFile == null)
+        {
             throw new IllegalArgumentException("Class not found: " + className);
         }
 
         MethodEntry method = findMethod(classFile, methodName, descriptor);
-        if (method == null) {
+        if (method == null)
+        {
             throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
         }
 
-        if (currentDebugSession != null && !currentDebugSession.isStopped()) {
+        if (currentDebugSession != null && !currentDebugSession.isStopped())
+        {
             currentDebugSession.stop();
         }
 
         BytecodeContext sessionContext = new BytecodeContext.Builder()
-            .heapManager(heapManager)
-            .classResolver(classResolver)
-            .mode(recursive ?
-                ExecutionMode.RECURSIVE :
-                ExecutionMode.DELEGATED)
-            .maxCallDepth(maxCallDepth)
-            .maxInstructions(maxInstructions)
-            .build();
+                .heapManager(heapManager)
+                .classResolver(classResolver)
+                .mode(recursive ? ExecutionMode.RECURSIVE : ExecutionMode.DELEGATED)
+                .maxCallDepth(maxCallDepth)
+                .maxInstructions(maxInstructions)
+                .build();
 
         currentDebugSession = new DebugSession(sessionContext);
         ConcreteValue[] vmArgs = convertToConcreteValues(args);
@@ -515,18 +593,25 @@ public class VMExecutionService {
      * frozen byte set is cached and reused across instances until the project's bytecode changes, so many AI sessions
      * starting with no edits between them don't repeat the serialize cost.
      */
-    public synchronized VmInstance createSnapshotInstance() {
+    public synchronized VmInstance createSnapshotInstance()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassPool() == null) {
+        if (project == null || project.getClassPool() == null)
+        {
             throw new IllegalStateException("No project loaded. Load a project before starting a VM session.");
         }
         long version = project.getBytecodeVersion();
-        if (cachedFrozenClasses == null || cachedSnapshotVersion != version) {
+        if (cachedFrozenClasses == null || cachedSnapshotVersion != version)
+        {
             Map<String, byte[]> frozen = new HashMap<>();
-            for (ClassEntryModel entry : project.getUserClasses()) {
-                try {
+            for (ClassEntryModel entry : project.getUserClasses())
+            {
+                try
+                {
                     frozen.put(entry.getClassName(), entry.getClassFile().write());
-                } catch (Exception ignored) {
+                }
+                catch (Exception ignored)
+                {
                     // unserializable class - omit from the snapshot
                 }
             }
@@ -537,87 +622,106 @@ public class VMExecutionService {
         return new VmInstance(pool, maxCallDepth, maxInstructions);
     }
 
-    public MethodEntry findMethod(String className, String methodName, String descriptor) {
+    public MethodEntry findMethod(String className, String methodName, String descriptor)
+    {
         ensureInitialized();
 
         ClassFile classFile = classPool.get(className);
-        if (classFile == null) {
+        if (classFile == null)
+        {
             return null;
         }
         return findMethod(classFile, methodName, descriptor);
     }
 
-    public void setMaxCallDepth(int maxCallDepth) {
+    public void setMaxCallDepth(int maxCallDepth)
+    {
         this.maxCallDepth = maxCallDepth;
-        if (initialized.get()) {
+        if (initialized.get())
+        {
             rebuildContext();
         }
     }
 
-    public void setMaxInstructions(int maxInstructions) {
+    public void setMaxInstructions(int maxInstructions)
+    {
         this.maxInstructions = maxInstructions;
-        if (initialized.get()) {
+        if (initialized.get())
+        {
             rebuildContext();
         }
     }
 
-    public String getVMStatus() {
+    public String getVMStatus()
+    {
         StringBuilder sb = new StringBuilder();
         sb.append("VM Status:\n");
         sb.append("  Initialized: ").append(initialized.get()).append("\n");
         sb.append("  Executing: ").append(executing.get()).append("\n");
 
-        if (classPool != null) {
+        if (classPool != null)
+        {
             sb.append("  Classes: ").append(classPool.getClasses().size()).append("\n");
         }
 
-        if (heapManager != null) {
+        if (heapManager != null)
+        {
             sb.append("  Heap Objects: ").append(heapManager.objectCount()).append("\n");
         }
 
         sb.append("  Max Call Depth: ").append(maxCallDepth).append("\n");
         sb.append("  Max Instructions: ").append(maxInstructions).append("\n");
 
-        if (currentDebugSession != null) {
+        if (currentDebugSession != null)
+        {
             sb.append("  Debug Session: ").append(currentDebugSession.getState()).append("\n");
         }
 
         return sb.toString();
     }
 
-    private void ensureInitialized() {
-        if (!initialized.get()) {
+    private void ensureInitialized()
+    {
+        if (!initialized.get())
+        {
             initialize();
         }
     }
 
-    private void rebuildContext() {
+    private void rebuildContext()
+    {
         this.context = new BytecodeContext.Builder()
-            .heapManager(heapManager)
-            .classResolver(classResolver)
-            .maxCallDepth(maxCallDepth)
-            .maxInstructions(maxInstructions)
-            .build();
+                .heapManager(heapManager)
+                .classResolver(classResolver)
+                .maxCallDepth(maxCallDepth)
+                .maxInstructions(maxInstructions)
+                .build();
     }
 
-    private MethodEntry findMethod(ClassFile classFile, String methodName, String descriptor) {
+    private MethodEntry findMethod(ClassFile classFile, String methodName, String descriptor)
+    {
         return VmSupport.findMethod(classFile, methodName, descriptor);
     }
 
-    private ConcreteValue[] convertToConcreteValues(Object[] args) {
+    private ConcreteValue[] convertToConcreteValues(Object[] args)
+    {
         return VmSupport.toConcreteValues(heapManager, args);
     }
 
-    private ConcreteValue convertToConcreteValue(Object value) {
+    private ConcreteValue convertToConcreteValue(Object value)
+    {
         return VmSupport.toConcreteValue(heapManager, value);
     }
 
-    private Object convertFromConcreteValue(ConcreteValue value) {
-        if (value == null || value.isNull()) {
+    private Object convertFromConcreteValue(ConcreteValue value)
+    {
+        if (value == null || value.isNull())
+        {
             return null;
         }
 
-        switch (value.getTag()) {
+        switch (value.getTag())
+        {
             case INT:
                 return value.asInt();
             case LONG:
@@ -633,51 +737,60 @@ public class VMExecutionService {
         }
     }
 
-    private ExecutionResult buildExecutionResult(BytecodeResult result, long executionTimeMs) {
+    private ExecutionResult buildExecutionResult(BytecodeResult result, long executionTimeMs)
+    {
         return buildExecutionResult(result, executionTimeMs, null);
     }
 
-    private ExecutionResult buildExecutionResult(BytecodeResult result, long executionTimeMs, List<MethodCall> methodCalls) {
+    private ExecutionResult buildExecutionResult(BytecodeResult result, long executionTimeMs, List<MethodCall> methodCalls)
+    {
         boolean success = result.isSuccess();
         Object returnValue = null;
         String returnType = "V";
         Throwable exception = null;
 
-        if (result.isSuccess() && result.getReturnValue() != null) {
+        if (result.isSuccess() && result.getReturnValue() != null)
+        {
             returnValue = convertFromConcreteValue(result.getReturnValue());
             returnType = result.getReturnValue().getTag().name();
         }
 
-        if (result.hasException()) {
+        if (result.hasException())
+        {
             exception = new RuntimeException("VM Exception: " + result.getException().toString());
         }
 
         ExecutionResult.Builder builder = ExecutionResult.builder()
-            .success(success)
-            .returnValue(returnValue)
-            .returnType(returnType)
-            .executionTimeMs(executionTimeMs)
-            .instructionsExecuted(result.getInstructionsExecuted());
+                .success(success)
+                .returnValue(returnValue)
+                .returnType(returnType)
+                .executionTimeMs(executionTimeMs)
+                .instructionsExecuted(result.getInstructionsExecuted());
 
-        if (exception != null) {
+        if (exception != null)
+        {
             builder.exception(exception);
         }
 
-        if (methodCalls != null) {
+        if (methodCalls != null)
+        {
             builder.methodCalls(methodCalls);
         }
 
         return builder.build();
     }
 
-    private Object[] extractArgumentsFromFrame(StackFrame frame) {
-        try {
+    private Object[] extractArgumentsFromFrame(StackFrame frame)
+    {
+        try
+        {
             MethodEntry method = frame.getMethod();
             String desc = method.getDesc();
             boolean isStatic = (method.getAccess() & 0x0008) != 0;
 
             List<String> argTypes = parseArgumentTypes(desc);
-            if (argTypes.isEmpty()) {
+            if (argTypes.isEmpty())
+            {
                 return new Object[0];
             }
 
@@ -685,7 +798,8 @@ public class VMExecutionService {
             Object[] args = new Object[argTypes.size()];
             int slot = isStatic ? 0 : 1;
 
-            for (int i = 0; i < argTypes.size(); i++) {
+            for (int i = 0; i < argTypes.size(); i++)
+            {
                 String type = argTypes.get(i);
                 ConcreteValue value = locals.get(slot);
                 args[i] = convertFromConcreteValue(value);
@@ -693,41 +807,54 @@ public class VMExecutionService {
             }
 
             return args;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return new Object[0];
         }
     }
 
-    private List<String> parseArgumentTypes(String descriptor) {
+    private List<String> parseArgumentTypes(String descriptor)
+    {
         List<String> types = new ArrayList<>();
         int i = descriptor.indexOf('(');
         if (i < 0) return types;
         i++;
 
-        while (i < descriptor.length() && descriptor.charAt(i) != ')') {
+        while (i < descriptor.length() && descriptor.charAt(i) != ')')
+        {
             char c = descriptor.charAt(i);
-            if (c == 'L') {
+            if (c == 'L')
+            {
                 int end = descriptor.indexOf(';', i);
                 if (end < 0) break;
                 types.add(descriptor.substring(i, end + 1));
                 i = end + 1;
-            } else if (c == '[') {
+            }
+            else if (c == '[')
+            {
                 int start = i;
                 i++;
                 while (i < descriptor.length() && descriptor.charAt(i) == '[') i++;
-                if (i < descriptor.length()) {
+                if (i < descriptor.length())
+                {
                     char elem = descriptor.charAt(i);
-                    if (elem == 'L') {
+                    if (elem == 'L')
+                    {
                         int end = descriptor.indexOf(';', i);
                         if (end < 0) break;
                         types.add(descriptor.substring(start, end + 1));
                         i = end + 1;
-                    } else {
+                    }
+                    else
+                    {
                         types.add(descriptor.substring(start, i + 1));
                         i++;
                     }
                 }
-            } else {
+            }
+            else
+            {
                 types.add(String.valueOf(c));
                 i++;
             }
@@ -735,8 +862,10 @@ public class VMExecutionService {
         return types;
     }
 
-    private int getSlotSize(String typeDesc) {
-        if (typeDesc.equals("J") || typeDesc.equals("D")) {
+    private int getSlotSize(String typeDesc)
+    {
+        if (typeDesc.equals("J") || typeDesc.equals("D"))
+        {
             return 2;
         }
         return 1;

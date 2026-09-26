@@ -6,7 +6,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class BytecodeLineIndexTest {
+class BytecodeLineIndexTest
+{
 
     /**
      * Mirrors the {@code BytecodeView}/{@code BytecodeFormatter} layout: structural comments and the
@@ -16,46 +17,50 @@ class BytecodeLineIndexTest {
      */
     private static final String SAMPLE =
             "// Class: com/example/Foo\n" +
-            "// Super: java/lang/Object\n" +
-            "\n" +
-            "// =====\n" +
-            "// Method 1 of 2\n" +
-            "// =====\n" +
-            "\n" +
-            "// public foo(I)V\n" +
-            "  // signature: foo(n: I)\n" +
-            "  // max_stack = 2, max_locals = 2\n" +
-            "  // line 10\n" +
-            "  0000: iload             1  // n: I\n" +
-            "  0001: ifle              0008\n" +
-            "  // line 11\n" +
-            "  0004: iconst_1\n" +
-            "  0005: ireturn\n" +
-            "  // line 13\n" +
-            "  0008: tableswitch       default=0020, low=1, high=1, count=1\n" +
-            "          case[1] => offset 0020\n" +
-            "  0020: iconst_0\n" +
-            "  0021: ireturn\n" +
-            "  // Exception table:\n" +
-            "  //   from     to       target   type\n" +
-            "  //   0        4        8        any\n" +
-            "\n" +
-            "// =====\n" +
-            "// Method 2 of 2\n" +
-            "// =====\n" +
-            "\n" +
-            "// static <clinit>()V\n" +
-            "  // line 20\n" +
-            "  0000: return\n";
+                    "// Super: java/lang/Object\n" +
+                    "\n" +
+                    "// =====\n" +
+                    "// Method 1 of 2\n" +
+                    "// =====\n" +
+                    "\n" +
+                    "// public foo(I)V\n" +
+                    "  // signature: foo(n: I)\n" +
+                    "  // max_stack = 2, max_locals = 2\n" +
+                    "  // line 10\n" +
+                    "  0000: iload             1  // n: I\n" +
+                    "  0001: ifle              0008\n" +
+                    "  // line 11\n" +
+                    "  0004: iconst_1\n" +
+                    "  0005: ireturn\n" +
+                    "  // line 13\n" +
+                    "  0008: tableswitch       default=0020, low=1, high=1, count=1\n" +
+                    "          case[1] => offset 0020\n" +
+                    "  0020: iconst_0\n" +
+                    "  0021: ireturn\n" +
+                    "  // Exception table:\n" +
+                    "  //   from     to       target   type\n" +
+                    "  //   0        4        8        any\n" +
+                    "\n" +
+                    "// =====\n" +
+                    "// Method 2 of 2\n" +
+                    "// =====\n" +
+                    "\n" +
+                    "// static <clinit>()V\n" +
+                    "  // line 20\n" +
+                    "  0000: return\n";
 
-    private static String[] lines() {
+    private static String[] lines()
+    {
         return SAMPLE.split("\n", -1);
     }
 
-    private static int lineContaining(String needle) {
+    private static int lineContaining(String needle)
+    {
         String[] lines = lines();
-        for (int i = 0; i < lines.length; i++) {
-            if (lines[i].contains(needle)) {
+        for (int i = 0; i < lines.length; i++)
+        {
+            if (lines[i].contains(needle))
+            {
                 return i;
             }
         }
@@ -63,7 +68,8 @@ class BytecodeLineIndexTest {
     }
 
     @Test
-    void mapsInstructionLinesToOffsetsAndMethods() {
+    void mapsInstructionLinesToOffsetsAndMethods()
+    {
         BytecodeLineIndex index = BytecodeLineIndex.parse(SAMPLE);
 
         BcLocation iload = index.locationAtLine(lineContaining("iload"));
@@ -82,7 +88,8 @@ class BytecodeLineIndexTest {
     }
 
     @Test
-    void mapsSecondMethodWithSpecialName() {
+    void mapsSecondMethodWithSpecialName()
+    {
         BytecodeLineIndex index = BytecodeLineIndex.parse(SAMPLE);
         BcLocation ret = index.locationAtLine(lineContaining("0000: return"));
         assertNotNull(ret);
@@ -92,7 +99,8 @@ class BytecodeLineIndexTest {
     }
 
     @Test
-    void verboseExtrasAreNotInstructions() {
+    void verboseExtrasAreNotInstructions()
+    {
         BytecodeLineIndex index = BytecodeLineIndex.parse(SAMPLE);
         assertNull(index.locationAtLine(lineContaining("// line 10")));
         assertNull(index.locationAtLine(lineContaining("// signature")));
@@ -104,7 +112,8 @@ class BytecodeLineIndexTest {
     }
 
     @Test
-    void displayLinesForPcRangeReturnsInstructionLines() {
+    void displayLinesForPcRangeReturnsInstructionLines()
+    {
         BytecodeLineIndex index = BytecodeLineIndex.parse(SAMPLE);
         List<Integer> rangeLines = index.displayLinesForPcRange("foo(I)V", 0, 1);
         assertEquals(List.of(lineContaining("iload"), lineContaining("ifle")), rangeLines);
@@ -114,7 +123,8 @@ class BytecodeLineIndexTest {
     }
 
     @Test
-    void handlesNullAndEmpty() {
+    void handlesNullAndEmpty()
+    {
         assertNull(BytecodeLineIndex.parse(null).locationAtLine(0));
         assertNull(BytecodeLineIndex.parse("").locationAtLine(0));
         assertTrue(BytecodeLineIndex.parse("").displayLinesForPcRange("x()V", 0, 9).isEmpty());

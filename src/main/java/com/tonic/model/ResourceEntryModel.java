@@ -3,7 +3,8 @@ package com.tonic.model;
 import lombok.Getter;
 
 @Getter
-public class ResourceEntryModel {
+public class ResourceEntryModel
+{
 
     private final String path;
     private final String name;
@@ -12,7 +13,8 @@ public class ResourceEntryModel {
     private final ResourceType resourceType;
     private final long size;
 
-    public ResourceEntryModel(String path, byte[] data) {
+    public ResourceEntryModel(String path, byte[] data)
+    {
         this.path = path;
         this.name = extractName(path);
         this.directory = extractDirectory(path);
@@ -21,25 +23,31 @@ public class ResourceEntryModel {
         this.resourceType = ResourceType.detect(path, data);
     }
 
-    private static String extractName(String path) {
+    private static String extractName(String path)
+    {
         int lastSlash = path.lastIndexOf('/');
         return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
     }
 
-    private static String extractDirectory(String path) {
+    private static String extractDirectory(String path)
+    {
         int lastSlash = path.lastIndexOf('/');
         return lastSlash >= 0 ? path.substring(0, lastSlash) : "";
     }
 
-    public String getIconKey() {
+    public String getIconKey()
+    {
         return resourceType.getIconName();
     }
 
-    public String getFormattedSize() {
-        if (size < 1024) {
+    public String getFormattedSize()
+    {
+        if (size < 1024)
+        {
             return size + " B";
         }
-        if (size < 1024 * 1024) {
+        if (size < 1024 * 1024)
+        {
             return (size / 1024) + " KB";
         }
         return String.format("%.1f MB", size / (1024.0 * 1024.0));

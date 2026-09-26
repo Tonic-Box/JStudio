@@ -8,7 +8,8 @@ import lombok.Getter;
 import javax.swing.Icon;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class MethodRootNode extends DefaultMutableTreeNode {
+public class MethodRootNode extends DefaultMutableTreeNode
+{
 
     @Getter
     private final String methodName;
@@ -18,29 +19,34 @@ public class MethodRootNode extends DefaultMutableTreeNode {
     @Getter
     private final BlockStmt body;
 
-    public MethodRootNode(MethodEntry method, BlockStmt body) {
+    public MethodRootNode(MethodEntry method, BlockStmt body)
+    {
         super(method.getName() + method.getDesc());
         this.methodName = method.getName();
         this.methodDesc = method.getDesc();
         this.accessFlags = method.getAccess();
         this.body = body;
 
-        if (body != null) {
+        if (body != null)
+        {
             add(ASTTreeNode.createNodeFor(body, null));
         }
     }
 
-    public boolean hasBody() {
+    public boolean hasBody()
+    {
         return body != null;
     }
 
-    public String getDisplayText() {
+    public String getDisplayText()
+    {
         return formatAccessFlags() +
                 methodName +
                 formatMethodDesc();
     }
 
-    private String formatAccessFlags() {
+    private String formatAccessFlags()
+    {
         StringBuilder sb = new StringBuilder();
         if ((accessFlags & 0x0001) != 0) sb.append("public ");
         if ((accessFlags & 0x0002) != 0) sb.append("private ");
@@ -53,13 +59,15 @@ public class MethodRootNode extends DefaultMutableTreeNode {
         return sb.toString();
     }
 
-    private String formatMethodDesc() {
+    private String formatMethodDesc()
+    {
         String desc = methodDesc;
         StringBuilder sb = new StringBuilder("(");
 
         int idx = 1;
         int argCount = 0;
-        while (desc.charAt(idx) != ')') {
+        while (desc.charAt(idx) != ')')
+        {
             if (argCount > 0) sb.append(", ");
             idx = appendType(desc, idx, sb);
             argCount++;
@@ -73,24 +81,54 @@ public class MethodRootNode extends DefaultMutableTreeNode {
         return sb.toString();
     }
 
-    private int appendType(String desc, int idx, StringBuilder sb) {
+    private int appendType(String desc, int idx, StringBuilder sb)
+    {
         int arrayDim = 0;
-        while (desc.charAt(idx) == '[') {
+        while (desc.charAt(idx) == '[')
+        {
             arrayDim++;
             idx++;
         }
 
         char c = desc.charAt(idx);
-        switch (c) {
-            case 'B': sb.append("byte"); idx++; break;
-            case 'C': sb.append("char"); idx++; break;
-            case 'D': sb.append("double"); idx++; break;
-            case 'F': sb.append("float"); idx++; break;
-            case 'I': sb.append("int"); idx++; break;
-            case 'J': sb.append("long"); idx++; break;
-            case 'S': sb.append("short"); idx++; break;
-            case 'Z': sb.append("boolean"); idx++; break;
-            case 'V': sb.append("void"); idx++; break;
+        switch (c)
+        {
+            case 'B':
+                sb.append("byte");
+                idx++;
+                break;
+            case 'C':
+                sb.append("char");
+                idx++;
+                break;
+            case 'D':
+                sb.append("double");
+                idx++;
+                break;
+            case 'F':
+                sb.append("float");
+                idx++;
+                break;
+            case 'I':
+                sb.append("int");
+                idx++;
+                break;
+            case 'J':
+                sb.append("long");
+                idx++;
+                break;
+            case 'S':
+                sb.append("short");
+                idx++;
+                break;
+            case 'Z':
+                sb.append("boolean");
+                idx++;
+                break;
+            case 'V':
+                sb.append("void");
+                idx++;
+                break;
             case 'L':
                 int end = desc.indexOf(';', idx);
                 String className = desc.substring(idx + 1, end);
@@ -108,21 +146,26 @@ public class MethodRootNode extends DefaultMutableTreeNode {
         return idx;
     }
 
-    public Icon getIcon() {
-        if ((accessFlags & 0x0002) != 0) {
+    public Icon getIcon()
+    {
+        if ((accessFlags & 0x0002) != 0)
+        {
             return Icons.getIcon("method_private", 14);
         }
-        if ((accessFlags & 0x0004) != 0) {
+        if ((accessFlags & 0x0004) != 0)
+        {
             return Icons.getIcon("method_protected", 14);
         }
-        if ((accessFlags & 0x0001) != 0) {
+        if ((accessFlags & 0x0001) != 0)
+        {
             return Icons.getIcon("method_public", 14);
         }
         return Icons.getIcon("method_package", 14);
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return getDisplayText();
     }
 }

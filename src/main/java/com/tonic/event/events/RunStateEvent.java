@@ -8,11 +8,13 @@ import lombok.Getter;
  * between the run and terminate affordances.
  */
 @Getter
-public class RunStateEvent extends Event {
+public class RunStateEvent extends Event
+{
 
     private final boolean running;
 
-    public RunStateEvent(Object source, boolean running) {
+    public RunStateEvent(Object source, boolean running)
+    {
         super(source);
         this.running = running;
     }

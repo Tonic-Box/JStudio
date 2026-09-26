@@ -11,15 +11,17 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.Color;
 import java.awt.Component;
 
-public class ASTTreeCellRenderer extends DefaultTreeCellRenderer {
+public class ASTTreeCellRenderer extends DefaultTreeCellRenderer
+{
 
-    public ASTTreeCellRenderer() {
+    public ASTTreeCellRenderer()
+    {
         setOpaque(false);
     }
 
     @Override
-    public Component getTreeCellRendererComponent(JTree tree, Object value,
-            boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+    public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus)
+    {
 
         super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 
@@ -29,21 +31,28 @@ public class ASTTreeCellRenderer extends DefaultTreeCellRenderer {
         setTextSelectionColor(JStudioTheme.getTextPrimary());
         setBorderSelectionColor(null);
 
-        if (value instanceof ASTTreeNode) {
+        if (value instanceof ASTTreeNode)
+        {
             ASTTreeNode node = (ASTTreeNode) value;
             setText(formatASTNode(node));
             Icon icon = node.getIcon();
-            if (icon != null) {
+            if (icon != null)
+            {
                 setIcon(icon);
             }
-        } else if (value instanceof MethodRootNode) {
+        }
+        else if (value instanceof MethodRootNode)
+        {
             MethodRootNode method = (MethodRootNode) value;
             setText(formatMethodNode(method));
             setIcon(method.getIcon());
-        } else if (value instanceof DefaultMutableTreeNode) {
+        }
+        else if (value instanceof DefaultMutableTreeNode)
+        {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             Object userObject = node.getUserObject();
-            if (userObject instanceof String) {
+            if (userObject instanceof String)
+            {
                 setText(formatClassRoot((String) userObject));
                 setIcon(Icons.getIcon("class", 14));
             }
@@ -52,11 +61,13 @@ public class ASTTreeCellRenderer extends DefaultTreeCellRenderer {
         return this;
     }
 
-    private String formatASTNode(ASTTreeNode node) {
+    private String formatASTNode(ASTTreeNode node)
+    {
         StringBuilder html = new StringBuilder("<html>");
 
         String propName = node.getPropertyName();
-        if (propName != null && !propName.isEmpty()) {
+        if (propName != null && !propName.isEmpty())
+        {
             html.append("<font color='").append(colorToHex(SyntaxColors.getIrValue())).append("'>");
             html.append(escapeHtml(propName));
             html.append("</font>: ");
@@ -67,14 +78,16 @@ public class ASTTreeCellRenderer extends DefaultTreeCellRenderer {
         html.append("</font></b>");
 
         String details = node.getNodeDetails();
-        if (details != null && !details.isEmpty()) {
+        if (details != null && !details.isEmpty())
+        {
             html.append("<font color='").append(colorToHex(SyntaxColors.getJavaString())).append("'>");
             html.append("(").append(escapeHtml(details)).append(")");
             html.append("</font>");
         }
 
         String type = node.getTypeAnnotation();
-        if (type != null && !type.isEmpty()) {
+        if (type != null && !type.isEmpty())
+        {
             html.append(" <font color='").append(colorToHex(SyntaxColors.getJavaType())).append("'>");
             html.append(": ").append(escapeHtml(type));
             html.append("</font>");
@@ -84,13 +97,15 @@ public class ASTTreeCellRenderer extends DefaultTreeCellRenderer {
         return html.toString();
     }
 
-    private String formatMethodNode(MethodRootNode method) {
+    private String formatMethodNode(MethodRootNode method)
+    {
         StringBuilder html = new StringBuilder("<html>");
         html.append("<b><font color='").append(colorToHex(JStudioTheme.getAccent())).append("'>");
         html.append(escapeHtml(method.getDisplayText()));
         html.append("</font></b>");
 
-        if (!method.hasBody()) {
+        if (!method.hasBody())
+        {
             html.append(" <font color='").append(colorToHex(JStudioTheme.getTextSecondary())).append("'>");
             html.append("(no body)");
             html.append("</font>");
@@ -100,7 +115,8 @@ public class ASTTreeCellRenderer extends DefaultTreeCellRenderer {
         return html.toString();
     }
 
-    private String formatClassRoot(String className) {
+    private String formatClassRoot(String className)
+    {
         StringBuilder html = new StringBuilder("<html>");
         html.append("<b><font color='").append(colorToHex(SyntaxColors.getJavaType())).append("'>");
         html.append(escapeHtml(className));
@@ -109,11 +125,13 @@ public class ASTTreeCellRenderer extends DefaultTreeCellRenderer {
         return html.toString();
     }
 
-    private static String colorToHex(Color c) {
+    private static String colorToHex(Color c)
+    {
         return String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
     }
 
-    private static String escapeHtml(String s) {
+    private static String escapeHtml(String s)
+    {
         if (s == null) return "";
         return s.replace("&", "&amp;")
                 .replace("<", "&lt;")

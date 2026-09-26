@@ -32,7 +32,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * authoritative way to check whether a project is actually open. Per-plugin state (logger, config, results,
  * environment) is stable for the plugin's lifetime.
  */
-public class LiveGuiPluginContext implements PluginContext {
+public class LiveGuiPluginContext implements PluginContext
+{
 
     private final ConsolePluginLogger logger;
     private final MapPluginConfig config;
@@ -41,95 +42,114 @@ public class LiveGuiPluginContext implements PluginContext {
     private File exportDir;
     private ProjectModel emptyProject;
 
-    public LiveGuiPluginContext(String pluginName) {
+    public LiveGuiPluginContext(String pluginName)
+    {
         this.logger = new ConsolePluginLogger(pluginName);
         this.config = new MapPluginConfig();
         this.results = new ResultCollector(pluginName);
     }
 
     /** The live current project, or a shared empty sentinel when none is loaded (so the impls never see null). */
-    private ProjectModel project() {
+    private ProjectModel project()
+    {
         ProjectModel current = ProjectService.getInstance().getCurrentProject();
-        if (current != null) {
+        if (current != null)
+        {
             return current;
         }
-        if (emptyProject == null) {
+        if (emptyProject == null)
+        {
             emptyProject = new ProjectModel();
         }
         return emptyProject;
     }
 
     @Override
-    public PluginLogger getLogger() {
+    public PluginLogger getLogger()
+    {
         return logger;
     }
 
     @Override
-    public PluginConfig getConfig() {
+    public PluginConfig getConfig()
+    {
         return config;
     }
 
     @Override
-    public ProjectApi getProject() {
+    public ProjectApi getProject()
+    {
         return new ProjectApiImpl(project());
     }
 
     @Override
-    public AnalysisApi getAnalysis() {
+    public AnalysisApi getAnalysis()
+    {
         return new AnalysisApiImpl(project());
     }
 
     @Override
-    public YabrAccess getYabr() {
+    public YabrAccess getYabr()
+    {
         return new YabrAccessImpl(project());
     }
 
     @Override
-    public VmDebugApi getVmDebug() {
+    public VmDebugApi getVmDebug()
+    {
         return new VmDebugApiImpl();
     }
 
     @Override
-    public LiveApi getLive() {
+    public LiveApi getLive()
+    {
         return new LiveApiImpl();
     }
 
     @Override
-    public ScriptApi getScript() {
+    public ScriptApi getScript()
+    {
         return new ScriptApiImpl();
     }
 
     @Override
-    public RefactorApi getRefactor() {
+    public RefactorApi getRefactor()
+    {
         return new RefactorApiImpl();
     }
 
     @Override
-    public ResultCollector getResults() {
+    public ResultCollector getResults()
+    {
         return results;
     }
 
     @Override
-    public Optional<Object> getService(String name) {
+    public Optional<Object> getService(String name)
+    {
         return Optional.empty();
     }
 
     @Override
-    public Map<String, Object> getEnvironment() {
+    public Map<String, Object> getEnvironment()
+    {
         return new HashMap<>(environment);
     }
 
     @Override
-    public void setEnvironmentValue(String key, Object value) {
+    public void setEnvironmentValue(String key, Object value)
+    {
         environment.put(key, value);
     }
 
     @Override
-    public File getExportDir() {
+    public File getExportDir()
+    {
         return exportDir;
     }
 
-    public void setExportDir(File exportDir) {
+    public void setExportDir(File exportDir)
+    {
         this.exportDir = exportDir;
     }
 }

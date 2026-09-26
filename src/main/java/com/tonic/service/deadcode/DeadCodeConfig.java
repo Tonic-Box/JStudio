@@ -11,57 +11,73 @@ import java.util.Set;
  * <p>Keep entries are {@code com.foo.Bar#member} (name only, keeps all overloads) or
  * {@code com.foo.Bar#method(descriptor)} for a specific overload. Skip entries are {@code com.foo.Bar}.
  */
-public final class DeadCodeConfig {
+public final class DeadCodeConfig
+{
 
     private final boolean publicAsEntryPoints;
     private final Set<String> keep;
     private final Set<String> skipClassesInternal;
 
-    public DeadCodeConfig(boolean publicAsEntryPoints, Set<String> keepEntries, Set<String> skipClasses) {
+    public DeadCodeConfig(boolean publicAsEntryPoints, Set<String> keepEntries, Set<String> skipClasses)
+    {
         this.publicAsEntryPoints = publicAsEntryPoints;
         this.keep = new LinkedHashSet<>();
-        for (String s : keepEntries) {
+        for (String s : keepEntries)
+        {
             String t = s.trim();
-            if (!t.isEmpty()) {
+            if (!t.isEmpty())
+            {
                 this.keep.add(t);
             }
         }
         this.skipClassesInternal = new LinkedHashSet<>();
-        for (String s : skipClasses) {
+        for (String s : skipClasses)
+        {
             String t = s.trim();
-            if (!t.isEmpty()) {
+            if (!t.isEmpty())
+            {
                 this.skipClassesInternal.add(t.replace('.', '/'));
             }
         }
     }
 
-    boolean isPublicAsEntryPoints() {
+    boolean isPublicAsEntryPoints()
+    {
         return publicAsEntryPoints;
     }
 
     /** Internal-form class names excluded from analysis and removal. */
-    Set<String> skipClasses() {
+    Set<String> skipClasses()
+    {
         return skipClassesInternal;
     }
 
     /** Whether the keep-list forces the given member live (an entry-point root that is never removed). */
-    boolean keeps(String ownerInternal, String name, String desc) {
+    boolean keeps(String ownerInternal, String name, String desc)
+    {
         String ownerDotted = ownerInternal.replace('/', '.');
-        for (String entry : keep) {
+        for (String entry : keep)
+        {
             int hash = entry.indexOf('#');
-            if (hash < 0) {
+            if (hash < 0)
+            {
                 continue;
             }
-            if (!entry.substring(0, hash).trim().equals(ownerDotted)) {
+            if (!entry.substring(0, hash).trim().equals(ownerDotted))
+            {
                 continue;
             }
             String member = entry.substring(hash + 1).trim();
             int paren = member.indexOf('(');
-            if (paren >= 0) {
-                if (member.substring(0, paren).equals(name) && member.substring(paren).equals(desc)) {
+            if (paren >= 0)
+            {
+                if (member.substring(0, paren).equals(name) && member.substring(paren).equals(desc))
+                {
                     return true;
                 }
-            } else if (member.equals(name)) {
+            }
+            else if (member.equals(name))
+            {
                 return true;
             }
         }

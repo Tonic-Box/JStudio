@@ -16,7 +16,8 @@ import javax.swing.JTextPane;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 
-public class HexResourceView extends AbstractEditorView {
+public class HexResourceView extends AbstractEditorView
+{
 
     private final ResourceEntryModel resource;
     private final JTextPane textPane;
@@ -31,7 +32,8 @@ public class HexResourceView extends AbstractEditorView {
     private static final String STYLE_ASCII = "ascii";
     private static final String STYLE_SEPARATOR = "separator";
 
-    public HexResourceView(ResourceEntryModel resource) {
+    public HexResourceView(ResourceEntryModel resource)
+    {
         this.resource = resource;
 
         textPane = new JTextPane();
@@ -53,7 +55,8 @@ public class HexResourceView extends AbstractEditorView {
         displayHexDump();
     }
 
-    private void setupStyles() {
+    private void setupStyles()
+    {
         StyledDocument doc = textPane.getStyledDocument();
 
         Style offsetStyle = doc.addStyle(STYLE_OFFSET, null);
@@ -69,35 +72,46 @@ public class HexResourceView extends AbstractEditorView {
         StyleConstants.setForeground(separatorStyle, JStudioTheme.getTextSecondary());
     }
 
-    private void displayHexDump() {
+    private void displayHexDump()
+    {
         byte[] bytes = resource.getData();
         StyledDocument doc = textPane.getStyledDocument();
 
-        try {
-            for (int offset = 0; offset < bytes.length; offset += BYTES_PER_LINE) {
+        try
+        {
+            for (int offset = 0; offset < bytes.length; offset += BYTES_PER_LINE)
+            {
                 String offsetStr = String.format("%08X  ", offset);
                 doc.insertString(doc.getLength(), offsetStr, doc.getStyle(STYLE_OFFSET));
 
                 StringBuilder hexPart = new StringBuilder();
                 StringBuilder asciiPart = new StringBuilder();
 
-                for (int i = 0; i < BYTES_PER_LINE; i++) {
+                for (int i = 0; i < BYTES_PER_LINE; i++)
+                {
                     int byteOffset = offset + i;
-                    if (byteOffset < bytes.length) {
+                    if (byteOffset < bytes.length)
+                    {
                         int b = bytes[byteOffset] & 0xFF;
                         hexPart.append(String.format("%02X ", b));
 
-                        if (b >= 32 && b < 127) {
+                        if (b >= 32 && b < 127)
+                        {
                             asciiPart.append((char) b);
-                        } else {
+                        }
+                        else
+                        {
                             asciiPart.append('.');
                         }
-                    } else {
+                    }
+                    else
+                    {
                         hexPart.append("   ");
                         asciiPart.append(' ');
                     }
 
-                    if (i == 7) {
+                    if (i == 7)
+                    {
                         hexPart.append(' ');
                     }
                 }
@@ -109,13 +123,16 @@ public class HexResourceView extends AbstractEditorView {
             }
 
             textPane.setCaretPosition(0);
-        } catch (BadLocationException e) {
+        }
+        catch (BadLocationException e)
+        {
             // Ignore
         }
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         textPane.setBackground(JStudioTheme.getBgTertiary());
         textPane.setForeground(JStudioTheme.getTextPrimary());
         textPane.setCaretColor(JStudioTheme.getTextPrimary());
@@ -127,12 +144,14 @@ public class HexResourceView extends AbstractEditorView {
     }
 
     @Override
-    public String getText() {
+    public String getText()
+    {
         return textPane.getText();
     }
 
     @Override
-    public void setFontSize(int size) {
+    public void setFontSize(int size)
+    {
         textPane.setFont(JStudioTheme.getCodeFont(size));
         headerLabel.setFont(JStudioTheme.getCodeFont(size));
     }

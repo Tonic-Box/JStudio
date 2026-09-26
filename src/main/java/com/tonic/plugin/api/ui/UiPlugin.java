@@ -12,11 +12,13 @@ import com.tonic.plugin.api.Plugin;
  * {@code start} via {@link JStudioHost#ui()}; each contribution returns a {@link Registration} the host tracks
  * and removes automatically when the plugin is disabled or the app exits.
  */
-public interface UiPlugin extends Plugin {
+public interface UiPlugin extends Plugin
+{
 
     /** UI plugins are resident, not one-shot; the headless execute step is unused. */
     @Override
-    default void execute() {
+    default void execute()
+    {
     }
 
     /**
@@ -32,6 +34,7 @@ public interface UiPlugin extends Plugin {
      * removed every tracked {@link Registration}. Stop anything the host can't see here (threads, timers, windows).
      */
     @Override
-    default void dispose() {
+    default void dispose()
+    {
     }
 }

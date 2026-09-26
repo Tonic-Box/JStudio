@@ -11,7 +11,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 
-public class StatCard extends JPanel implements ThemeChangeListener {
+public class StatCard extends JPanel implements ThemeChangeListener
+{
 
     private String value;
     private String label;
@@ -20,7 +21,8 @@ public class StatCard extends JPanel implements ThemeChangeListener {
 
     private static final int ARC_SIZE = 12;
 
-    public StatCard(String value, String label, Color accentColor) {
+    public StatCard(String value, String label, Color accentColor)
+    {
         this.value = value;
         this.label = label;
         this.accentColor = accentColor;
@@ -29,15 +31,18 @@ public class StatCard extends JPanel implements ThemeChangeListener {
         setPreferredSize(new Dimension(140, 80));
         setMinimumSize(new Dimension(120, 70));
 
-        addMouseListener(new MouseAdapter() {
+        addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseEntered(MouseEvent e) {
+            public void mouseEntered(MouseEvent e)
+            {
                 hovered = true;
                 repaint();
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
+            public void mouseExited(MouseEvent e)
+            {
                 hovered = false;
                 repaint();
             }
@@ -46,23 +51,27 @@ public class StatCard extends JPanel implements ThemeChangeListener {
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
-    public void setValue(String value) {
+    public void setValue(String value)
+    {
         this.value = value;
         repaint();
     }
 
-    public void setLabel(String label) {
+    public void setLabel(String label)
+    {
         this.label = label;
         repaint();
     }
 
-    public void setAccentColor(Color accentColor) {
+    public void setAccentColor(Color accentColor)
+    {
         this.accentColor = accentColor;
         repaint();
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g)
+    {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g.create();
 
@@ -106,7 +115,8 @@ public class StatCard extends JPanel implements ThemeChangeListener {
         g2.dispose();
     }
 
-    private Color brighten(Color color, float factor) {
+    private Color brighten(Color color, float factor)
+    {
         int r = Math.min(255, (int) (color.getRed() * factor));
         int g = Math.min(255, (int) (color.getGreen() * factor));
         int b = Math.min(255, (int) (color.getBlue() * factor));
@@ -114,13 +124,15 @@ public class StatCard extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         super.removeNotify();
         ThemeManager.getInstance().removeThemeChangeListener(this);
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         repaint();
     }
 }

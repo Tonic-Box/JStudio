@@ -8,7 +8,8 @@ import java.util.prefs.Preferences;
 /**
  * Manages the list of recently opened files using Java Preferences API.
  */
-public class RecentFilesManager {
+public class RecentFilesManager
+{
 
     private static final String PREFS_KEY_PREFIX = "recentFile_";
     private static final String PREFS_KEY_COUNT = "recentFileCount";
@@ -22,11 +23,13 @@ public class RecentFilesManager {
     /**
      * Listener interface for recent files changes.
      */
-    public interface RecentFilesListener {
+    public interface RecentFilesListener
+    {
         void onRecentFilesChanged(List<File> recentFiles);
     }
 
-    private RecentFilesManager() {
+    private RecentFilesManager()
+    {
         prefs = Preferences.userNodeForPackage(RecentFilesManager.class);
         recentFiles = new ArrayList<>();
         listeners = new ArrayList<>();
@@ -36,8 +39,10 @@ public class RecentFilesManager {
     /**
      * Get the singleton instance.
      */
-    public static synchronized RecentFilesManager getInstance() {
-        if (instance == null) {
+    public static synchronized RecentFilesManager getInstance()
+    {
+        if (instance == null)
+        {
             instance = new RecentFilesManager();
         }
         return instance;
@@ -46,8 +51,10 @@ public class RecentFilesManager {
     /**
      * Add a file to the recent files list.
      */
-    public void addFile(File file) {
-        if (file == null || !file.exists()) {
+    public void addFile(File file)
+    {
+        if (file == null || !file.exists())
+        {
             return;
         }
 
@@ -58,7 +65,8 @@ public class RecentFilesManager {
         recentFiles.add(0, file);
 
         // Trim to max size
-        while (recentFiles.size() > MAX_RECENT_FILES) {
+        while (recentFiles.size() > MAX_RECENT_FILES)
+        {
             recentFiles.remove(recentFiles.size() - 1);
         }
 
@@ -69,11 +77,14 @@ public class RecentFilesManager {
     /**
      * Get the list of recent files.
      */
-    public List<File> getRecentFiles() {
+    public List<File> getRecentFiles()
+    {
         // Return a copy, removing any that no longer exist
         List<File> result = new ArrayList<>();
-        for (File file : recentFiles) {
-            if (file.exists()) {
+        for (File file : recentFiles)
+        {
+            if (file.exists())
+            {
                 result.add(file);
             }
         }
@@ -83,9 +94,12 @@ public class RecentFilesManager {
     /**
      * Get the most recently opened file.
      */
-    public File getMostRecent() {
-        for (File file : recentFiles) {
-            if (file.exists()) {
+    public File getMostRecent()
+    {
+        for (File file : recentFiles)
+        {
+            if (file.exists())
+            {
                 return file;
             }
         }
@@ -95,7 +109,8 @@ public class RecentFilesManager {
     /**
      * Clear all recent files.
      */
-    public void clear() {
+    public void clear()
+    {
         recentFiles.clear();
         saveToPreferences();
         notifyListeners();
@@ -104,8 +119,10 @@ public class RecentFilesManager {
     /**
      * Add a listener for recent files changes.
      */
-    public void addListener(RecentFilesListener listener) {
-        if (!listeners.contains(listener)) {
+    public void addListener(RecentFilesListener listener)
+    {
+        if (!listeners.contains(listener))
+        {
             listeners.add(listener);
         }
     }
@@ -113,41 +130,51 @@ public class RecentFilesManager {
     /**
      * Remove a listener.
      */
-    public void removeListener(RecentFilesListener listener) {
+    public void removeListener(RecentFilesListener listener)
+    {
         listeners.remove(listener);
     }
 
-    private void loadFromPreferences() {
+    private void loadFromPreferences()
+    {
         recentFiles.clear();
         int count = prefs.getInt(PREFS_KEY_COUNT, 0);
-        for (int i = 0; i < count && i < MAX_RECENT_FILES; i++) {
+        for (int i = 0; i < count && i < MAX_RECENT_FILES; i++)
+        {
             String path = prefs.get(PREFS_KEY_PREFIX + i, null);
-            if (path != null) {
+            if (path != null)
+            {
                 File file = new File(path);
-                if (file.exists()) {
+                if (file.exists())
+                {
                     recentFiles.add(file);
                 }
             }
         }
     }
 
-    private void saveToPreferences() {
+    private void saveToPreferences()
+    {
         // Clear old entries
         int oldCount = prefs.getInt(PREFS_KEY_COUNT, 0);
-        for (int i = 0; i < oldCount; i++) {
+        for (int i = 0; i < oldCount; i++)
+        {
             prefs.remove(PREFS_KEY_PREFIX + i);
         }
 
         // Save new entries
         prefs.putInt(PREFS_KEY_COUNT, recentFiles.size());
-        for (int i = 0; i < recentFiles.size(); i++) {
+        for (int i = 0; i < recentFiles.size(); i++)
+        {
             prefs.put(PREFS_KEY_PREFIX + i, recentFiles.get(i).getAbsolutePath());
         }
     }
 
-    private void notifyListeners() {
+    private void notifyListeners()
+    {
         List<File> files = getRecentFiles();
-        for (RecentFilesListener listener : listeners) {
+        for (RecentFilesListener listener : listeners)
+        {
             listener.onRecentFilesChanged(files);
         }
     }

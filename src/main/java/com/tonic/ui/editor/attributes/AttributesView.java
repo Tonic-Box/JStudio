@@ -19,7 +19,8 @@ import java.awt.datatransfer.StringSelection;
 import java.util.Enumeration;
 import java.util.List;
 
-public class AttributesView extends AbstractEditorView {
+public class AttributesView extends AbstractEditorView
+{
 
     private final ClassEntryModel classEntry;
     private final JTree tree;
@@ -29,7 +30,8 @@ public class AttributesView extends AbstractEditorView {
 
     private String lastSearch;
 
-    public AttributesView(ClassEntryModel classEntry) {
+    public AttributesView(ClassEntryModel classEntry)
+    {
         this.classEntry = classEntry;
 
         root = new DefaultMutableTreeNode("Attributes");
@@ -53,25 +55,32 @@ public class AttributesView extends AbstractEditorView {
     }
 
     @Override
-    public void refresh() {
+    public void refresh()
+    {
         cancelCurrentWorker();
         loadingOverlay.showLoading("Loading attributes...");
 
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+        SwingWorker<Void, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected Void doInBackground() {
+            protected Void doInBackground()
+            {
                 return null;
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 loadingOverlay.hideLoading();
                 if (isCancelled()) return;
-                try {
+                try
+                {
                     get();
                     loadAttributes();
                     loaded = true;
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     root.removeAllChildren();
                     root.add(new DefaultMutableTreeNode("Error loading attributes: " + e.getMessage()));
                     treeModel.reload();
@@ -82,36 +91,41 @@ public class AttributesView extends AbstractEditorView {
         worker.execute();
     }
 
-    private void loadAttributes() {
+    private void loadAttributes()
+    {
         root.removeAllChildren();
 
         ClassFile cf = classEntry.getClassFile();
-        if (cf == null) {
+        if (cf == null)
+        {
             treeModel.reload();
             return;
         }
 
         List<Attribute> classAttrs = cf.getClassAttributes();
-        if (classAttrs != null && !classAttrs.isEmpty()) {
-            DefaultMutableTreeNode classNode = new DefaultMutableTreeNode(
-                    new CategoryNode("Class Attributes", classAttrs.size(), CategoryType.CLASS));
-            for (Attribute attr : classAttrs) {
+        if (classAttrs != null && !classAttrs.isEmpty())
+        {
+            DefaultMutableTreeNode classNode = new DefaultMutableTreeNode(new CategoryNode("Class Attributes", classAttrs.size(), CategoryType.CLASS));
+            for (Attribute attr : classAttrs)
+            {
                 addAttributeNode(classNode, attr, cf);
             }
             root.add(classNode);
         }
 
         List<FieldEntry> fields = cf.getFields();
-        if (fields != null && !fields.isEmpty()) {
-            for (FieldEntry field : fields) {
+        if (fields != null && !fields.isEmpty())
+        {
+            for (FieldEntry field : fields)
+            {
                 List<Attribute> fieldAttrs = field.getAttributes();
-                if (fieldAttrs != null && !fieldAttrs.isEmpty()) {
+                if (fieldAttrs != null && !fieldAttrs.isEmpty())
+                {
                     String fieldName = resolveUtf8(cf, field.getNameIndex());
                     String fieldDesc = resolveUtf8(cf, field.getDescIndex());
-                    DefaultMutableTreeNode fieldNode = new DefaultMutableTreeNode(
-                            new CategoryNode("Field: " + fieldName + " : " + shortenType(fieldDesc),
-                                    fieldAttrs.size(), CategoryType.FIELD));
-                    for (Attribute attr : fieldAttrs) {
+                    DefaultMutableTreeNode fieldNode = new DefaultMutableTreeNode(new CategoryNode("Field: " + fieldName + " : " + shortenType(fieldDesc), fieldAttrs.size(), CategoryType.FIELD));
+                    for (Attribute attr : fieldAttrs)
+                    {
                         addAttributeNode(fieldNode, attr, cf);
                     }
                     root.add(fieldNode);
@@ -120,16 +134,18 @@ public class AttributesView extends AbstractEditorView {
         }
 
         List<MethodEntry> methods = cf.getMethods();
-        if (methods != null && !methods.isEmpty()) {
-            for (MethodEntry method : methods) {
+        if (methods != null && !methods.isEmpty())
+        {
+            for (MethodEntry method : methods)
+            {
                 List<Attribute> methodAttrs = method.getAttributes();
-                if (methodAttrs != null && !methodAttrs.isEmpty()) {
+                if (methodAttrs != null && !methodAttrs.isEmpty())
+                {
                     String methodName = resolveUtf8(cf, method.getNameIndex());
                     String methodDesc = resolveUtf8(cf, method.getDescIndex());
-                    DefaultMutableTreeNode methodNode = new DefaultMutableTreeNode(
-                            new CategoryNode("Method: " + methodName + shortenDescriptor(methodDesc),
-                                    methodAttrs.size(), CategoryType.METHOD));
-                    for (Attribute attr : methodAttrs) {
+                    DefaultMutableTreeNode methodNode = new DefaultMutableTreeNode(new CategoryNode("Method: " + methodName + shortenDescriptor(methodDesc), methodAttrs.size(), CategoryType.METHOD));
+                    for (Attribute attr : methodAttrs)
+                    {
                         addAttributeNode(methodNode, attr, cf);
                     }
                     root.add(methodNode);
@@ -140,16 +156,20 @@ public class AttributesView extends AbstractEditorView {
         treeModel.reload();
     }
 
-    private void addAttributeNode(DefaultMutableTreeNode parent, Attribute attr, ClassFile cf) {
+    private void addAttributeNode(DefaultMutableTreeNode parent, Attribute attr, ClassFile cf)
+    {
         String displayName = formatAttributeName(attr, cf);
         AttributeNode attrNode = new AttributeNode(attr, displayName, getAttributeType(attr));
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(attrNode);
 
-        if (attr instanceof CodeAttribute) {
+        if (attr instanceof CodeAttribute)
+        {
             CodeAttribute code = (CodeAttribute) attr;
             List<Attribute> nested = code.getAttributes();
-            if (nested != null) {
-                for (Attribute nestedAttr : nested) {
+            if (nested != null)
+            {
+                for (Attribute nestedAttr : nested)
+                {
                     addAttributeNode(node, nestedAttr, cf);
                 }
             }
@@ -158,61 +178,93 @@ public class AttributesView extends AbstractEditorView {
         parent.add(node);
     }
 
-    private String formatAttributeName(Attribute attr, ClassFile cf) {
+    private String formatAttributeName(Attribute attr, ClassFile cf)
+    {
         String name = getAttributeTypeName(attr);
         String extra = "";
 
-        if (attr instanceof CodeAttribute) {
+        if (attr instanceof CodeAttribute)
+        {
             CodeAttribute code = (CodeAttribute) attr;
-            extra = String.format(" (stack=%d, locals=%d, code=%d bytes)",
-                    code.getMaxStack(), code.getMaxLocals(), code.getCode().length);
-        } else if (attr instanceof LineNumberTableAttribute) {
+            extra = String.format(" (stack=%d, locals=%d, code=%d bytes)", code.getMaxStack(), code.getMaxLocals(), code.getCode().length);
+        }
+        else if (attr instanceof LineNumberTableAttribute)
+        {
             LineNumberTableAttribute lnt = (LineNumberTableAttribute) attr;
             extra = " (" + lnt.getLineNumberTable().size() + " entries)";
-        } else if (attr instanceof LocalVariableTableAttribute) {
+        }
+        else if (attr instanceof LocalVariableTableAttribute)
+        {
             LocalVariableTableAttribute lvt = (LocalVariableTableAttribute) attr;
             extra = " (" + lvt.getLocalVariableTable().size() + " variables)";
-        } else if (attr instanceof LocalVariableTypeTableAttribute) {
+        }
+        else if (attr instanceof LocalVariableTypeTableAttribute)
+        {
             LocalVariableTypeTableAttribute lvtt = (LocalVariableTypeTableAttribute) attr;
             extra = " (" + lvtt.getLocalVariableTypeTable().size() + " entries)";
-        } else if (attr instanceof ExceptionsAttribute) {
+        }
+        else if (attr instanceof ExceptionsAttribute)
+        {
             ExceptionsAttribute ex = (ExceptionsAttribute) attr;
             extra = " (" + ex.getExceptionIndexTable().size() + " throws)";
-        } else if (attr instanceof InnerClassesAttribute) {
+        }
+        else if (attr instanceof InnerClassesAttribute)
+        {
             InnerClassesAttribute ic = (InnerClassesAttribute) attr;
             extra = " (" + ic.getClasses().size() + " classes)";
-        } else if (attr instanceof StackMapTableAttribute) {
+        }
+        else if (attr instanceof StackMapTableAttribute)
+        {
             StackMapTableAttribute smt = (StackMapTableAttribute) attr;
             extra = " (" + smt.getFrames().size() + " frames)";
-        } else if (attr instanceof BootstrapMethodsAttribute) {
+        }
+        else if (attr instanceof BootstrapMethodsAttribute)
+        {
             BootstrapMethodsAttribute bsm = (BootstrapMethodsAttribute) attr;
             extra = " (" + bsm.getBootstrapMethods().size() + " methods)";
-        } else if (attr instanceof RuntimeInvisibleAnnotationsAttribute) {
+        }
+        else if (attr instanceof RuntimeInvisibleAnnotationsAttribute)
+        {
             RuntimeInvisibleAnnotationsAttribute ria = (RuntimeInvisibleAnnotationsAttribute) attr;
             extra = " (" + ria.getAnnotations().size() + " annotations)";
-        } else if (attr instanceof RuntimeVisibleAnnotationsAttribute) {
+        }
+        else if (attr instanceof RuntimeVisibleAnnotationsAttribute)
+        {
             RuntimeVisibleAnnotationsAttribute rva = (RuntimeVisibleAnnotationsAttribute) attr;
             extra = " (" + rva.getAnnotations().size() + " annotations)";
-        } else if (attr instanceof SourceFileAttribute) {
+        }
+        else if (attr instanceof SourceFileAttribute)
+        {
             SourceFileAttribute sf = (SourceFileAttribute) attr;
             extra = " -> " + resolveUtf8(cf, sf.getSourceFileIndex());
-        } else if (attr instanceof SignatureAttribute) {
+        }
+        else if (attr instanceof SignatureAttribute)
+        {
             SignatureAttribute sig = (SignatureAttribute) attr;
             String sigStr = resolveUtf8(cf, sig.getSignatureIndex());
-            if (sigStr.length() > 40) {
+            if (sigStr.length() > 40)
+            {
                 sigStr = sigStr.substring(0, 37) + "...";
             }
             extra = " -> " + sigStr;
-        } else if (attr instanceof ConstantValueAttribute) {
+        }
+        else if (attr instanceof ConstantValueAttribute)
+        {
             ConstantValueAttribute cv = (ConstantValueAttribute) attr;
             extra = " -> #" + cv.getConstantValueIndex();
-        } else if (attr instanceof MethodParametersAttribute) {
+        }
+        else if (attr instanceof MethodParametersAttribute)
+        {
             MethodParametersAttribute mp = (MethodParametersAttribute) attr;
             extra = " (" + mp.getParameters().size() + " parameters)";
-        } else if (attr instanceof NestMembersAttribute) {
+        }
+        else if (attr instanceof NestMembersAttribute)
+        {
             NestMembersAttribute nm = (NestMembersAttribute) attr;
             extra = " (" + nm.getClasses().size() + " members)";
-        } else if (attr instanceof NestHostAttribute) {
+        }
+        else if (attr instanceof NestHostAttribute)
+        {
             NestHostAttribute nh = (NestHostAttribute) attr;
             extra = " -> #" + nh.getHostClassIndex();
         }
@@ -220,52 +272,74 @@ public class AttributesView extends AbstractEditorView {
         return name + extra;
     }
 
-    private String resolveUtf8(ClassFile cf, int index) {
-        try {
+    private String resolveUtf8(ClassFile cf, int index)
+    {
+        try
+        {
             var item = cf.getConstPool().getItem(index);
-            if (item instanceof Utf8Item) {
+            if (item instanceof Utf8Item)
+            {
                 return ((Utf8Item) item).getValue();
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             // ignore
         }
         return "#" + index;
     }
 
-    private String shortenDescriptor(String desc) {
+    private String shortenDescriptor(String desc)
+    {
         if (desc == null) return "";
         int paren = desc.indexOf(')');
-        if (paren > 0) {
+        if (paren > 0)
+        {
             return desc.substring(0, paren + 1);
         }
         return desc;
     }
 
-    private String shortenType(String desc) {
+    private String shortenType(String desc)
+    {
         if (desc == null) return "";
-        switch (desc) {
-            case "Z": return "boolean";
-            case "B": return "byte";
-            case "C": return "char";
-            case "S": return "short";
-            case "I": return "int";
-            case "J": return "long";
-            case "F": return "float";
-            case "D": return "double";
-            case "V": return "void";
+        switch (desc)
+        {
+            case "Z":
+                return "boolean";
+            case "B":
+                return "byte";
+            case "C":
+                return "char";
+            case "S":
+                return "short";
+            case "I":
+                return "int";
+            case "J":
+                return "long";
+            case "F":
+                return "float";
+            case "D":
+                return "double";
+            case "V":
+                return "void";
             default:
-                if (desc.startsWith("L") && desc.endsWith(";")) {
+                if (desc.startsWith("L") && desc.endsWith(";"))
+                {
                     String className = desc.substring(1, desc.length() - 1);
                     int lastSlash = className.lastIndexOf('/');
                     return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
-                } else if (desc.startsWith("[")) {
+                }
+                else if (desc.startsWith("["))
+                {
                     return shortenType(desc.substring(1)) + "[]";
                 }
                 return desc;
         }
     }
 
-    private String getAttributeTypeName(Attribute attr) {
+    private String getAttributeTypeName(Attribute attr)
+    {
         if (attr instanceof CodeAttribute) return "Code";
         if (attr instanceof ConstantValueAttribute) return "ConstantValue";
         if (attr instanceof StackMapTableAttribute) return "StackMapTable";
@@ -292,7 +366,8 @@ public class AttributesView extends AbstractEditorView {
         return "Attribute";
     }
 
-    private AttributeType getAttributeType(Attribute attr) {
+    private AttributeType getAttributeType(Attribute attr)
+    {
         if (attr instanceof CodeAttribute) return AttributeType.CODE;
         if (attr instanceof LineNumberTableAttribute) return AttributeType.DEBUG;
         if (attr instanceof LocalVariableTableAttribute) return AttributeType.DEBUG;
@@ -316,7 +391,8 @@ public class AttributesView extends AbstractEditorView {
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         tree.setBackground(JStudioTheme.getBgTertiary());
         tree.setForeground(JStudioTheme.getTextPrimary());
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
@@ -324,93 +400,114 @@ public class AttributesView extends AbstractEditorView {
     }
 
     @Override
-    public String getText() {
+    public String getText()
+    {
         StringBuilder sb = new StringBuilder();
         sb.append("// Attributes for: ").append(classEntry.getClassName()).append("\n\n");
         appendNodeText(root, sb, 0);
         return sb.toString();
     }
 
-    private void appendNodeText(DefaultMutableTreeNode node, StringBuilder sb, int indent) {
+    private void appendNodeText(DefaultMutableTreeNode node, StringBuilder sb, int indent)
+    {
         String prefix = "  ".repeat(indent);
         Object userObj = node.getUserObject();
 
-        if (userObj instanceof CategoryNode) {
+        if (userObj instanceof CategoryNode)
+        {
             sb.append(prefix).append(((CategoryNode) userObj).name).append("\n");
-        } else if (userObj instanceof AttributeNode) {
+        }
+        else if (userObj instanceof AttributeNode)
+        {
             sb.append(prefix).append("- ").append(((AttributeNode) userObj).displayName).append("\n");
-        } else if (userObj instanceof String && !userObj.equals("Attributes")) {
+        }
+        else if (userObj instanceof String && !userObj.equals("Attributes"))
+        {
             sb.append(prefix).append(userObj).append("\n");
         }
 
         Enumeration<?> children = node.children();
-        while (children.hasMoreElements()) {
+        while (children.hasMoreElements())
+        {
             appendNodeText((DefaultMutableTreeNode) children.nextElement(), sb, indent + 1);
         }
     }
 
     @Override
-    public void copySelection() {
+    public void copySelection()
+    {
         TreePath[] paths = tree.getSelectionPaths();
         if (paths == null || paths.length == 0) return;
 
         StringBuilder sb = new StringBuilder();
-        for (TreePath path : paths) {
+        for (TreePath path : paths)
+        {
             Object node = path.getLastPathComponent();
-            if (node instanceof DefaultMutableTreeNode) {
+            if (node instanceof DefaultMutableTreeNode)
+            {
                 Object userObj = ((DefaultMutableTreeNode) node).getUserObject();
                 sb.append(userObj.toString()).append("\n");
             }
         }
 
-        if (sb.length() > 0) {
+        if (sb.length() > 0)
+        {
             StringSelection selection = new StringSelection(sb.toString().trim());
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
         }
     }
 
     @Override
-    public String getSelectedText() {
+    public String getSelectedText()
+    {
         TreePath path = tree.getSelectionPath();
         if (path == null) return null;
         Object node = path.getLastPathComponent();
-        if (node instanceof DefaultMutableTreeNode) {
+        if (node instanceof DefaultMutableTreeNode)
+        {
             return ((DefaultMutableTreeNode) node).getUserObject().toString();
         }
         return null;
     }
 
     @Override
-    public void goToLine(int line) {
-        if (line >= 0 && line < tree.getRowCount()) {
+    public void goToLine(int line)
+    {
+        if (line >= 0 && line < tree.getRowCount())
+        {
             tree.setSelectionRow(line);
             tree.scrollRowToVisible(line);
         }
     }
 
     @Override
-    public void showFindDialog() {
-        String input = (String) JOptionPane.showInputDialog(
-                this, "Search:", "Find Attribute",
-                JOptionPane.PLAIN_MESSAGE, null, null, lastSearch);
+    public void showFindDialog()
+    {
+        String input = (String) JOptionPane.showInputDialog(this, "Search:", "Find Attribute", JOptionPane.PLAIN_MESSAGE, null, null, lastSearch);
         lastSearch = input;
-        if (input != null && !input.isEmpty()) {
+        if (input != null && !input.isEmpty())
+        {
             scrollToText(input);
         }
     }
 
     @Override
-    public void scrollToText(String text) {
+    public void scrollToText(String text)
+    {
         if (text == null || text.isEmpty()) return;
 
         String lowerText = text.toLowerCase();
-        for (int i = 0; i < tree.getRowCount(); i++) {
+        for (int i = 0; i < tree.getRowCount(); i++)
+        {
             TreePath path = tree.getPathForRow(i);
-            if (path != null) {
+            if (path != null)
+            {
                 Object node = path.getLastPathComponent();
-                if (node instanceof DefaultMutableTreeNode) {
+                if (node instanceof DefaultMutableTreeNode)
+                {
                     Object userObj = ((DefaultMutableTreeNode) node).getUserObject();
-                    if (userObj.toString().toLowerCase().contains(lowerText)) {
+                    if (userObj.toString().toLowerCase().contains(lowerText))
+                    {
                         tree.setSelectionPath(path);
                         tree.scrollPathToVisible(path);
                         return;
@@ -421,57 +518,67 @@ public class AttributesView extends AbstractEditorView {
     }
 
     @Override
-    public void setFontSize(int size) {
+    public void setFontSize(int size)
+    {
         tree.setFont(JStudioTheme.getCodeFont(size));
         tree.setRowHeight(size + 10);
     }
 
-    enum CategoryType {
+    enum CategoryType
+    {
         CLASS, FIELD, METHOD
     }
 
-    enum AttributeType {
+    enum AttributeType
+    {
         CODE, DEBUG, SIGNATURE, ANNOTATION, EXCEPTION, DEPRECATED, SYNTHETIC, SOURCE, STRUCTURE, INVOKEDYNAMIC, OTHER
     }
 
-    static class CategoryNode {
+    static class CategoryNode
+    {
         final String name;
         final int count;
         final CategoryType type;
 
-        CategoryNode(String name, int count, CategoryType type) {
+        CategoryNode(String name, int count, CategoryType type)
+        {
             this.name = name;
             this.count = count;
             this.type = type;
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return name + " (" + count + ")";
         }
     }
 
-    static class AttributeNode {
+    static class AttributeNode
+    {
         final Attribute attribute;
         final String displayName;
         final AttributeType type;
 
-        AttributeNode(Attribute attribute, String displayName, AttributeType type) {
+        AttributeNode(Attribute attribute, String displayName, AttributeType type)
+        {
             this.attribute = attribute;
             this.displayName = displayName;
             this.type = type;
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return displayName;
         }
     }
 
-    private static class AttributeTreeCellRenderer extends DefaultTreeCellRenderer {
+    private static class AttributeTreeCellRenderer extends DefaultTreeCellRenderer
+    {
         @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected,
-                                                      boolean expanded, boolean leaf, int row, boolean hasFocus) {
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus)
+        {
             super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 
             setBackgroundNonSelectionColor(JStudioTheme.getBgTertiary());
@@ -480,20 +587,26 @@ public class AttributesView extends AbstractEditorView {
             setTextSelectionColor(JStudioTheme.getTextPrimary());
             setBorderSelectionColor(JStudioTheme.getAccent());
 
-            if (value instanceof DefaultMutableTreeNode) {
+            if (value instanceof DefaultMutableTreeNode)
+            {
                 Object userObj = ((DefaultMutableTreeNode) value).getUserObject();
 
-                if (userObj instanceof CategoryNode) {
+                if (userObj instanceof CategoryNode)
+                {
                     CategoryNode cat = (CategoryNode) userObj;
                     setFont(getFont().deriveFont(Font.BOLD));
-                    if (!selected) {
+                    if (!selected)
+                    {
                         setForeground(getCategoryColor(cat.type));
                     }
                     setIcon(null);
-                } else if (userObj instanceof AttributeNode) {
+                }
+                else if (userObj instanceof AttributeNode)
+                {
                     AttributeNode attrNode = (AttributeNode) userObj;
                     setFont(getFont().deriveFont(Font.PLAIN));
-                    if (!selected) {
+                    if (!selected)
+                    {
                         setForeground(getAttributeColor(attrNode.type));
                     }
                     setIcon(null);
@@ -503,29 +616,47 @@ public class AttributesView extends AbstractEditorView {
             return this;
         }
 
-        private Color getCategoryColor(CategoryType type) {
-            switch (type) {
-                case CLASS: return JStudioTheme.getAccent();
-                case FIELD: return JStudioTheme.getInfo();
-                case METHOD: return JStudioTheme.getWarning();
-                default: return JStudioTheme.getTextPrimary();
+        private Color getCategoryColor(CategoryType type)
+        {
+            switch (type)
+            {
+                case CLASS:
+                    return JStudioTheme.getAccent();
+                case FIELD:
+                    return JStudioTheme.getInfo();
+                case METHOD:
+                    return JStudioTheme.getWarning();
+                default:
+                    return JStudioTheme.getTextPrimary();
             }
         }
 
-        private Color getAttributeColor(AttributeType type) {
-            switch (type) {
-                case CODE: return JStudioTheme.getAccentSecondary();
-                case DEBUG: return JStudioTheme.getTextSecondary();
-                case SIGNATURE: return JStudioTheme.getAccent();
-                case ANNOTATION: return JStudioTheme.getSuccess();
-                case EXCEPTION: return JStudioTheme.getError();
+        private Color getAttributeColor(AttributeType type)
+        {
+            switch (type)
+            {
+                case CODE:
+                    return JStudioTheme.getAccentSecondary();
+                case DEBUG:
+                    return JStudioTheme.getTextSecondary();
+                case SIGNATURE:
+                    return JStudioTheme.getAccent();
+                case ANNOTATION:
+                    return JStudioTheme.getSuccess();
+                case EXCEPTION:
+                    return JStudioTheme.getError();
                 case DEPRECATED:
-                case SYNTHETIC: return JStudioTheme.getTextDisabled();
-                case SOURCE: return JStudioTheme.getInfo();
-                case STRUCTURE: return JStudioTheme.getWarning();
-                case INVOKEDYNAMIC: return JStudioTheme.getAccentSecondary();
+                case SYNTHETIC:
+                    return JStudioTheme.getTextDisabled();
+                case SOURCE:
+                    return JStudioTheme.getInfo();
+                case STRUCTURE:
+                    return JStudioTheme.getWarning();
+                case INVOKEDYNAMIC:
+                    return JStudioTheme.getAccentSecondary();
                 case OTHER:
-                default: return JStudioTheme.getTextPrimary();
+                default:
+                    return JStudioTheme.getTextPrimary();
             }
         }
     }

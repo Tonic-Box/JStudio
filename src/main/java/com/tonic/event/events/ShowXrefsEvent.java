@@ -4,9 +4,11 @@ import com.tonic.event.Event;
 import lombok.Getter;
 
 @Getter
-public class ShowXrefsEvent extends Event {
+public class ShowXrefsEvent extends Event
+{
 
-    public enum TargetType {
+    public enum TargetType
+    {
         CLASS,
         METHOD,
         FIELD
@@ -17,7 +19,8 @@ public class ShowXrefsEvent extends Event {
     private final String memberName;
     private final String memberDescriptor;
 
-    public ShowXrefsEvent(Object source, String className) {
+    public ShowXrefsEvent(Object source, String className)
+    {
         super(source);
         this.targetType = TargetType.CLASS;
         this.className = className;
@@ -25,18 +28,18 @@ public class ShowXrefsEvent extends Event {
         this.memberDescriptor = null;
     }
 
-    public static ShowXrefsEvent forMethod(Object source, String className,
-                                            String methodName, String methodDesc) {
+    public static ShowXrefsEvent forMethod(Object source, String className, String methodName, String methodDesc)
+    {
         return new ShowXrefsEvent(source, TargetType.METHOD, className, methodName, methodDesc);
     }
 
-    public static ShowXrefsEvent forField(Object source, String className,
-                                           String fieldName, String fieldDesc) {
+    public static ShowXrefsEvent forField(Object source, String className, String fieldName, String fieldDesc)
+    {
         return new ShowXrefsEvent(source, TargetType.FIELD, className, fieldName, fieldDesc);
     }
 
-    private ShowXrefsEvent(Object source, TargetType targetType, String className,
-                           String memberName, String memberDescriptor) {
+    private ShowXrefsEvent(Object source, TargetType targetType, String className, String memberName, String memberDescriptor)
+    {
         super(source);
         this.targetType = targetType;
         this.className = className;
@@ -44,9 +47,11 @@ public class ShowXrefsEvent extends Event {
         this.memberDescriptor = memberDescriptor;
     }
 
-    public String getTargetDisplay() {
+    public String getTargetDisplay()
+    {
         String displayClass = className != null ? className.replace('/', '.') : "unknown";
-        switch (targetType) {
+        switch (targetType)
+        {
             case METHOD:
                 return displayClass + "." + memberName + "()";
             case FIELD:

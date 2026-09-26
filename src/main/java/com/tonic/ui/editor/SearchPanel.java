@@ -50,62 +50,76 @@ import java.util.regex.PatternSyntaxException;
  *  - The viewport highlight set is refreshed via a 50 ms debounced scroll listener.
  *  - No SearchEngine / SearchContext calls anywhere; those are O(K²) for K matches.
  */
-public class SearchPanel extends ThemedJPanel {
+public class SearchPanel extends ThemedJPanel
+{
 
-    private static final int   DEBOUNCE_SEARCH_MS   = 200;
-    private static final int   DEBOUNCE_SCROLL_MS    = 50;
+    private static final int DEBOUNCE_SEARCH_MS = 200;
+    private static final int DEBOUNCE_SCROLL_MS = 50;
     /** Hard cap on markAll() entries to keep createPosition() cost O(MAX²) at worst. */
-    private static final int   MAX_VIEWPORT_MARKS   = 1000;
+    private static final int MAX_VIEWPORT_MARKS = 1000;
 
     /** Pale background used for all matches in the visible viewport. */
-    private static final Color MATCH_COLOR         = new Color(255, 235,  80,  55);
+    private static final Color MATCH_COLOR = new Color(255, 235, 80, 55);
     /** Vivid orange — clearly distinct hue and fully opaque vs the pale yellow above. */
-    private static final Color CURRENT_MATCH_COLOR = new Color(255, 120,   0);
+    private static final Color CURRENT_MATCH_COLOR = new Color(255, 120, 0);
 
     private final RSyntaxTextArea textArea;
     private final RTextScrollPane scrollPane;
 
     private final JTextField searchField;
-    private final JLabel     matchCountLabel;
-    private final JCheckBox  caseSensitiveBox;
-    private final JCheckBox  wholeWordBox;
-    private final JCheckBox  regexBox;
+    private final JLabel matchCountLabel;
+    private final JCheckBox caseSensitiveBox;
+    private final JCheckBox wholeWordBox;
+    private final JCheckBox regexBox;
 
     private List<int[]> matches = Collections.emptyList();
-    private String      cachedText;
+    private String cachedText;
 
     private SwingWorker<List<int[]>, Void> searchWorker;
-    private Timer  debounceTimer;
-    private Timer  scrollDebounceTimer;
+    private Timer debounceTimer;
+    private Timer scrollDebounceTimer;
 
-    private int    currentMatchIndex = -1;
+    private int currentMatchIndex = -1;
     private Object currentMatchTag;           // Highlighter tag for the bright current-match highlight
 
-    public SearchPanel(RSyntaxTextArea textArea, RTextScrollPane scrollPane) {
+    public SearchPanel(RSyntaxTextArea textArea, RTextScrollPane scrollPane)
+    {
         super(BackgroundStyle.SECONDARY);
-        this.textArea   = textArea;
+        this.textArea = textArea;
         this.scrollPane = scrollPane;
 
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM,
-                                            UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM)
-        ));
+        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM)));
         setVisible(false);
 
         // All mass-match highlights use the pale colour; focused match uses CURRENT_MATCH_COLOR
         textArea.setMarkAllHighlightColor(MATCH_COLOR);
 
         // Invalidate text snapshot whenever document content changes (e.g. new class loaded)
-        textArea.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e)  { cachedText = null; }
-            @Override public void removeUpdate(DocumentEvent e)  { cachedText = null; }
-            @Override public void changedUpdate(DocumentEvent e) { cachedText = null; }
+        textArea.getDocument().addDocumentListener(new DocumentListener()
+        {
+            @Override
+            public void insertUpdate(DocumentEvent e)
+            {
+                cachedText = null;
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e)
+            {
+                cachedText = null;
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e)
+            {
+                cachedText = null;
+            }
         });
 
         // Refresh visible highlights when the user scrolls (debounced)
-        if (scrollPane != null) {
+        if (scrollPane != null)
+        {
             scrollPane.getVerticalScrollBar().addAdjustmentListener(e -> scheduleHighlightUpdate());
         }
 
@@ -122,24 +136,39 @@ public class SearchPanel extends ThemedJPanel {
         searchField.setBackground(JStudioTheme.getBgTertiary());
         searchField.setForeground(JStudioTheme.getTextPrimary());
         searchField.setCaretColor(JStudioTheme.getTextPrimary());
-        searchField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(2, 6, 2, 6)
-        ));
+        searchField.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(2, 6, 2, 6)));
 
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e)  { scheduleSearch(); }
-            @Override public void removeUpdate(DocumentEvent e)  { scheduleSearch(); }
-            @Override public void changedUpdate(DocumentEvent e) { scheduleSearch(); }
+        searchField.getDocument().addDocumentListener(new DocumentListener()
+        {
+            @Override
+            public void insertUpdate(DocumentEvent e)
+            {
+                scheduleSearch();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e)
+            {
+                scheduleSearch();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e)
+            {
+                scheduleSearch();
+            }
         });
 
-        searchField.addKeyListener(new KeyAdapter() {
+        searchField.addKeyListener(new KeyAdapter()
+        {
             @Override
-            public void keyPressed(KeyEvent e) {
-                if      (e.getKeyCode() == KeyEvent.VK_ESCAPE) hidePanel();
-                else if (e.getKeyCode() == KeyEvent.VK_ENTER)  {
+            public void keyPressed(KeyEvent e)
+            {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) hidePanel();
+                else if (e.getKeyCode() == KeyEvent.VK_ENTER)
+                {
                     if (e.isShiftDown()) findPrevious();
-                    else                findNext();
+                    else findNext();
                 }
             }
         });
@@ -148,7 +177,7 @@ public class SearchPanel extends ThemedJPanel {
         add(Box.createHorizontalStrut(8));
 
         // ── Prev / Next buttons ───────────────────────────────────────────────
-        JButton prevBtn = makeButton(Icons.getIcon("arrow_up",   12), "Previous (Shift+Enter)");
+        JButton prevBtn = makeButton(Icons.getIcon("arrow_up", 12), "Previous (Shift+Enter)");
         prevBtn.addActionListener(e -> findPrevious());
         add(prevBtn);
 
@@ -187,21 +216,25 @@ public class SearchPanel extends ThemedJPanel {
 
     // ── Public API ────────────────────────────────────────────────────────────
 
-    public void showPanel() {
+    public void showPanel()
+    {
         setVisible(true);
         searchField.requestFocusInWindow();
         searchField.selectAll();
 
         String sel = textArea.getSelectedText();
-        if (sel != null && !sel.isEmpty() && !sel.contains("\n")) {
+        if (sel != null && !sel.isEmpty() && !sel.contains("\n"))
+        {
             searchField.setText(sel);
         }
-        if (!searchField.getText().isEmpty()) {
+        if (!searchField.getText().isEmpty())
+        {
             triggerSearch();
         }
     }
 
-    public void hidePanel() {
+    public void hidePanel()
+    {
         cancelWorker();
         stopTimers();
         clearCurrentMatchHighlight();
@@ -215,18 +248,21 @@ public class SearchPanel extends ThemedJPanel {
 
     // ── Search scheduling ─────────────────────────────────────────────────────
 
-    private void scheduleSearch() {
+    private void scheduleSearch()
+    {
         if (debounceTimer != null) debounceTimer.stop();
         debounceTimer = new Timer(DEBOUNCE_SEARCH_MS, e -> triggerSearch());
         debounceTimer.setRepeats(false);
         debounceTimer.start();
     }
 
-    private void triggerSearch() {
+    private void triggerSearch()
+    {
         if (debounceTimer != null) debounceTimer.stop();
 
         String query = searchField.getText();
-        if (query.isEmpty()) {
+        if (query.isEmpty())
+        {
             cancelWorker();
             clearCurrentMatchHighlight();
             currentMatchIndex = -1;
@@ -238,33 +274,45 @@ public class SearchPanel extends ThemedJPanel {
 
         // Snapshot state on the EDT before handing off to the worker
         if (cachedText == null) cachedText = textArea.getText();
-        final String  snapshot      = cachedText;
+        final String snapshot = cachedText;
         final boolean caseSensitive = caseSensitiveBox.isSelected();
-        final boolean wholeWord     = wholeWordBox.isSelected();
-        final boolean useRegex      = regexBox.isSelected();
-        final int     caretAtLaunch = textArea.getCaretPosition();
+        final boolean wholeWord = wholeWordBox.isSelected();
+        final boolean useRegex = regexBox.isSelected();
+        final int caretAtLaunch = textArea.getCaretPosition();
 
         cancelWorker();
 
-        searchWorker = new SwingWorker<>() {
-            @Override protected List<int[]> doInBackground() {
+        searchWorker = new SwingWorker<>()
+        {
+            @Override
+            protected List<int[]> doInBackground()
+            {
                 return scan(snapshot, query, caseSensitive, wholeWord, useRegex);
             }
 
-            @Override protected void done() {
+            @Override
+            protected void done()
+            {
                 if (isCancelled()) return;
-                try {
+                try
+                {
                     clearCurrentMatchHighlight();
                     currentMatchIndex = -1;
                     matches = get();
                     updateMatchLabel();
                     updateHighlights();
-                    if (!matches.isEmpty()) {
+                    if (!matches.isEmpty())
+                    {
                         navigateTo(firstIndexAtOrAfter(caretAtLaunch));
                     }
-                } catch (InterruptedException e) {
+                }
+                catch (InterruptedException e)
+                {
                     Thread.currentThread().interrupt();
-                } catch (ExecutionException ignored) {}
+                }
+                catch (ExecutionException ignored)
+                {
+                }
             }
         };
         searchWorker.execute();
@@ -277,37 +325,43 @@ public class SearchPanel extends ThemedJPanel {
      * passes it to textArea.markAll(). Bounded to ~200 ranges regardless of total
      * match count, so createPosition() cost stays O(200²) ≈ 1 ms.
      */
-    private void updateHighlights() {
-        if (matches.isEmpty()) {
+    private void updateHighlights()
+    {
+        if (matches.isEmpty())
+        {
             textArea.clearMarkAllHighlights();
             return;
         }
 
         int visStart = 0;
-        int visEnd   = cachedText != null ? cachedText.length() : 0;
+        int visEnd = cachedText != null ? cachedText.length() : 0;
 
-        if (scrollPane != null) {
-            try {
-                JViewport vp     = scrollPane.getViewport();
-                Point     vpPos  = vp.getViewPosition();
+        if (scrollPane != null)
+        {
+            try
+            {
+                JViewport vp = scrollPane.getViewport();
+                Point vpPos = vp.getViewPosition();
                 Dimension vpSize = vp.getExtentSize();
-                if (vpSize.height > 0) {
-                    visStart = textArea.viewToModel2D(
-                                   new Point2D.Float(vpPos.x, vpPos.y));
-                    visEnd   = textArea.viewToModel2D(
-                                   new Point2D.Float(vpPos.x + vpSize.width,
-                                                     vpPos.y + vpSize.height));
+                if (vpSize.height > 0)
+                {
+                    visStart = textArea.viewToModel2D(new Point2D.Float(vpPos.x, vpPos.y));
+                    visEnd = textArea.viewToModel2D(new Point2D.Float(vpPos.x + vpSize.width, vpPos.y + vpSize.height));
                 }
-            } catch (Exception ignored) {}
+            }
+            catch (Exception ignored)
+            {
+            }
         }
 
         // Buffer = 2 screen heights worth of document characters
-        int buf   = Math.max(500, (visEnd - visStart) * 2);
-        int lo    = firstIndexAtOrAfter(Math.max(0, visStart - buf));
+        int buf = Math.max(500, (visEnd - visStart) * 2);
+        int lo = firstIndexAtOrAfter(Math.max(0, visStart - buf));
         int hiEnd = visEnd + buf;
 
         List<DocumentRange> toMark = new ArrayList<>();
-        for (int i = lo; i < matches.size(); i++) {
+        for (int i = lo; i < matches.size(); i++)
+        {
             if (matches.get(i)[0] > hiEnd) break;
             if (toMark.size() >= MAX_VIEWPORT_MARKS) break; // keeps createPosition cost O(MAX²)
             if (i == currentMatchIndex) continue; // bright highlight handled separately
@@ -316,7 +370,8 @@ public class SearchPanel extends ThemedJPanel {
         textArea.markAll(toMark);
     }
 
-    private void scheduleHighlightUpdate() {
+    private void scheduleHighlightUpdate()
+    {
         if (matches.isEmpty()) return;
         if (scrollDebounceTimer != null) scrollDebounceTimer.stop();
         scrollDebounceTimer = new Timer(DEBOUNCE_SCROLL_MS, e -> updateHighlights());
@@ -326,17 +381,20 @@ public class SearchPanel extends ThemedJPanel {
 
     // ── Navigation ────────────────────────────────────────────────────────────
 
-    private void findNext() {
+    private void findNext()
+    {
         if (matches.isEmpty()) return;
         navigateTo(firstIndexAtOrAfter(textArea.getCaretPosition() + 1));
     }
 
-    private void findPrevious() {
+    private void findPrevious()
+    {
         if (matches.isEmpty()) return;
         navigateTo(lastIndexBefore(textArea.getCaretPosition()));
     }
 
-    private void navigateTo(int idx) {
+    private void navigateTo(int idx)
+    {
         if (idx < 0 || idx >= matches.size()) return;
         currentMatchIndex = idx;
         clearCurrentMatchHighlight();
@@ -344,27 +402,33 @@ public class SearchPanel extends ThemedJPanel {
         int[] m = matches.get(idx);
         textArea.setCaretPosition(m[0]);
 
-        try {
-            currentMatchTag = textArea.getHighlighter().addHighlight(
-                m[0], m[1],
-                new DefaultHighlighter.DefaultHighlightPainter(CURRENT_MATCH_COLOR));
-        } catch (BadLocationException ignored) {}
+        try
+        {
+            currentMatchTag = textArea.getHighlighter().addHighlight(m[0], m[1], new DefaultHighlighter.DefaultHighlightPainter(CURRENT_MATCH_COLOR));
+        }
+        catch (BadLocationException ignored)
+        {
+        }
 
         updateHighlights();   // re-draws pale highlights, skipping currentMatchIndex
         updateMatchLabel();   // refresh "x / N" counter
     }
 
-    private void clearCurrentMatchHighlight() {
-        if (currentMatchTag != null) {
+    private void clearCurrentMatchHighlight()
+    {
+        if (currentMatchTag != null)
+        {
             textArea.getHighlighter().removeHighlight(currentMatchTag);
             currentMatchTag = null;
         }
     }
 
     /** First index where match[0] >= offset; wraps to 0 if past end. */
-    private int firstIndexAtOrAfter(int offset) {
+    private int firstIndexAtOrAfter(int offset)
+    {
         int lo = 0, hi = matches.size();
-        while (lo < hi) {
+        while (lo < hi)
+        {
             int mid = (lo + hi) >>> 1;
             if (matches.get(mid)[0] < offset) lo = mid + 1;
             else hi = mid;
@@ -373,9 +437,11 @@ public class SearchPanel extends ThemedJPanel {
     }
 
     /** Last index where match[0] < offset; wraps to last. */
-    private int lastIndexBefore(int offset) {
+    private int lastIndexBefore(int offset)
+    {
         int lo = 0, hi = matches.size();
-        while (lo < hi) {
+        while (lo < hi)
+        {
             int mid = (lo + hi) >>> 1;
             if (matches.get(mid)[0] < offset) lo = mid + 1;
             else hi = mid;
@@ -386,26 +452,35 @@ public class SearchPanel extends ThemedJPanel {
 
     // ── Off-EDT text scanning ─────────────────────────────────────────────────
 
-    private List<int[]> scan(String text, String query,
-                              boolean caseSensitive, boolean wholeWord, boolean useRegex) {
+    private List<int[]> scan(String text, String query, boolean caseSensitive, boolean wholeWord, boolean useRegex)
+    {
         if (text.isEmpty() || query.isEmpty()) return Collections.emptyList();
         List<int[]> result = new ArrayList<>();
 
-        if (useRegex) {
-            try {
+        if (useRegex)
+        {
+            try
+            {
                 int flags = caseSensitive ? 0 : Pattern.CASE_INSENSITIVE;
                 Matcher m = Pattern.compile(query, flags).matcher(text);
-                while (m.find()) {
+                while (m.find())
+                {
                     if (Thread.currentThread().isInterrupted()) break;
                     if (!wholeWord || isWholeWord(text, m.start(), m.end()))
                         result.add(new int[]{m.start(), m.end()});
                 }
-            } catch (PatternSyntaxException ignored) {}
-        } else {
-            String haystack = caseSensitive ? text  : text.toLowerCase();
-            String needle   = caseSensitive ? query : query.toLowerCase();
+            }
+            catch (PatternSyntaxException ignored)
+            {
+            }
+        }
+        else
+        {
+            String haystack = caseSensitive ? text : text.toLowerCase();
+            String needle = caseSensitive ? query : query.toLowerCase();
             int pos = 0, len = needle.length();
-            while ((pos = haystack.indexOf(needle, pos)) >= 0) {
+            while ((pos = haystack.indexOf(needle, pos)) >= 0)
+            {
                 if (Thread.currentThread().isInterrupted()) break;
                 if (!wholeWord || isWholeWord(text, pos, pos + len))
                     result.add(new int[]{pos, pos + len});
@@ -415,38 +490,48 @@ public class SearchPanel extends ThemedJPanel {
         return result;
     }
 
-    private boolean isWholeWord(String text, int start, int end) {
+    private boolean isWholeWord(String text, int start, int end)
+    {
         if (start > 0 && Character.isLetterOrDigit(text.charAt(start - 1))) return false;
         return end >= text.length() || !Character.isLetterOrDigit(text.charAt(end));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private void cancelWorker() {
+    private void cancelWorker()
+    {
         if (searchWorker != null && !searchWorker.isDone())
             searchWorker.cancel(true);
     }
 
-    private void stopTimers() {
-        if (debounceTimer       != null) debounceTimer.stop();
+    private void stopTimers()
+    {
+        if (debounceTimer != null) debounceTimer.stop();
         if (scrollDebounceTimer != null) scrollDebounceTimer.stop();
     }
 
-    private void updateMatchLabel() {
+    private void updateMatchLabel()
+    {
         int n = matches.size();
-        if (n == 0) {
+        if (n == 0)
+        {
             matchCountLabel.setText("No matches");
             matchCountLabel.setForeground(new Color(255, 100, 100));
-        } else if (currentMatchIndex >= 0 && currentMatchIndex < n) {
+        }
+        else if (currentMatchIndex >= 0 && currentMatchIndex < n)
+        {
             matchCountLabel.setText((currentMatchIndex + 1) + " / " + n);
             matchCountLabel.setForeground(JStudioTheme.getTextSecondary());
-        } else {
+        }
+        else
+        {
             matchCountLabel.setText(n + " matches");
             matchCountLabel.setForeground(JStudioTheme.getTextSecondary());
         }
     }
 
-    private JButton makeButton(Icon icon, String tooltip) {
+    private JButton makeButton(Icon icon, String tooltip)
+    {
         JButton btn = new JButton(icon);
         btn.setToolTipText(tooltip);
         btn.setFocusable(false);
@@ -457,7 +542,8 @@ public class SearchPanel extends ThemedJPanel {
         return btn;
     }
 
-    private JCheckBox makeCheckBox(String text, String tooltip) {
+    private JCheckBox makeCheckBox(String text, String tooltip)
+    {
         JCheckBox cb = new JCheckBox(text);
         cb.setToolTipText(tooltip);
         cb.setFocusable(false);

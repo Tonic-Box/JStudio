@@ -17,13 +17,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class VMDebugSession {
+public class VMDebugSession
+{
 
-    public interface DebugListener {
+    public interface DebugListener
+    {
         void onStateChanged(DebugStateModel state);
+
         void onSessionStarted();
+
         void onSessionStopped(String reason);
+
         void onBreakpointHit(String location);
+
         void onError(String message);
     }
 
@@ -41,33 +47,39 @@ public class VMDebugSession {
     private boolean started;
     private Timer animationTimer;
 
-    public VMDebugSession() {
+    public VMDebugSession()
+    {
         this(null);
     }
 
     /** Drives an isolated {@link VmInstance} (its own heap + snapshot pool); null uses the shared default VM. */
-    public VMDebugSession(VmInstance vmInstance) {
+    public VMDebugSession(VmInstance vmInstance)
+    {
         this.vmInstance = vmInstance;
         this.started = false;
     }
 
-    public void start(MethodEntry method, boolean recursive, Object... args) {
-        if (started) {
+    public void start(MethodEntry method, boolean recursive, Object... args)
+    {
+        if (started)
+        {
             throw new IllegalStateException("Session already started");
         }
 
         this.currentMethod = method;
 
-        if (vmInstance != null) {
-            yabrSession = vmInstance.createDebugSession(
-                method.getOwnerName(), method.getName(), method.getDesc(), recursive, args);
-        } else {
+        if (vmInstance != null)
+        {
+            yabrSession = vmInstance.createDebugSession(method.getOwnerName(), method.getName(), method.getDesc(), recursive, args);
+        }
+        else
+        {
             VMExecutionService vmService = VMExecutionService.getInstance();
-            if (!vmService.isInitialized()) {
+            if (!vmService.isInitialized())
+            {
                 vmService.initialize();
             }
-            yabrSession = vmService.createDebugSession(
-                method.getOwnerName(), method.getName(), method.getDesc(), recursive, args);
+            yabrSession = vmService.createDebugSession(method.getOwnerName(), method.getName(), method.getDesc(), recursive, args);
         }
 
         yabrSession.addListener(new YabrDebugListener());
@@ -77,14 +89,17 @@ public class VMDebugSession {
         updateState();
     }
 
-    public void stop() {
+    public void stop()
+    {
         stopAnimation();
 
-        if (!started) {
+        if (!started)
+        {
             return;
         }
 
-        if (yabrSession != null && !yabrSession.isStopped()) {
+        if (yabrSession != null && !yabrSession.isStopped())
+        {
             yabrSession.stop();
         }
 
@@ -92,123 +107,175 @@ public class VMDebugSession {
         notifySessionStopped("User stopped session");
     }
 
-    public void stepInto() {
-        if (!canStep()) {
+    public void stepInto()
+    {
+        if (!canStep())
+        {
             return;
         }
 
-        try {
+        try
+        {
             yabrSession.stepInto();
 
-            if (yabrSession.isStopped()) {
+            if (yabrSession.isStopped())
+            {
                 started = false;
                 String reason = "Execution completed";
                 BytecodeResult result = yabrSession.getResult();
-                if (result != null) {
-                    if (result.hasException()) {
+                if (result != null)
+                {
+                    if (result.hasException())
+                    {
                         reason = "Exception: " + result.getException();
-                    } else {
+                    }
+                    else
+                    {
                         String returnVal = formatReturnValue(result);
-                        if (returnVal != null) {
+                        if (returnVal != null)
+                        {
                             reason = "Execution completed - Return: " + returnVal;
                         }
                     }
                 }
                 notifySessionStopped(reason);
-            } else {
+            }
+            else
+            {
                 updateState();
             }
-        } catch (StackOverflowError e) {
+        }
+        catch (StackOverflowError e)
+        {
             notifyError("Stack overflow: " + e.getMessage());
             handleExecutionError(e);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             notifyError("Step Into failed: " + e.getMessage());
             handleExecutionError(e);
         }
     }
 
-    public void stepOver() {
+    public void stepOver()
+    {
         if (!canStep()) return;
 
-        try {
+        try
+        {
             yabrSession.stepOver();
-            if (yabrSession.isStopped()) {
+            if (yabrSession.isStopped())
+            {
                 started = false;
                 String reason = "Execution completed";
                 BytecodeResult result = yabrSession.getResult();
-                if (result != null) {
-                    if (result.hasException()) {
+                if (result != null)
+                {
+                    if (result.hasException())
+                    {
                         reason = "Exception: " + result.getException();
-                    } else {
+                    }
+                    else
+                    {
                         String returnVal = formatReturnValue(result);
-                        if (returnVal != null) {
+                        if (returnVal != null)
+                        {
                             reason = "Execution completed - Return: " + returnVal;
                         }
                     }
                 }
                 notifySessionStopped(reason);
-            } else {
+            }
+            else
+            {
                 updateState();
             }
-        } catch (StackOverflowError e) {
+        }
+        catch (StackOverflowError e)
+        {
             notifyError("Stack overflow: " + e.getMessage());
             handleExecutionError(e);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             notifyError("Step Over failed: " + e.getMessage());
             handleExecutionError(e);
         }
     }
 
-    public void stepOut() {
+    public void stepOut()
+    {
         if (!canStep()) return;
 
-        try {
+        try
+        {
             yabrSession.stepOut();
-            if (yabrSession.isStopped()) {
+            if (yabrSession.isStopped())
+            {
                 started = false;
                 String reason = "Execution completed";
                 BytecodeResult result = yabrSession.getResult();
-                if (result != null) {
-                    if (result.hasException()) {
+                if (result != null)
+                {
+                    if (result.hasException())
+                    {
                         reason = "Exception: " + result.getException();
-                    } else {
+                    }
+                    else
+                    {
                         String returnVal = formatReturnValue(result);
-                        if (returnVal != null) {
+                        if (returnVal != null)
+                        {
                             reason = "Execution completed - Return: " + returnVal;
                         }
                     }
                 }
                 notifySessionStopped(reason);
-            } else {
+            }
+            else
+            {
                 updateState();
             }
-        } catch (StackOverflowError e) {
+        }
+        catch (StackOverflowError e)
+        {
             notifyError("Stack overflow: " + e.getMessage());
             handleExecutionError(e);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             notifyError("Step Out failed: " + e.getMessage());
             handleExecutionError(e);
         }
     }
 
-    public void resumeAnimated() {
+    public void resumeAnimated()
+    {
         if (!canStep()) return;
 
         stopAnimation();
 
-        animationTimer = new Timer(stepDelayMs, e -> {
-            if (yabrSession == null || yabrSession.isStopped()) {
+        animationTimer = new Timer(stepDelayMs, e ->
+        {
+            if (yabrSession == null || yabrSession.isStopped())
+            {
                 stopAnimation();
                 started = false;
                 String reason = "Execution completed";
-                if (yabrSession != null) {
+                if (yabrSession != null)
+                {
                     BytecodeResult result = yabrSession.getResult();
-                    if (result != null) {
-                        if (result.hasException()) {
+                    if (result != null)
+                    {
+                        if (result.hasException())
+                        {
                             reason = "Exception: " + result.getException();
-                        } else {
+                        }
+                        else
+                        {
                             String returnVal = formatReturnValue(result);
-                            if (returnVal != null) {
+                            if (returnVal != null)
+                            {
                                 reason = "Execution completed - Return: " + returnVal;
                             }
                         }
@@ -218,35 +285,47 @@ public class VMDebugSession {
                 return;
             }
 
-            if (!yabrSession.isPaused()) {
+            if (!yabrSession.isPaused())
+            {
                 return;
             }
 
-            try {
+            try
+            {
                 yabrSession.stepInto();
                 updateState();
 
-                if (yabrSession.isStopped()) {
+                if (yabrSession.isStopped())
+                {
                     stopAnimation();
                     started = false;
                     String reason = "Execution completed";
                     BytecodeResult result = yabrSession.getResult();
-                    if (result != null) {
-                        if (result.hasException()) {
+                    if (result != null)
+                    {
+                        if (result.hasException())
+                        {
                             reason = "Exception: " + result.getException();
-                        } else {
+                        }
+                        else
+                        {
                             String returnVal = formatReturnValue(result);
-                            if (returnVal != null) {
+                            if (returnVal != null)
+                            {
                                 reason = "Execution completed - Return: " + returnVal;
                             }
                         }
                     }
                     notifySessionStopped(reason);
                 }
-            } catch (StackOverflowError ex) {
+            }
+            catch (StackOverflowError ex)
+            {
                 notifyError("Stack overflow: " + ex.getMessage());
                 handleExecutionError(ex);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 notifyError("Execution error: " + ex.getMessage());
                 handleExecutionError(ex);
             }
@@ -255,33 +334,42 @@ public class VMDebugSession {
         animationTimer.start();
     }
 
-    public void stopAnimation() {
-        if (animationTimer != null) {
+    public void stopAnimation()
+    {
+        if (animationTimer != null)
+        {
             animationTimer.stop();
             animationTimer = null;
         }
     }
 
-    public boolean isAnimating() {
+    public boolean isAnimating()
+    {
         return animationTimer != null && animationTimer.isRunning();
     }
 
-    public void setAnimationDelay(int delayMs) {
+    public void setAnimationDelay(int delayMs)
+    {
         this.stepDelayMs = delayMs;
-        if (animationTimer != null && animationTimer.isRunning()) {
+        if (animationTimer != null && animationTimer.isRunning())
+        {
             animationTimer.setDelay(delayMs);
         }
     }
 
-    private void handleExecutionError(Throwable error) {
+    private void handleExecutionError(Throwable error)
+    {
         stopAnimation();
 
         StringBuilder details = new StringBuilder("Execution error");
 
-        if (yabrSession != null) {
-            try {
+        if (yabrSession != null)
+        {
+            try
+            {
                 DebugState state = yabrSession.getCurrentState();
-                if (state != null) {
+                if (state != null)
+                {
                     details.append("\n  Method: ").append(state.getCurrentMethod());
                     details.append("\n  PC: ").append(state.getCurrentPC());
                     details.append("\n  Line: ").append(state.getCurrentLine());
@@ -289,34 +377,44 @@ public class VMDebugSession {
                     details.append("\n  Instructions executed: ").append(state.getInstructionCount());
 
                     List<StackFrameInfo> callStack = state.getCallStack();
-                    if (callStack != null && !callStack.isEmpty()) {
+                    if (callStack != null && !callStack.isEmpty())
+                    {
                         details.append("\n  Call stack:");
-                        for (int i = 0; i < Math.min(callStack.size(), 10); i++) {
+                        for (int i = 0; i < Math.min(callStack.size(), 10); i++)
+                        {
                             StackFrameInfo frame = callStack.get(i);
                             details.append("\n    ").append(i).append(": ")
-                                   .append(frame.getMethodSignature())
-                                   .append(" @ PC ").append(frame.getPC());
+                                    .append(frame.getMethodSignature())
+                                    .append(" @ PC ").append(frame.getPC());
                         }
-                        if (callStack.size() > 10) {
+                        if (callStack.size() > 10)
+                        {
                             details.append("\n    ... and ").append(callStack.size() - 10).append(" more frames");
                         }
                     }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 details.append("\n  (Could not get state: ").append(e.getMessage()).append(")");
             }
 
-            if (!yabrSession.isStopped()) {
-                try {
+            if (!yabrSession.isStopped())
+            {
+                try
+                {
                     yabrSession.stop();
-                } catch (Exception ignored) {
+                }
+                catch (Exception ignored)
+                {
                 }
             }
         }
 
-        if (error != null) {
+        if (error != null)
+        {
             details.append("\n  Error: ").append(error.getClass().getSimpleName())
-                   .append(": ").append(error.getMessage());
+                    .append(": ").append(error.getMessage());
             ConsoleLogService.getInstance().error("Execution error in debug session", error);
         }
 
@@ -324,133 +422,171 @@ public class VMDebugSession {
         notifySessionStopped(details.toString());
     }
 
-    public void runToCursor(int pc) {
+    public void runToCursor(int pc)
+    {
         if (!canStep()) return;
 
-        try {
+        try
+        {
             yabrSession.runToCursor(pc);
             updateState();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             notifyError("Run to cursor failed: " + e.getMessage());
         }
     }
 
-    public void addBreakpoint(String className, String methodName, String descriptor, int pc) {
-        if (yabrSession != null) {
+    public void addBreakpoint(String className, String methodName, String descriptor, int pc)
+    {
+        if (yabrSession != null)
+        {
             yabrSession.addBreakpoint(new Breakpoint(className, methodName, descriptor, pc));
         }
     }
 
-    public void removeBreakpoint(String className, String methodName, String descriptor, int pc) {
-        if (yabrSession != null) {
+    public void removeBreakpoint(String className, String methodName, String descriptor, int pc)
+    {
+        if (yabrSession != null)
+        {
             Breakpoint bp = new Breakpoint(className, methodName, descriptor, pc);
             yabrSession.removeBreakpoint(bp);
         }
     }
 
-    public boolean isPaused() {
+    public boolean isPaused()
+    {
         return started && yabrSession != null && yabrSession.isPaused();
     }
 
-    public boolean isStopped() {
+    public boolean isStopped()
+    {
         return yabrSession != null && yabrSession.isStopped();
     }
 
-    public boolean setLocalValue(int slot, ConcreteValue value) {
-        if (!isPaused()) {
+    public boolean setLocalValue(int slot, ConcreteValue value)
+    {
+        if (!isPaused())
+        {
             notifyError("Cannot edit values: debugger not paused");
             return false;
         }
-        if (isAnimating()) {
+        if (isAnimating())
+        {
             notifyError("Cannot edit values: animation in progress");
             return false;
         }
-        try {
+        try
+        {
             yabrSession.setLocalValue(slot, value);
             updateState();
             return true;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             notifyError("Failed to set local value: " + e.getMessage());
             return false;
         }
     }
 
-    public boolean setStackValue(int index, ConcreteValue value) {
-        if (!isPaused()) {
+    public boolean setStackValue(int index, ConcreteValue value)
+    {
+        if (!isPaused())
+        {
             notifyError("Cannot edit values: debugger not paused");
             return false;
         }
-        if (isAnimating()) {
+        if (isAnimating())
+        {
             notifyError("Cannot edit values: animation in progress");
             return false;
         }
-        try {
+        try
+        {
             yabrSession.setStackValue(index, value);
             updateState();
             return true;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             notifyError("Failed to set stack value: " + e.getMessage());
             return false;
         }
     }
 
-    public boolean setObjectFieldValue(ObjectInstance obj,
-                                        String owner, String name, String desc, Object value) {
-        if (!isPaused()) {
+    public boolean setObjectFieldValue(ObjectInstance obj, String owner, String name, String desc, Object value)
+    {
+        if (!isPaused())
+        {
             notifyError("Cannot edit field: debugger not paused");
             return false;
         }
-        if (isAnimating()) {
+        if (isAnimating())
+        {
             notifyError("Cannot edit field: animation in progress");
             return false;
         }
-        if (obj == null) {
+        if (obj == null)
+        {
             notifyError("Cannot edit field: object is null");
             return false;
         }
-        try {
+        try
+        {
             obj.setField(owner, name, desc, value);
             updateState();
             return true;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             notifyError("Failed to set field value: " + e.getMessage());
             return false;
         }
     }
 
-    public void addListener(DebugListener listener) {
-        if (listener != null) {
+    public void addListener(DebugListener listener)
+    {
+        if (listener != null)
+        {
             listeners.add(listener);
         }
     }
 
-    public void removeListener(DebugListener listener) {
-        if (listener != null) {
+    public void removeListener(DebugListener listener)
+    {
+        if (listener != null)
+        {
             listeners.remove(listener);
         }
     }
 
-    private boolean canStep() {
-        if (!started) {
+    private boolean canStep()
+    {
+        if (!started)
+        {
             notifyError("Cannot step: Session not started");
             return false;
         }
-        if (yabrSession == null) {
+        if (yabrSession == null)
+        {
             notifyError("Cannot step: No debug session");
             return false;
         }
-        if (yabrSession.isStopped()) {
+        if (yabrSession.isStopped())
+        {
             notifyError("Cannot step: Session already stopped (state=" + yabrSession.getState() + ")");
             return false;
         }
-        if (!yabrSession.isPaused()) {
+        if (!yabrSession.isPaused())
+        {
             notifyError("Cannot step: Session not paused (state=" + yabrSession.getState() + ")");
             return false;
         }
         return true;
     }
 
-    private void updateState() {
+    private void updateState()
+    {
         if (yabrSession == null) return;
 
         DebugState yabrState = yabrSession.getCurrentState();
@@ -460,75 +596,60 @@ public class VMDebugSession {
         notifyStateChanged(lastState);
     }
 
-    private DebugStateModel convertToDebugStateModel(DebugState yabrState) {
+    private DebugStateModel convertToDebugStateModel(DebugState yabrState)
+    {
         var builder = DebugStateModel.builder();
 
         String methodSig = yabrState.getCurrentMethod();
-        if (methodSig != null) {
+        if (methodSig != null)
+        {
             String[] parts = parseMethodSignature(methodSig);
             builder.className(parts[0])
-                   .methodName(parts[1])
-                   .descriptor(parts[2]);
+                    .methodName(parts[1])
+                    .descriptor(parts[2]);
         }
 
         builder.instructionIndex(yabrState.getCurrentPC())
-               .lineNumber(yabrState.getCurrentLine());
+                .lineNumber(yabrState.getCurrentLine());
 
         List<StackEntry> stackEntries = new ArrayList<>();
         StackSnapshot stackSnapshot = yabrState.getOperandStack();
-        if (stackSnapshot != null) {
+        if (stackSnapshot != null)
+        {
             List<ValueInfo> values = stackSnapshot.getValues();
-            for (int i = 0; i < values.size(); i++) {
+            for (int i = 0; i < values.size(); i++)
+            {
                 ValueInfo info = values.get(i);
                 ValueTag tag = parseValueTag(info.getType());
                 boolean wide = "LONG".equals(info.getType()) || "DOUBLE".equals(info.getType());
-                stackEntries.add(new EditableStackEntry(
-                    i,
-                    info.getValueString(),
-                    info.getType(),
-                    "",
-                    wide,
-                    tag,
-                    info.getRawValue()
-                ));
+                stackEntries.add(new EditableStackEntry(i, info.getValueString(), info.getType(), "", wide, tag, info.getRawValue()));
             }
         }
         builder.operandStack(stackEntries);
 
         List<LocalEntry> localEntries = new ArrayList<>();
         LocalsSnapshot localsSnapshot = yabrState.getLocals();
-        if (localsSnapshot != null) {
+        if (localsSnapshot != null)
+        {
             Map<Integer, ValueInfo> values = localsSnapshot.getValues();
-            for (Map.Entry<Integer, ValueInfo> entry : values.entrySet()) {
+            for (Map.Entry<Integer, ValueInfo> entry : values.entrySet())
+            {
                 ValueInfo info = entry.getValue();
                 ValueTag tag = parseValueTag(info.getType());
-                localEntries.add(new EditableLocalEntry(
-                    entry.getKey(),
-                    "local" + entry.getKey(),
-                    info.getType(),
-                    info.getValueString(),
-                    false,
-                    tag,
-                    info.getRawValue()
-                ));
+                localEntries.add(new EditableLocalEntry(entry.getKey(), "local" + entry.getKey(), info.getType(), info.getValueString(), false, tag, info.getRawValue()));
             }
         }
         builder.localVariables(localEntries);
 
         List<FrameEntry> frameEntries = new ArrayList<>();
         List<StackFrameInfo> callStack = yabrState.getCallStack();
-        if (callStack != null) {
-            for (int i = 0; i < callStack.size(); i++) {
+        if (callStack != null)
+        {
+            for (int i = 0; i < callStack.size(); i++)
+            {
                 StackFrameInfo frameInfo = callStack.get(i);
                 String[] frameParts = parseMethodSignature(frameInfo.getMethodSignature());
-                frameEntries.add(new FrameEntry(
-                    frameParts[0],
-                    frameParts[1],
-                    frameParts[2],
-                    frameInfo.getPC(),
-                    frameInfo.getLineNumber(),
-                    i == 0
-                ));
+                frameEntries.add(new FrameEntry(frameParts[0], frameParts[1], frameParts[2], frameInfo.getPC(), frameInfo.getLineNumber(), i == 0));
             }
         }
         builder.callStack(frameEntries);
@@ -536,15 +657,18 @@ public class VMDebugSession {
         return builder.build();
     }
 
-    private String[] parseMethodSignature(String signature) {
-        if (signature == null) {
+    private String[] parseMethodSignature(String signature)
+    {
+        if (signature == null)
+        {
             return new String[]{"", "", ""};
         }
 
         int dotIndex = signature.lastIndexOf('.');
         int parenIndex = signature.indexOf('(');
 
-        if (dotIndex < 0 || parenIndex < 0) {
+        if (dotIndex < 0 || parenIndex < 0)
+        {
             return new String[]{signature, "", ""};
         }
 
@@ -555,18 +679,24 @@ public class VMDebugSession {
         return new String[]{className, methodName, descriptor};
     }
 
-    private ValueTag parseValueTag(String type) {
-        if (type == null) {
+    private ValueTag parseValueTag(String type)
+    {
+        if (type == null)
+        {
             return null;
         }
-        try {
+        try
+        {
             return ValueTag.valueOf(type);
-        } catch (IllegalArgumentException e) {
+        }
+        catch (IllegalArgumentException e)
+        {
             return null;
         }
     }
 
-    private String formatReturnValue(BytecodeResult result) {
+    private String formatReturnValue(BytecodeResult result)
+    {
         if (result == null || !result.isSuccess()) return null;
 
         ConcreteValue returnValue = result.getReturnValue();
@@ -575,7 +705,8 @@ public class VMDebugSession {
         String formatted;
         String typeLabel;
 
-        switch (returnValue.getTag()) {
+        switch (returnValue.getTag())
+        {
             case INT:
                 formatted = String.valueOf(returnValue.asInt());
                 typeLabel = "int";
@@ -598,11 +729,14 @@ public class VMDebugSession {
                 break;
             case REFERENCE:
                 var ref = returnValue.asReference();
-                if (ref != null) {
+                if (ref != null)
+                {
                     String className = ref.getClassName();
                     formatted = ref.toString();
                     typeLabel = className.replace('/', '.');
-                } else {
+                }
+                else
+                {
                     formatted = "null";
                     typeLabel = "reference";
                 }
@@ -614,86 +748,119 @@ public class VMDebugSession {
         return formatted + " (" + typeLabel + ")";
     }
 
-    private void notifyStateChanged(DebugStateModel state) {
-        for (DebugListener listener : listeners) {
-            try {
+    private void notifyStateChanged(DebugStateModel state)
+    {
+        for (DebugListener listener : listeners)
+        {
+            try
+            {
                 listener.onStateChanged(state);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ConsoleLogService.getInstance().warn("Listener exception in onStateChanged: " + e.getMessage());
             }
         }
     }
 
-    private void notifySessionStarted() {
-        for (DebugListener listener : listeners) {
-            try {
+    private void notifySessionStarted()
+    {
+        for (DebugListener listener : listeners)
+        {
+            try
+            {
                 listener.onSessionStarted();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ConsoleLogService.getInstance().warn("Listener exception in onSessionStarted: " + e.getMessage());
             }
         }
     }
 
-    private void notifySessionStopped(String reason) {
-        for (DebugListener listener : listeners) {
-            try {
+    private void notifySessionStopped(String reason)
+    {
+        for (DebugListener listener : listeners)
+        {
+            try
+            {
                 listener.onSessionStopped(reason);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ConsoleLogService.getInstance().warn("Listener exception in onSessionStopped: " + e.getMessage());
             }
         }
     }
 
-    private void notifyBreakpointHit(String location) {
-        for (DebugListener listener : listeners) {
-            try {
+    private void notifyBreakpointHit(String location)
+    {
+        for (DebugListener listener : listeners)
+        {
+            try
+            {
                 listener.onBreakpointHit(location);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ConsoleLogService.getInstance().warn("Listener exception in onBreakpointHit: " + e.getMessage());
             }
         }
     }
 
-    private void notifyError(String message) {
-        for (DebugListener listener : listeners) {
-            try {
+    private void notifyError(String message)
+    {
+        for (DebugListener listener : listeners)
+        {
+            try
+            {
                 listener.onError(message);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ConsoleLogService.getInstance().warn("Listener exception in onError: " + e.getMessage());
             }
         }
     }
 
-    private class YabrDebugListener implements DebugEventListener {
+    private class YabrDebugListener implements DebugEventListener
+    {
 
         @Override
-        public void onSessionStop(DebugSession session, BytecodeResult result) {
+        public void onSessionStop(DebugSession session, BytecodeResult result)
+        {
             started = false;
             String reason;
-            if (result.isSuccess()) {
+            if (result.isSuccess())
+            {
                 String returnVal = formatReturnValue(result);
                 reason = returnVal != null
-                    ? "Completed - Return: " + returnVal
-                    : "Completed successfully";
-            } else {
+                        ? "Completed - Return: " + returnVal
+                        : "Completed successfully";
+            }
+            else
+            {
                 reason = "Execution failed";
             }
             notifySessionStopped(reason);
         }
 
         @Override
-        public void onBreakpointHit(DebugSession session, Breakpoint breakpoint) {
+        public void onBreakpointHit(DebugSession session, Breakpoint breakpoint)
+        {
             updateState();
             notifyBreakpointHit(breakpoint.getClassName() + "." + breakpoint.getMethodName() + " @ " + breakpoint.getPC());
         }
 
         @Override
-        public void onStepComplete(DebugSession session, DebugState state) {
+        public void onStepComplete(DebugSession session, DebugState state)
+        {
             updateState();
         }
 
         @Override
-        public void onException(DebugSession session, ObjectInstance exception) {
+        public void onException(DebugSession session, ObjectInstance exception)
+        {
             notifyError("Exception: " + exception.toString());
         }
 

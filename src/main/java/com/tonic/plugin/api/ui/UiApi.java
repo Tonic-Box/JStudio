@@ -9,7 +9,8 @@ import javax.swing.JComponent;
  * the plugin is disabled or the app exits. All methods must be called on the Swing event dispatch thread (the
  * host already calls {@link UiPlugin#start(JStudioHost)} on the EDT).
  */
-public interface UiApi {
+public interface UiApi
+{
 
     /**
      * Adds a right-dock side tab (an IntelliJ-style tool window) showing {@code component}. If the name collides

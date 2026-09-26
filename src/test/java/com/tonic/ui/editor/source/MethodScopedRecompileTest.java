@@ -19,21 +19,27 @@ import static org.junit.jupiter.api.Assertions.*;
  * Verifies the core fix for the reported bug: editing ONE method must not perturb the others. With method-scoped
  * recompile, only the edited method is re-lowered; every sibling keeps its original bytecode byte-for-byte.
  */
-class MethodScopedRecompileTest {
+class MethodScopedRecompileTest
+{
 
     private static final String JAR = "C:/Users/zacke/IdeaProjects/JStudio/DemoJar.jar";
     private static final String CLASS = "osrs/dev/auth/AuthenticationCoordinator";
 
     @Test
-    void editingOneMethodLeavesSiblingsByteIdentical() throws Exception {
+    void editingOneMethodLeavesSiblingsByteIdentical() throws Exception
+    {
         System.setProperty("java.awt.headless", "true");
         ClassPool pool = new ClassPool();
-        try (JarFile jar = new JarFile(JAR)) {
+        try (JarFile jar = new JarFile(JAR))
+        {
             Enumeration<JarEntry> entries = jar.entries();
-            while (entries.hasMoreElements()) {
+            while (entries.hasMoreElements())
+            {
                 JarEntry e = entries.nextElement();
-                if (e.getName().endsWith(".class")) {
-                    try (InputStream in = jar.getInputStream(e)) {
+                if (e.getName().endsWith(".class"))
+                {
+                    try (InputStream in = jar.getInputStream(e))
+                    {
                         pool.loadClass(in.readAllBytes());
                     }
                 }
@@ -51,17 +57,18 @@ class MethodScopedRecompileTest {
         assertNotEquals(edited, source, "the edit must actually change the source");
 
         Set<String> changed = MethodBodyDiff.changedMethods(source, edited, pool, CLASS);
-        CompilationResult result = new SourceCompiler().compile(edited, cf, pool,
-                changed.isEmpty() ? null : changed);
+        CompilationResult result = new SourceCompiler().compile(edited, cf, pool, changed.isEmpty() ? null : changed);
 
         byte[] siblingAfter = methodCode(result.getCompiledClass(), "performAuthenticationFlow");
-        assertArrayEquals(siblingBefore, siblingAfter,
-                "an unedited sibling method must keep its original bytecode under method-scoped recompile");
+        assertArrayEquals(siblingBefore, siblingAfter, "an unedited sibling method must keep its original bytecode under method-scoped recompile");
     }
 
-    private static byte[] methodCode(ClassFile cf, String name) {
-        for (MethodEntry m : cf.getMethods()) {
-            if (m.getName().equals(name) && m.getCodeAttribute() != null) {
+    private static byte[] methodCode(ClassFile cf, String name)
+    {
+        for (MethodEntry m : cf.getMethods())
+        {
+            if (m.getName().equals(name) && m.getCodeAttribute() != null)
+            {
                 return m.getCodeAttribute().getCode().clone();
             }
         }

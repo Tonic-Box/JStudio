@@ -12,9 +12,11 @@ import java.util.NavigableMap;
  * dual view, and any future consumer on one implementation rather than duplicating ceiling/floor
  * and inversion logic per call site.
  */
-public final class SourceLineMaps {
+public final class SourceLineMaps
+{
 
-    private SourceLineMaps() {
+    private SourceLineMaps()
+    {
     }
 
     /**
@@ -22,12 +24,15 @@ public final class SourceLineMaps {
      * the ceiling entry (an inlined expression is emitted by its later-offset consumer statement)
      * and falls back to the floor entry.
      */
-    public static int sourceLineForPc(NavigableMap<Integer, Integer> offsetToLine, int pc) {
-        if (offsetToLine == null || offsetToLine.isEmpty()) {
+    public static int sourceLineForPc(NavigableMap<Integer, Integer> offsetToLine, int pc)
+    {
+        if (offsetToLine == null || offsetToLine.isEmpty())
+        {
             return -1;
         }
         Map.Entry<Integer, Integer> ceiling = offsetToLine.ceilingEntry(pc);
-        if (ceiling != null) {
+        if (ceiling != null)
+        {
             return ceiling.getValue();
         }
         Map.Entry<Integer, Integer> floor = offsetToLine.floorEntry(pc);
@@ -42,21 +47,27 @@ public final class SourceLineMaps {
      * including this line's last anchor. This mirrors the ceiling attribution of {@link #sourceLineForPc}
      * — every offset in {@code [lo, hi]} resolves back to this line — so the two directions stay consistent.
      */
-    public static int[] pcSpanForSourceLine(NavigableMap<Integer, Integer> offsetToLine, int oneBasedLine) {
-        if (offsetToLine == null || offsetToLine.isEmpty()) {
+    public static int[] pcSpanForSourceLine(NavigableMap<Integer, Integer> offsetToLine, int oneBasedLine)
+    {
+        if (offsetToLine == null || offsetToLine.isEmpty())
+        {
             return null;
         }
         Integer firstForLine = null;
         Integer lastForLine = null;
-        for (Map.Entry<Integer, Integer> entry : offsetToLine.entrySet()) {
-            if (entry.getValue() != null && entry.getValue() == oneBasedLine) {
-                if (firstForLine == null) {
+        for (Map.Entry<Integer, Integer> entry : offsetToLine.entrySet())
+        {
+            if (entry.getValue() != null && entry.getValue() == oneBasedLine)
+            {
+                if (firstForLine == null)
+                {
                     firstForLine = entry.getKey();
                 }
                 lastForLine = entry.getKey();
             }
         }
-        if (firstForLine == null) {
+        if (firstForLine == null)
+        {
             return null;
         }
         Integer previousAnchor = offsetToLine.lowerKey(firstForLine);
@@ -69,16 +80,19 @@ public final class SourceLineMaps {
      * or null when the line falls outside every method (class header, fields, blank lines). The
      * innermost containing span wins when spans overlap.
      */
-    public static String methodKeyForSourceLine(Map<String, DecompileResult.MethodSpan> methodSpans,
-                                                int oneBasedLine) {
-        if (methodSpans == null) {
+    public static String methodKeyForSourceLine(Map<String, DecompileResult.MethodSpan> methodSpans, int oneBasedLine)
+    {
+        if (methodSpans == null)
+        {
             return null;
         }
         String best = null;
         int bestStart = Integer.MIN_VALUE;
-        for (Map.Entry<String, DecompileResult.MethodSpan> entry : methodSpans.entrySet()) {
+        for (Map.Entry<String, DecompileResult.MethodSpan> entry : methodSpans.entrySet())
+        {
             DecompileResult.MethodSpan span = entry.getValue();
-            if (span != null && span.contains(oneBasedLine) && span.getStartLine() > bestStart) {
+            if (span != null && span.contains(oneBasedLine) && span.getStartLine() > bestStart)
+            {
                 best = entry.getKey();
                 bestStart = span.getStartLine();
             }

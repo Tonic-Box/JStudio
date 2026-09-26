@@ -8,7 +8,8 @@ import java.util.List;
  * differenced client-side over successive snapshots to derive rates; CPU loads are instantaneous (0..1, or
  * -1 when the JVM cannot report them).
  */
-public final class MetricsSnapshot {
+public final class MetricsSnapshot
+{
 
     public final long uptimeMs;
 
@@ -36,13 +37,8 @@ public final class MetricsSnapshot {
     public final List<MemoryPool> memoryPools;
     public final List<GcStat> gcStats;
 
-    public MetricsSnapshot(long uptimeMs,
-                           long heapUsed, long heapCommitted, long heapMax,
-                           long nonHeapUsed, long nonHeapCommitted, long nonHeapMax,
-                           double processCpuLoad, double systemCpuLoad, int availableProcessors,
-                           int threadCount, int daemonThreadCount, int peakThreadCount, long totalStartedThreadCount,
-                           int loadedClassCount, long totalLoadedClassCount, long unloadedClassCount,
-                           List<MemoryPool> memoryPools, List<GcStat> gcStats) {
+    public MetricsSnapshot(long uptimeMs, long heapUsed, long heapCommitted, long heapMax, long nonHeapUsed, long nonHeapCommitted, long nonHeapMax, double processCpuLoad, double systemCpuLoad, int availableProcessors, int threadCount, int daemonThreadCount, int peakThreadCount, long totalStartedThreadCount, int loadedClassCount, long totalLoadedClassCount, long unloadedClassCount, List<MemoryPool> memoryPools, List<GcStat> gcStats)
+    {
         this.uptimeMs = uptimeMs;
         this.heapUsed = heapUsed;
         this.heapCommitted = heapCommitted;
@@ -65,13 +61,15 @@ public final class MetricsSnapshot {
     }
 
     /** A memory pool's usage (e.g. {@code Metaspace}, {@code G1 Eden Space}, {@code Code Cache}). */
-    public static final class MemoryPool {
+    public static final class MemoryPool
+    {
         public final String name;
         public final long used;
         public final long committed;
         public final long max;
 
-        public MemoryPool(String name, long used, long committed, long max) {
+        public MemoryPool(String name, long used, long committed, long max)
+        {
             this.name = name;
             this.used = used;
             this.committed = committed;
@@ -80,12 +78,14 @@ public final class MetricsSnapshot {
     }
 
     /** A garbage collector's cumulative collection count and accumulated pause time (ms). */
-    public static final class GcStat {
+    public static final class GcStat
+    {
         public final String name;
         public final long collectionCount;
         public final long collectionTimeMs;
 
-        public GcStat(String name, long collectionCount, long collectionTimeMs) {
+        public GcStat(String name, long collectionCount, long collectionTimeMs)
+        {
             this.name = name;
             this.collectionCount = collectionCount;
             this.collectionTimeMs = collectionTimeMs;

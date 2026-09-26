@@ -10,7 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class PluginContextImpl implements PluginContext {
+public class PluginContextImpl implements PluginContext
+{
 
     private final ConsolePluginLogger logger;
     private final MapPluginConfig config;
@@ -25,7 +26,8 @@ public class PluginContextImpl implements PluginContext {
     private final Map<String, Object> environment = new ConcurrentHashMap<>();
     private File exportDir;
 
-    public PluginContextImpl(ProjectModel projectModel, String pluginName) {
+    public PluginContextImpl(ProjectModel projectModel, String pluginName)
+    {
         this.logger = new ConsolePluginLogger(pluginName);
         this.config = new MapPluginConfig();
         this.projectApi = new ProjectApiImpl(projectModel);
@@ -38,83 +40,98 @@ public class PluginContextImpl implements PluginContext {
         this.results = new ResultCollector(pluginName);
     }
 
-    public PluginContextImpl(ProjectModel projectModel, String pluginName,
-                             Map<String, String> configProperties) {
+    public PluginContextImpl(ProjectModel projectModel, String pluginName, Map<String, String> configProperties)
+    {
         this(projectModel, pluginName);
         this.config.putAll(configProperties);
     }
 
     @Override
-    public PluginLogger getLogger() {
+    public PluginLogger getLogger()
+    {
         return logger;
     }
 
     @Override
-    public PluginConfig getConfig() {
+    public PluginConfig getConfig()
+    {
         return config;
     }
 
     @Override
-    public ProjectApi getProject() {
+    public ProjectApi getProject()
+    {
         return projectApi;
     }
 
     @Override
-    public AnalysisApi getAnalysis() {
+    public AnalysisApi getAnalysis()
+    {
         return analysisApi;
     }
 
     @Override
-    public YabrAccess getYabr() {
+    public YabrAccess getYabr()
+    {
         return yabrAccess;
     }
 
     @Override
-    public VmDebugApi getVmDebug() {
+    public VmDebugApi getVmDebug()
+    {
         return vmDebugApi;
     }
 
     @Override
-    public LiveApi getLive() {
+    public LiveApi getLive()
+    {
         return liveApi;
     }
 
     @Override
-    public ScriptApi getScript() {
+    public ScriptApi getScript()
+    {
         return scriptApi;
     }
 
     @Override
-    public RefactorApi getRefactor() {
+    public RefactorApi getRefactor()
+    {
         return refactorApi;
     }
 
     @Override
-    public ResultCollector getResults() {
+    public ResultCollector getResults()
+    {
         return results;
     }
 
     @Override
-    public Optional<Object> getService(String name) {
+    public Optional<Object> getService(String name)
+    {
         return Optional.empty();
     }
 
     @Override
-    public Map<String, Object> getEnvironment() {
+    public Map<String, Object> getEnvironment()
+    {
         return new HashMap<>(environment);
     }
 
     @Override
-    public void setEnvironmentValue(String key, Object value) {
+    public void setEnvironmentValue(String key, Object value)
+    {
         environment.put(key, value);
     }
 
     @Override
-    public File getExportDir() {
+    public File getExportDir()
+    {
         return exportDir;
     }
 
-    public void setExportDir(File exportDir) {
+    public void setExportDir(File exportDir)
+    {
         this.exportDir = exportDir;
     }
 }

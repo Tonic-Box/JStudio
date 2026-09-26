@@ -25,11 +25,13 @@ import java.util.List;
  * shortcut/action rows), and the blocks are greedily packed into balanced columns so the page reads as a few adjacent
  * tables rather than one very tall column.
  */
-public final class KeyboardShortcutsView extends ThemedJPanel {
+public final class KeyboardShortcutsView extends ThemedJPanel
+{
 
     private static final int COLUMNS = 3;
 
-    public KeyboardShortcutsView() {
+    public KeyboardShortcutsView()
+    {
         super(ThemedJPanel.BackgroundStyle.PRIMARY, new BorderLayout());
         String mod = System.getProperty("os.name").toLowerCase().contains("mac") ? "Cmd" : "Ctrl";
 
@@ -39,17 +41,21 @@ public final class KeyboardShortcutsView extends ThemedJPanel {
 
         JPanel[] columns = new JPanel[COLUMNS];
         int[] weights = new int[COLUMNS];
-        for (int i = 0; i < COLUMNS; i++) {
+        for (int i = 0; i < COLUMNS; i++)
+        {
             columns[i] = new JPanel();
             columns[i].setLayout(new BoxLayout(columns[i], BoxLayout.Y_AXIS));
             columns[i].setOpaque(false);
             grid.add(columns[i]);
         }
 
-        for (Category category : categories(mod)) {
+        for (Category category : categories(mod))
+        {
             int target = 0;
-            for (int i = 1; i < COLUMNS; i++) {
-                if (weights[i] < weights[target]) {
+            for (int i = 1; i < COLUMNS; i++)
+            {
+                if (weights[i] < weights[target])
+                {
                     target = i;
                 }
             }
@@ -57,7 +63,8 @@ public final class KeyboardShortcutsView extends ThemedJPanel {
             columns[target].add(Box.createVerticalStrut(16));
             weights[target] += category.rows.length + 2;
         }
-        for (JPanel column : columns) {
+        for (JPanel column : columns)
+        {
             column.add(Box.createVerticalGlue());
         }
 
@@ -69,7 +76,8 @@ public final class KeyboardShortcutsView extends ThemedJPanel {
         add(scroll, BorderLayout.CENTER);
     }
 
-    private JComponent categoryBlock(Category category) {
+    private JComponent categoryBlock(Category category)
+    {
         JPanel block = new JPanel(new GridBagLayout());
         block.setOpaque(false);
         block.setAlignmentX(LEFT_ALIGNMENT);
@@ -86,7 +94,8 @@ public final class KeyboardShortcutsView extends ThemedJPanel {
         block.add(header, c);
 
         int row = 1;
-        for (String[] entry : category.rows) {
+        for (String[] entry : category.rows)
+        {
             c.gridx = 0;
             c.gridy = row;
             c.gridwidth = 1;
@@ -111,76 +120,28 @@ public final class KeyboardShortcutsView extends ThemedJPanel {
         return block;
     }
 
-    private static List<Category> categories(String mod) {
+    private static List<Category> categories(String mod)
+    {
         List<Category> list = new ArrayList<>();
-        list.add(new Category("File", new String[][]{
-                {mod + "+O", "Open JAR/Class"},
-                {mod + "+Shift+O", "Open Recent"},
-                {mod + "+S", "Save Project"},
-                {mod + "+Shift+S", "Save Project As"},
-                {mod + "+Alt+E", "Export Class"},
-                {mod + "+Shift+J", "Export as JAR"},
-                {mod + "+W", "Close Tab"},
-                {mod + "+Shift+W", "Close Project"},
-                {mod + "+Q", "Exit"},
-        }));
-        list.add(new Category("Navigation", new String[][]{
-                {mod + "+G", "Go to Class"},
-                {mod + "+L", "Go to Line"},
-                {"Alt+Left", "Navigate Back"},
-                {"Alt+Right", "Navigate Forward"},
-        }));
-        list.add(new Category("Edit", new String[][]{
-                {mod + "+C", "Copy"},
-                {mod + "+F", "Find in File"},
-                {mod + "+Shift+F", "Find in Project"},
-                {mod + "+B", "Add Bookmark"},
-                {mod + "+Shift+B", "View Bookmarks"},
-                {mod + "+;", "Add Comment"},
-                {mod + "+,", "Preferences"},
-        }));
-        list.add(new Category("Views", new String[][]{
-                {"F5", "Source View"},
-                {"F6", "Bytecode View"},
-                {"F7", "IR View"},
-                {"F8", "Hex View"},
-                {mod + "+F5", "Refresh"},
-                {"Alt+Z", "Word Wrap"},
-        }));
-        list.add(new Category("Panels", new String[][]{
-                {mod + "+1", "Toggle Navigator"},
-                {mod + "+2", "Toggle Properties"},
-                {mod + "+3", "Toggle Console"},
-        }));
-        list.add(new Category("Font", new String[][]{
-                {mod + "+=", "Increase Font"},
-                {mod + "+-", "Decrease Font"},
-                {mod + "+0", "Reset Font"},
-        }));
-        list.add(new Category("Analysis", new String[][]{
-                {"F9", "Run Analysis"},
-                {"F10", "Simulation Analysis"},
-                {mod + "+Shift+G", "Call Graph"},
-        }));
-        list.add(new Category("Transform", new String[][]{
-                {mod + "+Shift+T", "Apply Transforms"},
-                {mod + "+Alt+S", "Script Editor"},
-                {mod + "+Shift+D", "String Deobfuscation"},
-        }));
-        list.add(new Category("VM", new String[][]{
-                {"F11", "Bytecode Debugger"},
-                {mod + "+Shift+C", "VM Console"},
-                {mod + "+Shift+E", "Execute Method"},
-                {mod + "+Shift+H", "Heap Forensics"},
-        }));
+        list.add(new Category("File", new String[][]{{mod + "+O", "Open JAR/Class"}, {mod + "+Shift+O", "Open Recent"}, {mod + "+S", "Save Project"}, {mod + "+Shift+S", "Save Project As"}, {mod + "+Alt+E", "Export Class"}, {mod + "+Shift+J", "Export as JAR"}, {mod + "+W", "Close Tab"}, {mod + "+Shift+W", "Close Project"}, {mod + "+Q", "Exit"},}));
+        list.add(new Category("Navigation", new String[][]{{mod + "+G", "Go to Class"}, {mod + "+L", "Go to Line"}, {"Alt+Left", "Navigate Back"}, {"Alt+Right", "Navigate Forward"},}));
+        list.add(new Category("Edit", new String[][]{{mod + "+C", "Copy"}, {mod + "+F", "Find in File"}, {mod + "+Shift+F", "Find in Project"}, {mod + "+B", "Add Bookmark"}, {mod + "+Shift+B", "View Bookmarks"}, {mod + "+;", "Add Comment"}, {mod + "+,", "Preferences"},}));
+        list.add(new Category("Views", new String[][]{{"F5", "Source View"}, {"F6", "Bytecode View"}, {"F7", "IR View"}, {"F8", "Hex View"}, {mod + "+F5", "Refresh"}, {"Alt+Z", "Word Wrap"},}));
+        list.add(new Category("Panels", new String[][]{{mod + "+1", "Toggle Navigator"}, {mod + "+2", "Toggle Properties"}, {mod + "+3", "Toggle Console"},}));
+        list.add(new Category("Font", new String[][]{{mod + "+=", "Increase Font"}, {mod + "+-", "Decrease Font"}, {mod + "+0", "Reset Font"},}));
+        list.add(new Category("Analysis", new String[][]{{"F9", "Run Analysis"}, {"F10", "Simulation Analysis"}, {mod + "+Shift+G", "Call Graph"},}));
+        list.add(new Category("Transform", new String[][]{{mod + "+Shift+T", "Apply Transforms"}, {mod + "+Alt+S", "Script Editor"}, {mod + "+Shift+D", "String Deobfuscation"},}));
+        list.add(new Category("VM", new String[][]{{"F11", "Bytecode Debugger"}, {mod + "+Shift+C", "VM Console"}, {mod + "+Shift+E", "Execute Method"}, {mod + "+Shift+H", "Heap Forensics"},}));
         return list;
     }
 
-    private static final class Category {
+    private static final class Category
+    {
         final String name;
         final String[][] rows;
 
-        Category(String name, String[][] rows) {
+        Category(String name, String[][] rows)
+        {
             this.name = name;
             this.rows = rows;
         }

@@ -10,12 +10,14 @@ import java.awt.Font;
 /**
  * Custom tree cell renderer for the class navigator.
  */
-public class ClassTreeCellRenderer extends DefaultTreeCellRenderer {
+public class ClassTreeCellRenderer extends DefaultTreeCellRenderer
+{
 
     private final Font normalFont;
     private final Font italicFont;
 
-    public ClassTreeCellRenderer() {
+    public ClassTreeCellRenderer()
+    {
         this.normalFont = JStudioTheme.getUIFont(12);
         this.italicFont = normalFont.deriveFont(Font.ITALIC);
 
@@ -28,12 +30,12 @@ public class ClassTreeCellRenderer extends DefaultTreeCellRenderer {
     }
 
     @Override
-    public Component getTreeCellRendererComponent(JTree tree, Object value,
-                                                  boolean selected, boolean expanded,
-                                                  boolean leaf, int row, boolean hasFocus) {
+    public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus)
+    {
         super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 
-        if (value instanceof NavigatorNode) {
+        if (value instanceof NavigatorNode)
+        {
             NavigatorNode node = (NavigatorNode) value;
 
             // Set display text
@@ -46,29 +48,43 @@ public class ClassTreeCellRenderer extends DefaultTreeCellRenderer {
             setToolTipText(node.getTooltip());
 
             // Set font (italic for abstract classes/methods)
-            if (node instanceof NavigatorNode.ClassNode) {
+            if (node instanceof NavigatorNode.ClassNode)
+            {
                 NavigatorNode.ClassNode classNode = (NavigatorNode.ClassNode) node;
-                if (classNode.getClassEntry().isAbstract() || classNode.getClassEntry().isInterface()) {
+                if (classNode.getClassEntry().isAbstract() || classNode.getClassEntry().isInterface())
+                {
                     setFont(italicFont);
-                } else {
+                }
+                else
+                {
                     setFont(normalFont);
                 }
-            } else if (node instanceof NavigatorNode.MethodNode) {
+            }
+            else if (node instanceof NavigatorNode.MethodNode)
+            {
                 NavigatorNode.MethodNode methodNode = (NavigatorNode.MethodNode) node;
-                if (methodNode.getMethodEntry().isAbstract()) {
+                if (methodNode.getMethodEntry().isAbstract())
+                {
                     setFont(italicFont);
-                } else {
+                }
+                else
+                {
                     setFont(normalFont);
                 }
-            } else {
+            }
+            else
+            {
                 setFont(normalFont);
             }
 
             // Adjust colors
-            if (selected) {
+            if (selected)
+            {
                 setBackground(JStudioTheme.getSelection());
                 setForeground(JStudioTheme.getTextPrimary());
-            } else {
+            }
+            else
+            {
                 setBackground(JStudioTheme.getBgSecondary());
                 setForeground(JStudioTheme.getTextPrimary());
             }

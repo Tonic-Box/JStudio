@@ -5,7 +5,8 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class StackEntry {
+public class StackEntry
+{
     private final int index;
     private final String value;
     private final String typeName;
@@ -13,7 +14,8 @@ public class StackEntry {
     private final boolean wide;
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "[" + index + "] " + typeName + ": " + value;
     }
 }

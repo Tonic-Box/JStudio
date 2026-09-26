@@ -8,61 +8,74 @@ import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.JTextArea;
 
-public class ThemedJTextArea extends JTextArea implements ThemeChangeListener {
+public class ThemedJTextArea extends JTextArea implements ThemeChangeListener
+{
 
     private boolean useCodeFont = true;
 
-    public ThemedJTextArea() {
+    public ThemedJTextArea()
+    {
         super();
         initialize();
     }
 
-    public ThemedJTextArea(String text) {
+    public ThemedJTextArea(String text)
+    {
         super(text);
         initialize();
     }
 
-    public ThemedJTextArea(int rows, int cols) {
+    public ThemedJTextArea(int rows, int cols)
+    {
         super(rows, cols);
         initialize();
     }
 
-    public ThemedJTextArea(String text, int rows, int cols) {
+    public ThemedJTextArea(String text, int rows, int cols)
+    {
         super(text, rows, cols);
         initialize();
     }
 
-    public void setUseCodeFont(boolean useCodeFont) {
+    public void setUseCodeFont(boolean useCodeFont)
+    {
         this.useCodeFont = useCodeFont;
         applyTheme();
     }
 
-    private void initialize() {
+    private void initialize()
+    {
         applyTheme();
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         applyTheme();
         repaint();
     }
 
-    protected void applyTheme() {
+    protected void applyTheme()
+    {
         setBackground(JStudioTheme.getBgTertiary());
         setForeground(JStudioTheme.getTextPrimary());
         setCaretColor(JStudioTheme.getTextPrimary());
         setSelectionColor(JStudioTheme.getSelection());
 
-        if (useCodeFont) {
+        if (useCodeFont)
+        {
             setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
-        } else {
+        }
+        else
+        {
             setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL));
         }
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         super.removeNotify();
         ThemeManager.getInstance().removeThemeChangeListener(this);
     }

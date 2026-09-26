@@ -34,15 +34,18 @@ import java.util.List;
  * read-only Variables table for the selected frame. Driven entirely by EventBus debug events; navigation back
  * into the editor is delegated to {@link MainFrame}. Variable editing and stepping come in later phases.
  */
-public final class DebuggerPanel extends JPanel {
+public final class DebuggerPanel extends JPanel
+{
 
     private final MainFrame mainFrame;
 
     private final DefaultListModel<DebugFrame> stackModel = new DefaultListModel<>();
     private final JList<DebugFrame> stackList = new JList<>(stackModel);
-    private final DefaultTableModel varsModel = new DefaultTableModel(new Object[]{"Name", "Type", "Value"}, 0) {
+    private final DefaultTableModel varsModel = new DefaultTableModel(new Object[]{"Name", "Type", "Value"}, 0)
+    {
         @Override
-        public boolean isCellEditable(int row, int column) {
+        public boolean isCellEditable(int row, int column)
+        {
             return false;
         }
     };
@@ -50,7 +53,8 @@ public final class DebuggerPanel extends JPanel {
     private final JButton resumeButton = new JButton("Resume");
     private final JLabel status = new JLabel("Running.");
 
-    public DebuggerPanel(MainFrame mainFrame) {
+    public DebuggerPanel(MainFrame mainFrame)
+    {
         super(new BorderLayout());
         this.mainFrame = mainFrame;
         setBackground(JStudioTheme.getBgSecondary());
@@ -60,7 +64,8 @@ public final class DebuggerPanel extends JPanel {
         updateButtons(false);
     }
 
-    private JComponent buildToolbar() {
+    private JComponent buildToolbar()
+    {
         JToolBar bar = new JToolBar();
         bar.setFloatable(false);
         bar.setBackground(JStudioTheme.getBgSecondary());
@@ -75,26 +80,31 @@ public final class DebuggerPanel extends JPanel {
         return bar;
     }
 
-    private JComponent buildBody() {
+    private JComponent buildBody()
+    {
         stackList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         stackList.setBackground(JStudioTheme.getBgSecondary());
         stackList.setForeground(JStudioTheme.getTextPrimary());
         stackList.setSelectionBackground(JStudioTheme.getSelection());
         stackList.setSelectionForeground(JStudioTheme.getTextPrimary());
         stackList.setFont(JStudioTheme.getCodeFont(12));
-        stackList.setCellRenderer(new DefaultListCellRenderer() {
+        stackList.setCellRenderer(new DefaultListCellRenderer()
+        {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                          boolean selected, boolean focused) {
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focused)
+            {
                 super.getListCellRendererComponent(list, value, index, selected, focused);
-                if (value instanceof DebugFrame) {
+                if (value instanceof DebugFrame)
+                {
                     setText(((DebugFrame) value).getDisplay());
                 }
                 return this;
             }
         });
-        stackList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
+        stackList.addListSelectionListener(e ->
+        {
+            if (!e.getValueIsAdjusting())
+            {
                 onFrameSelected();
             }
         });
@@ -113,82 +123,114 @@ public final class DebuggerPanel extends JPanel {
         return split;
     }
 
-    private void registerEvents() {
-        EventBus.getInstance().register(DebugPausedEvent.class,
-                e -> SwingUtilities.invokeLater(() -> onPaused(e.getFrames())));
-        EventBus.getInstance().register(DebugResumedEvent.class,
-                e -> SwingUtilities.invokeLater(this::onResumed));
-        EventBus.getInstance().register(DebugSessionEvent.class, e -> SwingUtilities.invokeLater(() -> {
-            if (!e.isConnected()) {
+    private void registerEvents()
+    {
+        EventBus.getInstance().register(DebugPausedEvent.class, e -> SwingUtilities.invokeLater(() -> onPaused(e.getFrames())));
+        EventBus.getInstance().register(DebugResumedEvent.class, e -> SwingUtilities.invokeLater(this::onResumed));
+        EventBus.getInstance().register(DebugSessionEvent.class, e -> SwingUtilities.invokeLater(() ->
+        {
+            if (!e.isConnected())
+            {
                 onResumed();
             }
         }));
     }
 
-    private void onPaused(List<DebugFrame> frames) {
+    private void onPaused(List<DebugFrame> frames)
+    {
         stackModel.clear();
-        for (DebugFrame f : frames) {
+        for (DebugFrame f : frames)
+        {
             stackModel.addElement(f);
         }
         status.setText("Paused.");
         updateButtons(true);
-        if (!stackModel.isEmpty()) {
+        if (!stackModel.isEmpty())
+        {
             stackList.setSelectedIndex(0);
-        } else {
+        }
+        else
+        {
             varsModel.setRowCount(0);
         }
     }
 
-    private void onResumed() {
+    private void onResumed()
+    {
         status.setText("Running.");
         updateButtons(false);
         stackModel.clear();
         varsModel.setRowCount(0);
     }
 
-    private void onFrameSelected() {
+    private void onFrameSelected()
+    {
         DebugFrame frame = stackList.getSelectedValue();
-        if (frame == null) {
+        if (frame == null)
+        {
             return;
         }
         mainFrame.navigateToDebugLocation(frame.getLocation());
         EventBus.getInstance().post(new DebugFrameSelectedEvent(this, frame));
         varsModel.setRowCount(0);
-        for (DebugVariable v : DebugManager.getInstance().variables(frame.getIndex())) {
+        for (DebugVariable v : DebugManager.getInstance().variables(frame.getIndex()))
+        {
             varsModel.addRow(new Object[]{v.getName(), prettyType(v.getTypeDescriptor()), v.getDisplay()});
         }
     }
 
-    private void updateButtons(boolean paused) {
+    private void updateButtons(boolean paused)
+    {
         resumeButton.setEnabled(paused);
     }
 
     /** Best-effort readable type from a JVM descriptor (e.g. {@code Ljava/lang/String;} -> {@code String}). */
-    private static String prettyType(String desc) {
-        if (desc == null || desc.isEmpty()) {
+    private static String prettyType(String desc)
+    {
+        if (desc == null || desc.isEmpty())
+        {
             return "";
         }
         int arrays = 0;
         int i = 0;
-        while (i < desc.length() && desc.charAt(i) == '[') {
+        while (i < desc.length() && desc.charAt(i) == '[')
+        {
             arrays++;
             i++;
         }
         String base;
-        switch (desc.charAt(i)) {
+        switch (desc.charAt(i))
+        {
             case 'L':
                 String cn = desc.substring(i + 1, desc.endsWith(";") ? desc.length() - 1 : desc.length());
                 base = cn.substring(cn.lastIndexOf('/') + 1);
                 break;
-            case 'Z': base = "boolean"; break;
-            case 'B': base = "byte"; break;
-            case 'C': base = "char"; break;
-            case 'S': base = "short"; break;
-            case 'I': base = "int"; break;
-            case 'J': base = "long"; break;
-            case 'F': base = "float"; break;
-            case 'D': base = "double"; break;
-            default: base = desc;
+            case 'Z':
+                base = "boolean";
+                break;
+            case 'B':
+                base = "byte";
+                break;
+            case 'C':
+                base = "char";
+                break;
+            case 'S':
+                base = "short";
+                break;
+            case 'I':
+                base = "int";
+                break;
+            case 'J':
+                base = "long";
+                break;
+            case 'F':
+                base = "float";
+                break;
+            case 'D':
+                base = "double";
+                break;
+            default:
+                base = desc;
         }
         return base + "[]".repeat(Math.max(0, arrays));
     }

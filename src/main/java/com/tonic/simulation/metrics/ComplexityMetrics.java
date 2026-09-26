@@ -8,7 +8,8 @@ import com.tonic.analysis.ssa.ir.SwitchInstruction;
 import lombok.Getter;
 
 @Getter
-public class ComplexityMetrics {
+public class ComplexityMetrics
+{
 
     private final int cyclomaticComplexity;
     private final int blockCount;
@@ -19,8 +20,10 @@ public class ComplexityMetrics {
     private final int maxNestingDepth;
     private final int instructionCount;
 
-    public ComplexityMetrics(IRMethod method) {
-        if (method == null) {
+    public ComplexityMetrics(IRMethod method)
+    {
+        if (method == null)
+        {
             this.cyclomaticComplexity = 1;
             this.blockCount = 0;
             this.edgeCount = 0;
@@ -40,19 +43,25 @@ public class ComplexityMetrics {
         int switchCases = 0;
         int loops = 0;
 
-        for (IRBlock block : method.getBlocks()) {
+        for (IRBlock block : method.getBlocks())
+        {
             edges += block.getSuccessors().size();
 
-            for (IRBlock succ : block.getSuccessors()) {
-                if (succ.getId() < block.getId()) {
+            for (IRBlock succ : block.getSuccessors())
+            {
+                if (succ.getId() < block.getId())
+                {
                     loops++;
                 }
             }
 
             IRInstruction terminator = block.getTerminator();
-            if (terminator instanceof BranchInstruction) {
+            if (terminator instanceof BranchInstruction)
+            {
                 branches++;
-            } else if (terminator instanceof SwitchInstruction) {
+            }
+            else if (terminator instanceof SwitchInstruction)
+            {
                 SwitchInstruction sw = (SwitchInstruction) terminator;
                 switchCases += sw.getCases().size();
             }
@@ -69,46 +78,59 @@ public class ComplexityMetrics {
         this.maxNestingDepth = estimateMaxNesting(method);
     }
 
-    private int countInstructions(IRMethod method) {
+    private int countInstructions(IRMethod method)
+    {
         int count = 0;
-        for (IRBlock block : method.getBlocks()) {
+        for (IRBlock block : method.getBlocks())
+        {
             count += block.getInstructions().size();
             count += block.getPhiInstructions().size();
         }
         return count;
     }
 
-    private int estimateMaxNesting(IRMethod method) {
+    private int estimateMaxNesting(IRMethod method)
+    {
         int maxDepth = 0;
-        for (IRBlock block : method.getBlocks()) {
+        for (IRBlock block : method.getBlocks())
+        {
             int depth = block.getPredecessors().size();
-            if (depth > maxDepth) {
+            if (depth > maxDepth)
+            {
                 maxDepth = depth;
             }
         }
         return Math.min(maxDepth, 10);
     }
 
-    public String getComplexityRating() {
-        if (cyclomaticComplexity <= 5) {
+    public String getComplexityRating()
+    {
+        if (cyclomaticComplexity <= 5)
+        {
             return "Simple";
-        } else if (cyclomaticComplexity <= 10) {
+        }
+        else if (cyclomaticComplexity <= 10)
+        {
             return "Moderate";
-        } else if (cyclomaticComplexity <= 20) {
+        }
+        else if (cyclomaticComplexity <= 20)
+        {
             return "Complex";
-        } else {
+        }
+        else
+        {
             return "Very Complex";
         }
     }
 
-    public String getSummary() {
-        return String.format("CC=%d (%s), Blocks=%d, Branches=%d, Loops=%d",
-                cyclomaticComplexity, getComplexityRating(),
-                blockCount, branchCount, loopCount);
+    public String getSummary()
+    {
+        return String.format("CC=%d (%s), Blocks=%d, Branches=%d, Loops=%d", cyclomaticComplexity, getComplexityRating(), blockCount, branchCount, loopCount);
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "ComplexityMetrics[\n" +
                 "  Cyclomatic Complexity: " + cyclomaticComplexity +
                 " (" + getComplexityRating() + ")\n" +

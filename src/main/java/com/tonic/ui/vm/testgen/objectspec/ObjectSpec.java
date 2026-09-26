@@ -10,7 +10,8 @@ import java.util.Map;
 
 @Getter
 @Setter
-public class ObjectSpec {
+public class ObjectSpec
+{
 
     private String typeName;
     private ConstructionMode mode = ConstructionMode.CONSTRUCTOR;
@@ -23,27 +24,32 @@ public class ObjectSpec {
     private String templateName;
     private Map<String, ParamSpec> fieldOverrides = new LinkedHashMap<>();
 
-    public ObjectSpec() {
+    public ObjectSpec()
+    {
     }
 
-    public ObjectSpec(String typeName) {
+    public ObjectSpec(String typeName)
+    {
         this.typeName = typeName;
     }
 
-    public static ObjectSpec nullSpec(String typeName) {
+    public static ObjectSpec nullSpec(String typeName)
+    {
         ObjectSpec spec = new ObjectSpec(typeName);
         spec.mode = ConstructionMode.NULL;
         return spec;
     }
 
-    public static ObjectSpec withConstructor(String typeName, String constructorDesc) {
+    public static ObjectSpec withConstructor(String typeName, String constructorDesc)
+    {
         ObjectSpec spec = new ObjectSpec(typeName);
         spec.mode = ConstructionMode.CONSTRUCTOR;
         spec.constructorDescriptor = constructorDesc;
         return spec;
     }
 
-    public static ObjectSpec withFactory(String typeName, String methodName, String methodDesc) {
+    public static ObjectSpec withFactory(String typeName, String methodName, String methodDesc)
+    {
         ObjectSpec spec = new ObjectSpec(typeName);
         spec.mode = ConstructionMode.FACTORY_METHOD;
         spec.factoryMethodName = methodName;
@@ -51,41 +57,49 @@ public class ObjectSpec {
         return spec;
     }
 
-    public static ObjectSpec withExpression(String typeName, String expr) {
+    public static ObjectSpec withExpression(String typeName, String expr)
+    {
         ObjectSpec spec = new ObjectSpec(typeName);
         spec.mode = ConstructionMode.EXPRESSION;
         spec.expression = expr;
         return spec;
     }
 
-    public static ObjectSpec fromTemplate(String typeName, String templateName) {
+    public static ObjectSpec fromTemplate(String typeName, String templateName)
+    {
         ObjectSpec spec = new ObjectSpec(typeName);
         spec.mode = ConstructionMode.TEMPLATE;
         spec.templateName = templateName;
         return spec;
     }
 
-    public void addConstructorArg(ParamSpec arg) {
+    public void addConstructorArg(ParamSpec arg)
+    {
         constructorArgs.add(arg);
     }
 
-    public void addFactoryArg(ParamSpec arg) {
+    public void addFactoryArg(ParamSpec arg)
+    {
         factoryArgs.add(arg);
     }
 
-    public void setFieldOverride(String fieldName, ParamSpec value) {
+    public void setFieldOverride(String fieldName, ParamSpec value)
+    {
         fieldOverrides.put(fieldName, value);
     }
 
-    public String getSimpleTypeName() {
+    public String getSimpleTypeName()
+    {
         if (typeName == null) return "?";
         String name = typeName.replace('/', '.');
         int lastDot = name.lastIndexOf('.');
         return lastDot >= 0 ? name.substring(lastDot + 1) : name;
     }
 
-    public String getSummary() {
-        switch (mode) {
+    public String getSummary()
+    {
+        switch (mode)
+        {
             case NULL:
                 return "null";
             case CONSTRUCTOR:
@@ -94,7 +108,8 @@ public class ObjectSpec {
             case FACTORY_METHOD:
                 return getSimpleTypeName() + "." + factoryMethodName + "()";
             case EXPRESSION:
-                if (expression != null && expression.length() > 30) {
+                if (expression != null && expression.length() > 30)
+                {
                     return expression.substring(0, 27) + "...";
                 }
                 return expression;
@@ -107,25 +122,31 @@ public class ObjectSpec {
         }
     }
 
-    public boolean hasAnyFuzzParams() {
-        for (ParamSpec arg : constructorArgs) {
+    public boolean hasAnyFuzzParams()
+    {
+        for (ParamSpec arg : constructorArgs)
+        {
             if (arg.getMode() == ValueMode.FUZZ) return true;
             if (arg.getMode() == ValueMode.OBJECT_SPEC &&
-                arg.getNestedObjectSpec() != null &&
-                arg.getNestedObjectSpec().hasAnyFuzzParams()) {
+                    arg.getNestedObjectSpec() != null &&
+                    arg.getNestedObjectSpec().hasAnyFuzzParams())
+            {
                 return true;
             }
         }
-        for (ParamSpec arg : factoryArgs) {
+        for (ParamSpec arg : factoryArgs)
+        {
             if (arg.getMode() == ValueMode.FUZZ) return true;
         }
-        for (ParamSpec field : fieldOverrides.values()) {
+        for (ParamSpec field : fieldOverrides.values())
+        {
             if (field.getMode() == ValueMode.FUZZ) return true;
         }
         return false;
     }
 
-    public ObjectSpec copy() {
+    public ObjectSpec copy()
+    {
         ObjectSpec copy = new ObjectSpec(typeName);
         copy.mode = mode;
         copy.constructorDescriptor = constructorDescriptor;
@@ -134,13 +155,16 @@ public class ObjectSpec {
         copy.expression = expression;
         copy.templateName = templateName;
 
-        for (ParamSpec arg : constructorArgs) {
+        for (ParamSpec arg : constructorArgs)
+        {
             copy.constructorArgs.add(arg.copy());
         }
-        for (ParamSpec arg : factoryArgs) {
+        for (ParamSpec arg : factoryArgs)
+        {
             copy.factoryArgs.add(arg.copy());
         }
-        for (Map.Entry<String, ParamSpec> entry : fieldOverrides.entrySet()) {
+        for (Map.Entry<String, ParamSpec> entry : fieldOverrides.entrySet())
+        {
             copy.fieldOverrides.put(entry.getKey(), entry.getValue().copy());
         }
         return copy;

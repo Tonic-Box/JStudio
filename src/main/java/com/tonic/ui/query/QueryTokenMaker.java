@@ -16,17 +16,14 @@ import java.util.Set;
  * {@code arg}, {@code call}, ...) as plain identifiers, so it never drifts from the registry. Keyword
  * matching is case-insensitive, mirroring the lexer.
  */
-public class QueryTokenMaker extends AbstractTokenMaker {
+public class QueryTokenMaker extends AbstractTokenMaker
+{
 
-    private static final Set<String> KEYWORDS = Set.of(
-            "find", "show", "in", "where", "limit", "order", "by", "as",
-            "has", "any", "all", "none", "count", "and", "or", "not", "sequence", "seq", "during", "asc", "desc");
+    private static final Set<String> KEYWORDS = Set.of("find", "show", "in", "where", "limit", "order", "by", "as", "has", "any", "all", "none", "count", "and", "or", "not", "sequence", "seq", "during", "asc", "desc");
 
-    private static final Set<String> WORD_OPERATORS = Set.of(
-            "matches", "contains", "startswith", "endswith", "flowsto", "flowsfrom");
+    private static final Set<String> WORD_OPERATORS = Set.of("matches", "contains", "startswith", "endswith", "flowsto", "flowsfrom");
 
-    private static final Set<String> TYPES = Set.of(
-            "void", "boolean", "byte", "char", "short", "int", "long", "float", "double");
+    private static final Set<String> TYPES = Set.of("void", "boolean", "byte", "char", "short", "int", "long", "float", "double");
 
     private static final Set<String> CONSTANTS = Set.of("true", "false", "null");
 
@@ -35,11 +32,14 @@ public class QueryTokenMaker extends AbstractTokenMaker {
 
     private static final String REGEX_FLAGS = "imsxuUdcl";
 
-    private static Set<String> opcodeMnemonics() {
+    private static Set<String> opcodeMnemonics()
+    {
         Set<String> set = new HashSet<>();
-        for (Opcode op : Opcode.values()) {
+        for (Opcode op : Opcode.values())
+        {
             String m = op.getMnemonic();
-            if (m != null) {
+            if (m != null)
+            {
                 set.add(m.toLowerCase());
             }
         }
@@ -47,12 +47,14 @@ public class QueryTokenMaker extends AbstractTokenMaker {
     }
 
     @Override
-    public TokenMap getWordsToHighlight() {
+    public TokenMap getWordsToHighlight()
+    {
         return new TokenMap();
     }
 
     @Override
-    public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
+    public Token getTokenList(Segment text, int initialTokenType, int startOffset)
+    {
         resetTokenList();
 
         char[] array = text.array;
@@ -64,41 +66,64 @@ public class QueryTokenMaker extends AbstractTokenMaker {
         int currentTokenStart = offset;
         int currentTokenType = Token.NULL;
 
-        for (int i = offset; i < end; i++) {
+        for (int i = offset; i < end; i++)
+        {
             char c = array[i];
 
-            switch (currentTokenType) {
+            switch (currentTokenType)
+            {
                 case Token.NULL:
                     currentTokenStart = i;
-                    if (Character.isWhitespace(c)) {
+                    if (Character.isWhitespace(c))
+                    {
                         currentTokenType = Token.WHITESPACE;
-                    } else if (c == '"') {
+                    }
+                    else if (c == '"')
+                    {
                         currentTokenType = Token.LITERAL_STRING_DOUBLE_QUOTE;
-                    } else if (c == '/') {
+                    }
+                    else if (c == '/')
+                    {
                         currentTokenType = Token.REGEX;
-                    } else if (Character.isDigit(c)) {
+                    }
+                    else if (Character.isDigit(c))
+                    {
                         currentTokenType = Token.LITERAL_NUMBER_DECIMAL_INT;
-                    } else if (Character.isLetter(c) || c == '_') {
+                    }
+                    else if (Character.isLetter(c) || c == '_')
+                    {
                         currentTokenType = Token.IDENTIFIER;
-                    } else if (c == '=' || c == '!' || c == '<' || c == '>') {
-                        if (i + 1 < end && array[i + 1] == '=') {
+                    }
+                    else if (c == '=' || c == '!' || c == '<' || c == '>')
+                    {
+                        if (i + 1 < end && array[i + 1] == '=')
+                        {
                             addToken(text, i, i + 1, Token.OPERATOR, newStartOffset + i);
                             i++;
-                        } else {
+                        }
+                        else
+                        {
                             addToken(text, i, i, Token.OPERATOR, newStartOffset + i);
                         }
-                    } else if (c == '*' || c == '+') {
+                    }
+                    else if (c == '*' || c == '+')
+                    {
                         addToken(text, i, i, Token.OPERATOR, newStartOffset + i);
-                    } else if (c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}'
-                            || c == ',' || c == '.') {
+                    }
+                    else if (c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}'
+                            || c == ',' || c == '.')
+                    {
                         addToken(text, i, i, Token.SEPARATOR, newStartOffset + i);
-                    } else {
+                    }
+                    else
+                    {
                         addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                     }
                     break;
 
                 case Token.WHITESPACE:
-                    if (!Character.isWhitespace(c)) {
+                    if (!Character.isWhitespace(c))
+                    {
                         addToken(text, currentTokenStart, i - 1, Token.WHITESPACE, newStartOffset + currentTokenStart);
                         currentTokenType = Token.NULL;
                         i--;
@@ -106,7 +131,8 @@ public class QueryTokenMaker extends AbstractTokenMaker {
                     break;
 
                 case Token.IDENTIFIER:
-                    if (!Character.isLetterOrDigit(c) && c != '_') {
+                    if (!Character.isLetterOrDigit(c) && c != '_')
+                    {
                         addToken(text, currentTokenStart, i - 1, classifyWord(array, currentTokenStart, i - 1), newStartOffset + currentTokenStart);
                         currentTokenType = Token.NULL;
                         i--;
@@ -114,7 +140,8 @@ public class QueryTokenMaker extends AbstractTokenMaker {
                     break;
 
                 case Token.LITERAL_NUMBER_DECIMAL_INT:
-                    if (!Character.isLetterOrDigit(c) && c != '_' && c != '.') {
+                    if (!Character.isLetterOrDigit(c) && c != '_' && c != '.')
+                    {
                         addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset + currentTokenStart);
                         currentTokenType = Token.NULL;
                         i--;
@@ -122,16 +149,19 @@ public class QueryTokenMaker extends AbstractTokenMaker {
                     break;
 
                 case Token.LITERAL_STRING_DOUBLE_QUOTE:
-                    if (c == '"' && array[i - 1] != '\\') {
+                    if (c == '"' && array[i - 1] != '\\')
+                    {
                         addToken(text, currentTokenStart, i, Token.LITERAL_STRING_DOUBLE_QUOTE, newStartOffset + currentTokenStart);
                         currentTokenType = Token.NULL;
                     }
                     break;
 
                 case Token.REGEX:
-                    if (c == '/' && array[i - 1] != '\\') {
+                    if (c == '/' && array[i - 1] != '\\')
+                    {
                         int regexEnd = i;
-                        while (regexEnd + 1 < end && REGEX_FLAGS.indexOf(array[regexEnd + 1]) >= 0) {
+                        while (regexEnd + 1 < end && REGEX_FLAGS.indexOf(array[regexEnd + 1]) >= 0)
+                        {
                             regexEnd++;
                         }
                         addToken(text, currentTokenStart, regexEnd, Token.REGEX, newStartOffset + currentTokenStart);
@@ -145,7 +175,8 @@ public class QueryTokenMaker extends AbstractTokenMaker {
             }
         }
 
-        switch (currentTokenType) {
+        switch (currentTokenType)
+        {
             case Token.NULL:
                 addNullToken();
                 break;
@@ -161,21 +192,27 @@ public class QueryTokenMaker extends AbstractTokenMaker {
         return firstToken;
     }
 
-    private int classifyWord(char[] array, int start, int end) {
+    private int classifyWord(char[] array, int start, int end)
+    {
         String lower = new String(array, start, end - start + 1).toLowerCase();
-        if (KEYWORDS.contains(lower)) {
+        if (KEYWORDS.contains(lower))
+        {
             return Token.RESERVED_WORD;
         }
-        if (WORD_OPERATORS.contains(lower)) {
+        if (WORD_OPERATORS.contains(lower))
+        {
             return Token.FUNCTION;
         }
-        if (TYPES.contains(lower)) {
+        if (TYPES.contains(lower))
+        {
             return Token.DATA_TYPE;
         }
-        if (CONSTANTS.contains(lower)) {
+        if (CONSTANTS.contains(lower))
+        {
             return Token.LITERAL_BOOLEAN;
         }
-        if (OPCODES.contains(lower)) {
+        if (OPCODES.contains(lower))
+        {
             return Token.RESERVED_WORD_2;
         }
         return Token.IDENTIFIER;

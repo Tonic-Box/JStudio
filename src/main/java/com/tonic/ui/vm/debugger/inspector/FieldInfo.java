@@ -3,7 +3,8 @@ package com.tonic.ui.vm.debugger.inspector;
 import com.tonic.analysis.execution.state.ValueTag;
 import lombok.Getter;
 
-public class FieldInfo {
+public class FieldInfo
+{
 
     @Getter
     private final String name;
@@ -18,8 +19,8 @@ public class FieldInfo {
     private final boolean isFinal;
     private final boolean isStatic;
 
-    public FieldInfo(String name, String descriptor, String ownerClass,
-                     Object value, ValueTag valueTag, boolean isFinal, boolean isStatic) {
+    public FieldInfo(String name, String descriptor, String ownerClass, Object value, ValueTag valueTag, boolean isFinal, boolean isStatic)
+    {
         this.name = name;
         this.descriptor = descriptor;
         this.ownerClass = ownerClass;
@@ -29,49 +30,68 @@ public class FieldInfo {
         this.isStatic = isStatic;
     }
 
-    public boolean isFinal() {
+    public boolean isFinal()
+    {
         return isFinal;
     }
 
-    public boolean isStatic() {
+    public boolean isStatic()
+    {
         return isStatic;
     }
 
-    public boolean isEditable() {
+    public boolean isEditable()
+    {
         return !isFinal && valueTag != null;
     }
 
-    public String getTypeName() {
+    public String getTypeName()
+    {
         return descriptorToTypeName(descriptor);
     }
 
-    public String getValueString() {
-        if (value == null) {
+    public String getValueString()
+    {
+        if (value == null)
+        {
             return "null";
         }
         return value.toString();
     }
 
-    private static String descriptorToTypeName(String desc) {
-        if (desc == null || desc.isEmpty()) {
+    private static String descriptorToTypeName(String desc)
+    {
+        if (desc == null || desc.isEmpty())
+        {
             return "unknown";
         }
 
-        switch (desc.charAt(0)) {
-            case 'I': return "int";
-            case 'J': return "long";
-            case 'F': return "float";
-            case 'D': return "double";
-            case 'Z': return "boolean";
-            case 'B': return "byte";
-            case 'C': return "char";
-            case 'S': return "short";
-            case 'V': return "void";
+        switch (desc.charAt(0))
+        {
+            case 'I':
+                return "int";
+            case 'J':
+                return "long";
+            case 'F':
+                return "float";
+            case 'D':
+                return "double";
+            case 'Z':
+                return "boolean";
+            case 'B':
+                return "byte";
+            case 'C':
+                return "char";
+            case 'S':
+                return "short";
+            case 'V':
+                return "void";
             case '[':
                 return descriptorToTypeName(desc.substring(1)) + "[]";
             case 'L':
                 int end = desc.indexOf(';');
-                if (end > 1) {
+                if (end > 1)
+                {
                     String className = desc.substring(1, end);
                     int lastSlash = className.lastIndexOf('/');
                     return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;

@@ -6,9 +6,11 @@ import lombok.Getter;
  * Token types for the script lexer.
  */
 @Getter
-public class ScriptToken {
+public class ScriptToken
+{
 
-    public enum Type {
+    public enum Type
+    {
         // Literals
         IDENTIFIER,
         STRING,
@@ -88,7 +90,8 @@ public class ScriptToken {
     private final int line;
     private final int column;
 
-    public ScriptToken(Type type, String value, int line, int column) {
+    public ScriptToken(Type type, String value, int line, int column)
+    {
         this.type = type;
         this.value = value;
         this.line = line;
@@ -96,12 +99,15 @@ public class ScriptToken {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return String.format("%s(%s) at %d:%d", type, value, line, column);
     }
 
-    public boolean is(Type... types) {
-        for (Type t : types) {
+    public boolean is(Type... types)
+    {
+        for (Type t : types)
+        {
             if (this.type == t) return true;
         }
         return false;

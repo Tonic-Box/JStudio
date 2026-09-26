@@ -7,20 +7,24 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import java.util.List;
 
-public class ASTTreeModel extends DefaultTreeModel {
+public class ASTTreeModel extends DefaultTreeModel
+{
 
     private final DefaultMutableTreeNode rootNode;
 
-    public ASTTreeModel() {
+    public ASTTreeModel()
+    {
         super(new DefaultMutableTreeNode("AST"));
         this.rootNode = (DefaultMutableTreeNode) getRoot();
     }
 
-    public void loadClass(String className, List<MethodASTEntry> methods) {
+    public void loadClass(String className, List<MethodASTEntry> methods)
+    {
         rootNode.removeAllChildren();
         rootNode.setUserObject(className);
 
-        for (MethodASTEntry entry : methods) {
+        for (MethodASTEntry entry : methods)
+        {
             MethodRootNode methodNode = new MethodRootNode(entry.method(), entry.body());
             rootNode.add(methodNode);
         }
@@ -28,30 +32,36 @@ public class ASTTreeModel extends DefaultTreeModel {
         reload();
     }
 
-    public void clear() {
+    public void clear()
+    {
         rootNode.removeAllChildren();
         rootNode.setUserObject("AST");
         reload();
     }
 
-    public int getMethodCount() {
+    public int getMethodCount()
+    {
         return rootNode.getChildCount();
     }
 
-    public static class MethodASTEntry {
+    public static class MethodASTEntry
+    {
         private final MethodEntry method;
         private final BlockStmt body;
 
-        public MethodASTEntry(MethodEntry method, BlockStmt body) {
+        public MethodASTEntry(MethodEntry method, BlockStmt body)
+        {
             this.method = method;
             this.body = body;
         }
 
-        public MethodEntry method() {
+        public MethodEntry method()
+        {
             return method;
         }
 
-        public BlockStmt body() {
+        public BlockStmt body()
+        {
             return body;
         }
     }

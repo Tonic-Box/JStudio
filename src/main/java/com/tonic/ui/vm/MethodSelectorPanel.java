@@ -26,7 +26,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
 
-public class MethodSelectorPanel extends ThemedJPanel {
+public class MethodSelectorPanel extends ThemedJPanel
+{
 
     private final JTree tree;
     private final ClassTreeModel treeModel;
@@ -36,22 +37,18 @@ public class MethodSelectorPanel extends ThemedJPanel {
     private MethodEntryModel selectedMethod;
     private Consumer<MethodEntryModel> onMethodSelected;
 
-    public MethodSelectorPanel() {
+    public MethodSelectorPanel()
+    {
         this(null);
     }
 
-    public MethodSelectorPanel(String title) {
+    public MethodSelectorPanel(String title)
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
-        if (title != null) {
-            setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                title,
-                TitledBorder.LEFT,
-                TitledBorder.TOP,
-                null,
-                JStudioTheme.getTextPrimary()
-            ));
+        if (title != null)
+        {
+            setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), title, TitledBorder.LEFT, TitledBorder.TOP, null, JStudioTheme.getTextPrimary()));
         }
 
         JPanel topPanel = new JPanel(new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
@@ -61,10 +58,7 @@ public class MethodSelectorPanel extends ThemedJPanel {
         searchField.setBackground(JStudioTheme.getBgSecondary());
         searchField.setForeground(JStudioTheme.getTextPrimary());
         searchField.setCaretColor(JStudioTheme.getTextPrimary());
-        searchField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL)
-        ));
+        searchField.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL)));
         searchField.setToolTipText("Filter by class or method name");
 
         JLabel searchIcon = new JLabel(Icons.getIcon("search", UIConstants.ICON_SIZE_SMALL));
@@ -110,56 +104,72 @@ public class MethodSelectorPanel extends ThemedJPanel {
         EventBus.getInstance().register(ProjectUpdatedEvent.class, this::onProjectUpdated);
     }
 
-    private void onProjectLoaded(ProjectLoadedEvent event) {
+    private void onProjectLoaded(ProjectLoadedEvent event)
+    {
         refresh();
     }
 
-    private void onProjectUpdated(ProjectUpdatedEvent event) {
+    private void onProjectUpdated(ProjectUpdatedEvent event)
+    {
         refresh();
     }
 
-    private void setupListeners() {
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
+    private void setupListeners()
+    {
+        searchField.getDocument().addDocumentListener(new DocumentListener()
+        {
             @Override
-            public void insertUpdate(DocumentEvent e) {
+            public void insertUpdate(DocumentEvent e)
+            {
                 filterTree();
             }
 
             @Override
-            public void removeUpdate(DocumentEvent e) {
+            public void removeUpdate(DocumentEvent e)
+            {
                 filterTree();
             }
 
             @Override
-            public void changedUpdate(DocumentEvent e) {
+            public void changedUpdate(DocumentEvent e)
+            {
                 filterTree();
             }
         });
 
-        tree.addTreeSelectionListener(e -> {
+        tree.addTreeSelectionListener(e ->
+        {
             TreePath path = tree.getSelectionPath();
-            if (path == null) {
+            if (path == null)
+            {
                 return;
             }
 
             Object node = path.getLastPathComponent();
-            if (node instanceof NavigatorNode.MethodNode) {
+            if (node instanceof NavigatorNode.MethodNode)
+            {
                 MethodEntryModel method = ((NavigatorNode.MethodNode) node).getMethodEntry();
                 selectMethod(method);
             }
         });
 
-        tree.addMouseListener(new MouseAdapter() {
+        tree.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
                     TreePath path = tree.getPathForLocation(e.getX(), e.getY());
-                    if (path != null) {
+                    if (path != null)
+                    {
                         Object node = path.getLastPathComponent();
-                        if (node instanceof NavigatorNode.MethodNode) {
+                        if (node instanceof NavigatorNode.MethodNode)
+                        {
                             MethodEntryModel method = ((NavigatorNode.MethodNode) node).getMethodEntry();
                             selectMethod(method);
-                            if (onMethodSelected != null) {
+                            if (onMethodSelected != null)
+                            {
                                 onMethodSelected.accept(method);
                             }
                         }
@@ -169,60 +179,79 @@ public class MethodSelectorPanel extends ThemedJPanel {
         });
     }
 
-    private void filterTree() {
+    private void filterTree()
+    {
         String text = searchField.getText().trim();
-        if (text.isEmpty()) {
+        if (text.isEmpty())
+        {
             treeModel.clearFilter();
-        } else {
+        }
+        else
+        {
             treeModel.setFilter(text);
         }
         expandAll();
     }
 
-    private void expandAll() {
-        for (int i = 0; i < tree.getRowCount(); i++) {
+    private void expandAll()
+    {
+        for (int i = 0; i < tree.getRowCount(); i++)
+        {
             tree.expandRow(i);
         }
     }
 
-    private void loadCurrentProject() {
+    private void loadCurrentProject()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
+        if (project != null)
+        {
             setProject(project);
         }
     }
 
-    public void setProject(ProjectModel project) {
-        if (project != null) {
+    public void setProject(ProjectModel project)
+    {
+        if (project != null)
+        {
             treeModel.loadProject(project);
-        } else {
+        }
+        else
+        {
             treeModel.clear();
         }
     }
 
-    public void refresh() {
+    public void refresh()
+    {
         loadCurrentProject();
     }
 
-    private void selectMethod(MethodEntryModel method) {
+    private void selectMethod(MethodEntryModel method)
+    {
         this.selectedMethod = method;
-        if (method != null) {
+        if (method != null)
+        {
             String className = method.getMethodEntry().getOwnerName();
             int lastSlash = className.lastIndexOf('/');
             String simpleName = lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
             selectedLabel.setText(simpleName + "." + method.getDisplaySignature());
             selectedLabel.setForeground(JStudioTheme.getTextPrimary());
-        } else {
+        }
+        else
+        {
             selectedLabel.setText("No method selected");
             selectedLabel.setForeground(JStudioTheme.getTextSecondary());
         }
     }
 
-    public void setOnMethodSelected(Consumer<MethodEntryModel> callback) {
+    public void setOnMethodSelected(Consumer<MethodEntryModel> callback)
+    {
         this.onMethodSelected = callback;
     }
 
-    public void clearSelection() {
+    public void clearSelection()
+    {
         tree.clearSelection();
         this.selectedMethod = null;
         selectedLabel.setText("No method selected");
@@ -230,7 +259,8 @@ public class MethodSelectorPanel extends ThemedJPanel {
     }
 
     @Override
-    public Dimension getPreferredSize() {
+    public Dimension getPreferredSize()
+    {
         Dimension pref = super.getPreferredSize();
         return new Dimension(Math.max(250, pref.width), Math.max(200, pref.height));
     }

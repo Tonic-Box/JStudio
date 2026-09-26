@@ -15,7 +15,8 @@ import java.util.function.Consumer;
 /**
  * Breadcrumb navigation bar showing current location: Package > Class > Method
  */
-public class BreadcrumbBar extends JPanel {
+public class BreadcrumbBar extends JPanel
+{
 
     private ClassEntryModel currentClass;
     private String currentMethod;
@@ -24,20 +25,19 @@ public class BreadcrumbBar extends JPanel {
     private Consumer<ClassEntryModel> onClassClick;
     private Consumer<String> onMethodClick;
 
-    public BreadcrumbBar() {
+    public BreadcrumbBar()
+    {
         setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         setBackground(JStudioTheme.getBgSecondary());
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
+        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         setVisible(false); // Hidden until a class is loaded
     }
 
     /**
      * Update the breadcrumb to show the given class.
      */
-    public void setClass(ClassEntryModel classEntry) {
+    public void setClass(ClassEntryModel classEntry)
+    {
         this.currentClass = classEntry;
         this.currentMethod = null;
         rebuild();
@@ -46,7 +46,8 @@ public class BreadcrumbBar extends JPanel {
     /**
      * Update the breadcrumb to show a method within the current class.
      */
-    public void setMethod(String methodName) {
+    public void setMethod(String methodName)
+    {
         this.currentMethod = methodName;
         rebuild();
     }
@@ -54,7 +55,8 @@ public class BreadcrumbBar extends JPanel {
     /**
      * Clear the breadcrumb.
      */
-    public void clear() {
+    public void clear()
+    {
         this.currentClass = null;
         this.currentMethod = null;
         rebuild();
@@ -63,28 +65,33 @@ public class BreadcrumbBar extends JPanel {
     /**
      * Set callback for package click.
      */
-    public void setOnPackageClick(Consumer<String> callback) {
+    public void setOnPackageClick(Consumer<String> callback)
+    {
         this.onPackageClick = callback;
     }
 
     /**
      * Set callback for class click.
      */
-    public void setOnClassClick(Consumer<ClassEntryModel> callback) {
+    public void setOnClassClick(Consumer<ClassEntryModel> callback)
+    {
         this.onClassClick = callback;
     }
 
     /**
      * Set callback for method click.
      */
-    public void setOnMethodClick(Consumer<String> callback) {
+    public void setOnMethodClick(Consumer<String> callback)
+    {
         this.onMethodClick = callback;
     }
 
-    private void rebuild() {
+    private void rebuild()
+    {
         removeAll();
 
-        if (currentClass == null) {
+        if (currentClass == null)
+        {
             setVisible(false);
             return;
         }
@@ -96,8 +103,10 @@ public class BreadcrumbBar extends JPanel {
 
         // Build package path
         StringBuilder packagePath = new StringBuilder();
-        for (int i = 0; i < parts.length - 1; i++) {
-            if (i > 0) {
+        for (int i = 0; i < parts.length - 1; i++)
+        {
+            if (i > 0)
+            {
                 packagePath.append(".");
             }
             packagePath.append(parts[i]);
@@ -105,8 +114,10 @@ public class BreadcrumbBar extends JPanel {
             // Add package segment
             String pkg = parts[i];
             final String fullPackage = packagePath.toString();
-            BreadcrumbItem item = new BreadcrumbItem(pkg, false, () -> {
-                if (onPackageClick != null) {
+            BreadcrumbItem item = new BreadcrumbItem(pkg, false, () ->
+            {
+                if (onPackageClick != null)
+                {
                     onPackageClick.accept(fullPackage);
                 }
             });
@@ -116,18 +127,23 @@ public class BreadcrumbBar extends JPanel {
 
         // Add class name
         String simpleClassName = parts[parts.length - 1];
-        BreadcrumbItem classItem = new BreadcrumbItem(simpleClassName, currentMethod == null, () -> {
-            if (onClassClick != null) {
+        BreadcrumbItem classItem = new BreadcrumbItem(simpleClassName, currentMethod == null, () ->
+        {
+            if (onClassClick != null)
+            {
                 onClassClick.accept(currentClass);
             }
         });
         addItem(classItem);
 
         // Add method if present
-        if (currentMethod != null) {
+        if (currentMethod != null)
+        {
             addSeparator();
-            BreadcrumbItem methodItem = new BreadcrumbItem(currentMethod, true, () -> {
-                if (onMethodClick != null) {
+            BreadcrumbItem methodItem = new BreadcrumbItem(currentMethod, true, () ->
+            {
+                if (onMethodClick != null)
+                {
                     onMethodClick.accept(currentMethod);
                 }
             });
@@ -138,18 +154,21 @@ public class BreadcrumbBar extends JPanel {
         repaint();
     }
 
-    private void addItem(BreadcrumbItem item) {
+    private void addItem(BreadcrumbItem item)
+    {
         add(item);
     }
 
-    private void addSeparator() {
+    private void addSeparator()
+    {
         JLabel sep = new JLabel(" > ");
         sep.setForeground(JStudioTheme.getTextSecondary());
         sep.setFont(JStudioTheme.getUIFont(11));
         add(sep);
     }
 
-    private static String sanitize(String text) {
+    private static String sanitize(String text)
+    {
         if (text == null) return "";
         return text
                 .replace("&", "&amp;")
@@ -160,32 +179,42 @@ public class BreadcrumbBar extends JPanel {
     /**
      * A single breadcrumb segment.
      */
-    private static class BreadcrumbItem extends JLabel {
+    private static class BreadcrumbItem extends JLabel
+    {
 
-        BreadcrumbItem(String text, boolean isCurrent, Runnable onClick) {
+        BreadcrumbItem(String text, boolean isCurrent, Runnable onClick)
+        {
             super(sanitize(text));
             setFont(JStudioTheme.getUIFont(11));
 
-            if (isCurrent) {
+            if (isCurrent)
+            {
                 setForeground(JStudioTheme.getAccent());
-            } else {
+            }
+            else
+            {
                 setForeground(JStudioTheme.getTextPrimary());
                 setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-                addMouseListener(new MouseAdapter() {
+                addMouseListener(new MouseAdapter()
+                {
                     @Override
-                    public void mouseEntered(MouseEvent e) {
+                    public void mouseEntered(MouseEvent e)
+                    {
                         setForeground(JStudioTheme.getAccent());
                     }
 
                     @Override
-                    public void mouseExited(MouseEvent e) {
+                    public void mouseExited(MouseEvent e)
+                    {
                         setForeground(JStudioTheme.getTextPrimary());
                     }
 
                     @Override
-                    public void mouseClicked(MouseEvent e) {
-                        if (onClick != null) {
+                    public void mouseClicked(MouseEvent e)
+                    {
+                        if (onClick != null)
+                        {
                             onClick.run();
                         }
                     }

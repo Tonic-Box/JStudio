@@ -11,7 +11,8 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 
-public class ExecutionResultPanel extends ThemedJPanel {
+public class ExecutionResultPanel extends ThemedJPanel
+{
 
     private final SummaryBar summaryBar;
     private final JTabbedPane detailsTabs;
@@ -27,7 +28,8 @@ public class ExecutionResultPanel extends ThemedJPanel {
     private String executionDescriptor;
     private Object[] executionArgs;
 
-    public ExecutionResultPanel() {
+    public ExecutionResultPanel()
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout(0, UIConstants.SPACING_MEDIUM));
 
         JPanel topPanel = new JPanel();
@@ -69,14 +71,7 @@ public class ExecutionResultPanel extends ThemedJPanel {
         detailsTabs.setBackground(JStudioTheme.getBgPrimary());
         detailsTabs.setForeground(JStudioTheme.getTextPrimary());
         detailsTabs.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
-        detailsTabs.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Details",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE).deriveFont(Font.BOLD),
-            JStudioTheme.getTextPrimary()
-        ));
+        detailsTabs.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Details", TitledBorder.LEFT, TitledBorder.TOP, JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE).deriveFont(Font.BOLD), JStudioTheme.getTextPrimary()));
 
         detailsTabs.addTab("Call Trace", callTracePanel);
         detailsTabs.addTab("Console", consolePanel);
@@ -85,7 +80,8 @@ public class ExecutionResultPanel extends ThemedJPanel {
         add(detailsTabs, BorderLayout.CENTER);
     }
 
-    public void displayResult(ExecutionResult result) {
+    public void displayResult(ExecutionResult result)
+    {
         this.currentResult = result;
         summaryBar.update(result);
         callTracePanel.update(result.getMethodCalls());
@@ -94,24 +90,30 @@ public class ExecutionResultPanel extends ThemedJPanel {
 
         saveAsTestButton.setEnabled(executionClassName != null && currentResult != null);
 
-        if (!result.getMethodCalls().isEmpty()) {
+        if (!result.getMethodCalls().isEmpty())
+        {
             detailsTabs.setSelectedComponent(callTracePanel);
-        } else if (!result.getConsoleOutput().isEmpty()) {
+        }
+        else if (!result.getConsoleOutput().isEmpty())
+        {
             detailsTabs.setSelectedComponent(consolePanel);
-        } else {
+        }
+        else
+        {
             detailsTabs.setSelectedComponent(statsPanel);
         }
     }
 
-    public void setMethodContext(String className, String methodName, String descriptor) {
+    public void setMethodContext(String className, String methodName, String descriptor)
+    {
         this.executionClassName = className;
         this.executionMethodName = methodName;
         this.executionDescriptor = descriptor;
         fuzzTestButton.setEnabled(className != null);
     }
 
-    public void setExecutionContext(String className, String methodName,
-                                     String descriptor, Object[] args) {
+    public void setExecutionContext(String className, String methodName, String descriptor, Object[] args)
+    {
         this.executionClassName = className;
         this.executionMethodName = methodName;
         this.executionDescriptor = descriptor;
@@ -119,20 +121,23 @@ public class ExecutionResultPanel extends ThemedJPanel {
         fuzzTestButton.setEnabled(className != null);
     }
 
-    private void openTestGeneratorDialog() {
-        if (currentResult == null || executionClassName == null) {
+    private void openTestGeneratorDialog()
+    {
+        if (currentResult == null || executionClassName == null)
+        {
             return;
         }
 
         Window owner = SwingUtilities.getWindowAncestor(this);
         TestGeneratorDialog dialog = new TestGeneratorDialog(owner);
-        dialog.setExecutionResult(currentResult, executionClassName,
-                                   executionMethodName, executionDescriptor, executionArgs);
+        dialog.setExecutionResult(currentResult, executionClassName, executionMethodName, executionDescriptor, executionArgs);
         dialog.setVisible(true);
     }
 
-    private void openFuzzTestDialog() {
-        if (executionClassName == null) {
+    private void openFuzzTestDialog()
+    {
+        if (executionClassName == null)
+        {
             return;
         }
 
@@ -142,14 +147,16 @@ public class ExecutionResultPanel extends ThemedJPanel {
         dialog.setVisible(true);
     }
 
-    public void showExecuting() {
+    public void showExecuting()
+    {
         summaryBar.showExecuting();
         callTracePanel.showEmpty();
         consolePanel.clear();
         statsPanel.showEmpty();
     }
 
-    public void clear() {
+    public void clear()
+    {
         currentResult = null;
         summaryBar.showEmpty();
         callTracePanel.showEmpty();
@@ -158,7 +165,8 @@ public class ExecutionResultPanel extends ThemedJPanel {
         saveAsTestButton.setEnabled(false);
     }
 
-    public void clearAll() {
+    public void clearAll()
+    {
         clear();
         executionClassName = null;
         executionMethodName = null;

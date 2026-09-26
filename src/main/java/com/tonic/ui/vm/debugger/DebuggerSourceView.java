@@ -38,7 +38,8 @@ import java.util.function.IntConsumer;
  * and supports toggling breakpoints from source lines by inverting the same map. Decompiled text,
  * line maps and spans are shared with the editor through the {@link ClassEntryModel} cache.
  */
-public class DebuggerSourceView extends JPanel {
+public class DebuggerSourceView extends JPanel
+{
 
     private final RSyntaxTextArea textArea;
     private final RTextScrollPane scrollPane;
@@ -57,7 +58,8 @@ public class DebuggerSourceView extends JPanel {
     private SwingWorker<DecompileResult, Void> decompileWorker;
     private Runnable pendingUpdate;
 
-    public DebuggerSourceView() {
+    public DebuggerSourceView()
+    {
         super(new BorderLayout());
 
         textArea = new RSyntaxTextArea();
@@ -82,14 +84,20 @@ public class DebuggerSourceView extends JPanel {
         contextMenu.add(toggleItem);
         textArea.setComponentPopupMenu(contextMenu);
 
-        scrollPane.getGutter().addMouseListener(new MouseAdapter() {
+        scrollPane.getGutter().addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 int offset = textArea.viewToModel2D(new Point(0, e.getY()));
-                if (offset >= 0) {
-                    try {
+                if (offset >= 0)
+                {
+                    try
+                    {
                         toggleBreakpointAtDisplayLine(textArea.getLineOfOffset(offset) + 1);
-                    } catch (BadLocationException ignored) {
+                    }
+                    catch (BadLocationException ignored)
+                    {
                     }
                 }
             }
@@ -99,19 +107,23 @@ public class DebuggerSourceView extends JPanel {
         ThemeManager.getInstance().addThemeChangeListener(t -> SwingUtilities.invokeLater(this::applyTheme));
     }
 
-    public void setBreakpointToggler(IntConsumer breakpointToggler) {
+    public void setBreakpointToggler(IntConsumer breakpointToggler)
+    {
         this.breakpointToggler = breakpointToggler;
     }
 
     /**
      * Shows the method's source without an execution highlight (initial method load).
      */
-    public void showMethod(MethodEntry method, Set<Integer> breakpointPcs) {
-        if (method == null) {
+    public void showMethod(MethodEntry method, Set<Integer> breakpointPcs)
+    {
+        if (method == null)
+        {
             return;
         }
         Set<Integer> pcs = new HashSet<>(breakpointPcs);
-        ensureMethodLoaded(method, () -> {
+        ensureMethodLoaded(method, () ->
+        {
             clearExecutionHighlight();
             refreshBreakpoints(pcs);
             scrollToMethodStart();
@@ -122,19 +134,24 @@ public class DebuggerSourceView extends JPanel {
      * Highlights the statement executing at the given PC, re-slicing to the new method first when
      * stepping crossed a method boundary.
      */
-    public void showExecutionPoint(MethodEntry method, int pc, Set<Integer> breakpointPcs) {
-        if (method == null) {
+    public void showExecutionPoint(MethodEntry method, int pc, Set<Integer> breakpointPcs)
+    {
+        if (method == null)
+        {
             return;
         }
         Set<Integer> pcs = new HashSet<>(breakpointPcs);
-        ensureMethodLoaded(method, () -> {
+        ensureMethodLoaded(method, () ->
+        {
             refreshBreakpoints(pcs);
             highlightExecution(pc);
         });
     }
 
-    public void clearExecutionHighlight() {
-        if (executionHighlight != null) {
+    public void clearExecutionHighlight()
+    {
+        if (executionHighlight != null)
+        {
             textArea.removeLineHighlight(executionHighlight);
             executionHighlight = null;
         }
@@ -144,30 +161,40 @@ public class DebuggerSourceView extends JPanel {
     /**
      * Re-renders the breakpoint gutter dots from the displayed method's breakpoint PCs.
      */
-    public void refreshBreakpoints(Set<Integer> breakpointPcs) {
-        for (GutterIconInfo info : breakpointIcons) {
+    public void refreshBreakpoints(Set<Integer> breakpointPcs)
+    {
+        for (GutterIconInfo info : breakpointIcons)
+        {
             scrollPane.getGutter().removeTrackingIcon(info);
         }
         breakpointIcons.clear();
 
         NavigableMap<Integer, Integer> map = methodMap();
-        if (map == null) {
+        if (map == null)
+        {
             return;
         }
         Set<Integer> displayLines = new HashSet<>();
-        for (int pc : breakpointPcs) {
+        for (int pc : breakpointPcs)
+        {
             Map.Entry<Integer, Integer> entry = map.floorEntry(pc);
-            if (entry == null) {
+            if (entry == null)
+            {
                 entry = map.ceilingEntry(pc);
             }
-            if (entry != null) {
+            if (entry != null)
+            {
                 displayLines.add(entry.getValue() - lineOffset);
             }
         }
-        for (int line : displayLines) {
-            try {
+        for (int line : displayLines)
+        {
+            try
+            {
                 breakpointIcons.add(scrollPane.getGutter().addLineTrackingIcon(line - 1, breakpointIcon));
-            } catch (BadLocationException ignored) {
+            }
+            catch (BadLocationException ignored)
+            {
             }
         }
     }
@@ -176,84 +203,106 @@ public class DebuggerSourceView extends JPanel {
      * Inverts the line map (display line back to the statement's start offset) and toggles a
      * breakpoint there. Only lines carrying a mapped statement are valid targets.
      */
-    private void toggleBreakpointAtDisplayLine(int oneBasedDisplayLine) {
-        if (breakpointToggler == null) {
+    private void toggleBreakpointAtDisplayLine(int oneBasedDisplayLine)
+    {
+        if (breakpointToggler == null)
+        {
             return;
         }
         NavigableMap<Integer, Integer> map = methodMap();
-        if (map == null) {
+        if (map == null)
+        {
             status("No line mapping available for the displayed method");
             return;
         }
         int documentLine = oneBasedDisplayLine + lineOffset;
         int pc = -1;
-        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
-            if (entry.getValue() == documentLine && (pc < 0 || entry.getKey() < pc)) {
+        for (Map.Entry<Integer, Integer> entry : map.entrySet())
+        {
+            if (entry.getValue() == documentLine && (pc < 0 || entry.getKey() < pc))
+            {
                 pc = entry.getKey();
             }
         }
-        if (pc < 0) {
+        if (pc < 0)
+        {
             status("No statement maps to line " + (oneBasedDisplayLine + lineOffset));
             return;
         }
         breakpointToggler.accept(pc);
     }
 
-    private void highlightExecution(int pc) {
+    private void highlightExecution(int pc)
+    {
         NavigableMap<Integer, Integer> map = methodMap();
-        if (map == null || map.isEmpty()) {
+        if (map == null || map.isEmpty())
+        {
             status("No line mapping for the executing method");
             return;
         }
         Map.Entry<Integer, Integer> entry = map.floorEntry(pc);
-        if (entry == null) {
+        if (entry == null)
+        {
             entry = map.ceilingEntry(pc);
         }
-        if (entry == null) {
+        if (entry == null)
+        {
             return;
         }
         int displayLine = entry.getValue() - lineOffset;
-        if (displayLine == lastExecutionLine && executionHighlight != null) {
+        if (displayLine == lastExecutionLine && executionHighlight != null)
+        {
             return;
         }
         clearExecutionHighlight();
-        try {
+        try
+        {
             Color accent = JStudioTheme.getAccent();
             Color execColor = new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 55);
             executionHighlight = textArea.addLineHighlight(displayLine - 1, execColor);
             lastExecutionLine = displayLine;
             scrollToLine(displayLine - 1);
             status(" ");
-        } catch (BadLocationException ignored) {
+        }
+        catch (BadLocationException ignored)
+        {
         }
     }
 
-    private void scrollToMethodStart() {
+    private void scrollToMethodStart()
+    {
         NavigableMap<Integer, Integer> map = methodMap();
-        if (map != null && !map.isEmpty()) {
+        if (map != null && !map.isEmpty())
+        {
             scrollToLine(map.firstEntry().getValue() - lineOffset - 1);
         }
     }
 
-    private void scrollToLine(int zeroBasedLine) {
-        try {
+    private void scrollToLine(int zeroBasedLine)
+    {
+        try
+        {
             int offset = textArea.getLineStartOffset(Math.max(0, zeroBasedLine));
             textArea.setCaretPosition(offset);
             // Before the text area has been laid out (e.g. the debugger window isn't visible yet)
             // modelToView2D returns null; defer the scroll to the EDT once geometry exists.
             Rectangle2D view = textArea.modelToView2D(offset);
-            if (view == null) {
+            if (view == null)
+            {
                 SwingUtilities.invokeLater(() -> scrollToLine(zeroBasedLine));
                 return;
             }
             Rectangle rect = view.getBounds();
             rect.height = Math.max(rect.height, textArea.getVisibleRect().height / 3);
             textArea.scrollRectToVisible(rect);
-        } catch (BadLocationException ignored) {
+        }
+        catch (BadLocationException ignored)
+        {
         }
     }
 
-    private NavigableMap<Integer, Integer> methodMap() {
+    private NavigableMap<Integer, Integer> methodMap()
+    {
         return lineMaps != null && loadedMethodKey != null ? lineMaps.get(loadedMethodKey) : null;
     }
 
@@ -262,40 +311,44 @@ public class DebuggerSourceView extends JPanel {
      * asynchronously on first need; the result is shared with the editor via the model's
      * decompilation cache. {@code onReady} runs once text and maps are in place.
      */
-    private void ensureMethodLoaded(MethodEntry method, Runnable onReady) {
+    private void ensureMethodLoaded(MethodEntry method, Runnable onReady)
+    {
         String ownerName = method.getOwnerName();
         String methodKey = method.getName() + method.getDesc();
-        if (ownerName.equals(loadedClassName) && methodKey.equals(loadedMethodKey) && lineMaps != null) {
+        if (ownerName.equals(loadedClassName) && methodKey.equals(loadedMethodKey) && lineMaps != null)
+        {
             onReady.run();
             return;
         }
 
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         ClassEntryModel classEntry = project != null ? project.getClass(ownerName) : null;
-        if (classEntry == null && project != null) {
+        if (classEntry == null && project != null)
+        {
             classEntry = project.findClassByName(ownerName);
         }
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             loadedClassName = ownerName;
             loadedMethodKey = methodKey;
             lineMaps = null;
             lineOffset = 0;
             clearExecutionHighlight();
-            textArea.setText("// Source not available for " + ownerName + "\n"
-                    + "// (library class or not part of the loaded project)\n");
+            textArea.setText("// Source not available for " + ownerName + "\n" + "// (library class or not part of the loaded project)\n");
             status("Source not available for " + simpleName(ownerName));
             return;
         }
 
-        if (classEntry.getDecompilationCache() != null && classEntry.getSourceLineMaps() != null) {
-            applySource(ownerName, methodKey, classEntry.getDecompilationCache(),
-                    classEntry.getSourceLineMaps(), classEntry.getMethodSpans());
+        if (classEntry.getDecompilationCache() != null && classEntry.getSourceLineMaps() != null)
+        {
+            applySource(ownerName, methodKey, classEntry.getDecompilationCache(), classEntry.getSourceLineMaps(), classEntry.getMethodSpans());
             onReady.run();
             return;
         }
 
         pendingUpdate = onReady;
-        if (decompileWorker != null && !decompileWorker.isDone()) {
+        if (decompileWorker != null && !decompileWorker.isDone())
+        {
             decompileWorker.cancel(true);
         }
         clearExecutionHighlight();
@@ -303,30 +356,36 @@ public class DebuggerSourceView extends JPanel {
         status("Decompiling " + simpleName(ownerName) + " ...");
 
         final ClassEntryModel target = classEntry;
-        decompileWorker = new SwingWorker<>() {
+        decompileWorker = new SwingWorker<>()
+        {
             @Override
-            protected DecompileResult doInBackground() {
+            protected DecompileResult doInBackground()
+            {
                 return new ClassDecompiler(target.getClassFile()).decompileWithLineMap();
             }
 
             @Override
-            protected void done() {
-                if (isCancelled()) {
+            protected void done()
+            {
+                if (isCancelled())
+                {
                     return;
                 }
-                try {
+                try
+                {
                     DecompileResult result = get();
-                    target.setDecompilationCache(result.getSource(), result.getLineMaps(),
-                            result.getMethodSpans(), result.getFieldSpans(), result.getClassSpan());
-                    applySource(ownerName, methodKey, result.getSource(), result.getLineMaps(),
-                            result.getMethodSpans());
+                    target.setDecompilationCache(result.getSource(), result.getLineMaps(), result.getMethodSpans(), result.getFieldSpans(), result.getClassSpan());
+                    applySource(ownerName, methodKey, result.getSource(), result.getLineMaps(), result.getMethodSpans());
                     status(" ");
                     Runnable update = pendingUpdate;
                     pendingUpdate = null;
-                    if (update != null) {
+                    if (update != null)
+                    {
                         update.run();
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     pendingUpdate = null;
                     lineMaps = null;
                     textArea.setText("// Decompilation failed: " + e.getMessage() + "\n");
@@ -342,30 +401,34 @@ public class DebuggerSourceView extends JPanel {
      * records the line offset that rebases between document and display coordinates. The gutter
      * keeps whole-document numbering so lines match the editor's source view.
      */
-    private void applySource(String ownerName, String methodKey, String source,
-                             Map<String, NavigableMap<Integer, Integer>> maps,
-                             Map<String, DecompileResult.MethodSpan> spans) {
+    private void applySource(String ownerName, String methodKey, String source, Map<String, NavigableMap<Integer, Integer>> maps, Map<String, DecompileResult.MethodSpan> spans)
+    {
         clearExecutionHighlight();
         textArea.removeAllLineHighlights();
         scrollPane.getGutter().removeAllTrackingIcons();
         breakpointIcons.clear();
 
         DecompileResult.MethodSpan span = spans != null ? spans.get(methodKey) : null;
-        if (span != null) {
+        if (span != null)
+        {
             String[] lines = source.split("\n", -1);
             int start = Math.max(1, span.getStartLine());
             int end = Math.min(lines.length, span.getEndLine());
             StringBuilder slice = new StringBuilder();
-            for (int i = start; i <= end; i++) {
+            for (int i = start; i <= end; i++)
+            {
                 slice.append(lines[i - 1]);
-                if (i < end) {
+                if (i < end)
+                {
                     slice.append('\n');
                 }
             }
             textArea.setText(slice.toString());
             lineOffset = start - 1;
             scrollPane.getGutter().setLineNumberingStartIndex(start);
-        } else {
+        }
+        else
+        {
             textArea.setText(source);
             lineOffset = 0;
             scrollPane.getGutter().setLineNumberingStartIndex(1);
@@ -376,16 +439,19 @@ public class DebuggerSourceView extends JPanel {
         lineMaps = maps;
     }
 
-    private void status(String message) {
+    private void status(String message)
+    {
         statusLabel.setText(message);
     }
 
-    private static String simpleName(String internalName) {
+    private static String simpleName(String internalName)
+    {
         int idx = internalName.lastIndexOf('/');
         return idx >= 0 ? internalName.substring(idx + 1) : internalName;
     }
 
-    private void applyTheme() {
+    private void applyTheme()
+    {
         setBackground(JStudioTheme.getBgTertiary());
         textArea.setBackground(JStudioTheme.getBgTertiary());
         textArea.setForeground(JStudioTheme.getTextPrimary());
@@ -422,17 +488,21 @@ public class DebuggerSourceView extends JPanel {
         repaint();
     }
 
-    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color) {
-        if (scheme.getStyle(tokenType) != null) {
+    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color)
+    {
+        if (scheme.getStyle(tokenType) != null)
+        {
             scheme.getStyle(tokenType).foreground = color;
         }
     }
 
-    private static final class BreakpointDotIcon implements Icon {
+    private static final class BreakpointDotIcon implements Icon
+    {
         private static final int SIZE = 10;
 
         @Override
-        public void paintIcon(Component c, Graphics g, int x, int y) {
+        public void paintIcon(Component c, Graphics g, int x, int y)
+        {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setColor(new Color(0xE0, 0x45, 0x45));
@@ -441,12 +511,14 @@ public class DebuggerSourceView extends JPanel {
         }
 
         @Override
-        public int getIconWidth() {
+        public int getIconWidth()
+        {
             return SIZE;
         }
 
         @Override
-        public int getIconHeight() {
+        public int getIconHeight()
+        {
             return SIZE;
         }
     }

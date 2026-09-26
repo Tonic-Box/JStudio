@@ -21,7 +21,8 @@ import java.util.function.Consumer;
  * Bridge for data flow analysis.
  * Exposes a 'dataflow' global object for building and querying data flow graphs.
  */
-public class DataFlowBridge {
+public class DataFlowBridge
+{
 
     private final ProjectModel projectModel;
     private final Map<String, DataFlowGraph> graphCache = new HashMap<>();
@@ -29,155 +30,151 @@ public class DataFlowBridge {
     private DataFlowGraph currentGraph;
     private Consumer<String> logCallback;
 
-    public DataFlowBridge(ProjectModel projectModel) {
+    public DataFlowBridge(ProjectModel projectModel)
+    {
         this.projectModel = projectModel;
     }
 
-    public void setLogCallback(Consumer<String> callback) {
+    public void setLogCallback(Consumer<String> callback)
+    {
         this.logCallback = callback;
     }
 
-    private void log(String message) {
-        if (logCallback != null) {
+    private void log(String message)
+    {
+        if (logCallback != null)
+        {
             logCallback.accept(message);
         }
     }
 
-    public ScriptValue createDataFlowObject() {
+    public ScriptValue createDataFlowObject()
+    {
         Map<String, ScriptValue> props = new HashMap<>();
 
-        props.put("build", ScriptValue.function(
-            ScriptFunction.native1("build", this::build)
-        ));
+        props.put("build", ScriptValue.function(ScriptFunction.native1("build", this::build)));
 
-        props.put("getNodes", ScriptValue.function(
-            ScriptFunction.native0("getNodes", this::getNodes)
-        ));
+        props.put("getNodes", ScriptValue.function(ScriptFunction.native0("getNodes", this::getNodes)));
 
-        props.put("getEdges", ScriptValue.function(
-            ScriptFunction.native0("getEdges", this::getEdges)
-        ));
+        props.put("getEdges", ScriptValue.function(ScriptFunction.native0("getEdges", this::getEdges)));
 
-        props.put("getSources", ScriptValue.function(
-            ScriptFunction.native0("getSources", this::getSources)
-        ));
+        props.put("getSources", ScriptValue.function(ScriptFunction.native0("getSources", this::getSources)));
 
-        props.put("getSinks", ScriptValue.function(
-            ScriptFunction.native0("getSinks", this::getSinks)
-        ));
+        props.put("getSinks", ScriptValue.function(ScriptFunction.native0("getSinks", this::getSinks)));
 
-        props.put("getReachable", ScriptValue.function(
-            ScriptFunction.native1("getReachable", this::getReachable)
-        ));
+        props.put("getReachable", ScriptValue.function(ScriptFunction.native1("getReachable", this::getReachable)));
 
-        props.put("getFlowingInto", ScriptValue.function(
-            ScriptFunction.native1("getFlowingInto", this::getFlowingInto)
-        ));
+        props.put("getFlowingInto", ScriptValue.function(ScriptFunction.native1("getFlowingInto", this::getFlowingInto)));
 
-        props.put("getNodesByType", ScriptValue.function(
-            ScriptFunction.native1("getNodesByType", this::getNodesByType)
-        ));
+        props.put("getNodesByType", ScriptValue.function(ScriptFunction.native1("getNodesByType", this::getNodesByType)));
 
-        props.put("flowsTo", ScriptValue.function(
-            ScriptFunction.native2("flowsTo", this::flowsTo)
-        ));
+        props.put("flowsTo", ScriptValue.function(ScriptFunction.native2("flowsTo", this::flowsTo)));
 
-        props.put("getParams", ScriptValue.function(
-            ScriptFunction.native0("getParams", this::getParams)
-        ));
+        props.put("getParams", ScriptValue.function(ScriptFunction.native0("getParams", this::getParams)));
 
-        props.put("getInvokes", ScriptValue.function(
-            ScriptFunction.native0("getInvokes", this::getInvokes)
-        ));
+        props.put("getInvokes", ScriptValue.function(ScriptFunction.native0("getInvokes", this::getInvokes)));
 
-        props.put("nodeCount", ScriptValue.function(
-            ScriptFunction.native0("nodeCount", () ->
-                ScriptValue.number(currentGraph != null ? currentGraph.getNodeCount() : 0))
-        ));
+        props.put("nodeCount", ScriptValue.function(ScriptFunction.native0("nodeCount", () -> ScriptValue.number(currentGraph != null ? currentGraph.getNodeCount() : 0))));
 
-        props.put("edgeCount", ScriptValue.function(
-            ScriptFunction.native0("edgeCount", () ->
-                ScriptValue.number(currentGraph != null ? currentGraph.getEdgeCount() : 0))
-        ));
+        props.put("edgeCount", ScriptValue.function(ScriptFunction.native0("edgeCount", () -> ScriptValue.number(currentGraph != null ? currentGraph.getEdgeCount() : 0))));
 
-        props.put("taintAnalysis", ScriptValue.function(
-            ScriptFunction.native2("taintAnalysis", this::taintAnalysis)
-        ));
+        props.put("taintAnalysis", ScriptValue.function(ScriptFunction.native2("taintAnalysis", this::taintAnalysis)));
 
         return ScriptValue.object(props);
     }
 
-    private ScriptValue build(ScriptValue methodRef) {
+    private ScriptValue build(ScriptValue methodRef)
+    {
         String className;
         String methodName;
         String methodDesc = null;
 
-        if (methodRef.isString()) {
+        if (methodRef.isString())
+        {
             String s = methodRef.asString();
             int dotIdx = s.lastIndexOf('.');
-            if (dotIdx > 0) {
+            if (dotIdx > 0)
+            {
                 className = s.substring(0, dotIdx).replace('.', '/');
                 String rest = s.substring(dotIdx + 1);
                 int parenIdx = rest.indexOf('(');
-                if (parenIdx > 0) {
+                if (parenIdx > 0)
+                {
                     methodName = rest.substring(0, parenIdx);
                     methodDesc = rest.substring(parenIdx);
-                } else {
+                }
+                else
+                {
                     methodName = rest;
                 }
-            } else {
+            }
+            else
+            {
                 log("Invalid method reference: " + s);
                 return ScriptValue.bool(false);
             }
-        } else if (methodRef.isObject()) {
+        }
+        else if (methodRef.isObject())
+        {
             Map<String, ScriptValue> obj = methodRef.asObject();
             className = obj.containsKey("className") ? obj.get("className").asString() : null;
             methodName = obj.containsKey("name") ? obj.get("name").asString() : null;
             methodDesc = obj.containsKey("desc") ? obj.get("desc").asString() : null;
-        } else {
+        }
+        else
+        {
             log("Invalid method reference type");
             return ScriptValue.bool(false);
         }
 
-        if (className == null || methodName == null) {
+        if (className == null || methodName == null)
+        {
             log("Missing class or method name");
             return ScriptValue.bool(false);
         }
 
         ClassEntryModel classEntry = projectModel.findClassByName(className);
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             log("Class not found: " + className);
             return ScriptValue.bool(false);
         }
 
         MethodEntry targetMethod = null;
-        for (MethodEntryModel mm : classEntry.getMethods()) {
+        for (MethodEntryModel mm : classEntry.getMethods())
+        {
             MethodEntry m = mm.getMethodEntry();
-            if (m.getName().equals(methodName)) {
-                if (methodDesc == null || m.getDesc().equals(methodDesc)) {
+            if (m.getName().equals(methodName))
+            {
+                if (methodDesc == null || m.getDesc().equals(methodDesc))
+                {
                     targetMethod = m;
                     break;
                 }
             }
         }
 
-        if (targetMethod == null || targetMethod.getCodeAttribute() == null) {
+        if (targetMethod == null || targetMethod.getCodeAttribute() == null)
+        {
             log("Method not found or has no code: " + methodName);
             return ScriptValue.bool(false);
         }
 
         String cacheKey = className + "." + methodName + (methodDesc != null ? methodDesc : "");
-        if (graphCache.containsKey(cacheKey)) {
+        if (graphCache.containsKey(cacheKey))
+        {
             currentGraph = graphCache.get(cacheKey);
             log("Using cached data flow graph for " + cacheKey);
             return ScriptValue.bool(true);
         }
 
-        try {
+        try
+        {
             SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
             IRMethod irMethod = ssa.lift(targetMethod);
 
-            if (irMethod == null || irMethod.getEntryBlock() == null) {
+            if (irMethod == null || irMethod.getEntryBlock() == null)
+            {
                 log("Failed to lift method to IR");
                 return ScriptValue.bool(false);
             }
@@ -186,97 +183,116 @@ public class DataFlowBridge {
             currentGraph.build();
             graphCache.put(cacheKey, currentGraph);
 
-            log("Built data flow graph: " + currentGraph.getNodeCount() + " nodes, " +
-                currentGraph.getEdgeCount() + " edges");
+            log("Built data flow graph: " + currentGraph.getNodeCount() + " nodes, " + currentGraph.getEdgeCount() + " edges");
             return ScriptValue.bool(true);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log("Error building data flow graph: " + e.getMessage());
             return ScriptValue.bool(false);
         }
     }
 
-    private ScriptValue getNodes() {
+    private ScriptValue getNodes()
+    {
         if (currentGraph == null) return ScriptValue.array(new ArrayList<>());
         List<ScriptValue> nodes = new ArrayList<>();
-        for (DataFlowNode node : currentGraph.getNodes()) {
+        for (DataFlowNode node : currentGraph.getNodes())
+        {
             nodes.add(wrapNode(node));
         }
         return ScriptValue.array(nodes);
     }
 
-    private ScriptValue getEdges() {
+    private ScriptValue getEdges()
+    {
         if (currentGraph == null) return ScriptValue.array(new ArrayList<>());
         List<ScriptValue> edges = new ArrayList<>();
-        for (DataFlowEdge edge : currentGraph.getEdges()) {
+        for (DataFlowEdge edge : currentGraph.getEdges())
+        {
             edges.add(wrapEdge(edge));
         }
         return ScriptValue.array(edges);
     }
 
-    private ScriptValue getSources() {
+    private ScriptValue getSources()
+    {
         if (currentGraph == null) return ScriptValue.array(new ArrayList<>());
         List<ScriptValue> sources = new ArrayList<>();
-        for (DataFlowNode node : currentGraph.getPotentialSources()) {
+        for (DataFlowNode node : currentGraph.getPotentialSources())
+        {
             sources.add(wrapNode(node));
         }
         return ScriptValue.array(sources);
     }
 
-    private ScriptValue getSinks() {
+    private ScriptValue getSinks()
+    {
         if (currentGraph == null) return ScriptValue.array(new ArrayList<>());
         List<ScriptValue> sinks = new ArrayList<>();
-        for (DataFlowNode node : currentGraph.getPotentialSinks()) {
+        for (DataFlowNode node : currentGraph.getPotentialSinks())
+        {
             sinks.add(wrapNode(node));
         }
         return ScriptValue.array(sinks);
     }
 
-    private ScriptValue getReachable(ScriptValue nodeRef) {
+    private ScriptValue getReachable(ScriptValue nodeRef)
+    {
         if (currentGraph == null) return ScriptValue.array(new ArrayList<>());
         DataFlowNode node = parseNodeRef(nodeRef);
         if (node == null) return ScriptValue.array(new ArrayList<>());
 
         Set<DataFlowNode> reachable = currentGraph.getReachableNodes(node);
         List<ScriptValue> result = new ArrayList<>();
-        for (DataFlowNode n : reachable) {
+        for (DataFlowNode n : reachable)
+        {
             result.add(wrapNode(n));
         }
         return ScriptValue.array(result);
     }
 
-    private ScriptValue getFlowingInto(ScriptValue nodeRef) {
+    private ScriptValue getFlowingInto(ScriptValue nodeRef)
+    {
         if (currentGraph == null) return ScriptValue.array(new ArrayList<>());
         DataFlowNode node = parseNodeRef(nodeRef);
         if (node == null) return ScriptValue.array(new ArrayList<>());
 
         Set<DataFlowNode> flowing = currentGraph.getFlowingIntoNodes(node);
         List<ScriptValue> result = new ArrayList<>();
-        for (DataFlowNode n : flowing) {
+        for (DataFlowNode n : flowing)
+        {
             result.add(wrapNode(n));
         }
         return ScriptValue.array(result);
     }
 
-    private ScriptValue getNodesByType(ScriptValue typeVal) {
+    private ScriptValue getNodesByType(ScriptValue typeVal)
+    {
         if (currentGraph == null) return ScriptValue.array(new ArrayList<>());
         String typeName = typeVal.asString().toUpperCase();
 
         DataFlowNodeType type;
-        try {
+        try
+        {
             type = DataFlowNodeType.valueOf(typeName);
-        } catch (IllegalArgumentException e) {
+        }
+        catch (IllegalArgumentException e)
+        {
             log("Unknown node type: " + typeName);
             return ScriptValue.array(new ArrayList<>());
         }
 
         List<ScriptValue> result = new ArrayList<>();
-        for (DataFlowNode node : currentGraph.getNodesByType(type)) {
+        for (DataFlowNode node : currentGraph.getNodesByType(type))
+        {
             result.add(wrapNode(node));
         }
         return ScriptValue.array(result);
     }
 
-    private ScriptValue flowsTo(ScriptValue sourceRef, ScriptValue sinkRef) {
+    private ScriptValue flowsTo(ScriptValue sourceRef, ScriptValue sinkRef)
+    {
         if (currentGraph == null) return ScriptValue.bool(false);
         DataFlowNode source = parseNodeRef(sourceRef);
         DataFlowNode sink = parseNodeRef(sinkRef);
@@ -286,63 +302,85 @@ public class DataFlowBridge {
         return ScriptValue.bool(reachable.contains(sink));
     }
 
-    private ScriptValue getParams() {
+    private ScriptValue getParams()
+    {
         if (currentGraph == null) return ScriptValue.array(new ArrayList<>());
         List<ScriptValue> params = new ArrayList<>();
-        for (DataFlowNode node : currentGraph.getNodesByType(DataFlowNodeType.PARAM)) {
+        for (DataFlowNode node : currentGraph.getNodesByType(DataFlowNodeType.PARAM))
+        {
             params.add(wrapNode(node));
         }
         return ScriptValue.array(params);
     }
 
-    private ScriptValue getInvokes() {
+    private ScriptValue getInvokes()
+    {
         if (currentGraph == null) return ScriptValue.array(new ArrayList<>());
         List<ScriptValue> invokes = new ArrayList<>();
-        for (DataFlowNode node : currentGraph.getNodesByType(DataFlowNodeType.INVOKE_RESULT)) {
+        for (DataFlowNode node : currentGraph.getNodesByType(DataFlowNodeType.INVOKE_RESULT))
+        {
             invokes.add(wrapNode(node));
         }
         return ScriptValue.array(invokes);
     }
 
-    private ScriptValue taintAnalysis(ScriptValue sources, ScriptValue sinks) {
+    private ScriptValue taintAnalysis(ScriptValue sources, ScriptValue sinks)
+    {
         if (currentGraph == null) return ScriptValue.array(new ArrayList<>());
 
         List<DataFlowNode> sourceNodes = new ArrayList<>();
         List<DataFlowNode> sinkNodes = new ArrayList<>();
 
-        if (sources.isArray()) {
-            for (ScriptValue sv : sources.asArray()) {
+        if (sources.isArray())
+        {
+            for (ScriptValue sv : sources.asArray())
+            {
                 DataFlowNode node = parseNodeRef(sv);
                 if (node != null) sourceNodes.add(node);
             }
-        } else if (sources.isString()) {
+        }
+        else if (sources.isString())
+        {
             String type = sources.asString();
-            if ("params".equalsIgnoreCase(type)) {
+            if ("params".equalsIgnoreCase(type))
+            {
                 sourceNodes.addAll(currentGraph.getNodesByType(DataFlowNodeType.PARAM));
-            } else {
+            }
+            else
+            {
                 sourceNodes.addAll(currentGraph.getPotentialSources());
             }
         }
 
-        if (sinks.isArray()) {
-            for (ScriptValue sv : sinks.asArray()) {
+        if (sinks.isArray())
+        {
+            for (ScriptValue sv : sinks.asArray())
+            {
                 DataFlowNode node = parseNodeRef(sv);
                 if (node != null) sinkNodes.add(node);
             }
-        } else if (sinks.isString()) {
+        }
+        else if (sinks.isString())
+        {
             String type = sinks.asString();
-            if ("invokes".equalsIgnoreCase(type)) {
+            if ("invokes".equalsIgnoreCase(type))
+            {
                 sinkNodes.addAll(currentGraph.getNodesByType(DataFlowNodeType.INVOKE_RESULT));
-            } else {
+            }
+            else
+            {
                 sinkNodes.addAll(currentGraph.getPotentialSinks());
             }
         }
 
         List<ScriptValue> flows = new ArrayList<>();
-        for (DataFlowNode source : sourceNodes) {
+        for (DataFlowNode source : sourceNodes)
+        {
             Set<DataFlowNode> reachable = currentGraph.getReachableNodes(source);
-            for (DataFlowNode sink : sinkNodes) {
-                if (reachable.contains(sink)) {
+            for (DataFlowNode sink : sinkNodes)
+            {
+                if (reachable.contains(sink))
+                {
                     Map<String, ScriptValue> flow = new HashMap<>();
                     flow.put("source", wrapNode(source));
                     flow.put("sink", wrapNode(sink));
@@ -354,19 +392,26 @@ public class DataFlowBridge {
         return ScriptValue.array(flows);
     }
 
-    private DataFlowNode parseNodeRef(ScriptValue value) {
+    private DataFlowNode parseNodeRef(ScriptValue value)
+    {
         if (currentGraph == null) return null;
 
-        if (value.isNumber()) {
+        if (value.isNumber())
+        {
             int id = (int) value.asNumber();
-            for (DataFlowNode node : currentGraph.getNodes()) {
+            for (DataFlowNode node : currentGraph.getNodes())
+            {
                 if (node.getId() == id) return node;
             }
-        } else if (value.isObject()) {
+        }
+        else if (value.isObject())
+        {
             Map<String, ScriptValue> obj = value.asObject();
-            if (obj.containsKey("id")) {
+            if (obj.containsKey("id"))
+            {
                 int id = (int) obj.get("id").asNumber();
-                for (DataFlowNode node : currentGraph.getNodes()) {
+                for (DataFlowNode node : currentGraph.getNodes())
+                {
                     if (node.getId() == id) return node;
                 }
             }
@@ -374,7 +419,8 @@ public class DataFlowBridge {
         return null;
     }
 
-    private ScriptValue wrapNode(DataFlowNode node) {
+    private ScriptValue wrapNode(DataFlowNode node)
+    {
         Map<String, ScriptValue> props = new HashMap<>();
         props.put("id", ScriptValue.number(node.getId()));
         props.put("type", ScriptValue.string(node.getType().name()));
@@ -387,7 +433,8 @@ public class DataFlowBridge {
         return ScriptValue.object(props);
     }
 
-    private ScriptValue wrapEdge(DataFlowEdge edge) {
+    private ScriptValue wrapEdge(DataFlowEdge edge)
+    {
         Map<String, ScriptValue> props = new HashMap<>();
         props.put("sourceId", ScriptValue.number(edge.getSource().getId()));
         props.put("targetId", ScriptValue.number(edge.getTarget().getId()));

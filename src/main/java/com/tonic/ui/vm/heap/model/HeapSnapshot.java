@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Getter
-public class HeapSnapshot {
+public class HeapSnapshot
+{
     private final int snapshotId;
     private final String label;
     private final Instant timestamp;
@@ -20,7 +21,8 @@ public class HeapSnapshot {
     private final Map<String, Integer> classCounts;
     private final int totalObjects;
 
-    private HeapSnapshot(Builder builder) {
+    private HeapSnapshot(Builder builder)
+    {
         this.snapshotId = builder.snapshotId;
         this.label = builder.label;
         this.timestamp = builder.timestamp;
@@ -30,67 +32,79 @@ public class HeapSnapshot {
         this.totalObjects = this.objects.size();
     }
 
-    private Map<String, Integer> computeClassCounts(Map<Integer, HeapObject> objs) {
+    private Map<String, Integer> computeClassCounts(Map<Integer, HeapObject> objs)
+    {
         Map<String, Integer> counts = new HashMap<>();
-        for (HeapObject obj : objs.values()) {
+        for (HeapObject obj : objs.values())
+        {
             counts.merge(obj.getClassName(), 1, Integer::sum);
         }
         return Collections.unmodifiableMap(counts);
     }
 
-    public HeapObject getObject(int id) {
+    public HeapObject getObject(int id)
+    {
         return objects.get(id);
     }
 
-    public List<HeapObject> getObjectsByClass(String className) {
+    public List<HeapObject> getObjectsByClass(String className)
+    {
         return objects.values().stream()
-            .filter(obj -> className.equals(obj.getClassName()))
-            .collect(Collectors.toList());
+                .filter(obj -> className.equals(obj.getClassName()))
+                .collect(Collectors.toList());
     }
 
-    public List<String> getClassesSortedByCount() {
+    public List<String> getClassesSortedByCount()
+    {
         return classCounts.entrySet().stream()
-            .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toList());
+                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
-    public int getClassCount(String className) {
+    public int getClassCount(String className)
+    {
         return classCounts.getOrDefault(className, 0);
     }
 
-    public List<HeapObject> getStrings() {
+    public List<HeapObject> getStrings()
+    {
         return getObjectsByClass("java/lang/String");
     }
 
-    public List<HeapObject> getLambdas() {
+    public List<HeapObject> getLambdas()
+    {
         return objects.values().stream()
-            .filter(HeapObject::isLambda)
-            .collect(Collectors.toList());
+                .filter(HeapObject::isLambda)
+                .collect(Collectors.toList());
     }
 
-    public List<HeapObject> getArrays() {
+    public List<HeapObject> getArrays()
+    {
         return objects.values().stream()
-            .filter(HeapObject::isArray)
-            .collect(Collectors.toList());
+                .filter(HeapObject::isArray)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "HeapSnapshot{" +
-            "id=" + snapshotId +
-            ", label='" + label + '\'' +
-            ", objects=" + totalObjects +
-            ", classes=" + classCounts.size() +
-            ", at=" + instructionCount +
-            '}';
+                "id=" + snapshotId +
+                ", label='" + label + '\'' +
+                ", objects=" + totalObjects +
+                ", classes=" + classCounts.size() +
+                ", at=" + instructionCount +
+                '}';
     }
 
-    public static Builder builder() {
+    public static Builder builder()
+    {
         return new Builder();
     }
 
-    public static class Builder {
+    public static class Builder
+    {
         private static int nextSnapshotId = 1;
 
         private int snapshotId;
@@ -99,41 +113,49 @@ public class HeapSnapshot {
         private long instructionCount;
         private Map<Integer, HeapObject> objects = new LinkedHashMap<>();
 
-        public Builder() {
+        public Builder()
+        {
             this.snapshotId = nextSnapshotId++;
         }
 
-        public Builder snapshotId(int snapshotId) {
+        public Builder snapshotId(int snapshotId)
+        {
             this.snapshotId = snapshotId;
             return this;
         }
 
-        public Builder label(String label) {
+        public Builder label(String label)
+        {
             this.label = label;
             return this;
         }
 
-        public Builder timestamp(Instant timestamp) {
+        public Builder timestamp(Instant timestamp)
+        {
             this.timestamp = timestamp;
             return this;
         }
 
-        public Builder instructionCount(long instructionCount) {
+        public Builder instructionCount(long instructionCount)
+        {
             this.instructionCount = instructionCount;
             return this;
         }
 
-        public Builder objects(Map<Integer, HeapObject> objects) {
+        public Builder objects(Map<Integer, HeapObject> objects)
+        {
             this.objects = objects != null ? objects : new LinkedHashMap<>();
             return this;
         }
 
-        public Builder addObject(HeapObject object) {
+        public Builder addObject(HeapObject object)
+        {
             this.objects.put(object.getId(), object);
             return this;
         }
 
-        public HeapSnapshot build() {
+        public HeapSnapshot build()
+        {
             return new HeapSnapshot(this);
         }
     }

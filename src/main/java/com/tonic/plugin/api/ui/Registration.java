@@ -7,7 +7,8 @@ package com.tonic.plugin.api.ui;
  * first call.
  */
 @FunctionalInterface
-public interface Registration {
+public interface Registration
+{
 
     /** Undoes the contribution. Idempotent. */
     void remove();

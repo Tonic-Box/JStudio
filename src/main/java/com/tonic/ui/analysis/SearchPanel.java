@@ -33,7 +33,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class SearchPanel extends ThemedJPanel {
+public class SearchPanel extends ThemedJPanel
+{
 
     private final ProjectModel project;
     private final JTextField searchField;
@@ -44,7 +45,8 @@ public class SearchPanel extends ThemedJPanel {
 
     private List<SearchResult> lastResults;
 
-    public SearchPanel(ProjectModel project) {
+    public SearchPanel(ProjectModel project)
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
 
@@ -65,15 +67,7 @@ public class SearchPanel extends ThemedJPanel {
 
         gbc.gridx = 1;
         gbc.weightx = 0.3;
-        searchTypeCombo = new JComboBox<>(new String[]{
-                "Method Calls",
-                "Field Accesses",
-                "Class Allocations",
-                "Type Casts",
-                "Instanceof Checks",
-                "Null Checks",
-                "Throws"
-        });
+        searchTypeCombo = new JComboBox<>(new String[]{"Method Calls", "Field Accesses", "Class Allocations", "Type Casts", "Instanceof Checks", "Null Checks", "Throws"});
         searchTypeCombo.setBackground(JStudioTheme.getBgTertiary());
         searchTypeCombo.setForeground(JStudioTheme.getTextPrimary());
         controlPanel.add(searchTypeCombo, gbc);
@@ -114,10 +108,13 @@ public class SearchPanel extends ThemedJPanel {
         resultsList.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
 
         // Double-click to navigate to result
-        resultsList.addMouseListener(new MouseAdapter() {
+        resultsList.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
                     navigateToSelectedResult();
                 }
             }
@@ -139,8 +136,10 @@ public class SearchPanel extends ThemedJPanel {
     /**
      * Perform search.
      */
-    public void search() {
-        if (project.getClassPool() == null) {
+    public void search()
+    {
+        if (project.getClassPool() == null)
+        {
             statusLabel.setText("No project loaded. Open a JAR or class file first.");
             return;
         }
@@ -151,49 +150,69 @@ public class SearchPanel extends ThemedJPanel {
         statusLabel.setText("Searching...");
         resultsModel.clear();
 
-        SwingWorker<List<SearchResult>, Void> worker = new SwingWorker<>() {
+        SwingWorker<List<SearchResult>, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected List<SearchResult> doInBackground() {
+            protected List<SearchResult> doInBackground()
+            {
                 PatternSearch search = new PatternSearch(project.getClassPool())
                         .inAllClasses()
                         .limit(100);
 
-                switch (Objects.requireNonNull(searchType)) {
+                switch (Objects.requireNonNull(searchType))
+                {
                     case "Method Calls":
-                        if (pattern.isEmpty()) {
+                        if (pattern.isEmpty())
+                        {
                             return search.findMethodCalls(Patterns.anyMethodCall());
-                        } else if (pattern.contains(".")) {
+                        }
+                        else if (pattern.contains("."))
+                        {
                             String[] parts = pattern.split("\\.", 2);
                             return search.findMethodCalls(parts[0], parts[1]);
-                        } else {
+                        }
+                        else
+                        {
                             return search.findMethodCalls(pattern);
                         }
 
                     case "Field Accesses":
-                        if (pattern.isEmpty()) {
+                        if (pattern.isEmpty())
+                        {
                             return search.findFieldsByName(".*");
-                        } else {
+                        }
+                        else
+                        {
                             return search.findFieldsByName(pattern);
                         }
 
                     case "Class Allocations":
-                        if (pattern.isEmpty()) {
+                        if (pattern.isEmpty())
+                        {
                             return search.findAllocations();
-                        } else {
+                        }
+                        else
+                        {
                             return search.findAllocations(pattern);
                         }
 
                     case "Type Casts":
-                        if (pattern.isEmpty()) {
+                        if (pattern.isEmpty())
+                        {
                             return search.findCasts();
-                        } else {
+                        }
+                        else
+                        {
                             return search.findCastsTo(pattern);
                         }
 
                     case "Instanceof Checks":
-                        if (pattern.isEmpty()) {
+                        if (pattern.isEmpty())
+                        {
                             return search.findInstanceOfChecks();
-                        } else {
+                        }
+                        else
+                        {
                             return search.findInstanceOfChecks(pattern);
                         }
 
@@ -209,12 +228,16 @@ public class SearchPanel extends ThemedJPanel {
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     lastResults = get();
                     displayResults(lastResults);
                     statusLabel.setText("Found " + lastResults.size() + " results");
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     statusLabel.setText("Search failed: " + e.getMessage());
                 }
             }
@@ -223,14 +246,18 @@ public class SearchPanel extends ThemedJPanel {
         worker.execute();
     }
 
-    private void displayResults(List<SearchResult> results) {
+    private void displayResults(List<SearchResult> results)
+    {
         resultsModel.clear();
-        for (SearchResult result : results) {
+        for (SearchResult result : results)
+        {
             String location = "";
-            if (result.getClassFile() != null) {
+            if (result.getClassFile() != null)
+            {
                 location = formatClassName(result.getClassFile().getClassName());
             }
-            if (result.getMethod() != null) {
+            if (result.getMethod() != null)
+            {
                 location += "." + result.getMethod().getName();
             }
             String description = result.getDescription() != null ? result.getDescription() : "";
@@ -238,14 +265,17 @@ public class SearchPanel extends ThemedJPanel {
         }
     }
 
-    private String formatClassName(String className) {
+    private String formatClassName(String className)
+    {
         if (className == null) return "?";
         int lastSlash = className.lastIndexOf('/');
-        if (lastSlash >= 0) {
+        if (lastSlash >= 0)
+        {
             return className.substring(lastSlash + 1);
         }
         int lastDot = className.lastIndexOf('.');
-        if (lastDot >= 0) {
+        if (lastDot >= 0)
+        {
             return className.substring(lastDot + 1);
         }
         return className;
@@ -254,16 +284,19 @@ public class SearchPanel extends ThemedJPanel {
     /**
      * Refresh the panel.
      */
-    public void refresh() {
+    public void refresh()
+    {
         // Nothing to refresh
     }
 
     /**
      * Get the selected search result.
      */
-    public SearchResult getSelectedResult() {
+    public SearchResult getSelectedResult()
+    {
         int index = resultsList.getSelectedIndex();
-        if (index >= 0 && lastResults != null && index < lastResults.size()) {
+        if (index >= 0 && lastResults != null && index < lastResults.size())
+        {
             return lastResults.get(index);
         }
         return null;
@@ -272,7 +305,8 @@ public class SearchPanel extends ThemedJPanel {
     /**
      * Navigate to the selected search result.
      */
-    private void navigateToSelectedResult() {
+    private void navigateToSelectedResult()
+    {
         SearchResult result = getSelectedResult();
         if (result == null) return;
 
@@ -280,8 +314,10 @@ public class SearchPanel extends ThemedJPanel {
         if (classFile == null) return;
 
         String className = classFile.getClassName();
-        for (ClassEntryModel classEntry : project.getUserClasses()) {
-            if (classEntry.getClassName().equals(className)) {
+        for (ClassEntryModel classEntry : project.getUserClasses())
+        {
+            if (classEntry.getClassName().equals(className))
+            {
                 EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
                 statusLabel.setText("Navigated to: " + className);
                 return;

@@ -22,13 +22,15 @@ import java.util.List;
  * {@link LineDiff} (filler lines fill the gaps), changed lines are tinted (removed = red, added = green), and the two
  * editors scroll together. Source is supplied already-decompiled by the opener.
  */
-public final class HistoryDiffView extends ThemedJPanel {
+public final class HistoryDiffView extends ThemedJPanel
+{
 
     private static final Color REMOVED = new Color(255, 85, 85, 48);
     private static final Color ADDED = new Color(90, 200, 90, 48);
     private static final Color FILLER = new Color(128, 128, 128, 26);
 
-    public HistoryDiffView(String leftLabel, String rightLabel, String oldSource, String newSource) {
+    public HistoryDiffView(String leftLabel, String rightLabel, String oldSource, String newSource)
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
 
         List<String> oldLines = Arrays.asList(oldSource.split("\n", -1));
@@ -42,7 +44,8 @@ public final class HistoryDiffView extends ThemedJPanel {
 
         StringBuilder leftText = new StringBuilder();
         StringBuilder rightText = new StringBuilder();
-        for (LineDiff.Row row : rows) {
+        for (LineDiff.Row row : rows)
+        {
             leftText.append(row.left != null ? row.left : "").append('\n');
             rightText.append(row.right != null ? row.right : "").append('\n');
         }
@@ -57,8 +60,7 @@ public final class HistoryDiffView extends ThemedJPanel {
 
         add(buildHeader(leftLabel, rightLabel, rows), BorderLayout.NORTH);
 
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                titled(leftLabel, leftScroll), titled(rightLabel, rightScroll));
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, titled(leftLabel, leftScroll), titled(rightLabel, rightScroll));
         split.setResizeWeight(0.5);
         split.setBorder(null);
         split.setDividerSize(4);
@@ -67,10 +69,13 @@ public final class HistoryDiffView extends ThemedJPanel {
         syncScroll(leftScroll.getVerticalScrollBar(), rightScroll.getVerticalScrollBar());
     }
 
-    private void highlight(RSyntaxTextArea left, RSyntaxTextArea right, List<LineDiff.Row> rows) {
-        for (int i = 0; i < rows.size(); i++) {
+    private void highlight(RSyntaxTextArea left, RSyntaxTextArea right, List<LineDiff.Row> rows)
+    {
+        for (int i = 0; i < rows.size(); i++)
+        {
             LineDiff.Row row = rows.get(i);
-            switch (row.type) {
+            switch (row.type)
+            {
                 case DELETE:
                     addLine(left, i, REMOVED);
                     addLine(right, i, FILLER);
@@ -89,29 +94,39 @@ public final class HistoryDiffView extends ThemedJPanel {
         }
     }
 
-    private static void addLine(RSyntaxTextArea editor, int line, Color color) {
-        try {
+    private static void addLine(RSyntaxTextArea editor, int line, Color color)
+    {
+        try
+        {
             editor.addLineHighlight(line, color);
-        } catch (BadLocationException | RuntimeException ignored) {
+        }
+        catch (BadLocationException | RuntimeException ignored)
+        {
             // line out of range (trailing) - skip
         }
     }
 
-    private JPanel buildHeader(String leftLabel, String rightLabel, List<LineDiff.Row> rows) {
+    private JPanel buildHeader(String leftLabel, String rightLabel, List<LineDiff.Row> rows)
+    {
         int added = 0;
         int removed = 0;
         int changed = 0;
-        for (LineDiff.Row row : rows) {
-            if (row.type == LineDiff.Type.INSERT) {
+        for (LineDiff.Row row : rows)
+        {
+            if (row.type == LineDiff.Type.INSERT)
+            {
                 added++;
-            } else if (row.type == LineDiff.Type.DELETE) {
+            }
+            else if (row.type == LineDiff.Type.DELETE)
+            {
                 removed++;
-            } else if (row.type == LineDiff.Type.CHANGE) {
+            }
+            else if (row.type == LineDiff.Type.CHANGE)
+            {
                 changed++;
             }
         }
-        JLabel label = new JLabel(leftLabel + "  vs  " + rightLabel
-                + "      +" + added + " added, -" + removed + " removed, ~" + changed + " changed");
+        JLabel label = new JLabel(leftLabel + "  vs  " + rightLabel + "      +" + added + " added, -" + removed + " removed, ~" + changed + " changed");
         label.setForeground(JStudioTheme.getTextSecondary());
         label.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
         JPanel header = new JPanel(new BorderLayout());
@@ -120,7 +135,8 @@ public final class HistoryDiffView extends ThemedJPanel {
         return header;
     }
 
-    private JPanel titled(String title, RTextScrollPane scroll) {
+    private JPanel titled(String title, RTextScrollPane scroll)
+    {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
         JLabel label = new JLabel(title);
@@ -131,17 +147,22 @@ public final class HistoryDiffView extends ThemedJPanel {
         return panel;
     }
 
-    private void syncScroll(JScrollBar a, JScrollBar b) {
+    private void syncScroll(JScrollBar a, JScrollBar b)
+    {
         boolean[] guard = {false};
-        a.addAdjustmentListener(e -> {
-            if (!guard[0]) {
+        a.addAdjustmentListener(e ->
+        {
+            if (!guard[0])
+            {
                 guard[0] = true;
                 b.setValue(e.getValue());
                 guard[0] = false;
             }
         });
-        b.addAdjustmentListener(e -> {
-            if (!guard[0]) {
+        b.addAdjustmentListener(e ->
+        {
+            if (!guard[0])
+            {
                 guard[0] = true;
                 a.setValue(e.getValue());
                 guard[0] = false;

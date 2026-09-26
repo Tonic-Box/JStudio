@@ -32,7 +32,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
 
-public abstract class BaseGraphView extends AbstractEditorView {
+public abstract class BaseGraphView extends AbstractEditorView
+{
 
     protected final ClassEntryModel classEntry;
 
@@ -64,13 +65,15 @@ public abstract class BaseGraphView extends AbstractEditorView {
     private Point panStartScreen;
     private Point panStartViewport;
 
-    public BaseGraphView(ClassEntryModel classEntry) {
+    public BaseGraphView(ClassEntryModel classEntry)
+    {
         this.classEntry = classEntry;
         initComponents();
         initializing = false;
     }
 
-    private void initComponents() {
+    private void initComponents()
+    {
         createToolbar();
         add(toolbar, BorderLayout.NORTH);
 
@@ -87,7 +90,8 @@ public abstract class BaseGraphView extends AbstractEditorView {
         add(overlayWrap(contentPanel), BorderLayout.CENTER);
     }
 
-    private void createToolbar() {
+    private void createToolbar()
+    {
         toolbar = new JToolBar();
         toolbar.setFloatable(false);
         toolbar.setBackground(JStudioTheme.getBgSecondary());
@@ -133,8 +137,10 @@ public abstract class BaseGraphView extends AbstractEditorView {
         layoutCombo = new JComboBox<>(new String[]{"Hierarchical", "Organic", "Circular"});
         layoutCombo.setFont(JStudioTheme.getCodeFont(11));
         layoutCombo.setMaximumSize(new Dimension(120, 25));
-        layoutCombo.addActionListener(e -> {
-            if (!initializing) {
+        layoutCombo.addActionListener(e ->
+        {
+            if (!initializing)
+            {
                 applyLayout((String) layoutCombo.getSelectedItem());
             }
         });
@@ -163,7 +169,8 @@ public abstract class BaseGraphView extends AbstractEditorView {
         toolbar.add(exportPngBtn);
     }
 
-    private void createGraphComponent() {
+    private void createGraphComponent()
+    {
         graph = new mxGraph();
         graph.setAllowDanglingEdges(false);
         graph.setEdgeLabelsMovable(false);
@@ -185,10 +192,13 @@ public abstract class BaseGraphView extends AbstractEditorView {
 
         graphComponent.getGraphControl().addMouseWheelListener(this::handleMouseWheel);
 
-        graphComponent.getGraphControl().addMouseListener(new MouseAdapter() {
+        graphComponent.getGraphControl().addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mousePressed(MouseEvent e) {
-                if (SwingUtilities.isLeftMouseButton(e)) {
+            public void mousePressed(MouseEvent e)
+            {
+                if (SwingUtilities.isLeftMouseButton(e))
+                {
                     panStartScreen = e.getLocationOnScreen();
                     panStartViewport = graphComponent.getViewport().getViewPosition();
                     graphComponent.getGraphControl().setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
@@ -196,22 +206,27 @@ public abstract class BaseGraphView extends AbstractEditorView {
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
+            public void mouseReleased(MouseEvent e)
+            {
                 panStartScreen = null;
                 panStartViewport = null;
                 graphComponent.getGraphControl().setCursor(Cursor.getDefaultCursor());
             }
 
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
                     handleDoubleClick(e);
                 }
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                if (panStartScreen != null && !SwingUtilities.isLeftMouseButton(e)) {
+            public void mouseExited(MouseEvent e)
+            {
+                if (panStartScreen != null && !SwingUtilities.isLeftMouseButton(e))
+                {
                     panStartScreen = null;
                     panStartViewport = null;
                     graphComponent.getGraphControl().setCursor(Cursor.getDefaultCursor());
@@ -219,10 +234,13 @@ public abstract class BaseGraphView extends AbstractEditorView {
             }
         });
 
-        graphComponent.getGraphControl().addMouseMotionListener(new MouseMotionAdapter() {
+        graphComponent.getGraphControl().addMouseMotionListener(new MouseMotionAdapter()
+        {
             @Override
-            public void mouseDragged(MouseEvent e) {
-                if (panStartScreen != null && panStartViewport != null && SwingUtilities.isLeftMouseButton(e)) {
+            public void mouseDragged(MouseEvent e)
+            {
+                if (panStartScreen != null && panStartViewport != null && SwingUtilities.isLeftMouseButton(e))
+                {
                     JViewport viewport = graphComponent.getViewport();
                     Point currentScreen = e.getLocationOnScreen();
 
@@ -241,7 +259,8 @@ public abstract class BaseGraphView extends AbstractEditorView {
         });
     }
 
-    protected void setupGraphStyles() {
+    protected void setupGraphStyles()
+    {
         mxStylesheet stylesheet = graph.getStylesheet();
 
         Map<String, Object> baseVertex = new HashMap<>();
@@ -318,16 +337,21 @@ public abstract class BaseGraphView extends AbstractEditorView {
         stylesheet.putCellStyle("CFG", cfgEdge);
     }
 
-    private void handleMouseWheel(MouseWheelEvent e) {
-        if (e.getWheelRotation() < 0) {
+    private void handleMouseWheel(MouseWheelEvent e)
+    {
+        if (e.getWheelRotation() < 0)
+        {
             graphComponent.zoomIn();
-        } else {
+        }
+        else
+        {
             graphComponent.zoomOut();
         }
         e.consume();
     }
 
-    private void createDOTTextPane() {
+    private void createDOTTextPane()
+    {
         dotTextPane = new JTextPane();
         dotTextPane.setEditable(false);
         dotTextPane.setBackground(JStudioTheme.getBgTertiary());
@@ -343,8 +367,10 @@ public abstract class BaseGraphView extends AbstractEditorView {
     }
 
     @Override
-    protected void applyChildThemes() {
-        if (toolbar == null) {
+    protected void applyChildThemes()
+    {
+        if (toolbar == null)
+        {
             return;
         }
         toolbar.setBackground(JStudioTheme.getBgSecondary());
@@ -360,14 +386,17 @@ public abstract class BaseGraphView extends AbstractEditorView {
         dotScrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
 
         setupGraphStyles();
-        if (loaded) {
+        if (loaded)
+        {
             rebuildGraph();
         }
     }
 
     @Override
-    public void refresh() {
-        if (loaded) {
+    public void refresh()
+    {
+        if (loaded)
+        {
             return;
         }
 
@@ -376,28 +405,35 @@ public abstract class BaseGraphView extends AbstractEditorView {
         loadingOverlay.showLoading("Building graph...");
         graphComponent.setEnabled(false);
 
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
+        SwingWorker<String, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected String doInBackground() {
+            protected String doInBackground()
+            {
                 prepareGraphData();
                 return generateDOT();
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 loadingOverlay.hideLoading();
                 graphComponent.setEnabled(true);
 
-                if (isCancelled()) {
+                if (isCancelled())
+                {
                     return;
                 }
 
-                try {
+                try
+                {
                     currentDOT = get();
                     rebuildGraph();
                     updateDOTView();
                     loaded = true;
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     showError("Failed to build graph: " + ex.getMessage());
                 }
             }
@@ -412,109 +448,135 @@ public abstract class BaseGraphView extends AbstractEditorView {
 
     protected abstract String generateDOT();
 
-    protected void createAdditionalToolbarItems() {
+    protected void createAdditionalToolbarItems()
+    {
     }
 
-    protected void handleDoubleClick(MouseEvent e) {
+    protected void handleDoubleClick(MouseEvent e)
+    {
     }
 
-    protected void onMethodFilterChanged() {
-        if (initializing) {
+    protected void onMethodFilterChanged()
+    {
+        if (initializing)
+        {
             return;
         }
         loaded = false;
         refresh();
     }
 
-    protected void populateMethodFilter() {
+    protected void populateMethodFilter()
+    {
         initializing = true;
-        try {
+        try
+        {
             methodFilterCombo.removeAllItems();
             methodFilterCombo.addItem("All Methods");
-            for (var method : classEntry.getMethods()) {
+            for (var method : classEntry.getMethods())
+            {
                 methodFilterCombo.addItem(method.getName() + method.getMethodEntry().getDesc());
             }
-        } finally {
+        }
+        finally
+        {
             initializing = false;
         }
     }
 
-    protected void hideMethodFilter() {
+    protected void hideMethodFilter()
+    {
         methodFilterLabel.setVisible(false);
         methodFilterCombo.setVisible(false);
     }
 
-    protected void applyHierarchicalLayout() {
+    protected void applyHierarchicalLayout()
+    {
         Object parent = graph.getDefaultParent();
-        if (graph.getChildVertices(parent).length == 0) {
+        if (graph.getChildVertices(parent).length == 0)
+        {
             return;
         }
 
         graph.getModel().beginUpdate();
-        try {
+        try
+        {
             mxHierarchicalLayout layout = new mxHierarchicalLayout(graph);
             layout.setInterRankCellSpacing(80);
             layout.setIntraCellSpacing(35);
             layout.execute(parent);
-        } finally {
+        }
+        finally
+        {
             graph.getModel().endUpdate();
         }
     }
 
-    public void switchToVisual() {
+    public void switchToVisual()
+    {
         showingVisual = true;
         visualBtn.setSelected(true);
         cardLayout.show(contentPanel, VISUAL_CARD);
     }
 
-    public void switchToDOT() {
+    public void switchToDOT()
+    {
         showingVisual = false;
         dotBtn.setSelected(true);
         updateDOTView();
         cardLayout.show(contentPanel, DOT_CARD);
     }
 
-    private void updateDOTView() {
-        try {
+    private void updateDOTView()
+    {
+        try
+        {
             dotDoc.remove(0, dotDoc.getLength());
             SimpleAttributeSet style = new SimpleAttributeSet();
             StyleConstants.setForeground(style, JStudioTheme.getTextPrimary());
             StyleConstants.setFontFamily(style, JStudioTheme.getCodeFont(12).getFamily());
             StyleConstants.setFontSize(style, 12);
             dotDoc.insertString(0, currentDOT, style);
-        } catch (BadLocationException e) {
+        }
+        catch (BadLocationException e)
+        {
             // Ignore
         }
     }
 
-    public void zoomIn() {
+    public void zoomIn()
+    {
         graphComponent.zoomIn();
     }
 
-    public void zoomOut() {
+    public void zoomOut()
+    {
         graphComponent.zoomOut();
     }
 
-    public void fitToWindow() {
+    public void fitToWindow()
+    {
         graphComponent.zoomActual();
-        double newScale = Math.min(
-            (double) graphComponent.getWidth() / graph.getGraphBounds().getWidth(),
-            (double) graphComponent.getHeight() / graph.getGraphBounds().getHeight()
-        );
-        if (newScale > 0 && Double.isFinite(newScale)) {
+        double newScale = Math.min((double) graphComponent.getWidth() / graph.getGraphBounds().getWidth(), (double) graphComponent.getHeight() / graph.getGraphBounds().getHeight());
+        if (newScale > 0 && Double.isFinite(newScale))
+        {
             graphComponent.zoomTo(newScale * 0.9, false);
         }
     }
 
-    public void applyLayout(String layoutType) {
-        if (layoutType == null || graph.getChildVertices(graph.getDefaultParent()).length == 0) {
+    public void applyLayout(String layoutType)
+    {
+        if (layoutType == null || graph.getChildVertices(graph.getDefaultParent()).length == 0)
+        {
             return;
         }
 
         Object parent = graph.getDefaultParent();
         graph.getModel().beginUpdate();
-        try {
-            switch (layoutType) {
+        try
+        {
+            switch (layoutType)
+            {
                 case "Hierarchical":
                     mxHierarchicalLayout hierarchical = new mxHierarchicalLayout(graph);
                     hierarchical.setInterRankCellSpacing(50);
@@ -530,122 +592,147 @@ public abstract class BaseGraphView extends AbstractEditorView {
                     circle.execute(parent);
                     break;
             }
-        } finally {
+        }
+        finally
+        {
             graph.getModel().endUpdate();
         }
     }
 
-    public void exportDOT() {
+    public void exportDOT()
+    {
         JFileChooser chooser = new JFileChooser();
         chooser.setSelectedFile(new File(classEntry.getSimpleName() + ".dot"));
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
             File file = chooser.getSelectedFile();
-            try (FileWriter writer = new FileWriter(file)) {
+            try (FileWriter writer = new FileWriter(file))
+            {
                 writer.write(currentDOT);
-                JOptionPane.showMessageDialog(this,
-                    "Exported to: " + file.getAbsolutePath(),
-                    "Export Successful", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this,
-                    "Failed to export: " + e.getMessage(),
-                    "Export Failed", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Exported to: " + file.getAbsolutePath(), "Export Successful", JOptionPane.INFORMATION_MESSAGE);
+            }
+            catch (IOException e)
+            {
+                JOptionPane.showMessageDialog(this, "Failed to export: " + e.getMessage(), "Export Failed", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    public void exportPNG() {
+    public void exportPNG()
+    {
         JFileChooser chooser = new JFileChooser();
         chooser.setSelectedFile(new File(classEntry.getSimpleName() + ".png"));
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
             File file = chooser.getSelectedFile();
-            try {
-                BufferedImage image = mxCellRenderer.createBufferedImage(
-                    graph, null, 1, JStudioTheme.getBgPrimary(), true, null);
-                if (image != null) {
+            try
+            {
+                BufferedImage image = mxCellRenderer.createBufferedImage(graph, null, 1, JStudioTheme.getBgPrimary(), true, null);
+                if (image != null)
+                {
                     ImageIO.write(image, "PNG", file);
-                    JOptionPane.showMessageDialog(this,
-                        "Exported to: " + file.getAbsolutePath(),
-                        "Export Successful", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                        "No graph to export",
-                        "Export Failed", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Exported to: " + file.getAbsolutePath(), "Export Successful", JOptionPane.INFORMATION_MESSAGE);
                 }
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this,
-                    "Failed to export: " + e.getMessage(),
-                    "Export Failed", JOptionPane.ERROR_MESSAGE);
+                else
+                {
+                    JOptionPane.showMessageDialog(this, "No graph to export", "Export Failed", JOptionPane.WARNING_MESSAGE);
+                }
+            }
+            catch (IOException e)
+            {
+                JOptionPane.showMessageDialog(this, "Failed to export: " + e.getMessage(), "Export Failed", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    protected void showError(String message) {
-        try {
+    protected void showError(String message)
+    {
+        try
+        {
             dotDoc.remove(0, dotDoc.getLength());
             SimpleAttributeSet style = new SimpleAttributeSet();
             StyleConstants.setForeground(style, Color.RED);
             dotDoc.insertString(0, "// Error: " + message, style);
-        } catch (BadLocationException e) {
+        }
+        catch (BadLocationException e)
+        {
             // Ignore
         }
     }
 
-    protected void clearGraph() {
+    protected void clearGraph()
+    {
         graph.getModel().beginUpdate();
-        try {
+        try
+        {
             graph.removeCells(graph.getChildCells(graph.getDefaultParent(), true, true));
-        } finally {
+        }
+        finally
+        {
             graph.getModel().endUpdate();
         }
     }
 
-    protected static String toHex(Color c) {
+    protected static String toHex(Color c)
+    {
         return String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
     }
 
     @Override
-    public String getText() {
+    public String getText()
+    {
         return currentDOT;
     }
 
     @Override
-    public void copySelection() {
-        if (showingVisual) {
+    public void copySelection()
+    {
+        if (showingVisual)
+        {
             return;
         }
         String selected = dotTextPane.getSelectedText();
-        if (selected != null && !selected.isEmpty()) {
+        if (selected != null && !selected.isEmpty())
+        {
             StringSelection selection = new StringSelection(selected);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
         }
     }
 
     @Override
-    public String getSelectedText() {
-        if (showingVisual) {
+    public String getSelectedText()
+    {
+        if (showingVisual)
+        {
             return null;
         }
         return dotTextPane.getSelectedText();
     }
 
     @Override
-    public void goToLine(int line) {
+    public void goToLine(int line)
+    {
         if (showingVisual) return;
-        try {
+        try
+        {
             int offset = dotTextPane.getDocument().getDefaultRootElement().getElement(line - 1).getStartOffset();
             dotTextPane.setCaretPosition(offset);
             dotTextPane.requestFocus();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             // Line out of range
         }
     }
 
     @Override
-    public void scrollToText(String searchText) {
+    public void scrollToText(String searchText)
+    {
         if (showingVisual || searchText == null || searchText.isEmpty()) return;
         String text = dotTextPane.getText();
         int index = text.toLowerCase().indexOf(searchText.toLowerCase());
-        if (index >= 0) {
+        if (index >= 0)
+        {
             dotTextPane.setCaretPosition(index);
             dotTextPane.select(index, index + searchText.length());
             dotTextPane.requestFocus();
@@ -653,7 +740,8 @@ public abstract class BaseGraphView extends AbstractEditorView {
     }
 
     @Override
-    public void setFontSize(int size) {
+    public void setFontSize(int size)
+    {
         dotTextPane.setFont(JStudioTheme.getCodeFont(size));
     }
 }

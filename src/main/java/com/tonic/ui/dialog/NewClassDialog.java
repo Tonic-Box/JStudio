@@ -14,7 +14,8 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NewClassDialog extends ThemedJDialog {
+public class NewClassDialog extends ThemedJDialog
+{
 
     /** Placeholder shown for the root package; treated as an empty (default) package. */
     private static final String DEFAULT_PACKAGE_LABEL = "(default package)";
@@ -34,7 +35,8 @@ public class NewClassDialog extends ThemedJDialog {
     @Getter
     private boolean confirmed = false;
 
-    public NewClassDialog(Window owner, String defaultPackage) {
+    public NewClassDialog(Window owner, String defaultPackage)
+    {
         super(owner, "New Class", ModalityType.APPLICATION_MODAL);
 
         JPanel content = new JPanel(new GridBagLayout());
@@ -104,8 +106,10 @@ public class NewClassDialog extends ThemedJDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         typeCombo = new JComboBox<>(ClassType.values());
         styleComboBox(typeCombo);
-        typeCombo.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
+        typeCombo.addItemListener(e ->
+        {
+            if (e.getStateChange() == ItemEvent.SELECTED)
+            {
                 updateFieldsForType();
             }
         });
@@ -169,13 +173,17 @@ public class NewClassDialog extends ThemedJDialog {
         finalCheck.setForeground(JStudioTheme.getTextPrimary());
         modifiersPanel.add(finalCheck);
 
-        abstractCheck.addItemListener(e -> {
-            if (abstractCheck.isSelected() && finalCheck.isSelected()) {
+        abstractCheck.addItemListener(e ->
+        {
+            if (abstractCheck.isSelected() && finalCheck.isSelected())
+            {
                 finalCheck.setSelected(false);
             }
         });
-        finalCheck.addItemListener(e -> {
-            if (finalCheck.isSelected() && abstractCheck.isSelected()) {
+        finalCheck.addItemListener(e ->
+        {
+            if (finalCheck.isSelected() && abstractCheck.isSelected())
+            {
                 abstractCheck.setSelected(false);
             }
         });
@@ -247,8 +255,10 @@ public class NewClassDialog extends ThemedJDialog {
 
         JButton createButton = new JButton("Create");
         styleButton(createButton, true);
-        createButton.addActionListener(e -> {
-            if (validateInput()) {
+        createButton.addActionListener(e ->
+        {
+            if (validateInput())
+            {
                 confirmed = true;
                 dispose();
             }
@@ -265,15 +275,21 @@ public class NewClassDialog extends ThemedJDialog {
         gbc.insets = new Insets(15, 5, 5, 5);
         content.add(buttonPanel, gbc);
 
-        KeyAdapter enterListener = new KeyAdapter() {
+        KeyAdapter enterListener = new KeyAdapter()
+        {
             @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    if (validateInput()) {
+            public void keyPressed(KeyEvent e)
+            {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER)
+                {
+                    if (validateInput())
+                    {
                         confirmed = true;
                         dispose();
                     }
-                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+                {
                     dispose();
                 }
             }
@@ -291,11 +307,13 @@ public class NewClassDialog extends ThemedJDialog {
         nameField.requestFocusInWindow();
     }
 
-    private void updateFieldsForType() {
+    private void updateFieldsForType()
+    {
         ClassType type = (ClassType) typeCombo.getSelectedItem();
         if (type == null) return;
 
-        switch (type) {
+        switch (type)
+        {
             case INTERFACE:
                 abstractCheck.setSelected(false);
                 abstractCheck.setEnabled(false);
@@ -329,53 +347,58 @@ public class NewClassDialog extends ThemedJDialog {
                 finalCheck.setEnabled(true);
                 superClassField.setEnabled(true);
                 superClassLabel.setForeground(JStudioTheme.getTextPrimary());
-                if ("java.lang.Enum".equals(superClassField.getText())) {
+                if ("java.lang.Enum".equals(superClassField.getText()))
+                {
                     superClassField.setText("java.lang.Object");
                 }
                 break;
         }
     }
 
-    private void styleTextField(JTextField field) {
+    private void styleTextField(JTextField field)
+    {
         field.setBackground(JStudioTheme.getBgSecondary());
         field.setForeground(JStudioTheme.getTextPrimary());
         field.setCaretColor(JStudioTheme.getTextPrimary());
-        field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
+        field.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(5, 8, 5, 8)));
         field.setFont(JStudioTheme.getCodeFont(12));
     }
 
-    private void styleComboBox(JComboBox<?> combo) {
+    private void styleComboBox(JComboBox<?> combo)
+    {
         combo.setBackground(JStudioTheme.getBgSecondary());
         combo.setForeground(JStudioTheme.getTextPrimary());
         combo.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
     }
 
-    private void styleButton(JButton button, boolean primary) {
-        if (primary) {
+    private void styleButton(JButton button, boolean primary)
+    {
+        if (primary)
+        {
             button.setBackground(JStudioTheme.getAccent());
             button.setForeground(Color.WHITE);
-        } else {
+        }
+        else
+        {
             button.setBackground(JStudioTheme.getBgSecondary());
             button.setForeground(JStudioTheme.getTextPrimary());
         }
         button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(6, 16, 6, 16)
-        ));
+        button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(6, 16, 6, 16)));
     }
 
-    private boolean validateInput() {
+    private boolean validateInput()
+    {
         errorLabel.setText(" ");
 
         String pkg = normalizedPackage();
-        if (!pkg.isEmpty()) {
+        if (!pkg.isEmpty())
+        {
             String[] pkgParts = pkg.split("\\.");
-            for (String part : pkgParts) {
-                if (!isValidJavaIdentifier(part)) {
+            for (String part : pkgParts)
+            {
+                if (!isValidJavaIdentifier(part))
+                {
                     errorLabel.setText("Invalid package name: each segment must be a valid Java identifier");
                     packageField.requestFocusInWindow();
                     return false;
@@ -384,31 +407,38 @@ public class NewClassDialog extends ThemedJDialog {
         }
 
         String name = nameField.getText().trim();
-        if (name.isEmpty()) {
+        if (name.isEmpty())
+        {
             errorLabel.setText("Class name cannot be empty");
             nameField.requestFocusInWindow();
             return false;
         }
 
-        if (!isValidJavaIdentifier(name)) {
+        if (!isValidJavaIdentifier(name))
+        {
             errorLabel.setText("Invalid class name: must be a valid Java identifier");
             nameField.requestFocusInWindow();
             return false;
         }
 
         ClassType type = (ClassType) typeCombo.getSelectedItem();
-        if (type == ClassType.CLASS) {
-            if (abstractCheck.isSelected() && finalCheck.isSelected()) {
+        if (type == ClassType.CLASS)
+        {
+            if (abstractCheck.isSelected() && finalCheck.isSelected())
+            {
                 errorLabel.setText("Cannot be both abstract and final");
                 return false;
             }
         }
 
         String superClass = superClassField.getText().trim();
-        if (!superClass.isEmpty() && !superClass.equals("java.lang.Object")) {
+        if (!superClass.isEmpty() && !superClass.equals("java.lang.Object"))
+        {
             String[] parts = superClass.split("\\.");
-            for (String part : parts) {
-                if (!isValidJavaIdentifier(part)) {
+            for (String part : parts)
+            {
+                if (!isValidJavaIdentifier(part))
+                {
                     errorLabel.setText("Invalid superclass name");
                     superClassField.requestFocusInWindow();
                     return false;
@@ -417,14 +447,19 @@ public class NewClassDialog extends ThemedJDialog {
         }
 
         String interfaces = interfacesField.getText().trim();
-        if (!interfaces.isEmpty()) {
+        if (!interfaces.isEmpty())
+        {
             String[] ifaceList = interfaces.split(",");
-            for (String iface : ifaceList) {
+            for (String iface : ifaceList)
+            {
                 String trimmed = iface.trim();
-                if (!trimmed.isEmpty()) {
+                if (!trimmed.isEmpty())
+                {
                     String[] parts = trimmed.split("\\.");
-                    for (String part : parts) {
-                        if (!isValidJavaIdentifier(part)) {
+                    for (String part : parts)
+                    {
+                        if (!isValidJavaIdentifier(part))
+                        {
                             errorLabel.setText("Invalid interface name: " + trimmed);
                             interfacesField.requestFocusInWindow();
                             return false;
@@ -437,10 +472,12 @@ public class NewClassDialog extends ThemedJDialog {
         return true;
     }
 
-    private boolean isValidJavaIdentifier(String s) {
+    private boolean isValidJavaIdentifier(String s)
+    {
         if (s == null || s.isEmpty()) return false;
         if (!Character.isJavaIdentifierStart(s.charAt(0))) return false;
-        for (int i = 1; i < s.length(); i++) {
+        for (int i = 1; i < s.length(); i++)
+        {
             if (!Character.isJavaIdentifierPart(s.charAt(i))) return false;
         }
         return true;
@@ -450,18 +487,23 @@ public class NewClassDialog extends ThemedJDialog {
      * The trimmed package text, with the {@link #DEFAULT_PACKAGE_LABEL} placeholder normalized to
      * empty so creating a class in the root package is accepted rather than rejected as invalid.
      */
-    private String normalizedPackage() {
+    private String normalizedPackage()
+    {
         String pkg = packageField.getText().trim();
         return pkg.equals(DEFAULT_PACKAGE_LABEL) ? "" : pkg;
     }
 
-    public ClassCreationParams getCreationParams() {
+    public ClassCreationParams getCreationParams()
+    {
         String name = nameField.getText().trim();
         String pkg = normalizedPackage().replace('.', '/');
         String fullClassName;
-        if (!pkg.isEmpty()) {
+        if (!pkg.isEmpty())
+        {
             fullClassName = pkg + "/" + name;
-        } else {
+        }
+        else
+        {
             fullClassName = name;
         }
 
@@ -469,7 +511,8 @@ public class NewClassDialog extends ThemedJDialog {
         boolean isPublic = "public".equals(accessCombo.getSelectedItem());
 
         String superClass = superClassField.getText().trim().replace('.', '/');
-        if (superClass.isEmpty()) {
+        if (superClass.isEmpty())
+        {
             superClass = "java/lang/Object";
         }
 
@@ -488,17 +531,21 @@ public class NewClassDialog extends ThemedJDialog {
                 .build();
     }
 
-    private List<String> parseInterfaces() {
+    private List<String> parseInterfaces()
+    {
         List<String> result = new ArrayList<>();
         String text = interfacesField.getText().trim();
-        if (text.isEmpty()) {
+        if (text.isEmpty())
+        {
             return result;
         }
 
         String[] parts = text.split(",");
-        for (String part : parts) {
+        for (String part : parts)
+        {
             String trimmed = part.trim();
-            if (!trimmed.isEmpty()) {
+            if (!trimmed.isEmpty())
+            {
                 result.add(trimmed.replace('.', '/'));
             }
         }
@@ -506,7 +553,8 @@ public class NewClassDialog extends ThemedJDialog {
     }
 
     /** Selectable class-file (bytecode) versions, mapping a label to its class-file major version. */
-    private enum BytecodeVersion {
+    private enum BytecodeVersion
+    {
         JAVA_8("Java 8 (52)", 52),
         JAVA_11("Java 11 (55)", 55),
         JAVA_17("Java 17 (61)", 61),
@@ -516,13 +564,15 @@ public class NewClassDialog extends ThemedJDialog {
         private final String label;
         private final int major;
 
-        BytecodeVersion(String label, int major) {
+        BytecodeVersion(String label, int major)
+        {
             this.label = label;
             this.major = major;
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return label;
         }
     }

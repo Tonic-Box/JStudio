@@ -27,7 +27,8 @@ import java.awt.*;
 import java.io.File;
 import java.util.List;
 
-public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTracker.ForensicsEventListener {
+public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTracker.ForensicsEventListener
+{
 
     @Getter
     private HeapForensicsTracker tracker;
@@ -55,7 +56,8 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
     private int spinnerFrame = 0;
     private static final String[] SPINNER_FRAMES = {"|", "/", "-", "\\"};
 
-    public HeapForensicsPanel() {
+    public HeapForensicsPanel()
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
         SimpleHeapManager heapManager = new SimpleHeapManager();
         this.tracker = new HeapForensicsTracker(heapManager);
@@ -82,23 +84,17 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         objectDetailPanel = new ObjectDetailPanel();
         objectDetailPanel.setTracker(tracker);
 
-        JSplitPane detailSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-            wrapWithTitle(objectListPanel, "Objects"),
-            wrapWithTitle(objectDetailPanel, "Object Details"));
+        JSplitPane detailSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, wrapWithTitle(objectListPanel, "Objects"), wrapWithTitle(objectDetailPanel, "Object Details"));
         detailSplit.setDividerLocation(200);
         detailSplit.setResizeWeight(0.4);
         detailSplit.setBackground(JStudioTheme.getBgPrimary());
 
-        JSplitPane rightSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-            wrapWithTitle(classSummaryPanel, "Class Summary"),
-            detailSplit);
+        JSplitPane rightSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, wrapWithTitle(classSummaryPanel, "Class Summary"), detailSplit);
         rightSplit.setDividerLocation(470); //TODO
         rightSplit.setResizeWeight(0.25);
         rightSplit.setBackground(JStudioTheme.getBgPrimary());
 
-        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                methodSelector,
-            rightSplit);
+        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, methodSelector, rightSplit);
         mainSplit.setDividerLocation(255); //todo
         mainSplit.setResizeWeight(0.25);
         mainSplit.setBackground(JStudioTheme.getBgPrimary());
@@ -116,13 +112,11 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         updateButtonStates();
     }
 
-    private JPanel createStatusPanel() {
+    private JPanel createStatusPanel()
+    {
         JPanel panel = new JPanel(new BorderLayout(10, 0));
         panel.setBackground(JStudioTheme.getBgSecondary());
-        panel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
+        panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(5, 10, 5, 10)));
 
         statusLabel = new JLabel("Select a method and click 'Run Analysis' to begin");
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
@@ -137,20 +131,27 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         return panel;
     }
 
-    private void showLoading() {
+    private void showLoading()
+    {
         progressBar.setVisible(true);
 
         Window window = SwingUtilities.getWindowAncestor(this);
-        if (window instanceof RootPaneContainer) {
+        if (window instanceof RootPaneContainer)
+        {
             RootPaneContainer rpc = (RootPaneContainer) window;
             Component existingGlass = rpc.getGlassPane();
             JPanel glass;
-            if (existingGlass instanceof JPanel && ((JPanel) existingGlass).getLayout() instanceof GridBagLayout) {
+            if (existingGlass instanceof JPanel && ((JPanel) existingGlass).getLayout() instanceof GridBagLayout)
+            {
                 glass = (JPanel) existingGlass;
-            } else {
-                glass = new JPanel(new GridBagLayout()) {
+            }
+            else
+            {
+                glass = new JPanel(new GridBagLayout())
+                {
                     @Override
-                    protected void paintComponent(Graphics g) {
+                    protected void paintComponent(Graphics g)
+                    {
                         Graphics2D g2 = (Graphics2D) g.create();
                         g2.setColor(new Color(0, 0, 0, 100));
                         g2.fillRect(0, 0, getWidth(), getHeight());
@@ -161,29 +162,30 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
                 glass.add(createLoadingCard());
                 rpc.setGlassPane(glass);
             }
-            if (loadingLabel != null) {
+            if (loadingLabel != null)
+            {
                 loadingLabel.setText("Initializing VM...");
             }
             glass.setVisible(true);
         }
 
         final String baseMessage = "Initializing VM...";
-        spinnerTimer = new Timer(100, e -> {
+        spinnerTimer = new Timer(100, e ->
+        {
             spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES.length;
-            if (loadingLabel != null) {
+            if (loadingLabel != null)
+            {
                 loadingLabel.setText(SPINNER_FRAMES[spinnerFrame] + " " + baseMessage);
             }
         });
         spinnerTimer.start();
     }
 
-    private JPanel createLoadingCard() {
+    private JPanel createLoadingCard()
+    {
         JPanel card = new JPanel(new BorderLayout(10, 15));
         card.setBackground(JStudioTheme.getBgSecondary());
-        card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getAccent(), 2),
-            BorderFactory.createEmptyBorder(25, 40, 25, 40)
-        ));
+        card.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getAccent(), 2), BorderFactory.createEmptyBorder(25, 40, 25, 40)));
 
         loadingLabel = new JLabel("Analyzing...", SwingConstants.CENTER);
         loadingLabel.setFont(loadingLabel.getFont().deriveFont(Font.BOLD, 14f));
@@ -198,27 +200,28 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         return card;
     }
 
-    private void hideLoading() {
-        if (spinnerTimer != null) {
+    private void hideLoading()
+    {
+        if (spinnerTimer != null)
+        {
             spinnerTimer.stop();
             spinnerTimer = null;
         }
         progressBar.setVisible(false);
 
         Window window = SwingUtilities.getWindowAncestor(this);
-        if (window instanceof RootPaneContainer) {
+        if (window instanceof RootPaneContainer)
+        {
             RootPaneContainer rpc = (RootPaneContainer) window;
             rpc.getGlassPane().setVisible(false);
         }
     }
 
-    private JPanel createToolbar() {
+    private JPanel createToolbar()
+    {
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
         toolbar.setBackground(JStudioTheme.getBgSecondary());
-        toolbar.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL)
-        ));
+        toolbar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL)));
 
         runBtn = new JButton("Run Analysis", Icons.getIcon("run"));
         runBtn.setEnabled(false);
@@ -229,7 +232,8 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
 
         trackingToggle = new JToggleButton("Tracking", true);
         trackingToggle.setSelected(true);
-        trackingToggle.addActionListener(e -> {
+        trackingToggle.addActionListener(e ->
+        {
             tracker.setTracking(trackingToggle.isSelected());
             updateStatus();
         });
@@ -238,15 +242,13 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         trackMutationsCheck = new JCheckBox("Track Mutations", true);
         trackMutationsCheck.setBackground(JStudioTheme.getBgSecondary());
         trackMutationsCheck.setForeground(JStudioTheme.getTextPrimary());
-        trackMutationsCheck.addActionListener(e ->
-            listener.setTrackMutations(trackMutationsCheck.isSelected()));
+        trackMutationsCheck.addActionListener(e -> listener.setTrackMutations(trackMutationsCheck.isSelected()));
         toolbar.add(trackMutationsCheck);
 
         toolbar.add(new JLabel("Provenance:"));
         provenanceSpinner = new JSpinner(new SpinnerNumberModel(1, 0, 10, 1));
         provenanceSpinner.setPreferredSize(new Dimension(50, 25));
-        provenanceSpinner.addChangeListener(e ->
-            listener.setProvenanceDepth((Integer) provenanceSpinner.getValue()));
+        provenanceSpinner.addChangeListener(e -> listener.setProvenanceDepth((Integer) provenanceSpinner.getValue()));
         toolbar.add(provenanceSpinner);
 
         toolbar.add(Box.createHorizontalStrut(15));
@@ -270,52 +272,50 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         return toolbar;
     }
 
-    private JScrollPane wrapWithTitle(JComponent component, String title) {
+    private JScrollPane wrapWithTitle(JComponent component, String title)
+    {
         JScrollPane scroll = new JScrollPane(component);
-        scroll.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            title,
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            null,
-            JStudioTheme.getTextPrimary()
-        ));
+        scroll.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), title, TitledBorder.LEFT, TitledBorder.TOP, null, JStudioTheme.getTextPrimary()));
         scroll.getViewport().setBackground(JStudioTheme.getBgSecondary());
         return scroll;
     }
 
-    private void onMethodSelected(MethodEntryModel method) {
+    private void onMethodSelected(MethodEntryModel method)
+    {
         this.selectedMethod = method;
         updateButtonStates();
-        if (method != null) {
+        if (method != null)
+        {
             String ownerName = method.getOwner() != null ? method.getOwner().getClassName() : "?";
             statusLabel.setText("Selected: " + ownerName + "." + method.getName() + method.getDescriptor());
             argumentConfigPanel.setMethod(method.getMethodEntry());
-        } else {
+        }
+        else
+        {
             argumentConfigPanel.setMethod(null);
         }
     }
 
-    private void updateButtonStates() {
+    private void updateButtonStates()
+    {
         runBtn.setEnabled(selectedMethod != null && !isRunning);
     }
 
-    private void runAnalysis() {
+    private void runAnalysis()
+    {
         if (selectedMethod == null || isRunning) return;
 
         MethodEntry method = selectedMethod.getMethodEntry();
-        if (method == null) {
-            JOptionPane.showMessageDialog(this,
-                "Cannot resolve method entry",
-                "Error", JOptionPane.ERROR_MESSAGE);
+        if (method == null)
+        {
+            JOptionPane.showMessageDialog(this, "Cannot resolve method entry", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassPool() == null) {
-            JOptionPane.showMessageDialog(this,
-                "No project loaded. Load a JAR or class file first.",
-                "Error", JOptionPane.ERROR_MESSAGE);
+        if (project == null || project.getClassPool() == null)
+        {
+            JOptionPane.showMessageDialog(this, "No project loaded. Load a JAR or class file first.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -326,12 +326,15 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
 
         ClassPool classPool = project.getClassPool();
 
-        SwingWorker<ExecutionResultWrapper, String> worker = new SwingWorker<>() {
+        SwingWorker<ExecutionResultWrapper, String> worker = new SwingWorker<>()
+        {
             private SimpleHeapManager heapManager;
 
             @Override
-            protected ExecutionResultWrapper doInBackground() {
-                try {
+            protected ExecutionResultWrapper doInBackground()
+            {
+                try
+                {
                     publish("Initializing VM...");
                     SwingUtilities.invokeAndWait(() -> reset());
 
@@ -341,7 +344,8 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
                     heapManager.setClassResolver(classResolver);
 
                     final ClassResolver finalResolver = classResolver;
-                    SwingUtilities.invokeAndWait(() -> {
+                    SwingUtilities.invokeAndWait(() ->
+                    {
                         argumentConfigPanel.setHeapManager(heapManager);
                         argumentConfigPanel.setClassResolver(finalResolver);
                     });
@@ -351,12 +355,12 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
                     publish("Analyzing " + selectedMethod.getName() + "...");
 
                     BytecodeContext ctx = new BytecodeContext.Builder()
-                        .heapManager(heapManager)
-                        .classResolver(classResolver)
-                        .mode(ExecutionMode.RECURSIVE)
-                        .maxCallDepth(100)
-                        .maxInstructions(1_000_000)
-                        .build();
+                            .heapManager(heapManager)
+                            .classResolver(classResolver)
+                            .mode(ExecutionMode.RECURSIVE)
+                            .maxCallDepth(100)
+                            .maxInstructions(1_000_000)
+                            .build();
 
                     BytecodeEngine engine = new BytecodeEngine(ctx);
                     engine.addListener(listener);
@@ -364,47 +368,63 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
                     BytecodeResult result = engine.execute(method, args);
 
                     return new ExecutionResultWrapper(result, null);
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     return new ExecutionResultWrapper(null, e);
                 }
             }
 
             @Override
-            protected void process(List<String> chunks) {
-                if (!chunks.isEmpty()) {
+            protected void process(List<String> chunks)
+            {
+                if (!chunks.isEmpty())
+                {
                     String msg = chunks.get(chunks.size() - 1);
                     statusLabel.setText(msg);
-                    if (loadingLabel != null) {
+                    if (loadingLabel != null)
+                    {
                         loadingLabel.setText(msg);
                     }
                 }
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 isRunning = false;
                 hideLoading();
                 updateButtonStates();
-                try {
+                try
+                {
                     ExecutionResultWrapper wrapper = get();
-                    if (wrapper.result != null && wrapper.result.isSuccess()) {
+                    if (wrapper.result != null && wrapper.result.isSuccess())
+                    {
                         String resultText = "Completed successfully";
                         ConcreteValue retVal = wrapper.result.getReturnValue();
-                        if (retVal != null && !retVal.isNull()) {
+                        if (retVal != null && !retVal.isNull())
+                        {
                             resultText += " | Return: " + formatReturnValue(retVal);
                         }
                         resultText += " | Instructions: " + wrapper.result.getInstructionsExecuted();
                         statusLabel.setText(resultText + " | " + getStatsText());
-                    } else {
+                    }
+                    else
+                    {
                         String error = "Unknown error";
-                        if (wrapper.exception != null) {
+                        if (wrapper.exception != null)
+                        {
                             error = wrapper.exception.getMessage();
-                        } else if (wrapper.result != null && wrapper.result.getException() != null) {
+                        }
+                        else if (wrapper.result != null && wrapper.result.getException() != null)
+                        {
                             error = wrapper.result.getException().toString();
                         }
                         statusLabel.setText("Execution failed: " + error);
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     statusLabel.setText("Error: " + e.getMessage());
                 }
                 refresh();
@@ -414,44 +434,55 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         worker.execute();
     }
 
-    private String formatReturnValue(ConcreteValue value) {
+    private String formatReturnValue(ConcreteValue value)
+    {
         if (value == null || value.isNull()) return "null";
-        switch (value.getTag()) {
-            case INT: return String.valueOf(value.asInt());
-            case LONG: return String.valueOf(value.asLong());
-            case FLOAT: return String.valueOf(value.asFloat());
-            case DOUBLE: return String.valueOf(value.asDouble());
+        switch (value.getTag())
+        {
+            case INT:
+                return String.valueOf(value.asInt());
+            case LONG:
+                return String.valueOf(value.asLong());
+            case FLOAT:
+                return String.valueOf(value.asFloat());
+            case DOUBLE:
+                return String.valueOf(value.asDouble());
             case REFERENCE:
                 ObjectInstance ref = value.asReference();
-                if (ref != null) {
+                if (ref != null)
+                {
                     SimpleHeapManager hm = (SimpleHeapManager) tracker.getHeapManager();
                     String str = hm.extractString(ref);
                     if (str != null) return "\"" + str + "\"";
                     return ref.getClassName() + "@" + ref.getId();
                 }
                 return "ref";
-            default: return value.toString();
+            default:
+                return value.toString();
         }
     }
 
-    private static class ExecutionResultWrapper {
+    private static class ExecutionResultWrapper
+    {
         final BytecodeResult result;
         final Exception exception;
-        ExecutionResultWrapper(BytecodeResult result, Exception exception) {
+
+        ExecutionResultWrapper(BytecodeResult result, Exception exception)
+        {
             this.result = result;
             this.exception = exception;
         }
     }
 
-    private String getStatsText() {
-        return String.format("Objects: %d | Allocs: %d | Mutations: %d",
-            tracker.getTotalObjectCount(),
-            tracker.getTotalAllocationCount(),
-            tracker.getTotalMutationCount());
+    private String getStatsText()
+    {
+        return String.format("Objects: %d | Allocs: %d | Mutations: %d", tracker.getTotalObjectCount(), tracker.getTotalAllocationCount(), tracker.getTotalMutationCount());
     }
 
-    private void onClassSelected(String className) {
-        if (className == null) {
+    private void onClassSelected(String className)
+    {
+        if (className == null)
+        {
             objectListPanel.setObjects(List.of());
             return;
         }
@@ -461,79 +492,83 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         updateStatus();
     }
 
-    private void onObjectSelected(HeapObject object) {
+    private void onObjectSelected(HeapObject object)
+    {
         objectDetailPanel.setObject(object);
     }
 
-    private void takeSnapshot() {
-        String label = JOptionPane.showInputDialog(this,
-            "Snapshot label:", "Snapshot " + (tracker.getSnapshots().size() + 1));
+    private void takeSnapshot()
+    {
+        String label = JOptionPane.showInputDialog(this, "Snapshot label:", "Snapshot " + (tracker.getSnapshots().size() + 1));
         if (label == null) return;
 
         lastSnapshot = tracker.takeSnapshot(label);
         updateStatus();
-        JOptionPane.showMessageDialog(this,
-            "Snapshot taken: " + lastSnapshot.getTotalObjects() + " objects",
-            "Snapshot", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, "Snapshot taken: " + lastSnapshot.getTotalObjects() + " objects", "Snapshot", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    public void refresh() {
+    public void refresh()
+    {
         classSummaryPanel.update(tracker.getClassCounts(), lastSnapshot);
         classSummaryPanel.setOnClassSelected(this::onClassSelected);
         classSummaryPanel.selectFirstRow();
         updateStatus();
     }
 
-    private void showExportDialog() {
+    private void showExportDialog()
+    {
         String[] options = {"JSON", "CSV", "HTML Report", "Cancel"};
-        int choice = JOptionPane.showOptionDialog(this,
-            "Select export format:",
-            "Export Heap Data",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null, options, options[0]);
+        int choice = JOptionPane.showOptionDialog(this, "Select export format:", "Export Heap Data", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
-        if (choice >= 0 && choice < 3) {
+        if (choice >= 0 && choice < 3)
+        {
             JFileChooser chooser = new JFileChooser();
             String ext = choice == 0 ? ".json" : choice == 1 ? ".csv" : ".html";
             chooser.setSelectedFile(new File("heap_export" + ext));
-            if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+            {
                 exportData(chooser.getSelectedFile(), choice);
             }
         }
     }
 
-    private void exportData(File file, int format) {
+    private void exportData(File file, int format)
+    {
         statusLabel.setText("Export not yet implemented");
     }
 
-    private void updateStatus() {
-        if (!isRunning) {
-            statusLabel.setText(getStatsText() +
-                " | Snapshots: " + tracker.getSnapshots().size() +
-                " | " + (tracker.isTracking() ? "Tracking" : "Paused"));
+    private void updateStatus()
+    {
+        if (!isRunning)
+        {
+            statusLabel.setText(getStatsText() + " | Snapshots: " + tracker.getSnapshots().size() + " | " + (tracker.isTracking() ? "Tracking" : "Paused"));
         }
     }
 
     @Override
-    public void onAllocationRecorded(AllocationEvent event) {
+    public void onAllocationRecorded(AllocationEvent event)
+    {
         SwingUtilities.invokeLater(() -> classSummaryPanel.incrementClass(event.getClassName()));
     }
 
     @Override
-    public void onSnapshotTaken(HeapSnapshot snapshot) {
-        SwingUtilities.invokeLater(() -> {
+    public void onSnapshotTaken(HeapSnapshot snapshot)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             lastSnapshot = snapshot;
             refresh();
         });
     }
 
     @Override
-    public void onExecutionEnded(long instructionCount) {
+    public void onExecutionEnded(long instructionCount)
+    {
         SwingUtilities.invokeLater(this::refresh);
     }
 
-    public void reset() {
+    public void reset()
+    {
         SimpleHeapManager newHeap = new SimpleHeapManager();
         tracker = new HeapForensicsTracker(newHeap);
         listener = new HeapForensicsListener(tracker);

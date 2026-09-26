@@ -8,7 +8,8 @@ import java.io.File;
 
 @Getter
 @Builder
-public class ExecutionConfig {
+public class ExecutionConfig
+{
 
     private final File target;
     private final File plugin;

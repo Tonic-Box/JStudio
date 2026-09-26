@@ -25,36 +25,45 @@ import java.util.Map;
  * type, so a slot reused for different-typed variables is never misread (those entries are left untouched). Only
  * the debug attribute changes - the bytecode, offsets, frames, and breakpoints stay valid.
  */
-public final class SyntheticLvtInjector {
+public final class SyntheticLvtInjector
+{
 
-    private SyntheticLvtInjector() {
+    private SyntheticLvtInjector()
+    {
     }
 
     /**
      * Returns {@code original}'s bytes with every method's LVT recovered (if missing) and safely widened, or null
      * when nothing changed. Operates on a fresh parse, so the caller's {@link ClassFile} is never mutated.
      */
-    public static byte[] augment(ClassFile original) {
-        if (original == null) {
+    public static byte[] augment(ClassFile original)
+    {
+        if (original == null)
+        {
             return null;
         }
-        try {
+        try
+        {
             ClassFile cf = new ClassFile(new ByteArrayInputStream(original.write()));
             ClassDecompiler decompiler = new ClassDecompiler(cf);
             ConstPool constPool = cf.getConstPool();
             boolean changed = false;
-            for (MethodEntry method : cf.getMethods()) {
+            for (MethodEntry method : cf.getMethods())
+            {
                 CodeAttribute code = method.getCodeAttribute();
-                if (code == null || code.getCode() == null || code.getCode().length == 0) {
+                if (code == null || code.getCode() == null || code.getCode().length == 0)
+                {
                     continue;
                 }
                 int codeLen = code.getCode().length;
 
                 LocalVariableTableAttribute lvt = findLvt(code);
                 boolean recovered = false;
-                if (lvt == null) {
+                if (lvt == null)
+                {
                     lvt = decompiler.localVariableTableFor(method);
-                    if (lvt == null) {
+                    if (lvt == null)
+                    {
                         continue;
                     }
                     recovered = true;
@@ -62,26 +71,33 @@ public final class SyntheticLvtInjector {
 
                 List<LocalVariableTableEntry> current = lvt.getLocalVariableTable();
                 List<LocalVariableTableEntry> widened = widen(current, constPool, codeLen);
-                if (!recovered && !differs(current, widened)) {
+                if (!recovered && !differs(current, widened))
+                {
                     continue;
                 }
                 current.clear();
                 current.addAll(widened);
                 lvt.updateLength();
-                if (recovered) {
+                if (recovered)
+                {
                     code.getAttributes().add(lvt);
                 }
                 changed = true;
             }
             return changed ? cf.write() : null;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return null;
         }
     }
 
-    private static LocalVariableTableAttribute findLvt(CodeAttribute code) {
-        for (Attribute a : code.getAttributes()) {
-            if (a instanceof LocalVariableTableAttribute) {
+    private static LocalVariableTableAttribute findLvt(CodeAttribute code)
+    {
+        for (Attribute a : code.getAttributes())
+        {
+            if (a instanceof LocalVariableTableAttribute)
+            {
                 return (LocalVariableTableAttribute) a;
             }
         }
@@ -93,26 +109,32 @@ public final class SyntheticLvtInjector {
      * entry spanning {@code [0, codeLen)}; type-mixed slots keep their original (scope-accurate) entries. Slots
      * are emitted in first-seen order.
      */
-    private static List<LocalVariableTableEntry> widen(List<LocalVariableTableEntry> entries, ConstPool constPool,
-                                                       int codeLen) {
+    private static List<LocalVariableTableEntry> widen(List<LocalVariableTableEntry> entries, ConstPool constPool, int codeLen)
+    {
         Map<Integer, List<LocalVariableTableEntry>> bySlot = new LinkedHashMap<>();
-        for (LocalVariableTableEntry e : entries) {
+        for (LocalVariableTableEntry e : entries)
+        {
             bySlot.computeIfAbsent(e.getIndex(), k -> new ArrayList<>()).add(e);
         }
         List<LocalVariableTableEntry> out = new ArrayList<>();
-        for (List<LocalVariableTableEntry> group : bySlot.values()) {
+        for (List<LocalVariableTableEntry> group : bySlot.values())
+        {
             LocalVariableTableEntry first = group.get(0);
             boolean sameType = true;
-            for (LocalVariableTableEntry e : group) {
-                if (e.getDescriptorIndex() != first.getDescriptorIndex()) {
+            for (LocalVariableTableEntry e : group)
+            {
+                if (e.getDescriptorIndex() != first.getDescriptorIndex())
+                {
                     sameType = false;
                     break;
                 }
             }
-            if (sameType) {
-                out.add(new LocalVariableTableEntry(constPool, 0, codeLen,
-                        first.getNameIndex(), first.getDescriptorIndex(), first.getIndex()));
-            } else {
+            if (sameType)
+            {
+                out.add(new LocalVariableTableEntry(constPool, 0, codeLen, first.getNameIndex(), first.getDescriptorIndex(), first.getIndex()));
+            }
+            else
+            {
                 out.addAll(group);
             }
         }
@@ -120,16 +142,20 @@ public final class SyntheticLvtInjector {
     }
 
     /** True when {@code widened} differs from {@code current} (so the class is worth redefining). */
-    private static boolean differs(List<LocalVariableTableEntry> current, List<LocalVariableTableEntry> widened) {
-        if (current.size() != widened.size()) {
+    private static boolean differs(List<LocalVariableTableEntry> current, List<LocalVariableTableEntry> widened)
+    {
+        if (current.size() != widened.size())
+        {
             return true;
         }
-        for (int i = 0; i < current.size(); i++) {
+        for (int i = 0; i < current.size(); i++)
+        {
             LocalVariableTableEntry a = current.get(i);
             LocalVariableTableEntry b = widened.get(i);
             if (a.getStartPc() != b.getStartPc() || a.getLengthPc() != b.getLengthPc()
                     || a.getNameIndex() != b.getNameIndex() || a.getDescriptorIndex() != b.getDescriptorIndex()
-                    || a.getIndex() != b.getIndex()) {
+                    || a.getIndex() != b.getIndex())
+            {
                 return true;
             }
         }

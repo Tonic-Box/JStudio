@@ -21,12 +21,14 @@ import java.awt.FlowLayout;
  * (from {@link ScriptConsoleEvent}) with a Clear control and a final "N modifications" status. All updates arrive
  * on the EDT (the MainFrame handler marshals).
  */
-public final class ScriptConsolePanel extends ThemedJPanel {
+public final class ScriptConsolePanel extends ThemedJPanel
+{
 
     private final JTextPane output = new JTextPane();
     private final JLabel status = new JLabel("Idle.");
 
-    public ScriptConsolePanel() {
+    public ScriptConsolePanel()
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
 
         JToolBar toolbar = new JToolBar();
@@ -52,8 +54,10 @@ public final class ScriptConsolePanel extends ThemedJPanel {
     }
 
     /** Applies one streamed console event (called on the EDT). */
-    public void handle(ScriptConsoleEvent event) {
-        switch (event.getKind()) {
+    public void handle(ScriptConsoleEvent event)
+    {
+        switch (event.getKind())
+        {
             case START:
                 output.setText("");
                 status.setForeground(JStudioTheme.getTextSecondary());
@@ -62,8 +66,7 @@ public final class ScriptConsolePanel extends ThemedJPanel {
                 break;
             case LINE:
                 String line = event.getText();
-                append(line, line.startsWith("ERROR") || line.contains("error:")
-                        ? JStudioTheme.getError() : JStudioTheme.getTextPrimary());
+                append(line, line.startsWith("ERROR") || line.contains("error:") ? JStudioTheme.getError() : JStudioTheme.getTextPrimary());
                 break;
             case DONE:
                 int mods = event.getModifications();
@@ -75,13 +78,17 @@ public final class ScriptConsolePanel extends ThemedJPanel {
         }
     }
 
-    private void append(String text, Color color) {
+    private void append(String text, Color color)
+    {
         SimpleAttributeSet attrs = new SimpleAttributeSet();
         StyleConstants.setForeground(attrs, color);
-        try {
+        try
+        {
             output.getStyledDocument().insertString(output.getStyledDocument().getLength(), text, attrs);
             output.setCaretPosition(output.getStyledDocument().getLength());
-        } catch (BadLocationException ignored) {
+        }
+        catch (BadLocationException ignored)
+        {
         }
     }
 }

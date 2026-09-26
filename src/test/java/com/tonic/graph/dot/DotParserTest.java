@@ -11,16 +11,19 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class DotParserTest {
+class DotParserTest
+{
 
-    private static DotGraph.Node node(DotGraph g, String id) {
+    private static DotGraph.Node node(DotGraph g, String id)
+    {
         Optional<DotGraph.Node> found = g.getNodes().stream().filter(n -> n.getId().equals(id)).findFirst();
         assertTrue(found.isPresent(), "node " + id + " present");
         return found.get();
     }
 
     @Test
-    void parsesNodesEdgesLabelsAndRankdir() {
+    void parsesNodesEdgesLabelsAndRankdir()
+    {
         String dot =
                 "digraph G {\n"
                         + "  rankdir=LR;\n"
@@ -49,7 +52,8 @@ class DotParserTest {
     }
 
     @Test
-    void honorsNodeDefaultsStyleAndUndirectedEdges() {
+    void honorsNodeDefaultsStyleAndUndirectedEdges()
+    {
         String dot =
                 "graph G {\n"
                         + "  node [shape=box, style=\"rounded,dashed\"];\n"
@@ -65,13 +69,15 @@ class DotParserTest {
     }
 
     @Test
-    void escapedNewlinesBecomeLineBreaks() {
+    void escapedNewlinesBecomeLineBreaks()
+    {
         DotGraph g = DotParser.parse("digraph { A [label=\"line1\\nline2\"]; }");
         assertEquals("line1\nline2", node(g, "A").getLabel());
     }
 
     @Test
-    void blockCommentsAndQuotedIdsAreHandled() {
+    void blockCommentsAndQuotedIdsAreHandled()
+    {
         DotGraph g = DotParser.parse("digraph { /* x */ \"a b\" -> c; }");
         assertNotNull(node(g, "a b"));
         assertNotNull(node(g, "c"));
@@ -79,12 +85,14 @@ class DotParserTest {
     }
 
     @Test
-    void malformedInputThrows() {
+    void malformedInputThrows()
+    {
         assertThrows(DotParseException.class, () -> DotParser.parse("this is not a graph"));
     }
 
     @Test
-    void emptyInputThrows() {
+    void emptyInputThrows()
+    {
         assertThrows(DotParseException.class, () -> DotParser.parse("   "));
     }
 }

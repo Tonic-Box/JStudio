@@ -10,7 +10,8 @@ import com.tonic.service.ConsoleLogService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ObjectFieldEnumerator {
+public class ObjectFieldEnumerator
+{
 
     private static final int ACC_STATIC = 0x0008;
     private static final int ACC_FINAL = 0x0010;
@@ -20,20 +21,24 @@ public class ObjectFieldEnumerator {
     private final boolean includeSynthetic;
     private final boolean includeStatic;
 
-    public ObjectFieldEnumerator(ClassResolver classResolver) {
+    public ObjectFieldEnumerator(ClassResolver classResolver)
+    {
         this(classResolver, false, false);
     }
 
-    public ObjectFieldEnumerator(ClassResolver classResolver, boolean includeSynthetic, boolean includeStatic) {
+    public ObjectFieldEnumerator(ClassResolver classResolver, boolean includeSynthetic, boolean includeStatic)
+    {
         this.classResolver = classResolver;
         this.includeSynthetic = includeSynthetic;
         this.includeStatic = includeStatic;
     }
 
-    public List<FieldInfo> enumerate(ObjectInstance obj) {
+    public List<FieldInfo> enumerate(ObjectInstance obj)
+    {
         List<FieldInfo> fields = new ArrayList<>();
 
-        if (obj == null) {
+        if (obj == null)
+        {
             return fields;
         }
 
@@ -43,28 +48,36 @@ public class ObjectFieldEnumerator {
         return fields;
     }
 
-    private void enumerateHierarchy(ObjectInstance obj, String className, List<FieldInfo> fields) {
-        if (className == null || className.equals("java/lang/Object")) {
+    private void enumerateHierarchy(ObjectInstance obj, String className, List<FieldInfo> fields)
+    {
+        if (className == null || className.equals("java/lang/Object"))
+        {
             return;
         }
 
-        try {
+        try
+        {
             ClassFile classFile = classResolver.resolveClass(className);
-            if (classFile != null) {
-                for (FieldEntry field : classFile.getFields()) {
+            if (classFile != null)
+            {
+                for (FieldEntry field : classFile.getFields())
+                {
                     int access = field.getAccess();
 
                     boolean isStatic = (access & ACC_STATIC) != 0;
-                    if (isStatic && !includeStatic) {
+                    if (isStatic && !includeStatic)
+                    {
                         continue;
                     }
 
                     boolean isSynthetic = (access & ACC_SYNTHETIC) != 0;
-                    if (isSynthetic && !includeSynthetic) {
+                    if (isSynthetic && !includeSynthetic)
+                    {
                         continue;
                     }
 
-                    if (isSyntheticName(field.getName()) && !includeSynthetic) {
+                    if (isSyntheticName(field.getName()) && !includeSynthetic)
+                    {
                         continue;
                     }
 
@@ -75,40 +88,39 @@ public class ObjectFieldEnumerator {
                     Object value = obj.getField(className, name, descriptor);
                     ValueTag tag = descriptorToValueTag(descriptor, value);
 
-                    fields.add(new FieldInfo(
-                        name,
-                        descriptor,
-                        className,
-                        value,
-                        tag,
-                        isFinal,
-                        isStatic
-                    ));
+                    fields.add(new FieldInfo(name, descriptor, className, value, tag, isFinal, isStatic));
                 }
 
                 String superClass = classFile.getSuperClassName();
-                if (superClass != null && !superClass.equals("java/lang/Object")) {
+                if (superClass != null && !superClass.equals("java/lang/Object"))
+                {
                     enumerateHierarchy(obj, superClass, fields);
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             ConsoleLogService.getInstance().error("[ObjectFieldEnumerator] Error enumerating " + className + ": " + e.getMessage());
         }
     }
 
-    private boolean isSyntheticName(String name) {
+    private boolean isSyntheticName(String name)
+    {
         return name.startsWith("this$") ||
-               name.startsWith("val$") ||
-               name.startsWith("access$") ||
-               name.contains("$assertionsDisabled");
+                name.startsWith("val$") ||
+                name.startsWith("access$") ||
+                name.contains("$assertionsDisabled");
     }
 
-    private ValueTag descriptorToValueTag(String descriptor, Object value) {
-        if (descriptor == null || descriptor.isEmpty()) {
+    private ValueTag descriptorToValueTag(String descriptor, Object value)
+    {
+        if (descriptor == null || descriptor.isEmpty())
+        {
             return null;
         }
 
-        switch (descriptor.charAt(0)) {
+        switch (descriptor.charAt(0))
+        {
             case 'I':
             case 'Z':
             case 'B':
@@ -123,7 +135,8 @@ public class ObjectFieldEnumerator {
                 return ValueTag.DOUBLE;
             case 'L':
             case '[':
-                if (value == null) {
+                if (value == null)
+                {
                     return ValueTag.NULL;
                 }
                 return ValueTag.REFERENCE;

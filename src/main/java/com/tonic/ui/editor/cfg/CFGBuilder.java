@@ -8,21 +8,26 @@ import com.tonic.parser.attribute.table.ExceptionTableEntry;
 
 import java.util.*;
 
-public class CFGBuilder {
+public class CFGBuilder
+{
 
-    public List<CFGBlock> buildCFG(MethodEntry method) {
+    public List<CFGBlock> buildCFG(MethodEntry method)
+    {
         CodeAttribute codeAttr = method.getCodeAttribute();
-        if (codeAttr == null) {
+        if (codeAttr == null)
+        {
             return Collections.emptyList();
         }
 
         CodeWriter codeWriter = new CodeWriter(method);
         List<Instruction> instructions = new ArrayList<>();
-        for (Instruction instr : codeWriter.getInstructions()) {
+        for (Instruction instr : codeWriter.getInstructions())
+        {
             instructions.add(instr);
         }
 
-        if (instructions.isEmpty()) {
+        if (instructions.isEmpty())
+        {
             return Collections.emptyList();
         }
 
@@ -36,49 +41,67 @@ public class CFGBuilder {
         return result;
     }
 
-    private Set<Integer> findBoundaries(List<Instruction> instructions, CodeAttribute codeAttr) {
+    private Set<Integer> findBoundaries(List<Instruction> instructions, CodeAttribute codeAttr)
+    {
         Set<Integer> boundaries = new TreeSet<>();
         boundaries.add(0);
 
-        for (Instruction instr : instructions) {
+        for (Instruction instr : instructions)
+        {
             int offset = instr.getOffset();
 
-            if (instr instanceof ConditionalBranchInstruction) {
+            if (instr instanceof ConditionalBranchInstruction)
+            {
                 ConditionalBranchInstruction branch = (ConditionalBranchInstruction) instr;
                 int target = offset + branch.getBranchOffset();
                 boundaries.add(target);
                 boundaries.add(offset + instr.getLength());
-            } else if (instr instanceof GotoInstruction) {
+            }
+            else if (instr instanceof GotoInstruction)
+            {
                 GotoInstruction gotoInstr = (GotoInstruction) instr;
                 int target;
-                if (gotoInstr.getType() == GotoInstruction.GotoType.GOTO_WIDE) {
+                if (gotoInstr.getType() == GotoInstruction.GotoType.GOTO_WIDE)
+                {
                     target = offset + gotoInstr.getBranchOffsetWide();
-                } else {
+                }
+                else
+                {
                     target = offset + gotoInstr.getBranchOffset();
                 }
                 boundaries.add(target);
                 boundaries.add(offset + instr.getLength());
-            } else if (instr instanceof TableSwitchInstruction) {
+            }
+            else if (instr instanceof TableSwitchInstruction)
+            {
                 TableSwitchInstruction tableSwitch = (TableSwitchInstruction) instr;
                 boundaries.add(offset + tableSwitch.getDefaultOffset());
-                for (int jumpOffset : tableSwitch.getJumpOffsets().values()) {
+                for (int jumpOffset : tableSwitch.getJumpOffsets().values())
+                {
                     boundaries.add(offset + jumpOffset);
                 }
                 boundaries.add(offset + instr.getLength());
-            } else if (instr instanceof LookupSwitchInstruction) {
+            }
+            else if (instr instanceof LookupSwitchInstruction)
+            {
                 LookupSwitchInstruction lookupSwitch = (LookupSwitchInstruction) instr;
                 boundaries.add(offset + lookupSwitch.getDefaultOffset());
-                for (int jumpOffset : lookupSwitch.getMatchOffsets().values()) {
+                for (int jumpOffset : lookupSwitch.getMatchOffsets().values())
+                {
                     boundaries.add(offset + jumpOffset);
                 }
                 boundaries.add(offset + instr.getLength());
-            } else if (instr instanceof MethodReturnInstruction || instr instanceof ATHROWInstruction) {
+            }
+            else if (instr instanceof MethodReturnInstruction || instr instanceof ATHROWInstruction)
+            {
                 boundaries.add(offset + instr.getLength());
             }
         }
 
-        if (codeAttr.getExceptionTable() != null) {
-            for (ExceptionTableEntry entry : codeAttr.getExceptionTable()) {
+        if (codeAttr.getExceptionTable() != null)
+        {
+            for (ExceptionTableEntry entry : codeAttr.getExceptionTable())
+            {
                 boundaries.add(entry.getStartPc());
                 boundaries.add(entry.getEndPc());
                 boundaries.add(entry.getHandlerPc());
@@ -88,20 +111,24 @@ public class CFGBuilder {
         return boundaries;
     }
 
-    private Map<Integer, CFGBlock> createBlocks(List<Instruction> instructions, Set<Integer> boundaries) {
+    private Map<Integer, CFGBlock> createBlocks(List<Instruction> instructions, Set<Integer> boundaries)
+    {
         Map<Integer, CFGBlock> blockMap = new TreeMap<>();
         int blockId = 0;
         CFGBlock currentBlock = null;
 
-        for (Instruction instr : instructions) {
+        for (Instruction instr : instructions)
+        {
             int offset = instr.getOffset();
 
-            if (boundaries.contains(offset)) {
+            if (boundaries.contains(offset))
+            {
                 currentBlock = new CFGBlock(blockId++, offset);
                 blockMap.put(offset, currentBlock);
             }
 
-            if (currentBlock != null) {
+            if (currentBlock != null)
+            {
                 currentBlock.addInstruction(instr);
             }
         }
@@ -109,14 +136,17 @@ public class CFGBuilder {
         return blockMap;
     }
 
-    private void connectBlocks(Map<Integer, CFGBlock> blockMap, List<Instruction> instructions, CodeAttribute codeAttr) {
-        for (CFGBlock block : blockMap.values()) {
+    private void connectBlocks(Map<Integer, CFGBlock> blockMap, List<Instruction> instructions, CodeAttribute codeAttr)
+    {
+        for (CFGBlock block : blockMap.values())
+        {
             Instruction lastInstr = block.getLastInstruction();
             if (lastInstr == null) continue;
 
             int offset = lastInstr.getOffset();
 
-            if (lastInstr instanceof ConditionalBranchInstruction) {
+            if (lastInstr instanceof ConditionalBranchInstruction)
+            {
                 ConditionalBranchInstruction branch = (ConditionalBranchInstruction) lastInstr;
                 int trueTarget = offset + branch.getBranchOffset();
                 int falseTarget = offset + lastInstr.getLength();
@@ -124,71 +154,96 @@ public class CFGBuilder {
                 CFGBlock trueBlock = blockMap.get(trueTarget);
                 CFGBlock falseBlock = blockMap.get(falseTarget);
 
-                if (trueBlock != null) {
+                if (trueBlock != null)
+                {
                     block.addEdge(trueBlock, CFGEdgeType.CONDITIONAL_TRUE);
                 }
-                if (falseBlock != null) {
+                if (falseBlock != null)
+                {
                     block.addEdge(falseBlock, CFGEdgeType.CONDITIONAL_FALSE);
                 }
-            } else if (lastInstr instanceof GotoInstruction) {
+            }
+            else if (lastInstr instanceof GotoInstruction)
+            {
                 GotoInstruction gotoInstr = (GotoInstruction) lastInstr;
                 int target;
-                if (gotoInstr.getType() == GotoInstruction.GotoType.GOTO_WIDE) {
+                if (gotoInstr.getType() == GotoInstruction.GotoType.GOTO_WIDE)
+                {
                     target = offset + gotoInstr.getBranchOffsetWide();
-                } else {
+                }
+                else
+                {
                     target = offset + gotoInstr.getBranchOffset();
                 }
 
                 CFGBlock targetBlock = blockMap.get(target);
-                if (targetBlock != null) {
+                if (targetBlock != null)
+                {
                     block.addEdge(targetBlock, CFGEdgeType.UNCONDITIONAL);
                 }
-            } else if (lastInstr instanceof TableSwitchInstruction) {
+            }
+            else if (lastInstr instanceof TableSwitchInstruction)
+            {
                 TableSwitchInstruction tableSwitch = (TableSwitchInstruction) lastInstr;
                 int defaultTarget = offset + tableSwitch.getDefaultOffset();
                 CFGBlock defaultBlock = blockMap.get(defaultTarget);
-                if (defaultBlock != null) {
+                if (defaultBlock != null)
+                {
                     block.addEdge(defaultBlock, CFGEdgeType.SWITCH_DEFAULT);
                 }
 
-                for (int jumpOffset : tableSwitch.getJumpOffsets().values()) {
+                for (int jumpOffset : tableSwitch.getJumpOffsets().values())
+                {
                     int target = offset + jumpOffset;
                     CFGBlock caseBlock = blockMap.get(target);
-                    if (caseBlock != null && caseBlock != defaultBlock) {
+                    if (caseBlock != null && caseBlock != defaultBlock)
+                    {
                         block.addEdge(caseBlock, CFGEdgeType.SWITCH_CASE);
                     }
                 }
-            } else if (lastInstr instanceof LookupSwitchInstruction) {
+            }
+            else if (lastInstr instanceof LookupSwitchInstruction)
+            {
                 LookupSwitchInstruction lookupSwitch = (LookupSwitchInstruction) lastInstr;
                 int defaultTarget = offset + lookupSwitch.getDefaultOffset();
                 CFGBlock defaultBlock = blockMap.get(defaultTarget);
-                if (defaultBlock != null) {
+                if (defaultBlock != null)
+                {
                     block.addEdge(defaultBlock, CFGEdgeType.SWITCH_DEFAULT);
                 }
 
-                for (int jumpOffset : lookupSwitch.getMatchOffsets().values()) {
+                for (int jumpOffset : lookupSwitch.getMatchOffsets().values())
+                {
                     int target = offset + jumpOffset;
                     CFGBlock caseBlock = blockMap.get(target);
-                    if (caseBlock != null && caseBlock != defaultBlock) {
+                    if (caseBlock != null && caseBlock != defaultBlock)
+                    {
                         block.addEdge(caseBlock, CFGEdgeType.SWITCH_CASE);
                     }
                 }
-            } else if (!(lastInstr instanceof MethodReturnInstruction) && !(lastInstr instanceof ATHROWInstruction)) {
+            }
+            else if (!(lastInstr instanceof MethodReturnInstruction) && !(lastInstr instanceof ATHROWInstruction))
+            {
                 int fallthrough = offset + lastInstr.getLength();
                 CFGBlock nextBlock = blockMap.get(fallthrough);
-                if (nextBlock != null) {
+                if (nextBlock != null)
+                {
                     block.addEdge(nextBlock, CFGEdgeType.NORMAL);
                 }
             }
         }
 
-        if (codeAttr.getExceptionTable() != null) {
-            for (ExceptionTableEntry entry : codeAttr.getExceptionTable()) {
+        if (codeAttr.getExceptionTable() != null)
+        {
+            for (ExceptionTableEntry entry : codeAttr.getExceptionTable())
+            {
                 CFGBlock handlerBlock = blockMap.get(entry.getHandlerPc());
                 if (handlerBlock == null) continue;
 
-                for (CFGBlock block : blockMap.values()) {
-                    if (block.getStartOffset() >= entry.getStartPc() && block.getStartOffset() < entry.getEndPc()) {
+                for (CFGBlock block : blockMap.values())
+                {
+                    if (block.getStartOffset() >= entry.getStartPc() && block.getStartOffset() < entry.getEndPc())
+                    {
                         block.addEdge(handlerBlock, CFGEdgeType.EXCEPTION);
                     }
                 }
@@ -196,15 +251,18 @@ public class CFGBuilder {
         }
     }
 
-    private void markExceptionHandlers(Map<Integer, CFGBlock> blockMap, CodeAttribute codeAttr, MethodEntry method) {
+    private void markExceptionHandlers(Map<Integer, CFGBlock> blockMap, CodeAttribute codeAttr, MethodEntry method)
+    {
         if (codeAttr.getExceptionTable() == null) return;
 
-        for (ExceptionTableEntry entry : codeAttr.getExceptionTable()) {
+        for (ExceptionTableEntry entry : codeAttr.getExceptionTable())
+        {
             CFGBlock handlerBlock = blockMap.get(entry.getHandlerPc());
-            if (handlerBlock != null) {
+            if (handlerBlock != null)
+            {
                 handlerBlock.setExceptionHandler(true);
                 String type = entry.getCatchType() == 0 ? "finally" :
-                    method.getClassFile().getConstPool().getClassName(entry.getCatchType());
+                        method.getClassFile().getConstPool().getClassName(entry.getCatchType());
                 handlerBlock.setHandlerType(type);
             }
         }

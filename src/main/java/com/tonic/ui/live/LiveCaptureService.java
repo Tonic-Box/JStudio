@@ -18,12 +18,14 @@ import java.util.function.Consumer;
  * requests. Adding a class uses only the bytes already delivered (no request), but ClassFile parsing is
  * offloaded to a single-thread executor to keep the reader thread responsive.
  */
-public final class LiveCaptureService {
+public final class LiveCaptureService
+{
 
     private final LiveSession session;
     private final Consumer<LiveEvent> hook = this::onEvent;
     private final ExecutorService worker =
-            Executors.newSingleThreadExecutor(r -> {
+            Executors.newSingleThreadExecutor(r ->
+            {
                 Thread t = new Thread(r, "live-capture");
                 t.setDaemon(true);
                 return t;
@@ -32,18 +34,22 @@ public final class LiveCaptureService {
     @Getter
     private volatile boolean armed;
 
-    public LiveCaptureService(LiveSession session) {
+    public LiveCaptureService(LiveSession session)
+    {
         this.session = session;
     }
 
     /** Optional callback (internal class name) invoked after a captured class is added to the project. */
-    public void setOnCaptured(Consumer<String> onCaptured) {
+    public void setOnCaptured(Consumer<String> onCaptured)
+    {
         this.onCaptured = onCaptured;
     }
 
     /** Begin streaming runtime class loads into the project. */
-    public void arm() throws Exception {
-        if (armed) {
+    public void arm() throws Exception
+    {
+        if (armed)
+        {
             return;
         }
         session.addEventListener(hook);
@@ -52,33 +58,44 @@ public final class LiveCaptureService {
     }
 
     /** Stop streaming runtime class loads. */
-    public void disarm() {
-        if (!armed) {
+    public void disarm()
+    {
+        if (!armed)
+        {
             return;
         }
         armed = false;
-        try {
+        try
+        {
             session.setCaptureLoads(false);
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
         session.removeEventListener(hook);
     }
 
-    public void dispose() {
+    public void dispose()
+    {
         disarm();
         worker.shutdownNow();
     }
 
-    private void onEvent(LiveEvent e) {
-        if (e.getKind() != LiveEvent.Kind.CLASS_LOADED) {
+    private void onEvent(LiveEvent e)
+    {
+        if (e.getKind() != LiveEvent.Kind.CLASS_LOADED)
+        {
             return;
         }
         final String name = e.getClassName();
         final byte[] bytes = e.getClassBytes();
-        worker.submit(() -> {
-            if (ProjectService.getInstance().addCapturedLiveClass(name, bytes) != null) {
+        worker.submit(() ->
+        {
+            if (ProjectService.getInstance().addCapturedLiveClass(name, bytes) != null)
+            {
                 Consumer<String> cb = onCaptured;
-                if (cb != null) {
+                if (cb != null)
+                {
                     cb.accept(name);
                 }
             }

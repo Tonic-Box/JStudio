@@ -31,7 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * connect/disconnect, breakpoint install, resume, and paused-frame inspection. Breakpoints are session-scoped;
  * the {@link BreakpointService} re-installs them on connect and clears them on disconnect.
  */
-public final class DebugManager implements DebugListener {
+public final class DebugManager implements DebugListener
+{
 
     private static final DebugManager INSTANCE = new DebugManager();
 
@@ -49,18 +50,22 @@ public final class DebugManager implements DebugListener {
     /** Classes a synthetic LocalVariableTable injection has already been attempted for this session (once each). */
     private final Set<String> injectedLvtClasses = ConcurrentHashMap.newKeySet();
 
-    private DebugManager() {
+    private DebugManager()
+    {
     }
 
-    public static DebugManager getInstance() {
+    public static DebugManager getInstance()
+    {
         return INSTANCE;
     }
 
-    public boolean isConnected() {
+    public boolean isConnected()
+    {
         return session != null;
     }
 
-    public boolean isPaused() {
+    public boolean isPaused()
+    {
         DebugSession s = session;
         return s != null && s.isPaused();
     }
@@ -68,27 +73,35 @@ public final class DebugManager implements DebugListener {
     // ---- connection ---------------------------------------------------------------------------------
 
     /** Connects JDI to a target already serving JDWP at {@code host:port} (a JStudio-launched JVM). */
-    public synchronized void connect(String host, int port) throws IOException {
+    public synchronized void connect(String host, int port) throws IOException
+    {
         disconnect();
-        session = DebugSession.attach(host, port, this, Settings.getInstance().isDebuggerSuspendAll(),
-                AGENT_THREAD_PREFIX);
+        session = DebugSession.attach(host, port, this, Settings.getInstance().isDebuggerSuspendAll(), AGENT_THREAD_PREFIX);
         BreakpointService.getInstance().reinstall();
         session.start();
         postSession(true);
     }
 
     /** Like {@link #connect} but retries briefly, since a freshly launched JDWP listener may not be up yet. */
-    public void connectWithRetry(String host, int port) throws IOException {
+    public void connectWithRetry(String host, int port) throws IOException
+    {
         IOException last = null;
-        for (int i = 0; i < 50; i++) {
-            try {
+        for (int i = 0; i < 50; i++)
+        {
+            try
+            {
                 connect(host, port);
                 return;
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 last = e;
-                try {
+                try
+                {
                     Thread.sleep(200);
-                } catch (InterruptedException ie) {
+                }
+                catch (InterruptedException ie)
+                {
                     Thread.currentThread().interrupt();
                     throw new IOException("interrupted while connecting debugger", ie);
                 }
@@ -98,14 +111,17 @@ public final class DebugManager implements DebugListener {
     }
 
     /** Late-loads the JDWP agent into an externally-attached {@code pid}, then connects JDI (with retry). */
-    public void connectExternal(String pid, int port) throws Exception {
+    public void connectExternal(String pid, int port) throws Exception
+    {
         AttachLauncher.loadJdwp(pid, port);
         connectWithRetry("127.0.0.1", port);
     }
 
-    public synchronized void disconnect() {
+    public synchronized void disconnect()
+    {
         DebugSession s = session;
-        if (s != null) {
+        if (s != null)
+        {
             session = null;
             pausedLocation = null;
             injectedLvtClasses.clear();
@@ -116,25 +132,31 @@ public final class DebugManager implements DebugListener {
 
     // ---- suspend policy -----------------------------------------------------------------------------
 
-    public boolean isSuspendAll() {
+    public boolean isSuspendAll()
+    {
         return Settings.getInstance().isDebuggerSuspendAll();
     }
 
-    public void setSuspendAll(boolean suspendAll) {
+    public void setSuspendAll(boolean suspendAll)
+    {
         Settings.getInstance().setDebuggerSuspendAll(suspendAll);
         DebugSession s = session;
-        if (s != null) {
+        if (s != null)
+        {
             s.setSuspendAll(suspendAll);
         }
     }
 
     // ---- breakpoints / control ----------------------------------------------------------------------
 
-    public void addBreakpoint(String className, String methodName, String methodDesc, long pc) {
+    public void addBreakpoint(String className, String methodName, String methodDesc, long pc)
+    {
         DebugSession s = session;
-        if (s != null) {
+        if (s != null)
+        {
             s.addBreakpoint(className, methodName, methodDesc, pc);
-            if (!injectedLvtClasses.contains(className)) {
+            if (!injectedLvtClasses.contains(className))
+            {
                 final DebugSession session0 = s;
                 Thread t = new Thread(() -> maybeInjectSyntheticLvt(session0, className), "jstudio-lvt-inject");
                 t.setDaemon(true);
@@ -143,16 +165,20 @@ public final class DebugManager implements DebugListener {
         }
     }
 
-    public void removeBreakpoint(String className, String methodName, String methodDesc, long pc) {
+    public void removeBreakpoint(String className, String methodName, String methodDesc, long pc)
+    {
         DebugSession s = session;
-        if (s != null) {
+        if (s != null)
+        {
             s.removeBreakpoint(className, methodName, methodDesc, pc);
         }
     }
 
-    public void resume() {
+    public void resume()
+    {
         DebugSession s = session;
-        if (s != null) {
+        if (s != null)
+        {
             s.resume();
         }
     }
@@ -161,7 +187,8 @@ public final class DebugManager implements DebugListener {
      * Parks (via JDI) up to {@code max} live instances of {@code className} into the agent's dropbox for the
      * agent to consume. Returns the count parked, or -1 if unavailable (so callers fall back to the agent walk).
      */
-    public int parkInstances(String className, int max) {
+    public int parkInstances(String className, int max)
+    {
         DebugSession s = session;
         return s != null ? s.parkInstances(DROPBOX_CLASS, DROPBOX_FIELD, className, max) : -1;
     }
@@ -170,29 +197,34 @@ public final class DebugManager implements DebugListener {
      * Parks (via JDI) up to {@code max} objects held by the target's thread stacks into the agent's dropbox, to
      * be used as extra scan roots. Returns the count parked, or -1 if unavailable.
      */
-    public int parkStackRoots(int max) {
+    public int parkStackRoots(int max)
+    {
         DebugSession s = session;
         return s != null ? s.parkStackRoots(DROPBOX_CLASS, DROPBOX_FIELD, max) : -1;
     }
 
-    public List<DebugFrame> frames() {
+    public List<DebugFrame> frames()
+    {
         DebugSession s = session;
         return s != null ? s.frames() : Collections.emptyList();
     }
 
-    public List<DebugVariable> variables(int frameIndex) {
+    public List<DebugVariable> variables(int frameIndex)
+    {
         DebugSession s = session;
         return s != null ? s.variables(frameIndex) : Collections.emptyList();
     }
 
     /** Fields/elements of a reference value handed out by {@link #variables} (click-to-expand). */
-    public List<DebugVariable> objectFields(long refHandle) {
+    public List<DebugVariable> objectFields(long refHandle)
+    {
         DebugSession s = session;
         return s != null ? s.objectFields(refHandle) : Collections.emptyList();
     }
 
     /** The first {@code max} elements of an array reference (for the hover preview / element viewer). */
-    public List<DebugVariable> arrayElements(long refHandle, int max) {
+    public List<DebugVariable> arrayElements(long refHandle, int max)
+    {
         DebugSession s = session;
         return s != null ? s.arrayElements(refHandle, max) : Collections.emptyList();
     }
@@ -200,24 +232,28 @@ public final class DebugManager implements DebugListener {
     // ---- DebugListener (event thread) -> EventBus on the EDT -----------------------------------------
 
     @Override
-    public void onPaused(DebugLocation location, List<DebugFrame> frames) {
+    public void onPaused(DebugLocation location, List<DebugFrame> frames)
+    {
         this.pausedLocation = location;
         SwingUtilities.invokeLater(() -> EventBus.getInstance().post(new DebugPausedEvent(this, location, frames)));
     }
 
     @Override
-    public void onResumed() {
+    public void onResumed()
+    {
         this.pausedLocation = null;
         SwingUtilities.invokeLater(() -> EventBus.getInstance().post(new DebugResumedEvent(this)));
     }
 
     @Override
-    public void onDisconnected() {
+    public void onDisconnected()
+    {
         SwingUtilities.invokeLater(this::disconnect);
     }
 
     @Override
-    public void onClassPrepared(String className) {
+    public void onClassPrepared(String className)
+    {
         maybeInjectSyntheticLvt(session, className);
     }
 
@@ -227,28 +263,35 @@ public final class DebugManager implements DebugListener {
      * the class isn't loaded, the project lacks it, or it already carries an LVT (every method), and never
      * disturbs the unchanged bytecode (only the debug attribute is added).
      */
-    private void maybeInjectSyntheticLvt(DebugSession s, String className) {
-        if (s == null || !s.canRedefineClasses() || !s.isClassLoaded(className)) {
+    private void maybeInjectSyntheticLvt(DebugSession s, String className)
+    {
+        if (s == null || !s.canRedefineClasses() || !s.isClassLoaded(className))
+        {
             return;
         }
-        if (!injectedLvtClasses.add(className)) {
+        if (!injectedLvtClasses.add(className))
+        {
             return;
         }
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             return;
         }
         ClassEntryModel entry = project.getClass(className.replace('.', '/'));
-        if (entry == null) {
+        if (entry == null)
+        {
             return;
         }
         byte[] augmented = SyntheticLvtInjector.augment(entry.getClassFile());
-        if (augmented != null) {
+        if (augmented != null)
+        {
             s.redefineClasses(className, augmented);
         }
     }
 
-    private void postSession(boolean connected) {
+    private void postSession(boolean connected)
+    {
         SwingUtilities.invokeLater(() -> EventBus.getInstance().post(new DebugSessionEvent(this, connected)));
     }
 }

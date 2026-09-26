@@ -6,7 +6,8 @@ import lombok.Getter;
  * View modes for the code editor.
  */
 @Getter
-public enum ViewMode {
+public enum ViewMode
+{
     SOURCE("Source", "Decompiled Java source code"),
     BYTECODE("Bytecode", "Raw JVM bytecode"),
     DUAL("Dual", "Bytecode and source side by side, linked by double-click"),
@@ -28,7 +29,8 @@ public enum ViewMode {
     private final String displayName;
     private final String description;
 
-    ViewMode(String displayName, String description) {
+    ViewMode(String displayName, String description)
+    {
         this.displayName = displayName;
         this.description = description;
     }

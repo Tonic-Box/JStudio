@@ -8,7 +8,8 @@ import java.util.List;
 
 @Getter
 @Builder
-public class DebugStateModel {
+public class DebugStateModel
+{
     @Builder.Default
     private final String className = "";
     @Builder.Default
@@ -26,7 +27,8 @@ public class DebugStateModel {
     @Builder.Default
     private final List<FrameEntry> callStack = Collections.emptyList();
 
-    public String getSimpleClassName() {
+    public String getSimpleClassName()
+    {
         int lastSlash = className.lastIndexOf('/');
         return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
     }

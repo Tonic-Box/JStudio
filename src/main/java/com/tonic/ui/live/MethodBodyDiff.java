@@ -27,9 +27,11 @@ import java.util.Set;
  * change. The descriptor is derived with the same front end {@code SourceCompiler} uses, so the keys line up
  * with the recompiled {@code ClassFile}'s methods exactly (including overloads).
  */
-public final class MethodBodyDiff {
+public final class MethodBodyDiff
+{
 
-    private MethodBodyDiff() {
+    private MethodBodyDiff()
+    {
     }
 
     /**
@@ -43,20 +45,25 @@ public final class MethodBodyDiff {
      * @param ownerClass the internal name of the class being patched
      * @return the signatures of changed methods (empty if nothing comparable changed or parsing fails)
      */
-    public static Set<String> changedMethods(String baseline, String edited, ClassPool classPool, String ownerClass) {
-        if (baseline == null || edited == null) {
+    public static Set<String> changedMethods(String baseline, String edited, ClassPool classPool, String ownerClass)
+    {
+        if (baseline == null || edited == null)
+        {
             return Collections.emptySet();
         }
         Map<String, String> baselineBodies = methodBodies(baseline, classPool, ownerClass);
-        if (baselineBodies.isEmpty()) {
+        if (baselineBodies.isEmpty())
+        {
             return Collections.emptySet();
         }
         Map<String, String> editedBodies = methodBodies(edited, classPool, ownerClass);
 
         Set<String> changed = new HashSet<>();
-        for (Map.Entry<String, String> entry : editedBodies.entrySet()) {
+        for (Map.Entry<String, String> entry : editedBodies.entrySet())
+        {
             String baselineBody = baselineBodies.get(entry.getKey());
-            if (baselineBody != null && !baselineBody.equals(entry.getValue())) {
+            if (baselineBody != null && !baselineBody.equals(entry.getValue()))
+            {
                 changed.add(entry.getKey());
             }
         }
@@ -64,32 +71,42 @@ public final class MethodBodyDiff {
     }
 
     /** Maps each concrete method of the source's primary type to a canonical rendering of its body. */
-    private static Map<String, String> methodBodies(String source, ClassPool classPool, String ownerClass) {
+    private static Map<String, String> methodBodies(String source, ClassPool classPool, String ownerClass)
+    {
         Map<String, String> bodies = new HashMap<>();
         CompilationUnit unit;
-        try {
+        try
+        {
             unit = JavaParser.create().parse(source);
-        } catch (RuntimeException parseFailure) {
+        }
+        catch (RuntimeException parseFailure)
+        {
             return bodies;
         }
         TypeDecl primary = unit.getPrimaryType();
-        if (!(primary instanceof ClassDecl)) {
+        if (!(primary instanceof ClassDecl))
+        {
             return bodies;
         }
         ClassDecl classDecl = (ClassDecl) primary;
         TypeResolver resolver = null;
-        if (classPool != null) {
+        if (classPool != null)
+        {
             resolver = new TypeResolver(classPool, ownerClass);
             resolver.setImports(unit.getImports());
             resolver.setCurrentClassDecl(classDecl);
         }
-        for (MethodDecl method : classDecl.getMethods()) {
-            if (method.getBody() != null) {
+        for (MethodDecl method : classDecl.getMethods())
+        {
+            if (method.getBody() != null)
+            {
                 bodies.put(signature(method, resolver), ASTPrinter.format(method.getBody()));
             }
         }
-        for (ConstructorDecl constructor : classDecl.getConstructors()) {
-            if (constructor.getBody() != null) {
+        for (ConstructorDecl constructor : classDecl.getConstructors())
+        {
+            if (constructor.getBody() != null)
+            {
                 bodies.put(constructorSignature(constructor, resolver), ASTPrinter.format(constructor.getBody()));
             }
         }
@@ -100,26 +117,24 @@ public final class MethodBodyDiff {
      * The method's {@code name + descriptor} key, with reference types resolved through {@code resolver} (so it
      * matches the compiled class's signature). Falls back to the unresolved descriptor when no pool is given.
      */
-    private static String signature(MethodDecl method, TypeResolver resolver) {
+    private static String signature(MethodDecl method, TypeResolver resolver)
+    {
         StringBuilder descriptor = new StringBuilder("(");
-        for (ParameterDecl parameter : method.getParameters()) {
-            descriptor.append(resolver != null
-                    ? resolver.descriptorOf(parameter.getType())
-                    : parameter.getType().toIRType().getDescriptor());
+        for (ParameterDecl parameter : method.getParameters())
+        {
+            descriptor.append(resolver != null ? resolver.descriptorOf(parameter.getType()) : parameter.getType().toIRType().getDescriptor());
         }
-        descriptor.append(")").append(resolver != null
-                ? resolver.descriptorOf(method.getReturnType())
-                : method.getReturnType().toIRType().getDescriptor());
+        descriptor.append(")").append(resolver != null ? resolver.descriptorOf(method.getReturnType()) : method.getReturnType().toIRType().getDescriptor());
         return method.getName() + descriptor;
     }
 
     /** The constructor's {@code <init>} key: its parameters (resolved like {@link #signature}) and void return. */
-    private static String constructorSignature(ConstructorDecl constructor, TypeResolver resolver) {
+    private static String constructorSignature(ConstructorDecl constructor, TypeResolver resolver)
+    {
         StringBuilder descriptor = new StringBuilder("(");
-        for (ParameterDecl parameter : constructor.getParameters()) {
-            descriptor.append(resolver != null
-                    ? resolver.descriptorOf(parameter.getType())
-                    : parameter.getType().toIRType().getDescriptor());
+        for (ParameterDecl parameter : constructor.getParameters())
+        {
+            descriptor.append(resolver != null ? resolver.descriptorOf(parameter.getType()) : parameter.getType().toIRType().getDescriptor());
         }
         descriptor.append(")V");
         return "<init>" + descriptor;

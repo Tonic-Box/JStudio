@@ -14,31 +14,38 @@ import java.util.List;
  *
  * <p>Note: on JDK 21+ dynamic agent loading prints a warning (JEP 451) but is still permitted.
  */
-public final class AttachLauncher {
+public final class AttachLauncher
+{
 
-    private AttachLauncher() {
+    private AttachLauncher()
+    {
     }
 
     /** A locally attachable JVM. */
     @Getter
-    public static final class JvmProcess {
+    public static final class JvmProcess
+    {
         private final String id;
         private final String displayName;
 
-        public JvmProcess(String id, String displayName) {
+        public JvmProcess(String id, String displayName)
+        {
             this.id = id;
             this.displayName = displayName;
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return id + "  " + displayName;
         }
     }
 
-    public static List<JvmProcess> listJvms() {
+    public static List<JvmProcess> listJvms()
+    {
         List<JvmProcess> result = new ArrayList<>();
-        for (VirtualMachineDescriptor vmd : VirtualMachine.list()) {
+        for (VirtualMachineDescriptor vmd : VirtualMachine.list())
+        {
             String name = vmd.displayName();
             result.add(new JvmProcess(vmd.id(), name == null || name.isEmpty() ? "(unknown)" : name));
         }
@@ -49,11 +56,15 @@ public final class AttachLauncher {
      * Attaches to {@code pid}, loads the Java agent jar ({@code java.lang.instrument}), and tells it to
      * listen on {@code port}. Detaches once loaded (the agent keeps running in the target).
      */
-    public static void loadAgent(String pid, String agentJarPath, int port) throws Exception {
+    public static void loadAgent(String pid, String agentJarPath, int port) throws Exception
+    {
         VirtualMachine vm = VirtualMachine.attach(pid);
-        try {
+        try
+        {
             vm.loadAgent(agentJarPath, "port=" + port);
-        } finally {
+        }
+        finally
+        {
             vm.detach();
         }
     }
@@ -62,11 +73,15 @@ public final class AttachLauncher {
      * Late-loads the JDK's JDWP agent into {@code pid} so a JDI debugger can attach, telling it to serve the
      * {@code dt_socket} transport on {@code 127.0.0.1:port}. May fail on hardened JVMs that block agent loading.
      */
-    public static void loadJdwp(String pid, int port) throws Exception {
+    public static void loadJdwp(String pid, int port) throws Exception
+    {
         VirtualMachine vm = VirtualMachine.attach(pid);
-        try {
+        try
+        {
             vm.loadAgentLibrary("jdwp", "transport=dt_socket,server=y,suspend=n,address=127.0.0.1:" + port);
-        } finally {
+        }
+        finally
+        {
             vm.detach();
         }
     }

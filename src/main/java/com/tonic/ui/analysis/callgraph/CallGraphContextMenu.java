@@ -12,7 +12,8 @@ import java.awt.Component;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public class CallGraphContextMenu {
+public class CallGraphContextMenu
+{
 
     private final JPopupMenu menu;
     private final mxGraph graph;
@@ -21,10 +22,8 @@ public class CallGraphContextMenu {
     private final Consumer<MethodReference> onNavigate;
     private final Consumer<String> statusCallback;
 
-    public CallGraphContextMenu(mxGraph graph, CallGraphModel model,
-                                Consumer<MethodReference> onFocusMethod,
-                                Consumer<MethodReference> onNavigate,
-                                Consumer<String> statusCallback) {
+    public CallGraphContextMenu(mxGraph graph, CallGraphModel model, Consumer<MethodReference> onFocusMethod, Consumer<MethodReference> onNavigate, Consumer<String> statusCallback)
+    {
         this.graph = graph;
         this.model = model;
         this.onFocusMethod = onFocusMethod;
@@ -33,7 +32,8 @@ public class CallGraphContextMenu {
         this.menu = createMenu();
     }
 
-    private JPopupMenu createMenu() {
+    private JPopupMenu createMenu()
+    {
         JPopupMenu popup = new JPopupMenu();
         popup.setBackground(JStudioTheme.getBgSecondary());
         popup.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
@@ -46,29 +46,36 @@ public class CallGraphContextMenu {
         return popup;
     }
 
-    private JMenuItem createFocusMenuItem() {
+    private JMenuItem createFocusMenuItem()
+    {
         JMenuItem item = createMenuItem("Focus on this method");
-        item.addActionListener(e -> {
+        item.addActionListener(e ->
+        {
             MethodReference method = getSelectedMethod();
-            if (method != null) {
+            if (method != null)
+            {
                 onFocusMethod.accept(method);
             }
         });
         return item;
     }
 
-    private JMenuItem createShowCallersMenuItem() {
+    private JMenuItem createShowCallersMenuItem()
+    {
         JMenuItem item = createMenuItem("Show all callers");
-        item.addActionListener(e -> {
+        item.addActionListener(e ->
+        {
             MethodReference method = getSelectedMethod();
             CallGraph callGraph = model.getCallGraph();
-            if (method != null && callGraph != null) {
+            if (method != null && callGraph != null)
+            {
                 Set<MethodReference> callers = callGraph.getCallers(method);
                 StringBuilder sb = new StringBuilder();
                 sb.append("Callers of ").append(method.getName()).append(":\n");
-                for (MethodReference caller : callers) {
+                for (MethodReference caller : callers)
+                {
                     sb.append("  - ").append(caller.getOwner())
-                      .append(".").append(caller.getName()).append("\n");
+                            .append(".").append(caller.getName()).append("\n");
                 }
                 statusCallback.accept(sb.toString());
             }
@@ -76,18 +83,22 @@ public class CallGraphContextMenu {
         return item;
     }
 
-    private JMenuItem createShowCalleesMenuItem() {
+    private JMenuItem createShowCalleesMenuItem()
+    {
         JMenuItem item = createMenuItem("Show all callees");
-        item.addActionListener(e -> {
+        item.addActionListener(e ->
+        {
             MethodReference method = getSelectedMethod();
             CallGraph callGraph = model.getCallGraph();
-            if (method != null && callGraph != null) {
+            if (method != null && callGraph != null)
+            {
                 Set<MethodReference> callees = callGraph.getCallees(method);
                 StringBuilder sb = new StringBuilder();
                 sb.append("Callees of ").append(method.getName()).append(":\n");
-                for (MethodReference callee : callees) {
+                for (MethodReference callee : callees)
+                {
                     sb.append("  - ").append(callee.getOwner())
-                      .append(".").append(callee.getName()).append("\n");
+                            .append(".").append(callee.getName()).append("\n");
                 }
                 statusCallback.accept(sb.toString());
             }
@@ -95,30 +106,36 @@ public class CallGraphContextMenu {
         return item;
     }
 
-    private JMenuItem createNavigateMenuItem() {
+    private JMenuItem createNavigateMenuItem()
+    {
         JMenuItem item = createMenuItem("Navigate to source");
-        item.addActionListener(e -> {
+        item.addActionListener(e ->
+        {
             MethodReference method = getSelectedMethod();
-            if (method != null) {
+            if (method != null)
+            {
                 onNavigate.accept(method);
             }
         });
         return item;
     }
 
-    private JMenuItem createMenuItem(String text) {
+    private JMenuItem createMenuItem(String text)
+    {
         JMenuItem item = new JMenuItem(text);
         item.setBackground(JStudioTheme.getBgSecondary());
         item.setForeground(JStudioTheme.getTextPrimary());
         return item;
     }
 
-    private MethodReference getSelectedMethod() {
+    private MethodReference getSelectedMethod()
+    {
         Object cell = graph.getSelectionCell();
         return cell != null ? model.getMethodForCell(cell) : null;
     }
 
-    public void show(Component invoker, int x, int y) {
+    public void show(Component invoker, int x, int y)
+    {
         menu.show(invoker, x, y);
     }
 }

@@ -21,18 +21,21 @@ import java.util.List;
  * selectable, scrollable text area. Opened by clicking any inline hint; the full (untruncated) value is shown
  * here even though the inline annotation is truncated, so long strings remain readable and copyable.
  */
-final class RuntimeValuesDialog {
+final class RuntimeValuesDialog
+{
 
-    private RuntimeValuesDialog() {
+    private RuntimeValuesDialog()
+    {
     }
 
-    static void show(Component owner, List<RuntimeHint.HintEntry> entries) {
+    static void show(Component owner, List<RuntimeHint.HintEntry> entries)
+    {
         List<RuntimeHint.HintEntry> sorted = new ArrayList<>(entries);
-        sorted.sort(Comparator.comparingInt((RuntimeHint.HintEntry e) -> e.line)
-                .thenComparing(e -> e.fullText));
+        sorted.sort(Comparator.comparingInt((RuntimeHint.HintEntry e) -> e.line).thenComparing(e -> e.fullText));
 
         StringBuilder sb = new StringBuilder();
-        for (RuntimeHint.HintEntry e : sorted) {
+        for (RuntimeHint.HintEntry e : sorted)
+        {
             sb.append(e.fullText).append('\n');
         }
 

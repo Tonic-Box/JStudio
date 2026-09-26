@@ -5,12 +5,15 @@ import com.tonic.ui.theme.ThemeManager;
 
 import java.awt.Color;
 
-public class ScriptDocumentation {
+public class ScriptDocumentation
+{
 
-    private ScriptDocumentation() {
+    private ScriptDocumentation()
+    {
     }
 
-    public static String getStylesheet() {
+    public static String getStylesheet()
+    {
         Theme theme = ThemeManager.getInstance().getCurrentTheme();
         String bg = colorToHex(theme.getBgPrimary());
         String bgSecondary = colorToHex(theme.getBgSecondary());
@@ -45,11 +48,13 @@ public class ScriptDocumentation {
                 "</style>\n";
     }
 
-    private static String colorToHex(Color c) {
+    private static String colorToHex(Color c)
+    {
         return String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
     }
 
-    public static String getOverview() {
+    public static String getOverview()
+    {
         return getStylesheet() +
                 "<h1>JStudio Script Language</h1>\n" +
                 "<p>JStudio includes a powerful scripting language for analyzing and transforming Java bytecode. " +
@@ -80,7 +85,8 @@ public class ScriptDocumentation {
                 "</div>\n";
     }
 
-    public static String getLoops() {
+    public static String getLoops()
+    {
         return getStylesheet() +
                 "<h1>Loops</h1>\n" +
                 "<h2>While Loop</h2>\n" +
@@ -111,7 +117,8 @@ public class ScriptDocumentation {
                 "}</pre>\n";
     }
 
-    public static String getArrayMethods() {
+    public static String getArrayMethods()
+    {
         return getStylesheet() +
                 "<h1>Array Methods</h1>\n" +
                 "<h2>Iteration</h2>\n" +
@@ -162,7 +169,8 @@ public class ScriptDocumentation {
                 "<span class='kw'>let</span> str = arr.<span class='fn'>join</span>(<span class='str'>\", \"</span>);  <span class='cmt'>// \"1, 2, 3\"</span></pre>\n";
     }
 
-    public static String getTryCatch() {
+    public static String getTryCatch()
+    {
         return getStylesheet() +
                 "<h1>Try/Catch</h1>\n" +
                 "<p>Handle errors gracefully with try/catch blocks:</p>\n" +
@@ -185,7 +193,8 @@ public class ScriptDocumentation {
                 "}</pre>\n";
     }
 
-    public static String getResultsApi() {
+    public static String getResultsApi()
+    {
         return getStylesheet() +
                 "<h1>Results API</h1>\n" +
                 "<p>The <code>results</code> object collects and exports analysis findings:</p>\n" +
@@ -223,7 +232,8 @@ public class ScriptDocumentation {
                 "<span class='kw'>let</span> summary = results.<span class='fn'>summary</span>();</pre>\n";
     }
 
-    public static String getProjectApi() {
+    public static String getProjectApi()
+    {
         return getStylesheet() +
                 "<h1>Project API</h1>\n" +
                 "<p>The <code>project</code> object provides project-wide queries:</p>\n" +
@@ -251,7 +261,8 @@ public class ScriptDocumentation {
                 "<span class='fn'>log</span>(<span class='str'>\"Methods: \"</span> + project.<span class='fn'>methodCount</span>());</pre>\n";
     }
 
-    public static String getCallGraphApi() {
+    public static String getCallGraphApi()
+    {
         return getStylesheet() +
                 "<h1>Call Graph API</h1>\n" +
                 "<p>The <code>callgraph</code> object analyzes method call relationships:</p>\n" +
@@ -283,7 +294,8 @@ public class ScriptDocumentation {
                 "<span class='kw'>let</span> reachable = callgraph.<span class='fn'>getReachableFrom</span>(entries);</pre>\n";
     }
 
-    public static String getDataFlowApi() {
+    public static String getDataFlowApi()
+    {
         return getStylesheet() +
                 "<h1>Data Flow API</h1>\n" +
                 "<p>The <code>dataflow</code> object performs data flow analysis:</p>\n" +
@@ -318,7 +330,8 @@ public class ScriptDocumentation {
                 "}</pre>\n";
     }
 
-    public static String getDependencyApi() {
+    public static String getDependencyApi()
+    {
         return getStylesheet() +
                 "<h1>Dependency API</h1>\n" +
                 "<p>The <code>dependencies</code> object analyzes class dependencies:</p>\n" +
@@ -351,7 +364,8 @@ public class ScriptDocumentation {
                 "<span class='kw'>let</span> roots = dependencies.<span class='fn'>findRootClasses</span>();</pre>\n";
     }
 
-    public static String getPatternApi() {
+    public static String getPatternApi()
+    {
         return getStylesheet() +
                 "<h1>Pattern API</h1>\n" +
                 "<p>The <code>patterns</code> object searches for bytecode patterns:</p>\n" +
@@ -375,7 +389,8 @@ public class ScriptDocumentation {
                 "<span class='kw'>let</span> throws = patterns.<span class='fn'>findThrows</span>();</pre>\n";
     }
 
-    public static String getSimulationApi() {
+    public static String getSimulationApi()
+    {
         return getStylesheet() +
                 "<h1>Simulation API</h1>\n" +
                 "<p>The <code>simulation</code> object provides abstract interpretation:</p>\n" +
@@ -404,7 +419,8 @@ public class ScriptDocumentation {
                 "<span class='kw'>let</span> trace = simulation.<span class='fn'>trace</span>();</pre>\n";
     }
 
-    public static String getInstrumentApi() {
+    public static String getInstrumentApi()
+    {
         return getStylesheet() +
                 "<h1>Instrumentation API</h1>\n" +
                 "<p>The <code>instrument</code> object modifies bytecode:</p>\n" +
@@ -430,7 +446,8 @@ public class ScriptDocumentation {
                 "<span class='fn'>log</span>(<span class='str'>\"Made \"</span> + mods + <span class='str'>\" modifications\"</span>);</pre>\n";
     }
 
-    public static String getTypesApi() {
+    public static String getTypesApi()
+    {
         return getStylesheet() +
                 "<h1>Types API</h1>\n" +
                 "<p>The <code>types</code> object provides type analysis:</p>\n" +
@@ -455,7 +472,8 @@ public class ScriptDocumentation {
                 "<span class='kw'>let</span> strings = types.<span class='fn'>findByType</span>(<span class='str'>\"String\"</span>);</pre>\n";
     }
 
-    public static String getAstApi() {
+    public static String getAstApi()
+    {
         return getStylesheet() +
                 "<h1>AST API</h1>\n" +
                 "<p>The <code>ast</code> object provides AST manipulation, traversal, factory methods, and validation:</p>\n" +
@@ -573,7 +591,8 @@ public class ScriptDocumentation {
                 "ast.<span class='fn'>getSimpleName</span>(<span class='str'>\"java/lang/String\"</span>); <span class='cmt'>// \"String\"</span></pre>\n";
     }
 
-    public static String getStringsApi() {
+    public static String getStringsApi()
+    {
         return getStylesheet() +
                 "<h1>Strings API</h1>\n" +
                 "<p>The <code>strings</code> object analyzes string constants:</p>\n" +
@@ -598,7 +617,8 @@ public class ScriptDocumentation {
                 "<span class='kw'>let</span> byClass = strings.<span class='fn'>groupByClass</span>();</pre>\n";
     }
 
-    public static String getPipelineApi() {
+    public static String getPipelineApi()
+    {
         return getStylesheet() +
                 "<h1>Pipeline API</h1>\n" +
                 "<p>The <code>pipeline</code> object creates multi-stage workflows:</p>\n" +
@@ -625,7 +645,8 @@ public class ScriptDocumentation {
                 "<span class='fn'>log</span>(<span class='str'>\"Total time: \"</span> + pipeline.<span class='fn'>getTotalTime</span>() + <span class='str'>\"ms\"</span>);</pre>\n";
     }
 
-    public static String getSecurityExample() {
+    public static String getSecurityExample()
+    {
         return getStylesheet() +
                 "<h1>Example: Security Scanner</h1>\n" +
                 "<pre><span class='cmt'>// Build analysis graphs</span>\n" +
@@ -663,7 +684,8 @@ public class ScriptDocumentation {
                 "results.<span class='fn'>exportJson</span>(<span class='str'>\"security-report.json\"</span>);</pre>\n";
     }
 
-    public static String getDeadCodeExample() {
+    public static String getDeadCodeExample()
+    {
         return getStylesheet() +
                 "<h1>Example: Dead Code Finder</h1>\n" +
                 "<pre><span class='cmt'>// Build call graph</span>\n" +
@@ -690,35 +712,39 @@ public class ScriptDocumentation {
                 "<span class='fn'>log</span>(results.<span class='fn'>toTable</span>());</pre>\n";
     }
 
-    public static String[] getSectionTitles() {
-        return new String[] {
-                "Overview",
-                "Language",
-                "  Loops",
-                "  Array Methods",
-                "  Try/Catch",
-                "Analysis APIs",
-                "  AST",
-                "  Results",
-                "  Project",
-                "  Call Graph",
-                "  Data Flow",
-                "  Dependencies",
-                "  Patterns",
-                "Advanced APIs",
-                "  Simulation",
-                "  Instrumentation",
-                "  Types",
-                "  Strings",
-                "  Pipeline",
-                "Examples",
-                "  Security Scanner",
-                "  Dead Code Finder"
-        };
+    public static String[] getSectionTitles()
+    {
+        return new String[]
+                {
+                        "Overview",
+                        "Language",
+                        "  Loops",
+                        "  Array Methods",
+                        "  Try/Catch",
+                        "Analysis APIs",
+                        "  AST",
+                        "  Results",
+                        "  Project",
+                        "  Call Graph",
+                        "  Data Flow",
+                        "  Dependencies",
+                        "  Patterns",
+                        "Advanced APIs",
+                        "  Simulation",
+                        "  Instrumentation",
+                        "  Types",
+                        "  Strings",
+                        "  Pipeline",
+                        "Examples",
+                        "  Security Scanner",
+                        "  Dead Code Finder"
+                };
     }
 
-    public static String getContentForSection(String section) {
-        switch (section) {
+    public static String getContentForSection(String section)
+    {
+        switch (section)
+        {
             case "  Loops":
             case "Language":
                 return getLoops();

@@ -9,13 +9,15 @@ import lombok.Getter;
  * and an optional package filter. MainFrame focuses the scanner tool and pre-fills its scan bar.
  */
 @Getter
-public class ScanSeedEvent extends Event {
+public class ScanSeedEvent extends Event
+{
 
     private final int valueType;
     private final String value;
     private final String packageFilter;
 
-    public ScanSeedEvent(Object source, int valueType, String value, String packageFilter) {
+    public ScanSeedEvent(Object source, int valueType, String value, String packageFilter)
+    {
         super(source);
         this.valueType = valueType;
         this.value = value;

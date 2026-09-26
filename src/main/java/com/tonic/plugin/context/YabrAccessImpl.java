@@ -1,4 +1,5 @@
 package com.tonic.plugin.context;
+
 import com.tonic.analysis.CodePrinter;
 
 import com.tonic.analysis.DisassemblyOptions;
@@ -23,36 +24,42 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class YabrAccessImpl implements YabrAccess {
+public class YabrAccessImpl implements YabrAccess
+{
 
     private final ProjectModel projectModel;
     private final ClassPoolImpl classPoolWrapper;
 
-    public YabrAccessImpl(ProjectModel projectModel) {
+    public YabrAccessImpl(ProjectModel projectModel)
+    {
         this.projectModel = projectModel;
         this.classPoolWrapper = new ClassPoolImpl();
     }
 
     @Override
-    public ClassPool getClassPool() {
+    public ClassPool getClassPool()
+    {
         return classPoolWrapper;
     }
 
     @Override
-    public Optional<Object> getClassFile(String name) {
+    public Optional<Object> getClassFile(String name)
+    {
         ClassEntryModel entry = projectModel.findClassByName(name);
         return entry != null ? Optional.of(entry.getClassFile()) : Optional.empty();
     }
 
     @Override
-    public Optional<Object> liftToIR(String className, String methodName, String descriptor) {
+    public Optional<Object> liftToIR(String className, String methodName, String descriptor)
+    {
         ClassEntryModel classEntry = projectModel.findClassByName(className);
         if (classEntry == null) return Optional.empty();
 
         MethodEntryModel methodEntry = classEntry.getMethod(methodName, descriptor);
         if (methodEntry == null) return Optional.empty();
 
-        if (methodEntry.getCachedIR() != null) {
+        if (methodEntry.getCachedIR() != null)
+        {
             return Optional.of(methodEntry.getCachedIR());
         }
 
@@ -60,14 +67,16 @@ public class YabrAccessImpl implements YabrAccess {
     }
 
     @Override
-    public Object buildCallGraph() {
+    public Object buildCallGraph()
+    {
         com.tonic.parser.ClassPool pool = projectModel.getClassPool();
         if (pool == null) return null;
         return CallGraph.build(pool);
     }
 
     @Override
-    public Object buildDataFlowGraph(String className, String methodName, String descriptor) {
+    public Object buildDataFlowGraph(String className, String methodName, String descriptor)
+    {
         ClassEntryModel classEntry = projectModel.findClassByName(className);
         if (classEntry == null) return null;
 
@@ -77,23 +86,26 @@ public class YabrAccessImpl implements YabrAccess {
         MethodEntry method = methodModel.getMethodEntry();
         if (method == null || method.getCodeAttribute() == null) return null;
 
-        try {
-            SSA ssa = new SSA(
-                classEntry.getClassFile().getConstPool());
+        try
+        {
+            SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
             IRMethod irMethod = ssa.lift(method);
             if (irMethod == null || irMethod.getEntryBlock() == null) return null;
 
             DataFlowGraph dfg =
-                new DataFlowGraph(irMethod);
+                    new DataFlowGraph(irMethod);
             dfg.build();
             return dfg;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return null;
         }
     }
 
     @Override
-    public Object getMethodEntry(String className, String methodName, String descriptor) {
+    public Object getMethodEntry(String className, String methodName, String descriptor)
+    {
         ClassEntryModel classEntry = projectModel.findClassByName(className);
         if (classEntry == null) return null;
 
@@ -102,13 +114,16 @@ public class YabrAccessImpl implements YabrAccess {
     }
 
     @Override
-    public Optional<String> disassembleMethod(String className, String methodName, String descriptor, boolean verbose) {
+    public Optional<String> disassembleMethod(String className, String methodName, String descriptor, boolean verbose)
+    {
         MethodEntry method = resolveMethod(className, methodName, descriptor);
-        if (method == null) {
+        if (method == null)
+        {
             return Optional.empty();
         }
         CodeAttribute code = method.getCodeAttribute();
-        if (code == null) {
+        if (code == null)
+        {
             return Optional.empty();
         }
         DisassemblyOptions options = verbose ? DisassemblyOptions.verbose() : DisassemblyOptions.terse();
@@ -116,13 +131,16 @@ public class YabrAccessImpl implements YabrAccess {
     }
 
     @Override
-    public Optional<String> methodSsaIr(String className, String methodName, String descriptor) {
+    public Optional<String> methodSsaIr(String className, String methodName, String descriptor)
+    {
         ClassEntryModel classEntry = projectModel.findClassByName(className);
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             return Optional.empty();
         }
         MethodEntryModel methodModel = classEntry.getMethod(methodName, descriptor);
-        if (methodModel == null || methodModel.getMethodEntry() == null) {
+        if (methodModel == null || methodModel.getMethodEntry() == null)
+        {
             return Optional.empty();
         }
         SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
@@ -130,29 +148,37 @@ public class YabrAccessImpl implements YabrAccess {
     }
 
     @Override
-    public Optional<String> methodAst(String className, String methodName, String descriptor) {
+    public Optional<String> methodAst(String className, String methodName, String descriptor)
+    {
         ClassEntryModel classEntry = projectModel.findClassByName(className);
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             return Optional.empty();
         }
         MethodEntryModel methodModel = classEntry.getMethod(methodName, descriptor);
         if (methodModel == null || methodModel.getMethodEntry() == null
-                || methodModel.getMethodEntry().getCodeAttribute() == null) {
+                || methodModel.getMethodEntry().getCodeAttribute() == null)
+        {
             return Optional.empty();
         }
-        try {
+        try
+        {
             SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
             IRMethod ir = ssa.lift(methodModel.getMethodEntry());
             BlockStmt body = MethodRecoverer.recoverMethod(ir, methodModel.getMethodEntry());
             return body != null ? Optional.of(ASTPrinter.format(body)) : Optional.empty();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return Optional.empty();
         }
     }
 
-    private MethodEntry resolveMethod(String className, String methodName, String descriptor) {
+    private MethodEntry resolveMethod(String className, String methodName, String descriptor)
+    {
         ClassEntryModel classEntry = projectModel.findClassByName(className);
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             return null;
         }
         MethodEntryModel methodModel = classEntry.getMethod(methodName, descriptor);
@@ -160,85 +186,107 @@ public class YabrAccessImpl implements YabrAccess {
     }
 
     @Override
-    public List<String> getLoadedClassNames() {
+    public List<String> getLoadedClassNames()
+    {
         List<String> names = new ArrayList<>();
-        for (ClassEntryModel entry : projectModel.getAllClasses()) {
+        for (ClassEntryModel entry : projectModel.getAllClasses())
+        {
             names.add(entry.getClassName());
         }
         return names;
     }
 
     @Override
-    public byte[] getClassBytes(String className) {
+    public byte[] getClassBytes(String className)
+    {
         ClassEntryModel entry = projectModel.findClassByName(className);
         if (entry == null) return new byte[0];
-        try {
+        try
+        {
             ClassFile cf = entry.getClassFile();
             return cf != null ? cf.write() : new byte[0];
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return new byte[0];
         }
     }
 
     @Override
-    public void addClass(String name, byte[] bytecode) {
-        try {
+    public void addClass(String name, byte[] bytecode)
+    {
+        try
+        {
             ClassFile cf = new ClassFile(new ByteArrayInputStream(bytecode));
             projectModel.addClass(cf);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException("Failed to add class: " + name, e);
         }
     }
 
     @Override
-    public void removeClass(String name) {
+    public void removeClass(String name)
+    {
         com.tonic.parser.ClassPool pool = projectModel.getClassPool();
-        if (pool != null) {
+        if (pool != null)
+        {
             pool.getClasses().removeIf(cf -> cf.getClassName().equals(name));
         }
     }
 
-    private class ClassPoolImpl implements ClassPool {
+    private class ClassPoolImpl implements ClassPool
+    {
 
         @Override
-        public List<String> getClassNames() {
+        public List<String> getClassNames()
+        {
             return getLoadedClassNames();
         }
 
         @Override
-        public boolean hasClass(String name) {
+        public boolean hasClass(String name)
+        {
             return projectModel.findClassByName(name) != null;
         }
 
         @Override
-        public byte[] getClassBytes(String name) {
+        public byte[] getClassBytes(String name)
+        {
             return YabrAccessImpl.this.getClassBytes(name);
         }
 
         @Override
-        public Object getClassNode(String name) {
+        public Object getClassNode(String name)
+        {
             return getClassFile(name).orElse(null);
         }
 
         @Override
-        public void putClass(String name, byte[] bytecode) {
+        public void putClass(String name, byte[] bytecode)
+        {
             addClass(name, bytecode);
         }
 
         @Override
-        public void putClassNode(String name, Object classNode) {
-            if (classNode instanceof ClassFile) {
+        public void putClassNode(String name, Object classNode)
+        {
+            if (classNode instanceof ClassFile)
+            {
                 projectModel.addClass((ClassFile) classNode);
             }
         }
 
         @Override
-        public void clear() {
+        public void clear()
+        {
             projectModel.clear();
         }
 
         @Override
-        public int size() {
+        public int size()
+        {
             return projectModel.getClassCount();
         }
     }

@@ -32,14 +32,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-public class BookmarksPanel extends ThemedJPanel {
+public class BookmarksPanel extends ThemedJPanel
+{
 
     private final ProjectModel project;
     private final JList<Bookmark> bookmarkList;
     private final DefaultListModel<Bookmark> listModel;
     private final JLabel statusLabel;
 
-    public BookmarksPanel(ProjectModel project) {
+    public BookmarksPanel(ProjectModel project)
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
         this.project = project;
 
@@ -53,21 +55,26 @@ public class BookmarksPanel extends ThemedJPanel {
         bookmarkList.setBackground(JStudioTheme.getBgPrimary());
         bookmarkList.setForeground(JStudioTheme.getTextPrimary());
 
-        bookmarkList.addMouseListener(new MouseAdapter() {
+        bookmarkList.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
                     navigateToSelected();
                 }
             }
 
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mousePressed(MouseEvent e)
+            {
                 if (e.isPopupTrigger()) showContextMenu(e);
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
+            public void mouseReleased(MouseEvent e)
+            {
                 if (e.isPopupTrigger()) showContextMenu(e);
             }
         });
@@ -85,7 +92,8 @@ public class BookmarksPanel extends ThemedJPanel {
         ProjectDatabaseService.getInstance().addListener((db, dirty) -> SwingUtilities.invokeLater(this::refresh));
     }
 
-    private JToolBar createToolbar() {
+    private JToolBar createToolbar()
+    {
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
         toolbar.setBackground(JStudioTheme.getBgSecondary());
@@ -103,7 +111,8 @@ public class BookmarksPanel extends ThemedJPanel {
         return toolbar;
     }
 
-    private JButton createToolButton(String tooltip, String iconName, ActionListener action) {
+    private JButton createToolButton(String tooltip, String iconName, ActionListener action)
+    {
         JButton button = new JButton();
         button.setIcon(Icons.getIcon(iconName));
         button.setToolTipText(tooltip);
@@ -115,61 +124,75 @@ public class BookmarksPanel extends ThemedJPanel {
         return button;
     }
 
-    public void refresh() {
+    public void refresh()
+    {
         listModel.clear();
         List<Bookmark> bookmarks = ProjectDatabaseService.getInstance().getAllBookmarks();
-        for (Bookmark b : bookmarks) {
+        for (Bookmark b : bookmarks)
+        {
             listModel.addElement(b);
         }
         updateStatus();
     }
 
-    private void updateStatus() {
+    private void updateStatus()
+    {
         int count = listModel.size();
-        if (count == 0) {
+        if (count == 0)
+        {
             statusLabel.setText("No bookmarks");
-        } else {
+        }
+        else
+        {
             statusLabel.setText(count + " bookmark" + (count == 1 ? "" : "s"));
         }
     }
 
-    private void navigateToSelected() {
+    private void navigateToSelected()
+    {
         Bookmark selected = bookmarkList.getSelectedValue();
         if (selected == null) return;
 
         ClassEntryModel classEntry = findClass(selected.getClassName());
-        if (classEntry != null) {
+        if (classEntry != null)
+        {
             EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
         }
     }
 
-    private ClassEntryModel findClass(String className) {
-        if (project == null) {
+    private ClassEntryModel findClass(String className)
+    {
+        if (project == null)
+        {
             return null;
         }
         return project.getClass(className);
     }
 
-    public void addBookmark() {
-        if (project == null || project.getClassCount() == 0) {
+    public void addBookmark()
+    {
+        if (project == null || project.getClassCount() == 0)
+        {
             JOptionPane.showMessageDialog(this, "No classes loaded.", "Add Bookmark", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        String className = JOptionPane.showInputDialog(this, "Class name (internal format, e.g., com/example/Main):",
-                "Add Bookmark", JOptionPane.PLAIN_MESSAGE);
-        if (className == null || className.trim().isEmpty()) {
+        String className = JOptionPane.showInputDialog(this, "Class name (internal format, e.g., com/example/Main):", "Add Bookmark", JOptionPane.PLAIN_MESSAGE);
+        if (className == null || className.trim().isEmpty())
+        {
             return;
         }
 
         ClassEntryModel classEntry = findClass(className.trim());
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             JOptionPane.showMessageDialog(this, "Class not found: " + className, "Add Bookmark", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         String name = JOptionPane.showInputDialog(this, "Bookmark name:", "Add Bookmark", JOptionPane.PLAIN_MESSAGE);
-        if (name == null || name.trim().isEmpty()) {
+        if (name == null || name.trim().isEmpty())
+        {
             return;
         }
 
@@ -178,24 +201,25 @@ public class BookmarksPanel extends ThemedJPanel {
         refresh();
     }
 
-    private void removeSelected() {
+    private void removeSelected()
+    {
         Bookmark selected = bookmarkList.getSelectedValue();
         if (selected == null) return;
 
-        int result = JOptionPane.showConfirmDialog(this,
-                "Remove bookmark \"" + selected.getDisplayName() + "\"?",
-                "Remove Bookmark",
-                JOptionPane.YES_NO_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, "Remove bookmark \"" + selected.getDisplayName() + "\"?", "Remove Bookmark", JOptionPane.YES_NO_OPTION);
 
-        if (result == JOptionPane.YES_OPTION) {
+        if (result == JOptionPane.YES_OPTION)
+        {
             ProjectDatabaseService.getInstance().removeBookmark(selected.getId());
             refresh();
         }
     }
 
-    private void showContextMenu(MouseEvent e) {
+    private void showContextMenu(MouseEvent e)
+    {
         int index = bookmarkList.locationToIndex(e.getPoint());
-        if (index >= 0) {
+        if (index >= 0)
+        {
             bookmarkList.setSelectedIndex(index);
         }
 
@@ -218,9 +242,11 @@ public class BookmarksPanel extends ThemedJPanel {
         setSlot.addActionListener(ev -> setQuickSlot(selected));
         menu.add(setSlot);
 
-        if (selected.hasSlot()) {
+        if (selected.hasSlot())
+        {
             JMenuItem clearSlot = new JMenuItem("Clear Quick Slot");
-            clearSlot.addActionListener(ev -> {
+            clearSlot.addActionListener(ev ->
+            {
                 ProjectDatabaseService.getInstance().getDatabase().getBookmarks().clearQuickSlot(selected.getSlot());
                 ProjectDatabaseService.getInstance().markDirty();
                 refresh();
@@ -237,52 +263,54 @@ public class BookmarksPanel extends ThemedJPanel {
         menu.show(bookmarkList, e.getX(), e.getY());
     }
 
-    private void renameSelected() {
+    private void renameSelected()
+    {
         Bookmark selected = bookmarkList.getSelectedValue();
         if (selected == null) return;
 
         String newName = JOptionPane.showInputDialog(this, "New name:", selected.getName());
-        if (newName != null && !newName.trim().isEmpty()) {
+        if (newName != null && !newName.trim().isEmpty())
+        {
             selected.setName(newName.trim());
             ProjectDatabaseService.getInstance().markDirty();
             refresh();
         }
     }
 
-    private void setQuickSlot(Bookmark bookmark) {
+    private void setQuickSlot(Bookmark bookmark)
+    {
         String[] options = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-        String choice = (String) JOptionPane.showInputDialog(this,
-                "Select quick slot (Ctrl+number to jump):",
-                "Set Quick Slot",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                options,
-                bookmark.hasSlot() ? String.valueOf(bookmark.getSlot()) : "1");
+        String choice = (String) JOptionPane.showInputDialog(this, "Select quick slot (Ctrl+number to jump):", "Set Quick Slot", JOptionPane.PLAIN_MESSAGE, null, options, bookmark.hasSlot() ? String.valueOf(bookmark.getSlot()) : "1");
 
-        if (choice != null) {
+        if (choice != null)
+        {
             int slot = Integer.parseInt(choice);
             ProjectDatabaseService.getInstance().setQuickSlot(slot, bookmark);
             refresh();
         }
     }
 
-    private static class BookmarkCellRenderer extends DefaultListCellRenderer {
+    private static class BookmarkCellRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            if (value instanceof Bookmark) {
+            if (value instanceof Bookmark)
+            {
                 Bookmark b = (Bookmark) value;
                 String text = b.getDisplayName();
-                if (b.hasSlot()) {
+                if (b.hasSlot())
+                {
                     text = "[" + b.getSlot() + "] " + text;
                 }
                 setText(text);
                 setToolTipText(b.getClassName());
                 setIcon(Icons.getIcon("bookmark"));
 
-                if (!isSelected) {
+                if (!isSelected)
+                {
                     setBackground(JStudioTheme.getBgPrimary());
                     setForeground(JStudioTheme.getTextPrimary());
                 }

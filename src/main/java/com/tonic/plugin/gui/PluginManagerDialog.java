@@ -26,7 +26,8 @@ import java.io.StringWriter;
  * Lists the GUI plugins discovered from {@code ~/.jstudio/plugins/} and lets the user enable, disable, or reload
  * them and inspect load errors. Reachable from the Plugins menu.
  */
-public final class PluginManagerDialog extends ThemedJDialog {
+public final class PluginManagerDialog extends ThemedJDialog
+{
 
     private final DefaultListModel<LoadedPlugin> model = new DefaultListModel<>();
     private final JList<LoadedPlugin> list = new JList<>(model);
@@ -35,7 +36,8 @@ public final class PluginManagerDialog extends ThemedJDialog {
     private final JButton disableButton = new JButton("Disable");
     private final JButton reloadButton = new JButton("Reload");
 
-    public PluginManagerDialog(Frame owner) {
+    public PluginManagerDialog(Frame owner)
+    {
         super(owner, "Plugins", true);
         buildUi();
         refresh();
@@ -43,7 +45,8 @@ public final class PluginManagerDialog extends ThemedJDialog {
         setLocationRelativeTo(owner);
     }
 
-    private void buildUi() {
+    private void buildUi()
+    {
         JPanel content = new JPanel(new BorderLayout(8, 8));
         content.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         content.setBackground(JStudioTheme.getBgPrimary());
@@ -52,8 +55,10 @@ public final class PluginManagerDialog extends ThemedJDialog {
         list.setCellRenderer(new PluginCellRenderer());
         list.setBackground(JStudioTheme.getBgSecondary());
         list.setForeground(JStudioTheme.getTextPrimary());
-        list.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
+        list.addListSelectionListener(e ->
+        {
+            if (!e.getValueIsAdjusting())
+            {
                 onSelectionChanged();
             }
         });
@@ -65,8 +70,7 @@ public final class PluginManagerDialog extends ThemedJDialog {
         details.setBackground(JStudioTheme.getBgTertiary());
         details.setForeground(JStudioTheme.getTextPrimary());
 
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                new JScrollPane(list), new JScrollPane(details));
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(list), new JScrollPane(details));
         split.setResizeWeight(0.45);
         split.setBorder(null);
         content.add(split, BorderLayout.CENTER);
@@ -86,7 +90,8 @@ public final class PluginManagerDialog extends ThemedJDialog {
         JPanel right = new JPanel();
         right.setOpaque(false);
         JButton reloadAll = new JButton("Reload All");
-        reloadAll.addActionListener(e -> {
+        reloadAll.addActionListener(e ->
+        {
             GuiPluginManager.getInstance().reloadAll();
             refresh();
         });
@@ -106,44 +111,57 @@ public final class PluginManagerDialog extends ThemedJDialog {
         setContentPane(content);
     }
 
-    private void withSelection(java.util.function.Consumer<LoadedPlugin> action) {
+    private void withSelection(java.util.function.Consumer<LoadedPlugin> action)
+    {
         LoadedPlugin selected = list.getSelectedValue();
-        if (selected == null) {
+        if (selected == null)
+        {
             return;
         }
         action.accept(selected);
         refresh();
     }
 
-    private void refresh() {
+    private void refresh()
+    {
         LoadedPlugin previouslySelected = list.getSelectedValue();
         model.clear();
-        for (LoadedPlugin lp : GuiPluginManager.getInstance().getPlugins()) {
+        for (LoadedPlugin lp : GuiPluginManager.getInstance().getPlugins())
+        {
             model.addElement(lp);
         }
-        if (previouslySelected != null) {
+        if (previouslySelected != null)
+        {
             int index = indexOfId(previouslySelected.info.getId());
-            if (index >= 0) {
+            if (index >= 0)
+            {
                 list.setSelectedIndex(index);
             }
-        } else if (!model.isEmpty()) {
+        }
+        else if (!model.isEmpty())
+        {
             list.setSelectedIndex(0);
         }
         onSelectionChanged();
     }
 
-    private int indexOfId(String id) {
-        for (int i = 0; i < model.size(); i++) {
-            if (model.get(i).info.getId().equals(id)) {
+    private int indexOfId(String id)
+    {
+        for (int i = 0; i < model.size(); i++)
+        {
+            if (model.get(i).info.getId().equals(id))
+            {
                 return i;
             }
         }
         return -1;
     }
 
-    private void onSelectionChanged() {
+    private void onSelectionChanged()
+    {
         LoadedPlugin selected = list.getSelectedValue();
-        if (selected == null) {
+        if (selected == null)
+        {
             details.setText("");
             enableButton.setEnabled(false);
             disableButton.setEnabled(false);
@@ -157,57 +175,70 @@ public final class PluginManagerDialog extends ThemedJDialog {
         reloadButton.setEnabled(selected.plugin != null);
     }
 
-    private static String describe(LoadedPlugin lp) {
+    private static String describe(LoadedPlugin lp)
+    {
         PluginInfo info = lp.info;
         StringBuilder sb = new StringBuilder();
         sb.append("Name:    ").append(info.getName()).append('\n');
         sb.append("Id:      ").append(info.getId()).append('\n');
         sb.append("Version: ").append(info.getVersion()).append('\n');
-        if (info.getAuthor() != null && !info.getAuthor().isEmpty()) {
+        if (info.getAuthor() != null && !info.getAuthor().isEmpty())
+        {
             sb.append("Author:  ").append(info.getAuthor()).append('\n');
         }
         sb.append("State:   ").append(lp.state).append('\n');
         sb.append("Jar:     ").append(lp.jar.getName()).append('\n');
-        if (info.getDescription() != null && !info.getDescription().isEmpty()) {
+        if (info.getDescription() != null && !info.getDescription().isEmpty())
+        {
             sb.append('\n').append(info.getDescription()).append('\n');
         }
-        if (lp.error != null) {
+        if (lp.error != null)
+        {
             sb.append("\n--- Error ---\n").append(stackTrace(lp.error));
         }
         return sb.toString();
     }
 
-    private static String stackTrace(Throwable t) {
+    private static String stackTrace(Throwable t)
+    {
         StringWriter writer = new StringWriter();
         t.printStackTrace(new PrintWriter(writer));
         return writer.toString();
     }
 
-    private void openPluginsFolder() {
-        try {
+    private void openPluginsFolder()
+    {
+        try
+        {
             Desktop.getDesktop().open(GuiPluginManager.getInstance().pluginsDir());
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
     }
 
     /** Renders a plugin row as "name vVersion  [STATE]", colored by state. */
-    private static final class PluginCellRenderer extends DefaultListCellRenderer {
+    private static final class PluginCellRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             LoadedPlugin lp = (LoadedPlugin) value;
             setText(lp.info.getName() + "  v" + lp.info.getVersion() + "   [" + lp.state + "]");
             setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
-            if (!isSelected) {
+            if (!isSelected)
+            {
                 setForeground(stateColor(lp.state));
                 setBackground(JStudioTheme.getBgSecondary());
             }
             return this;
         }
 
-        private static java.awt.Color stateColor(LoadedPlugin.State state) {
-            switch (state) {
+        private static java.awt.Color stateColor(LoadedPlugin.State state)
+        {
+            switch (state)
+            {
                 case ENABLED:
                     return JStudioTheme.getSuccess();
                 case ERROR:

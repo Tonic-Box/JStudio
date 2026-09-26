@@ -3,7 +3,8 @@ package com.tonic.ui.dialog.filechooser;
 /**
  * Defines the operation mode for the file chooser dialog.
  */
-public enum FileChooserMode {
+public enum FileChooserMode
+{
     /**
      * Open one or more existing files.
      */

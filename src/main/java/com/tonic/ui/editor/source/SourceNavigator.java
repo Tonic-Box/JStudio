@@ -37,32 +37,38 @@ import java.util.regex.Pattern;
  * declaration under the caret. Collaborators (text area, class entry, the line highlighter, the project model and
  * the "omit annotations" flag) are injected; cross-cutting events use the host component as their source.
  */
-final class SourceNavigator {
+final class SourceNavigator
+{
 
     /** The kind of declaration recognised on a line, with its menu display name. */
-    enum DeclarationType {
+    enum DeclarationType
+    {
         CLASS("Class"),
         METHOD("Method"),
         FIELD("Field");
 
         final String displayName;
 
-        DeclarationType(String displayName) {
+        DeclarationType(String displayName)
+        {
             this.displayName = displayName;
         }
     }
 
     /** A resolved declaration (kind, name, and - for methods - descriptor) at a source line. */
-    static class DeclarationInfo {
+    static class DeclarationInfo
+    {
         final DeclarationType type;
         final String name;
         final String descriptor;
 
-        DeclarationInfo(DeclarationType type, String name) {
+        DeclarationInfo(DeclarationType type, String name)
+        {
             this(type, name, null);
         }
 
-        DeclarationInfo(DeclarationType type, String name, String descriptor) {
+        DeclarationInfo(DeclarationType type, String name, String descriptor)
+        {
             this.type = type;
             this.name = name;
             this.descriptor = descriptor;
@@ -76,9 +82,8 @@ final class SourceNavigator {
     private final BooleanSupplier omitAnnotations;
     private final Supplier<ProjectModel> projectModel;
 
-    SourceNavigator(Component host, RSyntaxTextArea textArea, ClassEntryModel classEntry,
-                    SourceLineHighlighter highlighter, BooleanSupplier omitAnnotations,
-                    Supplier<ProjectModel> projectModel) {
+    SourceNavigator(Component host, RSyntaxTextArea textArea, ClassEntryModel classEntry, SourceLineHighlighter highlighter, BooleanSupplier omitAnnotations, Supplier<ProjectModel> projectModel)
+    {
         this.host = host;
         this.textArea = textArea;
         this.classEntry = classEntry;
@@ -88,48 +93,64 @@ final class SourceNavigator {
         installMouseHandling();
     }
 
-    private void installMouseHandling() {
-        textArea.addKeyListener(new KeyAdapter() {
+    private void installMouseHandling()
+    {
+        textArea.addKeyListener(new KeyAdapter()
+        {
             @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+            public void keyPressed(KeyEvent e)
+            {
+                if (e.getKeyCode() == KeyEvent.VK_CONTROL)
+                {
                     textArea.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                 }
             }
 
             @Override
-            public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+            public void keyReleased(KeyEvent e)
+            {
+                if (e.getKeyCode() == KeyEvent.VK_CONTROL)
+                {
                     textArea.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
                 }
             }
         });
 
-        textArea.addMouseListener(new MouseAdapter() {
+        textArea.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if ((e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if ((e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0)
+                {
                     navigateToDefinition(e);
                 }
             }
         });
     }
 
-    private void navigateToDefinition(MouseEvent e) {
-        if (projectModel.get() == null) {
+    private void navigateToDefinition(MouseEvent e)
+    {
+        if (projectModel.get() == null)
+        {
             return;
         }
-        try {
+        try
+        {
             int offset = textArea.viewToModel2D(e.getPoint());
-            if (offset < 0) {
+            if (offset < 0)
+            {
                 return;
             }
             String text = textArea.getText();
             String identifier = SourceDeclarationParser.extractIdentifierAt(text, offset);
-            if (identifier != null && !identifier.isEmpty()) {
+            if (identifier != null && !identifier.isEmpty())
+            {
                 navigateToIdentifier(identifier);
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
     }
 
@@ -137,48 +158,62 @@ final class SourceNavigator {
      * Navigate to the definition of a given identifier.
      * Searches: current class methods -> current class fields -> project classes -> project methods.
      */
-    void navigateToIdentifier(String identifier) {
+    void navigateToIdentifier(String identifier)
+    {
         ProjectModel project = projectModel.get();
-        if (project == null || identifier == null || identifier.isEmpty()) {
+        if (project == null || identifier == null || identifier.isEmpty())
+        {
             return;
         }
-        try {
+        try
+        {
             ClassFile currentClassFile = classEntry.getClassFile();
-            for (MethodEntry method : currentClassFile.getMethods()) {
-                if (method.getName().equals(identifier)) {
+            for (MethodEntry method : currentClassFile.getMethods())
+            {
+                if (method.getName().equals(identifier))
+                {
                     scrollToMethodDefinition(method.getName(), method.getDesc());
                     return;
                 }
             }
 
-            for (FieldEntry field : currentClassFile.getFields()) {
-                if (field.getName().equals(identifier)) {
+            for (FieldEntry field : currentClassFile.getFields())
+            {
+                if (field.getName().equals(identifier))
+                {
                     scrollToFieldDefinition(field.getName());
                     return;
                 }
             }
 
             ClassEntryModel targetClass = findClassBySimpleName(identifier);
-            if (targetClass != null) {
+            if (targetClass != null)
+            {
                 EventBus.getInstance().post(new ClassSelectedEvent(host, targetClass));
                 return;
             }
 
             targetClass = project.getClass(identifier.replace('.', '/'));
-            if (targetClass != null) {
+            if (targetClass != null)
+            {
                 EventBus.getInstance().post(new ClassSelectedEvent(host, targetClass));
                 return;
             }
 
-            for (ClassEntryModel cls : project.getAllClasses()) {
-                for (MethodEntry method : cls.getClassFile().getMethods()) {
-                    if (method.getName().equals(identifier)) {
+            for (ClassEntryModel cls : project.getAllClasses())
+            {
+                for (MethodEntry method : cls.getClassFile().getMethods())
+                {
+                    if (method.getName().equals(identifier))
+                    {
                         EventBus.getInstance().post(new ClassSelectedEvent(host, cls));
                         return;
                     }
                 }
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
     }
 
@@ -186,10 +221,13 @@ final class SourceNavigator {
      * Scroll to a method definition in the source view and highlight the line. Looks for actual method
      * declarations, not call sites. Uses the descriptor to match the correct overload.
      */
-    void scrollToMethodDefinition(String methodName, String methodDesc) {
-        if (!omitAnnotations.getAsBoolean() && methodDesc != null && classEntry.getMethodSpans() != null) {
+    void scrollToMethodDefinition(String methodName, String methodDesc)
+    {
+        if (!omitAnnotations.getAsBoolean() && methodDesc != null && classEntry.getMethodSpans() != null)
+        {
             DecompileResult.MethodSpan span = classEntry.getMethodSpans().get(methodName + methodDesc);
-            if (span != null) {
+            if (span != null)
+            {
                 highlighter.highlightAndScrollToLine(span.getStartLine() - 1);
                 return;
             }
@@ -203,44 +241,46 @@ final class SourceNavigator {
         String thisMethod = "this." + methodName;
 
         String quotedName = Pattern.quote(methodName);
-        Pattern declarationPattern = Pattern.compile(
-            "^\\s*(public|private|protected|static|final|abstract|synchronized|native|strictfp|\\s)+.*\\s+" +
-            quotedName + "\\s*\\("
-        );
-        Pattern simplePattern = Pattern.compile(
-            "^\\s+\\w+.*\\s+" + quotedName + "\\s*\\("
-        );
+        Pattern declarationPattern = Pattern.compile("^\\s*(public|private|protected|static|final|abstract|synchronized|native|strictfp|\\s)+.*\\s+" + quotedName + "\\s*\\(");
+        Pattern simplePattern = Pattern.compile("^\\s+\\w+.*\\s+" + quotedName + "\\s*\\(");
 
         List<Integer> matchingLines = new ArrayList<>();
-        for (int lineNum = 0; lineNum < lines.length; lineNum++) {
+        for (int lineNum = 0; lineNum < lines.length; lineNum++)
+        {
             String line = lines[lineNum];
 
-            if (!line.contains(methodWithParen)) {
+            if (!line.contains(methodWithParen))
+            {
                 continue;
             }
 
-            if (line.contains(dotMethod) || line.contains(thisMethod)) {
+            if (line.contains(dotMethod) || line.contains(thisMethod))
+            {
                 continue;
             }
 
             String trimmed = line.trim();
-            if (trimmed.startsWith("return") || trimmed.startsWith("if") || trimmed.startsWith("while")) {
+            if (trimmed.startsWith("return") || trimmed.startsWith("if") || trimmed.startsWith("while"))
+            {
                 continue;
             }
 
             boolean isDeclaration = declarationPattern.matcher(line).find() ||
-                                   simplePattern.matcher(line).find();
+                    simplePattern.matcher(line).find();
 
-            if (isDeclaration) {
+            if (isDeclaration)
+            {
                 matchingLines.add(lineNum);
             }
         }
 
-        if (matchingLines.isEmpty()) {
+        if (matchingLines.isEmpty())
+        {
             return;
         }
 
-        if (matchingLines.size() == 1 || methodDesc == null) {
+        if (matchingLines.size() == 1 || methodDesc == null)
+        {
             highlighter.highlightAndScrollToLine(matchingLines.get(0));
             return;
         }
@@ -248,26 +288,30 @@ final class SourceNavigator {
         int descParamCount = MethodSignatureMatcher.countDescriptorParams(methodDesc);
         String descReturnType = MethodSignatureMatcher.extractReturnTypeFromDesc(methodDesc);
 
-        for (int lineNum : matchingLines) {
+        for (int lineNum : matchingLines)
+        {
             String line = lines[lineNum];
             String sourceParams = SourceDeclarationParser.extractMethodParams(line);
             int sourceParamCount = MethodSignatureMatcher.countParams(sourceParams);
             String sourceReturnType = MethodSignatureMatcher.extractReturnTypeFromSource(line);
             if (sourceParamCount == descParamCount &&
-                MethodSignatureMatcher.paramsMatch(sourceParams, methodDesc) &&
-                MethodSignatureMatcher.returnTypeMatches(sourceReturnType, descReturnType)) {
+                    MethodSignatureMatcher.paramsMatch(sourceParams, methodDesc) &&
+                    MethodSignatureMatcher.returnTypeMatches(sourceReturnType, descReturnType))
+            {
                 highlighter.highlightAndScrollToLine(lineNum);
                 return;
             }
         }
 
-        for (int lineNum : matchingLines) {
+        for (int lineNum : matchingLines)
+        {
             String line = lines[lineNum];
             String sourceParams = SourceDeclarationParser.extractMethodParams(line);
             int sourceParamCount = MethodSignatureMatcher.countParams(sourceParams);
             String sourceReturnType = MethodSignatureMatcher.extractReturnTypeFromSource(line);
             if (sourceParamCount == descParamCount &&
-                MethodSignatureMatcher.returnTypeMatches(sourceReturnType, descReturnType)) {
+                    MethodSignatureMatcher.returnTypeMatches(sourceReturnType, descReturnType))
+            {
                 highlighter.highlightAndScrollToLine(lineNum);
                 return;
             }
@@ -277,10 +321,13 @@ final class SourceNavigator {
     }
 
     /** Scroll to a field definition in the source view and highlight the line. */
-    void scrollToFieldDefinition(String fieldName) {
-        if (!omitAnnotations.getAsBoolean() && classEntry.getFieldSpans() != null) {
+    void scrollToFieldDefinition(String fieldName)
+    {
+        if (!omitAnnotations.getAsBoolean() && classEntry.getFieldSpans() != null)
+        {
             DecompileResult.MemberSpan span = fieldSpanByName(fieldName);
-            if (span != null) {
+            if (span != null)
+            {
                 highlighter.highlightAndScrollToLine(span.getStartLine() - 1);
                 return;
             }
@@ -292,29 +339,28 @@ final class SourceNavigator {
         String dotField = "." + fieldName;
 
         String quotedName = Pattern.quote(fieldName);
-        Pattern declarationPattern = Pattern.compile(
-            "^\\s*(public|private|protected|static|final|volatile|transient|\\s)+.*\\s+" +
-            quotedName + "\\s*[;=]"
-        );
-        Pattern simplePattern = Pattern.compile(
-            "^\\s+\\w+.*\\s+" + quotedName + "\\s*[;=]"
-        );
+        Pattern declarationPattern = Pattern.compile("^\\s*(public|private|protected|static|final|volatile|transient|\\s)+.*\\s+" + quotedName + "\\s*[;=]");
+        Pattern simplePattern = Pattern.compile("^\\s+\\w+.*\\s+" + quotedName + "\\s*[;=]");
 
-        for (int lineNum = 0; lineNum < lines.length; lineNum++) {
+        for (int lineNum = 0; lineNum < lines.length; lineNum++)
+        {
             String line = lines[lineNum];
 
-            if (!line.contains(fieldName)) {
+            if (!line.contains(fieldName))
+            {
                 continue;
             }
 
-            if (line.contains(dotField)) {
+            if (line.contains(dotField))
+            {
                 continue;
             }
 
             boolean isDeclaration = declarationPattern.matcher(line).find() ||
-                                   simplePattern.matcher(line).find();
+                    simplePattern.matcher(line).find();
 
-            if (isDeclaration) {
+            if (isDeclaration)
+            {
                 highlighter.highlightAndScrollToLine(lineNum);
                 return;
             }
@@ -322,75 +368,96 @@ final class SourceNavigator {
     }
 
     /** Get the word at the current caret position. */
-    String getWordAtCaret() {
-        try {
+    String getWordAtCaret()
+    {
+        try
+        {
             int caretPos = textArea.getCaretPosition();
             String text = textArea.getText();
-            if (caretPos < 0 || caretPos > text.length()) {
+            if (caretPos < 0 || caretPos > text.length())
+            {
                 return null;
             }
 
             int start = caretPos;
             int end = caretPos;
 
-            while (start > 0 && Character.isJavaIdentifierPart(text.charAt(start - 1))) {
+            while (start > 0 && Character.isJavaIdentifierPart(text.charAt(start - 1)))
+            {
                 start--;
             }
-            while (end < text.length() && Character.isJavaIdentifierPart(text.charAt(end))) {
+            while (end < text.length() && Character.isJavaIdentifierPart(text.charAt(end)))
+            {
                 end++;
             }
 
-            if (start < end) {
+            if (start < end)
+            {
                 return text.substring(start, end);
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
         return null;
     }
 
-    private ClassEntryModel findClassBySimpleName(String simpleName) {
+    private ClassEntryModel findClassBySimpleName(String simpleName)
+    {
         ProjectModel project = projectModel.get();
-        if (project == null) {
+        if (project == null)
+        {
             return null;
         }
-        for (ClassEntryModel entry : project.getAllClasses()) {
-            if (entry.getSimpleName().equals(simpleName)) {
+        for (ClassEntryModel entry : project.getAllClasses())
+        {
+            if (entry.getSimpleName().equals(simpleName))
+            {
                 return entry;
             }
         }
         return null;
     }
 
-    DeclarationInfo getDeclarationAtLine(int lineNumber) {
+    DeclarationInfo getDeclarationAtLine(int lineNumber)
+    {
         DeclarationInfo fromSpans = declarationFromSpans(lineNumber);
-        if (fromSpans != null) {
+        if (fromSpans != null)
+        {
             return fromSpans;
         }
-        try {
+        try
+        {
             int startOffset = textArea.getLineStartOffset(lineNumber - 1);
             int endOffset = textArea.getLineEndOffset(lineNumber - 1);
             String lineText = textArea.getText(startOffset, endOffset - startOffset);
 
             String className = SourceDeclarationParser.extractClassDeclaration(lineText);
-            if (className != null) {
+            if (className != null)
+            {
                 return new DeclarationInfo(DeclarationType.CLASS, className);
             }
 
             String methodName = SourceDeclarationParser.extractMethodDeclaration(lineText);
-            if (methodName != null) {
+            if (methodName != null)
+            {
                 String paramTypes = SourceDeclarationParser.extractMethodParams(lineText);
                 MethodEntryModel method = findMethodByNameAndParams(methodName, paramTypes);
-                if (method != null) {
+                if (method != null)
+                {
                     return new DeclarationInfo(DeclarationType.METHOD, methodName, method.getDescriptor());
                 }
                 return new DeclarationInfo(DeclarationType.METHOD, methodName);
             }
 
             String fieldName = SourceDeclarationParser.extractFieldDeclaration(lineText);
-            if (fieldName != null) {
+            if (fieldName != null)
+            {
                 return new DeclarationInfo(DeclarationType.FIELD, fieldName);
             }
-        } catch (BadLocationException e) {
+        }
+        catch (BadLocationException e)
+        {
             // ignore
         }
         return null;
@@ -401,28 +468,37 @@ final class SourceNavigator {
      * whose span contains it; class/method/field spans are disjoint). Returns null when spans are unavailable or
      * annotations are filtered - both shift or remove line data - so callers fall back to the regex extractors.
      */
-    private DeclarationInfo declarationFromSpans(int lineNumber) {
-        if (omitAnnotations.getAsBoolean()) {
+    private DeclarationInfo declarationFromSpans(int lineNumber)
+    {
+        if (omitAnnotations.getAsBoolean())
+        {
             return null;
         }
         DecompileResult.MemberSpan classSpan = classEntry.getClassSpan();
-        if (classSpan != null && classSpan.contains(lineNumber)) {
+        if (classSpan != null && classSpan.contains(lineNumber))
+        {
             return new DeclarationInfo(DeclarationType.CLASS, classEntry.getSimpleName());
         }
         Map<String, DecompileResult.MethodSpan> methodSpans = classEntry.getMethodSpans();
-        if (methodSpans != null) {
-            for (MethodEntryModel method : classEntry.getMethods()) {
+        if (methodSpans != null)
+        {
+            for (MethodEntryModel method : classEntry.getMethods())
+            {
                 DecompileResult.MethodSpan span = methodSpans.get(method.getName() + method.getDescriptor());
-                if (span != null && span.contains(lineNumber)) {
+                if (span != null && span.contains(lineNumber))
+                {
                     return new DeclarationInfo(DeclarationType.METHOD, method.getName(), method.getDescriptor());
                 }
             }
         }
         Map<String, DecompileResult.MemberSpan> fieldSpans = classEntry.getFieldSpans();
-        if (fieldSpans != null) {
-            for (FieldEntryModel field : classEntry.getFields()) {
+        if (fieldSpans != null)
+        {
+            for (FieldEntryModel field : classEntry.getFields())
+            {
                 DecompileResult.MemberSpan span = fieldSpans.get(field.getName() + field.getDescriptor());
-                if (span != null && span.contains(lineNumber)) {
+                if (span != null && span.contains(lineNumber))
+                {
                     return new DeclarationInfo(DeclarationType.FIELD, field.getName(), field.getDescriptor());
                 }
             }
@@ -431,49 +507,63 @@ final class SourceNavigator {
     }
 
     /** The field span for a field by its (class-unique) name, or null. */
-    private DecompileResult.MemberSpan fieldSpanByName(String fieldName) {
+    private DecompileResult.MemberSpan fieldSpanByName(String fieldName)
+    {
         Map<String, DecompileResult.MemberSpan> fieldSpans = classEntry.getFieldSpans();
-        if (fieldSpans == null) {
+        if (fieldSpans == null)
+        {
             return null;
         }
-        for (FieldEntryModel field : classEntry.getFields()) {
-            if (field.getName().equals(fieldName)) {
+        for (FieldEntryModel field : classEntry.getFields())
+        {
+            if (field.getName().equals(fieldName))
+            {
                 return fieldSpans.get(field.getName() + field.getDescriptor());
             }
         }
         return null;
     }
 
-    private MethodEntryModel findMethodByNameAndParams(String name, String sourceParams) {
+    private MethodEntryModel findMethodByNameAndParams(String name, String sourceParams)
+    {
         List<MethodEntryModel> candidates = new ArrayList<>();
-        for (MethodEntryModel method : classEntry.getMethods()) {
-            if (method.getName().equals(name)) {
+        for (MethodEntryModel method : classEntry.getMethods())
+        {
+            if (method.getName().equals(name))
+            {
                 candidates.add(method);
             }
         }
 
-        if (candidates.isEmpty()) {
+        if (candidates.isEmpty())
+        {
             return null;
         }
-        if (candidates.size() == 1) {
+        if (candidates.size() == 1)
+        {
             return candidates.get(0);
         }
 
         int sourceParamCount = MethodSignatureMatcher.countParams(sourceParams);
-        for (MethodEntryModel method : candidates) {
+        for (MethodEntryModel method : candidates)
+        {
             String desc = method.getDescriptor();
             int descParamCount = MethodSignatureMatcher.countDescriptorParams(desc);
-            if (descParamCount == sourceParamCount) {
-                if (MethodSignatureMatcher.paramsMatch(sourceParams, desc)) {
+            if (descParamCount == sourceParamCount)
+            {
+                if (MethodSignatureMatcher.paramsMatch(sourceParams, desc))
+                {
                     return method;
                 }
             }
         }
 
-        for (MethodEntryModel method : candidates) {
+        for (MethodEntryModel method : candidates)
+        {
             String desc = method.getDescriptor();
             int descParamCount = MethodSignatureMatcher.countDescriptorParams(desc);
-            if (descParamCount == sourceParamCount) {
+            if (descParamCount == sourceParamCount)
+            {
                 return method;
             }
         }
@@ -481,80 +571,97 @@ final class SourceNavigator {
         return candidates.get(0);
     }
 
-    void showRenameDialog(DeclarationInfo decl) {
-        if (decl == null) {
+    void showRenameDialog(DeclarationInfo decl)
+    {
+        if (decl == null)
+        {
             return;
         }
 
         Window window = SwingUtilities.getWindowAncestor(host);
-        if (!(window instanceof MainFrame)) {
+        if (!(window instanceof MainFrame))
+        {
             return;
         }
         MainFrame mainFrame = (MainFrame) window;
 
-        switch (decl.type) {
+        switch (decl.type)
+        {
             case CLASS:
                 mainFrame.showRenameClassDialog(classEntry);
                 break;
             case METHOD:
                 MethodEntryModel methodModel = findMethodByName(decl.name);
-                if (methodModel != null) {
+                if (methodModel != null)
+                {
                     mainFrame.showRenameMethodDialog(classEntry, methodModel);
                 }
                 break;
             case FIELD:
                 FieldEntryModel fieldModel = findFieldByName(decl.name);
-                if (fieldModel != null) {
+                if (fieldModel != null)
+                {
                     mainFrame.showRenameFieldDialog(classEntry, fieldModel);
                 }
                 break;
         }
     }
 
-    void findUsagesOfDeclaration(DeclarationInfo decl) {
-        if (decl == null) {
+    void findUsagesOfDeclaration(DeclarationInfo decl)
+    {
+        if (decl == null)
+        {
             return;
         }
 
         String className = classEntry.getClassName();
-        switch (decl.type) {
+        switch (decl.type)
+        {
             case CLASS:
                 EventBus.getInstance().post(FindUsagesEvent.forClass(host, className));
                 break;
             case METHOD:
-                if (decl.descriptor != null) {
-                    EventBus.getInstance().post(FindUsagesEvent.forMethod(
-                            host, className, decl.name, decl.descriptor));
-                } else {
+                if (decl.descriptor != null)
+                {
+                    EventBus.getInstance().post(FindUsagesEvent.forMethod(host, className, decl.name, decl.descriptor));
+                }
+                else
+                {
                     MethodEntryModel method = findMethodByName(decl.name);
-                    if (method != null) {
-                        EventBus.getInstance().post(FindUsagesEvent.forMethod(
-                                host, className, method.getName(), method.getDescriptor()));
+                    if (method != null)
+                    {
+                        EventBus.getInstance().post(FindUsagesEvent.forMethod(host, className, method.getName(), method.getDescriptor()));
                     }
                 }
                 break;
             case FIELD:
                 FieldEntryModel field = findFieldByName(decl.name);
-                if (field != null) {
-                    EventBus.getInstance().post(FindUsagesEvent.forField(
-                            host, className, field.getName(), field.getFieldEntry().getDesc()));
+                if (field != null)
+                {
+                    EventBus.getInstance().post(FindUsagesEvent.forField(host, className, field.getName(), field.getFieldEntry().getDesc()));
                 }
                 break;
         }
     }
 
-    private MethodEntryModel findMethodByName(String name) {
-        for (MethodEntryModel method : classEntry.getMethods()) {
-            if (method.getName().equals(name)) {
+    private MethodEntryModel findMethodByName(String name)
+    {
+        for (MethodEntryModel method : classEntry.getMethods())
+        {
+            if (method.getName().equals(name))
+            {
                 return method;
             }
         }
         return null;
     }
 
-    private FieldEntryModel findFieldByName(String name) {
-        for (FieldEntryModel field : classEntry.getFields()) {
-            if (field.getName().equals(name)) {
+    private FieldEntryModel findFieldByName(String name)
+    {
+        for (FieldEntryModel field : classEntry.getFields())
+        {
+            if (field.getName().equals(name))
+            {
                 return field;
             }
         }

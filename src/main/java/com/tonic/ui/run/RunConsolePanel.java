@@ -23,7 +23,8 @@ import java.awt.FlowLayout;
  * stderr (red), with Terminate / Rerun / Clear controls and the final exit code. Implements
  * {@link RunService.RunOutput}; all callbacks marshal to the EDT.
  */
-public final class RunConsolePanel extends ThemedJPanel implements RunService.RunOutput {
+public final class RunConsolePanel extends ThemedJPanel implements RunService.RunOutput
+{
 
     private final JTextPane output = new JTextPane();
     private final JButton terminateButton = new JButton("Terminate", Icons.getIcon("close"));
@@ -33,14 +34,16 @@ public final class RunConsolePanel extends ThemedJPanel implements RunService.Ru
     private Process process;
     private Runnable rerunAction;
 
-    public RunConsolePanel() {
+    public RunConsolePanel()
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
 
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
         toolbar.setOpaque(false);
         JButton clearButton = new JButton("Clear");
-        for (JButton button : new JButton[]{terminateButton, rerunButton, clearButton}) {
+        for (JButton button : new JButton[]{terminateButton, rerunButton, clearButton})
+        {
             button.setFocusable(false);
             toolbar.add(button);
         }
@@ -58,8 +61,10 @@ public final class RunConsolePanel extends ThemedJPanel implements RunService.Ru
         add(new ThemedJScrollPane(output), BorderLayout.CENTER);
 
         terminateButton.addActionListener(e -> RunService.terminate(process));
-        rerunButton.addActionListener(e -> {
-            if (process == null && rerunAction != null) {
+        rerunButton.addActionListener(e ->
+        {
+            if (process == null && rerunAction != null)
+            {
                 rerunAction.run();
             }
         });
@@ -68,19 +73,23 @@ public final class RunConsolePanel extends ThemedJPanel implements RunService.Ru
     }
 
     /** Sets the action that relaunches with the same configuration (used by the Rerun button). */
-    public void setRerunAction(Runnable action) {
+    public void setRerunAction(Runnable action)
+    {
         this.rerunAction = action;
     }
 
     /** Binds the live process to this panel (enables Terminate while it runs). */
-    public void setProcess(Process process) {
+    public void setProcess(Process process)
+    {
         this.process = process;
         updateButtons();
     }
 
     @Override
-    public void onStarted(String commandLine) {
-        SwingUtilities.invokeLater(() -> {
+    public void onStarted(String commandLine)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             append("> " + commandLine + "\n", JStudioTheme.getTextSecondary());
             status.setText("Running...");
             updateButtons();
@@ -88,30 +97,35 @@ public final class RunConsolePanel extends ThemedJPanel implements RunService.Ru
     }
 
     @Override
-    public void onStdout(String line) {
+    public void onStdout(String line)
+    {
         SwingUtilities.invokeLater(() -> append(line + "\n", JStudioTheme.getTextPrimary()));
     }
 
     @Override
-    public void onStderr(String line) {
+    public void onStderr(String line)
+    {
         SwingUtilities.invokeLater(() -> append(line + "\n", JStudioTheme.getError()));
     }
 
     @Override
-    public void onFinished(int exitCode) {
-        SwingUtilities.invokeLater(() -> {
+    public void onFinished(int exitCode)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             process = null;
             status.setForeground(exitCode == 0 ? JStudioTheme.getSuccess() : JStudioTheme.getError());
             status.setText("Exited with code " + exitCode);
-            append("\nProcess finished with exit code " + exitCode + "\n",
-                    exitCode == 0 ? JStudioTheme.getSuccess() : JStudioTheme.getError());
+            append("\nProcess finished with exit code " + exitCode + "\n", exitCode == 0 ? JStudioTheme.getSuccess() : JStudioTheme.getError());
             updateButtons();
         });
     }
 
     @Override
-    public void onError(String message) {
-        SwingUtilities.invokeLater(() -> {
+    public void onError(String message)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             process = null;
             append(message + "\n", JStudioTheme.getError());
             status.setForeground(JStudioTheme.getError());
@@ -120,17 +134,22 @@ public final class RunConsolePanel extends ThemedJPanel implements RunService.Ru
         });
     }
 
-    private void append(String text, Color color) {
+    private void append(String text, Color color)
+    {
         SimpleAttributeSet attrs = new SimpleAttributeSet();
         StyleConstants.setForeground(attrs, color);
-        try {
+        try
+        {
             output.getStyledDocument().insertString(output.getStyledDocument().getLength(), text, attrs);
             output.setCaretPosition(output.getStyledDocument().getLength());
-        } catch (BadLocationException ignored) {
+        }
+        catch (BadLocationException ignored)
+        {
         }
     }
 
-    private void updateButtons() {
+    private void updateButtons()
+    {
         boolean running = process != null;
         terminateButton.setEnabled(running);
         rerunButton.setEnabled(!running && rerunAction != null);

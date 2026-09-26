@@ -1,6 +1,7 @@
 package com.tonic.ui.editor.graph.render;
 
-public interface GraphVertexRenderer<T> {
+public interface GraphVertexRenderer<T>
+{
 
     String renderHtml(T nodeData);
 

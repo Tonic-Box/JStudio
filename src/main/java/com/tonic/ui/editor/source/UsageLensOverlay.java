@@ -21,29 +21,36 @@ import java.util.List;
  * end-of-line entries trail the declaration text. Purely visual — the document is never modified,
  * so the decompiler's line maps stay valid.
  */
-public final class UsageLensOverlay {
+public final class UsageLensOverlay
+{
 
     private static final int LENS_FONT_SIZE = 11;
     private static final int END_OF_LINE_GAP = 24;
 
     private List<UsageLens.LensEntry> entries = Collections.emptyList();
 
-    public void setEntries(List<UsageLens.LensEntry> entries) {
+    public void setEntries(List<UsageLens.LensEntry> entries)
+    {
         this.entries = entries != null ? entries : Collections.emptyList();
     }
 
-    public void clear() {
+    public void clear()
+    {
         entries = Collections.emptyList();
     }
 
-    public boolean isEmpty() {
+    public boolean isEmpty()
+    {
         return entries.isEmpty();
     }
 
     /** The lens whose painted bounds contain the point, or null. */
-    public UsageLens.LensEntry hitTest(Point p) {
-        for (UsageLens.LensEntry entry : entries) {
-            if (entry.hitBox != null && entry.hitBox.contains(p)) {
+    public UsageLens.LensEntry hitTest(Point p)
+    {
+        for (UsageLens.LensEntry entry : entries)
+        {
+            if (entry.hitBox != null && entry.hitBox.contains(p))
+            {
                 return entry;
             }
         }
@@ -51,8 +58,10 @@ public final class UsageLensOverlay {
     }
 
     /** Paints all entries; call after the text area's own painting. */
-    public void paint(Graphics2D g, RSyntaxTextArea textArea) {
-        if (entries.isEmpty()) {
+    public void paint(Graphics2D g, RSyntaxTextArea textArea)
+    {
+        if (entries.isEmpty())
+        {
             return;
         }
         Font lensFont = JStudioTheme.getCodeFont(LENS_FONT_SIZE);
@@ -64,35 +73,44 @@ public final class UsageLensOverlay {
         g.setColor(JStudioTheme.getTextSecondary());
 
         List<UsageLens.LensEntry> snapshot = new ArrayList<>(entries);
-        for (UsageLens.LensEntry entry : snapshot) {
-            try {
+        for (UsageLens.LensEntry entry : snapshot)
+        {
+            try
+            {
                 paintEntry(g, textArea, entry, lensMetrics, textMetrics);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 entry.hitBox = null;
             }
         }
     }
 
-    private void paintEntry(Graphics2D g, RSyntaxTextArea textArea, UsageLens.LensEntry entry,
-                            FontMetrics lensMetrics, FontMetrics textMetrics) throws Exception {
+    private void paintEntry(Graphics2D g, RSyntaxTextArea textArea, UsageLens.LensEntry entry, FontMetrics lensMetrics, FontMetrics textMetrics) throws Exception
+    {
         if (entry.anchorLine >= textArea.getLineCount()
-                || entry.declarationLine >= textArea.getLineCount()) {
+                || entry.declarationLine >= textArea.getLineCount())
+        {
             entry.hitBox = null;
             return;
         }
         int anchorStart = textArea.getLineStartOffset(entry.anchorLine);
         Rectangle2D anchorRect = textArea.modelToView2D(anchorStart);
-        if (anchorRect == null) {
+        if (anchorRect == null)
+        {
             entry.hitBox = null;
             return;
         }
 
         double x;
-        if (entry.endOfLine) {
+        if (entry.endOfLine)
+        {
             int lineEnd = Math.max(textArea.getLineEndOffset(entry.anchorLine) - 1, anchorStart);
             Rectangle2D endRect = textArea.modelToView2D(lineEnd);
             x = (endRect != null ? endRect.getMaxX() : anchorRect.getX()) + END_OF_LINE_GAP;
-        } else {
+        }
+        else
+        {
             x = indentX(textArea, entry.declarationLine, anchorRect.getX());
         }
 
@@ -100,17 +118,18 @@ public final class UsageLensOverlay {
         g.drawString(entry.text, (float) x, baseline);
 
         int width = lensMetrics.stringWidth(entry.text);
-        entry.hitBox = new Rectangle((int) Math.round(x), (int) Math.round(anchorRect.getY()),
-                width, (int) Math.round(anchorRect.getHeight()));
+        entry.hitBox = new Rectangle((int) Math.round(x), (int) Math.round(anchorRect.getY()), width, (int) Math.round(anchorRect.getHeight()));
     }
 
     /** The x of the declaration line's first non-whitespace character, for indent alignment. */
-    private double indentX(RSyntaxTextArea textArea, int declarationLine, double fallback) throws Exception {
+    private double indentX(RSyntaxTextArea textArea, int declarationLine, double fallback) throws Exception
+    {
         int start = textArea.getLineStartOffset(declarationLine);
         int end = textArea.getLineEndOffset(declarationLine);
         String text = textArea.getText(start, end - start);
         int firstNonWs = 0;
-        while (firstNonWs < text.length() && Character.isWhitespace(text.charAt(firstNonWs))) {
+        while (firstNonWs < text.length() && Character.isWhitespace(text.charAt(firstNonWs)))
+        {
             firstNonWs++;
         }
         Rectangle2D rect = textArea.modelToView2D(start + firstNonWs);

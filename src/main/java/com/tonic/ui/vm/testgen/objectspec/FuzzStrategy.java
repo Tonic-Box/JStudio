@@ -5,10 +5,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class FuzzStrategy {
+public class FuzzStrategy
+{
 
     @Getter
-    public enum Type {
+    public enum Type
+    {
         DEFAULT("Default for Type"),
         INT_RANGE("Integer Range"),
         LONG_RANGE("Long Range"),
@@ -21,7 +23,8 @@ public class FuzzStrategy {
 
         private final String displayName;
 
-        Type(String displayName) {
+        Type(String displayName)
+        {
             this.displayName = displayName;
         }
 
@@ -40,39 +43,47 @@ public class FuzzStrategy {
     private boolean includeNull = true;
     private int sampleCount = 5;
 
-    public FuzzStrategy() {
+    public FuzzStrategy()
+    {
     }
 
-    public FuzzStrategy(Type type) {
+    public FuzzStrategy(Type type)
+    {
         this.type = type;
     }
 
-    public static FuzzStrategy defaultStrategy() {
+    public static FuzzStrategy defaultStrategy()
+    {
         return new FuzzStrategy(Type.DEFAULT);
     }
 
-    public static FuzzStrategy intRange(int min, int max) {
+    public static FuzzStrategy intRange(int min, int max)
+    {
         FuzzStrategy s = new FuzzStrategy(Type.INT_RANGE);
         s.minInt = min;
         s.maxInt = max;
         return s;
     }
 
-    public static FuzzStrategy doubleRange(double min, double max) {
+    public static FuzzStrategy doubleRange(double min, double max)
+    {
         FuzzStrategy s = new FuzzStrategy(Type.DOUBLE_RANGE);
         s.minDouble = min;
         s.maxDouble = max;
         return s;
     }
 
-    public static FuzzStrategy stringSet(String... values) {
+    public static FuzzStrategy stringSet(String... values)
+    {
         FuzzStrategy s = new FuzzStrategy(Type.STRING_SET);
         s.stringSet = values;
         return s;
     }
 
-    public String getDescription() {
-        switch (type) {
+    public String getDescription()
+    {
+        switch (type)
+        {
             case INT_RANGE:
                 return "int[" + minInt + ".." + maxInt + "]";
             case LONG_RANGE:
@@ -80,7 +91,8 @@ public class FuzzStrategy {
             case DOUBLE_RANGE:
                 return "double[" + minDouble + ".." + maxDouble + "]";
             case STRING_SET:
-                if (stringSet != null && stringSet.length > 0) {
+                if (stringSet != null && stringSet.length > 0)
+                {
                     return "strings[" + stringSet.length + " values]";
                 }
                 return "strings";

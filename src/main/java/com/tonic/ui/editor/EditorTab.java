@@ -41,7 +41,8 @@ import java.util.function.Supplier;
 /**
  * A single editor tab that can show source, bytecode, or IR view.
  */
-public class EditorTab extends JPanel {
+public class EditorTab extends JPanel
+{
 
     /**
      * -- GETTER --
@@ -93,7 +94,8 @@ public class EditorTab extends JPanel {
     private ViewMode currentMode = ViewMode.SOURCE;
     private ProjectModel projectModel;
 
-    public EditorTab(ClassEntryModel classEntry) {
+    public EditorTab(ClassEntryModel classEntry)
+    {
         this.classEntry = classEntry;
 
         setLayout(new BorderLayout());
@@ -135,25 +137,32 @@ public class EditorTab extends JPanel {
         add(cardPanel, BorderLayout.CENTER);
     }
 
-    private boolean isViewReady(ViewMode mode) {
+    private boolean isViewReady(ViewMode mode)
+    {
         return views.containsKey(mode);
     }
 
-    private <T extends JPanel> void loadViewInBackground(ViewMode mode, Supplier<T> viewFactory, Consumer<T> viewSetter) {
-        if (loadingViews.contains(mode)) {
+    private <T extends JPanel> void loadViewInBackground(ViewMode mode, Supplier<T> viewFactory, Consumer<T> viewSetter)
+    {
+        if (loadingViews.contains(mode))
+        {
             return;
         }
         loadingViews.add(mode);
 
-        new SwingWorker<T, Void>() {
+        new SwingWorker<T, Void>()
+        {
             @Override
-            protected T doInBackground() {
+            protected T doInBackground()
+            {
                 return viewFactory.get();
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     T view = get();
                     applySettingsToView((EditorView) view);
 
@@ -162,24 +171,30 @@ public class EditorTab extends JPanel {
                     views.put(mode, (EditorView) view);
                     loadingViews.remove(mode);
 
-                    if (currentMode == mode) {
+                    if (currentMode == mode)
+                    {
                         refreshView(mode);
                         cardLayout.show(cardPanel, mode.name());
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     loadingViews.remove(mode);
                 }
             }
         }.execute();
     }
 
-    private void applySettingsToView(EditorView view) {
+    private void applySettingsToView(EditorView view)
+    {
         view.setFontSize(fontSize);
         view.setWordWrap(wordWrap);
     }
 
-    private void ensureViewLoaded(ViewMode mode) {
-        switch (mode) {
+    private void ensureViewLoaded(ViewMode mode)
+    {
+        switch (mode)
+        {
             case IR:
                 if (irView == null) loadViewInBackground(mode, () -> new IRView(classEntry), v -> irView = v);
                 break;
@@ -202,7 +217,8 @@ public class EditorTab extends JPanel {
                 if (controlFlowView == null) loadViewInBackground(mode, () -> new ControlFlowView(classEntry), v -> controlFlowView = v);
                 break;
             case CALLGRAPH:
-                if (callGraphView == null) loadViewInBackground(mode, () -> new CallGraphView(classEntry), v -> {
+                if (callGraphView == null) loadViewInBackground(mode, () -> new CallGraphView(classEntry), v ->
+                {
                     callGraphView = v;
                     if (projectModel != null) v.setProjectModel(projectModel);
                 });
@@ -214,7 +230,8 @@ public class EditorTab extends JPanel {
                 if (statisticsView == null) loadViewInBackground(mode, () -> new StatisticsView(classEntry), v -> statisticsView = v);
                 break;
             case DUAL:
-                if (dualView == null) loadViewInBackground(mode, () -> new DualView(classEntry), v -> {
+                if (dualView == null) loadViewInBackground(mode, () -> new DualView(classEntry), v ->
+                {
                     dualView = v;
                     if (projectModel != null) v.setProjectModel(projectModel);
                 });
@@ -230,24 +247,31 @@ public class EditorTab extends JPanel {
         }
     }
 
-    private void refreshView(ViewMode mode) {
+    private void refreshView(ViewMode mode)
+    {
         EditorView view = views.get(mode);
-        if (view != null) {
+        if (view != null)
+        {
             view.refresh();
         }
     }
 
-    public ViewMode getViewMode() {
+    public ViewMode getViewMode()
+    {
         return currentMode;
     }
 
-    public void setViewMode(ViewMode mode) {
+    public void setViewMode(ViewMode mode)
+    {
         this.currentMode = mode;
 
-        if (isViewReady(mode)) {
+        if (isViewReady(mode))
+        {
             refreshView(mode);
             cardLayout.show(cardPanel, mode.name());
-        } else {
+        }
+        else
+        {
             cardLayout.show(cardPanel, LOADING_CARD);
             ensureViewLoaded(mode);
         }
@@ -256,32 +280,40 @@ public class EditorTab extends JPanel {
     /**
      * Set whether to omit annotations from decompiled output display.
      */
-    public void setOmitAnnotations(boolean omit) {
+    public void setOmitAnnotations(boolean omit)
+    {
         sourceView.setOmitAnnotations(omit);
     }
 
     /**
      * Enable or disable usage-count lenses in the source view (and the dual view's source pane).
      */
-    public void setUsageLensEnabled(boolean enabled) {
+    public void setUsageLensEnabled(boolean enabled)
+    {
         sourceView.setUsageLensEnabled(enabled);
-        if (dualView != null) {
+        if (dualView != null)
+        {
             dualView.setUsageLensEnabled(enabled);
         }
     }
 
-    public void refresh() {
-        if (isViewReady(currentMode)) {
+    public void refresh()
+    {
+        if (isViewReady(currentMode))
+        {
             refreshView(currentMode);
         }
     }
 
     /** Re-renders the source/bytecode breakpoint gutters (e.g. when the debug session connects/disconnects). */
-    public void refreshBreakpointGutters() {
-        if (sourceView != null) {
+    public void refreshBreakpointGutters()
+    {
+        if (sourceView != null)
+        {
             sourceView.refreshBreakpointGutter();
         }
-        if (bytecodeView != null) {
+        if (bytecodeView != null)
+        {
             bytecodeView.refreshBreakpointGutter();
         }
     }
@@ -291,7 +323,8 @@ public class EditorTab extends JPanel {
      * drops the decompilation cache and refreshes every instantiated view - including the source view, whose
      * {@code refresh()} otherwise re-displays the now-stale cached source - so nothing keeps showing old output.
      */
-    public void reload() {
+    public void reload()
+    {
         classEntry.invalidateDecompilationCache();
         breadcrumbBar.setClass(classEntry);
         if (sourceView != null) sourceView.reload();
@@ -311,7 +344,8 @@ public class EditorTab extends JPanel {
         if (dualView != null) dualView.refresh();
     }
 
-    private void onClassRecompiled() {
+    private void onClassRecompiled()
+    {
         breadcrumbBar.setClass(classEntry);
         if (bytecodeView != null) bytecodeView.refresh();
         if (constPoolView != null) constPoolView.refresh();
@@ -331,18 +365,21 @@ public class EditorTab extends JPanel {
     /**
      * Get the title for this tab.
      */
-    public String getTitle() {
+    public String getTitle()
+    {
         return sanitize(classEntry.getSimpleName());
     }
 
     /**
      * Get the tooltip for this tab.
      */
-    public String getTooltip() {
+    public String getTooltip()
+    {
         return sanitize(classEntry.getClassName());
     }
 
-    private String sanitize(String text) {
+    private String sanitize(String text)
+    {
         if (text == null) return "";
         return text
                 .replace("&", "&amp;")
@@ -350,21 +387,26 @@ public class EditorTab extends JPanel {
                 .replace(">", "&gt;");
     }
 
-    public void copySelection() {
+    public void copySelection()
+    {
         EditorView view = views.get(currentMode);
-        if (view != null) {
+        if (view != null)
+        {
             view.copySelection();
         }
     }
 
-    public String getText() {
+    public String getText()
+    {
         EditorView view = views.get(currentMode);
         return view != null ? view.getText() : "";
     }
 
-    public void goToLine(int line) {
+    public void goToLine(int line)
+    {
         EditorView view = views.get(currentMode);
-        if (view != null) {
+        if (view != null)
+        {
             view.goToLine(line);
         }
     }
@@ -372,16 +414,20 @@ public class EditorTab extends JPanel {
     /**
      * Highlight a specific line, scroll to it, and place caret one line above.
      */
-    public void highlightLine(int line) {
+    public void highlightLine(int line)
+    {
         EditorView view = views.get(currentMode);
-        if (view != null) {
+        if (view != null)
+        {
             view.highlightLine(currentMode == ViewMode.SOURCE ? line - 1 : line);
         }
     }
 
-    public void showFindDialog() {
+    public void showFindDialog()
+    {
         EditorView view = views.get(currentMode);
-        if (view != null) {
+        if (view != null)
+        {
             view.showFindDialog();
         }
     }
@@ -390,28 +436,40 @@ public class EditorTab extends JPanel {
      * Get the currently selected method (if determinable from caret position).
      * This is a best-effort implementation.
      */
-    public MethodEntryModel getCurrentMethod() {
+    public MethodEntryModel getCurrentMethod()
+    {
         // For now, return the first method if we have any
         // A more sophisticated implementation would track caret position
-        if (classEntry.getMethods() != null && !classEntry.getMethods().isEmpty()) {
+        if (classEntry.getMethods() != null && !classEntry.getMethods().isEmpty())
+        {
             return classEntry.getMethods().get(0);
         }
         return null;
     }
 
-    public String getSelectedText() {
+    public String getSelectedText()
+    {
         EditorView view = views.get(currentMode);
         return view != null ? view.getSelectedText() : null;
     }
 
-    public void scrollToMethod(MethodEntryModel method) {
+    public void scrollToMethod(MethodEntryModel method)
+    {
         String methodName = method.getMethodEntry().getName();
         String methodDesc = method.getMethodEntry().getDesc();
-        switch (currentMode) {
-            case SOURCE: sourceView.scrollToMethodDeclaration(methodName, methodDesc); break;
-            case BYTECODE: bytecodeView.scrollToMethod(methodName, methodDesc); break;
-            case DUAL: if (dualView != null) dualView.scrollToMethod(methodName, methodDesc); break;
-            default: {
+        switch (currentMode)
+        {
+            case SOURCE:
+                sourceView.scrollToMethodDeclaration(methodName, methodDesc);
+                break;
+            case BYTECODE:
+                bytecodeView.scrollToMethod(methodName, methodDesc);
+                break;
+            case DUAL:
+                if (dualView != null) dualView.scrollToMethod(methodName, methodDesc);
+                break;
+            default:
+            {
                 EditorView view = views.get(currentMode);
                 if (view != null) view.scrollToText(methodName);
                 break;
@@ -423,9 +481,11 @@ public class EditorTab extends JPanel {
      * Scroll to and highlight a specific field declaration.
      * Only highlights in SOURCE and BYTECODE views.
      */
-    public void scrollToField(FieldEntryModel field) {
+    public void scrollToField(FieldEntryModel field)
+    {
         String fieldName = field.getName();
-        switch (currentMode) {
+        switch (currentMode)
+        {
             case SOURCE:
                 sourceView.scrollToFieldDeclaration(fieldName);
                 break;
@@ -441,9 +501,11 @@ public class EditorTab extends JPanel {
     /**
      * Set font size for all views.
      */
-    public void setFontSize(int size) {
+    public void setFontSize(int size)
+    {
         this.fontSize = size;
-        for (EditorView view : views.values()) {
+        for (EditorView view : views.values())
+        {
             view.setFontSize(size);
         }
     }
@@ -451,9 +513,11 @@ public class EditorTab extends JPanel {
     /**
      * Set word wrap for all views.
      */
-    public void setWordWrap(boolean enabled) {
+    public void setWordWrap(boolean enabled)
+    {
         this.wordWrap = enabled;
-        for (EditorView view : views.values()) {
+        for (EditorView view : views.values())
+        {
             view.setWordWrap(enabled);
         }
     }
@@ -461,13 +525,16 @@ public class EditorTab extends JPanel {
     /**
      * Set the project model for navigation features.
      */
-    public void setProjectModel(ProjectModel projectModel) {
+    public void setProjectModel(ProjectModel projectModel)
+    {
         this.projectModel = projectModel;
         sourceView.setProjectModel(projectModel);
-        if (callGraphView != null) {
+        if (callGraphView != null)
+        {
             callGraphView.setProjectModel(projectModel);
         }
-        if (dualView != null) {
+        if (dualView != null)
+        {
             dualView.setProjectModel(projectModel);
         }
     }
@@ -480,24 +547,41 @@ public class EditorTab extends JPanel {
      * @param pc the bytecode offset
      * @return true if navigation succeeded
      */
-    public boolean navigateToPC(String methodName, String methodDesc, int pc) {
+    public boolean navigateToPC(String methodName, String methodDesc, int pc)
+    {
         setViewMode(ViewMode.BYTECODE);
         return bytecodeView.highlightPC(methodName, methodDesc, pc);
     }
 
-    public boolean navigateToSourceOffset(String methodName, String methodDesc, int pc, String selectToken) {
+    public boolean navigateToSourceOffset(String methodName, String methodDesc, int pc, String selectToken)
+    {
         setViewMode(ViewMode.SOURCE);
         return sourceView.scrollToSourceOffset(methodName, methodDesc, pc, selectToken);
     }
 
-    public boolean navigateToMethod(String methodName, String methodDesc) {
-        switch (currentMode) {
-            case BYTECODE: return bytecodeView.scrollToMethod(methodName, methodDesc);
-            case DUAL: if (dualView != null) { dualView.scrollToMethod(methodName, methodDesc); return true; } return false;
-            case HEX: return false;
-            default: {
+    public boolean navigateToMethod(String methodName, String methodDesc)
+    {
+        switch (currentMode)
+        {
+            case BYTECODE:
+                return bytecodeView.scrollToMethod(methodName, methodDesc);
+            case DUAL:
+                if (dualView != null)
+                {
+                    dualView.scrollToMethod(methodName, methodDesc);
+                    return true;
+                }
+                return false;
+            case HEX:
+                return false;
+            default:
+            {
                 EditorView view = views.get(currentMode);
-                if (view != null) { view.scrollToText(methodName); return true; }
+                if (view != null)
+                {
+                    view.scrollToText(methodName);
+                    return true;
+                }
                 return false;
             }
         }

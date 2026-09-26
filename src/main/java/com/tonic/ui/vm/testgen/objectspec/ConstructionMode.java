@@ -3,7 +3,8 @@ package com.tonic.ui.vm.testgen.objectspec;
 import lombok.Getter;
 
 @Getter
-public enum ConstructionMode {
+public enum ConstructionMode
+{
     CONSTRUCTOR("Use Constructor"),
     FACTORY_METHOD("Use Factory Method"),
     FIELD_INJECTION("Direct Field Injection"),
@@ -13,12 +14,14 @@ public enum ConstructionMode {
 
     private final String displayName;
 
-    ConstructionMode(String displayName) {
+    ConstructionMode(String displayName)
+    {
         this.displayName = displayName;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return displayName;
     }
 }

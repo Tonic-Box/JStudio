@@ -5,7 +5,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public interface ProjectApi {
+public interface ProjectApi
+{
 
     String getName();
 
@@ -33,45 +34,78 @@ public interface ProjectApi {
 
     int getMethodCount();
 
-    interface ClassInfo {
+    interface ClassInfo
+    {
         String getName();
+
         String getSimpleName();
+
         String getPackageName();
+
         String getSuperclass();
+
         List<String> getInterfaces();
+
         List<MethodInfo> getMethods();
+
         List<FieldInfo> getFields();
+
         int getAccessFlags();
+
         boolean isInterface();
+
         boolean isAbstract();
+
         boolean isEnum();
+
         boolean isAnnotation();
+
         byte[] getBytecode();
     }
 
-    interface MethodInfo {
+    interface MethodInfo
+    {
         String getName();
+
         String getDescriptor();
+
         String getClassName();
+
         String getSignature();
+
         int getAccessFlags();
+
         boolean isStatic();
+
         boolean isAbstract();
+
         boolean isNative();
+
         boolean isSynthetic();
+
         List<String> getParameterTypes();
+
         String getReturnType();
+
         int getInstructionCount();
+
         byte[] getBytecode();
     }
 
-    interface FieldInfo {
+    interface FieldInfo
+    {
         String getName();
+
         String getDescriptor();
+
         String getClassName();
+
         int getAccessFlags();
+
         boolean isStatic();
+
         boolean isFinal();
+
         Object getConstantValue();
     }
 }

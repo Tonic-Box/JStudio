@@ -15,7 +15,8 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
-public class CallTracePanel extends ThemedJPanel {
+public class CallTracePanel extends ThemedJPanel
+{
 
     private final JTextField filterField;
     private final JButton expandAllBtn;
@@ -33,19 +34,23 @@ public class CallTracePanel extends ThemedJPanel {
 
     private List<MethodCall> currentCalls = new ArrayList<>();
 
-    private static Color entryColor() {
+    private static Color entryColor()
+    {
         return JStudioTheme.getInfo();
     }
 
-    private static Color exitColor() {
+    private static Color exitColor()
+    {
         return JStudioTheme.getSuccess();
     }
 
-    private static Color exceptionColor() {
+    private static Color exceptionColor()
+    {
         return JStudioTheme.getError();
     }
 
-    public CallTracePanel() {
+    public CallTracePanel()
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
 
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL + 1, 3));
@@ -101,14 +106,17 @@ public class CallTracePanel extends ThemedJPanel {
         callTree.setCellRenderer(new CallTreeCellRenderer());
         callTree.setRootVisible(false);
         callTree.setShowsRootHandles(true);
-        callTree.addMouseListener(new MouseAdapter() {
+        callTree.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mousePressed(MouseEvent e)
+            {
                 handleTreePopup(e);
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
+            public void mouseReleased(MouseEvent e)
+            {
                 handleTreePopup(e);
             }
         });
@@ -135,7 +143,8 @@ public class CallTracePanel extends ThemedJPanel {
         showEmpty();
     }
 
-    private void initListStyles() {
+    private void initListStyles()
+    {
         Style defaultStyle = listPane.addStyle("default", null);
         StyleConstants.setForeground(defaultStyle, JStudioTheme.getTextPrimary());
 
@@ -150,26 +159,34 @@ public class CallTracePanel extends ThemedJPanel {
         StyleConstants.setBold(exceptionStyle, true);
     }
 
-    public void showEmpty() {
+    public void showEmpty()
+    {
         rootNode.removeAllChildren();
         treeModel.reload();
-        try {
+        try
+        {
             listDoc.remove(0, listDoc.getLength());
             listDoc.insertString(0, "(No trace data)", listPane.getStyle("default"));
-        } catch (BadLocationException ignored) {}
+        }
+        catch (BadLocationException ignored)
+        {
+        }
         currentCalls = new ArrayList<>();
     }
 
-    public void update(List<MethodCall> calls) {
+    public void update(List<MethodCall> calls)
+    {
         this.currentCalls = calls != null ? new ArrayList<>(calls) : new ArrayList<>();
         buildTreeView();
         buildListView();
     }
 
-    private void buildTreeView() {
+    private void buildTreeView()
+    {
         rootNode.removeAllChildren();
 
-        if (currentCalls.isEmpty()) {
+        if (currentCalls.isEmpty())
+        {
             treeModel.reload();
             return;
         }
@@ -177,16 +194,19 @@ public class CallTracePanel extends ThemedJPanel {
         Deque<DefaultMutableTreeNode> stack = new ArrayDeque<>();
         stack.push(rootNode);
 
-        for (MethodCall call : currentCalls) {
+        for (MethodCall call : currentCalls)
+        {
             int depth = call.getDepth();
 
-            while (stack.size() > depth + 1) {
+            while (stack.size() > depth + 1)
+            {
                 stack.pop();
             }
 
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(call);
             DefaultMutableTreeNode parent = stack.peek();
-            if (parent == null) {
+            if (parent == null)
+            {
                 parent = rootNode;
                 stack.push(rootNode);
             }
@@ -198,16 +218,20 @@ public class CallTracePanel extends ThemedJPanel {
         expandAll();
     }
 
-    private void buildListView() {
-        try {
+    private void buildListView()
+    {
+        try
+        {
             listDoc.remove(0, listDoc.getLength());
 
-            if (currentCalls.isEmpty()) {
+            if (currentCalls.isEmpty())
+            {
                 listDoc.insertString(0, "(No trace data)", listPane.getStyle("default"));
                 return;
             }
 
-            for (MethodCall call : currentCalls) {
+            for (MethodCall call : currentCalls)
+            {
                 StringBuilder indent = new StringBuilder();
                 indent.append("  ".repeat(Math.max(0, call.getDepth())));
 
@@ -217,9 +241,11 @@ public class CallTracePanel extends ThemedJPanel {
                 StringBuilder line = new StringBuilder(indent + arrow + call.getShortSignature());
 
                 Object[] args = call.getArguments();
-                if (args.length > 0) {
+                if (args.length > 0)
+                {
                     line.append("(");
-                    for (int i = 0; i < args.length; i++) {
+                    for (int i = 0; i < args.length; i++)
+                    {
                         if (i > 0) line.append(", ");
                         line.append(formatArg(args[i]));
                     }
@@ -229,12 +255,16 @@ public class CallTracePanel extends ThemedJPanel {
                 line.append("\n");
                 listDoc.insertString(listDoc.getLength(), line.toString(), style);
 
-                if (call.getReturnValue() != null || call.isExceptional()) {
+                if (call.getReturnValue() != null || call.isExceptional())
+                {
                     String returnLine = indent + "\u2190 " + call.getShortSignature();
-                    if (call.isExceptional()) {
+                    if (call.isExceptional())
+                    {
                         returnLine += " [EXCEPTION]";
                         style = listPane.getStyle("exception");
-                    } else {
+                    }
+                    else
+                    {
                         returnLine += " \u2192 " + formatArg(call.getReturnValue());
                         style = listPane.getStyle("exit");
                     }
@@ -244,12 +274,17 @@ public class CallTracePanel extends ThemedJPanel {
             }
 
             listPane.setCaretPosition(0);
-        } catch (BadLocationException ignored) {}
+        }
+        catch (BadLocationException ignored)
+        {
+        }
     }
 
-    private String formatArg(Object arg) {
+    private String formatArg(Object arg)
+    {
         if (arg == null) return "null";
-        if (arg instanceof String) {
+        if (arg instanceof String)
+        {
             String s = (String) arg;
             if (s.length() > 30) return "\"" + s.substring(0, 27) + "...\"";
             return "\"" + s + "\"";
@@ -258,42 +293,52 @@ public class CallTracePanel extends ThemedJPanel {
         return String.valueOf(arg);
     }
 
-    private void showTreeView() {
+    private void showTreeView()
+    {
         cardLayout.show(viewContainer, "tree");
         expandAllBtn.setEnabled(true);
         collapseAllBtn.setEnabled(true);
     }
 
-    private void showListView() {
+    private void showListView()
+    {
         cardLayout.show(viewContainer, "list");
         expandAllBtn.setEnabled(false);
         collapseAllBtn.setEnabled(false);
     }
 
-    private void expandAll() {
-        for (int i = 0; i < callTree.getRowCount(); i++) {
+    private void expandAll()
+    {
+        for (int i = 0; i < callTree.getRowCount(); i++)
+        {
             callTree.expandRow(i);
         }
     }
 
-    private void collapseAll() {
-        for (int i = callTree.getRowCount() - 1; i >= 0; i--) {
+    private void collapseAll()
+    {
+        for (int i = callTree.getRowCount() - 1; i >= 0; i--)
+        {
             callTree.collapseRow(i);
         }
     }
 
-    private void applyFilter() {
+    private void applyFilter()
+    {
         String filter = filterField.getText().toLowerCase().trim();
-        if (filter.isEmpty()) {
+        if (filter.isEmpty())
+        {
             buildTreeView();
             buildListView();
             return;
         }
 
         List<MethodCall> filtered = new ArrayList<>();
-        for (MethodCall call : currentCalls) {
+        for (MethodCall call : currentCalls)
+        {
             if (call.getMethodName().toLowerCase().contains(filter) ||
-                call.getOwnerClass().toLowerCase().contains(filter)) {
+                    call.getOwnerClass().toLowerCase().contains(filter))
+            {
                 filtered.add(call);
             }
         }
@@ -305,13 +350,16 @@ public class CallTracePanel extends ThemedJPanel {
         currentCalls = original;
     }
 
-    private void handleTreePopup(MouseEvent e) {
-        if (!e.isPopupTrigger()) {
+    private void handleTreePopup(MouseEvent e)
+    {
+        if (!e.isPopupTrigger())
+        {
             return;
         }
 
         TreePath path = callTree.getClosestPathForLocation(e.getX(), e.getY());
-        if (path == null) {
+        if (path == null)
+        {
             return;
         }
 
@@ -319,7 +367,8 @@ public class CallTracePanel extends ThemedJPanel {
 
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
         Object userObj = node.getUserObject();
-        if (!(userObj instanceof MethodCall)) {
+        if (!(userObj instanceof MethodCall))
+        {
             return;
         }
 
@@ -333,15 +382,18 @@ public class CallTracePanel extends ThemedJPanel {
         popup.show(callTree, e.getX(), e.getY());
     }
 
-    private void openTestDialogForCall(MethodCall call) {
+    private void openTestDialogForCall(MethodCall call)
+    {
         Window owner = SwingUtilities.getWindowAncestor(this);
         TestGeneratorDialog dialog = new TestGeneratorDialog(owner);
         dialog.setMethodCall(call);
         dialog.setVisible(true);
     }
 
-    private class CallTreeCellRenderer extends DefaultTreeCellRenderer {
-        public CallTreeCellRenderer() {
+    private class CallTreeCellRenderer extends DefaultTreeCellRenderer
+    {
+        public CallTreeCellRenderer()
+        {
             setBackgroundNonSelectionColor(JStudioTheme.getBgPrimary());
             setBackgroundSelectionColor(JStudioTheme.getSelection());
             setTextNonSelectionColor(JStudioTheme.getTextPrimary());
@@ -349,35 +401,43 @@ public class CallTracePanel extends ThemedJPanel {
         }
 
         @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel,
-                boolean expanded, boolean leaf, int row, boolean hasFocus) {
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus)
+        {
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
             setIcon(null);
 
-            if (value instanceof DefaultMutableTreeNode) {
+            if (value instanceof DefaultMutableTreeNode)
+            {
                 Object userObj = ((DefaultMutableTreeNode) value).getUserObject();
-                if (userObj instanceof MethodCall) {
+                if (userObj instanceof MethodCall)
+                {
                     MethodCall call = (MethodCall) userObj;
                     StringBuilder text = new StringBuilder();
                     text.append(call.getShortSignature());
 
                     Object ret = call.getReturnValue();
-                    if (ret != null) {
+                    if (ret != null)
+                    {
                         text.append(" \u2192 ").append(formatArg(ret));
                     }
 
                     long durationNanos = call.getDurationNanos();
-                    if (durationNanos > 0) {
+                    if (durationNanos > 0)
+                    {
                         double ms = durationNanos / 1_000_000.0;
                         text.append(String.format("  [%.2fms]", ms));
                     }
 
                     setText(text.toString());
 
-                    if (!sel) {
-                        if (call.isExceptional()) {
+                    if (!sel)
+                    {
+                        if (call.isExceptional())
+                        {
                             setForeground(exceptionColor());
-                        } else {
+                        }
+                        else
+                        {
                             setForeground(entryColor());
                         }
                     }

@@ -26,7 +26,8 @@ import java.util.function.IntConsumer;
  * All actions are delegated through injected callbacks; {@link #updateButtonStates()} derives enabled state from
  * the supplied {@link VMDebugSession} and method-loaded predicate.
  */
-final class DebuggerToolbar extends JPanel {
+final class DebuggerToolbar extends JPanel
+{
 
     /** Animation delays (ms) corresponding to the speed selector entries. */
     private static final int[] DELAYS = {5, 10, 20, 50, 100, 300};
@@ -46,20 +47,8 @@ final class DebuggerToolbar extends JPanel {
     private final JButton exportTraceBtn;
     private final JButton clearTraceBtn;
 
-    DebuggerToolbar(VMDebugSession session,
-                    BooleanSupplier hasMethod,
-                    Runnable onStart,
-                    Runnable onStepInto,
-                    Runnable onStepOver,
-                    Runnable onStepOut,
-                    Runnable onResume,
-                    Runnable onStop,
-                    IntConsumer onSpeedChange,
-                    Consumer<Boolean> onRecursiveChange,
-                    Consumer<Boolean> onRecordToggle,
-                    Runnable onExportTrace,
-                    Runnable onClearTrace,
-                    Runnable onReinit) {
+    DebuggerToolbar(VMDebugSession session, BooleanSupplier hasMethod, Runnable onStart, Runnable onStepInto, Runnable onStepOver, Runnable onStepOut, Runnable onResume, Runnable onStop, IntConsumer onSpeedChange, Consumer<Boolean> onRecursiveChange, Consumer<Boolean> onRecordToggle, Runnable onExportTrace, Runnable onClearTrace, Runnable onReinit)
+    {
         super(new FlowLayout(FlowLayout.LEFT, 5, 5));
         this.session = session;
         this.hasMethod = hasMethod;
@@ -106,10 +95,7 @@ final class DebuggerToolbar extends JPanel {
         recordBtn.setBackground(JStudioTheme.getBgSecondary());
         recordBtn.setForeground(JStudioTheme.getTextPrimary());
         recordBtn.setFocusPainted(false);
-        recordBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
+        recordBtn.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(5, 10, 5, 10)));
         recordBtn.setToolTipText("Record execution trace");
         recordBtn.addActionListener(e -> onRecordToggle.accept(recordBtn.isSelected()));
 
@@ -133,27 +119,34 @@ final class DebuggerToolbar extends JPanel {
     }
 
     /** Whether the user has the record toggle pressed. */
-    boolean isRecordSelected() {
+    boolean isRecordSelected()
+    {
         return recordBtn.isSelected();
     }
 
     /** Sets the record button's active (red) or idle appearance. */
-    void setRecordingActive(boolean active) {
-        if (active) {
+    void setRecordingActive(boolean active)
+    {
+        if (active)
+        {
             recordBtn.setBackground(JStudioTheme.getError().darker());
-        } else {
+        }
+        else
+        {
             recordBtn.setBackground(JStudioTheme.getBgSecondary());
         }
         recordBtn.setForeground(JStudioTheme.getTextPrimary());
     }
 
     /** Enables/disables the export and clear trace buttons together. */
-    void setTraceActionsEnabled(boolean enabled) {
+    void setTraceActionsEnabled(boolean enabled)
+    {
         exportTraceBtn.setEnabled(enabled);
         clearTraceBtn.setEnabled(enabled);
     }
 
-    void updateButtonStates() {
+    void updateButtonStates()
+    {
         boolean methodLoaded = hasMethod.getAsBoolean();
         boolean canStep = session.isPaused();
         boolean isRunning = session.isStarted() && !session.isStopped();
@@ -169,26 +162,29 @@ final class DebuggerToolbar extends JPanel {
         stopBtn.setEnabled(isRunning || isAnimating);
     }
 
-    private JButton createToolButton(String text, String shortcut, ActionListener action) {
+    private JButton createToolButton(String text, String shortcut, ActionListener action)
+    {
         JButton button = new JButton(text);
         button.setBackground(JStudioTheme.getBgSecondary());
         button.setForeground(JStudioTheme.getTextPrimary());
         button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
+        button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(5, 10, 5, 10)));
         button.addActionListener(action);
 
-        if (shortcut != null) {
+        if (shortcut != null)
+        {
             KeyStroke keyStroke = KeyStroke.getKeyStroke(shortcut);
-            if (keyStroke != null) {
+            if (keyStroke != null)
+            {
                 button.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                    .put(keyStroke, shortcut);
-                button.getActionMap().put(shortcut, new AbstractAction() {
+                        .put(keyStroke, shortcut);
+                button.getActionMap().put(shortcut, new AbstractAction()
+                {
                     @Override
-                    public void actionPerformed(ActionEvent e) {
-                        if (button.isEnabled()) {
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        if (button.isEnabled())
+                        {
                             action.actionPerformed(e);
                         }
                     }

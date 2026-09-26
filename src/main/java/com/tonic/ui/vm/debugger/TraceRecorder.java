@@ -19,7 +19,8 @@ import java.util.function.IntFunction;
  * recorded {@link ExecutionTrace}. UI side effects (status messages, enabling the export/clear actions, the record
  * button's appearance) are delegated through injected callbacks so this stays free of toolbar wiring.
  */
-final class TraceRecorder {
+final class TraceRecorder
+{
 
     private final Component dialogParent;
     private final IntFunction<String> instructionAtPc;
@@ -33,13 +34,8 @@ final class TraceRecorder {
     private ExecutionTrace currentTrace;
     private List<String> lastStackState = new ArrayList<>();
 
-    TraceRecorder(Component dialogParent,
-                  IntFunction<String> instructionAtPc,
-                  Consumer<String> output,
-                  Runnable onTraceAvailable,
-                  Runnable onTraceUnavailable,
-                  Runnable onRecordingStarted,
-                  Runnable onRecordingStopped) {
+    TraceRecorder(Component dialogParent, IntFunction<String> instructionAtPc, Consumer<String> output, Runnable onTraceAvailable, Runnable onTraceUnavailable, Runnable onRecordingStarted, Runnable onRecordingStopped)
+    {
         this.dialogParent = dialogParent;
         this.instructionAtPc = instructionAtPc;
         this.output = output;
@@ -49,33 +45,40 @@ final class TraceRecorder {
         this.onRecordingStopped = onRecordingStopped;
     }
 
-    boolean isRecording() {
+    boolean isRecording()
+    {
         return recording;
     }
 
     /** Toggles recording on/off for the supplied method (may be null when no method is loaded yet). */
-    void toggleRecording(boolean selected, MethodEntry currentMethod) {
+    void toggleRecording(boolean selected, MethodEntry currentMethod)
+    {
         recording = selected;
-        if (recording) {
-            if (currentMethod != null) {
-                currentTrace = new ExecutionTrace(
-                    currentMethod.getOwnerName(),
-                    currentMethod.getName(),
-                    currentMethod.getDesc()
-                );
+        if (recording)
+        {
+            if (currentMethod != null)
+            {
+                currentTrace = new ExecutionTrace(currentMethod.getOwnerName(), currentMethod.getName(), currentMethod.getDesc());
                 lastStackState.clear();
                 output.accept("Recording started - execution trace will be captured");
-            } else {
+            }
+            else
+            {
                 output.accept("Recording enabled - will start capturing when debugging begins");
                 currentTrace = null;
             }
             onRecordingStarted.run();
             onTraceUnavailable.run();
-        } else {
-            if (currentTrace != null && !currentTrace.getSteps().isEmpty()) {
+        }
+        else
+        {
+            if (currentTrace != null && !currentTrace.getSteps().isEmpty())
+            {
                 output.accept("Recording stopped - " + currentTrace.getSteps().size() + " steps captured");
                 onTraceAvailable.run();
-            } else {
+            }
+            else
+            {
                 output.accept("Recording stopped - no steps captured");
             }
             onRecordingStopped.run();
@@ -83,23 +86,23 @@ final class TraceRecorder {
     }
 
     /** Starts a trace at session start when recording was enabled before a method was available. */
-    void onSessionStarted(MethodEntry currentMethod) {
-        if (recording && currentTrace == null && currentMethod != null) {
-            currentTrace = new ExecutionTrace(
-                currentMethod.getOwnerName(),
-                currentMethod.getName(),
-                currentMethod.getDesc()
-            );
+    void onSessionStarted(MethodEntry currentMethod)
+    {
+        if (recording && currentTrace == null && currentMethod != null)
+        {
+            currentTrace = new ExecutionTrace(currentMethod.getOwnerName(), currentMethod.getName(), currentMethod.getDesc());
             lastStackState.clear();
             output.accept("Recording execution trace...");
         }
     }
 
     /** Finalizes the trace on a session stop, marking it complete and enabling export. */
-    void onSessionStopped(String reason) {
-        if (recording && currentTrace != null) {
+    void onSessionStopped(String reason)
+    {
+        if (recording && currentTrace != null)
+        {
             boolean normal = reason.toLowerCase().contains("complete") ||
-                             reason.toLowerCase().contains("return");
+                    reason.toLowerCase().contains("return");
             currentTrace.complete(reason, normal);
             output.accept("Trace recording complete - " + currentTrace.getSteps().size() + " steps captured");
             onTraceAvailable.run();
@@ -107,37 +110,34 @@ final class TraceRecorder {
     }
 
     /** Finalizes the trace when the user manually stops debugging. */
-    void onManualStop() {
-        if (recording && currentTrace != null) {
+    void onManualStop()
+    {
+        if (recording && currentTrace != null)
+        {
             currentTrace.complete("Session stopped by user", false);
             onTraceAvailable.run();
         }
     }
 
-    void captureStep(DebugStateModel state) {
+    void captureStep(DebugStateModel state)
+    {
         if (!recording || currentTrace == null) return;
 
-        ExecutionStep step = new ExecutionStep(
-            state.getClassName(),
-            state.getMethodName(),
-            state.getDescriptor(),
-            state.getInstructionIndex(),
-            state.getLineNumber(),
-            instructionAtPc.apply(state.getInstructionIndex()),
-            state.getCallStack().size()
-        );
+        ExecutionStep step = new ExecutionStep(state.getClassName(), state.getMethodName(), state.getDescriptor(), state.getInstructionIndex(), state.getLineNumber(), instructionAtPc.apply(state.getInstructionIndex()), state.getCallStack().size());
 
         step.setStackBefore(new ArrayList<>(lastStackState));
 
         List<String> currentStack = new ArrayList<>();
-        for (StackEntry entry : state.getOperandStack()) {
+        for (StackEntry entry : state.getOperandStack())
+        {
             currentStack.add(entry.toString());
         }
         step.setStackAfter(currentStack);
         lastStackState = new ArrayList<>(currentStack);
 
         List<String> locals = new ArrayList<>();
-        for (LocalEntry entry : state.getLocalVariables()) {
+        for (LocalEntry entry : state.getLocalVariables())
+        {
             locals.add("local" + entry.getSlot() + ": " + entry);
         }
         step.setLocals(locals);
@@ -145,12 +145,11 @@ final class TraceRecorder {
         currentTrace.addStep(step);
     }
 
-    void exportTrace() {
-        if (currentTrace == null || currentTrace.getSteps().isEmpty()) {
-            JOptionPane.showMessageDialog(dialogParent,
-                "No execution trace to export",
-                "Export Trace",
-                JOptionPane.WARNING_MESSAGE);
+    void exportTrace()
+    {
+        if (currentTrace == null || currentTrace.getSteps().isEmpty())
+        {
+            JOptionPane.showMessageDialog(dialogParent, "No execution trace to export", "Export Trace", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -162,42 +161,46 @@ final class TraceRecorder {
         String defaultName = currentTrace.getMethodName() + "_trace";
         chooser.setSelectedFile(new File(defaultName + ".md"));
 
-        if (chooser.showSaveDialog(dialogParent) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showSaveDialog(dialogParent) == JFileChooser.APPROVE_OPTION)
+        {
             File file = chooser.getSelectedFile();
             String path = file.getAbsolutePath();
 
             boolean isMarkdown = path.endsWith(".md") ||
-                (chooser.getFileFilter() instanceof FileNameExtensionFilter &&
-                 ((FileNameExtensionFilter)chooser.getFileFilter()).getExtensions()[0].equals("md"));
+                    (chooser.getFileFilter() instanceof FileNameExtensionFilter &&
+                            ((FileNameExtensionFilter) chooser.getFileFilter()).getExtensions()[0].equals("md"));
 
-            if (!path.endsWith(".md") && !path.endsWith(".txt")) {
+            if (!path.endsWith(".md") && !path.endsWith(".txt"))
+            {
                 path += isMarkdown ? ".md" : ".txt";
                 file = new File(path);
             }
 
-            try (FileWriter writer = new FileWriter(file)) {
-                if (path.endsWith(".md")) {
+            try (FileWriter writer = new FileWriter(file))
+            {
+                if (path.endsWith(".md"))
+                {
                     writer.write(currentTrace.toMarkdown());
-                } else {
+                }
+                else
+                {
                     writer.write(currentTrace.toCompactText());
                 }
                 output.accept("Trace exported to: " + file.getName());
-                JOptionPane.showMessageDialog(dialogParent,
-                    "Trace exported successfully!\n" + currentTrace.getSteps().size() + " steps saved.",
-                    "Export Complete",
-                    JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException e) {
+                JOptionPane.showMessageDialog(dialogParent, "Trace exported successfully!\n" + currentTrace.getSteps().size() + " steps saved.", "Export Complete", JOptionPane.INFORMATION_MESSAGE);
+            }
+            catch (IOException e)
+            {
                 output.accept("Failed to export trace: " + e.getMessage());
-                JOptionPane.showMessageDialog(dialogParent,
-                    "Failed to export trace: " + e.getMessage(),
-                    "Export Error",
-                    JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialogParent, "Failed to export trace: " + e.getMessage(), "Export Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    void clearTrace() {
-        if (currentTrace == null || currentTrace.getSteps().isEmpty()) {
+    void clearTrace()
+    {
+        if (currentTrace == null || currentTrace.getSteps().isEmpty())
+        {
             output.accept("No trace to clear");
             return;
         }

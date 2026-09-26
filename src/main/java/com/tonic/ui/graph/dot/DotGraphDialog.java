@@ -12,9 +12,11 @@ import java.awt.Window;
  * actual pan/zoom graph + toolbar); opened from {@link DotGraphView} when no in-app open handler is supplied. The
  * AI chat instead embeds {@link DotGraphPanel} directly as an editor tab.
  */
-public final class DotGraphDialog extends JDialog {
+public final class DotGraphDialog extends JDialog
+{
 
-    public DotGraphDialog(Window owner, String dotSource) {
+    public DotGraphDialog(Window owner, String dotSource)
+    {
         super(owner, "Diagram", ModalityType.MODELESS);
         setLayout(new BorderLayout());
         add(new DotGraphPanel(dotSource), BorderLayout.CENTER);
@@ -23,10 +25,11 @@ public final class DotGraphDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    private static Dimension sizeFor(Window owner) {
-        if (owner != null) {
-            return new Dimension(Math.max(640, owner.getWidth() * 3 / 4),
-                    Math.max(480, owner.getHeight() * 3 / 4));
+    private static Dimension sizeFor(Window owner)
+    {
+        if (owner != null)
+        {
+            return new Dimension(Math.max(640, owner.getWidth() * 3 / 4), Math.max(480, owner.getHeight() * 3 / 4));
         }
         return new Dimension(820, 620);
     }

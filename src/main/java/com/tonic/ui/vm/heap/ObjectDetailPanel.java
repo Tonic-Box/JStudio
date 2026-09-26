@@ -15,7 +15,8 @@ import java.awt.*;
 import java.util.List;
 import java.util.Map;
 
-public class ObjectDetailPanel extends ThemedJPanel {
+public class ObjectDetailPanel extends ThemedJPanel
+{
 
     private final JLabel headerLabel;
     private final JTextArea provenanceArea;
@@ -26,7 +27,8 @@ public class ObjectDetailPanel extends ThemedJPanel {
 
     private HeapForensicsTracker tracker;
 
-    public ObjectDetailPanel() {
+    public ObjectDetailPanel()
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         headerLabel = new JLabel("No object selected");
@@ -46,14 +48,7 @@ public class ObjectDetailPanel extends ThemedJPanel {
         provenanceArea.setBackground(JStudioTheme.getBgPrimary());
         provenanceArea.setForeground(JStudioTheme.getTextPrimary());
         provenanceArea.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
-        provenanceArea.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Provenance",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            null,
-            JStudioTheme.getTextSecondary()
-        ));
+        provenanceArea.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Provenance", TitledBorder.LEFT, TitledBorder.TOP, null, JStudioTheme.getTextSecondary()));
         infoPanel.add(new JScrollPane(provenanceArea), BorderLayout.NORTH);
 
         rootNode = new DefaultMutableTreeNode("Fields");
@@ -65,14 +60,7 @@ public class ObjectDetailPanel extends ThemedJPanel {
         fieldsTree.setCellRenderer(new FieldTreeCellRenderer());
 
         JScrollPane fieldsScroll = new JScrollPane(fieldsTree);
-        fieldsScroll.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Fields",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            null,
-            JStudioTheme.getTextSecondary()
-        ));
+        fieldsScroll.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Fields", TitledBorder.LEFT, TitledBorder.TOP, null, JStudioTheme.getTextSecondary()));
         fieldsScroll.getViewport().setBackground(JStudioTheme.getBgSecondary());
         infoPanel.add(fieldsScroll, BorderLayout.CENTER);
 
@@ -91,13 +79,16 @@ public class ObjectDetailPanel extends ThemedJPanel {
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    public void setTracker(HeapForensicsTracker tracker) {
+    public void setTracker(HeapForensicsTracker tracker)
+    {
         this.tracker = tracker;
     }
 
-    public void setObject(HeapObject object) {
+    public void setObject(HeapObject object)
+    {
 
-        if (object == null) {
+        if (object == null)
+        {
             headerLabel.setText("No object selected");
             provenanceArea.setText("");
             rootNode.removeAllChildren();
@@ -118,9 +109,11 @@ public class ObjectDetailPanel extends ThemedJPanel {
         updateMutationArea(object);
     }
 
-    private void updateProvenanceArea(HeapObject object) {
+    private void updateProvenanceArea(HeapObject object)
+    {
         ProvenanceInfo prov = object.getProvenance();
-        if (prov == null) {
+        if (prov == null)
+        {
             provenanceArea.setText("Provenance not tracked");
             return;
         }
@@ -128,19 +121,23 @@ public class ObjectDetailPanel extends ThemedJPanel {
         StringBuilder sb = new StringBuilder();
         sb.append("Allocated at: ").append(prov.getMethodSignature()).append("\n");
         sb.append("PC: ").append(prov.getPc());
-        if (prov.getLineNumber() > 0) {
+        if (prov.getLineNumber() > 0)
+        {
             sb.append(" (line ").append(prov.getLineNumber()).append(")");
         }
         sb.append("\n");
         sb.append("Instruction: ").append(object.getAllocationTime());
 
         List<ProvenanceInfo.StackFrameInfo> callStack = prov.getCallStack();
-        if (callStack != null && !callStack.isEmpty()) {
+        if (callStack != null && !callStack.isEmpty())
+        {
             sb.append("\n\nCall Stack:");
-            for (ProvenanceInfo.StackFrameInfo frame : callStack) {
+            for (ProvenanceInfo.StackFrameInfo frame : callStack)
+            {
                 sb.append("\n  at ").append(frame.getClassName())
-                  .append(".").append(frame.getMethodName());
-                if (frame.getLineNumber() > 0) {
+                        .append(".").append(frame.getMethodName());
+                if (frame.getLineNumber() > 0)
+                {
                     sb.append(":").append(frame.getLineNumber());
                 }
             }
@@ -150,17 +147,23 @@ public class ObjectDetailPanel extends ThemedJPanel {
         provenanceArea.setCaretPosition(0);
     }
 
-    private void updateFieldsTree(HeapObject object) {
+    private void updateFieldsTree(HeapObject object)
+    {
         rootNode.removeAllChildren();
 
         Map<String, FieldValue> fields = object.getFields();
-        if (fields.isEmpty()) {
+        if (fields.isEmpty())
+        {
             rootNode.add(new DefaultMutableTreeNode("(no fields)"));
-        } else {
-            for (FieldValue field : fields.values()) {
+        }
+        else
+        {
+            for (FieldValue field : fields.values())
+            {
                 DefaultMutableTreeNode fieldNode = new DefaultMutableTreeNode(field);
 
-                if (field.hasReferenceId() && tracker != null) {
+                if (field.hasReferenceId() && tracker != null)
+                {
                     fieldNode.add(new DefaultMutableTreeNode("-> Object #" + field.getReferenceId()));
                 }
 
@@ -169,14 +172,17 @@ public class ObjectDetailPanel extends ThemedJPanel {
         }
 
         treeModel.reload();
-        for (int i = 0; i < fieldsTree.getRowCount(); i++) {
+        for (int i = 0; i < fieldsTree.getRowCount(); i++)
+        {
             fieldsTree.expandRow(i);
         }
     }
 
-    private void updateMutationArea(HeapObject object) {
+    private void updateMutationArea(HeapObject object)
+    {
         List<MutationEvent> mutations = object.getMutations();
-        if (mutations.isEmpty()) {
+        if (mutations.isEmpty())
+        {
             mutationArea.setText("No mutations recorded");
             return;
         }
@@ -185,7 +191,8 @@ public class ObjectDetailPanel extends ThemedJPanel {
         sb.append("Mutation History (").append(mutations.size()).append(" events):\n\n");
 
         int index = 1;
-        for (MutationEvent mut : mutations) {
+        for (MutationEvent mut : mutations)
+        {
             sb.append("#").append(index++).append(": ");
             sb.append(mut.getFieldName());
             sb.append(" <- ");
@@ -193,7 +200,8 @@ public class ObjectDetailPanel extends ThemedJPanel {
             sb.append(" -> ");
             sb.append(formatValue(mut.getNewValue()));
             sb.append("\n    @ instruction ").append(mut.getInstructionCount());
-            if (mut.getProvenance() != null) {
+            if (mut.getProvenance() != null)
+            {
                 sb.append(" in ").append(mut.getProvenance().getMethodName());
             }
             sb.append("\n\n");
@@ -203,20 +211,23 @@ public class ObjectDetailPanel extends ThemedJPanel {
         mutationArea.setCaretPosition(0);
     }
 
-    private String formatValue(Object value) {
+    private String formatValue(Object value)
+    {
         if (value == null) return "null";
-        if (value instanceof ObjectInstance) {
+        if (value instanceof ObjectInstance)
+        {
             ObjectInstance obj =
-                (ObjectInstance) value;
+                    (ObjectInstance) value;
             return obj.getClassName() + " #" + obj.getId();
         }
         return String.valueOf(value);
     }
 
-    private static class FieldTreeCellRenderer extends DefaultTreeCellRenderer {
+    private static class FieldTreeCellRenderer extends DefaultTreeCellRenderer
+    {
         @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value,
-                boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus)
+        {
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 
             setBackgroundNonSelectionColor(JStudioTheme.getBgSecondary());
@@ -224,14 +235,17 @@ public class ObjectDetailPanel extends ThemedJPanel {
             setTextNonSelectionColor(JStudioTheme.getTextPrimary());
             setTextSelectionColor(JStudioTheme.getTextPrimary());
 
-            if (value instanceof DefaultMutableTreeNode) {
+            if (value instanceof DefaultMutableTreeNode)
+            {
                 Object userObject = ((DefaultMutableTreeNode) value).getUserObject();
-                if (userObject instanceof FieldValue) {
+                if (userObject instanceof FieldValue)
+                {
                     FieldValue fv = (FieldValue) userObject;
                     String display = fv.getName() + ": " + fv.getDisplayValue();
                     setText(display);
 
-                    if (fv.isReference()) {
+                    if (fv.isReference())
+                    {
                         setForeground(JStudioTheme.getInfo());
                     }
                 }

@@ -11,7 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
-public class HeapForensicsTracker {
+public class HeapForensicsTracker
+{
 
     @Getter
     private final HeapManager heapManager;
@@ -31,7 +32,8 @@ public class HeapForensicsTracker {
 
     private final List<ForensicsEventListener> listeners;
 
-    public HeapForensicsTracker(HeapManager heapManager) {
+    public HeapForensicsTracker(HeapManager heapManager)
+    {
         this.heapManager = heapManager;
         this.allocations = new CopyOnWriteArrayList<>();
         this.mutations = new CopyOnWriteArrayList<>();
@@ -45,16 +47,19 @@ public class HeapForensicsTracker {
         this.listeners = new CopyOnWriteArrayList<>();
     }
 
-    public void onExecutionStart() {
+    public void onExecutionStart()
+    {
         lastInstructionCount = 0;
     }
 
-    public void onExecutionEnd(long instructionCount) {
+    public void onExecutionEnd(long instructionCount)
+    {
         lastInstructionCount = instructionCount;
         fireExecutionEnded(instructionCount);
     }
 
-    public void recordAllocation(AllocationEvent event, ObjectInstance instance) {
+    public void recordAllocation(AllocationEvent event, ObjectInstance instance)
+    {
         if (!tracking) return;
 
         allocations.add(event);
@@ -63,14 +68,16 @@ public class HeapForensicsTracker {
         objectClassNames.put(event.getObjectId(), event.getClassName());
         objectFields.put(event.getObjectId(), new ConcurrentHashMap<>());
 
-        if (event.getProvenance() != null) {
+        if (event.getProvenance() != null)
+        {
             provenanceMap.put(event.getObjectId(), event.getProvenance());
         }
 
         fireAllocationRecorded(event);
     }
 
-    public void recordMutation(MutationEvent event) {
+    public void recordMutation(MutationEvent event)
+    {
         if (!tracking) return;
 
         mutations.add(event);
@@ -78,23 +85,25 @@ public class HeapForensicsTracker {
 
         String fieldKey = event.getFieldOwner() + "." + event.getFieldName() + ":" + event.getFieldDescriptor();
         FieldValue fv = FieldValue.builder()
-            .owner(event.getFieldOwner())
-            .name(event.getFieldName())
-            .descriptor(event.getFieldDescriptor())
-            .value(event.getNewValue())
-            .build();
+                .owner(event.getFieldOwner())
+                .name(event.getFieldName())
+                .descriptor(event.getFieldDescriptor())
+                .value(event.getNewValue())
+                .build();
 
         objectFields.computeIfAbsent(event.getObjectId(), k -> new ConcurrentHashMap<>()).put(fieldKey, fv);
 
         fireMutationRecorded(event);
     }
 
-    public HeapSnapshot takeSnapshot(String label) {
+    public HeapSnapshot takeSnapshot(String label)
+    {
         HeapSnapshot.Builder builder = HeapSnapshot.builder()
-            .label(label)
-            .instructionCount(lastInstructionCount);
+                .label(label)
+                .instructionCount(lastInstructionCount);
 
-        for (Map.Entry<Integer, ObjectInstance> entry : liveObjects.entrySet()) {
+        for (Map.Entry<Integer, ObjectInstance> entry : liveObjects.entrySet())
+        {
             int id = entry.getKey();
             ObjectInstance instance = entry.getValue();
             long allocTime = allocationTimes.getOrDefault(id, 0L);
@@ -102,9 +111,12 @@ public class HeapForensicsTracker {
             List<MutationEvent> objMutations = objectMutations.getOrDefault(id, Collections.emptyList());
 
             HeapObject heapObj;
-            if (instance instanceof ArrayInstance) {
+            if (instance instanceof ArrayInstance)
+            {
                 heapObj = HeapArray.fromArrayInstance((ArrayInstance) instance, allocTime, prov, objMutations);
-            } else {
+            }
+            else
+            {
                 heapObj = createHeapObject(instance, allocTime, prov, objMutations);
             }
 
@@ -118,19 +130,21 @@ public class HeapForensicsTracker {
         return snapshot;
     }
 
-    private HeapObject createHeapObject(ObjectInstance instance, long allocTime,
-                                         ProvenanceInfo prov, List<MutationEvent> mutations) {
+    private HeapObject createHeapObject(ObjectInstance instance, long allocTime, ProvenanceInfo prov, List<MutationEvent> mutations)
+    {
         HeapObject.Builder builder = HeapObject.builder()
-            .id(instance.getId())
-            .className(instance.getClassName())
-            .allocationTime(allocTime)
-            .provenance(prov)
-            .mutations(mutations)
-            .isArray(instance instanceof ArrayInstance);
+                .id(instance.getId())
+                .className(instance.getClassName())
+                .allocationTime(allocTime)
+                .provenance(prov)
+                .mutations(mutations)
+                .isArray(instance instanceof ArrayInstance);
 
         Map<String, FieldValue> fields = objectFields.get(instance.getId());
-        if (fields != null) {
-            for (FieldValue fv : fields.values()) {
+        if (fields != null)
+        {
+            for (FieldValue fv : fields.values())
+            {
                 builder.addField(fv);
             }
         }
@@ -138,14 +152,18 @@ public class HeapForensicsTracker {
         return builder.build();
     }
 
-    public HeapDiff compareSnapshots(HeapSnapshot before, HeapSnapshot after) {
+    public HeapDiff compareSnapshots(HeapSnapshot before, HeapSnapshot after)
+    {
         return HeapDiff.compare(before, after);
     }
 
-    public List<HeapObject> getObjectsByClass(String className) {
+    public List<HeapObject> getObjectsByClass(String className)
+    {
         List<HeapObject> result = new ArrayList<>();
-        for (Map.Entry<Integer, String> entry : objectClassNames.entrySet()) {
-            if (className.equals(entry.getValue())) {
+        for (Map.Entry<Integer, String> entry : objectClassNames.entrySet())
+        {
+            if (className.equals(entry.getValue()))
+            {
                 int id = entry.getKey();
                 ObjectInstance instance = liveObjects.get(id);
                 if (instance == null) continue;
@@ -154,9 +172,12 @@ public class HeapForensicsTracker {
                 ProvenanceInfo prov = provenanceMap.get(id);
                 List<MutationEvent> objMutations = objectMutations.getOrDefault(id, Collections.emptyList());
 
-                if (instance instanceof ArrayInstance) {
+                if (instance instanceof ArrayInstance)
+                {
                     result.add(HeapArray.fromArrayInstance((ArrayInstance) instance, allocTime, prov, objMutations));
-                } else {
+                }
+                else
+                {
                     result.add(createHeapObject(instance, allocTime, prov, objMutations));
                 }
             }
@@ -164,55 +185,66 @@ public class HeapForensicsTracker {
         return result;
     }
 
-    public Map<String, Integer> getClassCounts() {
+    public Map<String, Integer> getClassCounts()
+    {
         Map<String, Integer> counts = new HashMap<>();
-        for (String className : objectClassNames.values()) {
+        for (String className : objectClassNames.values())
+        {
             counts.merge(className, 1, Integer::sum);
         }
         return counts;
     }
 
-    public List<String> getClassesSortedByCount() {
+    public List<String> getClassesSortedByCount()
+    {
         return getClassCounts().entrySet().stream()
-            .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toList());
+                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
-    public List<AllocationEvent> getAllocationsInRange(long start, long end) {
+    public List<AllocationEvent> getAllocationsInRange(long start, long end)
+    {
         return allocations.stream()
-            .filter(e -> e.getInstructionCount() >= start && e.getInstructionCount() <= end)
-            .collect(Collectors.toList());
+                .filter(e -> e.getInstructionCount() >= start && e.getInstructionCount() <= end)
+                .collect(Collectors.toList());
     }
 
-    public List<AllocationEvent> getAllocationsForClass(String className) {
+    public List<AllocationEvent> getAllocationsForClass(String className)
+    {
         return allocations.stream()
-            .filter(e -> className.equals(e.getClassName()))
-            .collect(Collectors.toList());
+                .filter(e -> className.equals(e.getClassName()))
+                .collect(Collectors.toList());
     }
 
-    public List<MutationEvent> getMutationsForObject(int objectId) {
+    public List<MutationEvent> getMutationsForObject(int objectId)
+    {
         return objectMutations.getOrDefault(objectId, Collections.emptyList());
     }
 
-    public List<MutationEvent> getMutationsInRange(long start, long end) {
+    public List<MutationEvent> getMutationsInRange(long start, long end)
+    {
         return mutations.stream()
-            .filter(e -> e.getInstructionCount() >= start && e.getInstructionCount() <= end)
-            .collect(Collectors.toList());
+                .filter(e -> e.getInstructionCount() >= start && e.getInstructionCount() <= end)
+                .collect(Collectors.toList());
     }
 
-    public List<TimelineEvent> getTimeline() {
+    public List<TimelineEvent> getTimeline()
+    {
         List<TimelineEvent> events = new ArrayList<>();
 
-        for (AllocationEvent alloc : allocations) {
+        for (AllocationEvent alloc : allocations)
+        {
             events.add(TimelineEvent.allocation(alloc));
         }
 
-        for (MutationEvent mut : mutations) {
+        for (MutationEvent mut : mutations)
+        {
             events.add(TimelineEvent.mutation(mut));
         }
 
-        for (HeapSnapshot snap : snapshots) {
+        for (HeapSnapshot snap : snapshots)
+        {
             events.add(TimelineEvent.snapshot(snap.getInstructionCount(), snap.getLabel(), snap));
         }
 
@@ -220,51 +252,63 @@ public class HeapForensicsTracker {
         return events;
     }
 
-    public int getTotalObjectCount() {
+    public int getTotalObjectCount()
+    {
         return liveObjects.size();
     }
 
-    public int getTotalAllocationCount() {
+    public int getTotalAllocationCount()
+    {
         return allocations.size();
     }
 
-    public int getTotalMutationCount() {
+    public int getTotalMutationCount()
+    {
         return mutations.size();
     }
 
-    public long getCurrentInstructionCount() {
+    public long getCurrentInstructionCount()
+    {
         return lastInstructionCount;
     }
 
-    public List<AllocationEvent> getAllocations() {
+    public List<AllocationEvent> getAllocations()
+    {
         return Collections.unmodifiableList(allocations);
     }
 
-    public List<MutationEvent> getMutations() {
+    public List<MutationEvent> getMutations()
+    {
         return Collections.unmodifiableList(mutations);
     }
 
-    public List<HeapSnapshot> getSnapshots() {
+    public List<HeapSnapshot> getSnapshots()
+    {
         return Collections.unmodifiableList(snapshots);
     }
 
-    public HeapSnapshot getLatestSnapshot() {
+    public HeapSnapshot getLatestSnapshot()
+    {
         return snapshots.isEmpty() ? null : snapshots.get(snapshots.size() - 1);
     }
 
-    public ObjectInstance getLiveObject(int objectId) {
+    public ObjectInstance getLiveObject(int objectId)
+    {
         return liveObjects.get(objectId);
     }
 
-    public ProvenanceInfo getProvenance(int objectId) {
+    public ProvenanceInfo getProvenance(int objectId)
+    {
         return provenanceMap.get(objectId);
     }
 
-    public void setTracking(boolean tracking) {
+    public void setTracking(boolean tracking)
+    {
         this.tracking = tracking;
     }
 
-    public void reset() {
+    public void reset()
+    {
         allocations.clear();
         mutations.clear();
         snapshots.clear();
@@ -277,54 +321,88 @@ public class HeapForensicsTracker {
         lastInstructionCount = 0;
     }
 
-    public void addListener(ForensicsEventListener listener) {
+    public void addListener(ForensicsEventListener listener)
+    {
         listeners.add(listener);
     }
 
-    public void removeListener(ForensicsEventListener listener) {
+    public void removeListener(ForensicsEventListener listener)
+    {
         listeners.remove(listener);
     }
 
-    private void fireAllocationRecorded(AllocationEvent event) {
-        for (ForensicsEventListener listener : listeners) {
-            try {
+    private void fireAllocationRecorded(AllocationEvent event)
+    {
+        for (ForensicsEventListener listener : listeners)
+        {
+            try
+            {
                 listener.onAllocationRecorded(event);
-            } catch (Exception ignored) {
+            }
+            catch (Exception ignored)
+            {
             }
         }
     }
 
-    private void fireMutationRecorded(MutationEvent event) {
-        for (ForensicsEventListener listener : listeners) {
-            try {
+    private void fireMutationRecorded(MutationEvent event)
+    {
+        for (ForensicsEventListener listener : listeners)
+        {
+            try
+            {
                 listener.onMutationRecorded(event);
-            } catch (Exception ignored) {
+            }
+            catch (Exception ignored)
+            {
             }
         }
     }
 
-    private void fireSnapshotTaken(HeapSnapshot snapshot) {
-        for (ForensicsEventListener listener : listeners) {
-            try {
+    private void fireSnapshotTaken(HeapSnapshot snapshot)
+    {
+        for (ForensicsEventListener listener : listeners)
+        {
+            try
+            {
                 listener.onSnapshotTaken(snapshot);
-            } catch (Exception ignored) {
+            }
+            catch (Exception ignored)
+            {
             }
         }
     }
 
-    private void fireExecutionEnded(long instructionCount) {
-        for (ForensicsEventListener listener : listeners) {
-            try {
+    private void fireExecutionEnded(long instructionCount)
+    {
+        for (ForensicsEventListener listener : listeners)
+        {
+            try
+            {
                 listener.onExecutionEnded(instructionCount);
-            } catch (Exception ignored) {
+            }
+            catch (Exception ignored)
+            {
             }
         }
     }
 
-    public interface ForensicsEventListener {
-        default void onAllocationRecorded(AllocationEvent event) {}
-        default void onMutationRecorded(MutationEvent event) {}
-        default void onSnapshotTaken(HeapSnapshot snapshot) {}
-        default void onExecutionEnded(long instructionCount) {}
+    public interface ForensicsEventListener
+    {
+        default void onAllocationRecorded(AllocationEvent event)
+        {
+        }
+
+        default void onMutationRecorded(MutationEvent event)
+        {
+        }
+
+        default void onSnapshotTaken(HeapSnapshot snapshot)
+        {
+        }
+
+        default void onExecutionEnded(long instructionCount)
+        {
+        }
     }
 }

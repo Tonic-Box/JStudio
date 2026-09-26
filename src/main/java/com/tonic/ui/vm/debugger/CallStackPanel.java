@@ -11,22 +11,17 @@ import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class CallStackPanel extends ThemedJPanel {
+public class CallStackPanel extends ThemedJPanel
+{
 
     private final JList<FrameEntry> frameList;
     private final DefaultListModel<FrameEntry> listModel;
     private Consumer<FrameEntry> onFrameSelected;
 
-    public CallStackPanel() {
+    public CallStackPanel()
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
-        setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Call Stack",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            null,
-            JStudioTheme.getTextPrimary()
-        ));
+        setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Call Stack", TitledBorder.LEFT, TitledBorder.TOP, null, JStudioTheme.getTextPrimary()));
 
         listModel = new DefaultListModel<>();
         frameList = new JList<>(listModel);
@@ -39,10 +34,13 @@ public class CallStackPanel extends ThemedJPanel {
 
         frameList.setCellRenderer(new FrameCellRenderer());
 
-        frameList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && onFrameSelected != null) {
+        frameList.addListSelectionListener(e ->
+        {
+            if (!e.getValueIsAdjusting() && onFrameSelected != null)
+            {
                 FrameEntry selected = frameList.getSelectedValue();
-                if (selected != null) {
+                if (selected != null)
+                {
                     onFrameSelected.accept(selected);
                 }
             }
@@ -55,14 +53,19 @@ public class CallStackPanel extends ThemedJPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    public void updateCallStack(List<FrameEntry> frames) {
+    public void updateCallStack(List<FrameEntry> frames)
+    {
         listModel.clear();
-        for (FrameEntry frame : frames) {
+        for (FrameEntry frame : frames)
+        {
             listModel.addElement(frame);
         }
-        if (!frames.isEmpty()) {
-            for (int i = 0; i < frames.size(); i++) {
-                if (frames.get(i).isCurrent()) {
+        if (!frames.isEmpty())
+        {
+            for (int i = 0; i < frames.size(); i++)
+            {
+                if (frames.get(i).isCurrent())
+                {
                     frameList.setSelectedIndex(i);
                     break;
                 }
@@ -70,33 +73,42 @@ public class CallStackPanel extends ThemedJPanel {
         }
     }
 
-    public void clear() {
+    public void clear()
+    {
         listModel.clear();
     }
 
-    public void setOnFrameSelected(Consumer<FrameEntry> handler) {
+    public void setOnFrameSelected(Consumer<FrameEntry> handler)
+    {
         this.onFrameSelected = handler;
     }
 
-    private static class FrameCellRenderer extends DefaultListCellRenderer {
+    private static class FrameCellRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value,
-                int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            if (value instanceof FrameEntry) {
+            if (value instanceof FrameEntry)
+            {
                 FrameEntry frame = (FrameEntry) value;
                 setText(frame.toString());
 
                 boolean isJdkFrame = JdkClassFilter.isJdkClass(frame.getClassName());
 
-                if (isSelected) {
+                if (isSelected)
+                {
                     setBackground(JStudioTheme.getAccent());
                     setForeground(JStudioTheme.getTextPrimary());
-                } else if (frame.isCurrent()) {
+                }
+                else if (frame.isCurrent())
+                {
                     setBackground(JStudioTheme.getAccentSecondary().darker());
                     setForeground(JStudioTheme.getTextPrimary());
-                } else {
+                }
+                else
+                {
                     setBackground(JStudioTheme.getBgSecondary());
                     setForeground(isJdkFrame ? JStudioTheme.getTextDisabled() : JStudioTheme.getTextPrimary());
                 }

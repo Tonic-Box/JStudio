@@ -4,9 +4,11 @@ import com.tonic.event.Event;
 import lombok.Getter;
 
 @Getter
-public class FindUsagesEvent extends Event {
+public class FindUsagesEvent extends Event
+{
 
-    public enum TargetType {
+    public enum TargetType
+    {
         CLASS,
         METHOD,
         FIELD
@@ -17,7 +19,8 @@ public class FindUsagesEvent extends Event {
     private final String memberName;
     private final String memberDescriptor;
 
-    public FindUsagesEvent(Object source, String className) {
+    public FindUsagesEvent(Object source, String className)
+    {
         super(source);
         this.targetType = TargetType.CLASS;
         this.className = className;
@@ -25,22 +28,23 @@ public class FindUsagesEvent extends Event {
         this.memberDescriptor = null;
     }
 
-    public static FindUsagesEvent forClass(Object source, String className) {
+    public static FindUsagesEvent forClass(Object source, String className)
+    {
         return new FindUsagesEvent(source, className);
     }
 
-    public static FindUsagesEvent forMethod(Object source, String className,
-                                            String methodName, String methodDesc) {
+    public static FindUsagesEvent forMethod(Object source, String className, String methodName, String methodDesc)
+    {
         return new FindUsagesEvent(source, TargetType.METHOD, className, methodName, methodDesc);
     }
 
-    public static FindUsagesEvent forField(Object source, String className,
-                                           String fieldName, String fieldDesc) {
+    public static FindUsagesEvent forField(Object source, String className, String fieldName, String fieldDesc)
+    {
         return new FindUsagesEvent(source, TargetType.FIELD, className, fieldName, fieldDesc);
     }
 
-    private FindUsagesEvent(Object source, TargetType targetType, String className,
-                            String memberName, String memberDescriptor) {
+    private FindUsagesEvent(Object source, TargetType targetType, String className, String memberName, String memberDescriptor)
+    {
         super(source);
         this.targetType = targetType;
         this.className = className;
@@ -48,12 +52,14 @@ public class FindUsagesEvent extends Event {
         this.memberDescriptor = memberDescriptor;
     }
 
-    public String getTargetDisplay() {
+    public String getTargetDisplay()
+    {
         String displayClass = className != null ? className.replace('/', '.') : "unknown";
         int lastDot = displayClass.lastIndexOf('.');
         String simpleName = lastDot >= 0 ? displayClass.substring(lastDot + 1) : displayClass;
 
-        switch (targetType) {
+        switch (targetType)
+        {
             case METHOD:
                 return simpleName + "." + memberName + "()";
             case FIELD:

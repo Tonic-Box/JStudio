@@ -14,42 +14,52 @@ import java.io.IOException;
  * <p>At most one HPROF file exists on disk at a time - taking a new snapshot closes and deletes the old one.
  * {@link #clear()} (called on detach) disposes the current snapshot.
  */
-public final class LiveHeapService {
+public final class LiveHeapService
+{
 
     private static final LiveHeapService INSTANCE = new LiveHeapService();
 
     private HprofSnapshot snapshot;
 
-    private LiveHeapService() {
+    private LiveHeapService()
+    {
     }
 
-    public static LiveHeapService get() {
+    public static LiveHeapService get()
+    {
         return INSTANCE;
     }
 
-    public synchronized HprofSnapshot getSnapshot() {
+    public synchronized HprofSnapshot getSnapshot()
+    {
         return snapshot;
     }
 
     /** Take a fresh heap dump from the target, parse it, and replace any previous snapshot. Call off the EDT. */
-    public HprofSnapshot snapshot(LiveSession session) throws IOException {
+    public HprofSnapshot snapshot(LiveSession session) throws IOException
+    {
         String path = session.heapDump();
         HprofSnapshot fresh = new HprofSnapshot(new File(path));
         HprofSnapshot old;
-        synchronized (this) {
+        synchronized (this)
+        {
             old = snapshot;
             snapshot = fresh;
         }
-        if (old != null) {
+        if (old != null)
+        {
             old.close();
         }
         return fresh;
     }
 
     /** Return the current snapshot, taking one only if none exists. Call off the EDT. */
-    public HprofSnapshot ensureSnapshot(LiveSession session) throws IOException {
-        synchronized (this) {
-            if (snapshot != null) {
+    public HprofSnapshot ensureSnapshot(LiveSession session) throws IOException
+    {
+        synchronized (this)
+        {
+            if (snapshot != null)
+            {
                 return snapshot;
             }
         }
@@ -57,8 +67,10 @@ public final class LiveHeapService {
     }
 
     /** Dispose the current snapshot (close its file handle + delete the dump). */
-    public synchronized void clear() {
-        if (snapshot != null) {
+    public synchronized void clear()
+    {
+        if (snapshot != null)
+        {
             snapshot.close();
             snapshot = null;
         }

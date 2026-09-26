@@ -13,7 +13,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class MethodEntryModelTest {
+class MethodEntryModelTest
+{
 
     @Mock
     private MethodEntry methodEntry;
@@ -22,7 +23,8 @@ class MethodEntryModelTest {
     private ClassEntryModel owner;
 
     @Test
-    void testGetName() {
+    void testGetName()
+    {
         when(methodEntry.getName()).thenReturn("testMethod");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -32,7 +34,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testGetDescriptor() {
+    void testGetDescriptor()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("(ILjava/lang/String;)V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -42,7 +45,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testDisplaySignatureNoParams() {
+    void testDisplaySignatureNoParams()
+    {
         when(methodEntry.getName()).thenReturn("run");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -52,7 +56,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testDisplaySignatureWithParams() {
+    void testDisplaySignatureWithParams()
+    {
         when(methodEntry.getName()).thenReturn("process");
         when(methodEntry.getDesc()).thenReturn("(ILjava/lang/String;Z)V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -62,7 +67,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testDisplaySignatureMainMethod() {
+    void testDisplaySignatureMainMethod()
+    {
         when(methodEntry.getName()).thenReturn("main");
         when(methodEntry.getDesc()).thenReturn("([Ljava/lang/String;)V");
         when(methodEntry.getAccess()).thenReturn(0x0009);
@@ -72,7 +78,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIsPublic() {
+    void testIsPublic()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -84,7 +91,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIsPrivate() {
+    void testIsPrivate()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0002);
@@ -96,7 +104,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIsProtected() {
+    void testIsProtected()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0004);
@@ -108,7 +117,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIsStatic() {
+    void testIsStatic()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0008);
@@ -118,7 +128,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIsFinal() {
+    void testIsFinal()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0010);
@@ -128,7 +139,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIsSynchronized() {
+    void testIsSynchronized()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0020);
@@ -138,7 +150,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIsNative() {
+    void testIsNative()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0100);
@@ -148,7 +161,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIsAbstract() {
+    void testIsAbstract()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0400);
@@ -158,7 +172,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIsConstructor() {
+    void testIsConstructor()
+    {
         when(methodEntry.getName()).thenReturn("<init>");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -168,7 +183,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIsStaticInitializer() {
+    void testIsStaticInitializer()
+    {
         when(methodEntry.getName()).thenReturn("<clinit>");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0008);
@@ -178,7 +194,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testHasCodeWithCode() {
+    void testHasCodeWithCode()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -189,7 +206,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testHasCodeWithoutCode() {
+    void testHasCodeWithoutCode()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0400);
@@ -200,7 +218,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testDefaultAnalysisState() {
+    void testDefaultAnalysisState()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -210,7 +229,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testSetAnalysisState() {
+    void testSetAnalysisState()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -221,7 +241,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testInvalidateIRCache() {
+    void testInvalidateIRCache()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -239,7 +260,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testSelectedState() {
+    void testSelectedState()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -255,7 +277,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testBookmarkedState() {
+    void testBookmarkedState()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -268,7 +291,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testUserNotes() {
+    void testUserNotes()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -281,7 +305,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testToString() {
+    void testToString()
+    {
         when(methodEntry.getName()).thenReturn("calculate");
         when(methodEntry.getDesc()).thenReturn("(DD)D");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -291,7 +316,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testGetOwner() {
+    void testGetOwner()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -301,7 +327,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testGetMethodEntry() {
+    void testGetMethodEntry()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -311,7 +338,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testIconNotNull() {
+    void testIconNotNull()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001);
@@ -321,7 +349,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testCombinedAccessFlags() {
+    void testCombinedAccessFlags()
+    {
         when(methodEntry.getName()).thenReturn("test");
         when(methodEntry.getDesc()).thenReturn("()V");
         when(methodEntry.getAccess()).thenReturn(0x0001 | 0x0008 | 0x0010);
@@ -335,7 +364,8 @@ class MethodEntryModelTest {
     }
 
     @Test
-    void testComplexDescriptor() {
+    void testComplexDescriptor()
+    {
         when(methodEntry.getName()).thenReturn("complex");
         when(methodEntry.getDesc()).thenReturn("([[Ljava/lang/String;[I)Ljava/util/List;");
         when(methodEntry.getAccess()).thenReturn(0x0001);

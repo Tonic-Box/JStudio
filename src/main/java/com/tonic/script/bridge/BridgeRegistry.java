@@ -12,7 +12,8 @@ import java.util.function.Consumer;
  * Central registry for all script bridges.
  * Provides unified registration of global objects into the interpreter.
  */
-public class BridgeRegistry {
+public class BridgeRegistry
+{
 
     private final ScriptInterpreter interpreter;
     private final ProjectModel projectModel;
@@ -43,16 +44,19 @@ public class BridgeRegistry {
     @Getter
     private LiveBridge liveBridge;
 
-    public BridgeRegistry(ScriptInterpreter interpreter, ProjectModel projectModel) {
+    public BridgeRegistry(ScriptInterpreter interpreter, ProjectModel projectModel)
+    {
         this.interpreter = interpreter;
         this.projectModel = projectModel;
     }
 
-    public void setLogCallback(Consumer<String> log) {
+    public void setLogCallback(Consumer<String> log)
+    {
         this.logCallback = log;
     }
 
-    public void registerAll() {
+    public void registerAll()
+    {
         registerResultsBridge();
         registerProjectBridge();
         registerCallGraphBridge();
@@ -67,117 +71,151 @@ public class BridgeRegistry {
     }
 
     /** Registers the {@code live} binding for the attached JVM. Call only when a session exists. */
-    public void registerLiveBridge(LiveSession session) {
-        if (session != null) {
+    public void registerLiveBridge(LiveSession session)
+    {
+        if (session != null)
+        {
             liveBridge = new LiveBridge(interpreter, session);
-            if (logCallback != null) {
+            if (logCallback != null)
+            {
                 liveBridge.setLogCallback(logCallback);
             }
             interpreter.getGlobalContext().defineConstant("live", liveBridge.createBridgeObject());
         }
     }
 
-    public void registerResultsBridge() {
+    public void registerResultsBridge()
+    {
         resultsBridge = new ResultsBridge(interpreter);
-        if (logCallback != null) {
+        if (logCallback != null)
+        {
             resultsBridge.setLogCallback(logCallback);
         }
         interpreter.getGlobalContext().defineConstant("results", resultsBridge.createResultsObject());
     }
 
-    public void registerProjectBridge() {
-        if (projectModel != null) {
+    public void registerProjectBridge()
+    {
+        if (projectModel != null)
+        {
             projectBridge = new ProjectBridge(interpreter, projectModel);
-            if (logCallback != null) {
+            if (logCallback != null)
+            {
                 projectBridge.setLogCallback(logCallback);
             }
             interpreter.getGlobalContext().defineConstant("project", projectBridge.createProjectObject());
         }
     }
 
-    public void registerCallGraphBridge() {
-        if (projectModel != null) {
+    public void registerCallGraphBridge()
+    {
+        if (projectModel != null)
+        {
             callGraphBridge = new CallGraphBridge(interpreter, projectModel);
-            if (logCallback != null) {
+            if (logCallback != null)
+            {
                 callGraphBridge.setLogCallback(logCallback);
             }
             interpreter.getGlobalContext().defineConstant("callgraph", callGraphBridge.createCallGraphObject());
         }
     }
 
-    public void registerDataFlowBridge() {
-        if (projectModel != null) {
+    public void registerDataFlowBridge()
+    {
+        if (projectModel != null)
+        {
             dataFlowBridge = new DataFlowBridge(projectModel);
-            if (logCallback != null) {
+            if (logCallback != null)
+            {
                 dataFlowBridge.setLogCallback(logCallback);
             }
             interpreter.getGlobalContext().defineConstant("dataflow", dataFlowBridge.createDataFlowObject());
         }
     }
 
-    public void registerDependencyBridge() {
-        if (projectModel != null) {
+    public void registerDependencyBridge()
+    {
+        if (projectModel != null)
+        {
             dependencyBridge = new DependencyBridge(projectModel);
-            if (logCallback != null) {
+            if (logCallback != null)
+            {
                 dependencyBridge.setLogCallback(logCallback);
             }
             interpreter.getGlobalContext().defineConstant("dependencies", dependencyBridge.createDependencyObject());
         }
     }
 
-    public void registerSimulationBridge() {
-        if (projectModel != null) {
+    public void registerSimulationBridge()
+    {
+        if (projectModel != null)
+        {
             simulationBridge = new SimulationBridge(interpreter, projectModel);
-            if (logCallback != null) {
+            if (logCallback != null)
+            {
                 simulationBridge.setLogCallback(logCallback);
             }
             interpreter.getGlobalContext().defineConstant("simulation", simulationBridge.createSimulationObject());
         }
     }
 
-    public void registerInstrumentationBridge() {
-        if (projectModel != null) {
+    public void registerInstrumentationBridge()
+    {
+        if (projectModel != null)
+        {
             instrumentationBridge = new InstrumentationBridge(interpreter, projectModel);
-            if (logCallback != null) {
+            if (logCallback != null)
+            {
                 instrumentationBridge.setLogCallback(logCallback);
             }
             interpreter.getGlobalContext().defineConstant("instrument", instrumentationBridge.createInstrumentObject());
         }
     }
 
-    public void registerPatternBridge() {
-        if (projectModel != null) {
+    public void registerPatternBridge()
+    {
+        if (projectModel != null)
+        {
             patternBridge = new PatternBridge(projectModel);
-            if (logCallback != null) {
+            if (logCallback != null)
+            {
                 patternBridge.setLogCallback(logCallback);
             }
             interpreter.getGlobalContext().defineConstant("patterns", patternBridge.createPatternObject());
         }
     }
 
-    public void registerTypeBridge() {
-        if (projectModel != null) {
+    public void registerTypeBridge()
+    {
+        if (projectModel != null)
+        {
             typeBridge = new TypeBridge(projectModel);
-            if (logCallback != null) {
+            if (logCallback != null)
+            {
                 typeBridge.setLogCallback(logCallback);
             }
             interpreter.getGlobalContext().defineConstant("types", typeBridge.createTypesObject());
         }
     }
 
-    public void registerStringBridge() {
-        if (projectModel != null) {
+    public void registerStringBridge()
+    {
+        if (projectModel != null)
+        {
             stringBridge = new StringBridge(projectModel);
-            if (logCallback != null) {
+            if (logCallback != null)
+            {
                 stringBridge.setLogCallback(logCallback);
             }
             interpreter.getGlobalContext().defineConstant("strings", stringBridge.createStringsObject());
         }
     }
 
-    public void registerPipeline() {
+    public void registerPipeline()
+    {
         scriptPipeline = new ScriptPipeline(interpreter);
-        if (logCallback != null) {
+        if (logCallback != null)
+        {
             scriptPipeline.setLogCallback(logCallback);
         }
         interpreter.getGlobalContext().defineConstant("pipeline", scriptPipeline.createPipelineObject());

@@ -3,7 +3,8 @@ package com.tonic.ui.editor.cfg;
 import lombok.Getter;
 
 @Getter
-public enum CFGEdgeType {
+public enum CFGEdgeType
+{
     NORMAL("#808080"),
     UNCONDITIONAL("#f39c12"),
     CONDITIONAL_TRUE("#27ae60"),
@@ -14,7 +15,8 @@ public enum CFGEdgeType {
 
     private final String color;
 
-    CFGEdgeType(String color) {
+    CFGEdgeType(String color)
+    {
         this.color = color;
     }
 

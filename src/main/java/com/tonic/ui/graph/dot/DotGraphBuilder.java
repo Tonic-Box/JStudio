@@ -16,7 +16,8 @@ import java.util.Map;
  * (insert vertices/edges inside a model update, then {@link mxHierarchicalLayout}). Node/edge styles are inline so
  * arbitrary DOT colors are honored; missing colors fall back to the current {@link JStudioTheme}.
  */
-public final class DotGraphBuilder {
+public final class DotGraphBuilder
+{
 
     private static final int NODE_HEIGHT = 36;
     private static final int LINE_HEIGHT = 16;
@@ -25,10 +26,12 @@ public final class DotGraphBuilder {
     private static final int MIN_NODE_WIDTH = 90;
     private static final int MAX_NODE_WIDTH = 260;
 
-    private DotGraphBuilder() {
+    private DotGraphBuilder()
+    {
     }
 
-    public static mxGraph build(DotGraph dot) {
+    public static mxGraph build(DotGraph dot)
+    {
         mxGraph graph = new mxGraph();
         graph.setHtmlLabels(false);
         graph.setCellsEditable(false);
@@ -38,31 +41,36 @@ public final class DotGraphBuilder {
 
         Object parent = graph.getDefaultParent();
         graph.getModel().beginUpdate();
-        try {
+        try
+        {
             Map<String, Object> cells = new HashMap<>();
-            for (DotGraph.Node node : dot.getNodes()) {
+            for (DotGraph.Node node : dot.getNodes())
+            {
                 String label = node.getLabel() == null ? node.getId() : node.getLabel();
-                Object cell = graph.insertVertex(parent, node.getId(), label,
-                        0, 0, nodeWidth(label), nodeHeight(label), nodeStyle(node));
+                Object cell = graph.insertVertex(parent, node.getId(), label, 0, 0, nodeWidth(label), nodeHeight(label), nodeStyle(node));
                 cells.put(node.getId(), cell);
             }
-            for (DotGraph.Edge edge : dot.getEdges()) {
+            for (DotGraph.Edge edge : dot.getEdges())
+            {
                 Object src = cells.get(edge.getFrom());
                 Object tgt = cells.get(edge.getTo());
-                if (src == null || tgt == null) {
+                if (src == null || tgt == null)
+                {
                     continue;
                 }
-                graph.insertEdge(parent, null, edge.getLabel() == null ? "" : edge.getLabel(),
-                        src, tgt, edgeStyle(edge));
+                graph.insertEdge(parent, null, edge.getLabel() == null ? "" : edge.getLabel(), src, tgt, edgeStyle(edge));
             }
             applyLayout(graph, parent, dot.getRankdir());
-        } finally {
+        }
+        finally
+        {
             graph.getModel().endUpdate();
         }
         return graph;
     }
 
-    private static void applyLayout(mxGraph graph, Object parent, DotGraph.Rankdir rankdir) {
+    private static void applyLayout(mxGraph graph, Object parent, DotGraph.Rankdir rankdir)
+    {
         mxHierarchicalLayout layout = new mxHierarchicalLayout(graph, orientation(rankdir));
         layout.setInterRankCellSpacing(55);
         layout.setIntraCellSpacing(30);
@@ -71,17 +79,24 @@ public final class DotGraphBuilder {
         layout.execute(parent);
     }
 
-    private static int orientation(DotGraph.Rankdir rankdir) {
-        switch (rankdir) {
-            case LR: return SwingConstants.WEST;
-            case RL: return SwingConstants.EAST;
-            case BT: return SwingConstants.SOUTH;
+    private static int orientation(DotGraph.Rankdir rankdir)
+    {
+        switch (rankdir)
+        {
+            case LR:
+                return SwingConstants.WEST;
+            case RL:
+                return SwingConstants.EAST;
+            case BT:
+                return SwingConstants.SOUTH;
             case TB:
-            default: return SwingConstants.NORTH;
+            default:
+                return SwingConstants.NORTH;
         }
     }
 
-    private static String nodeStyle(DotGraph.Node node) {
+    private static String nodeStyle(DotGraph.Node node)
+    {
         StringBuilder sb = new StringBuilder();
         sb.append(mxConstants.STYLE_SHAPE).append('=').append(shape(node.getShape())).append(';');
         sb.append(mxConstants.STYLE_FILLCOLOR).append('=')
@@ -93,16 +108,19 @@ public final class DotGraphBuilder {
         sb.append(mxConstants.STYLE_VERTICAL_ALIGN).append('=').append(mxConstants.ALIGN_MIDDLE).append(';');
         sb.append(mxConstants.STYLE_ALIGN).append('=').append(mxConstants.ALIGN_CENTER).append(';');
         sb.append(mxConstants.STYLE_WHITE_SPACE).append("=wrap;");
-        if (node.isRounded() || isBox(node.getShape())) {
+        if (node.isRounded() || isBox(node.getShape()))
+        {
             sb.append(mxConstants.STYLE_ROUNDED).append("=1;").append(mxConstants.STYLE_ARCSIZE).append("=10;");
         }
-        if (node.isDashed()) {
+        if (node.isDashed())
+        {
             sb.append(mxConstants.STYLE_DASHED).append("=1;");
         }
         return sb.toString();
     }
 
-    private static String edgeStyle(DotGraph.Edge edge) {
+    private static String edgeStyle(DotGraph.Edge edge)
+    {
         StringBuilder sb = new StringBuilder();
         sb.append(mxConstants.STYLE_STROKECOLOR).append('=').append(toHex(JStudioTheme.getTextSecondary())).append(';');
         sb.append(mxConstants.STYLE_FONTCOLOR).append('=').append(toHex(JStudioTheme.getTextSecondary())).append(';');
@@ -111,17 +129,21 @@ public final class DotGraphBuilder {
         sb.append(mxConstants.STYLE_EDGE).append('=').append(mxConstants.EDGESTYLE_ORTHOGONAL).append(';');
         sb.append(mxConstants.STYLE_ENDARROW).append('=')
                 .append(edge.isDirected() ? mxConstants.ARROW_CLASSIC : mxConstants.NONE).append(';');
-        if (edge.isDashed()) {
+        if (edge.isDashed())
+        {
             sb.append(mxConstants.STYLE_DASHED).append("=1;");
         }
         return sb.toString();
     }
 
-    private static String shape(String dotShape) {
-        if (dotShape == null) {
+    private static String shape(String dotShape)
+    {
+        if (dotShape == null)
+        {
             return mxConstants.SHAPE_RECTANGLE;
         }
-        switch (dotShape) {
+        switch (dotShape)
+        {
             case "ellipse":
             case "oval":
             case "circle":
@@ -136,43 +158,53 @@ public final class DotGraphBuilder {
         }
     }
 
-    private static boolean isBox(String dotShape) {
+    private static boolean isBox(String dotShape)
+    {
         return dotShape == null || dotShape.equals("box") || dotShape.equals("rect")
                 || dotShape.equals("rectangle") || dotShape.equals("square");
     }
 
-    private static int nodeWidth(String label) {
+    private static int nodeWidth(String label)
+    {
         int longest = 0;
-        for (String line : label.split("\n", -1)) {
+        for (String line : label.split("\n", -1))
+        {
             longest = Math.max(longest, line.length());
         }
         return Math.max(MIN_NODE_WIDTH, Math.min(MAX_NODE_WIDTH, longest * CHAR_WIDTH + NODE_PADDING));
     }
 
-    private static int nodeHeight(String label) {
+    private static int nodeHeight(String label)
+    {
         int lines = label.split("\n", -1).length;
         return NODE_HEIGHT + (lines - 1) * LINE_HEIGHT;
     }
 
     /** Resolves a DOT color (hex or a common name) to a hex string, or the theme fallback. */
-    private static String color(String dotColor, Color fallback) {
-        if (dotColor == null || dotColor.trim().isEmpty()) {
+    private static String color(String dotColor, Color fallback)
+    {
+        if (dotColor == null || dotColor.trim().isEmpty())
+        {
             return toHex(fallback);
         }
         String c = dotColor.trim();
-        if (c.startsWith("#")) {
+        if (c.startsWith("#"))
+        {
             return c;
         }
         String named = NAMED_COLORS.get(c.toLowerCase());
         return named != null ? named : toHex(fallback);
     }
 
-    private static String toHex(Color c) {
+    private static String toHex(Color c)
+    {
         return String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue());
     }
 
     private static final Map<String, String> NAMED_COLORS = new HashMap<>();
-    static {
+
+    static
+    {
         NAMED_COLORS.put("black", "#000000");
         NAMED_COLORS.put("white", "#FFFFFF");
         NAMED_COLORS.put("red", "#E74C3C");

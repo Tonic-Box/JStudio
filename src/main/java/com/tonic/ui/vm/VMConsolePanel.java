@@ -18,7 +18,8 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VMConsolePanel extends ThemedJPanel {
+public class VMConsolePanel extends ThemedJPanel
+{
 
     private JTextPane outputPane;
     private JTextField inputField;
@@ -37,7 +38,8 @@ public class VMConsolePanel extends ThemedJPanel {
     private Style infoStyle;
     private Style promptStyle;
 
-    public VMConsolePanel() {
+    public VMConsolePanel()
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
         this.parser = new CommandParser();
         this.commandHistory = new ArrayList<>();
@@ -49,7 +51,8 @@ public class VMConsolePanel extends ThemedJPanel {
         printWelcome();
     }
 
-    private void initializeComponents() {
+    private void initializeComponents()
+    {
         outputPane = new JTextPane();
         outputPane.setEditable(false);
         outputPane.setBackground(JStudioTheme.getBgSecondary());
@@ -74,19 +77,21 @@ public class VMConsolePanel extends ThemedJPanel {
         inputField.setForeground(JStudioTheme.getTextPrimary());
         inputField.setCaretColor(JStudioTheme.getTextPrimary());
         inputField.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
-        inputField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL)
-        ));
+        inputField.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY, UIConstants.SPACING_SMALL)));
 
         inputField.addActionListener(e -> executeCommand());
-        inputField.addKeyListener(new KeyAdapter() {
+        inputField.addKeyListener(new KeyAdapter()
+        {
             @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_UP) {
+            public void keyPressed(KeyEvent e)
+            {
+                if (e.getKeyCode() == KeyEvent.VK_UP)
+                {
                     navigateHistory(-1);
                     e.consume();
-                } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_DOWN)
+                {
                     navigateHistory(1);
                     e.consume();
                 }
@@ -114,20 +119,19 @@ public class VMConsolePanel extends ThemedJPanel {
         add(inputPanel, BorderLayout.SOUTH);
     }
 
-    private JButton createButton(String text, ActionListener action) {
+    private JButton createButton(String text, ActionListener action)
+    {
         JButton button = new JButton(text);
         button.setBackground(JStudioTheme.getBgSecondary());
         button.setForeground(JStudioTheme.getTextPrimary());
         button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(3, 10, 3, 10)
-        ));
+        button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(3, 10, 3, 10)));
         button.addActionListener(action);
         return button;
     }
 
-    private void initializeStyles() {
+    private void initializeStyles()
+    {
         StyledDocument doc = outputPane.getStyledDocument();
 
         defaultStyle = doc.addStyle("default", null);
@@ -147,15 +151,18 @@ public class VMConsolePanel extends ThemedJPanel {
         StyleConstants.setBold(promptStyle, true);
     }
 
-    private void printWelcome() {
+    private void printWelcome()
+    {
         appendText("VM Console - Interactive Method Execution\n", infoStyle);
         appendText("Type /help for available commands\n", infoStyle);
         appendText("Execute methods: ClassName.methodName(args)\n\n", infoStyle);
     }
 
-    private void executeCommand() {
+    private void executeCommand()
+    {
         String input = inputField.getText().trim();
-        if (input.isEmpty()) {
+        if (input.isEmpty())
+        {
             return;
         }
 
@@ -167,7 +174,8 @@ public class VMConsolePanel extends ThemedJPanel {
 
         CommandParser.ParseResult result = parser.parse(input);
 
-        switch (result.getType()) {
+        switch (result.getType())
+        {
             case COMMAND:
                 handleCommand(result.getCommand(), result.getCommandArgs());
                 break;
@@ -182,8 +190,10 @@ public class VMConsolePanel extends ThemedJPanel {
         }
     }
 
-    private void handleCommand(String command, String args) {
-        switch (command) {
+    private void handleCommand(String command, String args)
+    {
+        switch (command)
+        {
             case "help":
                 printHelp();
                 break;
@@ -211,7 +221,8 @@ public class VMConsolePanel extends ThemedJPanel {
         }
     }
 
-    private void printHelp() {
+    private void printHelp()
+    {
         appendText("\nAvailable Commands:\n", infoStyle);
         appendText("  /help              Show this help message\n", defaultStyle);
         appendText("  /init              Initialize the VM\n", defaultStyle);
@@ -235,36 +246,48 @@ public class VMConsolePanel extends ThemedJPanel {
         appendText("  Null: null\n\n", defaultStyle);
     }
 
-    private void initializeVM() {
-        try {
-            if (!ProjectService.getInstance().hasProject()) {
+    private void initializeVM()
+    {
+        try
+        {
+            if (!ProjectService.getInstance().hasProject())
+            {
                 appendText("Error: No project loaded\n", errorStyle);
                 return;
             }
 
             VMExecutionService.getInstance().initialize();
             appendText("VM initialized successfully\n", successStyle);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             appendText("Failed to initialize VM: " + e.getMessage() + "\n", errorStyle);
         }
     }
 
-    private void resetVM() {
-        try {
+    private void resetVM()
+    {
+        try
+        {
             VMExecutionService.getInstance().reset();
             appendText("VM reset successfully\n", successStyle);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             appendText("Failed to reset VM: " + e.getMessage() + "\n", errorStyle);
         }
     }
 
-    private void showStatus() {
+    private void showStatus()
+    {
         String status = VMExecutionService.getInstance().getVMStatus();
         appendText(status + "\n", infoStyle);
     }
 
-    private void listClasses(String filter) {
-        if (!ProjectService.getInstance().hasProject()) {
+    private void listClasses(String filter)
+    {
+        if (!ProjectService.getInstance().hasProject())
+        {
             appendText("Error: No project loaded\n", errorStyle);
             return;
         }
@@ -276,12 +299,15 @@ public class VMConsolePanel extends ThemedJPanel {
         int max = 50;
 
         appendText("Loaded classes:\n", infoStyle);
-        for (var classEntry : classes) {
+        for (var classEntry : classes)
+        {
             String name = classEntry.getClassName().replace('/', '.');
-            if (filter == null || filter.isEmpty() || name.contains(filter)) {
+            if (filter == null || filter.isEmpty() || name.contains(filter))
+            {
                 appendText("  " + name + "\n", defaultStyle);
                 count++;
-                if (count >= max) {
+                if (count >= max)
+                {
                     appendText("  ... and " + (classes.size() - count) + " more\n", infoStyle);
                     break;
                 }
@@ -290,33 +316,39 @@ public class VMConsolePanel extends ThemedJPanel {
         appendText("Total: " + classes.size() + " user classes\n\n", infoStyle);
     }
 
-    private void listMethods(String className) {
-        if (className == null || className.isEmpty()) {
+    private void listMethods(String className)
+    {
+        if (className == null || className.isEmpty())
+        {
             appendText("Usage: /methods <className>\n", errorStyle);
             return;
         }
 
-        if (!ProjectService.getInstance().hasProject()) {
+        if (!ProjectService.getInstance().hasProject())
+        {
             appendText("Error: No project loaded\n", errorStyle);
             return;
         }
 
         String internalName = className.replace('.', '/');
 
-        if (JdkClassFilter.isJdkClass(internalName)) {
+        if (JdkClassFilter.isJdkClass(internalName))
+        {
             appendText("Cannot list JDK class methods: " + className + "\n", errorStyle);
             return;
         }
 
         ClassFile classFile = ProjectService.getInstance().getCurrentProject().getClassPool().get(internalName);
 
-        if (classFile == null) {
+        if (classFile == null)
+        {
             appendText("Class not found: " + className + "\n", errorStyle);
             return;
         }
 
         appendText("Methods in " + className + ":\n", infoStyle);
-        for (MethodEntry method : classFile.getMethods()) {
+        for (MethodEntry method : classFile.getMethods())
+        {
             String flags = "";
             int access = method.getAccess();
             if ((access & 0x0008) != 0) flags += "static ";
@@ -329,13 +361,18 @@ public class VMConsolePanel extends ThemedJPanel {
         appendText("\n", defaultStyle);
     }
 
-    private void handleMethodCall(CommandParser.ParseResult result) {
-        if (!VMExecutionService.getInstance().isInitialized()) {
+    private void handleMethodCall(CommandParser.ParseResult result)
+    {
+        if (!VMExecutionService.getInstance().isInitialized())
+        {
             appendText("VM not initialized. Initializing...\n", infoStyle);
-            try {
+            try
+            {
                 VMExecutionService.getInstance().initialize();
                 appendText("VM initialized successfully\n", successStyle);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 appendText("Failed to initialize VM: " + e.getMessage() + "\n", errorStyle);
                 return;
             }
@@ -349,19 +386,25 @@ public class VMConsolePanel extends ThemedJPanel {
 
         setExecuting(true);
 
-        SwingWorker<ExecutionResult, Void> worker = new SwingWorker<>() {
+        SwingWorker<ExecutionResult, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected ExecutionResult doInBackground() {
+            protected ExecutionResult doInBackground()
+            {
                 return VMExecutionService.getInstance().executeStaticMethod(className, methodName, null, args);
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 setExecuting(false);
-                try {
+                try
+                {
                     ExecutionResult execResult = get();
                     displayResult(execResult);
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     appendText("Execution failed: " + e.getMessage() + "\n", errorStyle);
                 }
             }
@@ -370,45 +413,58 @@ public class VMConsolePanel extends ThemedJPanel {
         worker.execute();
     }
 
-    private void displayResult(ExecutionResult result) {
-        if (result.isSuccess()) {
+    private void displayResult(ExecutionResult result)
+    {
+        if (result.isSuccess())
+        {
             appendText("Result: " + result.getFormattedReturnValue() + "\n", successStyle);
-        } else {
+        }
+        else
+        {
             appendText("Execution failed\n", errorStyle);
-            if (result.getException() != null) {
+            if (result.getException() != null)
+            {
                 appendText("  " + result.getException().getMessage() + "\n", errorStyle);
             }
         }
         appendText(result.getFormattedStatistics() + "\n\n", infoStyle);
     }
 
-    private void stopExecution() {
+    private void stopExecution()
+    {
         VMExecutionService.getInstance().interrupt();
         appendText("Execution interrupted\n", errorStyle);
         setExecuting(false);
     }
 
-    private void clearOutput() {
+    private void clearOutput()
+    {
         outputPane.setText("");
         printWelcome();
     }
 
-    private void setExecuting(boolean executing) {
+    private void setExecuting(boolean executing)
+    {
         this.isExecuting = executing;
         runButton.setEnabled(!executing);
         stopButton.setEnabled(executing);
         inputField.setEnabled(!executing);
     }
 
-    private void navigateHistory(int direction) {
-        if (commandHistory.isEmpty()) {
+    private void navigateHistory(int direction)
+    {
+        if (commandHistory.isEmpty())
+        {
             return;
         }
 
         historyIndex += direction;
-        if (historyIndex < 0) {
+        if (historyIndex < 0)
+        {
             historyIndex = 0;
-        } else if (historyIndex >= commandHistory.size()) {
+        }
+        else if (historyIndex >= commandHistory.size())
+        {
             historyIndex = commandHistory.size();
             inputField.setText("");
             return;
@@ -418,17 +474,22 @@ public class VMConsolePanel extends ThemedJPanel {
         inputField.setCaretPosition(inputField.getText().length());
     }
 
-    private void appendText(String text, Style style) {
+    private void appendText(String text, Style style)
+    {
         StyledDocument doc = outputPane.getStyledDocument();
-        try {
+        try
+        {
             doc.insertString(doc.getLength(), text, style);
             outputPane.setCaretPosition(doc.getLength());
-        } catch (BadLocationException e) {
+        }
+        catch (BadLocationException e)
+        {
             ConsoleLogService.getInstance().error("Failed to append text to console output", e);
         }
     }
 
-    public void focusInput() {
+    public void focusInput()
+    {
         inputField.requestFocusInWindow();
     }
 }

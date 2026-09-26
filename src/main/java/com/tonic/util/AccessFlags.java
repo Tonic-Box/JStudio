@@ -1,6 +1,7 @@
 package com.tonic.util;
 
-public final class AccessFlags {
+public final class AccessFlags
+{
 
     public static final int PUBLIC = 0x0001;
     public static final int PRIVATE = 0x0002;
@@ -18,70 +19,87 @@ public final class AccessFlags {
     public static final int ANNOTATION = 0x2000;
     public static final int ENUM = 0x4000;
 
-    private AccessFlags() {
+    private AccessFlags()
+    {
     }
 
-    public static boolean isPublic(int flags) {
+    public static boolean isPublic(int flags)
+    {
         return (flags & PUBLIC) != 0;
     }
 
-    public static boolean isPrivate(int flags) {
+    public static boolean isPrivate(int flags)
+    {
         return (flags & PRIVATE) != 0;
     }
 
-    public static boolean isProtected(int flags) {
+    public static boolean isProtected(int flags)
+    {
         return (flags & PROTECTED) != 0;
     }
 
-    public static boolean isPackagePrivate(int flags) {
+    public static boolean isPackagePrivate(int flags)
+    {
         return !isPublic(flags) && !isPrivate(flags) && !isProtected(flags);
     }
 
-    public static boolean isStatic(int flags) {
+    public static boolean isStatic(int flags)
+    {
         return (flags & STATIC) != 0;
     }
 
-    public static boolean isFinal(int flags) {
+    public static boolean isFinal(int flags)
+    {
         return (flags & FINAL) != 0;
     }
 
-    public static boolean isSynchronized(int flags) {
+    public static boolean isSynchronized(int flags)
+    {
         return (flags & SYNCHRONIZED) != 0;
     }
 
-    public static boolean isVolatile(int flags) {
+    public static boolean isVolatile(int flags)
+    {
         return (flags & VOLATILE) != 0;
     }
 
-    public static boolean isTransient(int flags) {
+    public static boolean isTransient(int flags)
+    {
         return (flags & TRANSIENT) != 0;
     }
 
-    public static boolean isNative(int flags) {
+    public static boolean isNative(int flags)
+    {
         return (flags & NATIVE) != 0;
     }
 
-    public static boolean isInterface(int flags) {
+    public static boolean isInterface(int flags)
+    {
         return (flags & INTERFACE) != 0;
     }
 
-    public static boolean isAbstract(int flags) {
+    public static boolean isAbstract(int flags)
+    {
         return (flags & ABSTRACT) != 0;
     }
 
-    public static boolean isStrict(int flags) {
+    public static boolean isStrict(int flags)
+    {
         return (flags & STRICT) != 0;
     }
 
-    public static boolean isSynthetic(int flags) {
+    public static boolean isSynthetic(int flags)
+    {
         return (flags & SYNTHETIC) != 0;
     }
 
-    public static boolean isAnnotation(int flags) {
+    public static boolean isAnnotation(int flags)
+    {
         return (flags & ANNOTATION) != 0;
     }
 
-    public static boolean isEnum(int flags) {
+    public static boolean isEnum(int flags)
+    {
         return (flags & ENUM) != 0;
     }
 }

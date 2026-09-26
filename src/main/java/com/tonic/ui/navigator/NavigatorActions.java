@@ -35,36 +35,39 @@ import java.util.function.Consumer;
  * announced over the {@link EventBus}; the host panel is told to (re)select a class or toggle its loading overlay
  * via injected callbacks.
  */
-final class NavigatorActions {
+final class NavigatorActions
+{
 
     private final JComponent parent;
     private final MainFrame mainFrame;
     private final Consumer<String> selectClass;
     private final Consumer<Boolean> setLoading;
 
-    NavigatorActions(JComponent parent, MainFrame mainFrame, Consumer<String> selectClass,
-                     Consumer<Boolean> setLoading) {
+    NavigatorActions(JComponent parent, MainFrame mainFrame, Consumer<String> selectClass, Consumer<Boolean> setLoading)
+    {
         this.parent = parent;
         this.mainFrame = mainFrame;
         this.selectClass = selectClass;
         this.setLoading = setLoading;
     }
 
-    void showNewClassDialog(String packageName) {
+    void showNewClassDialog(String packageName)
+    {
         ProjectModel existingProject = ProjectService.getInstance().getCurrentProject();
 
         String internalPackageName = packageName.replace('.', '/');
-        NewClassDialog dialog = new NewClassDialog(
-                SwingUtilities.getWindowAncestor(parent), internalPackageName);
+        NewClassDialog dialog = new NewClassDialog(SwingUtilities.getWindowAncestor(parent), internalPackageName);
         dialog.setVisible(true);
 
-        if (!dialog.isConfirmed()) {
+        if (!dialog.isConfirmed())
+        {
             return;
         }
 
         ClassCreationParams params = dialog.getCreationParams();
 
-        try {
+        try
+        {
             ClassFile classFile = ClassCreationService.getInstance().createClass(params);
 
             // With no project open, creating a class spins up a new project to hold it. Done only
@@ -76,60 +79,56 @@ final class NavigatorActions {
 
             ClassEntryModel entry = project.addClass(classFile);
 
-            if (newProject) {
+            if (newProject)
+            {
                 EventBus.getInstance().post(new ProjectLoadedEvent(this, project));
-            } else {
+            }
+            else
+            {
                 EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 1));
             }
 
-            SwingUtilities.invokeLater(() -> {
+            SwingUtilities.invokeLater(() ->
+            {
                 selectClass.accept(entry.getClassName());
                 EventBus.getInstance().post(new ClassSelectedEvent(this, entry));
             });
 
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(parent,
-                    "Failed to create class: " + e.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        }
+        catch (Exception e)
+        {
+            JOptionPane.showMessageDialog(parent, "Failed to create class: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    void showNewResourceFileDialog(String folderPath) {
+    void showNewResourceFileDialog(String folderPath)
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            JOptionPane.showMessageDialog(parent,
-                    "No project loaded",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        if (project == null)
+        {
+            JOptionPane.showMessageDialog(parent, "No project loaded", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        String filename = JOptionPane.showInputDialog(parent,
-                "Enter filename (with extension):",
-                "New Resource File",
-                JOptionPane.PLAIN_MESSAGE);
+        String filename = JOptionPane.showInputDialog(parent, "Enter filename (with extension):", "New Resource File", JOptionPane.PLAIN_MESSAGE);
 
-        if (filename == null || filename.trim().isEmpty()) {
+        if (filename == null || filename.trim().isEmpty())
+        {
             return;
         }
 
         filename = filename.trim();
-        if (!isValidFilename(filename)) {
-            JOptionPane.showMessageDialog(parent,
-                    "Invalid filename",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        if (!isValidFilename(filename))
+        {
+            JOptionPane.showMessageDialog(parent, "Invalid filename", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         String path = folderPath.isEmpty() ? filename : folderPath + "/" + filename;
 
-        if (project.getResource(path) != null) {
-            JOptionPane.showMessageDialog(parent,
-                    "A resource with this name already exists",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        if (project.getResource(path) != null)
+        {
+            JOptionPane.showMessageDialog(parent, "A resource with this name already exists", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -138,17 +137,15 @@ final class NavigatorActions {
 
         EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 0));
 
-        SwingUtilities.invokeLater(() ->
-                EventBus.getInstance().post(new ResourceSelectedEvent(this, resource)));
+        SwingUtilities.invokeLater(() -> EventBus.getInstance().post(new ResourceSelectedEvent(this, resource)));
     }
 
-    void showImportResourceDialog(String folderPath) {
+    void showImportResourceDialog(String folderPath)
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
-            JOptionPane.showMessageDialog(parent,
-                    "No project loaded",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        if (project == null)
+        {
+            JOptionPane.showMessageDialog(parent, "No project loaded", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -158,24 +155,26 @@ final class NavigatorActions {
         fileChooser.setMultiSelectionEnabled(true);
 
         int result = fileChooser.showOpenDialog(parent);
-        if (result != JFileChooser.APPROVE_OPTION) {
+        if (result != JFileChooser.APPROVE_OPTION)
+        {
             return;
         }
 
         File[] selectedFiles = fileChooser.getSelectedFiles();
         int importedCount = 0;
 
-        for (File file : selectedFiles) {
-            try {
+        for (File file : selectedFiles)
+        {
+            try
+            {
                 byte[] data = Files.readAllBytes(file.toPath());
                 String path = folderPath.isEmpty() ? file.getName() : folderPath + "/" + file.getName();
 
-                if (project.getResource(path) != null) {
-                    int overwrite = JOptionPane.showConfirmDialog(parent,
-                            "Resource '" + path + "' already exists. Overwrite?",
-                            "Confirm Overwrite",
-                            JOptionPane.YES_NO_OPTION);
-                    if (overwrite != JOptionPane.YES_OPTION) {
+                if (project.getResource(path) != null)
+                {
+                    int overwrite = JOptionPane.showConfirmDialog(parent, "Resource '" + path + "' already exists. Overwrite?", "Confirm Overwrite", JOptionPane.YES_NO_OPTION);
+                    if (overwrite != JOptionPane.YES_OPTION)
+                    {
                         continue;
                     }
                 }
@@ -184,58 +183,59 @@ final class NavigatorActions {
                 project.addResource(resource);
                 importedCount++;
 
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(parent,
-                        "Failed to import " + file.getName() + ": " + e.getMessage(),
-                        "Import Error",
-                        JOptionPane.ERROR_MESSAGE);
+            }
+            catch (Exception e)
+            {
+                JOptionPane.showMessageDialog(parent, "Failed to import " + file.getName() + ": " + e.getMessage(), "Import Error", JOptionPane.ERROR_MESSAGE);
             }
         }
 
-        if (importedCount > 0) {
+        if (importedCount > 0)
+        {
             EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 0));
-            JOptionPane.showMessageDialog(parent,
-                    "Imported " + importedCount + " file(s)",
-                    "Import Complete",
-                    JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(parent, "Imported " + importedCount + " file(s)", "Import Complete", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
-    boolean isValidFilename(String filename) {
-        if (filename == null || filename.isEmpty()) {
+    boolean isValidFilename(String filename)
+    {
+        if (filename == null || filename.isEmpty())
+        {
             return false;
         }
         String invalidChars = "<>:\"/\\|?*";
-        for (char c : invalidChars.toCharArray()) {
-            if (filename.indexOf(c) >= 0) {
+        for (char c : invalidChars.toCharArray())
+        {
+            if (filename.indexOf(c) >= 0)
+            {
                 return false;
             }
         }
         return !filename.equals(".") && !filename.equals("..");
     }
 
-    void renameClass(ClassEntryModel classEntry) {
+    void renameClass(ClassEntryModel classEntry)
+    {
         String oldName = classEntry.getClassName();
 
-        RenameClassDialog dialog = new RenameClassDialog(
-                SwingUtilities.getWindowAncestor(parent), oldName);
+        RenameClassDialog dialog = new RenameClassDialog(SwingUtilities.getWindowAncestor(parent), oldName);
         dialog.setVisible(true);
 
-        if (!dialog.isConfirmed()) {
+        if (!dialog.isConfirmed())
+        {
             return;
         }
 
         String newName = dialog.getNewClassName();
-        if (newName.equals(oldName)) {
+        if (newName.equals(oldName))
+        {
             return;
         }
 
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassPool() == null) {
-            JOptionPane.showMessageDialog(parent,
-                    "No project loaded",
-                    "Rename Error",
-                    JOptionPane.ERROR_MESSAGE);
+        if (project == null || project.getClassPool() == null)
+        {
+            JOptionPane.showMessageDialog(parent, "No project loaded", "Rename Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -243,7 +243,8 @@ final class NavigatorActions {
 
         setLoading.accept(true);
 
-        try {
+        try
+        {
             com.tonic.service.history.LocalHistoryService.getInstance()
                     .snapshot("Rename class", com.tonic.model.Snapshot.Trigger.RENAME);
             Renamer renamer = new Renamer(classPool);
@@ -253,88 +254,80 @@ final class NavigatorActions {
 
             mainFrame.refreshAfterRename(oldName, newName);
 
-            SwingUtilities.invokeLater(() -> {
+            SwingUtilities.invokeLater(() ->
+            {
                 selectClass.accept(newName);
-                JOptionPane.showMessageDialog(parent,
-                        "Class renamed successfully:\n" +
-                                oldName.replace('/', '.') + " -> " + newName.replace('/', '.'),
-                        "Rename Complete",
-                        JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(parent, "Class renamed successfully:\n" + oldName.replace('/', '.') + " -> " + newName.replace('/', '.'), "Rename Complete", JOptionPane.INFORMATION_MESSAGE);
             });
 
-        } catch (RenameException e) {
+        }
+        catch (RenameException e)
+        {
             setLoading.accept(false);
-            JOptionPane.showMessageDialog(parent,
-                    "Rename failed: " + e.getMessage(),
-                    "Rename Error",
-                    JOptionPane.ERROR_MESSAGE);
-        } catch (Exception e) {
+            JOptionPane.showMessageDialog(parent, "Rename failed: " + e.getMessage(), "Rename Error", JOptionPane.ERROR_MESSAGE);
+        }
+        catch (Exception e)
+        {
             setLoading.accept(false);
-            JOptionPane.showMessageDialog(parent,
-                    "Unexpected error during rename: " + e.getMessage(),
-                    "Rename Error",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(parent, "Unexpected error during rename: " + e.getMessage(), "Rename Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    void deleteClass(ClassEntryModel classEntry) {
+    void deleteClass(ClassEntryModel classEntry)
+    {
         String className = classEntry.getClassName();
         String displayName = className.replace('/', '.');
 
-        int confirm = JOptionPane.showConfirmDialog(parent,
-                "Delete class '" + displayName + "'?\n\nThis cannot be undone.",
-                "Confirm Delete",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
+        int confirm = JOptionPane.showConfirmDialog(parent, "Delete class '" + displayName + "'?\n\nThis cannot be undone.", "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
-        if (confirm != JOptionPane.YES_OPTION) {
+        if (confirm != JOptionPane.YES_OPTION)
+        {
             return;
         }
 
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             return;
         }
 
         com.tonic.service.history.LocalHistoryService.getInstance()
                 .snapshot("Delete class " + displayName, com.tonic.model.Snapshot.Trigger.DELETE);
-        if (project.removeClass(className)) {
+        if (project.removeClass(className))
+        {
             mainFrame.closeEditorForClass(className);
             EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, -1));
         }
     }
 
-    void deleteResource(ResourceEntryModel resource) {
+    void deleteResource(ResourceEntryModel resource)
+    {
         String path = resource.getPath();
 
-        int confirm = JOptionPane.showConfirmDialog(parent,
-                "Delete resource '" + path + "'?\n\nThis cannot be undone.",
-                "Confirm Delete",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
+        int confirm = JOptionPane.showConfirmDialog(parent, "Delete resource '" + path + "'?\n\nThis cannot be undone.", "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
-        if (confirm != JOptionPane.YES_OPTION) {
+        if (confirm != JOptionPane.YES_OPTION)
+        {
             return;
         }
 
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             return;
         }
 
-        if (project.removeResource(path)) {
+        if (project.removeResource(path))
+        {
             mainFrame.closeEditorForResource(path);
             EventBus.getInstance().post(new ProjectUpdatedEvent(this, project, 0));
         }
     }
 
-    void openFuzzTestDialog(MethodEntryModel method) {
-        FuzzTestGeneratorDialog dialog = new FuzzTestGeneratorDialog(
-            SwingUtilities.getWindowAncestor(parent));
-        dialog.setMethod(
-            method.getOwner().getClassName(),
-            method.getName(),
-            method.getDescriptor());
+    void openFuzzTestDialog(MethodEntryModel method)
+    {
+        FuzzTestGeneratorDialog dialog = new FuzzTestGeneratorDialog(SwingUtilities.getWindowAncestor(parent));
+        dialog.setMethod(method.getOwner().getClassName(), method.getName(), method.getDescriptor());
         dialog.setVisible(true);
     }
 }

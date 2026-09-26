@@ -13,24 +13,28 @@ import java.awt.BorderLayout;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
-public abstract class AnalysisPanelBase extends ThemedJPanel {
+public abstract class AnalysisPanelBase extends ThemedJPanel
+{
 
     protected final ProjectModel project;
     protected JPanel toolbarPanel;
     protected ThemedJTextArea statusArea;
     private SwingWorker<?, ?> currentWorker;
 
-    protected AnalysisPanelBase(ProjectModel project) {
+    protected AnalysisPanelBase(ProjectModel project)
+    {
         this(project, BackgroundStyle.SECONDARY);
     }
 
-    protected AnalysisPanelBase(ProjectModel project, BackgroundStyle style) {
+    protected AnalysisPanelBase(ProjectModel project, BackgroundStyle style)
+    {
         super(style, new BorderLayout());
         this.project = project;
         initializeLayout();
     }
 
-    private void initializeLayout() {
+    private void initializeLayout()
+    {
         toolbarPanel = LayoutHelper.createToolbarWithBorder();
         buildToolbar(toolbarPanel);
         add(toolbarPanel, BorderLayout.NORTH);
@@ -38,7 +42,8 @@ public abstract class AnalysisPanelBase extends ThemedJPanel {
         JPanel contentPanel = createContentPanel();
         add(contentPanel, BorderLayout.CENTER);
 
-        if (hasStatusArea()) {
+        if (hasStatusArea())
+        {
             statusArea = LayoutHelper.createStatusArea(3);
             add(LayoutHelper.createScrollPane(statusArea), BorderLayout.SOUTH);
         }
@@ -50,51 +55,66 @@ public abstract class AnalysisPanelBase extends ThemedJPanel {
 
     public abstract void refresh();
 
-    protected boolean hasStatusArea() {
+    protected boolean hasStatusArea()
+    {
         return false;
     }
 
-    protected void updateStatus(String message) {
-        if (statusArea != null) {
-            SwingUtilities.invokeLater(() -> {
+    protected void updateStatus(String message)
+    {
+        if (statusArea != null)
+        {
+            SwingUtilities.invokeLater(() ->
+            {
                 statusArea.append(message + "\n");
                 statusArea.setCaretPosition(statusArea.getDocument().getLength());
             });
         }
     }
 
-    protected void clearStatus() {
-        if (statusArea != null) {
+    protected void clearStatus()
+    {
+        if (statusArea != null)
+        {
             SwingUtilities.invokeLater(() -> statusArea.setText(""));
         }
     }
 
-    protected <T> void runAsync(String loadingMessage, Callable<T> task, Consumer<T> onSuccess) {
+    protected <T> void runAsync(String loadingMessage, Callable<T> task, Consumer<T> onSuccess)
+    {
         runAsync(loadingMessage, task, onSuccess, this::handleError);
     }
 
-    protected <T> void runAsync(String loadingMessage, Callable<T> task,
-                                 Consumer<T> onSuccess, Consumer<Exception> onError) {
+    protected <T> void runAsync(String loadingMessage, Callable<T> task, Consumer<T> onSuccess, Consumer<Exception> onError)
+    {
         cancelCurrentWorker();
 
-        if (loadingMessage != null) {
+        if (loadingMessage != null)
+        {
             updateStatus(loadingMessage);
         }
 
-        currentWorker = new SwingWorker<T, Void>() {
+        currentWorker = new SwingWorker<T, Void>()
+        {
             @Override
-            protected T doInBackground() throws Exception {
+            protected T doInBackground() throws Exception
+            {
                 return task.call();
             }
 
             @Override
-            protected void done() {
-                try {
-                    if (!isCancelled()) {
+            protected void done()
+            {
+                try
+                {
+                    if (!isCancelled())
+                    {
                         T result = get();
                         onSuccess.accept(result);
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     onError.accept(e);
                 }
             }
@@ -102,23 +122,28 @@ public abstract class AnalysisPanelBase extends ThemedJPanel {
         currentWorker.execute();
     }
 
-    protected void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
+    protected void cancelCurrentWorker()
+    {
+        if (currentWorker != null && !currentWorker.isDone())
+        {
             currentWorker.cancel(true);
         }
     }
 
-    protected void handleError(Exception e) {
+    protected void handleError(Exception e)
+    {
         ErrorHandler.handle(e, getClass().getSimpleName());
         updateStatus("Error: " + e.getMessage());
     }
 
-    protected ProjectModel getProject() {
+    protected ProjectModel getProject()
+    {
         return project;
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         super.removeNotify();
         cancelCurrentWorker();
     }

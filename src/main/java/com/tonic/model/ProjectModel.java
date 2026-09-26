@@ -22,7 +22,8 @@ import java.util.stream.Collectors;
  * Represents an open project containing classes to analyze.
  * Can be loaded from a JAR file, directory, or individual class files.
  */
-public class ProjectModel {
+public class ProjectModel
+{
 
     @Getter
     private String projectName;
@@ -43,7 +44,8 @@ public class ProjectModel {
     @Getter
     private long bytecodeVersion;
 
-    public ProjectModel() {
+    public ProjectModel()
+    {
         this.projectName = "Untitled";
         // Start with no class pool - it will be set when a file is loaded
         this.classPool = null;
@@ -52,12 +54,14 @@ public class ProjectModel {
     /**
      * Set the class pool (does not auto-populate class entries).
      */
-    public void setClassPool(ClassPool classPool) {
+    public void setClassPool(ClassPool classPool)
+    {
         this.classPool = classPool;
     }
 
     /** Marks the project as having unsaved changes (so close prompts to save). */
-    public void markDirty() {
+    public void markDirty()
+    {
         this.dirty = true;
         bytecodeVersion++;
     }
@@ -65,9 +69,11 @@ public class ProjectModel {
     /**
      * Add a user class to the project.
      */
-    public ClassEntryModel addClass(ClassFile classFile) {
+    public ClassEntryModel addClass(ClassFile classFile)
+    {
         String className = classFile.getClassName();
-        if (classPool != null) {
+        if (classPool != null)
+        {
             classPool.put(classFile);
         }
         ClassEntryModel entry = new ClassEntryModel(classFile);
@@ -82,20 +88,24 @@ public class ProjectModel {
      * This invalidates the ClassPool, xref database, and all decompilation caches.
      * @return true if the class was removed, false if it didn't exist
      */
-    public boolean removeClass(String className) {
+    public boolean removeClass(String className)
+    {
         ClassEntryModel entry = classEntries.remove(className);
-        if (entry == null) {
+        if (entry == null)
+        {
             return false;
         }
         userClassNames.remove(className);
 
         rebuildClassPool();
 
-        if (xrefDatabase != null) {
+        if (xrefDatabase != null)
+        {
             xrefDatabase.clear();
         }
 
-        for (ClassEntryModel c : classEntries.values()) {
+        for (ClassEntryModel c : classEntries.values())
+        {
             c.invalidateDecompilationCache();
         }
 
@@ -107,19 +117,27 @@ public class ProjectModel {
      * Rebuild the ClassPool from the current user classes.
      * This creates a fresh ClassPool and repopulates it with all remaining classes.
      */
-    private void rebuildClassPool() {
+    private void rebuildClassPool()
+    {
         ClassPool newPool;
-        if (!Settings.getInstance().isLoadJdkClassesEnabled()) {
+        if (!Settings.getInstance().isLoadJdkClassesEnabled())
+        {
             newPool = new ClassPool(true);
-        } else {
-            try {
+        }
+        else
+        {
+            try
+            {
                 newPool = new ClassPool();
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 newPool = new ClassPool(true);
             }
         }
 
-        for (ClassEntryModel entry : classEntries.values()) {
+        for (ClassEntryModel entry : classEntries.values())
+        {
             newPool.put(entry.getClassFile());
         }
 
@@ -129,14 +147,16 @@ public class ProjectModel {
     /**
      * Get a class entry by internal name.
      */
-    public ClassEntryModel getClass(String internalName) {
+    public ClassEntryModel getClass(String internalName)
+    {
         return internalName == null ? null : classEntries.get(internalName);
     }
 
     /**
      * Get all class entries.
      */
-    public List<ClassEntryModel> getAllClasses() {
+    public List<ClassEntryModel> getAllClasses()
+    {
         return new ArrayList<>(classEntries.values());
     }
 
@@ -145,8 +165,10 @@ public class ProjectModel {
      * in any class, so a cache scoped to the mutated class alone leaves other classes showing stale source; clearing
      * all of them forces a fresh decompile from current bytecode the next time each is viewed.
      */
-    public void invalidateAllDecompilationCaches() {
-        for (ClassEntryModel entry : classEntries.values()) {
+    public void invalidateAllDecompilationCaches()
+    {
+        for (ClassEntryModel entry : classEntries.values())
+        {
             entry.invalidateDecompilationCache();
         }
     }
@@ -154,7 +176,8 @@ public class ProjectModel {
     /**
      * Get user classes only (classes explicitly loaded by user).
      */
-    public List<ClassEntryModel> getUserClasses() {
+    public List<ClassEntryModel> getUserClasses()
+    {
         return classEntries.values().stream()
                 .filter(c -> userClassNames.contains(c.getClassName()))
                 .collect(Collectors.toList());
@@ -163,24 +186,29 @@ public class ProjectModel {
     /**
      * Check if a class name is a user class (not JDK/library).
      */
-    public boolean isUserClass(String className) {
+    public boolean isUserClass(String className)
+    {
         return className != null && userClassNames.contains(className);
     }
 
     /**
      * Get the set of user class names (classes explicitly loaded by user).
      */
-    public Set<String> getUserClassNames() {
+    public Set<String> getUserClassNames()
+    {
         return Collections.unmodifiableSet(userClassNames);
     }
 
     /**
      * Get classes in a specific package.
      */
-    public List<ClassEntryModel> getClassesInPackage(String packagePrefix) {
+    public List<ClassEntryModel> getClassesInPackage(String packagePrefix)
+    {
         List<ClassEntryModel> result = new ArrayList<>();
-        for (ClassEntryModel entry : classEntries.values()) {
-            if (entry.getPackageName().startsWith(packagePrefix)) {
+        for (ClassEntryModel entry : classEntries.values())
+        {
+            if (entry.getPackageName().startsWith(packagePrefix))
+            {
                 result.add(entry);
             }
         }
@@ -190,11 +218,14 @@ public class ProjectModel {
     /**
      * Get all unique package names.
      */
-    public List<String> getPackages() {
+    public List<String> getPackages()
+    {
         List<String> packages = new ArrayList<>();
-        for (ClassEntryModel entry : classEntries.values()) {
+        for (ClassEntryModel entry : classEntries.values())
+        {
             String pkg = entry.getPackageName();
-            if (!packages.contains(pkg)) {
+            if (!packages.contains(pkg))
+            {
                 packages.add(pkg);
             }
         }
@@ -205,11 +236,13 @@ public class ProjectModel {
     /**
      * Get the number of classes in the project.
      */
-    public int getClassCount() {
+    public int getClassCount()
+    {
         return classEntries.size();
     }
 
-    public void addResource(ResourceEntryModel resource) {
+    public void addResource(ResourceEntryModel resource)
+    {
         resources.put(resource.getPath(), resource);
         markDirty();
     }
@@ -218,38 +251,46 @@ public class ProjectModel {
      * Remove a resource from the project.
      * @return true if the resource was removed, false if it didn't exist
      */
-    public boolean removeResource(String path) {
+    public boolean removeResource(String path)
+    {
         ResourceEntryModel removed = resources.remove(path);
-        if (removed != null) {
+        if (removed != null)
+        {
             markDirty();
             return true;
         }
         return false;
     }
 
-    public ResourceEntryModel getResource(String path) {
+    public ResourceEntryModel getResource(String path)
+    {
         return resources.get(path);
     }
 
-    public Collection<ResourceEntryModel> getAllResources() {
+    public Collection<ResourceEntryModel> getAllResources()
+    {
         return Collections.unmodifiableCollection(resources.values());
     }
 
-    public int getResourceCount() {
+    public int getResourceCount()
+    {
         return resources.size();
     }
 
     /**
      * Clear all classes from the project.
      */
-    public void clear() {
+    public void clear()
+    {
         classEntries.clear();
         userClassNames.clear();
         resources.clear();
-        if (classPool != null) {
+        if (classPool != null)
+        {
             classPool.getClasses().clear();
         }
-        if (xrefDatabase != null) {
+        if (xrefDatabase != null)
+        {
             xrefDatabase.clear();
         }
         dirty = false;
@@ -257,22 +298,26 @@ public class ProjectModel {
 
     // Getters and setters
 
-    public void setProjectName(String projectName) {
+    public void setProjectName(String projectName)
+    {
         this.projectName = projectName;
     }
 
-    public void setSourceFile(File sourceFile) {
+    public void setSourceFile(File sourceFile)
+    {
         this.sourceFile = sourceFile;
     }
 
-    public void setXrefDatabase(XrefDatabase xrefDatabase) {
+    public void setXrefDatabase(XrefDatabase xrefDatabase)
+    {
         this.xrefDatabase = xrefDatabase;
     }
 
     /**
      * Find a class entry by name (supports both internal and qualified names).
      */
-    public ClassEntryModel findClassByName(String name) {
+    public ClassEntryModel findClassByName(String name)
+    {
         if (name == null) return null;
 
         // Try direct lookup
@@ -285,8 +330,10 @@ public class ProjectModel {
         if (entry != null) return entry;
 
         // Try partial match
-        for (Map.Entry<String, ClassEntryModel> e : classEntries.entrySet()) {
-            if (e.getKey().endsWith("/" + name) || e.getKey().endsWith(name)) {
+        for (Map.Entry<String, ClassEntryModel> e : classEntries.entrySet())
+        {
+            if (e.getKey().endsWith("/" + name) || e.getKey().endsWith(name))
+            {
                 return e.getValue();
             }
         }
@@ -294,45 +341,55 @@ public class ProjectModel {
         return null;
     }
 
-    public void setDirty(boolean dirty) {
+    public void setDirty(boolean dirty)
+    {
         this.dirty = dirty;
     }
 
-    public void notifyClassRenamed(String oldName, String newName) {
+    public void notifyClassRenamed(String oldName, String newName)
+    {
         ClassEntryModel entry = classEntries.remove(oldName);
-        if (entry != null) {
+        if (entry != null)
+        {
             entry.refreshDisplayData();
             classEntries.put(newName, entry);
         }
 
-        if (userClassNames.remove(oldName)) {
+        if (userClassNames.remove(oldName))
+        {
             userClassNames.add(newName);
         }
 
-        if (xrefDatabase != null) {
+        if (xrefDatabase != null)
+        {
             xrefDatabase.clear();
         }
 
         markDirty();
     }
 
-    public void applyClassNameMappings(Map<String, String> oldToNewNames) {
-        for (Map.Entry<String, String> entry : oldToNewNames.entrySet()) {
+    public void applyClassNameMappings(Map<String, String> oldToNewNames)
+    {
+        for (Map.Entry<String, String> entry : oldToNewNames.entrySet())
+        {
             String oldName = entry.getKey();
             String newName = entry.getValue();
 
-            if (userClassNames.remove(oldName)) {
+            if (userClassNames.remove(oldName))
+            {
                 userClassNames.add(newName);
             }
 
             ClassEntryModel classEntry = classEntries.remove(oldName);
-            if (classEntry != null) {
+            if (classEntry != null)
+            {
                 classEntry.refreshDisplayData();
                 classEntries.put(newName, classEntry);
             }
         }
 
-        if (xrefDatabase != null) {
+        if (xrefDatabase != null)
+        {
             xrefDatabase.clear();
         }
 
@@ -344,18 +401,24 @@ public class ProjectModel {
      * {@link ClassFile}, then rebuilds the class pool ONCE. Used by Local History restore; non-user (library/JDK)
      * entries are left untouched. Callers must trigger a UI refresh afterward (decompilation caches are cleared here).
      */
-    public void replaceUserClasses(Map<String, byte[]> classBytes, Map<String, byte[]> resourceBytes) {
-        for (String name : new ArrayList<>(userClassNames)) {
+    public void replaceUserClasses(Map<String, byte[]> classBytes, Map<String, byte[]> resourceBytes)
+    {
+        for (String name : new ArrayList<>(userClassNames))
+        {
             classEntries.remove(name);
         }
         userClassNames.clear();
 
-        for (Map.Entry<String, byte[]> entry : classBytes.entrySet()) {
-            try {
+        for (Map.Entry<String, byte[]> entry : classBytes.entrySet())
+        {
+            try
+            {
                 ClassFile cf = new ClassFile(new java.io.ByteArrayInputStream(entry.getValue()));
                 classEntries.put(cf.getClassName(), new ClassEntryModel(cf));
                 userClassNames.add(cf.getClassName());
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 throw new IllegalStateException("Failed to restore class " + entry.getKey() + ": " + e.getMessage(), e);
             }
         }
@@ -363,11 +426,13 @@ public class ProjectModel {
         rebuildClassPool();
 
         resources.clear();
-        for (Map.Entry<String, byte[]> entry : resourceBytes.entrySet()) {
+        for (Map.Entry<String, byte[]> entry : resourceBytes.entrySet())
+        {
             resources.put(entry.getKey(), new ResourceEntryModel(entry.getKey(), entry.getValue()));
         }
 
-        if (xrefDatabase != null) {
+        if (xrefDatabase != null)
+        {
             xrefDatabase.clear();
         }
         invalidateAllDecompilationCaches();
@@ -378,31 +443,40 @@ public class ProjectModel {
      * Replaces a single user class's bytecode from stored bytes (Local History per-class restore). No-op if the class
      * is not present. Callers must trigger a UI refresh afterward.
      */
-    public void replaceClass(String internalName, byte[] bytes) {
+    public void replaceClass(String internalName, byte[] bytes)
+    {
         ClassEntryModel entry = classEntries.get(internalName);
-        if (entry == null) {
+        if (entry == null)
+        {
             return;
         }
         ClassFile cf;
-        try {
+        try
+        {
             cf = new ClassFile(new java.io.ByteArrayInputStream(bytes));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new IllegalStateException("Failed to restore class " + internalName + ": " + e.getMessage(), e);
         }
         entry.updateClassFile(cf);
-        if (classPool != null) {
+        if (classPool != null)
+        {
             classPool.put(cf);
         }
-        if (xrefDatabase != null) {
+        if (xrefDatabase != null)
+        {
             xrefDatabase.clear();
         }
         markDirty();
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         int resCount = getResourceCount();
-        if (resCount > 0) {
+        if (resCount > 0)
+        {
             return projectName + " (" + getClassCount() + " classes, " + resCount + " resources)";
         }
         return projectName + " (" + getClassCount() + " classes)";

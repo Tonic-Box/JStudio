@@ -8,11 +8,13 @@ import lombok.Getter;
  * attached (e.g. the "Live Instances" view mode) can show or hide themselves.
  */
 @Getter
-public class LiveSessionEvent extends Event {
+public class LiveSessionEvent extends Event
+{
 
     private final boolean attached;
 
-    public LiveSessionEvent(Object source, boolean attached) {
+    public LiveSessionEvent(Object source, boolean attached)
+    {
         super(source);
         this.attached = attached;
     }

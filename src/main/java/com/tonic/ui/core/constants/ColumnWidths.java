@@ -1,8 +1,10 @@
 package com.tonic.ui.core.constants;
 
-public final class ColumnWidths {
+public final class ColumnWidths
+{
 
-    private ColumnWidths() {
+    private ColumnWidths()
+    {
     }
 
     public static final int CLASS_NAME = 250;

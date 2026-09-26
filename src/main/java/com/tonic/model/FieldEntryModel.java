@@ -8,7 +8,8 @@ import lombok.Setter;
 
 
 @Getter
-public class FieldEntryModel {
+public class FieldEntryModel
+{
 
     private final FieldEntry fieldEntry;
     private final ClassEntryModel owner;
@@ -23,61 +24,74 @@ public class FieldEntryModel {
     private String displayType;
     private String iconKey;
 
-    public FieldEntryModel(FieldEntry fieldEntry, ClassEntryModel owner) {
+    public FieldEntryModel(FieldEntry fieldEntry, ClassEntryModel owner)
+    {
         this.fieldEntry = fieldEntry;
         this.owner = owner;
         buildDisplayData();
     }
 
-    private void buildDisplayData() {
+    private void buildDisplayData()
+    {
         this.displayType = DescriptorParser.formatFieldDescriptor(fieldEntry.getDesc());
         this.iconKey = "field";
     }
 
     // FieldEntry delegated methods
 
-    public String getName() {
+    public String getName()
+    {
         return fieldEntry.getName();
     }
 
-    public String getDescriptor() {
+    public String getDescriptor()
+    {
         return fieldEntry.getDesc();
     }
 
-    public int getAccessFlags() {
+    public int getAccessFlags()
+    {
         return fieldEntry.getAccess();
     }
 
-    public boolean isStatic() {
+    public boolean isStatic()
+    {
         return AccessFlags.isStatic(fieldEntry.getAccess());
     }
 
-    public boolean isFinal() {
+    public boolean isFinal()
+    {
         return AccessFlags.isFinal(fieldEntry.getAccess());
     }
 
-    public boolean isPublic() {
+    public boolean isPublic()
+    {
         return AccessFlags.isPublic(fieldEntry.getAccess());
     }
 
-    public boolean isPrivate() {
+    public boolean isPrivate()
+    {
         return AccessFlags.isPrivate(fieldEntry.getAccess());
     }
 
-    public boolean isProtected() {
+    public boolean isProtected()
+    {
         return AccessFlags.isProtected(fieldEntry.getAccess());
     }
 
-    public boolean isVolatile() {
+    public boolean isVolatile()
+    {
         return AccessFlags.isVolatile(fieldEntry.getAccess());
     }
 
-    public boolean isTransient() {
+    public boolean isTransient()
+    {
         return AccessFlags.isTransient(fieldEntry.getAccess());
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return displayType + " " + fieldEntry.getName();
     }
 }

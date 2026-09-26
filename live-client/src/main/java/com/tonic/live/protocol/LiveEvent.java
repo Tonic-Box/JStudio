@@ -8,8 +8,10 @@ import lombok.Getter;
  * the connection drops.
  */
 @Getter
-public final class LiveEvent {
-    public enum Kind { VM_DEATH, CLASS_LOADED }
+public final class LiveEvent
+{
+    public enum Kind
+    {VM_DEATH, CLASS_LOADED}
 
     private final Kind kind;
     /**
@@ -26,24 +28,29 @@ public final class LiveEvent {
      */
     private final byte[] classBytes;
 
-    private LiveEvent(Kind kind, String className, byte[] classBytes) {
+    private LiveEvent(Kind kind, String className, byte[] classBytes)
+    {
         this.kind = kind;
         this.className = className;
         this.classBytes = classBytes;
     }
 
-    public static LiveEvent vmDeath() {
+    public static LiveEvent vmDeath()
+    {
         return new LiveEvent(Kind.VM_DEATH, "", null);
     }
 
     /** A runtime class-load capture: {@code internalName} loaded with its real bytes. */
-    public static LiveEvent classLoaded(String internalName, byte[] classBytes) {
+    public static LiveEvent classLoaded(String internalName, byte[] classBytes)
+    {
         return new LiveEvent(Kind.CLASS_LOADED, internalName, classBytes);
     }
 
     @Override
-    public String toString() {
-        if (kind == Kind.VM_DEATH) {
+    public String toString()
+    {
+        if (kind == Kind.VM_DEATH)
+        {
             return "VM_DEATH";
         }
         return "CLASS_LOADED " + className + " (" + (classBytes == null ? 0 : classBytes.length) + " bytes)";

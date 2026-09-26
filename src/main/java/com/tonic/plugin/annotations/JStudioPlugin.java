@@ -9,7 +9,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface JStudioPlugin {
+public @interface JStudioPlugin
+{
 
     String id() default "";
 

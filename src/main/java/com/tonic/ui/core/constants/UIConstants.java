@@ -1,8 +1,10 @@
 package com.tonic.ui.core.constants;
 
-public final class UIConstants {
+public final class UIConstants
+{
 
-    private UIConstants() {
+    private UIConstants()
+    {
     }
 
     public static final int FONT_SIZE_CODE = 11;

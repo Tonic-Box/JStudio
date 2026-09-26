@@ -9,11 +9,13 @@ import lombok.Getter;
  * frame in the call stack. Source views use it to know which frame's runtime values to render inline.
  */
 @Getter
-public class DebugFrameSelectedEvent extends Event {
+public class DebugFrameSelectedEvent extends Event
+{
 
     private final DebugFrame frame;
 
-    public DebugFrameSelectedEvent(Object source, DebugFrame frame) {
+    public DebugFrameSelectedEvent(Object source, DebugFrame frame)
+    {
         super(source);
         this.frame = frame;
     }

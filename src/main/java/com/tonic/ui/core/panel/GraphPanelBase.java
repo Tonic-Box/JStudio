@@ -18,17 +18,20 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public abstract class GraphPanelBase extends AnalysisPanelBase {
+public abstract class GraphPanelBase extends AnalysisPanelBase
+{
 
     protected mxGraph graph;
     protected mxGraphComponent graphComponent;
 
-    protected GraphPanelBase(ProjectModel project) {
+    protected GraphPanelBase(ProjectModel project)
+    {
         super(project);
     }
 
     @Override
-    protected JPanel createContentPanel() {
+    protected JPanel createContentPanel()
+    {
         graph = new mxGraph();
         graph.setAllowDanglingEdges(false);
         graph.setEdgeLabelsMovable(false);
@@ -55,66 +58,83 @@ public abstract class GraphPanelBase extends AnalysisPanelBase {
 
     protected abstract void setupGraphStyles(mxStylesheet stylesheet);
 
-    protected void clearGraph() {
+    protected void clearGraph()
+    {
         graph.getModel().beginUpdate();
-        try {
+        try
+        {
             graph.removeCells(graph.getChildVertices(graph.getDefaultParent()));
-        } finally {
+        }
+        finally
+        {
             graph.getModel().endUpdate();
         }
     }
 
-    protected void exportAsPng() {
+    protected void exportAsPng()
+    {
         String name = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) +
                 ".png";
         exportAsPng(name);
     }
 
-    protected void exportAsPng(String suggestedFilename) {
+    protected void exportAsPng(String suggestedFilename)
+    {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Export Graph as PNG");
         chooser.setFileFilter(new FileNameExtensionFilter("PNG Images", "png"));
 
-        if (suggestedFilename != null) {
+        if (suggestedFilename != null)
+        {
             chooser.setSelectedFile(new File(suggestedFilename + ".png"));
         }
 
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
             File file = chooser.getSelectedFile();
-            if (!file.getName().toLowerCase().endsWith(".png")) {
+            if (!file.getName().toLowerCase().endsWith(".png"))
+            {
                 file = new File(file.getAbsolutePath() + ".png");
             }
 
-            try {
-                BufferedImage image = mxCellRenderer.createBufferedImage(
-                    graph, null, 1, JStudioTheme.getBgPrimary(), true, null
-                );
-                if (image != null) {
+            try
+            {
+                BufferedImage image = mxCellRenderer.createBufferedImage(graph, null, 1, JStudioTheme.getBgPrimary(), true, null);
+                if (image != null)
+                {
                     ImageIO.write(image, "PNG", file);
                     updateStatus("Exported graph to: " + file.getAbsolutePath());
-                } else {
+                }
+                else
+                {
                     updateStatus("Cannot export empty graph");
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ErrorHandler.handle(e, "Graph export");
                 updateStatus("Export failed: " + e.getMessage());
             }
         }
     }
 
-    protected void zoomIn() {
+    protected void zoomIn()
+    {
         graphComponent.zoomIn();
     }
 
-    protected void zoomOut() {
+    protected void zoomOut()
+    {
         graphComponent.zoomOut();
     }
 
-    protected void zoomToFit() {
+    protected void zoomToFit()
+    {
         graphComponent.zoomTo(1.0, true);
     }
 
-    protected void centerGraph() {
+    protected void centerGraph()
+    {
         graphComponent.scrollToCenter(true);
     }
 }

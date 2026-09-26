@@ -30,12 +30,14 @@ import java.util.Collections;
         description = "Demonstrates tool windows, center views, bottom tabs, menus, toolbar, and navigator actions.",
         author = "JStudio"
 )
-public class SamplePlugin implements UiPlugin {
+public class SamplePlugin implements UiPlugin
+{
 
     private JLabel selectionLabel;
 
     @Override
-    public PluginInfo getInfo() {
+    public PluginInfo getInfo()
+    {
         return PluginInfo.builder()
                 .id("sample-plugin")
                 .name("Sample Plugin")
@@ -46,7 +48,8 @@ public class SamplePlugin implements UiPlugin {
     }
 
     @Override
-    public void start(JStudioHost host) {
+    public void start(JStudioHost host)
+    {
         // 1. A right-dock tool window with a live label and a couple of buttons.
         JPanel panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -56,7 +59,8 @@ public class SamplePlugin implements UiPlugin {
         panel.add(selectionLabel);
 
         JButton countButton = new JButton("Show class count");
-        countButton.addActionListener(e -> {
+        countButton.addActionListener(e ->
+        {
             ProjectModel project = host.currentProject();
             int count = project != null ? project.getAllClasses().size() : 0;
             host.ui().setStatus("Sample Plugin: project has " + count + " classes");
@@ -74,47 +78,45 @@ public class SamplePlugin implements UiPlugin {
         host.ui().addToolWindow("Sample", panel);
 
         // 2. A menu item (creates a "Sample" top-level menu) and a toolbar button.
-        host.ui().addMenuItem("Sample", "Say Hello", () ->
-                JOptionPane.showMessageDialog(host.frame(), "Hello from the Sample Plugin!"));
+        host.ui().addMenuItem("Sample", "Say Hello", () -> JOptionPane.showMessageDialog(host.frame(), "Hello from the Sample Plugin!"));
         host.ui().addToolbarButton(null, "Sample Plugin: open center view", () -> openCenterView(host));
 
         // 3. A navigator right-click action available when a class is selected.
-        host.ui().addNavigatorAction(context -> context.selectedClass()
-                .map(cls -> Collections.singletonList(new NavigatorAction(
-                        "Sample: log class name",
-                        () -> host.log().info("Selected class: " + cls.getClassName()))))
-                .orElse(Collections.emptyList()));
+        host.ui().addNavigatorAction(context -> context.selectedClass().map(cls -> Collections.singletonList(new NavigatorAction("Sample: log class name", () -> host.log().info("Selected class: " + cls.getClassName())))).orElse(Collections.emptyList()));
 
         // 4. React to navigation (auto-unregistered on unload).
-        host.onEvent(ClassSelectedEvent.class, event -> {
-            if (event.getClassEntry() != null) {
+        host.onEvent(ClassSelectedEvent.class, event ->
+        {
+            if (event.getClassEntry() != null)
+            {
                 selectionLabel.setText("Selected: " + event.getClassEntry().getClassName());
             }
         });
 
         // 5. Direct singleton access works too (no host API needed).
-        host.log().info("Sample Plugin started. Current project: "
-                + (ProjectService.getInstance().getCurrentProject() != null ? "loaded" : "none"));
+        host.log().info("Sample Plugin started. Current project: " + (ProjectService.getInstance().getCurrentProject() != null ? "loaded" : "none"));
 
         // 6. Hand the host a cleanup the registrations can't express.
         host.track(() -> host.log().info("Sample Plugin cleanup ran."));
     }
 
-    private void openCenterView(JStudioHost host) {
-        JTextArea area = new JTextArea("This is a plugin-contributed center view.\n"
-                + "Plugins can host arbitrary Swing content here.");
+    private void openCenterView(JStudioHost host)
+    {
+        JTextArea area = new JTextArea("This is a plugin-contributed center view.\n" + "Plugins can host arbitrary Swing content here.");
         area.setEditable(false);
         host.ui().openCenterView("sample-view", "Sample View", null, new JScrollPane(area));
     }
 
-    private void openBottomTab(JStudioHost host) {
+    private void openBottomTab(JStudioHost host)
+    {
         JTextArea area = new JTextArea("Plugin-contributed bottom tab.");
         area.setEditable(false);
         host.ui().addBottomTab("Sample Output", new JScrollPane(area));
     }
 
     @Override
-    public void dispose() {
+    public void dispose()
+    {
         selectionLabel = null;
     }
 }

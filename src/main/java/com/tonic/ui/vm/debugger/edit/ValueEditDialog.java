@@ -11,7 +11,8 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-public class ValueEditDialog extends JDialog {
+public class ValueEditDialog extends JDialog
+{
 
     private final JTextField valueField;
     private final JLabel errorLabel;
@@ -21,7 +22,8 @@ public class ValueEditDialog extends JDialog {
     @Getter
     private boolean confirmed;
 
-    public ValueEditDialog(Window owner, String title, String currentValue, ValueTag tag) {
+    public ValueEditDialog(Window owner, String title, String currentValue, ValueTag tag)
+    {
         super(owner, title, ModalityType.APPLICATION_MODAL);
         this.valueTag = tag;
         this.confirmed = false;
@@ -88,18 +90,24 @@ public class ValueEditDialog extends JDialog {
         okButton.addActionListener(e -> tryConfirm());
         cancelButton.addActionListener(e -> cancel());
 
-        valueField.addKeyListener(new KeyAdapter() {
+        valueField.addKeyListener(new KeyAdapter()
+        {
             @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+            public void keyPressed(KeyEvent e)
+            {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER)
+                {
                     tryConfirm();
-                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+                {
                     cancel();
                 }
             }
 
             @Override
-            public void keyReleased(KeyEvent e) {
+            public void keyReleased(KeyEvent e)
+            {
                 errorLabel.setText(" ");
             }
         });
@@ -113,7 +121,8 @@ public class ValueEditDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    private JButton createButton(String text) {
+    private JButton createButton(String text)
+    {
         JButton button = new JButton(text);
         button.setBackground(JStudioTheme.getBgSecondary());
         button.setForeground(JStudioTheme.getTextPrimary());
@@ -121,9 +130,11 @@ public class ValueEditDialog extends JDialog {
         return button;
     }
 
-    private JLabel createHintLabel(ValueTag tag) {
+    private JLabel createHintLabel(ValueTag tag)
+    {
         String hint;
-        switch (tag) {
+        switch (tag)
+        {
             case INT:
                 hint = "Accepts: decimal, 0x hex, 0b binary, 'c' char, true/false";
                 break;
@@ -147,26 +158,31 @@ public class ValueEditDialog extends JDialog {
         return label;
     }
 
-    private void tryConfirm() {
-        try {
+    private void tryConfirm()
+    {
+        try
+        {
             result = ValueParser.parse(valueField.getText(), valueTag);
             confirmed = true;
             dispose();
-        } catch (ValueParseException e) {
+        }
+        catch (ValueParseException e)
+        {
             errorLabel.setText(e.getMessage());
             valueField.selectAll();
             valueField.requestFocus();
         }
     }
 
-    private void cancel() {
+    private void cancel()
+    {
         confirmed = false;
         result = null;
         dispose();
     }
 
-    public static ConcreteValue showDialog(Component parent, String title,
-            String currentValue, ValueTag tag) {
+    public static ConcreteValue showDialog(Component parent, String title, String currentValue, ValueTag tag)
+    {
         Window window = SwingUtilities.getWindowAncestor(parent);
         ValueEditDialog dialog = new ValueEditDialog(window, title, currentValue, tag);
         dialog.setVisible(true);

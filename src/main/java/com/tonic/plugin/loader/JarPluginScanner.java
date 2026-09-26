@@ -21,17 +21,21 @@ import java.util.jar.JarFile;
  * creates one {@link URLClassLoader} (parent-first delegation off the supplied parent) that the caller owns and
  * must {@link #closeQuietly(URLClassLoader) close} once the plugins are disposed.
  */
-public final class JarPluginScanner {
+public final class JarPluginScanner
+{
 
-    private JarPluginScanner() {
+    private JarPluginScanner()
+    {
     }
 
     /** The class loader for a scanned jar plus every plugin instantiated from it. */
-    public static final class ScanResult {
+    public static final class ScanResult
+    {
         public final URLClassLoader loader;
         public final List<Plugin> plugins;
 
-        ScanResult(URLClassLoader loader, List<Plugin> plugins) {
+        ScanResult(URLClassLoader loader, List<Plugin> plugins)
+        {
             this.loader = loader;
             this.plugins = plugins;
         }
@@ -42,40 +46,56 @@ public final class JarPluginScanner {
      * classes lazily through it) and ownership passes to the caller; on any failure the loader is closed before the
      * exception propagates.
      */
-    public static ScanResult scan(File jarFile, ClassLoader parent) {
+    public static ScanResult scan(File jarFile, ClassLoader parent)
+    {
         URLClassLoader loader;
-        try {
+        try
+        {
             loader = new URLClassLoader(new URL[]{jarFile.toURI().toURL()}, parent);
-        } catch (MalformedURLException e) {
+        }
+        catch (MalformedURLException e)
+        {
             throw new RuntimeException("Failed to load JAR plugin: " + e.getMessage(), e);
         }
 
         List<Plugin> plugins = new ArrayList<>();
         boolean ok = false;
-        try (JarFile jar = new JarFile(jarFile)) {
+        try (JarFile jar = new JarFile(jarFile))
+        {
             Enumeration<JarEntry> entries = jar.entries();
-            while (entries.hasMoreElements()) {
+            while (entries.hasMoreElements())
+            {
                 JarEntry entry = entries.nextElement();
-                if (entry.getName().endsWith(".class")) {
+                if (entry.getName().endsWith(".class"))
+                {
                     String className = entry.getName()
                             .replace('/', '.')
                             .replace(".class", "");
-                    try {
+                    try
+                    {
                         Class<?> clazz = loader.loadClass(className);
                         if (Plugin.class.isAssignableFrom(clazz)
-                                && clazz.isAnnotationPresent(JStudioPlugin.class)) {
+                                && clazz.isAnnotationPresent(JStudioPlugin.class))
+                        {
                             plugins.add(instantiate(clazz));
                         }
-                    } catch (ClassNotFoundException | NoClassDefFoundError e) {
+                    }
+                    catch (ClassNotFoundException | NoClassDefFoundError e)
+                    {
                         // Skip classes that can't be resolved (optional deps, etc.).
                     }
                 }
             }
             ok = true;
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             throw new RuntimeException("Failed to load JAR plugin: " + e.getMessage(), e);
-        } finally {
-            if (!ok) {
+        }
+        finally
+        {
+            if (!ok)
+            {
                 closeQuietly(loader);
             }
         }
@@ -83,20 +103,28 @@ public final class JarPluginScanner {
     }
 
     /** Instantiates a plugin via its no-arg constructor (made accessible). */
-    public static Plugin instantiate(Class<?> clazz) {
-        try {
+    public static Plugin instantiate(Class<?> clazz)
+    {
+        try
+        {
             Constructor<?> constructor = clazz.getDeclaredConstructor();
             constructor.setAccessible(true);
             return (Plugin) constructor.newInstance();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException("Failed to instantiate plugin: " + e.getMessage(), e);
         }
     }
 
-    public static void closeQuietly(URLClassLoader loader) {
-        try {
+    public static void closeQuietly(URLClassLoader loader)
+    {
+        try
+        {
             loader.close();
-        } catch (IOException ignored) {
+        }
+        catch (IOException ignored)
+        {
         }
     }
 }

@@ -6,7 +6,8 @@ import java.util.Collections;
 import java.util.List;
 
 @Getter
-public class TaintFlow extends SimulationFinding {
+public class TaintFlow extends SimulationFinding
+{
 
     private final String sourceDescription;
     private final String sinkDescription;
@@ -14,7 +15,8 @@ public class TaintFlow extends SimulationFinding {
     private final int blockId;
     private final TaintCategory category;
 
-    public enum TaintCategory {
+    public enum TaintCategory
+    {
         SQL_INJECTION,
         COMMAND_INJECTION,
         PATH_TRAVERSAL,
@@ -24,14 +26,9 @@ public class TaintFlow extends SimulationFinding {
         GENERAL
     }
 
-    public TaintFlow(String className, String methodName, String methodDesc,
-                     IRInstruction sinkInstr, String sourceDescription,
-                     String sinkDescription, List<String> flowPath,
-                     TaintCategory category) {
-        super(className, methodName, methodDesc, FindingType.TAINTED_VALUE,
-                getSeverityForCategory(category),
-                sinkInstr != null && sinkInstr.getBlock() != null
-                        ? sinkInstr.getBlock().getBytecodeOffset() : -1);
+    public TaintFlow(String className, String methodName, String methodDesc, IRInstruction sinkInstr, String sourceDescription, String sinkDescription, List<String> flowPath, TaintCategory category)
+    {
+        super(className, methodName, methodDesc, FindingType.TAINTED_VALUE, getSeverityForCategory(category), sinkInstr != null && sinkInstr.getBlock() != null ? sinkInstr.getBlock().getBytecodeOffset() : -1);
         this.sourceDescription = sourceDescription;
         this.sinkDescription = sinkDescription;
         this.flowPath = flowPath != null
@@ -42,8 +39,10 @@ public class TaintFlow extends SimulationFinding {
         this.category = category;
     }
 
-    private static Severity getSeverityForCategory(TaintCategory category) {
-        switch (category) {
+    private static Severity getSeverityForCategory(TaintCategory category)
+    {
+        switch (category)
+        {
             case SQL_INJECTION:
             case COMMAND_INJECTION:
                 return Severity.CRITICAL;
@@ -59,21 +58,25 @@ public class TaintFlow extends SimulationFinding {
     }
 
     @Override
-    public String getTitle() {
+    public String getTitle()
+    {
         return "Taint Flow: " + category.name().replace("_", " ");
     }
 
     @Override
-    public String getDescription() {
+    public String getDescription()
+    {
         StringBuilder sb = new StringBuilder();
         sb.append("Potentially tainted data flows from a source to a sensitive sink.\n\n");
         sb.append("Source: ").append(sourceDescription).append("\n");
         sb.append("Sink: ").append(sinkDescription).append("\n");
         sb.append("Category: ").append(category.name().replace("_", " ")).append("\n\n");
 
-        if (!flowPath.isEmpty()) {
+        if (!flowPath.isEmpty())
+        {
             sb.append("Flow Path:\n");
-            for (int i = 0; i < flowPath.size(); i++) {
+            for (int i = 0; i < flowPath.size(); i++)
+            {
                 sb.append("  ").append(i + 1).append(". ").append(flowPath.get(i)).append("\n");
             }
         }
@@ -82,8 +85,10 @@ public class TaintFlow extends SimulationFinding {
     }
 
     @Override
-    public String getRecommendation() {
-        switch (category) {
+    public String getRecommendation()
+    {
+        switch (category)
+        {
             case SQL_INJECTION:
                 return "Use parameterized queries (prepared statements) instead of string concatenation. " +
                         "Validate and sanitize all user inputs before using in SQL queries.";
@@ -109,7 +114,8 @@ public class TaintFlow extends SimulationFinding {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "TaintFlow[" + sourceDescription + " -> " + sinkDescription +
                 ", category=" + category + "]";
     }

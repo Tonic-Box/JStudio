@@ -5,19 +5,23 @@ import com.tonic.analysis.execution.heap.ObjectInstance;
 import lombok.Getter;
 
 @Getter
-public class MutationEvent {
+public class MutationEvent
+{
     @Getter
-    public enum MutationType {
+    public enum MutationType
+    {
         PUTFIELD(0xB5),
         PUTSTATIC(0xB3);
 
         private final int opcode;
 
-        MutationType(int opcode) {
+        MutationType(int opcode)
+        {
             this.opcode = opcode;
         }
 
-        public static MutationType fromOpcode(int opcode) {
+        public static MutationType fromOpcode(int opcode)
+        {
             return opcode == 0xB3 ? PUTSTATIC : PUTFIELD;
         }
     }
@@ -32,7 +36,8 @@ public class MutationEvent {
     private final MutationType mutationType;
     private final ProvenanceInfo provenance;
 
-    private MutationEvent(Builder builder) {
+    private MutationEvent(Builder builder)
+    {
         this.objectId = builder.objectId;
         this.fieldOwner = builder.fieldOwner;
         this.fieldName = builder.fieldName;
@@ -44,32 +49,40 @@ public class MutationEvent {
         this.provenance = builder.provenance;
     }
 
-    public boolean isStatic() {
+    public boolean isStatic()
+    {
         return mutationType == MutationType.PUTSTATIC;
     }
 
-    public String getFieldKey() {
+    public String getFieldKey()
+    {
         return fieldOwner + "." + fieldName + ":" + fieldDescriptor;
     }
 
-    public String getDisplayOldValue() {
+    public String getDisplayOldValue()
+    {
         return formatValue(oldValue);
     }
 
-    public String getDisplayNewValue() {
+    public String getDisplayNewValue()
+    {
         return formatValue(newValue);
     }
 
-    private String formatValue(Object value) {
-        if (value == null) {
+    private String formatValue(Object value)
+    {
+        if (value == null)
+        {
             return "null";
         }
-        if (value instanceof ArrayInstance) {
+        if (value instanceof ArrayInstance)
+        {
             ArrayInstance arr =
                     (ArrayInstance) value;
             return arr.getComponentType() + "[" + arr.getLength() + "] #" + arr.getId();
         }
-        if (value instanceof ObjectInstance) {
+        if (value instanceof ObjectInstance)
+        {
             ObjectInstance obj = (ObjectInstance) value;
             return obj.getClassName() + " #" + obj.getId();
         }
@@ -77,19 +90,22 @@ public class MutationEvent {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "MutationEvent{" +
-            (isStatic() ? "static " : "#" + objectId + ".") +
-            fieldName + " = " + getDisplayOldValue() + " -> " + getDisplayNewValue() +
-            " @ " + instructionCount +
-            '}';
+                (isStatic() ? "static " : "#" + objectId + ".") +
+                fieldName + " = " + getDisplayOldValue() + " -> " + getDisplayNewValue() +
+                " @ " + instructionCount +
+                '}';
     }
 
-    public static Builder builder() {
+    public static Builder builder()
+    {
         return new Builder();
     }
 
-    public static class Builder {
+    public static class Builder
+    {
         private int objectId = -1;
         private String fieldOwner = "";
         private String fieldName = "";
@@ -100,57 +116,68 @@ public class MutationEvent {
         private MutationType mutationType = MutationType.PUTFIELD;
         private ProvenanceInfo provenance;
 
-        public Builder objectId(int objectId) {
+        public Builder objectId(int objectId)
+        {
             this.objectId = objectId;
             return this;
         }
 
-        public Builder fieldOwner(String fieldOwner) {
+        public Builder fieldOwner(String fieldOwner)
+        {
             this.fieldOwner = fieldOwner;
             return this;
         }
 
-        public Builder fieldName(String fieldName) {
+        public Builder fieldName(String fieldName)
+        {
             this.fieldName = fieldName;
             return this;
         }
 
-        public Builder fieldDescriptor(String fieldDescriptor) {
+        public Builder fieldDescriptor(String fieldDescriptor)
+        {
             this.fieldDescriptor = fieldDescriptor;
             return this;
         }
 
-        public Builder oldValue(Object oldValue) {
+        public Builder oldValue(Object oldValue)
+        {
             this.oldValue = oldValue;
             return this;
         }
 
-        public Builder newValue(Object newValue) {
+        public Builder newValue(Object newValue)
+        {
             this.newValue = newValue;
             return this;
         }
 
-        public Builder instructionCount(long instructionCount) {
+        public Builder instructionCount(long instructionCount)
+        {
             this.instructionCount = instructionCount;
             return this;
         }
 
-        public Builder mutationType(MutationType mutationType) {
+        public Builder mutationType(MutationType mutationType)
+        {
             this.mutationType = mutationType;
             return this;
         }
 
-        public Builder opcode(int opcode) {
+        public Builder opcode(int opcode)
+        {
             this.mutationType = MutationType.fromOpcode(opcode);
             return this;
         }
 
-        public Builder provenance(ProvenanceInfo provenance) {
+        public Builder provenance(ProvenanceInfo provenance)
+        {
             this.provenance = provenance;
             return this;
         }
 
-        public MutationEvent build() {
+        public MutationEvent build()
+        {
             return new MutationEvent(this);
         }
     }

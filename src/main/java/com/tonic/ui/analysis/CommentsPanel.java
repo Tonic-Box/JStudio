@@ -37,7 +37,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-public class CommentsPanel extends ThemedJPanel {
+public class CommentsPanel extends ThemedJPanel
+{
 
     private final ProjectModel project;
     private final JList<Comment> commentList;
@@ -45,7 +46,8 @@ public class CommentsPanel extends ThemedJPanel {
     private final JTextArea previewArea;
     private final JLabel statusLabel;
 
-    public CommentsPanel(ProjectModel project) {
+    public CommentsPanel(ProjectModel project)
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
         this.project = project;
 
@@ -59,27 +61,34 @@ public class CommentsPanel extends ThemedJPanel {
         commentList.setBackground(JStudioTheme.getBgPrimary());
         commentList.setForeground(JStudioTheme.getTextPrimary());
 
-        commentList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
+        commentList.addListSelectionListener(e ->
+        {
+            if (!e.getValueIsAdjusting())
+            {
                 showPreview();
             }
         });
 
-        commentList.addMouseListener(new MouseAdapter() {
+        commentList.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
                     navigateToSelected();
                 }
             }
 
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mousePressed(MouseEvent e)
+            {
                 if (e.isPopupTrigger()) showContextMenu(e);
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
+            public void mouseReleased(MouseEvent e)
+            {
                 if (e.isPopupTrigger()) showContextMenu(e);
             }
         });
@@ -98,9 +107,7 @@ public class CommentsPanel extends ThemedJPanel {
         previewArea.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_MEDIUM));
 
         JScrollPane previewScroll = new JScrollPane(previewArea);
-        previewScroll.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                "Preview"));
+        previewScroll.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Preview"));
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listScroll, previewScroll);
         splitPane.setResizeWeight(0.5);
@@ -117,7 +124,8 @@ public class CommentsPanel extends ThemedJPanel {
         ProjectDatabaseService.getInstance().addListener((db, dirty) -> SwingUtilities.invokeLater(this::refresh));
     }
 
-    private JToolBar createToolbar() {
+    private JToolBar createToolbar()
+    {
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
         toolbar.setBackground(JStudioTheme.getBgSecondary());
@@ -137,7 +145,8 @@ public class CommentsPanel extends ThemedJPanel {
         return toolbar;
     }
 
-    private JButton createToolButton(String tooltip, String iconName, ActionListener action) {
+    private JButton createToolButton(String tooltip, String iconName, ActionListener action)
+    {
         JButton button = new JButton();
         button.setIcon(Icons.getIcon(iconName));
         button.setToolTipText(tooltip);
@@ -149,12 +158,15 @@ public class CommentsPanel extends ThemedJPanel {
         return button;
     }
 
-    public void refresh() {
+    public void refresh()
+    {
         listModel.clear();
-        if (ProjectDatabaseService.getInstance().hasDatabase()) {
+        if (ProjectDatabaseService.getInstance().hasDatabase())
+        {
             List<Comment> comments = ProjectDatabaseService.getInstance().getDatabase().getComments().getAllComments();
             comments.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
-            for (Comment c : comments) {
+            for (Comment c : comments)
+            {
                 listModel.addElement(c);
             }
         }
@@ -162,18 +174,24 @@ public class CommentsPanel extends ThemedJPanel {
         previewArea.setText("");
     }
 
-    private void updateStatus() {
+    private void updateStatus()
+    {
         int count = listModel.size();
-        if (count == 0) {
+        if (count == 0)
+        {
             statusLabel.setText("No comments");
-        } else {
+        }
+        else
+        {
             statusLabel.setText(count + " comment" + (count == 1 ? "" : "s"));
         }
     }
 
-    private void showPreview() {
+    private void showPreview()
+    {
         Comment selected = commentList.getSelectedValue();
-        if (selected == null) {
+        if (selected == null)
+        {
             previewArea.setText("");
             return;
         }
@@ -185,41 +203,49 @@ public class CommentsPanel extends ThemedJPanel {
         previewArea.setCaretPosition(0);
     }
 
-    private String formatDate(long timestamp) {
+    private String formatDate(long timestamp)
+    {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(timestamp));
     }
 
-    private void navigateToSelected() {
+    private void navigateToSelected()
+    {
         Comment selected = commentList.getSelectedValue();
         if (selected == null) return;
 
         ClassEntryModel classEntry = findClass(selected.getClassName());
-        if (classEntry != null) {
+        if (classEntry != null)
+        {
             EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
         }
     }
 
-    private ClassEntryModel findClass(String className) {
-        if (project == null) {
+    private ClassEntryModel findClass(String className)
+    {
+        if (project == null)
+        {
             return null;
         }
         return project.getClass(className);
     }
 
-    public void addCommentAtCurrentLocation() {
-        if (project == null || project.getClassCount() == 0) {
+    public void addCommentAtCurrentLocation()
+    {
+        if (project == null || project.getClassCount() == 0)
+        {
             JOptionPane.showMessageDialog(this, "No classes loaded.", "Add Comment", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        String className = JOptionPane.showInputDialog(this, "Class name (internal format, e.g., com/example/Main):",
-                "Add Comment", JOptionPane.PLAIN_MESSAGE);
-        if (className == null || className.trim().isEmpty()) {
+        String className = JOptionPane.showInputDialog(this, "Class name (internal format, e.g., com/example/Main):", "Add Comment", JOptionPane.PLAIN_MESSAGE);
+        if (className == null || className.trim().isEmpty())
+        {
             return;
         }
 
         ClassEntryModel classEntry = findClass(className.trim());
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             JOptionPane.showMessageDialog(this, "Class not found: " + className, "Add Comment", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -229,10 +255,10 @@ public class CommentsPanel extends ThemedJPanel {
         textArea.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(textArea);
 
-        int result = JOptionPane.showConfirmDialog(this, scrollPane, "Enter Comment for " + classEntry.getSimpleName(),
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(this, scrollPane, "Enter Comment for " + classEntry.getSimpleName(), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        if (result == JOptionPane.OK_OPTION && !textArea.getText().trim().isEmpty()) {
+        if (result == JOptionPane.OK_OPTION && !textArea.getText().trim().isEmpty())
+        {
             Comment comment = new Comment(classEntry.getClassName(), -1, textArea.getText().trim());
             comment.setType(Comment.Type.CLASS);
             ProjectDatabaseService.getInstance().addComment(comment);
@@ -240,7 +266,8 @@ public class CommentsPanel extends ThemedJPanel {
         }
     }
 
-    private void editSelected() {
+    private void editSelected()
+    {
         Comment selected = commentList.getSelectedValue();
         if (selected == null) return;
 
@@ -250,38 +277,40 @@ public class CommentsPanel extends ThemedJPanel {
         textArea.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(textArea);
 
-        int result = JOptionPane.showConfirmDialog(this, scrollPane, "Edit Comment",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(this, scrollPane, "Edit Comment", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        if (result == JOptionPane.OK_OPTION && !textArea.getText().trim().isEmpty()) {
+        if (result == JOptionPane.OK_OPTION && !textArea.getText().trim().isEmpty())
+        {
             ProjectDatabaseService.getInstance().updateComment(selected.getId(), textArea.getText().trim());
             refresh();
         }
     }
 
-    private void removeSelected() {
+    private void removeSelected()
+    {
         Comment selected = commentList.getSelectedValue();
         if (selected == null) return;
 
         String preview = selected.getText();
-        if (preview.length() > 50) {
+        if (preview.length() > 50)
+        {
             preview = preview.substring(0, 47) + "...";
         }
 
-        int result = JOptionPane.showConfirmDialog(this,
-                "Remove comment: \"" + preview + "\"?",
-                "Remove Comment",
-                JOptionPane.YES_NO_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, "Remove comment: \"" + preview + "\"?", "Remove Comment", JOptionPane.YES_NO_OPTION);
 
-        if (result == JOptionPane.YES_OPTION) {
+        if (result == JOptionPane.YES_OPTION)
+        {
             ProjectDatabaseService.getInstance().removeComment(selected.getId());
             refresh();
         }
     }
 
-    private void showContextMenu(MouseEvent e) {
+    private void showContextMenu(MouseEvent e)
+    {
         int index = commentList.locationToIndex(e.getPoint());
-        if (index >= 0) {
+        if (index >= 0)
+        {
             commentList.setSelectedIndex(index);
         }
 
@@ -307,28 +336,33 @@ public class CommentsPanel extends ThemedJPanel {
         menu.show(commentList, e.getX(), e.getY());
     }
 
-    private static class CommentCellRenderer extends DefaultListCellRenderer {
+    private static class CommentCellRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            if (value instanceof Comment) {
+            if (value instanceof Comment)
+            {
                 Comment c = (Comment) value;
                 String preview = c.getText();
-                if (preview.length() > 40) {
+                if (preview.length() > 40)
+                {
                     preview = preview.substring(0, 37) + "...";
                 }
                 String className = c.getClassName();
                 int lastSlash = className.lastIndexOf('/');
-                if (lastSlash >= 0) {
+                if (lastSlash >= 0)
+                {
                     className = className.substring(lastSlash + 1);
                 }
                 setText(className + ": " + preview);
                 setToolTipText("<html>" + c.getLocationKey() + "<br>" + c.getText().replace("\n", "<br>") + "</html>");
                 setIcon(Icons.getIcon("comment"));
 
-                if (!isSelected) {
+                if (!isSelected)
+                {
                     setBackground(JStudioTheme.getBgPrimary());
                     setForeground(JStudioTheme.getTextPrimary());
                 }

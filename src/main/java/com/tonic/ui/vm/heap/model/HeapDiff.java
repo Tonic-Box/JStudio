@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class HeapDiff {
+public class HeapDiff
+{
     @Getter
     private final HeapSnapshot before;
     @Getter
@@ -20,7 +21,8 @@ public class HeapDiff {
     private final List<ModifiedObject> modifiedObjects;
     private final Map<String, ClassDiff> classDiffs;
 
-    private HeapDiff(HeapSnapshot before, HeapSnapshot after) {
+    private HeapDiff(HeapSnapshot before, HeapSnapshot after)
+    {
         this.before = before;
         this.after = after;
         this.addedObjects = new ArrayList<>();
@@ -31,7 +33,8 @@ public class HeapDiff {
         computeDiff();
     }
 
-    private void computeDiff() {
+    private void computeDiff()
+    {
         Set<Integer> beforeIds = before.getObjects().keySet();
         Set<Integer> afterIds = after.getObjects().keySet();
 
@@ -44,51 +47,64 @@ public class HeapDiff {
         Set<Integer> common = new HashSet<>(beforeIds);
         common.retainAll(afterIds);
 
-        for (int id : added) {
+        for (int id : added)
+        {
             HeapObject obj = after.getObject(id);
             addedObjects.add(obj);
             getOrCreateClassDiff(obj.getClassName()).addedCount++;
         }
 
-        for (int id : removed) {
+        for (int id : removed)
+        {
             HeapObject obj = before.getObject(id);
             removedObjects.add(obj);
             getOrCreateClassDiff(obj.getClassName()).removedCount++;
         }
 
-        for (int id : common) {
+        for (int id : common)
+        {
             HeapObject beforeObj = before.getObject(id);
             HeapObject afterObj = after.getObject(id);
 
             List<FieldChange> changes = compareFields(beforeObj, afterObj);
-            if (!changes.isEmpty()) {
+            if (!changes.isEmpty())
+            {
                 modifiedObjects.add(new ModifiedObject(beforeObj, afterObj, changes));
                 getOrCreateClassDiff(afterObj.getClassName()).modifiedCount++;
             }
         }
     }
 
-    private ClassDiff getOrCreateClassDiff(String className) {
+    private ClassDiff getOrCreateClassDiff(String className)
+    {
         return classDiffs.computeIfAbsent(className, k -> new ClassDiff(className));
     }
 
-    private List<FieldChange> compareFields(HeapObject before, HeapObject after) {
+    private List<FieldChange> compareFields(HeapObject before, HeapObject after)
+    {
         List<FieldChange> changes = new ArrayList<>();
 
         Set<String> allKeys = new HashSet<>();
         allKeys.addAll(before.getFields().keySet());
         allKeys.addAll(after.getFields().keySet());
 
-        for (String key : allKeys) {
+        for (String key : allKeys)
+        {
             FieldValue beforeVal = before.getFields().get(key);
             FieldValue afterVal = after.getFields().get(key);
 
-            if (beforeVal == null && afterVal != null) {
+            if (beforeVal == null && afterVal != null)
+            {
                 changes.add(new FieldChange(key, null, afterVal, FieldChange.ChangeType.ADDED));
-            } else if (beforeVal != null && afterVal == null) {
+            }
+            else if (beforeVal != null && afterVal == null)
+            {
                 changes.add(new FieldChange(key, beforeVal, null, FieldChange.ChangeType.REMOVED));
-            } else if (beforeVal != null) {
-                if (!valuesEqual(beforeVal.getValue(), afterVal.getValue())) {
+            }
+            else if (beforeVal != null)
+            {
+                if (!valuesEqual(beforeVal.getValue(), afterVal.getValue()))
+                {
                     changes.add(new FieldChange(key, beforeVal, afterVal, FieldChange.ChangeType.MODIFIED));
                 }
             }
@@ -97,81 +113,98 @@ public class HeapDiff {
         return changes;
     }
 
-    private boolean valuesEqual(Object a, Object b) {
+    private boolean valuesEqual(Object a, Object b)
+    {
         if (a == b) return true;
         if (a == null || b == null) return false;
         return a.equals(b);
     }
 
-    public static HeapDiff compare(HeapSnapshot before, HeapSnapshot after) {
+    public static HeapDiff compare(HeapSnapshot before, HeapSnapshot after)
+    {
         return new HeapDiff(before, after);
     }
 
-    public List<HeapObject> getAddedObjects() {
+    public List<HeapObject> getAddedObjects()
+    {
         return Collections.unmodifiableList(addedObjects);
     }
 
-    public List<HeapObject> getRemovedObjects() {
+    public List<HeapObject> getRemovedObjects()
+    {
         return Collections.unmodifiableList(removedObjects);
     }
 
-    public List<ModifiedObject> getModifiedObjects() {
+    public List<ModifiedObject> getModifiedObjects()
+    {
         return Collections.unmodifiableList(modifiedObjects);
     }
 
-    public Map<String, ClassDiff> getClassDiffs() {
+    public Map<String, ClassDiff> getClassDiffs()
+    {
         return Collections.unmodifiableMap(classDiffs);
     }
 
-    public int getTotalAdded() {
+    public int getTotalAdded()
+    {
         return addedObjects.size();
     }
 
-    public int getTotalRemoved() {
+    public int getTotalRemoved()
+    {
         return removedObjects.size();
     }
 
-    public int getTotalModified() {
+    public int getTotalModified()
+    {
         return modifiedObjects.size();
     }
 
-    public boolean hasChanges() {
+    public boolean hasChanges()
+    {
         return !addedObjects.isEmpty() || !removedObjects.isEmpty() || !modifiedObjects.isEmpty();
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "HeapDiff{" +
-            "added=" + addedObjects.size() +
-            ", removed=" + removedObjects.size() +
-            ", modified=" + modifiedObjects.size() +
-            '}';
+                "added=" + addedObjects.size() +
+                ", removed=" + removedObjects.size() +
+                ", modified=" + modifiedObjects.size() +
+                '}';
     }
 
     @Getter
-    public static class ModifiedObject {
+    public static class ModifiedObject
+    {
         private final HeapObject before;
         private final HeapObject after;
         private final List<FieldChange> fieldChanges;
 
-        public ModifiedObject(HeapObject before, HeapObject after, List<FieldChange> fieldChanges) {
+        public ModifiedObject(HeapObject before, HeapObject after, List<FieldChange> fieldChanges)
+        {
             this.before = before;
             this.after = after;
             this.fieldChanges = List.copyOf(fieldChanges);
         }
 
-        public int getObjectId() {
+        public int getObjectId()
+        {
             return after.getId();
         }
 
-        public String getClassName() {
+        public String getClassName()
+        {
             return after.getClassName();
         }
     }
 
     @Getter
-    public static class FieldChange {
-        public enum ChangeType {
+    public static class FieldChange
+    {
+        public enum ChangeType
+        {
             ADDED, REMOVED, MODIFIED
         }
 
@@ -180,34 +213,39 @@ public class HeapDiff {
         private final FieldValue afterValue;
         private final ChangeType changeType;
 
-        public FieldChange(String fieldKey, FieldValue beforeValue, FieldValue afterValue, ChangeType changeType) {
+        public FieldChange(String fieldKey, FieldValue beforeValue, FieldValue afterValue, ChangeType changeType)
+        {
             this.fieldKey = fieldKey;
             this.beforeValue = beforeValue;
             this.afterValue = afterValue;
             this.changeType = changeType;
         }
 
-        public String getFieldName() {
+        public String getFieldName()
+        {
             if (afterValue != null) return afterValue.getName();
             if (beforeValue != null) return beforeValue.getName();
             int lastDot = fieldKey.lastIndexOf('.');
             int lastColon = fieldKey.lastIndexOf(':');
-            if (lastDot >= 0 && lastColon > lastDot) {
+            if (lastDot >= 0 && lastColon > lastDot)
+            {
                 return fieldKey.substring(lastDot + 1, lastColon);
             }
             return fieldKey;
         }
 
         @Override
-        public String toString() {
-            switch (changeType) {
+        public String toString()
+        {
+            switch (changeType)
+            {
                 case ADDED:
                     return "+ " + getFieldName() + " = " + afterValue.getDisplayValue();
                 case REMOVED:
                     return "- " + getFieldName();
                 case MODIFIED:
                     return "~ " + getFieldName() + ": " +
-                           beforeValue.getDisplayValue() + " -> " + afterValue.getDisplayValue();
+                            beforeValue.getDisplayValue() + " -> " + afterValue.getDisplayValue();
                 default:
                     return fieldKey;
             }
@@ -215,21 +253,25 @@ public class HeapDiff {
     }
 
     @Getter
-    public static class ClassDiff {
+    public static class ClassDiff
+    {
         private final String className;
         private int addedCount;
         private int removedCount;
         private int modifiedCount;
 
-        public ClassDiff(String className) {
+        public ClassDiff(String className)
+        {
             this.className = className;
         }
 
-        public int getNetChange() {
+        public int getNetChange()
+        {
             return addedCount - removedCount;
         }
 
-        public String getNetChangeString() {
+        public String getNetChangeString()
+        {
             int net = getNetChange();
             if (net > 0) return "+" + net;
             if (net < 0) return String.valueOf(net);

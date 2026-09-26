@@ -12,12 +12,14 @@ import java.util.List;
  * and the paused thread's call stack for the Debugger tool window.
  */
 @Getter
-public class DebugPausedEvent extends Event {
+public class DebugPausedEvent extends Event
+{
 
     private final DebugLocation location;
     private final List<DebugFrame> frames;
 
-    public DebugPausedEvent(Object source, DebugLocation location, List<DebugFrame> frames) {
+    public DebugPausedEvent(Object source, DebugLocation location, List<DebugFrame> frames)
+    {
         super(source);
         this.location = location;
         this.frames = frames;

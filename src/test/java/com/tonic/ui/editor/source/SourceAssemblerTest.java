@@ -11,7 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class SourceAssemblerTest {
+class SourceAssemblerTest
+{
 
     // Lines: 1 package | 2 class{ | 3-5 foo | 6 blank | 7-9 bar | 10 }
     private static final String SOURCE = String.join("\n",
@@ -26,14 +27,16 @@ class SourceAssemblerTest {
             "  }",                  // 9
             "}");                   // 10
 
-    private static DecompileResult.MethodSpan span(int start, int end) {
+    private static DecompileResult.MethodSpan span(int start, int end)
+    {
         DecompileResult.MethodSpan s = mock(DecompileResult.MethodSpan.class);
         when(s.getStartLine()).thenReturn(start);
         when(s.getEndLine()).thenReturn(end);
         return s;
     }
 
-    private static ClassEntryModel classWithSpans() {
+    private static ClassEntryModel classWithSpans()
+    {
         Map<String, DecompileResult.MethodSpan> spans = new HashMap<>();
         spans.put("foo()V", span(3, 5));
         spans.put("bar()I", span(7, 9));
@@ -43,7 +46,8 @@ class SourceAssemblerTest {
     }
 
     @Test
-    void splicesShellAndBodiesKeepingGapsAndFooter() {
+    void splicesShellAndBodiesKeepingGapsAndFooter()
+    {
         ClassEntryModel cls = classWithSpans();
         Map<String, String> bodies = new HashMap<>();
         bodies.put("foo()V", "  void foo() {\n    doThing();\n  }");
@@ -62,7 +66,8 @@ class SourceAssemblerTest {
     }
 
     @Test
-    void missingBodyKeepsOriginalSlice() {
+    void missingBodyKeepsOriginalSlice()
+    {
         ClassEntryModel cls = classWithSpans();
         Map<String, String> bodies = new HashMap<>();
         bodies.put("foo()V", "  void foo() {\n    doThing();\n  }");
@@ -75,7 +80,8 @@ class SourceAssemblerTest {
     }
 
     @Test
-    void headerAndMethodSlices() {
+    void headerAndMethodSlices()
+    {
         ClassEntryModel cls = classWithSpans();
         assertEquals("package x;\npublic class C {", SourceAssembler.headerSource(cls, SOURCE));
         assertEquals("  void foo() {\n    a();\n  }", SourceAssembler.methodSource(cls, SOURCE, "foo", "()V"));

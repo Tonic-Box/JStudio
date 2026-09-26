@@ -1,6 +1,7 @@
 package com.tonic.plugin.api;
 
-public interface PluginLogger {
+public interface PluginLogger
+{
 
     void info(String message);
 

@@ -3,7 +3,8 @@ package com.tonic.plugin.api;
 import java.util.List;
 import java.util.Optional;
 
-public interface YabrAccess {
+public interface YabrAccess
+{
 
     ClassPool getClassPool();
 
@@ -34,7 +35,8 @@ public interface YabrAccess {
 
     void removeClass(String name);
 
-    interface ClassPool {
+    interface ClassPool
+    {
 
         List<String> getClassNames();
 

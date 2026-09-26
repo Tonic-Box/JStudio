@@ -8,9 +8,11 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class Script {
+public class Script
+{
 
-    public enum Mode {
+    public enum Mode
+    {
         AST,    // Target decompiled source AST
         IR,     // Target SSA IR bytecode
         BOTH    // Run on both (AST first, then IR)
@@ -24,7 +26,8 @@ public class Script {
     private String content;
     private boolean builtIn;
 
-    public Script() {
+    public Script()
+    {
         this.name = "Untitled";
         this.description = "";
         this.mode = Mode.AST;
@@ -34,7 +37,8 @@ public class Script {
         this.builtIn = false;
     }
 
-    public Script(String name, Mode mode, String content) {
+    public Script(String name, Mode mode, String content)
+    {
         this();
         this.name = name;
         this.mode = mode;
@@ -45,17 +49,24 @@ public class Script {
      * Parses mode from script content annotations.
      * Looks for: // @mode: ast|ir|both
      */
-    public static Mode parseModeFromContent(String content) {
+    public static Mode parseModeFromContent(String content)
+    {
         if (content == null) return Mode.AST;
 
-        for (String line : content.split("\n")) {
+        for (String line : content.split("\n"))
+        {
             line = line.trim();
-            if (line.startsWith("// @mode:") || line.startsWith("//@mode:")) {
+            if (line.startsWith("// @mode:") || line.startsWith("//@mode:"))
+            {
                 String modeStr = line.substring(line.indexOf(':') + 1).trim().toLowerCase();
-                switch (modeStr) {
-                    case "ir": return Mode.IR;
-                    case "both": return Mode.BOTH;
-                    default: return Mode.AST;
+                switch (modeStr)
+                {
+                    case "ir":
+                        return Mode.IR;
+                    case "both":
+                        return Mode.BOTH;
+                    default:
+                        return Mode.AST;
                 }
             }
         }
@@ -66,12 +77,15 @@ public class Script {
      * Parses name from script content annotations.
      * Looks for: // @name: Script Name
      */
-    public static String parseNameFromContent(String content) {
+    public static String parseNameFromContent(String content)
+    {
         if (content == null) return "Untitled";
 
-        for (String line : content.split("\n")) {
+        for (String line : content.split("\n"))
+        {
             line = line.trim();
-            if (line.startsWith("// @name:") || line.startsWith("//@name:")) {
+            if (line.startsWith("// @name:") || line.startsWith("//@name:"))
+            {
                 return line.substring(line.indexOf(':') + 1).trim();
             }
         }
@@ -79,7 +93,8 @@ public class Script {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return name;
     }
 }

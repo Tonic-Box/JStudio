@@ -29,9 +29,11 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager.QuickAccessListener {
+public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager.QuickAccessListener
+{
 
-    public interface LocationListener {
+    public interface LocationListener
+    {
         void onLocationSelected(File location);
     }
 
@@ -51,7 +53,8 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
     private final JLabel pinnedHeader;
     private final JLabel recentHeader;
 
-    public QuickAccessPanel(LocationListener listener) {
+    public QuickAccessPanel(LocationListener listener)
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.listener = listener;
         this.manager = QuickAccessManager.getInstance();
@@ -110,22 +113,27 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
     }
 
     @Override
-    public void onPinnedChanged(List<File> pinned) {
-        SwingUtilities.invokeLater(() -> {
+    public void onPinnedChanged(List<File> pinned)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             populatePinned();
             updateSectionVisibility();
         });
     }
 
     @Override
-    public void onRecentChanged(List<File> recent) {
-        SwingUtilities.invokeLater(() -> {
+    public void onRecentChanged(List<File> recent)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             populateRecent();
             updateSectionVisibility();
         });
     }
 
-    private void updateSectionVisibility() {
+    private void updateSectionVisibility()
+    {
         boolean hasPinned = pinnedModel.getSize() > 0;
         pinnedHeader.setVisible(hasPinned);
         pinnedList.setVisible(hasPinned);
@@ -135,7 +143,8 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         recentList.setVisible(hasRecent);
     }
 
-    private JLabel createSectionHeader(String title) {
+    private JLabel createSectionHeader(String title)
+    {
         JLabel header = new JLabel(title);
         header.setForeground(JStudioTheme.getTextSecondary());
         header.setFont(JStudioTheme.getUIFont(11).deriveFont(Font.BOLD));
@@ -144,8 +153,8 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         return header;
     }
 
-    private JList<QuickAccessItem> createList(DefaultListModel<QuickAccessItem> model,
-                                               QuickAccessItemType defaultType) {
+    private JList<QuickAccessItem> createList(DefaultListModel<QuickAccessItem> model, QuickAccessItemType defaultType)
+    {
         JList<QuickAccessItem> list = new JList<>(model);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list.setBackground(JStudioTheme.getBgSecondary());
@@ -155,14 +164,19 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         list.setCellRenderer(new QuickAccessRenderer());
         list.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        list.addMouseListener(new MouseAdapter() {
+        list.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 1 && SwingUtilities.isLeftMouseButton(e)) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 1 && SwingUtilities.isLeftMouseButton(e))
+                {
                     int index = list.locationToIndex(e.getPoint());
-                    if (index >= 0) {
+                    if (index >= 0)
+                    {
                         QuickAccessItem item = model.getElementAt(index);
-                        if (item != null && item.file != null && listener != null) {
+                        if (item != null && item.file != null && listener != null)
+                        {
                             listener.onLocationSelected(item.file);
                             clearAllSelections();
                         }
@@ -171,15 +185,19 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
             }
 
             @Override
-            public void mousePressed(MouseEvent e) {
-                if (e.isPopupTrigger()) {
+            public void mousePressed(MouseEvent e)
+            {
+                if (e.isPopupTrigger())
+                {
                     showContextMenu(e, list, model);
                 }
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) {
+            public void mouseReleased(MouseEvent e)
+            {
+                if (e.isPopupTrigger())
+                {
                     showContextMenu(e, list, model);
                 }
             }
@@ -188,8 +206,8 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         return list;
     }
 
-    private void showContextMenu(MouseEvent e, JList<QuickAccessItem> list,
-                                  DefaultListModel<QuickAccessItem> model) {
+    private void showContextMenu(MouseEvent e, JList<QuickAccessItem> list, DefaultListModel<QuickAccessItem> model)
+    {
         int index = list.locationToIndex(e.getPoint());
         if (index < 0) return;
 
@@ -200,37 +218,49 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         JPopupMenu menu = new JPopupMenu();
         styleMenu(menu);
 
-        if (item.type == QuickAccessItemType.PINNED) {
+        if (item.type == QuickAccessItemType.PINNED)
+        {
             addMenuItem(menu, "Unpin", () -> manager.removePinned(item.file));
             menu.addSeparator();
             addMenuItem(menu, "Move Up", () -> manager.movePinnedUp(item.file));
             addMenuItem(menu, "Move Down", () -> manager.movePinnedDown(item.file));
-        } else if (item.type == QuickAccessItemType.RECENT) {
-            if (!manager.isPinned(item.file)) {
+        }
+        else if (item.type == QuickAccessItemType.RECENT)
+        {
+            if (!manager.isPinned(item.file))
+            {
                 addMenuItem(menu, "Pin to Quick Access", () -> manager.addPinned(item.file));
             }
             addMenuItem(menu, "Remove", () -> manager.removeRecent(item.file));
             menu.addSeparator();
             addMenuItem(menu, "Clear All Recent", manager::clearRecent);
-        } else {
-            if (!manager.isPinned(item.file)) {
+        }
+        else
+        {
+            if (!manager.isPinned(item.file))
+            {
                 addMenuItem(menu, "Pin to Quick Access", () -> manager.addPinned(item.file));
-            } else {
+            }
+            else
+            {
                 addMenuItem(menu, "Unpin", () -> manager.removePinned(item.file));
             }
         }
 
-        if (menu.getComponentCount() > 0) {
+        if (menu.getComponentCount() > 0)
+        {
             menu.show(list, e.getX(), e.getY());
         }
     }
 
-    private void styleMenu(JPopupMenu menu) {
+    private void styleMenu(JPopupMenu menu)
+    {
         menu.setBackground(JStudioTheme.getBgSecondary());
         menu.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
     }
 
-    private void addMenuItem(JPopupMenu menu, String text, Runnable action) {
+    private void addMenuItem(JPopupMenu menu, String text, Runnable action)
+    {
         JMenuItem item = new JMenuItem(text);
         item.setBackground(JStudioTheme.getBgSecondary());
         item.setForeground(JStudioTheme.getTextPrimary());
@@ -238,18 +268,17 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         menu.add(item);
     }
 
-    private void populatePinned() {
+    private void populatePinned()
+    {
         pinnedModel.clear();
-        for (File dir : manager.getPinnedDirectories()) {
-            pinnedModel.addElement(new QuickAccessItem(
-                    dir.getName(),
-                    dir,
-                    QuickAccessItemType.PINNED
-            ));
+        for (File dir : manager.getPinnedDirectories())
+        {
+            pinnedModel.addElement(new QuickAccessItem(dir.getName(), dir, QuickAccessItemType.PINNED));
         }
     }
 
-    private void populateQuickAccess() {
+    private void populateQuickAccess()
+    {
         quickAccessModel.clear();
 
         Map<String, File> folders = FileSystemWorker.getSpecialFolders();
@@ -260,84 +289,95 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         addIfExists(folders, "Home", quickAccessModel, QuickAccessItemType.HOME);
     }
 
-    private void addIfExists(Map<String, File> folders, String key,
-                             DefaultListModel<QuickAccessItem> model,
-                             QuickAccessItemType type) {
+    private void addIfExists(Map<String, File> folders, String key, DefaultListModel<QuickAccessItem> model, QuickAccessItemType type)
+    {
         File file = folders.get(key);
-        if (file != null && file.exists()) {
+        if (file != null && file.exists())
+        {
             model.addElement(new QuickAccessItem(key, file, type));
         }
     }
 
-    private void populateRecent() {
+    private void populateRecent()
+    {
         recentModel.clear();
-        for (File dir : manager.getRecentDirectories()) {
-            recentModel.addElement(new QuickAccessItem(
-                    dir.getName(),
-                    dir,
-                    QuickAccessItemType.RECENT
-            ));
+        for (File dir : manager.getRecentDirectories())
+        {
+            recentModel.addElement(new QuickAccessItem(dir.getName(), dir, QuickAccessItemType.RECENT));
         }
     }
 
-    private void populateDrives() {
+    private void populateDrives()
+    {
         drivesModel.clear();
 
-        for (File root : FileSystemWorker.getRoots()) {
+        for (File root : FileSystemWorker.getRoots())
+        {
             String name = FileSystemWorker.getDisplayName(root);
-            if (name.isEmpty()) {
+            if (name.isEmpty())
+            {
                 name = root.getAbsolutePath();
             }
             drivesModel.addElement(new QuickAccessItem(name, root, QuickAccessItemType.DRIVE));
         }
     }
 
-    public void addRecentLocation(File location) {
-        if (location == null || !location.isDirectory()) {
+    public void addRecentLocation(File location)
+    {
+        if (location == null || !location.isDirectory())
+        {
             return;
         }
         manager.addRecent(location);
     }
 
-    public void clearSelection() {
+    public void clearSelection()
+    {
         clearAllSelections();
     }
 
-    private void clearAllSelections() {
+    private void clearAllSelections()
+    {
         pinnedList.clearSelection();
         quickAccessList.clearSelection();
         recentList.clearSelection();
         drivesList.clearSelection();
     }
 
-    private enum QuickAccessItemType {
+    private enum QuickAccessItemType
+    {
         PINNED, DESKTOP, DOCUMENTS, DOWNLOADS, HOME, FOLDER, RECENT, DRIVE
     }
 
-    private static class QuickAccessItem {
+    private static class QuickAccessItem
+    {
         final String name;
         final File file;
         final QuickAccessItemType type;
 
-        QuickAccessItem(String name, File file, QuickAccessItemType type) {
+        QuickAccessItem(String name, File file, QuickAccessItemType type)
+        {
             this.name = name;
             this.file = file;
             this.type = type;
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return name;
         }
     }
 
-    private static class QuickAccessRenderer implements ListCellRenderer<QuickAccessItem> {
+    private static class QuickAccessRenderer implements ListCellRenderer<QuickAccessItem>
+    {
         private final JPanel panel;
         private final JLabel iconLabel;
         private final JLabel textLabel;
         private final JLabel pinIndicator;
 
-        QuickAccessRenderer() {
+        QuickAccessRenderer()
+        {
             panel = new JPanel(new BorderLayout(6, 0));
             panel.setOpaque(true);
             panel.setBorder(BorderFactory.createEmptyBorder(3, 12, 3, 8));
@@ -359,12 +399,14 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         }
 
         @Override
-        public Component getListCellRendererComponent(JList<? extends QuickAccessItem> list,
-                                                      QuickAccessItem value, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
-            if (isSelected) {
+        public Component getListCellRendererComponent(JList<? extends QuickAccessItem> list, QuickAccessItem value, int index, boolean isSelected, boolean cellHasFocus)
+        {
+            if (isSelected)
+            {
                 panel.setBackground(JStudioTheme.getSelection());
-            } else {
+            }
+            else
+            {
                 panel.setBackground(JStudioTheme.getBgSecondary());
             }
             textLabel.setForeground(JStudioTheme.getTextPrimary());
@@ -372,18 +414,26 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
 
             textLabel.setText(value.name);
 
-            if (value.file != null) {
+            if (value.file != null)
+            {
                 Icon icon = FileSystemWorker.getSystemIcon(value.file);
                 iconLabel.setIcon(icon);
-            } else {
+            }
+            else
+            {
                 iconLabel.setIcon(null);
             }
 
-            if (value.type == QuickAccessItemType.PINNED) {
+            if (value.type == QuickAccessItemType.PINNED)
+            {
                 pinIndicator.setText("\u2302");
-            } else if (value.type == QuickAccessItemType.RECENT) {
+            }
+            else if (value.type == QuickAccessItemType.RECENT)
+            {
                 pinIndicator.setText("");
-            } else {
+            }
+            else
+            {
                 pinIndicator.setText("");
             }
 

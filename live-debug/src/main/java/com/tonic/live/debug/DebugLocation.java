@@ -7,14 +7,16 @@ import lombok.Getter;
  * index, and the source line (-1 when no line information is available).
  */
 @Getter
-public final class DebugLocation {
+public final class DebugLocation
+{
     private final String className;
     private final String methodName;
     private final String methodDescriptor;
     private final long codeIndex;
     private final int lineNumber;
 
-    public DebugLocation(String className, String methodName, String methodDescriptor, long codeIndex, int lineNumber) {
+    public DebugLocation(String className, String methodName, String methodDescriptor, long codeIndex, int lineNumber)
+    {
         this.className = className;
         this.methodName = methodName;
         this.methodDescriptor = methodDescriptor;

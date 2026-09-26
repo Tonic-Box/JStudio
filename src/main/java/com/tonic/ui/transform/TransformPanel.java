@@ -32,12 +32,14 @@ import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TransformPanel extends ThemedJPanel {
+public class TransformPanel extends ThemedJPanel
+{
 
     /**
      * Callback interface for transform completion.
      */
-    public interface TransformCallback {
+    public interface TransformCallback
+    {
         void onTransformComplete();
     }
 
@@ -58,7 +60,8 @@ public class TransformPanel extends ThemedJPanel {
     // Callback for notifying when transforms are applied
     private TransformCallback transformCallback;
 
-    public TransformPanel(ProjectModel project) {
+    public TransformPanel(ProjectModel project)
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
         this.transformCheckBoxes = new ArrayList<>();
@@ -74,8 +77,7 @@ public class TransformPanel extends ThemedJPanel {
         JSplitPane previewSplit = createPreviewPanel();
 
         // Main split
-        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                transformListPanel, previewSplit);
+        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, transformListPanel, previewSplit);
         mainSplit.setDividerLocation(250);
         mainSplit.setBorder(null);
         add(mainSplit, BorderLayout.CENTER);
@@ -85,14 +87,12 @@ public class TransformPanel extends ThemedJPanel {
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
-    private JPanel createTargetPanel() {
+    private JPanel createTargetPanel()
+    {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         panel.setBackground(JStudioTheme.getBgSecondary());
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(8, 8, 8, 8)
-        ));
+        panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(8, 8, 8, 8)));
 
         JLabel classLabelTitle = new JLabel("Class:");
         classLabelTitle.setForeground(JStudioTheme.getTextSecondary());
@@ -113,8 +113,10 @@ public class TransformPanel extends ThemedJPanel {
         methodComboBox.setBackground(JStudioTheme.getBgTertiary());
         methodComboBox.setForeground(JStudioTheme.getTextPrimary());
         methodComboBox.setRenderer(new MethodComboRenderer());
-        methodComboBox.addActionListener(e -> {
-            if (methodComboBox.getSelectedItem() instanceof MethodEntryModel) {
+        methodComboBox.addActionListener(e ->
+        {
+            if (methodComboBox.getSelectedItem() instanceof MethodEntryModel)
+            {
                 selectedMethod = (MethodEntryModel) methodComboBox.getSelectedItem();
                 updateStatusLabel();
                 beforeArea.setText("");
@@ -127,14 +129,12 @@ public class TransformPanel extends ThemedJPanel {
         return panel;
     }
 
-    private JPanel createBottomPanel() {
+    private JPanel createBottomPanel()
+    {
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.X_AXIS));
         bottomPanel.setBackground(JStudioTheme.getBgSecondary());
-        bottomPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(8, 8, 8, 8)
-        ));
+        bottomPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(8, 8, 8, 8)));
 
         JButton previewButton = new JButton("Preview");
         previewButton.setBackground(JStudioTheme.getBgTertiary());
@@ -172,7 +172,8 @@ public class TransformPanel extends ThemedJPanel {
         return bottomPanel;
     }
 
-    private JPanel createTransformListPanel() {
+    private JPanel createTransformListPanel()
+    {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(JStudioTheme.getBgSecondary());
         panel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
@@ -246,13 +247,15 @@ public class TransformPanel extends ThemedJPanel {
         return panel;
     }
 
-    private void addTransform(JPanel panel, String name, String description, boolean defaultSelected) {
+    private void addTransform(JPanel panel, String name, String description, boolean defaultSelected)
+    {
         TransformCheckBox cb = new TransformCheckBox(name, description, defaultSelected);
         transformCheckBoxes.add(cb);
         panel.add(cb);
     }
 
-    private JSplitPane createPreviewPanel() {
+    private JSplitPane createPreviewPanel()
+    {
         // Before panel
         JPanel beforePanel = new JPanel(new BorderLayout());
         beforePanel.setBackground(JStudioTheme.getBgTertiary());
@@ -295,46 +298,56 @@ public class TransformPanel extends ThemedJPanel {
         return split;
     }
 
-    private void setAllSelected(boolean selected) {
-        for (TransformCheckBox cb : transformCheckBoxes) {
+    private void setAllSelected(boolean selected)
+    {
+        for (TransformCheckBox cb : transformCheckBoxes)
+        {
             cb.setSelected(selected);
         }
     }
 
-    private void selectStandard() {
-        for (TransformCheckBox cb : transformCheckBoxes) {
+    private void selectStandard()
+    {
+        for (TransformCheckBox cb : transformCheckBoxes)
+        {
             String name = cb.getTransformName();
-            cb.setSelected(name.equals("Constant Folding") ||
-                    name.equals("Copy Propagation") ||
-                    name.equals("Dead Code Elimination"));
+            cb.setSelected(name.equals("Constant Folding") || name.equals("Copy Propagation") || name.equals("Dead Code Elimination"));
         }
     }
 
     /**
      * Set the class to transform (and populate method dropdown).
      */
-    public void setClass(ClassEntryModel classEntry) {
+    public void setClass(ClassEntryModel classEntry)
+    {
         this.selectedClass = classEntry;
         this.selectedMethod = null;
 
         // Update class label
-        if (classEntry != null) {
+        if (classEntry != null)
+        {
             classLabel.setText(classEntry.getSimpleName());
-        } else {
+        }
+        else
+        {
             classLabel.setText("(none selected)");
         }
 
         // Populate method dropdown
         methodComboBox.removeAllItems();
-        if (classEntry != null) {
-            for (MethodEntryModel method : classEntry.getMethods()) {
+        if (classEntry != null)
+        {
+            for (MethodEntryModel method : classEntry.getMethods())
+            {
                 // Only add methods with code (skip abstract/native)
-                if (method.getMethodEntry().getCodeAttribute() != null) {
+                if (method.getMethodEntry().getCodeAttribute() != null)
+                {
                     methodComboBox.addItem(method);
                 }
             }
             // Select first method if available
-            if (methodComboBox.getItemCount() > 0) {
+            if (methodComboBox.getItemCount() > 0)
+            {
                 methodComboBox.setSelectedIndex(0);
                 selectedMethod = (MethodEntryModel) methodComboBox.getSelectedItem();
             }
@@ -349,12 +362,16 @@ public class TransformPanel extends ThemedJPanel {
     /**
      * Set the method to transform (legacy method for compatibility).
      */
-    public void setMethod(MethodEntryModel method) {
+    public void setMethod(MethodEntryModel method)
+    {
         this.selectedMethod = method;
-        if (method != null) {
+        if (method != null)
+        {
             // Try to select this method in the combo box
-            for (int i = 0; i < methodComboBox.getItemCount(); i++) {
-                if (methodComboBox.getItemAt(i) == method) {
+            for (int i = 0; i < methodComboBox.getItemCount(); i++)
+            {
+                if (methodComboBox.getItemAt(i) == method)
+                {
                     methodComboBox.setSelectedIndex(i);
                     break;
                 }
@@ -368,25 +385,34 @@ public class TransformPanel extends ThemedJPanel {
     /**
      * Set the callback to be invoked when transforms are applied.
      */
-    public void setTransformCallback(TransformCallback callback) {
+    public void setTransformCallback(TransformCallback callback)
+    {
         this.transformCallback = callback;
     }
 
     /**
      * Notify callback that transforms were applied.
      */
-    private void notifyTransformComplete() {
-        if (transformCallback != null) {
+    private void notifyTransformComplete()
+    {
+        if (transformCallback != null)
+        {
             transformCallback.onTransformComplete();
         }
     }
 
-    private void updateStatusLabel() {
-        if (selectedClass == null) {
+    private void updateStatusLabel()
+    {
+        if (selectedClass == null)
+        {
             statusLabel.setText("No class selected. Open a class first.");
-        } else if (selectedMethod == null) {
+        }
+        else if (selectedMethod == null)
+        {
             statusLabel.setText("Class: " + selectedClass.getSimpleName() + " - Select a method");
-        } else {
+        }
+        else
+        {
             statusLabel.setText("Ready: " + selectedClass.getSimpleName() + "." + selectedMethod.getMethodEntry().getName() + "()");
         }
     }
@@ -394,23 +420,28 @@ public class TransformPanel extends ThemedJPanel {
     /**
      * Preview the transform effect.
      */
-    public void preview() {
-        if (selectedMethod == null) {
+    public void preview()
+    {
+        if (selectedMethod == null)
+        {
             statusLabel.setText("No method selected.");
             return;
         }
 
         MethodEntry method = selectedMethod.getMethodEntry();
-        if (method.getCodeAttribute() == null) {
+        if (method.getCodeAttribute() == null)
+        {
             statusLabel.setText("Method has no code (abstract or native).");
             return;
         }
 
         statusLabel.setText("Generating preview...");
 
-        SwingWorker<String[], Void> worker = new SwingWorker<>() {
+        SwingWorker<String[], Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected String[] doInBackground() {
+            protected String[] doInBackground()
+            {
                 SSA ssa = createConfiguredSSA(method);
 
                 // Before: just lift
@@ -426,15 +457,19 @@ public class TransformPanel extends ThemedJPanel {
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     String[] result = get();
                     beforeArea.setText(result[0]);
                     afterArea.setText(result[1]);
                     beforeArea.setCaretPosition(0);
                     afterArea.setCaretPosition(0);
                     statusLabel.setText("Preview generated.");
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     statusLabel.setText("Preview failed: " + e.getMessage());
                 }
             }
@@ -446,41 +481,51 @@ public class TransformPanel extends ThemedJPanel {
     /**
      * Apply transforms to the selected method.
      */
-    public void applyToMethod() {
-        if (selectedMethod == null) {
+    public void applyToMethod()
+    {
+        if (selectedMethod == null)
+        {
             statusLabel.setText("No method selected.");
             return;
         }
 
         MethodEntry method = selectedMethod.getMethodEntry();
-        if (method.getCodeAttribute() == null) {
+        if (method.getCodeAttribute() == null)
+        {
             statusLabel.setText("Method has no code (abstract or native).");
             return;
         }
 
         statusLabel.setText("Applying transforms...");
 
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+        SwingWorker<Void, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected Void doInBackground() {
+            protected Void doInBackground()
+            {
                 SSA ssa = createConfiguredSSA(method);
                 ssa.transform(method);
                 return null;
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     get();
                     // Clear caches
                     selectedMethod.setIrCache(null);
-                    if (selectedClass != null) {
+                    if (selectedClass != null)
+                    {
                         selectedClass.setDecompilationCache(null);
                     }
                     statusLabel.setText("Transforms applied to " + method.getName());
                     // Notify callback to refresh the view
                     notifyTransformComplete();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     statusLabel.setText("Transform failed: " + e.getMessage());
                 }
             }
@@ -492,29 +537,37 @@ public class TransformPanel extends ThemedJPanel {
     /**
      * Apply transforms to all methods in the selected class.
      */
-    public void applyToClass() {
-        if (selectedClass == null) {
+    public void applyToClass()
+    {
+        if (selectedClass == null)
+        {
             statusLabel.setText("No class selected.");
             return;
         }
 
         statusLabel.setText("Applying transforms to class...");
 
-        SwingWorker<Integer, Void> worker = new SwingWorker<>() {
+        SwingWorker<Integer, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected Integer doInBackground() {
+            protected Integer doInBackground()
+            {
                 int count = 0;
-                for (MethodEntryModel methodModel : selectedClass.getMethods()) {
+                for (MethodEntryModel methodModel : selectedClass.getMethods())
+                {
                     MethodEntry method = methodModel.getMethodEntry();
                     if (method.getCodeAttribute() == null) continue;
                     if (method.getName().startsWith("<")) continue;
 
-                    try {
+                    try
+                    {
                         SSA ssa = createConfiguredSSA(method);
                         ssa.transform(method);
                         methodModel.setIrCache(null);
                         count++;
-                    } catch (Exception ex) {
+                    }
+                    catch (Exception ex)
+                    {
                         ConsoleLogService.getInstance().error("Failed to transform " + selectedClass.getClassName() + "." + method.getName(), ex);
                     }
                 }
@@ -522,14 +575,18 @@ public class TransformPanel extends ThemedJPanel {
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     int count = get();
                     selectedClass.setDecompilationCache(null);
                     statusLabel.setText("Transforms applied to " + count + " methods in " + selectedClass.getSimpleName());
                     // Notify callback to refresh the view
                     notifyTransformComplete();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     statusLabel.setText("Transform failed: " + e.getMessage());
                 }
             }
@@ -541,32 +598,41 @@ public class TransformPanel extends ThemedJPanel {
     /**
      * Apply transforms to all methods in all loaded classes.
      */
-    public void applyToAllClasses() {
+    public void applyToAllClasses()
+    {
         statusLabel.setText("Applying transforms to all classes...");
 
-        SwingWorker<int[], String> worker = new SwingWorker<>() {
+        SwingWorker<int[], String> worker = new SwingWorker<>()
+        {
             @Override
-            protected int[] doInBackground() {
+            protected int[] doInBackground()
+            {
                 int totalMethods = 0;
                 int totalClasses = 0;
-                for (ClassEntryModel classEntry : project.getUserClasses()) {
+                for (ClassEntryModel classEntry : project.getUserClasses())
+                {
                     boolean classModified = false;
-                    for (MethodEntryModel methodModel : classEntry.getMethods()) {
+                    for (MethodEntryModel methodModel : classEntry.getMethods())
+                    {
                         MethodEntry method = methodModel.getMethodEntry();
                         if (method.getCodeAttribute() == null) continue;
                         if (method.getName().startsWith("<")) continue;
 
-                        try {
+                        try
+                        {
                             SSA ssa = createConfiguredSSA(method);
                             ssa.transform(method);
                             methodModel.setIrCache(null);
                             totalMethods++;
                             classModified = true;
-                        } catch (Exception ex) {
+                        }
+                        catch (Exception ex)
+                        {
                             ConsoleLogService.getInstance().error("Failed to transform " + classEntry.getClassName() + "." + method.getName(), ex);
                         }
                     }
-                    if (classModified) {
+                    if (classModified)
+                    {
                         classEntry.setDecompilationCache(null);
                         totalClasses++;
                         publish(classEntry.getSimpleName());
@@ -576,19 +642,25 @@ public class TransformPanel extends ThemedJPanel {
             }
 
             @Override
-            protected void process(List<String> chunks) {
-                if (!chunks.isEmpty()) {
+            protected void process(List<String> chunks)
+            {
+                if (!chunks.isEmpty())
+                {
                     statusLabel.setText("Processing: " + chunks.get(chunks.size() - 1));
                 }
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     int[] result = get();
                     statusLabel.setText("Transforms applied to " + result[0] + " methods across " + result[1] + " classes");
                     notifyTransformComplete();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     ConsoleLogService.getInstance().error("Failed to apply transforms to all classes", e);
                     Throwable cause = e.getCause();
                     String msg = cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : e.getMessage();
@@ -600,34 +672,77 @@ public class TransformPanel extends ThemedJPanel {
         worker.execute();
     }
 
-    private SSA createConfiguredSSA(MethodEntry method) {
+    private SSA createConfiguredSSA(MethodEntry method)
+    {
         SSA ssa = new SSA(method.getClassFile().getConstPool());
 
-        for (TransformCheckBox cb : transformCheckBoxes) {
+        for (TransformCheckBox cb : transformCheckBoxes)
+        {
             if (!cb.isSelected()) continue;
 
             String name = cb.getTransformName();
-            switch (name) {
-                case "Constant Folding": ssa.withConstantFolding(); break;
-                case "Copy Propagation": ssa.withCopyPropagation(); break;
-                case "Dead Code Elimination": ssa.withDeadCodeElimination(); break;
-                case "Algebraic Simplification": ssa.withAlgebraicSimplification(); break;
-                case "Strength Reduction": ssa.withStrengthReduction(); break;
-                case "Reassociation": ssa.withReassociate(); break;
-                case "Phi Constant Propagation": ssa.withPhiConstantPropagation(); break;
-                case "Peephole Optimizations": ssa.withPeepholeOptimizations(); break;
-                case "Common Subexpression Elimination": ssa.withCommonSubexpressionElimination(); break;
-                case "Null Check Elimination": ssa.withNullCheckElimination(); break;
-                case "Conditional Constant Propagation": ssa.withConditionalConstantPropagation(); break;
-                case "Loop Invariant Code Motion": ssa.withLoopInvariantCodeMotion(); break;
-                case "Loop Predication": ssa.withLoopPredication(); break;
-                case "Jump Threading": ssa.withJumpThreading(); break;
-                case "Block Merging": ssa.withBlockMerging(); break;
-                case "Control Flow Reducibility": ssa.withControlFlowReducibility(); break;
-                case "Duplicate Block Merging": ssa.withDuplicateBlockMerging(); break;
-                case "Redundant Copy Elimination": ssa.withRedundantCopyElimination(); break;
-                case "Bit-Tracking DCE": ssa.withBitTrackingDCE(); break;
-                case "Correlated Value Propagation": ssa.withCorrelatedValuePropagation(); break;
+            switch (name)
+            {
+                case "Constant Folding":
+                    ssa.withConstantFolding();
+                    break;
+                case "Copy Propagation":
+                    ssa.withCopyPropagation();
+                    break;
+                case "Dead Code Elimination":
+                    ssa.withDeadCodeElimination();
+                    break;
+                case "Algebraic Simplification":
+                    ssa.withAlgebraicSimplification();
+                    break;
+                case "Strength Reduction":
+                    ssa.withStrengthReduction();
+                    break;
+                case "Reassociation":
+                    ssa.withReassociate();
+                    break;
+                case "Phi Constant Propagation":
+                    ssa.withPhiConstantPropagation();
+                    break;
+                case "Peephole Optimizations":
+                    ssa.withPeepholeOptimizations();
+                    break;
+                case "Common Subexpression Elimination":
+                    ssa.withCommonSubexpressionElimination();
+                    break;
+                case "Null Check Elimination":
+                    ssa.withNullCheckElimination();
+                    break;
+                case "Conditional Constant Propagation":
+                    ssa.withConditionalConstantPropagation();
+                    break;
+                case "Loop Invariant Code Motion":
+                    ssa.withLoopInvariantCodeMotion();
+                    break;
+                case "Loop Predication":
+                    ssa.withLoopPredication();
+                    break;
+                case "Jump Threading":
+                    ssa.withJumpThreading();
+                    break;
+                case "Block Merging":
+                    ssa.withBlockMerging();
+                    break;
+                case "Control Flow Reducibility":
+                    ssa.withControlFlowReducibility();
+                    break;
+                case "Duplicate Block Merging":
+                    ssa.withDuplicateBlockMerging();
+                    break;
+                case "Redundant Copy Elimination":
+                    ssa.withRedundantCopyElimination();
+                    break;
+                case "Bit-Tracking DCE":
+                    ssa.withBitTrackingDCE();
+                    break;
+                case "Correlated Value Propagation":
+                    ssa.withCorrelatedValuePropagation();
+                    break;
             }
         }
 
@@ -637,17 +752,20 @@ public class TransformPanel extends ThemedJPanel {
     /**
      * Refresh the panel.
      */
-    public void refresh() {
+    public void refresh()
+    {
         // Nothing specific to refresh
     }
 
     /**
      * Inner class for transform checkbox with tooltip.
      */
-    private static class TransformCheckBox extends JCheckBox {
+    private static class TransformCheckBox extends JCheckBox
+    {
         private final String transformName;
 
-        TransformCheckBox(String name, String description, boolean selected) {
+        TransformCheckBox(String name, String description, boolean selected)
+        {
             super(name, selected);
             this.transformName = name;
             setToolTipText(description);
@@ -655,7 +773,8 @@ public class TransformPanel extends ThemedJPanel {
             setForeground(JStudioTheme.getTextPrimary());
         }
 
-        String getTransformName() {
+        String getTransformName()
+        {
             return transformName;
         }
     }
@@ -663,13 +782,15 @@ public class TransformPanel extends ThemedJPanel {
     /**
      * Custom renderer for method combo box.
      */
-    private static class MethodComboRenderer extends DefaultListCellRenderer {
+    private static class MethodComboRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value,
-                                                      int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            if (value instanceof MethodEntryModel) {
+            if (value instanceof MethodEntryModel)
+            {
                 MethodEntryModel method = (MethodEntryModel) value;
                 MethodEntry entry = method.getMethodEntry();
                 setText(entry.getName() + entry.getDesc());

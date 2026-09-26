@@ -26,13 +26,15 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ASTView extends AbstractTextView {
+public class ASTView extends AbstractTextView
+{
 
     private static final String SYNTAX_STYLE_AST = "text/ast";
     private static final String TEXT_VIEW = "TEXT";
     private static final String TREE_VIEW = "TREE";
 
-    static {
+    static
+    {
         AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
         atmf.putMapping(SYNTAX_STYLE_AST, "com.tonic.ui.editor.ast.ASTTokenMaker");
     }
@@ -57,7 +59,8 @@ public class ASTView extends AbstractTextView {
     @Getter
     private boolean showingTreeView = false;
 
-    public ASTView(ClassEntryModel classEntry) {
+    public ASTView(ClassEntryModel classEntry)
+    {
         this.classEntry = classEntry;
 
         toolbar = createToolbar();
@@ -102,7 +105,8 @@ public class ASTView extends AbstractTextView {
         updateToolbarState();
     }
 
-    private JToolBar createToolbar() {
+    private JToolBar createToolbar()
+    {
         JToolBar tb = new JToolBar();
         tb.setFloatable(false);
         tb.setBackground(JStudioTheme.getBgSecondary());
@@ -140,62 +144,69 @@ public class ASTView extends AbstractTextView {
         return tb;
     }
 
-    private void styleToggleButton(JToggleButton btn) {
+    private void styleToggleButton(JToggleButton btn)
+    {
         btn.setFocusPainted(false);
         btn.setBackground(JStudioTheme.getBgSecondary());
         btn.setForeground(JStudioTheme.getTextPrimary());
-        btn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
+        btn.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         btn.setFont(JStudioTheme.getCodeFont(11));
     }
 
-    private void styleButton(JButton btn) {
+    private void styleButton(JButton btn)
+    {
         btn.setFocusPainted(false);
         btn.setBackground(JStudioTheme.getBgSecondary());
         btn.setForeground(JStudioTheme.getTextPrimary());
-        btn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
+        btn.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         btn.setFont(JStudioTheme.getCodeFont(11));
     }
 
-    private void switchToView(String viewName) {
+    private void switchToView(String viewName)
+    {
         showingTreeView = TREE_VIEW.equals(viewName);
         cardLayout.show(contentPanel, viewName);
         updateToolbarState();
     }
 
-    private void updateToolbarState() {
+    private void updateToolbarState()
+    {
         expandAllBtn.setEnabled(showingTreeView);
         collapseAllBtn.setEnabled(showingTreeView);
     }
 
-    private void expandAll() {
-        for (int i = 0; i < astTree.getRowCount(); i++) {
+    private void expandAll()
+    {
+        for (int i = 0; i < astTree.getRowCount(); i++)
+        {
             astTree.expandRow(i);
         }
     }
 
-    private void collapseAll() {
-        for (int i = astTree.getRowCount() - 1; i >= 1; i--) {
+    private void collapseAll()
+    {
+        for (int i = astTree.getRowCount() - 1; i >= 1; i--)
+        {
             astTree.collapseRow(i);
         }
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         applyTextTheme();
 
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
 
-        for (Component c : toolbar.getComponents()) {
-            if (c instanceof JToggleButton) {
+        for (Component c : toolbar.getComponents())
+        {
+            if (c instanceof JToggleButton)
+            {
                 styleToggleButton((JToggleButton) c);
-            } else if (c instanceof JButton) {
+            }
+            else if (c instanceof JButton)
+            {
                 styleButton((JButton) c);
             }
         }
@@ -226,37 +237,47 @@ public class ASTView extends AbstractTextView {
         repaint();
     }
 
-    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color) {
-        if (scheme.getStyle(tokenType) != null) {
+    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color)
+    {
+        if (scheme.getStyle(tokenType) != null)
+        {
             scheme.getStyle(tokenType).foreground = color;
         }
     }
 
     @Override
-    public void refresh() {
+    public void refresh()
+    {
         cancelCurrentWorker();
         loadingOverlay.showLoading("Decompiling to AST...");
         treeModel.clear();
 
-        SwingWorker<ASTResult, Void> worker = new SwingWorker<>() {
+        SwingWorker<ASTResult, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected ASTResult doInBackground() {
+            protected ASTResult doInBackground()
+            {
                 return generateASTBoth();
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 loadingOverlay.hideLoading();
-                if (isCancelled()) {
+                if (isCancelled())
+                {
                     return;
                 }
-                try {
+                try
+                {
                     ASTResult result = get();
                     textArea.setText(result.textOutput);
                     textArea.setCaretPosition(0);
                     treeModel.loadClass(classEntry.getClassName(), result.methodEntries);
                     loaded = true;
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     textArea.setText("// Failed to generate AST: " + e.getMessage());
                 }
             }
@@ -265,19 +286,22 @@ public class ASTView extends AbstractTextView {
         worker.execute();
     }
 
-    private static class ASTResult {
+    private static class ASTResult
+    {
         String textOutput;
         List<ASTTreeModel.MethodASTEntry> methodEntries;
     }
 
-    private ASTResult generateASTBoth() {
+    private ASTResult generateASTBoth()
+    {
         ASTResult result = new ASTResult();
         result.methodEntries = new ArrayList<>();
 
         StringBuilder sb = new StringBuilder();
         sb.append("// Class: ").append(classEntry.getClassName()).append("\n");
         sb.append("// Super: ").append(classEntry.getSuperClassName()).append("\n");
-        if (!classEntry.getInterfaceNames().isEmpty()) {
+        if (!classEntry.getInterfaceNames().isEmpty())
+        {
             sb.append("// Implements: ").append(String.join(", ", classEntry.getInterfaceNames())).append("\n");
         }
         sb.append("\n");
@@ -286,7 +310,8 @@ public class ASTView extends AbstractTextView {
 
         int methodIndex = 0;
         int totalMethods = classEntry.getMethods().size();
-        for (MethodEntryModel methodModel : classEntry.getMethods()) {
+        for (MethodEntryModel methodModel : classEntry.getMethods())
+        {
             methodIndex++;
             MethodEntry method = methodModel.getMethodEntry();
 
@@ -298,20 +323,29 @@ public class ASTView extends AbstractTextView {
             sb.append(" ").append(method.getName()).append(method.getDesc()).append("\n\n");
 
             BlockStmt body = null;
-            if (method.getCodeAttribute() != null) {
-                try {
+            if (method.getCodeAttribute() != null)
+            {
+                try
+                {
                     IRMethod ir = ssa.lift(method);
                     body = MethodRecoverer.recoverMethod(ir, method);
-                    if (body != null) {
+                    if (body != null)
+                    {
                         String astOutput = ASTPrinter.format(body);
                         sb.append(astOutput);
-                    } else {
+                    }
+                    else
+                    {
                         sb.append("  // Could not decompile method\n");
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     sb.append("  // Error decompiling: ").append(e.getMessage()).append("\n");
                 }
-            } else {
+            }
+            else
+            {
                 sb.append("  // No code (abstract or native)\n");
             }
 
@@ -323,7 +357,8 @@ public class ASTView extends AbstractTextView {
         return result;
     }
 
-    private String formatAccessFlags(int flags) {
+    private String formatAccessFlags(int flags)
+    {
         StringBuilder sb = new StringBuilder();
         if ((flags & 0x0001) != 0) sb.append(" public");
         if ((flags & 0x0002) != 0) sb.append(" private");
@@ -339,24 +374,19 @@ public class ASTView extends AbstractTextView {
     private String lastSearch;
 
     @Override
-    public void showFindDialog() {
-        String input = (String) JOptionPane.showInputDialog(
-            this,
-            "Find:",
-            "Find",
-            JOptionPane.PLAIN_MESSAGE,
-            null,
-            null,
-            lastSearch
-        );
+    public void showFindDialog()
+    {
+        String input = (String) JOptionPane.showInputDialog(this, "Find:", "Find", JOptionPane.PLAIN_MESSAGE, null, null, lastSearch);
         lastSearch = input;
-        if (input != null && !input.isEmpty()) {
+        if (input != null && !input.isEmpty())
+        {
             scrollToText(input);
         }
     }
 
     @Override
-    public void scrollToText(String searchText) {
+    public void scrollToText(String searchText)
+    {
         if (searchText == null || searchText.isEmpty()) return;
 
         SearchContext context = new SearchContext(searchText);
@@ -366,16 +396,21 @@ public class ASTView extends AbstractTextView {
     }
 
     @Override
-    public void setFontSize(int size) {
+    public void setFontSize(int size)
+    {
         textArea.setFont(JStudioTheme.getCodeFont(size));
         astTree.setRowHeight(size + 8);
     }
 
-    public void setShowTreeView(boolean showTree) {
-        if (showTree) {
+    public void setShowTreeView(boolean showTree)
+    {
+        if (showTree)
+        {
             treeViewBtn.setSelected(true);
             switchToView(TREE_VIEW);
-        } else {
+        }
+        else
+        {
             textViewBtn.setSelected(true);
             switchToView(TEXT_VIEW);
         }

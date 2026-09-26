@@ -8,12 +8,14 @@ import lombok.Getter;
  * are read.
  */
 @Getter
-public final class DebugFrame {
+public final class DebugFrame
+{
     private final int index;
     private final DebugLocation location;
     private final String display;
 
-    public DebugFrame(int index, DebugLocation location, String display) {
+    public DebugFrame(int index, DebugLocation location, String display)
+    {
         this.index = index;
         this.location = location;
         this.display = display;

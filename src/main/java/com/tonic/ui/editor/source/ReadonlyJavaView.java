@@ -12,11 +12,13 @@ import java.awt.BorderLayout;
  * whose classpath excludes the editor library) can still show highlighted Java. Not editable; call
  * {@link #setSource(String)} to replace the displayed text.
  */
-public final class ReadonlyJavaView extends JPanel {
+public final class ReadonlyJavaView extends JPanel
+{
 
     private final RSyntaxTextArea editor;
 
-    public ReadonlyJavaView(String source) {
+    public ReadonlyJavaView(String source)
+    {
         super(new BorderLayout());
         editor = JavaEditorFactory.createEditor(false);
         RTextScrollPane scrollPane = JavaEditorFactory.createScrollPane(editor);
@@ -26,7 +28,8 @@ public final class ReadonlyJavaView extends JPanel {
     }
 
     /** Replaces the displayed source and scrolls back to the top. */
-    public void setSource(String source) {
+    public void setSource(String source)
+    {
         editor.setText(source == null ? "" : source);
         editor.setCaretPosition(0);
     }

@@ -3,38 +3,47 @@ package com.tonic.ui.util;
 import com.tonic.model.ProjectModel;
 import com.tonic.service.ProjectService;
 
-public class JdkClassFilter {
+public class JdkClassFilter
+{
 
-    private JdkClassFilter() {
+    private JdkClassFilter()
+    {
     }
 
-    public static boolean isJdkClass(String className) {
-        if (className == null) {
+    public static boolean isJdkClass(String className)
+    {
+        if (className == null)
+        {
             return false;
         }
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
+        if (project != null)
+        {
             return !project.isUserClass(className);
         }
         return isJdkClassByPrefix(className);
     }
 
-    public static boolean isUserClass(String className) {
-        if (className == null) {
+    public static boolean isUserClass(String className)
+    {
+        if (className == null)
+        {
             return false;
         }
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
+        if (project != null)
+        {
             return project.isUserClass(className);
         }
         return !isJdkClassByPrefix(className);
     }
 
-    private static boolean isJdkClassByPrefix(String className) {
+    private static boolean isJdkClassByPrefix(String className)
+    {
         return className.startsWith("java/") ||
-               className.startsWith("javax/") ||
-               className.startsWith("sun/") ||
-               className.startsWith("com/sun/") ||
-               className.startsWith("jdk/");
+                className.startsWith("javax/") ||
+                className.startsWith("sun/") ||
+                className.startsWith("com/sun/") ||
+                className.startsWith("jdk/");
     }
 }

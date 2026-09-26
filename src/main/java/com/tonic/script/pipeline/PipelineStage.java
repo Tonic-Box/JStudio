@@ -8,7 +8,8 @@ import lombok.Getter;
  * Represents a single stage in a script pipeline.
  */
 @Getter
-public class PipelineStage {
+public class PipelineStage
+{
 
     private final String name;
     private final ScriptFunction action;
@@ -17,28 +18,34 @@ public class PipelineStage {
     private String error;
     private long executionTimeMs;
 
-    public PipelineStage(String name, ScriptFunction action) {
+    public PipelineStage(String name, ScriptFunction action)
+    {
         this.name = name;
         this.action = action;
     }
 
-    public void setStatus(StageStatus status) {
+    public void setStatus(StageStatus status)
+    {
         this.status = status;
     }
 
-    public void setResult(ScriptValue result) {
+    public void setResult(ScriptValue result)
+    {
         this.result = result;
     }
 
-    public void setError(String error) {
+    public void setError(String error)
+    {
         this.error = error;
     }
 
-    public void setExecutionTimeMs(long executionTimeMs) {
+    public void setExecutionTimeMs(long executionTimeMs)
+    {
         this.executionTimeMs = executionTimeMs;
     }
 
-    public enum StageStatus {
+    public enum StageStatus
+    {
         PENDING,
         RUNNING,
         COMPLETED,

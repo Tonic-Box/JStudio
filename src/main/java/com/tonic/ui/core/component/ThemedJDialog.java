@@ -10,90 +10,108 @@ import java.awt.Dialog;
 import java.awt.Frame;
 import java.awt.Window;
 
-public class ThemedJDialog extends JDialog implements ThemeChangeListener {
+public class ThemedJDialog extends JDialog implements ThemeChangeListener
+{
 
-    public ThemedJDialog() {
+    public ThemedJDialog()
+    {
         super();
         initialize();
     }
 
-    public ThemedJDialog(Frame owner) {
+    public ThemedJDialog(Frame owner)
+    {
         super(owner);
         initialize();
     }
 
-    public ThemedJDialog(Frame owner, boolean modal) {
+    public ThemedJDialog(Frame owner, boolean modal)
+    {
         super(owner, modal);
         initialize();
     }
 
-    public ThemedJDialog(Frame owner, String title) {
+    public ThemedJDialog(Frame owner, String title)
+    {
         super(owner, title);
         initialize();
     }
 
-    public ThemedJDialog(Frame owner, String title, boolean modal) {
+    public ThemedJDialog(Frame owner, String title, boolean modal)
+    {
         super(owner, title, modal);
         initialize();
     }
 
-    public ThemedJDialog(Dialog owner) {
+    public ThemedJDialog(Dialog owner)
+    {
         super(owner);
         initialize();
     }
 
-    public ThemedJDialog(Dialog owner, boolean modal) {
+    public ThemedJDialog(Dialog owner, boolean modal)
+    {
         super(owner, modal);
         initialize();
     }
 
-    public ThemedJDialog(Dialog owner, String title) {
+    public ThemedJDialog(Dialog owner, String title)
+    {
         super(owner, title);
         initialize();
     }
 
-    public ThemedJDialog(Dialog owner, String title, boolean modal) {
+    public ThemedJDialog(Dialog owner, String title, boolean modal)
+    {
         super(owner, title, modal);
         initialize();
     }
 
-    public ThemedJDialog(Window owner) {
+    public ThemedJDialog(Window owner)
+    {
         super(owner);
         initialize();
     }
 
-    public ThemedJDialog(Window owner, ModalityType modalityType) {
+    public ThemedJDialog(Window owner, ModalityType modalityType)
+    {
         super(owner, modalityType);
         initialize();
     }
 
-    public ThemedJDialog(Window owner, String title) {
+    public ThemedJDialog(Window owner, String title)
+    {
         super(owner, title);
         initialize();
     }
 
-    public ThemedJDialog(Window owner, String title, ModalityType modalityType) {
+    public ThemedJDialog(Window owner, String title, ModalityType modalityType)
+    {
         super(owner, title, modalityType);
         initialize();
     }
 
-    private void initialize() {
+    private void initialize()
+    {
         applyTheme();
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         applyTheme();
         repaint();
     }
 
-    protected void applyTheme() {
+    protected void applyTheme()
+    {
         getContentPane().setBackground(JStudioTheme.getBgPrimary());
     }
 
     @Override
-    public void dispose() {
+    public void dispose()
+    {
         ThemeManager.getInstance().removeThemeChangeListener(this);
         super.dispose();
     }

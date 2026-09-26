@@ -18,11 +18,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 @Command(
-    name = "batch",
-    description = "Batch process multiple targets with a plugin",
-    mixinStandardHelpOptions = true
+        name = "batch",
+        description = "Batch process multiple targets with a plugin",
+        mixinStandardHelpOptions = true
 )
-public class BatchCommand implements Callable<Integer> {
+public class BatchCommand implements Callable<Integer>
+{
 
     @Parameters(description = "Target files or directories (supports glob patterns)")
     private List<File> targets;
@@ -52,18 +53,22 @@ public class BatchCommand implements Callable<Integer> {
     private boolean continueOnError;
 
     @Override
-    public Integer call() {
-        if (targets == null || targets.isEmpty()) {
+    public Integer call()
+    {
+        if (targets == null || targets.isEmpty())
+        {
             System.err.println("Error: No targets specified");
             return 1;
         }
 
-        if (!plugin.exists()) {
+        if (!plugin.exists())
+        {
             System.err.println("Error: Plugin not found: " + plugin);
             return 1;
         }
 
-        if (outputDir != null && !outputDir.exists()) {
+        if (outputDir != null && !outputDir.exists())
+        {
             outputDir.mkdirs();
         }
 
@@ -71,26 +76,36 @@ public class BatchCommand implements Callable<Integer> {
         int failCount = 0;
         long totalTime = 0;
 
-        if (parallel && targets.size() > 1) {
+        if (parallel && targets.size() > 1)
+        {
             ExecutorService executor = Executors.newFixedThreadPool(Math.min(jobs, targets.size()));
             List<Future<ExecutionResult>> futures = new ArrayList<>();
 
-            for (File target : targets) {
+            for (File target : targets)
+            {
                 futures.add(executor.submit(() -> processTarget(target)));
             }
 
-            for (Future<ExecutionResult> future : futures) {
-                try {
+            for (Future<ExecutionResult> future : futures)
+            {
+                try
+                {
                     ExecutionResult result = future.get();
-                    if (result.isSuccess()) {
+                    if (result.isSuccess())
+                    {
                         successCount++;
-                    } else {
+                    }
+                    else
+                    {
                         failCount++;
                     }
                     totalTime += result.getDurationMs();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     failCount++;
-                    if (!continueOnError) {
+                    if (!continueOnError)
+                    {
                         executor.shutdownNow();
                         break;
                     }
@@ -98,25 +113,35 @@ public class BatchCommand implements Callable<Integer> {
             }
 
             executor.shutdown();
-        } else {
-            for (File target : targets) {
-                try {
+        }
+        else
+        {
+            for (File target : targets)
+            {
+                try
+                {
                     ExecutionResult result = processTarget(target);
-                    if (result.isSuccess()) {
+                    if (result.isSuccess())
+                    {
                         successCount++;
-                    } else {
+                    }
+                    else
+                    {
                         failCount++;
                         if (!continueOnError) break;
                     }
                     totalTime += result.getDurationMs();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     failCount++;
                     if (!continueOnError) break;
                 }
             }
         }
 
-        if (!quiet) {
+        if (!quiet)
+        {
             System.out.println();
             System.out.println("Batch processing complete:");
             System.out.println("  Targets processed: " + (successCount + failCount));
@@ -128,23 +153,26 @@ public class BatchCommand implements Callable<Integer> {
         return failCount > 0 ? 1 : 0;
     }
 
-    private ExecutionResult processTarget(File target) throws Exception {
-        if (!quiet) {
+    private ExecutionResult processTarget(File target) throws Exception
+    {
+        if (!quiet)
+        {
             System.out.println("Processing: " + target.getName());
         }
 
         ExecutionConfig config = ExecutionConfig.builder()
-            .target(target)
-            .plugin(plugin)
-            .outputFormat(format)
-            .verbose(verbose)
-            .quiet(quiet)
-            .build();
+                .target(target)
+                .plugin(plugin)
+                .outputFormat(format)
+                .verbose(verbose)
+                .quiet(quiet)
+                .build();
 
         ExecutionEngine engine = new ExecutionEngine();
         ExecutionResult result = engine.execute(config);
 
-        if (outputDir != null) {
+        if (outputDir != null)
+        {
             File outputFile = new File(outputDir, target.getName() + "." + format.getExtension());
             OutputHandler handler = OutputHandler.forFormat(format, outputFile);
             handler.writeResult(result);

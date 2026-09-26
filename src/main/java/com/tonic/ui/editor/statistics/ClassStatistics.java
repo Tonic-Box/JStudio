@@ -8,7 +8,8 @@ import java.util.Map;
 
 @Getter
 @Builder
-public class ClassStatistics {
+public class ClassStatistics
+{
 
     private final int methodCount;
     private final int fieldCount;
@@ -29,7 +30,8 @@ public class ClassStatistics {
 
     @Getter
     @Builder
-    public static class MethodSizeInfo {
+    public static class MethodSizeInfo
+    {
         private final String name;
         private final int bytecodeSize;
         private final int maxStack;
@@ -38,7 +40,8 @@ public class ClassStatistics {
 
     @Getter
     @Builder
-    public static class MethodDetailInfo {
+    public static class MethodDetailInfo
+    {
         private final String name;
         private final String descriptor;
         private final int bytecodeSize;
@@ -53,7 +56,8 @@ public class ClassStatistics {
     }
 
     @Getter
-    public enum OpcodeCategory {
+    public enum OpcodeCategory
+    {
         INVOKE("Invoke", "Method invocations"),
         LOAD("Load", "Load operations"),
         STORE("Store", "Store operations"),
@@ -69,7 +73,8 @@ public class ClassStatistics {
         private final String displayName;
         private final String description;
 
-        OpcodeCategory(String displayName, String description) {
+        OpcodeCategory(String displayName, String description)
+        {
             this.displayName = displayName;
             this.description = description;
         }

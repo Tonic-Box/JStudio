@@ -1,4 +1,5 @@
 package com.tonic.ui.console;
+
 import com.tonic.service.LogLevel;
 
 import com.tonic.ui.core.component.ThemedJPanel;
@@ -21,7 +22,8 @@ import java.awt.FlowLayout;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class ConsolePanel extends ThemedJPanel {
+public class ConsolePanel extends ThemedJPanel
+{
 
     private final JTextPane textPane;
     private final StyledDocument doc;
@@ -38,7 +40,8 @@ public class ConsolePanel extends ThemedJPanel {
     private boolean showTimestamps = true;
     private int maxLines = 1000;
 
-    public ConsolePanel() {
+    public ConsolePanel()
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
 
         toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, UIConstants.SPACING_TINY));
@@ -63,7 +66,8 @@ public class ConsolePanel extends ThemedJPanel {
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         toolbar.setBackground(JStudioTheme.getBgSecondary());
 
         clearButton.setBackground(JStudioTheme.getBgTertiary());
@@ -82,7 +86,8 @@ public class ConsolePanel extends ThemedJPanel {
         timestampStyle = createStyle(JStudioTheme.getTextSecondary());
     }
 
-    private SimpleAttributeSet createStyle(Color color) {
+    private SimpleAttributeSet createStyle(Color color)
+    {
         SimpleAttributeSet style = new SimpleAttributeSet();
         StyleConstants.setForeground(style, color);
         StyleConstants.setFontFamily(style, JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE).getFamily());
@@ -90,17 +95,22 @@ public class ConsolePanel extends ThemedJPanel {
         return style;
     }
 
-    public void log(LogLevel level, String message) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                if (showTimestamps) {
+    public void log(LogLevel level, String message)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
+            try
+            {
+                if (showTimestamps)
+                {
                     String timestamp = "[" + dateFormat.format(new Date()) + "] ";
                     doc.insertString(doc.getLength(), timestamp, timestampStyle);
                 }
 
                 String prefix;
                 SimpleAttributeSet style;
-                switch (level) {
+                switch (level)
+                {
                     case DEBUG:
                         prefix = "[DEBUG] ";
                         style = debugStyle;
@@ -127,88 +137,116 @@ public class ConsolePanel extends ThemedJPanel {
 
                 textPane.setCaretPosition(doc.getLength());
 
-            } catch (BadLocationException e) {
+            }
+            catch (BadLocationException e)
+            {
                 // Ignore
             }
         });
     }
 
-    public void log(String message) {
+    public void log(String message)
+    {
         log(LogLevel.INFO, message);
     }
 
-    public void logError(String message) {
+    public void logError(String message)
+    {
         log(LogLevel.ERROR, message);
     }
 
-    public void info(String message) {
+    public void info(String message)
+    {
         log(LogLevel.INFO, message);
     }
 
-    public void warn(String message) {
+    public void warn(String message)
+    {
         log(LogLevel.WARN, message);
     }
 
-    public void error(String message) {
+    public void error(String message)
+    {
         log(LogLevel.ERROR, message);
     }
 
-    public void debug(String message) {
+    public void debug(String message)
+    {
         log(LogLevel.DEBUG, message);
     }
 
-    public void error(String message, Throwable t) {
+    public void error(String message, Throwable t)
+    {
         log(LogLevel.ERROR, message + ": " + t.getMessage());
-        for (StackTraceElement ste : t.getStackTrace()) {
+        for (StackTraceElement ste : t.getStackTrace())
+        {
             log(LogLevel.ERROR, "  at " + ste.toString());
-            if (t.getStackTrace().length > 5) {
+            if (t.getStackTrace().length > 5)
+            {
                 log(LogLevel.ERROR, "  ... " + (t.getStackTrace().length - 5) + " more");
                 break;
             }
         }
     }
 
-    public void clear() {
-        try {
+    public void clear()
+    {
+        try
+        {
             doc.remove(0, doc.getLength());
-        } catch (BadLocationException e) {
+        }
+        catch (BadLocationException e)
+        {
             // Ignore
         }
     }
 
-    private void trimLines() {
+    private void trimLines()
+    {
         String text = textPane.getText();
         int lineCount = text.split("\n").length;
-        if (lineCount > maxLines) {
-            try {
+        if (lineCount > maxLines)
+        {
+            try
+            {
                 int linesToRemove = lineCount - maxLines;
                 int removeEnd = 0;
-                for (int i = 0; i < linesToRemove && removeEnd < text.length(); i++) {
+                for (int i = 0; i < linesToRemove && removeEnd < text.length(); i++)
+                {
                     int newline = text.indexOf('\n', removeEnd);
-                    if (newline >= 0) {
+                    if (newline >= 0)
+                    {
                         removeEnd = newline + 1;
-                    } else {
+                    }
+                    else
+                    {
                         break;
                     }
                 }
-                if (removeEnd > 0) {
+                if (removeEnd > 0)
+                {
                     doc.remove(0, removeEnd);
                 }
-            } catch (BadLocationException e) {
+            }
+            catch (BadLocationException e)
+            {
                 // Ignore
             }
         }
     }
 
-    public void setShowTimestamps(boolean show) {
+    public void setShowTimestamps(boolean show)
+    {
         this.showTimestamps = show;
     }
 
-    public void setMaxLines(int max) {
+    public void setMaxLines(int max)
+    {
         this.maxLines = max;
     }
 
-    public String getText() {
+    public String getText()
+    {
         return textPane.getText();
     }
 }

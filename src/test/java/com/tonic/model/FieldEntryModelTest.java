@@ -13,7 +13,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class FieldEntryModelTest {
+class FieldEntryModelTest
+{
 
     @Mock
     private FieldEntry fieldEntry;
@@ -22,7 +23,8 @@ class FieldEntryModelTest {
     private ClassEntryModel owner;
 
     @Test
-    void testGetName() {
+    void testGetName()
+    {
         when(fieldEntry.getName()).thenReturn("myField");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -32,7 +34,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testGetDescriptor() {
+    void testGetDescriptor()
+    {
         when(fieldEntry.getName()).thenReturn("test");
         when(fieldEntry.getDesc()).thenReturn("Ljava/lang/String;");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -42,7 +45,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypePrimitiveByte() {
+    void testDisplayTypePrimitiveByte()
+    {
         when(fieldEntry.getName()).thenReturn("b");
         when(fieldEntry.getDesc()).thenReturn("B");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -52,7 +56,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypePrimitiveChar() {
+    void testDisplayTypePrimitiveChar()
+    {
         when(fieldEntry.getName()).thenReturn("c");
         when(fieldEntry.getDesc()).thenReturn("C");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -62,7 +67,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypePrimitiveInt() {
+    void testDisplayTypePrimitiveInt()
+    {
         when(fieldEntry.getName()).thenReturn("i");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -72,7 +78,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypePrimitiveLong() {
+    void testDisplayTypePrimitiveLong()
+    {
         when(fieldEntry.getName()).thenReturn("l");
         when(fieldEntry.getDesc()).thenReturn("J");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -82,7 +89,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypePrimitiveDouble() {
+    void testDisplayTypePrimitiveDouble()
+    {
         when(fieldEntry.getName()).thenReturn("d");
         when(fieldEntry.getDesc()).thenReturn("D");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -92,7 +100,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypePrimitiveFloat() {
+    void testDisplayTypePrimitiveFloat()
+    {
         when(fieldEntry.getName()).thenReturn("f");
         when(fieldEntry.getDesc()).thenReturn("F");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -102,7 +111,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypePrimitiveShort() {
+    void testDisplayTypePrimitiveShort()
+    {
         when(fieldEntry.getName()).thenReturn("s");
         when(fieldEntry.getDesc()).thenReturn("S");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -112,7 +122,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypePrimitiveBoolean() {
+    void testDisplayTypePrimitiveBoolean()
+    {
         when(fieldEntry.getName()).thenReturn("flag");
         when(fieldEntry.getDesc()).thenReturn("Z");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -122,7 +133,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypeSimpleClass() {
+    void testDisplayTypeSimpleClass()
+    {
         when(fieldEntry.getName()).thenReturn("str");
         when(fieldEntry.getDesc()).thenReturn("Ljava/lang/String;");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -132,7 +144,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypeNestedClass() {
+    void testDisplayTypeNestedClass()
+    {
         when(fieldEntry.getName()).thenReturn("list");
         when(fieldEntry.getDesc()).thenReturn("Ljava/util/ArrayList;");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -142,7 +155,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypePrimitiveArray() {
+    void testDisplayTypePrimitiveArray()
+    {
         when(fieldEntry.getName()).thenReturn("arr");
         when(fieldEntry.getDesc()).thenReturn("[I");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -152,7 +166,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypeMultiDimensionalArray() {
+    void testDisplayTypeMultiDimensionalArray()
+    {
         when(fieldEntry.getName()).thenReturn("matrix");
         when(fieldEntry.getDesc()).thenReturn("[[D");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -162,7 +177,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypeObjectArray() {
+    void testDisplayTypeObjectArray()
+    {
         when(fieldEntry.getName()).thenReturn("strings");
         when(fieldEntry.getDesc()).thenReturn("[Ljava/lang/String;");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -172,7 +188,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypeMultiDimensionalObjectArray() {
+    void testDisplayTypeMultiDimensionalObjectArray()
+    {
         when(fieldEntry.getName()).thenReturn("objects");
         when(fieldEntry.getDesc()).thenReturn("[[Ljava/lang/Object;");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -182,7 +199,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypeNullDescriptor() {
+    void testDisplayTypeNullDescriptor()
+    {
         when(fieldEntry.getName()).thenReturn("unknown");
         when(fieldEntry.getDesc()).thenReturn(null);
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -192,7 +210,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDisplayTypeEmptyDescriptor() {
+    void testDisplayTypeEmptyDescriptor()
+    {
         when(fieldEntry.getName()).thenReturn("unknown");
         when(fieldEntry.getDesc()).thenReturn("");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -202,7 +221,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testIsPublic() {
+    void testIsPublic()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -214,7 +234,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testIsPrivate() {
+    void testIsPrivate()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0002);
@@ -225,7 +246,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testIsProtected() {
+    void testIsProtected()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0004);
@@ -236,7 +258,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testIsStatic() {
+    void testIsStatic()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0008);
@@ -246,7 +269,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testIsFinal() {
+    void testIsFinal()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0010);
@@ -256,7 +280,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testIsVolatile() {
+    void testIsVolatile()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0040);
@@ -266,7 +291,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testIsTransient() {
+    void testIsTransient()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0080);
@@ -276,7 +302,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testCombinedAccessFlags() {
+    void testCombinedAccessFlags()
+    {
         when(fieldEntry.getName()).thenReturn("CONSTANT");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0001 | 0x0008 | 0x0010);
@@ -288,7 +315,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testSelectedState() {
+    void testSelectedState()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -304,7 +332,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testUserNotes() {
+    void testUserNotes()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -317,7 +346,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testToString() {
+    void testToString()
+    {
         when(fieldEntry.getName()).thenReturn("counter");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -327,7 +357,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testToStringWithObject() {
+    void testToStringWithObject()
+    {
         when(fieldEntry.getName()).thenReturn("name");
         when(fieldEntry.getDesc()).thenReturn("Ljava/lang/String;");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -337,7 +368,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testGetOwner() {
+    void testGetOwner()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -347,7 +379,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testGetFieldEntry() {
+    void testGetFieldEntry()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -357,7 +390,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testIconNotNull() {
+    void testIconNotNull()
+    {
         when(fieldEntry.getName()).thenReturn("field");
         when(fieldEntry.getDesc()).thenReturn("I");
         when(fieldEntry.getAccess()).thenReturn(0x0001);
@@ -367,7 +401,8 @@ class FieldEntryModelTest {
     }
 
     @Test
-    void testDefaultPackageClass() {
+    void testDefaultPackageClass()
+    {
         when(fieldEntry.getName()).thenReturn("obj");
         when(fieldEntry.getDesc()).thenReturn("LMyClass;");
         when(fieldEntry.getAccess()).thenReturn(0x0001);

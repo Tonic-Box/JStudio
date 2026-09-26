@@ -27,7 +27,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>Two sets: {@code active} (the volatile candidate set narrowed by next-scans) and {@code pinned} (the watch /
  * freeze list, which survives narrowing). Frozen locations are re-written on a timer.
  */
-final class ScanEngine {
+final class ScanEngine
+{
 
     /** Hard ceilings so a runaway walk can never wedge the target. */
     private static final long DEFAULT_TIME_BUDGET_MS = 6000;
@@ -44,7 +45,8 @@ final class ScanEngine {
     private boolean userClassesOnly;
 
     /** One retained value location: a weak handle to the owner plus how to read/write the slot. */
-    private static final class Location {
+    private static final class Location
+    {
         final long id;
         final WeakReference<Object> owner;
         final Field field;          // null for an array element
@@ -56,8 +58,8 @@ final class ScanEngine {
         final String displayPath;
         Object last;
 
-        Location(long id, Object owner, Field field, int index, int valueType,
-                 String declaringClass, String fieldName, String fieldDesc, String displayPath, Object last) {
+        Location(long id, Object owner, Field field, int index, int valueType, String declaringClass, String fieldName, String fieldDesc, String displayPath, Object last)
+        {
             this.id = id;
             this.owner = new WeakReference<>(owner);
             this.field = field;
@@ -71,19 +73,25 @@ final class ScanEngine {
         }
 
         /** Current value, or null if the owner was collected or the read failed. */
-        Object read() {
+        Object read()
+        {
             Object o = owner.get();
-            if (o == null) {
+            if (o == null)
+            {
                 return null;
             }
-            try {
+            try
+            {
                 return field != null ? field.get(o) : Array.get(o, index);
-            } catch (Throwable t) {
+            }
+            catch (Throwable t)
+            {
                 return null;
             }
         }
 
-        boolean collected() {
+        boolean collected()
+        {
             return owner.get() == null;
         }
     }
@@ -95,9 +103,8 @@ final class ScanEngine {
      * enqueues the JDI-parked objects in {@link DropBox#BOX} as roots; {@code rootsOnly} uses ONLY those
      * (skipping the agent's statics/threads/AWT roots) - the JDI class-scoped scan path.
      */
-    synchronized void firstScan(Instrumentation inst, int valueType, int scanKind, String value, String value2,
-                                String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches,
-                                boolean useDropbox, boolean rootsOnly) {
+    synchronized void firstScan(Instrumentation inst, int valueType, int scanKind, String value, String value2, String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches, boolean useDropbox, boolean rootsOnly)
+    {
         clear();
         truncated = false;
         this.userClassesOnly = userClassesOnly;
@@ -110,59 +117,78 @@ final class ScanEngine {
         Map<Object, Boolean> visited = new IdentityHashMap<>();
         int visitedCount = 0;
 
-        if (!rootsOnly) {
+        if (!rootsOnly)
+        {
             enqueueAgentRoots(inst, queue, visited, pkgFilter, valueType, scanKind, wanted, target, target2, maxMatches);
         }
-        if (useDropbox) {
+        if (useDropbox)
+        {
             Object[] box = DropBox.BOX;
             DropBox.BOX = null;
-            if (box != null) {
-                for (Object o : box) {
+            if (box != null)
+            {
+                for (Object o : box)
+                {
                     enqueue(queue, visited, o);
                 }
             }
         }
 
-        while (!queue.isEmpty()) {
-            if (visitedCount >= maxVisited || System.currentTimeMillis() > deadline || active.size() >= maxMatches) {
+        while (!queue.isEmpty())
+        {
+            if (visitedCount >= maxVisited || System.currentTimeMillis() > deadline || active.size() >= maxMatches)
+            {
                 truncated = !queue.isEmpty();
                 break;
             }
             Object o = queue.poll();
-            if (o == null) {
+            if (o == null)
+            {
                 continue;
             }
             visitedCount++;
             Class<?> oc = o.getClass();
-            if (oc.isArray()) {
+            if (oc.isArray())
+            {
                 walkArray(o, oc, valueType, wanted, scanKind, target, target2, queue, visited, maxMatches);
                 continue;
             }
-            for (Class<?> k = oc; k != null && k != Object.class; k = k.getSuperclass()) {
-                for (Field f : safeFields(k)) {
-                    if (Modifier.isStatic(f.getModifiers())) {
+            for (Class<?> k = oc; k != null && k != Object.class; k = k.getSuperclass())
+            {
+                for (Field f : safeFields(k))
+                {
+                    if (Modifier.isStatic(f.getModifiers()))
+                    {
                         continue;
                     }
                     Class<?> t = f.getType();
-                    if (t.isPrimitive()) {
-                        if (matchesType(t, wanted)) {
+                    if (t.isPrimitive())
+                    {
+                        if (matchesType(t, wanted))
+                        {
                             Object v = safeGet(f, o);
-                            if (v != null && predicate(scanKind, valueType, v, target, target2)) {
-                                record(recType(valueType, t), o, f, -1, internal(k), f.getName(), descriptor(t),
-                                        pathLabel(oc) + "." + f.getName(), v, maxMatches);
+                            if (v != null && predicate(scanKind, valueType, v, target, target2))
+                            {
+                                record(recType(valueType, t), o, f, -1, internal(k), f.getName(), descriptor(t), pathLabel(oc) + "." + f.getName(), v, maxMatches);
                             }
                         }
-                    } else {
+                    }
+                    else
+                    {
                         Object v = safeGet(f, o);
-                        if (v == null) {
+                        if (v == null)
+                        {
                             continue;
                         }
-                        if (refMatches(valueType, v)) {
-                            if (predicate(scanKind, valueType, v, target, target2)) {
-                                record(valueType, o, f, -1, internal(k), f.getName(), descriptor(t),
-                                        pathLabel(oc) + "." + f.getName(), v, maxMatches);
+                        if (refMatches(valueType, v))
+                        {
+                            if (predicate(scanKind, valueType, v, target, target2))
+                            {
+                                record(valueType, o, f, -1, internal(k), f.getName(), descriptor(t), pathLabel(oc) + "." + f.getName(), v, maxMatches);
                             }
-                        } else {
+                        }
+                        else
+                        {
                             enqueue(queue, visited, v);
                         }
                     }
@@ -175,77 +201,99 @@ final class ScanEngine {
      * Enqueues the agent's own roots - app static fields (recording matches found directly in statics), every
      * live thread, and every AWT/Swing window. This is the reach the JDI stack-root harvest augments, not replaces.
      */
-    private void enqueueAgentRoots(Instrumentation inst, Deque<Object> queue, Map<Object, Boolean> visited,
-                                   String pkgFilter, int valueType, int scanKind, Class<?> wanted,
-                                   Object target, Object target2, int maxMatches) {
-        for (Class<?> c : inst.getAllLoadedClasses()) {
-            if (!includeClass(c, pkgFilter)) {
+    private void enqueueAgentRoots(Instrumentation inst, Deque<Object> queue, Map<Object, Boolean> visited, String pkgFilter, int valueType, int scanKind, Class<?> wanted, Object target, Object target2, int maxMatches)
+    {
+        for (Class<?> c : inst.getAllLoadedClasses())
+        {
+            if (!includeClass(c, pkgFilter))
+            {
                 continue;
             }
-            for (Field f : safeFields(c)) {
-                if (!Modifier.isStatic(f.getModifiers())) {
+            for (Field f : safeFields(c))
+            {
+                if (!Modifier.isStatic(f.getModifiers()))
+                {
                     continue;
                 }
                 Class<?> t = f.getType();
-                if (t.isPrimitive()) {
-                    if (matchesType(t, wanted)) {
+                if (t.isPrimitive())
+                {
+                    if (matchesType(t, wanted))
+                    {
                         Object v = safeGet(f, null);
-                        if (v != null && predicate(scanKind, valueType, v, target, target2)) {
-                            record(recType(valueType, t), null, f, -1, internal(c), f.getName(), descriptor(t),
-                                    c.getSimpleName() + "." + f.getName(), v, maxMatches);
+                        if (v != null && predicate(scanKind, valueType, v, target, target2))
+                        {
+                            record(recType(valueType, t), null, f, -1, internal(c), f.getName(), descriptor(t), c.getSimpleName() + "." + f.getName(), v, maxMatches);
                         }
                     }
-                } else {
+                }
+                else
+                {
                     Object v = safeGet(f, null);
-                    if (v == null) {
+                    if (v == null)
+                    {
                         continue;
                     }
-                    if (refMatches(valueType, v)) {
-                        if (predicate(scanKind, valueType, v, target, target2)) {
-                            record(valueType, null, f, -1, internal(c), f.getName(), descriptor(t),
-                                    c.getSimpleName() + "." + f.getName(), v, maxMatches);
+                    if (refMatches(valueType, v))
+                    {
+                        if (predicate(scanKind, valueType, v, target, target2))
+                        {
+                            record(valueType, null, f, -1, internal(c), f.getName(), descriptor(t), c.getSimpleName() + "." + f.getName(), v, maxMatches);
                         }
-                    } else {
+                    }
+                    else
+                    {
                         enqueue(queue, visited, v);
                     }
                 }
             }
         }
-        for (Thread th : Thread.getAllStackTraces().keySet()) {
+        for (Thread th : Thread.getAllStackTraces().keySet())
+        {
             enqueue(queue, visited, th);
         }
-        for (Object w : awtRoots()) {
+        for (Object w : awtRoots())
+        {
             enqueue(queue, visited, w);
         }
     }
 
-    private void walkArray(Object arr, Class<?> arrClass, int valueType, Class<?> wanted, int scanKind,
-                           Object target, Object target2, Deque<Object> queue, Map<Object, Boolean> visited,
-                           int maxMatches) {
+    private void walkArray(Object arr, Class<?> arrClass, int valueType, Class<?> wanted, int scanKind, Object target, Object target2, Deque<Object> queue, Map<Object, Boolean> visited, int maxMatches)
+    {
         Class<?> comp = arrClass.getComponentType();
         int len = Array.getLength(arr);
-        if (comp.isPrimitive()) {
-            if (matchesType(comp, wanted)) {
-                for (int i = 0; i < len; i++) {
+        if (comp.isPrimitive())
+        {
+            if (matchesType(comp, wanted))
+            {
+                for (int i = 0; i < len; i++)
+                {
                     Object v = Array.get(arr, i);
-                    if (v != null && predicate(scanKind, valueType, v, target, target2)) {
-                        record(recType(valueType, comp), arr, null, i, internal(arrClass),
-                                "", descriptor(comp), pathLabel(arrClass) + "[" + i + "]", v, maxMatches);
+                    if (v != null && predicate(scanKind, valueType, v, target, target2))
+                    {
+                        record(recType(valueType, comp), arr, null, i, internal(arrClass), "", descriptor(comp), pathLabel(arrClass) + "[" + i + "]", v, maxMatches);
                     }
                 }
             }
-        } else {
-            for (int i = 0; i < len; i++) {
+        }
+        else
+        {
+            for (int i = 0; i < len; i++)
+            {
                 Object v = Array.get(arr, i);
-                if (v == null) {
+                if (v == null)
+                {
                     continue;
                 }
-                if (refMatches(valueType, v)) {
-                    if (predicate(scanKind, valueType, v, target, target2)) {
-                        record(valueType, arr, null, i, internal(String.class),
-                                "", descriptor(String.class), pathLabel(arrClass) + "[" + i + "]", v, maxMatches);
+                if (refMatches(valueType, v))
+                {
+                    if (predicate(scanKind, valueType, v, target, target2))
+                    {
+                        record(valueType, arr, null, i, internal(String.class), "", descriptor(String.class), pathLabel(arrClass) + "[" + i + "]", v, maxMatches);
                     }
-                } else {
+                }
+                else
+                {
                     enqueue(queue, visited, v);
                 }
             }
@@ -253,19 +301,25 @@ final class ScanEngine {
     }
 
     /** Next scan: re-read the active set and keep only locations matching the comparator vs their last value. */
-    synchronized void nextScan(int comparator, String value, String value2) {
+    synchronized void nextScan(int comparator, String value, String value2)
+    {
         Object target = value == null || value.isEmpty() ? null : parseFor(value);
         Object target2 = parseMaybe(value2);
         List<Long> drop = new ArrayList<>();
-        for (Location loc : active.values()) {
+        for (Location loc : active.values())
+        {
             Object cur = loc.read();
-            if (cur == null || !compare(comparator, loc.valueType, cur, loc.last, target, target2)) {
+            if (cur == null || !compare(comparator, loc.valueType, cur, loc.last, target, target2))
+            {
                 drop.add(loc.id);
-            } else {
+            }
+            else
+            {
                 loc.last = cur;
             }
         }
-        for (Long id : drop) {
+        for (Long id : drop)
+        {
             active.remove(id);
         }
         truncated = false;
@@ -273,27 +327,37 @@ final class ScanEngine {
 
     // ---- mutate / pin / freeze --------------------------------------------------------------------
 
-    synchronized String write(long id, boolean isNull, String value) {
+    synchronized String write(long id, boolean isNull, String value)
+    {
         Location loc = find(id);
-        if (loc == null) {
+        if (loc == null)
+        {
             throw new IllegalStateException("no such location");
         }
         Object o = loc.owner.get();
-        if (o == null) {
+        if (o == null)
+        {
             throw new IllegalStateException("the object was garbage-collected");
         }
-        if (loc.field != null) {
-            if (Modifier.isFinal(loc.field.getModifiers())) {
+        if (loc.field != null)
+        {
+            if (Modifier.isFinal(loc.field.getModifiers()))
+            {
                 throw new IllegalStateException("field is final");
             }
             Object v = isNull ? null : parse(loc.valueType, value);
-            try {
+            try
+            {
                 loc.field.set(o, v);
                 loc.last = loc.field.get(o);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 throw new IllegalStateException("set failed: " + e.getMessage());
             }
-        } else {
+        }
+        else
+        {
             Object v = parse(loc.valueType, value);
             Array.set(o, loc.index, v);
             loc.last = Array.get(o, loc.index);
@@ -304,22 +368,26 @@ final class ScanEngine {
     // ---- live instances (the instances view) --------------------------------------------------------
 
     /** Walks the reachable heap collecting live instances of {@code className}; returns [handleId, label] pairs. */
-    synchronized List<Object[]> collectInstances(Instrumentation inst, String className, int maxInstances,
-                                                 int maxVisited) {
+    synchronized List<Object[]> collectInstances(Instrumentation inst, String className, int maxInstances, int maxVisited)
+    {
         // Keep prior handles valid (a re-walk or another instances view must not orphan a still-shown list);
         // they are weak refs, so only soft-cap the map to bound growth across a long session.
-        if (instanceHandles.size() > 1_000_000) {
+        if (instanceHandles.size() > 1_000_000)
+        {
             instanceHandles.clear();
         }
         List<Object[]> out = new ArrayList<>();
         Class<?> target = null;
-        for (Class<?> c : inst.getAllLoadedClasses()) {
-            if (c.getName().equals(className)) {
+        for (Class<?> c : inst.getAllLoadedClasses())
+        {
+            if (c.getName().equals(className))
+            {
                 target = c;
                 break;
             }
         }
-        if (target == null) {
+        if (target == null)
+        {
             return out;
         }
 
@@ -328,50 +396,66 @@ final class ScanEngine {
         int visitedCount = 0;
         long deadline = System.currentTimeMillis() + DEFAULT_TIME_BUDGET_MS;
 
-        for (Class<?> c : inst.getAllLoadedClasses()) {
-            if (!includeClass(c, null)) {
+        for (Class<?> c : inst.getAllLoadedClasses())
+        {
+            if (!includeClass(c, null))
+            {
                 continue;
             }
-            for (Field f : safeFields(c)) {
-                if (Modifier.isStatic(f.getModifiers()) && !f.getType().isPrimitive()) {
+            for (Field f : safeFields(c))
+            {
+                if (Modifier.isStatic(f.getModifiers()) && !f.getType().isPrimitive())
+                {
                     enqueue(queue, visited, safeGet(f, null));
                 }
             }
         }
-        for (Thread th : Thread.getAllStackTraces().keySet()) {
+        for (Thread th : Thread.getAllStackTraces().keySet())
+        {
             enqueue(queue, visited, th);
         }
-        for (Object w : awtRoots()) {
+        for (Object w : awtRoots())
+        {
             enqueue(queue, visited, w);
         }
 
-        while (!queue.isEmpty()) {
-            if (visitedCount >= maxVisited || System.currentTimeMillis() > deadline || out.size() >= maxInstances) {
+        while (!queue.isEmpty())
+        {
+            if (visitedCount >= maxVisited || System.currentTimeMillis() > deadline || out.size() >= maxInstances)
+            {
                 break;
             }
             Object o = queue.poll();
-            if (o == null) {
+            if (o == null)
+            {
                 continue;
             }
             visitedCount++;
             Class<?> oc = o.getClass();
-            if (oc == target) {
+            if (oc == target)
+            {
                 long hid = ids.getAndIncrement();
                 instanceHandles.put(hid, new WeakReference<>(o));
                 out.add(new Object[]{hid, label(o)});
             }
-            if (oc.isArray()) {
-                if (!oc.getComponentType().isPrimitive()) {
+            if (oc.isArray())
+            {
+                if (!oc.getComponentType().isPrimitive())
+                {
                     int len = Array.getLength(o);
-                    for (int i = 0; i < len; i++) {
+                    for (int i = 0; i < len; i++)
+                    {
                         enqueue(queue, visited, Array.get(o, i));
                     }
                 }
                 continue;
             }
-            for (Class<?> k = oc; k != null && k != Object.class; k = k.getSuperclass()) {
-                for (Field f : safeFields(k)) {
-                    if (!Modifier.isStatic(f.getModifiers()) && !f.getType().isPrimitive()) {
+            for (Class<?> k = oc; k != null && k != Object.class; k = k.getSuperclass())
+            {
+                for (Field f : safeFields(k))
+                {
+                    if (!Modifier.isStatic(f.getModifiers()) && !f.getType().isPrimitive())
+                    {
                         enqueue(queue, visited, safeGet(f, o));
                     }
                 }
@@ -385,21 +469,27 @@ final class ScanEngine {
      * and returns {@code [handleId, label]} rows - the same shape as {@link #collectInstances}, so the field
      * read/write path is reused unchanged. Clears the dropbox so its strong reference only pins the set briefly.
      */
-    synchronized List<Object[]> consumeInstances(String className) {
+    synchronized List<Object[]> consumeInstances(String className)
+    {
         List<Object[]> out = new ArrayList<>();
         Object[] box = DropBox.BOX;
         DropBox.BOX = null;
-        if (box == null) {
+        if (box == null)
+        {
             return out;
         }
-        if (instanceHandles.size() > 1_000_000) {
+        if (instanceHandles.size() > 1_000_000)
+        {
             instanceHandles.clear();
         }
-        for (Object o : box) {
-            if (o == null) {
+        for (Object o : box)
+        {
+            if (o == null)
+            {
                 continue;
             }
-            if (className != null && !className.isEmpty() && !o.getClass().getName().equals(className)) {
+            if (className != null && !className.isEmpty() && !o.getClass().getName().equals(className))
+            {
                 continue;
             }
             long hid = ids.getAndIncrement();
@@ -414,26 +504,36 @@ final class ScanEngine {
      * per field. A reference field gets a fresh handle so the UI can navigate into it; primitives/Strings are
      * editable unless final.
      */
-    synchronized List<Object[]> instanceFields(long id) {
+    synchronized List<Object[]> instanceFields(long id)
+    {
         List<Object[]> out = new ArrayList<>();
         Object o = resolveInstance(id);
-        if (o == null) {
+        if (o == null)
+        {
             return out;
         }
-        for (Class<?> k = o.getClass(); k != null && k != Object.class; k = k.getSuperclass()) {
-            for (Field f : safeFields(k)) {
-                if (Modifier.isStatic(f.getModifiers())) {
+        for (Class<?> k = o.getClass(); k != null && k != Object.class; k = k.getSuperclass())
+        {
+            for (Field f : safeFields(k))
+            {
+                if (Modifier.isStatic(f.getModifiers()))
+                {
                     continue;
                 }
                 Class<?> t = f.getType();
                 Object v = safeGet(f, o);
                 long refId = 0;
                 String display;
-                if (t.isPrimitive() || t == String.class) {
+                if (t.isPrimitive() || t == String.class)
+                {
                     display = format(v);
-                } else if (v == null) {
+                }
+                else if (v == null)
+                {
                     display = "null";
-                } else {
+                }
+                else
+                {
                     refId = ids.getAndIncrement();
                     instanceHandles.put(refId, new WeakReference<>(v));
                     display = label(v);
@@ -446,118 +546,156 @@ final class ScanEngine {
     }
 
     /** Sets a live instance field by handle, parsing the string against the field's declared type. */
-    synchronized String setInstanceField(long id, String fieldName, boolean isNull, String value) {
+    synchronized String setInstanceField(long id, String fieldName, boolean isNull, String value)
+    {
         Object o = resolveInstance(id);
-        if (o == null) {
+        if (o == null)
+        {
             throw new IllegalStateException("the object was garbage-collected");
         }
         Field f = null;
-        for (Class<?> k = o.getClass(); k != null && f == null; k = k.getSuperclass()) {
-            for (Field cand : safeFields(k)) {
-                if (!Modifier.isStatic(cand.getModifiers()) && cand.getName().equals(fieldName)) {
+        for (Class<?> k = o.getClass(); k != null && f == null; k = k.getSuperclass())
+        {
+            for (Field cand : safeFields(k))
+            {
+                if (!Modifier.isStatic(cand.getModifiers()) && cand.getName().equals(fieldName))
+                {
                     f = cand;
                     break;
                 }
             }
         }
-        if (f == null) {
+        if (f == null)
+        {
             throw new IllegalStateException("no such field: " + fieldName);
         }
-        if (Modifier.isFinal(f.getModifiers())) {
+        if (Modifier.isFinal(f.getModifiers()))
+        {
             throw new IllegalStateException("field is final");
         }
-        try {
+        try
+        {
             f.setAccessible(true);
             f.set(o, isNull ? null : parseForField(f.getType(), value));
             return format(f.get(o));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new IllegalStateException("set failed: " + e.getMessage());
         }
     }
 
-    private Object resolveInstance(long id) {
+    private Object resolveInstance(long id)
+    {
         WeakReference<Object> ref = instanceHandles.get(id);
         return ref == null ? null : ref.get();
     }
 
-    private static String label(Object o) {
-        if (o instanceof String) {
+    private static String label(Object o)
+    {
+        if (o instanceof String)
+        {
             return "\"" + o + "\"";
         }
         return o.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(o));
     }
 
-    private static Object parseForField(Class<?> t, String s) {
-        if (t == boolean.class || t == Boolean.class) {
+    private static Object parseForField(Class<?> t, String s)
+    {
+        if (t == boolean.class || t == Boolean.class)
+        {
             return Boolean.parseBoolean(s.trim());
         }
-        if (t == byte.class || t == Byte.class) {
+        if (t == byte.class || t == Byte.class)
+        {
             return Byte.parseByte(s.trim());
         }
-        if (t == short.class || t == Short.class) {
+        if (t == short.class || t == Short.class)
+        {
             return Short.parseShort(s.trim());
         }
-        if (t == char.class || t == Character.class) {
+        if (t == char.class || t == Character.class)
+        {
             return s.isEmpty() ? '\0' : s.charAt(0);
         }
-        if (t == int.class || t == Integer.class) {
+        if (t == int.class || t == Integer.class)
+        {
             return Integer.parseInt(s.trim());
         }
-        if (t == long.class || t == Long.class) {
+        if (t == long.class || t == Long.class)
+        {
             return Long.parseLong(s.trim());
         }
-        if (t == float.class || t == Float.class) {
+        if (t == float.class || t == Float.class)
+        {
             return Float.parseFloat(s.trim());
         }
-        if (t == double.class || t == Double.class) {
+        if (t == double.class || t == Double.class)
+        {
             return Double.parseDouble(s.trim());
         }
-        if (t == String.class) {
+        if (t == String.class)
+        {
             return s;
         }
         throw new IllegalStateException("unsupported field type: " + t.getName());
     }
 
-    synchronized void freeze(long id, boolean on, String value) {
+    synchronized void freeze(long id, boolean on, String value)
+    {
         Location loc = find(id);
-        if (loc == null) {
+        if (loc == null)
+        {
             return;
         }
-        if (on) {
+        if (on)
+        {
             pinned.putIfAbsent(loc.id, loc);
             frozen.put(loc.id, new Object[]{loc, parse(loc.valueType, value)});
             ensureFreezeTimer();
-        } else {
+        }
+        else
+        {
             frozen.remove(loc.id);
         }
     }
 
-    synchronized void pin(long id, boolean on) {
-        if (on) {
+    synchronized void pin(long id, boolean on)
+    {
+        if (on)
+        {
             Location loc = active.get(id);
-            if (loc != null) {
+            if (loc != null)
+            {
                 pinned.putIfAbsent(id, loc);
             }
-        } else {
+        }
+        else
+        {
             pinned.remove(id);
             frozen.remove(id);
         }
     }
 
-    synchronized void clear() {
+    synchronized void clear()
+    {
         active.clear();
         pinned.clear();
         frozen.clear();
         truncated = false;
-        if (freezeTimer != null) {
+        if (freezeTimer != null)
+        {
             freezeTimer.shutdownNow();
             freezeTimer = null;
         }
     }
 
-    private void ensureFreezeTimer() {
-        if (freezeTimer == null) {
-            freezeTimer = Executors.newSingleThreadScheduledExecutor(r -> {
+    private void ensureFreezeTimer()
+    {
+        if (freezeTimer == null)
+        {
+            freezeTimer = Executors.newSingleThreadScheduledExecutor(r ->
+            {
                 Thread t = new Thread(r, "jstudio-scan-freeze");
                 t.setDaemon(true);
                 return t;
@@ -566,27 +704,37 @@ final class ScanEngine {
         }
     }
 
-    private synchronized void applyFreezes() {
-        for (Object[] entry : frozen.values()) {
+    private synchronized void applyFreezes()
+    {
+        for (Object[] entry : frozen.values())
+        {
             Location loc = (Location) entry[0];
             Object o = loc.owner.get();
-            if (o == null) {
+            if (o == null)
+            {
                 continue;
             }
-            try {
-                if (loc.field != null) {
+            try
+            {
+                if (loc.field != null)
+                {
                     loc.field.set(o, entry[1]);
-                } else {
+                }
+                else
+                {
                     Array.set(o, loc.index, entry[1]);
                 }
-            } catch (Throwable ignored) {
+            }
+            catch (Throwable ignored)
+            {
             }
         }
     }
 
     // ---- serialization (a "page" of locations) ----------------------------------------------------
 
-    synchronized byte[] page(int messageType, boolean pinnedOnly, int offset, int limit) throws java.io.IOException {
+    synchronized byte[] page(int messageType, boolean pinnedOnly, int offset, int limit) throws java.io.IOException
+    {
         Map<Long, Location> src = pinnedOnly ? pinned : active;
         List<Location> all = new ArrayList<>(src.values());
         int total = all.size();
@@ -596,7 +744,8 @@ final class ScanEngine {
         f.u32(total);
         f.u8(truncated ? 1 : 0);
         f.u32(Math.max(0, to - from));
-        for (int i = from; i < to; i++) {
+        for (int i = from; i < to; i++)
+        {
             Location loc = all.get(i);
             Object cur = loc.read();
             int flags = 0;
@@ -617,53 +766,83 @@ final class ScanEngine {
 
     // ---- predicates / comparisons -----------------------------------------------------------------
 
-    private boolean predicate(int scanKind, int valueType, Object v, Object target, Object target2) {
-        if (scanKind == LiveProtocol.SCANKIND_UNKNOWN) {
+    private boolean predicate(int scanKind, int valueType, Object v, Object target, Object target2)
+    {
+        if (scanKind == LiveProtocol.SCANKIND_UNKNOWN)
+        {
             return true;
         }
-        if (valueType == LiveProtocol.SCAN_STRING) {
+        if (valueType == LiveProtocol.SCAN_STRING)
+        {
             return scanKind == LiveProtocol.SCANKIND_EXACT && v.equals(target);
         }
-        if (valueType == LiveProtocol.SCAN_BOOLEAN) {
+        if (valueType == LiveProtocol.SCAN_BOOLEAN)
+        {
             return v.equals(target);
         }
         double a = num(v);
-        switch (scanKind) {
-            case LiveProtocol.SCANKIND_EXACT: return a == num(target);
-            case LiveProtocol.SCANKIND_GREATER: return a > num(target);
-            case LiveProtocol.SCANKIND_LESS: return a < num(target);
-            case LiveProtocol.SCANKIND_BETWEEN: return a >= num(target) && a <= num(target2);
-            default: return false;
+        switch (scanKind)
+        {
+            case LiveProtocol.SCANKIND_EXACT:
+                return a == num(target);
+            case LiveProtocol.SCANKIND_GREATER:
+                return a > num(target);
+            case LiveProtocol.SCANKIND_LESS:
+                return a < num(target);
+            case LiveProtocol.SCANKIND_BETWEEN:
+                return a >= num(target) && a <= num(target2);
+            default:
+                return false;
         }
     }
 
-    private boolean compare(int cmp, int valueType, Object cur, Object last, Object target, Object target2) {
-        if (valueType == LiveProtocol.SCAN_STRING || valueType == LiveProtocol.SCAN_BOOLEAN) {
-            switch (cmp) {
-                case LiveProtocol.CMP_EXACT: return cur.equals(target);
-                case LiveProtocol.CMP_CHANGED: return !cur.equals(last);
-                case LiveProtocol.CMP_UNCHANGED: return cur.equals(last);
-                default: return false;
+    private boolean compare(int cmp, int valueType, Object cur, Object last, Object target, Object target2)
+    {
+        if (valueType == LiveProtocol.SCAN_STRING || valueType == LiveProtocol.SCAN_BOOLEAN)
+        {
+            switch (cmp)
+            {
+                case LiveProtocol.CMP_EXACT:
+                    return cur.equals(target);
+                case LiveProtocol.CMP_CHANGED:
+                    return !cur.equals(last);
+                case LiveProtocol.CMP_UNCHANGED:
+                    return cur.equals(last);
+                default:
+                    return false;
             }
         }
         double a = num(cur);
         double b = last == null ? a : num(last);
-        switch (cmp) {
-            case LiveProtocol.CMP_EXACT: return target != null && a == num(target);
-            case LiveProtocol.CMP_CHANGED: return a != b;
-            case LiveProtocol.CMP_UNCHANGED: return a == b;
-            case LiveProtocol.CMP_INCREASED: return a > b;
-            case LiveProtocol.CMP_DECREASED: return a < b;
-            case LiveProtocol.CMP_INCREASED_BY: return target != null && a == b + num(target);
-            case LiveProtocol.CMP_DECREASED_BY: return target != null && a == b - num(target);
-            case LiveProtocol.CMP_GREATER: return target != null && a > num(target);
-            case LiveProtocol.CMP_LESS: return target != null && a < num(target);
-            case LiveProtocol.CMP_BETWEEN: return target != null && target2 != null && a >= num(target) && a <= num(target2);
-            default: return false;
+        switch (cmp)
+        {
+            case LiveProtocol.CMP_EXACT:
+                return target != null && a == num(target);
+            case LiveProtocol.CMP_CHANGED:
+                return a != b;
+            case LiveProtocol.CMP_UNCHANGED:
+                return a == b;
+            case LiveProtocol.CMP_INCREASED:
+                return a > b;
+            case LiveProtocol.CMP_DECREASED:
+                return a < b;
+            case LiveProtocol.CMP_INCREASED_BY:
+                return target != null && a == b + num(target);
+            case LiveProtocol.CMP_DECREASED_BY:
+                return target != null && a == b - num(target);
+            case LiveProtocol.CMP_GREATER:
+                return target != null && a > num(target);
+            case LiveProtocol.CMP_LESS:
+                return target != null && a < num(target);
+            case LiveProtocol.CMP_BETWEEN:
+                return target != null && target2 != null && a >= num(target) && a <= num(target2);
+            default:
+                return false;
         }
     }
 
-    private static double num(Object o) {
+    private static double num(Object o)
+    {
         if (o instanceof Number) return ((Number) o).doubleValue();
         if (o instanceof Character) return (char) (Character) o;
         if (o instanceof Boolean) return (Boolean) o ? 1 : 0;
@@ -672,33 +851,39 @@ final class ScanEngine {
 
     // ---- helpers ----------------------------------------------------------------------------------
 
-    private void record(int valueType, Object owner, Field field, int index, String declaringClass,
-                        String fieldName, String fieldDesc, String displayPath, Object value, int maxMatches) {
-        if (userClassesOnly && !isUserClassName(declaringClass)) {
+    private void record(int valueType, Object owner, Field field, int index, String declaringClass, String fieldName, String fieldDesc, String displayPath, Object value, int maxMatches)
+    {
+        if (userClassesOnly && !isUserClassName(declaringClass))
+        {
             return;
         }
-        if (active.size() >= maxMatches) {
+        if (active.size() >= maxMatches)
+        {
             truncated = true;
             return;
         }
         long id = ids.getAndIncrement();
-        active.put(id, new Location(id, owner == null ? field.getDeclaringClass() : owner,
-                field, index, valueType, declaringClass, fieldName, fieldDesc, displayPath, value));
+        active.put(id, new Location(id, owner == null ? field.getDeclaringClass() : owner, field, index, valueType, declaringClass, fieldName, fieldDesc, displayPath, value));
     }
 
-    private Location find(long id) {
+    private Location find(long id)
+    {
         Location loc = active.get(id);
         return loc != null ? loc : pinned.get(id);
     }
 
-    private static void enqueue(Deque<Object> queue, Map<Object, Boolean> visited, Object o) {
-        if (o == null || visited.containsKey(o)) {
+    private static void enqueue(Deque<Object> queue, Map<Object, Boolean> visited, Object o)
+    {
+        if (o == null || visited.containsKey(o))
+        {
             return;
         }
         Class<?> c = o.getClass();
-        if (c.getName().startsWith("java.lang.") && !(c.isArray())) {
+        if (c.getName().startsWith("java.lang.") && !(c.isArray()))
+        {
             // Boxed primitives / String have no useful child refs and are interned/shared; don't traverse them.
-            if (c == String.class || Number.class.isAssignableFrom(c) || c == Boolean.class || c == Character.class) {
+            if (c == String.class || Number.class.isAssignableFrom(c) || c == Boolean.class || c == Character.class)
+            {
                 visited.put(o, Boolean.TRUE);
                 return;
             }
@@ -708,19 +893,25 @@ final class ScanEngine {
     }
 
     /** All AWT/Swing windows (frames + dialogs) as live roots, via reflection so a headless/AWT-less target is fine. */
-    private static Object[] awtRoots() {
-        try {
+    private static Object[] awtRoots()
+    {
+        try
+        {
             Class<?> window = Class.forName("java.awt.Window");
             Object windows = window.getMethod("getWindows").invoke(null);
             return windows instanceof Object[] ? (Object[]) windows : new Object[0];
-        } catch (Throwable t) {
+        }
+        catch (Throwable t)
+        {
             return new Object[0];
         }
     }
 
     /** True for an application (non-JDK) class, given its internal name. Array slots ("[...") are not user-owned. */
-    private static boolean isUserClassName(String internalName) {
-        if (internalName == null || internalName.isEmpty() || internalName.startsWith("[")) {
+    private static boolean isUserClassName(String internalName)
+    {
+        if (internalName == null || internalName.isEmpty() || internalName.startsWith("["))
+        {
             return false;
         }
         return !(internalName.startsWith("java/") || internalName.startsWith("javax/")
@@ -728,46 +919,61 @@ final class ScanEngine {
                 || internalName.startsWith("com/sun/") || internalName.startsWith("com/tonic/live/"));
     }
 
-    private static boolean includeClass(Class<?> c, String pkgFilter) {
-        if (c.isArray() || c.isPrimitive() || c.isSynthetic()) {
+    private static boolean includeClass(Class<?> c, String pkgFilter)
+    {
+        if (c.isArray() || c.isPrimitive() || c.isSynthetic())
+        {
             return false;
         }
         String n = c.getName();
         if (n.startsWith("java.") || n.startsWith("jdk.") || n.startsWith("sun.")
-                || n.startsWith("com.sun.") || n.startsWith("javax.") || n.startsWith("com.tonic.live.")) {
+                || n.startsWith("com.sun.") || n.startsWith("javax.") || n.startsWith("com.tonic.live."))
+        {
             return false;
         }
         return pkgFilter == null || pkgFilter.isEmpty() || n.replace('.', '/').startsWith(pkgFilter);
     }
 
-    private static Field[] safeFields(Class<?> c) {
-        try {
+    private static Field[] safeFields(Class<?> c)
+    {
+        try
+        {
             return c.getDeclaredFields();
-        } catch (Throwable t) {
+        }
+        catch (Throwable t)
+        {
             return new Field[0];
         }
     }
 
-    private static Object safeGet(Field f, Object owner) {
-        try {
+    private static Object safeGet(Field f, Object owner)
+    {
+        try
+        {
             f.setAccessible(true);
             return f.get(owner);
-        } catch (Throwable t) {
+        }
+        catch (Throwable t)
+        {
             return null;
         }
     }
 
-    private static boolean matchesType(Class<?> declared, Class<?> wanted) {
-        if (wanted == null) {
+    private static boolean matchesType(Class<?> declared, Class<?> wanted)
+    {
+        if (wanted == null)
+        {
             return isNumeric(declared);
         }
-        if (wanted == String.class) {
+        if (wanted == String.class)
+        {
             return declared == String.class;
         }
         return declared == wanted;
     }
 
-    private static boolean isNumeric(Class<?> c) {
+    private static boolean isNumeric(Class<?> c)
+    {
         return c == byte.class || c == short.class || c == int.class || c == long.class
                 || c == float.class || c == double.class;
     }
@@ -776,13 +982,16 @@ final class ScanEngine {
      * Reference-typed scans (String) match on the value's RUNTIME type, not the declared field/array type, so a
      * String held in an {@code Object}/{@code CharSequence} field or an {@code Object[]} (List/Map backing) is found.
      */
-    private static boolean refMatches(int valueType, Object v) {
+    private static boolean refMatches(int valueType, Object v)
+    {
         return valueType == LiveProtocol.SCAN_STRING && v instanceof String;
     }
 
     /** The concrete SCAN_* code a number-mode match should be recorded under (so writes/format use the real type). */
-    private static int recType(int valueType, Class<?> declared) {
-        if (valueType != LiveProtocol.SCAN_NUMBER) {
+    private static int recType(int valueType, Class<?> declared)
+    {
+        if (valueType != LiveProtocol.SCAN_NUMBER)
+        {
             return valueType;
         }
         if (declared == long.class) return LiveProtocol.SCAN_LONG;
@@ -793,68 +1002,104 @@ final class ScanEngine {
         return LiveProtocol.SCAN_INT;
     }
 
-    private static Class<?> primitiveFor(int valueType) {
-        switch (valueType) {
-            case LiveProtocol.SCAN_INT: return int.class;
-            case LiveProtocol.SCAN_LONG: return long.class;
-            case LiveProtocol.SCAN_SHORT: return short.class;
-            case LiveProtocol.SCAN_BYTE: return byte.class;
-            case LiveProtocol.SCAN_CHAR: return char.class;
-            case LiveProtocol.SCAN_FLOAT: return float.class;
-            case LiveProtocol.SCAN_DOUBLE: return double.class;
-            case LiveProtocol.SCAN_BOOLEAN: return boolean.class;
-            case LiveProtocol.SCAN_NUMBER: return null;
-            default: return String.class;
-        }
-    }
-
-    private static Object parse(int valueType, String s) {
-        switch (valueType) {
-            case LiveProtocol.SCAN_INT: return Integer.parseInt(s.trim());
-            case LiveProtocol.SCAN_LONG: return Long.parseLong(s.trim());
-            case LiveProtocol.SCAN_SHORT: return Short.parseShort(s.trim());
-            case LiveProtocol.SCAN_BYTE: return Byte.parseByte(s.trim());
-            case LiveProtocol.SCAN_CHAR: return s.isEmpty() ? '\0' : s.charAt(0);
-            case LiveProtocol.SCAN_FLOAT: return Float.parseFloat(s.trim());
+    private static Class<?> primitiveFor(int valueType)
+    {
+        switch (valueType)
+        {
+            case LiveProtocol.SCAN_INT:
+                return int.class;
+            case LiveProtocol.SCAN_LONG:
+                return long.class;
+            case LiveProtocol.SCAN_SHORT:
+                return short.class;
+            case LiveProtocol.SCAN_BYTE:
+                return byte.class;
+            case LiveProtocol.SCAN_CHAR:
+                return char.class;
+            case LiveProtocol.SCAN_FLOAT:
+                return float.class;
             case LiveProtocol.SCAN_DOUBLE:
-            case LiveProtocol.SCAN_NUMBER: return Double.parseDouble(s.trim());
-            case LiveProtocol.SCAN_BOOLEAN: return Boolean.parseBoolean(s.trim());
-            default: return s;
+                return double.class;
+            case LiveProtocol.SCAN_BOOLEAN:
+                return boolean.class;
+            case LiveProtocol.SCAN_NUMBER:
+                return null;
+            default:
+                return String.class;
         }
     }
 
-    private Object parseFor(String value) {
-        try {
+    private static Object parse(int valueType, String s)
+    {
+        switch (valueType)
+        {
+            case LiveProtocol.SCAN_INT:
+                return Integer.parseInt(s.trim());
+            case LiveProtocol.SCAN_LONG:
+                return Long.parseLong(s.trim());
+            case LiveProtocol.SCAN_SHORT:
+                return Short.parseShort(s.trim());
+            case LiveProtocol.SCAN_BYTE:
+                return Byte.parseByte(s.trim());
+            case LiveProtocol.SCAN_CHAR:
+                return s.isEmpty() ? '\0' : s.charAt(0);
+            case LiveProtocol.SCAN_FLOAT:
+                return Float.parseFloat(s.trim());
+            case LiveProtocol.SCAN_DOUBLE:
+            case LiveProtocol.SCAN_NUMBER:
+                return Double.parseDouble(s.trim());
+            case LiveProtocol.SCAN_BOOLEAN:
+                return Boolean.parseBoolean(s.trim());
+            default:
+                return s;
+        }
+    }
+
+    private Object parseFor(String value)
+    {
+        try
+        {
             return Double.parseDouble(value.trim());
-        } catch (NumberFormatException e) {
+        }
+        catch (NumberFormatException e)
+        {
             return value;
         }
     }
 
-    private Object parseMaybe(String value) {
-        if (value == null || value.isEmpty()) {
+    private Object parseMaybe(String value)
+    {
+        if (value == null || value.isEmpty())
+        {
             return null;
         }
-        try {
+        try
+        {
             return Double.parseDouble(value.trim());
-        } catch (NumberFormatException e) {
+        }
+        catch (NumberFormatException e)
+        {
             return value;
         }
     }
 
-    private static String format(Object v) {
+    private static String format(Object v)
+    {
         return v == null ? "null" : String.valueOf(v);
     }
 
-    private static String internal(Class<?> c) {
+    private static String internal(Class<?> c)
+    {
         return c.getName().replace('.', '/');
     }
 
-    private static String pathLabel(Class<?> c) {
+    private static String pathLabel(Class<?> c)
+    {
         return c.getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(c));
     }
 
-    private static String descriptor(Class<?> c) {
+    private static String descriptor(Class<?> c)
+    {
         if (c == boolean.class) return "Z";
         if (c == byte.class) return "B";
         if (c == char.class) return "C";
@@ -867,48 +1112,66 @@ final class ScanEngine {
         return "L" + c.getName().replace('.', '/') + ";";
     }
 
-    private static String typeName(int valueType) {
-        switch (valueType) {
-            case LiveProtocol.SCAN_INT: return "int";
-            case LiveProtocol.SCAN_LONG: return "long";
-            case LiveProtocol.SCAN_SHORT: return "short";
-            case LiveProtocol.SCAN_BYTE: return "byte";
-            case LiveProtocol.SCAN_CHAR: return "char";
-            case LiveProtocol.SCAN_FLOAT: return "float";
-            case LiveProtocol.SCAN_DOUBLE: return "double";
-            case LiveProtocol.SCAN_BOOLEAN: return "boolean";
-            default: return "String";
+    private static String typeName(int valueType)
+    {
+        switch (valueType)
+        {
+            case LiveProtocol.SCAN_INT:
+                return "int";
+            case LiveProtocol.SCAN_LONG:
+                return "long";
+            case LiveProtocol.SCAN_SHORT:
+                return "short";
+            case LiveProtocol.SCAN_BYTE:
+                return "byte";
+            case LiveProtocol.SCAN_CHAR:
+                return "char";
+            case LiveProtocol.SCAN_FLOAT:
+                return "float";
+            case LiveProtocol.SCAN_DOUBLE:
+                return "double";
+            case LiveProtocol.SCAN_BOOLEAN:
+                return "boolean";
+            default:
+                return "String";
         }
     }
 
     /** Big-endian response builder, first byte = message type (mirrors {@code JavaAgent.Buf}). */
-    private static final class Frame {
+    private static final class Frame
+    {
         private final java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
         private final java.io.DataOutputStream d = new java.io.DataOutputStream(bo);
 
-        Frame(int type) throws java.io.IOException {
+        Frame(int type) throws java.io.IOException
+        {
             d.writeByte(type);
         }
 
-        void u8(int v) throws java.io.IOException {
+        void u8(int v) throws java.io.IOException
+        {
             d.writeByte(v);
         }
 
-        void u32(int v) throws java.io.IOException {
+        void u32(int v) throws java.io.IOException
+        {
             d.writeInt(v);
         }
 
-        void u64(long v) throws java.io.IOException {
+        void u64(long v) throws java.io.IOException
+        {
             d.writeLong(v);
         }
 
-        void str(String s) throws java.io.IOException {
+        void str(String s) throws java.io.IOException
+        {
             byte[] b = s.getBytes(java.nio.charset.StandardCharsets.UTF_8);
             d.writeShort(b.length);
             d.write(b);
         }
 
-        byte[] toBytes() throws java.io.IOException {
+        byte[] toBytes() throws java.io.IOException
+        {
             d.flush();
             return bo.toByteArray();
         }

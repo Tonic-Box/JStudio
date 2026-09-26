@@ -15,7 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Handles async file system operations to keep the UI responsive.
  */
-public class FileSystemWorker {
+public class FileSystemWorker
+{
 
     private static final FileSystemView fsv = FileSystemView.getFileSystemView();
 
@@ -26,20 +27,23 @@ public class FileSystemWorker {
     /**
      * Listener for directory listing results.
      */
-    public interface DirectoryListingListener {
+    public interface DirectoryListingListener
+    {
         void onListingComplete(File directory, List<File> files);
+
         void onListingError(File directory, Exception error);
     }
 
     /**
      * List files in a directory asynchronously.
      */
-    public static void listDirectory(File directory, ExtensionFileFilter filter,
-                                     DirectoryListingListener listener) {
+    public static void listDirectory(File directory, ExtensionFileFilter filter, DirectoryListingListener listener)
+    {
         // Check cache first
         String cacheKey = directory.getAbsolutePath();
         CachedListing cached = cache.get(cacheKey);
-        if (cached != null && !cached.isExpired()) {
+        if (cached != null && !cached.isExpired())
+        {
             // Filter cached results
             List<File> filtered = filterFiles(cached.files, filter);
             listener.onListingComplete(directory, filtered);
@@ -47,15 +51,19 @@ public class FileSystemWorker {
         }
 
         // Load asynchronously
-        SwingWorker<List<File>, Void> worker = new SwingWorker<>() {
+        SwingWorker<List<File>, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected List<File> doInBackground() {
+            protected List<File> doInBackground()
+            {
                 return listFilesSync(directory);
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     List<File> allFiles = get();
 
                     // Update cache
@@ -64,7 +72,9 @@ public class FileSystemWorker {
                     // Filter and return
                     List<File> filtered = filterFiles(allFiles, filter);
                     listener.onListingComplete(directory, filtered);
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     listener.onListingError(directory, e);
                 }
             }
@@ -76,21 +86,22 @@ public class FileSystemWorker {
     /**
      * List files synchronously (for use in worker thread).
      */
-    private static List<File> listFilesSync(File directory) {
+    private static List<File> listFilesSync(File directory)
+    {
         List<File> result = new ArrayList<>();
 
-        if (directory == null || !directory.isDirectory()) {
+        if (directory == null || !directory.isDirectory())
+        {
             return result;
         }
 
         File[] files = directory.listFiles();
-        if (files != null) {
+        if (files != null)
+        {
             result.addAll(Arrays.asList(files));
 
             // Sort: directories first, then by name (case-insensitive)
-            result.sort(Comparator
-                    .comparing((File f) -> !f.isDirectory())
-                    .thenComparing(f -> f.getName().toLowerCase()));
+            result.sort(Comparator.comparing((File f) -> !f.isDirectory()).thenComparing(f -> f.getName().toLowerCase()));
         }
 
         return result;
@@ -99,14 +110,18 @@ public class FileSystemWorker {
     /**
      * Filter files by extension.
      */
-    private static List<File> filterFiles(List<File> files, ExtensionFileFilter filter) {
-        if (filter == null || filter.isAllFiles()) {
+    private static List<File> filterFiles(List<File> files, ExtensionFileFilter filter)
+    {
+        if (filter == null || filter.isAllFiles())
+        {
             return new ArrayList<>(files);
         }
 
         List<File> result = new ArrayList<>();
-        for (File file : files) {
-            if (filter.accept(file)) {
+        for (File file : files)
+        {
+            if (filter.accept(file))
+            {
                 result.add(file);
             }
         }
@@ -116,35 +131,41 @@ public class FileSystemWorker {
     /**
      * Get the system file roots (drives on Windows).
      */
-    public static File[] getRoots() {
+    public static File[] getRoots()
+    {
         return File.listRoots();
     }
 
     /**
      * Get special system folders (Desktop, Documents, etc.).
      */
-    public static Map<String, File> getSpecialFolders() {
+    public static Map<String, File> getSpecialFolders()
+    {
         Map<String, File> folders = new HashMap<>();
 
         // Home directory
         String userHome = System.getProperty("user.home");
-        if (userHome != null) {
+        if (userHome != null)
+        {
             File home = new File(userHome);
             folders.put("Home", home);
 
             // Common subdirectories
             File desktop = new File(home, "Desktop");
-            if (desktop.exists()) {
+            if (desktop.exists())
+            {
                 folders.put("Desktop", desktop);
             }
 
             File documents = new File(home, "Documents");
-            if (documents.exists()) {
+            if (documents.exists())
+            {
                 folders.put("Documents", documents);
             }
 
             File downloads = new File(home, "Downloads");
-            if (downloads.exists()) {
+            if (downloads.exists())
+            {
                 folders.put("Downloads", downloads);
             }
         }
@@ -155,8 +176,10 @@ public class FileSystemWorker {
     /**
      * Get display name for a file (using FileSystemView).
      */
-    public static String getDisplayName(File file) {
-        if (file == null) {
+    public static String getDisplayName(File file)
+    {
+        if (file == null)
+        {
             return "";
         }
         String name = fsv.getSystemDisplayName(file);
@@ -166,26 +189,31 @@ public class FileSystemWorker {
     /**
      * Get system icon for a file.
      */
-    public static Icon getSystemIcon(File file) {
+    public static Icon getSystemIcon(File file)
+    {
         return fsv.getSystemIcon(file);
     }
 
     /**
      * Check if a file is a file system root (drive).
      */
-    public static boolean isRoot(File file) {
+    public static boolean isRoot(File file)
+    {
         return fsv.isFileSystemRoot(file);
     }
 
     /**
      * Get the parent directory, handling roots specially.
      */
-    public static File getParent(File file) {
-        if (file == null) {
+    public static File getParent(File file)
+    {
+        if (file == null)
+        {
             return null;
         }
         File parent = file.getParentFile();
-        if (parent == null && fsv.isFileSystemRoot(file)) {
+        if (parent == null && fsv.isFileSystemRoot(file))
+        {
             return null; // At root level
         }
         return parent;
@@ -194,8 +222,10 @@ public class FileSystemWorker {
     /**
      * Check if a path is valid and exists.
      */
-    public static boolean isValidPath(String path) {
-        if (path == null || path.trim().isEmpty()) {
+    public static boolean isValidPath(String path)
+    {
+        if (path == null || path.trim().isEmpty())
+        {
             return false;
         }
         File file = new File(path.trim());
@@ -205,8 +235,10 @@ public class FileSystemWorker {
     /**
      * Invalidate cache for a specific directory.
      */
-    public static void invalidateCache(File directory) {
-        if (directory != null) {
+    public static void invalidateCache(File directory)
+    {
+        if (directory != null)
+        {
             cache.remove(directory.getAbsolutePath());
         }
     }
@@ -214,23 +246,27 @@ public class FileSystemWorker {
     /**
      * Clear all cached listings.
      */
-    public static void clearCache() {
+    public static void clearCache()
+    {
         cache.clear();
     }
 
     /**
      * Cached directory listing with expiry.
      */
-    private static class CachedListing {
+    private static class CachedListing
+    {
         final List<File> files;
         final long timestamp;
 
-        CachedListing(List<File> files) {
+        CachedListing(List<File> files)
+        {
             this.files = files;
             this.timestamp = System.currentTimeMillis();
         }
 
-        boolean isExpired() {
+        boolean isExpired()
+        {
             return System.currentTimeMillis() - timestamp > CACHE_EXPIRY_MS;
         }
     }

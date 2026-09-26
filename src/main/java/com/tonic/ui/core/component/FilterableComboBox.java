@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class FilterableComboBox<T> extends JComboBox<T> {
+public class FilterableComboBox<T> extends JComboBox<T>
+{
 
     private List<T> allItems = new ArrayList<>();
     private final Function<T, String> textExtractor;
@@ -23,84 +24,110 @@ public class FilterableComboBox<T> extends JComboBox<T> {
     private boolean editorFocused = false;
     private T lastSelectedItem = null;
 
-    public FilterableComboBox(Function<T, String> textExtractor) {
+    public FilterableComboBox(Function<T, String> textExtractor)
+    {
         super(new DefaultComboBoxModel<>());
         this.textExtractor = textExtractor;
         setEditable(true);
         setupFilter();
     }
 
-    public void setAllItems(List<T> items) {
+    public void setAllItems(List<T> items)
+    {
         filtering = true;
-        try {
+        try
+        {
             allItems = new ArrayList<>(items);
             refreshModel("");
-            if (!allItems.isEmpty()) {
+            if (!allItems.isEmpty())
+            {
                 T first = allItems.get(0);
                 setSelectedItem(first);
                 lastSelectedItem = first;
                 JTextField editor = (JTextField) getEditor().getEditorComponent();
                 editor.setText(textExtractor.apply(first));
-            } else {
+            }
+            else
+            {
                 JTextField editor = (JTextField) getEditor().getEditorComponent();
                 editor.setText("");
             }
-        } finally {
+        }
+        finally
+        {
             filtering = false;
         }
     }
 
-    private void setupFilter() {
+    private void setupFilter()
+    {
         JTextField editor = (JTextField) getEditor().getEditorComponent();
 
-        editor.addFocusListener(new FocusAdapter() {
+        editor.addFocusListener(new FocusAdapter()
+        {
             @Override
-            public void focusGained(FocusEvent e) {
+            public void focusGained(FocusEvent e)
+            {
                 editorFocused = true;
             }
 
             @Override
-            public void focusLost(FocusEvent e) {
+            public void focusLost(FocusEvent e)
+            {
                 editorFocused = false;
                 restoreFullList();
             }
         });
 
-        editor.getDocument().addDocumentListener(new DocumentListener() {
+        editor.getDocument().addDocumentListener(new DocumentListener()
+        {
             @Override
-            public void insertUpdate(DocumentEvent e) {
+            public void insertUpdate(DocumentEvent e)
+            {
                 filter();
             }
 
             @Override
-            public void removeUpdate(DocumentEvent e) {
+            public void removeUpdate(DocumentEvent e)
+            {
                 filter();
             }
 
             @Override
-            public void changedUpdate(DocumentEvent e) {
+            public void changedUpdate(DocumentEvent e)
+            {
                 filter();
             }
         });
 
-        editor.addKeyListener(new KeyAdapter() {
+        editor.addKeyListener(new KeyAdapter()
+        {
             @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            public void keyPressed(KeyEvent e)
+            {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+                {
                     editor.setText("");
                     hidePopup();
-                    if (lastSelectedItem != null) {
+                    if (lastSelectedItem != null)
+                    {
                         setSelectedItem(lastSelectedItem);
                     }
-                } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_ENTER)
+                {
                     T selected = findItem(getSelectedItem());
-                    if (selected != null) {
+                    if (selected != null)
+                    {
                         lastSelectedItem = selected;
                         hidePopup();
                         editor.setText(textExtractor.apply(lastSelectedItem));
                     }
-                } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-                    if (!isPopupVisible() && getModel().getSize() > 0) {
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_DOWN)
+                {
+                    if (!isPopupVisible() && getModel().getSize() > 0)
+                    {
                         showPopup();
                     }
                 }
@@ -108,27 +135,35 @@ public class FilterableComboBox<T> extends JComboBox<T> {
         });
     }
 
-    private void restoreFullList() {
+    private void restoreFullList()
+    {
         filtering = true;
-        try {
+        try
+        {
             refreshModel("");
-            if (lastSelectedItem != null) {
+            if (lastSelectedItem != null)
+            {
                 setSelectedItem(lastSelectedItem);
                 JTextField editor = (JTextField) getEditor().getEditorComponent();
                 editor.setText(textExtractor.apply(lastSelectedItem));
             }
-        } finally {
+        }
+        finally
+        {
             filtering = false;
         }
     }
 
-    private void filter() {
+    private void filter()
+    {
         if (filtering || selecting || !editorFocused) return;
 
-        SwingUtilities.invokeLater(() -> {
+        SwingUtilities.invokeLater(() ->
+        {
             if (selecting) return;
             filtering = true;
-            try {
+            try
+            {
                 JTextField editor = (JTextField) getEditor().getEditorComponent();
                 String text = editor.getText();
                 int caretPosition = editor.getCaretPosition();
@@ -138,35 +173,45 @@ public class FilterableComboBox<T> extends JComboBox<T> {
                 editor.setText(text);
                 editor.setCaretPosition(Math.min(caretPosition, text.length()));
 
-                if (!text.isEmpty() && getModel().getSize() > 0 && isShowing()) {
+                if (!text.isEmpty() && getModel().getSize() > 0 && isShowing())
+                {
                     showPopup();
                 }
-            } finally {
+            }
+            finally
+            {
                 filtering = false;
             }
         });
     }
 
-    private void refreshModel(String filterText) {
+    private void refreshModel(String filterText)
+    {
         DefaultComboBoxModel<T> model = (DefaultComboBoxModel<T>) getModel();
         model.removeAllElements();
 
         String lower = filterText.toLowerCase();
-        for (T item : allItems) {
+        for (T item : allItems)
+        {
             String itemText = textExtractor.apply(item);
-            if (itemText.toLowerCase().contains(lower)) {
+            if (itemText.toLowerCase().contains(lower))
+            {
                 model.addElement(item);
             }
         }
     }
 
     /** Returns the {@code allItems} element equal to {@code candidate} (preserving its {@code T} type), or null. */
-    private T findItem(Object candidate) {
-        if (candidate == null) {
+    private T findItem(Object candidate)
+    {
+        if (candidate == null)
+        {
             return null;
         }
-        for (T item : allItems) {
-            if (item.equals(candidate)) {
+        for (T item : allItems)
+        {
+            if (item.equals(candidate))
+            {
                 return item;
             }
         }
@@ -174,17 +219,22 @@ public class FilterableComboBox<T> extends JComboBox<T> {
     }
 
     @Override
-    public void setSelectedItem(Object item) {
+    public void setSelectedItem(Object item)
+    {
         selecting = true;
-        try {
+        try
+        {
             super.setSelectedItem(item);
             T match = findItem(item);
-            if (match != null) {
+            if (match != null)
+            {
                 lastSelectedItem = match;
                 JTextField editor = (JTextField) getEditor().getEditorComponent();
                 editor.setText(textExtractor.apply(lastSelectedItem));
             }
-        } finally {
+        }
+        finally
+        {
             selecting = false;
         }
     }

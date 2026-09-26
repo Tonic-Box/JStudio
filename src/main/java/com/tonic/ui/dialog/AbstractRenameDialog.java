@@ -24,13 +24,15 @@ import java.awt.event.KeyEvent;
  * Cancel/Rename buttons, and Enter/Escape handling. Subclasses supply the title, the current-value label, the
  * initial name, and the entity word used in validation messages.
  */
-public abstract class AbstractRenameDialog extends ThemedJDialog {
+public abstract class AbstractRenameDialog extends ThemedJDialog
+{
 
     private final JTextField nameField;
     @Getter
     private boolean confirmed;
 
-    protected AbstractRenameDialog(Window owner, String title, String currentLabelText, String initialName) {
+    protected AbstractRenameDialog(Window owner, String title, String currentLabelText, String initialName)
+    {
         super(owner, title, ModalityType.APPLICATION_MODAL);
 
         JPanel content = new JPanel(new GridBagLayout());
@@ -83,12 +85,17 @@ public abstract class AbstractRenameDialog extends ThemedJDialog {
         gbc.insets = new Insets(15, 5, 5, 5);
         content.add(buttonPanel, gbc);
 
-        nameField.addKeyListener(new KeyAdapter() {
+        nameField.addKeyListener(new KeyAdapter()
+        {
             @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+            public void keyPressed(KeyEvent e)
+            {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER)
+                {
                     confirmIfValid();
-                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+                {
                     dispose();
                 }
             }
@@ -103,8 +110,10 @@ public abstract class AbstractRenameDialog extends ThemedJDialog {
         nameField.requestFocusInWindow();
     }
 
-    private void confirmIfValid() {
-        if (validateName()) {
+    private void confirmIfValid()
+    {
+        if (validateName())
+        {
             confirmed = true;
             dispose();
         }
@@ -114,44 +123,55 @@ public abstract class AbstractRenameDialog extends ThemedJDialog {
     protected abstract String entityWord();
 
     /** Validates the entered name (empty / valid Java identifier), showing an error dialog on failure. */
-    protected boolean validateName() {
+    protected boolean validateName()
+    {
         String name = getNewName();
-        if (name.isEmpty()) {
+        if (name.isEmpty())
+        {
             showError(capitalize(entityWord()) + " name cannot be empty");
             return false;
         }
-        if (!isValidJavaIdentifier(name)) {
+        if (!isValidJavaIdentifier(name))
+        {
             showError("Invalid " + entityWord() + " name: " + name);
             return false;
         }
         return true;
     }
 
-    protected void showError(String message) {
+    protected void showError(String message)
+    {
         JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
     }
 
-    public String getNewName() {
+    public String getNewName()
+    {
         return nameField.getText().trim();
     }
 
     /** Whether {@code s} is a valid Java identifier (shared by the rename dialogs). */
-    public static boolean isValidJavaIdentifier(String s) {
-        if (s == null || s.isEmpty()) {
+    public static boolean isValidJavaIdentifier(String s)
+    {
+        if (s == null || s.isEmpty())
+        {
             return false;
         }
-        if (!Character.isJavaIdentifierStart(s.charAt(0))) {
+        if (!Character.isJavaIdentifierStart(s.charAt(0)))
+        {
             return false;
         }
-        for (int i = 1; i < s.length(); i++) {
-            if (!Character.isJavaIdentifierPart(s.charAt(i))) {
+        for (int i = 1; i < s.length(); i++)
+        {
+            if (!Character.isJavaIdentifierPart(s.charAt(i)))
+            {
                 return false;
             }
         }
         return true;
     }
 
-    private static String capitalize(String s) {
+    private static String capitalize(String s)
+    {
         return s.isEmpty() ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 }

@@ -28,7 +28,8 @@ import java.util.List;
  * a fresh project from its loaded classes with a progress bar. The heavy work runs on a SwingWorker so
  * the UI stays responsive while classes stream in.
  */
-public final class LiveAttachDialog extends ThemedJDialog {
+public final class LiveAttachDialog extends ThemedJDialog
+{
 
     private final DefaultListModel<AttachLauncher.JvmProcess> model = new DefaultListModel<>();
     private final JList<AttachLauncher.JvmProcess> list = new JList<>(model);
@@ -37,7 +38,8 @@ public final class LiveAttachDialog extends ThemedJDialog {
     private final JLabel status = new JLabel("Select a running JVM to attach to.");
     private final JButton attachButton = new JButton("Attach");
 
-    public LiveAttachDialog(Frame owner) {
+    public LiveAttachDialog(Frame owner)
+    {
         super(owner, "Attach to Live JVM", true);
         setLayout(new BorderLayout(8, 8));
 
@@ -70,31 +72,40 @@ public final class LiveAttachDialog extends ThemedJDialog {
         reloadJvmList();
     }
 
-    private void reloadJvmList() {
+    private void reloadJvmList()
+    {
         model.clear();
-        try {
+        try
+        {
             List<AttachLauncher.JvmProcess> jvms = AttachLauncher.listJvms();
             String self = currentPid();
-            for (AttachLauncher.JvmProcess p : jvms) {
-                if (!p.getId().equals(self)) {
+            for (AttachLauncher.JvmProcess p : jvms)
+            {
+                if (!p.getId().equals(self))
+                {
                     model.addElement(p);
                 }
             }
             status.setText(model.isEmpty() ? "No attachable JVMs found." : "Select a JVM and Attach.");
-        } catch (Throwable t) {
+        }
+        catch (Throwable t)
+        {
             status.setText("Failed to list JVMs: " + t.getMessage());
         }
     }
 
-    private static String currentPid() {
+    private static String currentPid()
+    {
         String name = ManagementFactory.getRuntimeMXBean().getName();
         int at = name.indexOf('@');
         return at > 0 ? name.substring(0, at) : "";
     }
 
-    private void doAttach() {
+    private void doAttach()
+    {
         AttachLauncher.JvmProcess target = list.getSelectedValue();
-        if (target == null) {
+        if (target == null)
+        {
             status.setText("Select a JVM first.");
             return;
         }
@@ -103,16 +114,19 @@ public final class LiveAttachDialog extends ThemedJDialog {
         status.setText("Attaching to pid " + target.getId() + "...");
         final boolean withJdk = includeJdk.isSelected();
 
-        new SwingWorker<Void, Object[]>() {
+        new SwingWorker<Void, Object[]>()
+        {
             @Override
-            protected Void doInBackground() throws Exception {
+            protected Void doInBackground() throws Exception
+            {
                 ProjectService.ProgressCallback cb = (cur, total, msg) -> publish(new Object[]{cur, total, msg});
                 LiveAttachService.getInstance().attach(target.getId(), withJdk, cb);
                 return null;
             }
 
             @Override
-            protected void process(List<Object[]> chunks) {
+            protected void process(List<Object[]> chunks)
+            {
                 Object[] last = chunks.get(chunks.size() - 1);
                 int cur = (int) last[0];
                 int total = (int) last[1];
@@ -123,22 +137,26 @@ public final class LiveAttachDialog extends ThemedJDialog {
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     get();
                     status.setText("Attached.");
                     Window owner = getOwner();
-                    if (owner instanceof MainFrame) {
+                    if (owner instanceof MainFrame)
+                    {
                         ((MainFrame) owner).setLiveCaptureEnabled(true);
                     }
                     dispose();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     progress.setIndeterminate(false);
                     attachButton.setEnabled(true);
                     Throwable cause = e.getCause() != null ? e.getCause() : e;
                     status.setText("Attach failed: " + cause.getMessage());
-                    JOptionPane.showMessageDialog(LiveAttachDialog.this,
-                            cause.getMessage(), "Attach failed", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(LiveAttachDialog.this, cause.getMessage(), "Attach failed", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();

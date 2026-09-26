@@ -1,4 +1,5 @@
 package com.tonic.script;
+
 import com.tonic.analysis.ClassFactory;
 
 import com.tonic.analysis.source.ast.stmt.BlockStmt;
@@ -29,19 +30,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * change to bytecode for methods YABR can round-trip - while the verify-and-restore guard leaves methods it cannot
  * round-trip (complex control flow) untouched instead of corrupting them.
  */
-public class ScriptPrintlnDiagnosticTest {
+public class ScriptPrintlnDiagnosticTest
+{
 
     private static final String SCRIPT =
             "ast.onMethodCall((call) => {\n" +
-            "    if (call.owner == \"java/io/PrintStream\"\n" +
-            "        && (call.name == \"println\" || call.name == \"print\")) {\n" +
-            "        return ast.remove();\n" +
-            "    }\n" +
-            "});";
+                    "    if (call.owner == \"java/io/PrintStream\"\n" +
+                    "        && (call.name == \"println\" || call.name == \"print\")) {\n" +
+                    "        return ast.remove();\n" +
+                    "    }\n" +
+                    "});";
 
-    private static ClassPool loadPool() throws Exception {
+    private static ClassPool loadPool() throws Exception
+    {
         ClassPool pool = new ClassPool();
-        try (JarFile jar = new JarFile(new File("DemoJar.jar"))) {
+        try (JarFile jar = new JarFile(new File("DemoJar.jar")))
+        {
             pool.loadJar(jar);
         }
         return pool;
@@ -49,7 +53,8 @@ public class ScriptPrintlnDiagnosticTest {
 
     /** The pure IR lift->lower round-trip is faithful, so the restore path is sound. */
     @Test
-    public void irRoundTripIsFaithful() throws Exception {
+    public void irRoundTripIsFaithful() throws Exception
+    {
         ClassFile cf = loadPool().get("osrs/dev/Main");
         MethodEntry m = method(cf, "main");
         int before = countCalls(cf, m, false);
@@ -61,7 +66,8 @@ public class ScriptPrintlnDiagnosticTest {
 
     /** Normal method: the script removes the println and every other call survives. */
     @Test
-    public void removesPrintlnFromSimpleMethod() throws Exception {
+    public void removesPrintlnFromSimpleMethod() throws Exception
+    {
         ClassPool pool = loadPool();
         ClassFile cf = pool.get("osrs/dev/Logger");
         MethodEntry m = method(cf, "log");
@@ -70,8 +76,7 @@ public class ScriptPrintlnDiagnosticTest {
         assertTrue(printlnBefore > 0, "Logger.log has a println to remove");
 
         int mods = applyGuarded(pool, cf, m);
-        System.out.println("Logger.log: mods=" + mods + ", println " + printlnBefore + "->"
-                + countCalls(cf, m, true) + ", calls " + totalBefore + "->" + countCalls(cf, m, false));
+        System.out.println("Logger.log: mods=" + mods + ", println " + printlnBefore + "->" + countCalls(cf, m, true) + ", calls " + totalBefore + "->" + countCalls(cf, m, false));
         assertEquals(printlnBefore, mods, "every println removed");
         assertEquals(0, countCalls(cf, m, true), "no println remains");
         assertEquals(totalBefore - printlnBefore, countCalls(cf, m, false), "other calls preserved");
@@ -79,7 +84,8 @@ public class ScriptPrintlnDiagnosticTest {
 
     /** Complex method YABR can't round-trip: the guard restores it unchanged instead of corrupting it. */
     @Test
-    public void guardLeavesUnroundtrippableMethodUntouched() throws Exception {
+    public void guardLeavesUnroundtrippableMethodUntouched() throws Exception
+    {
         ClassPool pool = loadPool();
         ClassFile cf = pool.get("osrs/dev/Main");
         MethodEntry m = method(cf, "main");
@@ -87,15 +93,15 @@ public class ScriptPrintlnDiagnosticTest {
         int totalBefore = countCalls(cf, m, false);
 
         int mods = applyGuarded(pool, cf, m);
-        System.out.println("Main.main: mods=" + mods + ", println " + printlnBefore + "->"
-                + countCalls(cf, m, true) + ", calls " + totalBefore + "->" + countCalls(cf, m, false));
+        System.out.println("Main.main: mods=" + mods + ", println " + printlnBefore + "->" + countCalls(cf, m, true) + ", calls " + totalBefore + "->" + countCalls(cf, m, false));
         assertEquals(0, mods, "guard skips a method it cannot safely round-trip");
         assertEquals(printlnBefore, countCalls(cf, m, true), "method left unchanged (println intact)");
         assertEquals(totalBefore, countCalls(cf, m, false), "method left unchanged (all calls intact)");
     }
 
     /** Mirrors ScriptRunner.runASTMode incl. the verify-and-restore guard; returns modifications cemented. */
-    private static int applyGuarded(ClassPool pool, ClassFile cf, MethodEntry m) {
+    private static int applyGuarded(ClassPool pool, ClassFile cf, MethodEntry m)
+    {
         ScriptInterpreter interp = new ScriptInterpreter();
         CommonAPI api = new CommonAPI();
         api.setContext(cf.getClassName(), m.getName(), m.getDesc());
@@ -118,7 +124,8 @@ public class ScriptPrintlnDiagnosticTest {
 
         BlockStmt check = MethodRecoverer.recoverMethod(new SSA(cf.getConstPool()).lift(m), m);
         java.util.List<String> actual = check == null ? null : sigs(check, m, cf.getClassName());
-        if (actual == null || !actual.equals(intended)) {
+        if (actual == null || !actual.equals(intended))
+        {
             new SSA(cf.getConstPool()).lower(pristine, m);
             ClassFactory.computeFrames(cf);
             return 0;
@@ -126,10 +133,12 @@ public class ScriptPrintlnDiagnosticTest {
         return count;
     }
 
-    private static java.util.List<String> sigs(BlockStmt body, MethodEntry m, String className) {
+    private static java.util.List<String> sigs(BlockStmt body, MethodEntry m, String className)
+    {
         java.util.List<String> s = new java.util.ArrayList<>();
         ASTEditor e = new ASTEditor(body, m.getName(), m.getDesc(), className);
-        e.onMethodCall((ctx, call) -> {
+        e.onMethodCall((ctx, call) ->
+        {
             s.add(call.getOwnerClass() + "#" + call.getMethodName());
             return Replacement.keep();
         });
@@ -138,21 +147,25 @@ public class ScriptPrintlnDiagnosticTest {
         return s;
     }
 
-    private static MethodEntry method(ClassFile cf, String name) {
+    private static MethodEntry method(ClassFile cf, String name)
+    {
         return cf.getMethods().stream()
                 .filter(x -> x.getName().equals(name) && x.getCodeAttribute() != null)
                 .findFirst().orElseThrow();
     }
 
-    private static int countCalls(ClassFile cf, MethodEntry method, boolean printlnOnly) {
+    private static int countCalls(ClassFile cf, MethodEntry method, boolean printlnOnly)
+    {
         SSA ssa = new SSA(cf.getConstPool());
         BlockStmt body = MethodRecoverer.recoverMethod(ssa.lift(method), method);
         int[] n = {0};
         ASTEditor editor = new ASTEditor(body, method.getName(), method.getDesc(), cf.getClassName());
-        editor.onMethodCall((ctx, call) -> {
+        editor.onMethodCall((ctx, call) ->
+        {
             boolean isPrint = "java/io/PrintStream".equals(call.getOwnerClass())
                     && ("println".equals(call.getMethodName()) || "print".equals(call.getMethodName()));
-            if (!printlnOnly || isPrint) {
+            if (!printlnOnly || isPrint)
+            {
                 n[0]++;
             }
             return Replacement.keep();

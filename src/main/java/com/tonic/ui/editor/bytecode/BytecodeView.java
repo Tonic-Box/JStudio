@@ -30,11 +30,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntConsumer;
 
-public class BytecodeView extends AbstractTextView {
+public class BytecodeView extends AbstractTextView
+{
 
     private static final String SYNTAX_STYLE_BYTECODE = "text/bytecode";
 
-    static {
+    static
+    {
         AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
         atmf.putMapping(SYNTAX_STYLE_BYTECODE, "com.tonic.ui.editor.bytecode.BytecodeTokenMaker");
     }
@@ -52,13 +54,13 @@ public class BytecodeView extends AbstractTextView {
     private BytecodeLineIndex lineIndex;
     private final BreakpointGutterController breakpointGutter;
 
-    public BytecodeView(ClassEntryModel classEntry) {
+    public BytecodeView(ClassEntryModel classEntry)
+    {
         this.classEntry = classEntry;
 
         initTextArea(SYNTAX_STYLE_BYTECODE);
         scrollPane.setIconRowHeaderEnabled(true);
-        breakpointGutter = new BreakpointGutterController(textArea, scrollPane,
-                new BytecodeBreakpointMapper(this, classEntry));
+        breakpointGutter = new BreakpointGutterController(textArea, scrollPane, new BytecodeBreakpointMapper(this, classEntry));
 
         add(overlayWrap(scrollPane), BorderLayout.CENTER);
         add(searchPanel, BorderLayout.SOUTH);
@@ -67,83 +69,107 @@ public class BytecodeView extends AbstractTextView {
     }
 
     @Override
-    public void addNotify() {
+    public void addNotify()
+    {
         super.addNotify();
         breakpointGutter.attach();
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         breakpointGutter.detach();
         super.removeNotify();
     }
 
     /** Re-renders breakpoint dots and re-arms the gutter; called when the debug session connects/disconnects. */
-    public void refreshBreakpointGutter() {
+    public void refreshBreakpointGutter()
+    {
         breakpointGutter.updateIcons();
     }
 
     /** The 0-based display line for the instruction at {@code pc} in the {@code name+desc} method, or -1. */
-    public int displayLineForPc(String methodKey, int pc) {
+    public int displayLineForPc(String methodKey, int pc)
+    {
         List<Integer> lines = ensureLineIndex().displayLinesForPcRange(methodKey, pc, pc);
         return lines.isEmpty() ? -1 : lines.get(0);
     }
 
-    private void setupMouseListener() {
-        textArea.addMouseListener(new MouseAdapter() {
+    private void setupMouseListener()
+    {
+        textArea.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 if (e.getButton() != MouseEvent.BUTTON1) return;
 
-                try {
+                try
+                {
                     int offset = textArea.viewToModel2D(e.getPoint());
                     int lineNum = textArea.getLineOfOffset(offset);
                     if (lineNum < 0) return;
 
-                    if (e.getClickCount() == 2 && onLineActivated != null) {
+                    if (e.getClickCount() == 2 && onLineActivated != null)
+                    {
                         lastClickedLine = lineNum;
                         onLineActivated.accept(lineNum);
                         return;
                     }
 
-                    if (e.isControlDown()) {
+                    if (e.isControlDown())
+                    {
                         toggleHighlight(lineNum);
-                    } else if (e.isShiftDown() && lastClickedLine >= 0) {
+                    }
+                    else if (e.isShiftDown() && lastClickedLine >= 0)
+                    {
                         highlightRange(lastClickedLine, lineNum);
-                    } else {
+                    }
+                    else
+                    {
                         clearHighlights();
                     }
                     lastClickedLine = lineNum;
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     // Ignore
                 }
             }
 
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mousePressed(MouseEvent e)
+            {
                 maybeShowBreakpointMenu(e);
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
+            public void mouseReleased(MouseEvent e)
+            {
                 maybeShowBreakpointMenu(e);
             }
         });
     }
 
     /** Right-click on an instruction line offers Add/Remove Breakpoint while the debugger is connected. */
-    private void maybeShowBreakpointMenu(MouseEvent e) {
-        if (!e.isPopupTrigger()) {
+    private void maybeShowBreakpointMenu(MouseEvent e)
+    {
+        if (!e.isPopupTrigger())
+        {
             return;
         }
         int line;
-        try {
+        try
+        {
             line = textArea.getLineOfOffset(textArea.viewToModel2D(e.getPoint())) + 1;
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             return;
         }
         Breakpoint bp = breakpointGutter.breakpointAt(line);
-        if (bp == null) {
+        if (bp == null)
+        {
             return;
         }
         JPopupMenu menu = new JPopupMenu();
@@ -158,7 +184,8 @@ public class BytecodeView extends AbstractTextView {
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         applyTextTheme();
 
         SyntaxScheme scheme = textArea.getSyntaxScheme();
@@ -187,31 +214,39 @@ public class BytecodeView extends AbstractTextView {
         repaint();
     }
 
-    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color) {
-        if (scheme.getStyle(tokenType) != null) {
+    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color)
+    {
+        if (scheme.getStyle(tokenType) != null)
+        {
             scheme.getStyle(tokenType).foreground = color;
         }
     }
 
     @Override
-    public void refresh() {
+    public void refresh()
+    {
         cancelCurrentWorker();
         lineIndex = null;
         loadingOverlay.showLoading("Loading bytecode...");
 
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
+        SwingWorker<String, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected String doInBackground() {
+            protected String doInBackground()
+            {
                 return generateBytecodeText();
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 loadingOverlay.hideLoading();
-                if (isCancelled()) {
+                if (isCancelled())
+                {
                     return;
                 }
-                try {
+                try
+                {
                     String bytecodeText = get();
                     textArea.setText(bytecodeText);
                     textArea.setCaretPosition(0);
@@ -220,10 +255,13 @@ public class BytecodeView extends AbstractTextView {
                     breakpointGutter.updateIcons();
                     Runnable highlight = pendingHighlight;
                     pendingHighlight = null;
-                    if (highlight != null) {
+                    if (highlight != null)
+                    {
                         highlight.run();
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     pendingHighlight = null;
                     textArea.setText("// Error displaying bytecode: " + e.getMessage());
                 }
@@ -233,18 +271,21 @@ public class BytecodeView extends AbstractTextView {
         worker.execute();
     }
 
-    private String generateBytecodeText() {
+    private String generateBytecodeText()
+    {
         StringBuilder sb = new StringBuilder();
         sb.append("// Class: ").append(classEntry.getClassName()).append("\n");
         sb.append("// Super: ").append(classEntry.getSuperClassName()).append("\n");
-        if (!classEntry.getInterfaceNames().isEmpty()) {
+        if (!classEntry.getInterfaceNames().isEmpty())
+        {
             sb.append("// Implements: ").append(String.join(", ", classEntry.getInterfaceNames())).append("\n");
         }
         sb.append("\n");
 
         int methodIndex = 0;
         int totalMethods = classEntry.getMethods().size();
-        for (MethodEntryModel methodModel : classEntry.getMethods()) {
+        for (MethodEntryModel methodModel : classEntry.getMethods())
+        {
             methodIndex++;
             MethodEntry method = methodModel.getMethodEntry();
 
@@ -255,10 +296,13 @@ public class BytecodeView extends AbstractTextView {
             sb.append(formatAccessFlags(method.getAccess()));
             sb.append(" ").append(method.getName()).append(method.getDesc()).append("\n");
 
-            if (method.getCodeAttribute() != null) {
+            if (method.getCodeAttribute() != null)
+            {
                 BytecodeFormatter formatter = new BytecodeFormatter(method);
                 sb.append(formatter.format());
-            } else {
+            }
+            else
+            {
                 sb.append("  // No code (abstract or native)\n");
             }
 
@@ -268,7 +312,8 @@ public class BytecodeView extends AbstractTextView {
         return sb.toString();
     }
 
-    private String formatAccessFlags(int flags) {
+    private String formatAccessFlags(int flags)
+    {
         StringBuilder sb = new StringBuilder();
         sb.append("//");
         if ((flags & 0x0001) != 0) sb.append(" public");
@@ -283,22 +328,27 @@ public class BytecodeView extends AbstractTextView {
     }
 
     @Override
-    public void highlightLine(int line) {
+    public void highlightLine(int line)
+    {
         clearHighlights();
         addHighlight(line - 1);
-        try {
+        try
+        {
             int caretLine = Math.max(line - 2, 0);
             int caretOffset = textArea.getLineStartOffset(caretLine);
             textArea.setCaretPosition(caretOffset);
 
             int highlightOffset = textArea.getLineStartOffset(line - 1);
             Rectangle rect = textArea.modelToView2D(highlightOffset).getBounds();
-            if (rect != null) {
+            if (rect != null)
+            {
                 rect.height = textArea.getHeight() / 3;
                 textArea.scrollRectToVisible(rect);
             }
             textArea.requestFocus();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             // Line out of range
         }
     }
@@ -308,41 +358,50 @@ public class BytecodeView extends AbstractTextView {
      * in flight, its completion replaces the document and resets the caret, which would wipe a
      * highlight applied now — so the highlight is deferred and applied when that load finishes.
      */
-    public boolean highlightPC(String methodName, String methodDesc, int pc) {
-        if (!loaded) {
+    public boolean highlightPC(String methodName, String methodDesc, int pc)
+    {
+        if (!loaded)
+        {
             refresh();
         }
-        if (currentWorker != null && !currentWorker.isDone()) {
+        if (currentWorker != null && !currentWorker.isDone())
+        {
             pendingHighlight = () -> applyHighlightPC(methodName, methodDesc, pc);
             return true;
         }
         return applyHighlightPC(methodName, methodDesc, pc);
     }
 
-    private boolean applyHighlightPC(String methodName, String methodDesc, int pc) {
+    private boolean applyHighlightPC(String methodName, String methodDesc, int pc)
+    {
         String text = textArea.getText();
         String methodSignature = methodName + methodDesc;
         int methodStart = text.indexOf(methodSignature);
-        if (methodStart < 0) {
+        if (methodStart < 0)
+        {
             methodStart = text.indexOf(methodName);
         }
-        if (methodStart < 0) {
+        if (methodStart < 0)
+        {
             return false;
         }
 
         String pcPattern = String.format("%d:", pc);
         int pcIndex = text.indexOf(pcPattern, methodStart);
 
-        if (pcIndex < 0) {
+        if (pcIndex < 0)
+        {
             pcPattern = String.format(" %d:", pc);
             pcIndex = text.indexOf(pcPattern, methodStart);
         }
 
-        if (pcIndex >= 0) {
+        if (pcIndex >= 0)
+        {
             textArea.setCaretPosition(pcIndex);
             textArea.requestFocus();
 
-            try {
+            try
+            {
                 int lineNum = textArea.getLineOfOffset(pcIndex);
                 clearHighlights();
                 addHighlight(lineNum);
@@ -350,11 +409,14 @@ public class BytecodeView extends AbstractTextView {
 
                 int lineStart = textArea.getLineStartOffset(lineNum);
                 int lineEnd = textArea.getLineEndOffset(lineNum);
-                if (lineEnd > lineStart && text.charAt(lineEnd - 1) == '\n') {
+                if (lineEnd > lineStart && text.charAt(lineEnd - 1) == '\n')
+                {
                     lineEnd--;
                 }
                 textArea.select(lineStart, lineEnd);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 // Ignore
             }
             return true;
@@ -366,8 +428,10 @@ public class BytecodeView extends AbstractTextView {
         return true;
     }
 
-    public boolean scrollToMethod(String methodName, String methodDesc) {
-        if (!loaded) {
+    public boolean scrollToMethod(String methodName, String methodDesc)
+    {
+        if (!loaded)
+        {
             refresh();
         }
 
@@ -375,12 +439,16 @@ public class BytecodeView extends AbstractTextView {
         String searchPattern = methodDesc != null ? methodName + methodDesc : methodName;
         int index = text.indexOf(searchPattern);
 
-        if (index >= 0) {
+        if (index >= 0)
+        {
             clearHighlights();
-            try {
+            try
+            {
                 int lineNumber = textArea.getLineOfOffset(index);
                 addHighlight(lineNumber);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 // Ignore
             }
             textArea.setCaretPosition(index);
@@ -391,20 +459,26 @@ public class BytecodeView extends AbstractTextView {
         return false;
     }
 
-    public boolean scrollToField(String fieldName) {
-        if (!loaded) {
+    public boolean scrollToField(String fieldName)
+    {
+        if (!loaded)
+        {
             refresh();
         }
 
         String text = textArea.getText();
         int index = text.indexOf(fieldName);
 
-        if (index >= 0) {
+        if (index >= 0)
+        {
             clearHighlights();
-            try {
+            try
+            {
                 int lineNumber = textArea.getLineOfOffset(index);
                 addHighlight(lineNumber);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 // Ignore
             }
             textArea.setCaretPosition(index);
@@ -415,53 +489,74 @@ public class BytecodeView extends AbstractTextView {
         return false;
     }
 
-    public void clearHighlights() {
-        for (Object tag : highlightedLines.values()) {
-            try {
+    public void clearHighlights()
+    {
+        for (Object tag : highlightedLines.values())
+        {
+            try
+            {
                 textArea.removeLineHighlight(tag);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 // Ignore
             }
         }
         highlightedLines.clear();
     }
 
-    public void addHighlight(int lineNumber) {
-        if (!highlightedLines.containsKey(lineNumber)) {
-            try {
+    public void addHighlight(int lineNumber)
+    {
+        if (!highlightedLines.containsKey(lineNumber))
+        {
+            try
+            {
                 Color highlightColor = JStudioTheme.getAccentSecondary();
                 Color bgColor = new Color(highlightColor.getRed(), highlightColor.getGreen(), highlightColor.getBlue(), 100);
                 Object tag = textArea.addLineHighlight(lineNumber, bgColor);
                 highlightedLines.put(lineNumber, tag);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 // Ignore
             }
         }
     }
 
-    public void removeHighlight(int lineNumber) {
+    public void removeHighlight(int lineNumber)
+    {
         Object tag = highlightedLines.remove(lineNumber);
-        if (tag != null) {
-            try {
+        if (tag != null)
+        {
+            try
+            {
                 textArea.removeLineHighlight(tag);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 // Ignore
             }
         }
     }
 
-    public void toggleHighlight(int lineNumber) {
-        if (highlightedLines.containsKey(lineNumber)) {
+    public void toggleHighlight(int lineNumber)
+    {
+        if (highlightedLines.containsKey(lineNumber))
+        {
             removeHighlight(lineNumber);
-        } else {
+        }
+        else
+        {
             addHighlight(lineNumber);
         }
     }
 
-    public void highlightRange(int fromLine, int toLine) {
+    public void highlightRange(int fromLine, int toLine)
+    {
         int start = Math.min(fromLine, toLine);
         int end = Math.max(fromLine, toLine);
-        for (int i = start; i <= end; i++) {
+        for (int i = start; i <= end; i++)
+        {
             addHighlight(i);
         }
     }
@@ -470,14 +565,16 @@ public class BytecodeView extends AbstractTextView {
      * Registers a listener fired with the 0-based display line on a double-click, used by the dual
      * view to drive cross-pane highlighting. Single/ctrl/shift-click behavior is unchanged.
      */
-    public void setOnLineActivated(IntConsumer onLineActivated) {
+    public void setOnLineActivated(IntConsumer onLineActivated)
+    {
         this.onLineActivated = onLineActivated;
     }
 
     /**
      * The instruction location at a 0-based display line, or null when the line is not an instruction.
      */
-    public BcLocation locationAtLine(int displayLine) {
+    public BcLocation locationAtLine(int displayLine)
+    {
         return ensureLineIndex().locationAtLine(displayLine);
     }
 
@@ -485,36 +582,46 @@ public class BytecodeView extends AbstractTextView {
      * Clears existing highlights, highlights every instruction line whose offset is in {@code [pcLo, pcHi]}
      * for the given {@code name+desc} method, scrolls the first into view, and returns whether any matched.
      */
-    public boolean highlightPcSpan(String methodKey, int pcLo, int pcHi) {
+    public boolean highlightPcSpan(String methodKey, int pcLo, int pcHi)
+    {
         List<Integer> displayLines = ensureLineIndex().displayLinesForPcRange(methodKey, pcLo, pcHi);
-        if (displayLines.isEmpty()) {
+        if (displayLines.isEmpty())
+        {
             return false;
         }
         clearHighlights();
-        for (int line : displayLines) {
+        for (int line : displayLines)
+        {
             addHighlight(line);
         }
         scrollToDisplayLine(displayLines.get(0));
         return true;
     }
 
-    private BytecodeLineIndex ensureLineIndex() {
-        if (lineIndex == null) {
+    private BytecodeLineIndex ensureLineIndex()
+    {
+        if (lineIndex == null)
+        {
             lineIndex = BytecodeLineIndex.parse(textArea.getText());
         }
         return lineIndex;
     }
 
-    private void scrollToDisplayLine(int zeroBasedLine) {
-        try {
+    private void scrollToDisplayLine(int zeroBasedLine)
+    {
+        try
+        {
             int offset = textArea.getLineStartOffset(zeroBasedLine);
             Rectangle2D view = textArea.modelToView2D(offset);
-            if (view != null) {
+            if (view != null)
+            {
                 Rectangle rect = view.getBounds();
                 rect.height = textArea.getHeight() / 3;
                 textArea.scrollRectToVisible(rect);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             // Line out of range
         }
     }

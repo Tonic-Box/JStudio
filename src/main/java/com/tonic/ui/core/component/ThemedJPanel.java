@@ -9,9 +9,11 @@ import lombok.Getter;
 import javax.swing.JPanel;
 import java.awt.LayoutManager;
 
-public class ThemedJPanel extends JPanel implements ThemeChangeListener {
+public class ThemedJPanel extends JPanel implements ThemeChangeListener
+{
 
-    public enum BackgroundStyle {
+    public enum BackgroundStyle
+    {
         PRIMARY,
         SECONDARY,
         TERTIARY,
@@ -22,46 +24,56 @@ public class ThemedJPanel extends JPanel implements ThemeChangeListener {
     private BackgroundStyle backgroundStyle;
     private boolean themeApplied = false;
 
-    public ThemedJPanel() {
+    public ThemedJPanel()
+    {
         this(BackgroundStyle.PRIMARY);
     }
 
-    public ThemedJPanel(BackgroundStyle style) {
+    public ThemedJPanel(BackgroundStyle style)
+    {
         this(style, null);
     }
 
-    public ThemedJPanel(LayoutManager layout) {
+    public ThemedJPanel(LayoutManager layout)
+    {
         this(BackgroundStyle.PRIMARY, layout);
     }
 
-    public ThemedJPanel(BackgroundStyle style, LayoutManager layout) {
+    public ThemedJPanel(BackgroundStyle style, LayoutManager layout)
+    {
         super(layout);
         this.backgroundStyle = style;
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
-    public void addNotify() {
+    public void addNotify()
+    {
         super.addNotify();
-        if (!themeApplied) {
+        if (!themeApplied)
+        {
             applyTheme();
             themeApplied = true;
         }
     }
 
-    public void setBackgroundStyle(BackgroundStyle style) {
+    public void setBackgroundStyle(BackgroundStyle style)
+    {
         this.backgroundStyle = style;
         applyTheme();
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         applyTheme();
         repaint();
     }
 
-    protected void applyTheme() {
-        switch (backgroundStyle) {
+    protected void applyTheme()
+    {
+        switch (backgroundStyle)
+        {
             case PRIMARY:
                 setBackground(JStudioTheme.getBgPrimary());
                 break;
@@ -78,11 +90,13 @@ public class ThemedJPanel extends JPanel implements ThemeChangeListener {
         applyChildThemes();
     }
 
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         super.removeNotify();
         ThemeManager.getInstance().removeThemeChangeListener(this);
     }

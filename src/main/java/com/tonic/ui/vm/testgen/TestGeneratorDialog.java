@@ -12,7 +12,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class TestGeneratorDialog extends JDialog {
+public class TestGeneratorDialog extends JDialog
+{
 
     private final TestCaseGenerator generator = new TestCaseGenerator();
 
@@ -30,7 +31,8 @@ public class TestGeneratorDialog extends JDialog {
 
     private TestCaseGenerator.GeneratedTest currentTest;
 
-    public TestGeneratorDialog(Window owner) {
+    public TestGeneratorDialog(Window owner)
+    {
         super(owner, "Generate JUnit Test", ModalityType.APPLICATION_MODAL);
         initComponents();
         pack();
@@ -38,7 +40,8 @@ public class TestGeneratorDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    private void initComponents() {
+    private void initComponents()
+    {
         setLayout(new BorderLayout(10, 10));
         ((JPanel) getContentPane()).setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -47,17 +50,22 @@ public class TestGeneratorDialog extends JDialog {
         gbc.insets = new Insets(4, 4, 4, 4);
         gbc.anchor = GridBagConstraints.WEST;
 
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         topPanel.add(new JLabel("JUnit Version:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         versionCombo = new JComboBox<>(TestCaseGenerator.JUnitVersion.values());
         versionCombo.setSelectedItem(TestCaseGenerator.JUnitVersion.JUNIT5);
-        versionCombo.setRenderer(new DefaultListCellRenderer() {
+        versionCombo.setRenderer(new DefaultListCellRenderer()
+        {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value,
-                    int index, boolean isSelected, boolean cellHasFocus) {
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+            {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof TestCaseGenerator.JUnitVersion) {
+                if (value instanceof TestCaseGenerator.JUnitVersion)
+                {
                     setText(((TestCaseGenerator.JUnitVersion) value).getDisplayName());
                 }
                 return this;
@@ -66,25 +74,59 @@ public class TestGeneratorDialog extends JDialog {
         versionCombo.addActionListener(e -> regeneratePreview());
         topPanel.add(versionCombo, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         topPanel.add(new JLabel("Test Class:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         classNameField = new JTextField(30);
-        classNameField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { regeneratePreview(); }
-            public void removeUpdate(DocumentEvent e) { regeneratePreview(); }
-            public void changedUpdate(DocumentEvent e) { regeneratePreview(); }
+        classNameField.getDocument().addDocumentListener(new DocumentListener()
+        {
+            public void insertUpdate(DocumentEvent e)
+            {
+                regeneratePreview();
+            }
+
+            public void removeUpdate(DocumentEvent e)
+            {
+                regeneratePreview();
+            }
+
+            public void changedUpdate(DocumentEvent e)
+            {
+                regeneratePreview();
+            }
         });
         topPanel.add(classNameField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         topPanel.add(new JLabel("Test Method:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         methodNameField = new JTextField(30);
-        methodNameField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { regeneratePreview(); }
-            public void removeUpdate(DocumentEvent e) { regeneratePreview(); }
-            public void changedUpdate(DocumentEvent e) { regeneratePreview(); }
+        methodNameField.getDocument().addDocumentListener(new DocumentListener()
+        {
+            public void insertUpdate(DocumentEvent e)
+            {
+                regeneratePreview();
+            }
+
+            public void removeUpdate(DocumentEvent e)
+            {
+                regeneratePreview();
+            }
+
+            public void changedUpdate(DocumentEvent e)
+            {
+                regeneratePreview();
+            }
         });
         topPanel.add(methodNameField, gbc);
 
@@ -117,7 +159,8 @@ public class TestGeneratorDialog extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    public void setMethodCall(MethodCall call) {
+    public void setMethodCall(MethodCall call)
+    {
         this.methodCall = call;
         this.executionResult = null;
         this.entryClass = null;
@@ -132,8 +175,8 @@ public class TestGeneratorDialog extends JDialog {
         regeneratePreview();
     }
 
-    public void setExecutionResult(ExecutionResult result, String className,
-                                    String methodName, String descriptor, Object[] args) {
+    public void setExecutionResult(ExecutionResult result, String className, String methodName, String descriptor, Object[] args)
+    {
         this.methodCall = null;
         this.executionResult = result;
         this.entryClass = className;
@@ -148,82 +191,88 @@ public class TestGeneratorDialog extends JDialog {
         regeneratePreview();
     }
 
-    private void regeneratePreview() {
+    private void regeneratePreview()
+    {
         String testClassName = classNameField.getText().trim();
         String testMethodName = methodNameField.getText().trim();
         TestCaseGenerator.JUnitVersion version =
                 (TestCaseGenerator.JUnitVersion) versionCombo.getSelectedItem();
-        if (version == null) {
+        if (version == null)
+        {
             version = TestCaseGenerator.JUnitVersion.JUNIT5;
         }
 
         if (testClassName.isEmpty()) testClassName = "GeneratedTest";
         if (testMethodName.isEmpty()) testMethodName = "testMethod";
 
-        try {
-            if (methodCall != null) {
+        try
+        {
+            if (methodCall != null)
+            {
                 currentTest = generator.generate(methodCall, version, testClassName, testMethodName);
-            } else if (executionResult != null) {
-                currentTest = generator.generate(executionResult, entryClass, entryMethod,
-                                                  entryDescriptor, entryArgs, version,
-                                                  testClassName, testMethodName);
-            } else {
+            }
+            else if (executionResult != null)
+            {
+                currentTest = generator.generate(executionResult, entryClass, entryMethod, entryDescriptor, entryArgs, version, testClassName, testMethodName);
+            }
+            else
+            {
                 previewArea.setText("// No execution data available");
                 return;
             }
 
             previewArea.setText(currentTest.getCode());
             previewArea.setCaretPosition(0);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             previewArea.setText("// Error generating test: " + e.getMessage());
         }
     }
 
-    private void copyToClipboard() {
-        if (currentTest != null) {
+    private void copyToClipboard()
+    {
+        if (currentTest != null)
+        {
             StringSelection selection = new StringSelection(currentTest.getCode());
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-            JOptionPane.showMessageDialog(this,
-                    "Test code copied to clipboard!",
-                    "Copied",
-                    JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Test code copied to clipboard!", "Copied", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
-    private void saveToFile() {
+    private void saveToFile()
+    {
         if (currentTest == null) return;
 
         JFileChooser chooser = new JFileChooser();
         chooser.setSelectedFile(new File(currentTest.getSuggestedFileName()));
         chooser.setDialogTitle("Save Test File");
 
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
             File file = chooser.getSelectedFile();
-            if (!file.getName().endsWith(".java")) {
+            if (!file.getName().endsWith(".java"))
+            {
                 file = new File(file.getAbsolutePath() + ".java");
             }
 
-            if (file.exists()) {
-                int result = JOptionPane.showConfirmDialog(this,
-                        "File already exists. Overwrite?",
-                        "Confirm Overwrite",
-                        JOptionPane.YES_NO_OPTION);
-                if (result != JOptionPane.YES_OPTION) {
+            if (file.exists())
+            {
+                int result = JOptionPane.showConfirmDialog(this, "File already exists. Overwrite?", "Confirm Overwrite", JOptionPane.YES_NO_OPTION);
+                if (result != JOptionPane.YES_OPTION)
+                {
                     return;
                 }
             }
 
-            try (FileWriter writer = new FileWriter(file)) {
+            try (FileWriter writer = new FileWriter(file))
+            {
                 writer.write(currentTest.getCode());
-                JOptionPane.showMessageDialog(this,
-                        "Test saved to: " + file.getAbsolutePath(),
-                        "Saved",
-                        JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this,
-                        "Failed to save file: " + e.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Test saved to: " + file.getAbsolutePath(), "Saved", JOptionPane.INFORMATION_MESSAGE);
+            }
+            catch (IOException e)
+            {
+                JOptionPane.showMessageDialog(this, "Failed to save file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

@@ -6,7 +6,8 @@ import lombok.Getter;
  * One live value-scan result: a stable agent-side handle id plus the owning field's identity (declaring class /
  * name / descriptor - for the static launchpad), a human-readable path, and the current value.
  */
-public final class ScanLocation {
+public final class ScanLocation
+{
 
     @Getter
     private final long id;
@@ -24,8 +25,8 @@ public final class ScanLocation {
     private final String value;
     private final int flags;
 
-    public ScanLocation(long id, String declaringClass, String fieldName, String fieldDesc,
-                        String displayPath, String type, String value, int flags) {
+    public ScanLocation(long id, String declaringClass, String fieldName, String fieldDesc, String displayPath, String type, String value, int flags)
+    {
         this.id = id;
         this.declaringClass = declaringClass;
         this.fieldName = fieldName;
@@ -36,20 +37,24 @@ public final class ScanLocation {
         this.flags = flags;
     }
 
-    public boolean isPinned() {
+    public boolean isPinned()
+    {
         return (flags & LiveProtocol.FLAG_PINNED) != 0;
     }
 
-    public boolean isFrozen() {
+    public boolean isFrozen()
+    {
         return (flags & LiveProtocol.FLAG_FROZEN) != 0;
     }
 
-    public boolean isCollected() {
+    public boolean isCollected()
+    {
         return (flags & LiveProtocol.FLAG_COLLECTED) != 0;
     }
 
     /** True when this result names a concrete declared field that the static tools (usages/rename) can act on. */
-    public boolean hasField() {
+    public boolean hasField()
+    {
         return declaringClass != null && !declaringClass.isEmpty() && fieldName != null && !fieldName.isEmpty();
     }
 }

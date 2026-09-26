@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public interface PluginConfig {
+public interface PluginConfig
+{
 
     Optional<String> getString(String key);
 

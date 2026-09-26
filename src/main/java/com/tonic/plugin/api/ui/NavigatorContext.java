@@ -12,7 +12,8 @@ import java.util.Optional;
  * Exactly one of the accessors is typically present (matching the kind of node right-clicked); the rest are empty.
  * Wraps the selection in stable model types without exposing the internal tree-node classes.
  */
-public interface NavigatorContext {
+public interface NavigatorContext
+{
 
     Optional<ClassEntryModel> selectedClass();
 

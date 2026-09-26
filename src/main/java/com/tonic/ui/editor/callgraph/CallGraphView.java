@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class CallGraphView extends BaseGraphView {
+public class CallGraphView extends BaseGraphView
+{
 
     private FilterableComboBox<MethodEntryModel> methodSelector;
     private JSpinner depthSpinner;
@@ -42,19 +43,22 @@ public class CallGraphView extends BaseGraphView {
     private String prepareError = null;
     private int pendingDepth = 3;
 
-    public CallGraphView(ClassEntryModel classEntry) {
+    public CallGraphView(ClassEntryModel classEntry)
+    {
         super(classEntry);
         hideMethodFilter();
         populateMethodSelector();
     }
 
-    public void setProjectModel(ProjectModel projectModel) {
+    public void setProjectModel(ProjectModel projectModel)
+    {
         this.projectModel = projectModel;
         this.callGraph = null;
     }
 
     @Override
-    protected void createAdditionalToolbarItems() {
+    protected void createAdditionalToolbarItems()
+    {
         toolbar.add(new JLabel(" Method: "));
         methodSelector = new FilterableComboBox<>(m -> m.getName() + m.getMethodEntry().getDesc());
         methodSelector.setFont(JStudioTheme.getCodeFont(11));
@@ -77,7 +81,8 @@ public class CallGraphView extends BaseGraphView {
     }
 
     @Override
-    protected void setupGraphStyles() {
+    protected void setupGraphStyles()
+    {
         super.setupGraphStyles();
         mxStylesheet stylesheet = graph.getStylesheet();
 
@@ -93,20 +98,25 @@ public class CallGraphView extends BaseGraphView {
         stylesheet.putCellStyle("EXTERNAL", externalStyle);
     }
 
-    private void populateMethodSelector() {
+    private void populateMethodSelector()
+    {
         List<MethodEntryModel> methods = new ArrayList<>();
-        for (MethodEntryModel method : classEntry.getMethods()) {
-            if (method.getMethodEntry().getCodeAttribute() != null) {
+        for (MethodEntryModel method : classEntry.getMethods())
+        {
+            if (method.getMethodEntry().getCodeAttribute() != null)
+            {
                 methods.add(method);
             }
         }
         methodSelector.setAllItems(methods);
     }
 
-    private void onMethodSelected() {
+    private void onMethodSelected()
+    {
         if (initializing || methodSelector.isFiltering()) return;
         Object selected = methodSelector.getSelectedItem();
-        if (!(selected instanceof MethodEntryModel)) {
+        if (!(selected instanceof MethodEntryModel))
+        {
             return;
         }
         currentMethod = (MethodEntryModel) selected;
@@ -115,95 +125,114 @@ public class CallGraphView extends BaseGraphView {
         refresh();
     }
 
-    private void onSettingsChanged() {
+    private void onSettingsChanged()
+    {
         if (initializing || currentMethod == null) return;
         pendingDepth = (Integer) depthSpinner.getValue();
         loaded = false;
         refresh();
     }
 
-    private void ensureCallGraph() {
-        if (callGraph == null) {
+    private void ensureCallGraph()
+    {
+        if (callGraph == null)
+        {
             ClassPool pool = new ClassPool(true);
-            if (projectModel != null && projectModel.getClassPool() != null) {
-                for (ClassFile cf : projectModel.getClassPool().getClasses()) {
-                    if (projectModel.isUserClass(cf.getClassName())) {
+            if (projectModel != null && projectModel.getClassPool() != null)
+            {
+                for (ClassFile cf : projectModel.getClassPool().getClasses())
+                {
+                    if (projectModel.isUserClass(cf.getClassName()))
+                    {
                         pool.put(cf);
                     }
                 }
-            } else {
+            }
+            else
+            {
                 pool.put(classEntry.getClassFile());
             }
             callGraph = CallGraph.build(pool);
         }
     }
 
-    private boolean isUserDefinedClass(MethodReference ref) {
-        if (projectModel == null) {
+    private boolean isUserDefinedClass(MethodReference ref)
+    {
+        if (projectModel == null)
+        {
             return true;
         }
         return projectModel.isUserClass(ref.getOwner());
     }
 
     @Override
-    protected void prepareGraphData() {
+    protected void prepareGraphData()
+    {
         callers = Collections.emptySet();
         callees = Collections.emptySet();
         focusRef = null;
         prepareError = null;
 
-        if (currentMethod == null) {
+        if (currentMethod == null)
+        {
             return;
         }
 
-        try {
+        try
+        {
             ensureCallGraph();
 
-            focusRef = new MethodReference(
-                classEntry.getClassFile().getClassName(),
-                currentMethod.getName(),
-                currentMethod.getMethodEntry().getDesc()
-            );
+            focusRef = new MethodReference(classEntry.getClassFile().getClassName(), currentMethod.getName(), currentMethod.getMethodEntry().getDesc());
 
             callers = collectCallers(callGraph, focusRef, pendingDepth);
             callees = collectCallees(callGraph, focusRef, pendingDepth);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             prepareError = "Failed to build call graph: " + e.getMessage();
         }
     }
 
-    private Set<MethodReference> collectCallers(CallGraph graph, MethodReference method, int depth) {
+    private Set<MethodReference> collectCallers(CallGraph graph, MethodReference method, int depth)
+    {
         Set<MethodReference> result = new LinkedHashSet<>();
         collectCallersRecursive(graph, method, depth, result);
         return result;
     }
 
-    private void collectCallersRecursive(CallGraph graph, MethodReference method,
-                                          int depth, Set<MethodReference> result) {
+    private void collectCallersRecursive(CallGraph graph, MethodReference method, int depth, Set<MethodReference> result)
+    {
         if (depth <= 0) return;
         Set<MethodReference> methodCallers = graph.getCallers(method);
-        for (MethodReference caller : methodCallers) {
-            if (result.add(caller)) {
-                if (isUserDefinedClass(caller)) {
+        for (MethodReference caller : methodCallers)
+        {
+            if (result.add(caller))
+            {
+                if (isUserDefinedClass(caller))
+                {
                     collectCallersRecursive(graph, caller, depth - 1, result);
                 }
             }
         }
     }
 
-    private Set<MethodReference> collectCallees(CallGraph graph, MethodReference method, int depth) {
+    private Set<MethodReference> collectCallees(CallGraph graph, MethodReference method, int depth)
+    {
         Set<MethodReference> result = new LinkedHashSet<>();
         collectCalleesRecursive(graph, method, depth, result);
         return result;
     }
 
-    private void collectCalleesRecursive(CallGraph graph, MethodReference method,
-                                          int depth, Set<MethodReference> result) {
+    private void collectCalleesRecursive(CallGraph graph, MethodReference method, int depth, Set<MethodReference> result)
+    {
         if (depth <= 0) return;
         Set<MethodReference> methodCallees = graph.getCallees(method);
-        for (MethodReference callee : methodCallees) {
-            if (result.add(callee)) {
-                if (isUserDefinedClass(callee)) {
+        for (MethodReference callee : methodCallees)
+        {
+            if (result.add(callee))
+            {
+                if (isUserDefinedClass(callee))
+                {
                     collectCalleesRecursive(graph, callee, depth - 1, result);
                 }
             }
@@ -211,20 +240,24 @@ public class CallGraphView extends BaseGraphView {
     }
 
     @Override
-    protected void rebuildGraph() {
+    protected void rebuildGraph()
+    {
         clearGraph();
 
-        if (prepareError != null) {
+        if (prepareError != null)
+        {
             showError(prepareError);
             return;
         }
 
-        if (focusRef == null) {
+        if (focusRef == null)
+        {
             return;
         }
 
         graph.getModel().beginUpdate();
-        try {
+        try
+        {
             Object parent = graph.getDefaultParent();
             Map<MethodReference, Object> nodeMap = new HashMap<>();
 
@@ -234,14 +267,18 @@ public class CallGraphView extends BaseGraphView {
             graph.updateCellSize(focusCell);
             nodeMap.put(focusRef, focusCell);
 
-            for (MethodReference caller : callers) {
-                if (!nodeMap.containsKey(caller)) {
+            for (MethodReference caller : callers)
+            {
+                if (!nodeMap.containsKey(caller))
+                {
                     createNode(parent, caller, nodeMap);
                 }
             }
 
-            for (MethodReference callee : callees) {
-                if (!nodeMap.containsKey(callee)) {
+            for (MethodReference callee : callees)
+            {
+                if (!nodeMap.containsKey(callee))
+                {
                     createNode(parent, callee, nodeMap);
                 }
             }
@@ -250,12 +287,15 @@ public class CallGraphView extends BaseGraphView {
             createCalleeEdges(parent, callees, nodeMap);
 
             applyHierarchicalLayout();
-        } finally {
+        }
+        finally
+        {
             graph.getModel().endUpdate();
         }
     }
 
-    private void createNode(Object parent, MethodReference ref, Map<MethodReference, Object> nodeMap) {
+    private void createNode(Object parent, MethodReference ref, Map<MethodReference, Object> nodeMap)
+    {
         CallGraphVertexRenderer renderer = new CallGraphVertexRenderer(callGraph, focusRef, false);
         GraphVertex<MethodReference> vertex = new GraphVertex<>(ref, renderer);
 
@@ -265,20 +305,25 @@ public class CallGraphView extends BaseGraphView {
         nodeMap.put(ref, cell);
     }
 
-    private boolean isExternal(MethodReference ref) {
+    private boolean isExternal(MethodReference ref)
+    {
         return callGraph.getNode(ref) == null;
     }
 
-    private void createCallerEdges(Object parent, Set<MethodReference> callerSet,
-                                    Map<MethodReference, Object> nodeMap) {
-        for (MethodReference caller : callerSet) {
-            if (callGraph.calls(caller, focusRef)) {
+    private void createCallerEdges(Object parent, Set<MethodReference> callerSet, Map<MethodReference, Object> nodeMap)
+    {
+        for (MethodReference caller : callerSet)
+        {
+            if (callGraph.calls(caller, focusRef))
+            {
                 String edgeStyle = getEdgeStyle(caller, focusRef);
                 graph.insertEdge(parent, null, "", nodeMap.get(caller), nodeMap.get(focusRef), edgeStyle);
             }
 
-            for (MethodReference otherCaller : callerSet) {
-                if (!caller.equals(otherCaller) && callGraph.calls(caller, otherCaller)) {
+            for (MethodReference otherCaller : callerSet)
+            {
+                if (!caller.equals(otherCaller) && callGraph.calls(caller, otherCaller))
+                {
                     String edgeStyle = getEdgeStyle(caller, otherCaller);
                     graph.insertEdge(parent, null, "", nodeMap.get(caller), nodeMap.get(otherCaller), edgeStyle);
                 }
@@ -286,16 +331,20 @@ public class CallGraphView extends BaseGraphView {
         }
     }
 
-    private void createCalleeEdges(Object parent, Set<MethodReference> calleeSet,
-                                    Map<MethodReference, Object> nodeMap) {
-        for (MethodReference callee : calleeSet) {
-            if (callGraph.calls(focusRef, callee)) {
+    private void createCalleeEdges(Object parent, Set<MethodReference> calleeSet, Map<MethodReference, Object> nodeMap)
+    {
+        for (MethodReference callee : calleeSet)
+        {
+            if (callGraph.calls(focusRef, callee))
+            {
                 String edgeStyle = getEdgeStyle(focusRef, callee);
                 graph.insertEdge(parent, null, "", nodeMap.get(focusRef), nodeMap.get(callee), edgeStyle);
             }
 
-            for (MethodReference otherCallee : calleeSet) {
-                if (!callee.equals(otherCallee) && callGraph.calls(callee, otherCallee)) {
+            for (MethodReference otherCallee : calleeSet)
+            {
+                if (!callee.equals(otherCallee) && callGraph.calls(callee, otherCallee))
+                {
                     String edgeStyle = getEdgeStyle(callee, otherCallee);
                     graph.insertEdge(parent, null, "", nodeMap.get(callee), nodeMap.get(otherCallee), edgeStyle);
                 }
@@ -303,14 +352,19 @@ public class CallGraphView extends BaseGraphView {
         }
     }
 
-    private String getEdgeStyle(MethodReference caller, MethodReference callee) {
+    private String getEdgeStyle(MethodReference caller, MethodReference callee)
+    {
         String strokeColor = "#888888";
 
         CallGraphNode node = callGraph.getNode(caller);
-        if (node != null) {
-            for (CallSite site : node.getOutgoingCalls()) {
-                if (site.getTarget().equals(callee)) {
-                    switch (site.getInvokeType()) {
+        if (node != null)
+        {
+            for (CallSite site : node.getOutgoingCalls())
+            {
+                if (site.getTarget().equals(callee))
+                {
+                    switch (site.getInvokeType())
+                    {
                         case VIRTUAL:
                             strokeColor = "#00DD00";
                             break;
@@ -333,14 +387,16 @@ public class CallGraphView extends BaseGraphView {
         }
 
         return mxConstants.STYLE_STROKECOLOR + "=" + strokeColor + ";" +
-               mxConstants.STYLE_STROKEWIDTH + "=2;" +
-               mxConstants.STYLE_ENDARROW + "=" + mxConstants.ARROW_CLASSIC + ";" +
-               mxConstants.STYLE_ROUNDED + "=1;";
+                mxConstants.STYLE_STROKEWIDTH + "=2;" +
+                mxConstants.STYLE_ENDARROW + "=" + mxConstants.ARROW_CLASSIC + ";" +
+                mxConstants.STYLE_ROUNDED + "=1;";
     }
 
     @Override
-    protected String generateDOT() {
-        if (focusRef == null) {
+    protected String generateDOT()
+    {
+        if (focusRef == null)
+        {
             return "// No method selected\n// Select a method from the dropdown";
         }
 
@@ -349,10 +405,14 @@ public class CallGraphView extends BaseGraphView {
     }
 
     @Override
-    public void refresh() {
-        if (!loaded && methodSelector.getItemCount() > 0 && currentMethod == null) {
+    public void refresh()
+    {
+        if (!loaded && methodSelector.getItemCount() > 0 && currentMethod == null)
+        {
             methodSelector.setSelectedIndex(0);
-        } else {
+        }
+        else
+        {
             super.refresh();
         }
     }

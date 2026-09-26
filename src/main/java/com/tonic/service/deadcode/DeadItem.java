@@ -12,9 +12,11 @@ import java.util.List;
  * reachable methods whose store of the field must be patched out before the field is removed.
  */
 @Getter
-public final class DeadItem {
+public final class DeadItem
+{
 
-    public enum Kind {
+    public enum Kind
+    {
         CLASS, METHOD, FIELD
     }
 
@@ -25,8 +27,8 @@ public final class DeadItem {
     private final boolean writeOnly;
     private final List<MethodReference> writers;
 
-    private DeadItem(Kind kind, String owner, String name, String desc, boolean writeOnly,
-                     List<MethodReference> writers) {
+    private DeadItem(Kind kind, String owner, String name, String desc, boolean writeOnly, List<MethodReference> writers)
+    {
         this.kind = kind;
         this.owner = owner;
         this.name = name;
@@ -35,22 +37,26 @@ public final class DeadItem {
         this.writers = writers;
     }
 
-    static DeadItem ofClass(String owner) {
+    static DeadItem ofClass(String owner)
+    {
         return new DeadItem(Kind.CLASS, owner, null, null, false, Collections.emptyList());
     }
 
-    static DeadItem ofMethod(String owner, String name, String desc) {
+    static DeadItem ofMethod(String owner, String name, String desc)
+    {
         return new DeadItem(Kind.METHOD, owner, name, desc, false, Collections.emptyList());
     }
 
-    static DeadItem ofField(String owner, String name, String desc, boolean writeOnly,
-                            List<MethodReference> writers) {
+    static DeadItem ofField(String owner, String name, String desc, boolean writeOnly, List<MethodReference> writers)
+    {
         return new DeadItem(Kind.FIELD, owner, name, desc, writeOnly, writers);
     }
 
     /** A readable one-line label for the UI, e.g. {@code doWork(I)V} or {@code count : I (write-only)}. */
-    public String displayLabel() {
-        switch (kind) {
+    public String displayLabel()
+    {
+        switch (kind)
+        {
             case CLASS:
                 return owner.replace('/', '.');
             case METHOD:

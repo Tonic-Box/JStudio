@@ -15,52 +15,68 @@ import java.util.Set;
  * view appears in the other; mutations install/remove in the live session immediately and post a
  * {@link BreakpointsChangedEvent} so the gutters refresh.
  */
-public final class BreakpointService {
+public final class BreakpointService
+{
 
     private static final BreakpointService INSTANCE = new BreakpointService();
 
     private final Set<Breakpoint> breakpoints = new LinkedHashSet<>();
 
-    private BreakpointService() {
+    private BreakpointService()
+    {
     }
 
-    public static BreakpointService getInstance() {
+    public static BreakpointService getInstance()
+    {
         return INSTANCE;
     }
 
-    public synchronized boolean contains(Breakpoint bp) {
+    public synchronized boolean contains(Breakpoint bp)
+    {
         return breakpoints.contains(bp);
     }
 
-    public synchronized List<Breakpoint> forClass(String className) {
+    public synchronized List<Breakpoint> forClass(String className)
+    {
         List<Breakpoint> out = new ArrayList<>();
-        for (Breakpoint bp : breakpoints) {
-            if (bp.className.equals(className)) {
+        for (Breakpoint bp : breakpoints)
+        {
+            if (bp.className.equals(className))
+            {
                 out.add(bp);
             }
         }
         return out;
     }
 
-    public synchronized List<Breakpoint> all() {
+    public synchronized List<Breakpoint> all()
+    {
         return new ArrayList<>(breakpoints);
     }
 
     /** Toggles a breakpoint; returns true if it is now set. Installs/removes in the live session immediately. */
-    public boolean toggle(Breakpoint bp) {
+    public boolean toggle(Breakpoint bp)
+    {
         boolean nowSet;
-        synchronized (this) {
-            if (breakpoints.remove(bp)) {
+        synchronized (this)
+        {
+            if (breakpoints.remove(bp))
+            {
                 nowSet = false;
-            } else {
+            }
+            else
+            {
                 breakpoints.add(bp);
                 nowSet = true;
             }
         }
         DebugManager dm = DebugManager.getInstance();
-        if (nowSet) {
+        if (nowSet)
+        {
             dm.addBreakpoint(bp.className, bp.methodName, bp.methodDesc, bp.pc);
-        } else {
+        }
+        else
+        {
             dm.removeBreakpoint(bp.className, bp.methodName, bp.methodDesc, bp.pc);
         }
         EventBus.getInstance().post(new BreakpointsChangedEvent(this));
@@ -68,16 +84,21 @@ public final class BreakpointService {
     }
 
     /** Re-installs the registry into a freshly connected session (a no-op while empty, the usual case). */
-    public synchronized void reinstall() {
+    public synchronized void reinstall()
+    {
         DebugManager dm = DebugManager.getInstance();
-        for (Breakpoint bp : breakpoints) {
+        for (Breakpoint bp : breakpoints)
+        {
             dm.addBreakpoint(bp.className, bp.methodName, bp.methodDesc, bp.pc);
         }
     }
 
-    public void clear() {
-        synchronized (this) {
-            if (breakpoints.isEmpty()) {
+    public void clear()
+    {
+        synchronized (this)
+        {
+            if (breakpoints.isEmpty())
+            {
                 return;
             }
             breakpoints.clear();

@@ -18,7 +18,8 @@ import lombok.Getter;
  * time. The YABR engine holds no global mutable state, so independent instances run without interfering - each AI
  * subagent can own one, backed by a {@link SnapshotClassPool} that is immune to concurrent project edits.
  */
-public final class VmInstance {
+public final class VmInstance
+{
 
     @Getter
     private final ClassPool classPool;
@@ -31,7 +32,8 @@ public final class VmInstance {
     @Getter
     private DebugSession currentDebugSession;
 
-    public VmInstance(ClassPool classPool, int maxCallDepth, int maxInstructions) {
+    public VmInstance(ClassPool classPool, int maxCallDepth, int maxInstructions)
+    {
         this.classPool = classPool;
         this.heapManager = new SimpleHeapManager();
         this.classResolver = new ClassResolver(classPool);
@@ -40,22 +42,26 @@ public final class VmInstance {
         this.maxInstructions = maxInstructions;
     }
 
-    public MethodEntry findMethod(String className, String methodName, String descriptor) {
+    public MethodEntry findMethod(String className, String methodName, String descriptor)
+    {
         ClassFile classFile = classPool.get(className);
         return classFile == null ? null : VmSupport.findMethod(classFile, methodName, descriptor);
     }
 
-    public DebugSession createDebugSession(String className, String methodName, String descriptor,
-                                           boolean recursive, Object... args) {
+    public DebugSession createDebugSession(String className, String methodName, String descriptor, boolean recursive, Object... args)
+    {
         ClassFile classFile = classPool.get(className);
-        if (classFile == null) {
+        if (classFile == null)
+        {
             throw new IllegalArgumentException("Class not found: " + className);
         }
         MethodEntry method = VmSupport.findMethod(classFile, methodName, descriptor);
-        if (method == null) {
+        if (method == null)
+        {
             throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
         }
-        if (currentDebugSession != null && !currentDebugSession.isStopped()) {
+        if (currentDebugSession != null && !currentDebugSession.isStopped())
+        {
             currentDebugSession.stop();
         }
         BytecodeContext sessionContext = new BytecodeContext.Builder()
@@ -71,22 +77,27 @@ public final class VmInstance {
     }
 
     /** Runs a method to completion on this instance's heap (used to construct object arguments via a constructor). */
-    public BytecodeResult executeMethod(String className, String methodName, String descriptor,
-                                        Object receiver, Object... args) {
+    public BytecodeResult executeMethod(String className, String methodName, String descriptor, Object receiver, Object... args)
+    {
         ClassFile classFile = classPool.get(className);
-        if (classFile == null) {
+        if (classFile == null)
+        {
             throw new IllegalArgumentException("Class not found: " + className);
         }
         MethodEntry method = VmSupport.findMethod(classFile, methodName, descriptor);
-        if (method == null) {
+        if (method == null)
+        {
             throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
         }
         Object[] all;
-        if (receiver != null) {
+        if (receiver != null)
+        {
             all = new Object[args.length + 1];
             all[0] = receiver;
             System.arraycopy(args, 0, all, 1, args.length);
-        } else {
+        }
+        else
+        {
             all = args;
         }
         ConcreteValue[] vmArgs = VmSupport.toConcreteValues(heapManager, all);
@@ -100,8 +111,10 @@ public final class VmInstance {
         return new BytecodeEngine(context).execute(method, vmArgs);
     }
 
-    public void dispose() {
-        if (currentDebugSession != null && !currentDebugSession.isStopped()) {
+    public void dispose()
+    {
+        if (currentDebugSession != null && !currentDebugSession.isStopped())
+        {
             currentDebugSession.stop();
         }
         currentDebugSession = null;

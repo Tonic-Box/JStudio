@@ -10,7 +10,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Getter
-public class Finding {
+public class Finding
+{
 
     private final String id;
     private final Severity severity;
@@ -22,7 +23,8 @@ public class Finding {
     private final Instant timestamp;
     private final String pluginId;
 
-    private Finding(Builder builder) {
+    private Finding(Builder builder)
+    {
         this.id = builder.id != null ? builder.id : UUID.randomUUID().toString();
         this.severity = builder.severity != null ? builder.severity : Severity.INFO;
         this.category = builder.category != null ? builder.category : "general";
@@ -36,35 +38,43 @@ public class Finding {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T getMetadata(String key, Class<T> type) {
+    public <T> T getMetadata(String key, Class<T> type)
+    {
         Object value = metadata.get(key);
-        if (type.isInstance(value)) {
+        if (type.isInstance(value))
+        {
             return (T) value;
         }
         return null;
     }
 
-    public static Builder builder() {
+    public static Builder builder()
+    {
         return new Builder();
     }
 
-    public static Finding info(String message, Location location) {
+    public static Finding info(String message, Location location)
+    {
         return builder().severity(Severity.INFO).message(message).location(location).build();
     }
 
-    public static Finding warning(String message, Location location) {
+    public static Finding warning(String message, Location location)
+    {
         return builder().severity(Severity.MEDIUM).message(message).location(location).build();
     }
 
-    public static Finding error(String message, Location location) {
+    public static Finding error(String message, Location location)
+    {
         return builder().severity(Severity.HIGH).message(message).location(location).build();
     }
 
-    public static Finding critical(String message, Location location) {
+    public static Finding critical(String message, Location location)
+    {
         return builder().severity(Severity.CRITICAL).message(message).location(location).build();
     }
 
-    public static class Builder {
+    public static class Builder
+    {
         private String id;
         private Severity severity;
         private String category;
@@ -75,61 +85,74 @@ public class Finding {
         private Instant timestamp;
         private String pluginId;
 
-        public Builder id(String id) {
+        public Builder id(String id)
+        {
             this.id = id;
             return this;
         }
 
-        public Builder severity(Severity severity) {
+        public Builder severity(Severity severity)
+        {
             this.severity = severity;
             return this;
         }
 
-        public Builder category(String category) {
+        public Builder category(String category)
+        {
             this.category = category;
             return this;
         }
 
-        public Builder title(String title) {
+        public Builder title(String title)
+        {
             this.title = title;
             return this;
         }
 
-        public Builder message(String message) {
+        public Builder message(String message)
+        {
             this.message = message;
             return this;
         }
 
-        public Builder location(Location location) {
+        public Builder location(Location location)
+        {
             this.location = location;
             return this;
         }
 
-        public Builder metadata(Map<String, Object> metadata) {
+        public Builder metadata(Map<String, Object> metadata)
+        {
             this.metadata = metadata;
             return this;
         }
 
-        public Builder addMetadata(String key, Object value) {
-            if (this.metadata == null) {
+        public Builder addMetadata(String key, Object value)
+        {
+            if (this.metadata == null)
+            {
                 this.metadata = new HashMap<>();
             }
             this.metadata.put(key, value);
             return this;
         }
 
-        public Builder timestamp(Instant timestamp) {
+        public Builder timestamp(Instant timestamp)
+        {
             this.timestamp = timestamp;
             return this;
         }
 
-        public Builder pluginId(String pluginId) {
+        public Builder pluginId(String pluginId)
+        {
             this.pluginId = pluginId;
             return this;
         }
 
-        public Finding build() {
-            if (message == null || message.isEmpty()) {
+        public Finding build()
+        {
+            if (message == null || message.isEmpty())
+            {
                 throw new IllegalStateException("Finding message is required");
             }
             return new Finding(this);
@@ -137,21 +160,25 @@ public class Finding {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(severity.getDisplayName()).append("] ");
-        if (title != null) {
+        if (title != null)
+        {
             sb.append(title).append(": ");
         }
         sb.append(message);
-        if (location != null) {
+        if (location != null)
+        {
             sb.append(" at ").append(location);
         }
         return sb.toString();
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Finding finding = (Finding) o;
@@ -159,7 +186,8 @@ public class Finding {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(id);
     }
 }

@@ -8,7 +8,8 @@ import lombok.Getter;
 import javax.swing.JTabbedPane;
 import java.awt.BorderLayout;
 
-public class AnalysisPanel extends ThemedJPanel {
+public class AnalysisPanel extends ThemedJPanel
+{
 
     private final JTabbedPane tabbedPane;
     @Getter
@@ -20,7 +21,8 @@ public class AnalysisPanel extends ThemedJPanel {
     @Getter
     private final SimulationPanel simulationPanel;
 
-    public AnalysisPanel(ProjectModel project) {
+    public AnalysisPanel(ProjectModel project)
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -43,15 +45,31 @@ public class AnalysisPanel extends ThemedJPanel {
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    public void refresh() {
+    public void refresh()
+    {
         searchPanel.refresh();
         stringsPanel.refresh();
         similarityPanel.refresh();
         simulationPanel.refresh();
     }
 
-    public void showSearch() { tabbedPane.setSelectedComponent(searchPanel); }
-    public void showStrings() { tabbedPane.setSelectedComponent(stringsPanel); }
-    public void showSimilarity() { tabbedPane.setSelectedComponent(similarityPanel); }
-    public void showSimulation() { tabbedPane.setSelectedComponent(simulationPanel); }
+    public void showSearch()
+    {
+        tabbedPane.setSelectedComponent(searchPanel);
+    }
+
+    public void showStrings()
+    {
+        tabbedPane.setSelectedComponent(stringsPanel);
+    }
+
+    public void showSimilarity()
+    {
+        tabbedPane.setSelectedComponent(similarityPanel);
+    }
+
+    public void showSimulation()
+    {
+        tabbedPane.setSelectedComponent(simulationPanel);
+    }
 }

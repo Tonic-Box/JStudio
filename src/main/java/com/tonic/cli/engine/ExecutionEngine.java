@@ -14,25 +14,31 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-public class ExecutionEngine {
+public class ExecutionEngine
+{
 
     private final PluginLoader pluginLoader;
 
-    public ExecutionEngine() {
+    public ExecutionEngine()
+    {
         this.pluginLoader = new PluginLoader();
     }
 
-    public ExecutionResult execute(ExecutionConfig config) {
+    public ExecutionResult execute(ExecutionConfig config)
+    {
         long startTime = System.currentTimeMillis();
 
-        try {
+        try
+        {
             ProjectModel project = loadTarget(config);
-            if (project == null) {
+            if (project == null)
+            {
                 return ExecutionResult.failure("Failed to load target: " + config.getTarget());
             }
 
             Plugin plugin = loadPlugin(config);
-            if (plugin == null) {
+            if (plugin == null)
+            {
                 return ExecutionResult.failure("Failed to load plugin: " + config.getPlugin());
             }
 
@@ -41,18 +47,15 @@ public class ExecutionEngine {
             context.setExportDir(config.getExportDir());
             plugin.init(context);
 
-            if (config.isDryRun()) {
-                return ExecutionResult.success(
-                    project.getClassCount(), 0,
-                    System.currentTimeMillis() - startTime,
-                    "Dry run - no changes made",
-                    context.getResults().getFindings()
-                );
+            if (config.isDryRun())
+            {
+                return ExecutionResult.success(project.getClassCount(), 0, System.currentTimeMillis() - startTime, "Dry run - no changes made", context.getResults().getFindings());
             }
 
             plugin.execute();
 
-            if (config.getExportDir() != null) {
+            if (config.getExportDir() != null)
+            {
                 exportClasses(project, config.getExportDir());
             }
 
@@ -61,84 +64,105 @@ public class ExecutionEngine {
             long duration = System.currentTimeMillis() - startTime;
             List<Finding> findings = context.getResults().getFindings();
 
-            return ExecutionResult.success(
-                project.getClassCount(),
-                countMethods(project),
-                duration,
-                buildSummary(plugin, findings),
-                findings
-            );
-        } catch (Exception e) {
+            return ExecutionResult.success(project.getClassCount(), countMethods(project), duration, buildSummary(plugin, findings), findings);
+        }
+        catch (Exception e)
+        {
             return ExecutionResult.failure(e.getMessage());
         }
     }
 
-    private ProjectModel loadTarget(ExecutionConfig config) {
-        try {
+    private ProjectModel loadTarget(ExecutionConfig config)
+    {
+        try
+        {
             File target = config.getTarget();
             ProjectService service = ProjectService.getInstance();
             String name = target.getName().toLowerCase();
 
-            if (target.isDirectory()) {
+            if (target.isDirectory())
+            {
                 return service.loadDirectory(target, null);
-            } else if (name.endsWith(".jar") || name.endsWith(".zip")) {
+            }
+            else if (name.endsWith(".jar") || name.endsWith(".zip"))
+            {
                 return service.loadJar(target, null);
-            } else if (name.endsWith(".class")) {
+            }
+            else if (name.endsWith(".class"))
+            {
                 return service.loadClassFile(target);
-            } else {
+            }
+            else
+            {
                 return null;
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return null;
         }
     }
 
-    private Plugin loadPlugin(ExecutionConfig config) {
-        if (config.getPlugin() != null) {
+    private Plugin loadPlugin(ExecutionConfig config)
+    {
+        if (config.getPlugin() != null)
+        {
             return pluginLoader.load(config.getPlugin());
         }
-        if (config.getPluginDir() != null) {
+        if (config.getPluginDir() != null)
+        {
             return pluginLoader.loadFromDirectory(config.getPluginDir());
         }
         return null;
     }
 
-    private int countMethods(ProjectModel project) {
+    private int countMethods(ProjectModel project)
+    {
         int count = 0;
-        for (ClassEntryModel entry : project.getUserClasses()) {
+        for (ClassEntryModel entry : project.getUserClasses())
+        {
             count += entry.getMethods().size();
         }
         return count;
     }
 
-    private String buildSummary(Plugin plugin, List<Finding> findings) {
+    private String buildSummary(Plugin plugin, List<Finding> findings)
+    {
         StringBuilder sb = new StringBuilder();
         sb.append("Plugin: ").append(plugin.getInfo().getName()).append("\n");
         sb.append("Findings: ").append(findings.size());
 
-        if (plugin instanceof AnalyzerPlugin) {
+        if (plugin instanceof AnalyzerPlugin)
+        {
             sb.append(" (analysis complete)");
-        } else if (plugin instanceof TransformerPlugin) {
+        }
+        else if (plugin instanceof TransformerPlugin)
+        {
             sb.append(" (transformation complete)");
         }
 
         return sb.toString();
     }
 
-    private void exportClasses(ProjectModel project, File exportDir) throws Exception {
-        if (!exportDir.exists() && !exportDir.mkdirs()) {
+    private void exportClasses(ProjectModel project, File exportDir) throws Exception
+    {
+        if (!exportDir.exists() && !exportDir.mkdirs())
+        {
             throw new IOException("Failed to create export directory: " + exportDir);
         }
 
-        for (ClassEntryModel classEntry : project.getUserClasses()) {
+        for (ClassEntryModel classEntry : project.getUserClasses())
+        {
             String className = classEntry.getClassName();
             int lastSlash = className.lastIndexOf('/');
 
             File targetDir = exportDir;
-            if (lastSlash > 0) {
+            if (lastSlash > 0)
+            {
                 String packageDir = className.substring(0, lastSlash);
                 targetDir = new File(exportDir, packageDir);
-                if (!targetDir.mkdirs() && !targetDir.exists()) {
+                if (!targetDir.mkdirs() && !targetDir.exists())
+                {
                     throw new IOException("Failed to create package directory: " + targetDir);
                 }
             }
@@ -146,7 +170,8 @@ public class ExecutionEngine {
             String simpleName = lastSlash > 0 ? className.substring(lastSlash + 1) : className;
             File outputFile = new File(targetDir, simpleName + ".class");
 
-            try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+            try (FileOutputStream fos = new FileOutputStream(outputFile))
+            {
                 byte[] data = classEntry.getClassFile().write();
                 fos.write(data);
             }

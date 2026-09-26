@@ -15,7 +15,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Set;
 
-public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugListener {
+public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugListener
+{
 
     private final VMDebugSession session;
     private final BytecodeTableView bytecodeTableView;
@@ -42,40 +43,29 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
     private static final int TAB_ARGUMENTS = 0;
     private static final int TAB_OUTPUT = 1;
 
-    public DebuggerPanel() {
+    public DebuggerPanel()
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout(5, 5));
         this.session = new VMDebugSession();
         this.session.addListener(this);
-        this.bytecodeTableView = new BytecodeTableView(
-            this::breakpoints,
-            this::toggleBreakpointAtPc,
-            this::runToCursorAtPc);
-        this.traceRecorder = new TraceRecorder(
-            this,
-            bytecodeTableView::getInstructionAtPC,
-            this::appendOutput,
-            this::enableTraceActions,
-            this::disableTraceActions,
-            this::activateRecording,
-            this::deactivateRecording);
+        this.bytecodeTableView = new BytecodeTableView(this::breakpoints, this::toggleBreakpointAtPc, this::runToCursorAtPc);
+        this.traceRecorder = new TraceRecorder(this, bytecodeTableView::getInstructionAtPC, this::appendOutput, this::enableTraceActions, this::disableTraceActions, this::activateRecording, this::deactivateRecording);
 
         setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_LARGE, UIConstants.SPACING_LARGE, UIConstants.SPACING_LARGE, UIConstants.SPACING_LARGE));
 
-        toolbar = new DebuggerToolbar(
-            session,
-            () -> currentMethod != null,
-            this::startDebugging,
-            () -> { ensureSessionStarted(); session.stepInto(); },
-            () -> { ensureSessionStarted(); session.stepOver(); },
-            () -> { ensureSessionStarted(); session.stepOut(); },
-            this::onResume,
-            this::stopDebugging,
-            session::setAnimationDelay,
-            selected -> recursiveExecution = selected,
-            selected -> traceRecorder.toggleRecording(selected, currentMethod),
-            traceRecorder::exportTrace,
-            traceRecorder::clearTrace,
-            this::reinitializeVM);
+        toolbar = new DebuggerToolbar(session, () -> currentMethod != null, this::startDebugging, () ->
+        {
+            ensureSessionStarted();
+            session.stepInto();
+        }, () ->
+        {
+            ensureSessionStarted();
+            session.stepOver();
+        }, () ->
+        {
+            ensureSessionStarted();
+            session.stepOut();
+        }, this::onResume, this::stopDebugging, session::setAnimationDelay, selected -> recursiveExecution = selected, selected -> traceRecorder.toggleRecording(selected, currentMethod), traceRecorder::exportTrace, traceRecorder::clearTrace, this::reinitializeVM);
         add(toolbar, BorderLayout.NORTH);
 
         MethodSelectorPanel methodSelector = new MethodSelectorPanel("Method Browser");
@@ -83,52 +73,54 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         methodSelector.setOnMethodSelected(this::onMethodSelected);
 
         sourceView = new DebuggerSourceView();
-        breakpointController = new BreakpointController(
-            session,
-            () -> displayedMethod,
-            this::appendOutput,
-            () -> {
-                bytecodeTableView.refresh();
-                sourceView.refreshBreakpoints(breakpoints());
-            });
+        breakpointController = new BreakpointController(session, () -> displayedMethod, this::appendOutput, () ->
+        {
+            bytecodeTableView.refresh();
+            sourceView.refreshBreakpoints(breakpoints());
+        });
         sourceView.setBreakpointToggler(breakpointController::toggleBreakpointAtPc);
-        frameNavigator = new FrameNavigator(
-            () -> currentMethod,
-            m -> currentMethod = m,
-            () -> displayedMethod,
-            this::loadBytecode,
-            bytecodeTableView::highlightInstruction);
+        frameNavigator = new FrameNavigator(() -> currentMethod, m -> currentMethod = m, () -> displayedMethod, this::loadBytecode, bytecodeTableView::highlightInstruction);
 
         stackPanel = new StackPanel();
         localsPanel = new LocalsPanel();
         callStackPanel = new CallStackPanel();
 
-        localsPanel.setOnValueEdit((slot, value) -> {
-            if (session.setLocalValue(slot, value)) {
+        localsPanel.setOnValueEdit((slot, value) ->
+        {
+            if (session.setLocalValue(slot, value))
+            {
                 appendOutput("Local at slot " + slot + " updated to: " + formatValue(value));
             }
         });
 
-        stackPanel.setOnValueEdit((index, value) -> {
-            if (session.setStackValue(index, value)) {
+        stackPanel.setOnValueEdit((index, value) ->
+        {
+            if (session.setStackValue(index, value))
+            {
                 appendOutput("Stack at index " + index + " updated to: " + formatValue(value));
             }
         });
 
-        localsPanel.setOnObjectFieldEdit((obj, owner, name, desc, value) -> {
-            if (session.setObjectFieldValue(obj, owner, name, desc, value)) {
+        localsPanel.setOnObjectFieldEdit((obj, owner, name, desc, value) ->
+        {
+            if (session.setObjectFieldValue(obj, owner, name, desc, value))
+            {
                 appendOutput("Field " + name + " updated on object @" + Integer.toHexString(obj.getId()));
             }
         });
 
-        stackPanel.setOnObjectFieldEdit((obj, owner, name, desc, value) -> {
-            if (session.setObjectFieldValue(obj, owner, name, desc, value)) {
+        stackPanel.setOnObjectFieldEdit((obj, owner, name, desc, value) ->
+        {
+            if (session.setObjectFieldValue(obj, owner, name, desc, value))
+            {
                 appendOutput("Field " + name + " updated on object @" + Integer.toHexString(obj.getId()));
             }
         });
 
-        callStackPanel.setOnFrameSelected(frame -> {
-            if (frame != null) {
+        callStackPanel.setOnFrameSelected(frame ->
+        {
+            if (frame != null)
+            {
                 frameNavigator.navigateToFrame(frame);
             }
         });
@@ -193,13 +185,16 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         toolbar.updateButtonStates();
     }
 
-    private void onMethodSelected(MethodEntryModel methodModel) {
-        if (methodModel != null) {
+    private void onMethodSelected(MethodEntryModel methodModel)
+    {
+        if (methodModel != null)
+        {
             setMethod(methodModel.getMethodEntry());
         }
     }
 
-    public void setMethod(MethodEntry method) {
+    public void setMethod(MethodEntry method)
+    {
         this.currentMethod = method;
         loadMethod(method);
         argumentConfigPanel.setMethod(method);
@@ -207,12 +202,14 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         toolbar.updateButtonStates();
     }
 
-    private void loadMethod(MethodEntry method) {
+    private void loadMethod(MethodEntry method)
+    {
         this.displayedMethod = method;
         bytecodeTableView.setTitle(method);
 
         CodeAttribute code = method.getCodeAttribute();
-        if (code == null) {
+        if (code == null)
+        {
             bytecodeTableView.clearInstructions();
             return;
         }
@@ -222,37 +219,48 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         sourceView.showMethod(method, breakpoints());
     }
 
-    private void enableTraceActions() {
+    private void enableTraceActions()
+    {
         toolbar.setTraceActionsEnabled(true);
     }
 
-    private void disableTraceActions() {
+    private void disableTraceActions()
+    {
         toolbar.setTraceActionsEnabled(false);
     }
 
-    private void activateRecording() {
+    private void activateRecording()
+    {
         toolbar.setRecordingActive(true);
     }
 
-    private void deactivateRecording() {
+    private void deactivateRecording()
+    {
         toolbar.setRecordingActive(false);
     }
 
-    private void onResume() {
-        if (session.isAnimating()) {
+    private void onResume()
+    {
+        if (session.isAnimating())
+        {
             session.stopAnimation();
             toolbar.updateButtonStates();
-        } else {
+        }
+        else
+        {
             ensureSessionStarted();
             session.resumeAnimated();
         }
     }
 
-    private void reinitializeVM() {
-        try {
+    private void reinitializeVM()
+    {
+        try
+        {
             VMExecutionService vmService = VMExecutionService.getInstance();
 
-            if (session.isStarted()) {
+            if (session.isStarted())
+            {
                 session.stop();
             }
 
@@ -262,26 +270,27 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             appendOutput("VM reinitialized - new methods are now available");
             statusLabel.setText("VM reinitialized successfully");
 
-            if (currentMethod != null) {
-                MethodEntry m = frameNavigator.findMethod(
-                    currentMethod.getOwnerName(), currentMethod.getName(), currentMethod.getDesc());
-                if (m != null) {
+            if (currentMethod != null)
+            {
+                MethodEntry m = frameNavigator.findMethod(currentMethod.getOwnerName(), currentMethod.getName(), currentMethod.getDesc());
+                if (m != null)
+                {
                     setMethod(m);
                     appendOutput("Reloaded method: " + m.getName());
                 }
             }
 
             toolbar.updateButtonStates();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             appendOutput("Failed to reinitialize VM: " + e.getMessage());
-            JOptionPane.showMessageDialog(this,
-                "Failed to reinitialize VM: " + e.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to reinitialize VM: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    public void loadMethod(MethodEntryModel methodModel) {
+    public void loadMethod(MethodEntryModel methodModel)
+    {
         if (methodModel == null) return;
 
         this.currentMethod = methodModel.getMethodEntry();
@@ -293,21 +302,24 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         toolbar.updateButtonStates();
     }
 
-    private void loadBytecode(MethodEntry method) {
+    private void loadBytecode(MethodEntry method)
+    {
         this.displayedMethod = method;
         bytecodeTableView.setTitle(method);
 
         breakpointController.clear();
 
         CodeAttribute code = method.getCodeAttribute();
-        if (code == null) {
+        if (code == null)
+        {
             appendOutput("Method has no code (abstract or native)");
             bytecodeTableView.clearInstructions();
             return;
         }
 
         byte[] bytecode = code.getCode();
-        if (bytecode == null || bytecode.length == 0) {
+        if (bytecode == null || bytecode.length == 0)
+        {
             appendOutput("Method has empty bytecode");
             bytecodeTableView.clearInstructions();
             return;
@@ -318,18 +330,19 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         sourceView.showMethod(method, breakpoints());
     }
 
-    public void startDebugging(Object... args) {
-        if (currentMethod == null) {
-            JOptionPane.showMessageDialog(this,
-                "No method loaded. Select a method first.",
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
+    public void startDebugging(Object... args)
+    {
+        if (currentMethod == null)
+        {
+            JOptionPane.showMessageDialog(this, "No method loaded. Select a method first.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        try {
+        try
+        {
             VMExecutionService vmService = VMExecutionService.getInstance();
-            if (!vmService.isInitialized()) {
+            if (!vmService.isInitialized())
+            {
                 vmService.initialize();
             }
 
@@ -344,20 +357,23 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             toolbar.updateButtonStates();
             String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
             appendOutput("Started debugging: " + currentMethod.getName() + modeStr);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             appendOutput("Failed to start: " + e.getMessage());
-            JOptionPane.showMessageDialog(this,
-                "Failed to start debugging: " + e.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to start debugging: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void ensureSessionStarted() {
-        if (!session.isStarted() && currentMethod != null) {
-            try {
+    private void ensureSessionStarted()
+    {
+        if (!session.isStarted() && currentMethod != null)
+        {
+            try
+            {
                 VMExecutionService vmService = VMExecutionService.getInstance();
-                if (!vmService.isInitialized()) {
+                if (!vmService.isInitialized())
+                {
                     vmService.initialize();
                 }
 
@@ -372,13 +388,16 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
                 toolbar.updateButtonStates();
                 String modeStr = recursiveExecution ? " (recursive mode)" : " (stub mode)";
                 appendOutput("Started debugging: " + currentMethod.getName() + modeStr);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 appendOutput("Failed to start: " + e.getMessage());
             }
         }
     }
 
-    public void stopDebugging() {
+    public void stopDebugging()
+    {
         session.stop();
         toolbar.updateButtonStates();
         clearHighlight();
@@ -387,40 +406,50 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
         traceRecorder.onManualStop();
     }
 
-    public boolean isDebugging() {
+    public boolean isDebugging()
+    {
         return session.isStarted();
     }
 
-    private Set<Integer> breakpoints() {
+    private Set<Integer> breakpoints()
+    {
         return breakpointController.getBreakpoints();
     }
 
-    private void toggleBreakpointAtPc(int pc) {
+    private void toggleBreakpointAtPc(int pc)
+    {
         breakpointController.toggleBreakpointAtPc(pc);
     }
 
-    private void runToCursorAtPc(int pc) {
+    private void runToCursorAtPc(int pc)
+    {
         ensureSessionStarted();
         session.runToCursor(pc);
     }
 
-    private void clearHighlight() {
+    private void clearHighlight()
+    {
         bytecodeTableView.clearHighlight();
         sourceView.clearExecutionHighlight();
     }
 
-    private void appendOutput(String text) {
-        SwingUtilities.invokeLater(() -> {
+    private void appendOutput(String text)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             outputArea.append(text + "\n");
             outputArea.setCaretPosition(outputArea.getDocument().getLength());
         });
     }
 
-    private String formatValue(ConcreteValue value) {
-        if (value == null) {
+    private String formatValue(ConcreteValue value)
+    {
+        if (value == null)
+        {
             return "null";
         }
-        switch (value.getTag()) {
+        switch (value.getTag())
+        {
             case INT:
                 return String.valueOf(value.asInt());
             case LONG:
@@ -440,12 +469,14 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
     }
 
     @Override
-    public void onStateChanged(DebugStateModel state) {
-        SwingUtilities.invokeLater(() -> {
-            frameNavigator.onMethodMaybeChanged(
-                state.getClassName(), state.getMethodName(), state.getDescriptor());
+    public void onStateChanged(DebugStateModel state)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
+            frameNavigator.onMethodMaybeChanged(state.getClassName(), state.getMethodName(), state.getDescriptor());
 
-            if (traceRecorder.isRecording()) {
+            if (traceRecorder.isRecording())
+            {
                 traceRecorder.captureStep(state);
             }
 
@@ -455,19 +486,17 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
             localsPanel.updateLocals(state.getLocalVariables());
             callStackPanel.updateCallStack(state.getCallStack());
 
-            statusLabel.setText(String.format("Paused at %s.%s @ PC=%d (Line %d)",
-                state.getSimpleClassName(),
-                state.getMethodName(),
-                state.getInstructionIndex(),
-                state.getLineNumber()));
+            statusLabel.setText(String.format("Paused at %s.%s @ PC=%d (Line %d)", state.getSimpleClassName(), state.getMethodName(), state.getInstructionIndex(), state.getLineNumber()));
 
             toolbar.updateButtonStates();
         });
     }
 
     @Override
-    public void onSessionStarted() {
-        SwingUtilities.invokeLater(() -> {
+    public void onSessionStarted()
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             appendOutput("Debug session started");
             toolbar.updateButtonStates();
             bottomTabbedPane.setSelectedIndex(TAB_OUTPUT);
@@ -477,8 +506,10 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
     }
 
     @Override
-    public void onSessionStopped(String reason) {
-        SwingUtilities.invokeLater(() -> {
+    public void onSessionStopped(String reason)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             appendOutput("Debug session stopped: " + reason);
             statusLabel.setText("Stopped: " + reason);
             clearHighlight();
@@ -493,13 +524,16 @@ public class DebuggerPanel extends ThemedJPanel implements VMDebugSession.DebugL
     }
 
     @Override
-    public void onBreakpointHit(String location) {
+    public void onBreakpointHit(String location)
+    {
         SwingUtilities.invokeLater(() -> appendOutput("Breakpoint hit: " + location));
     }
 
     @Override
-    public void onError(String message) {
-        SwingUtilities.invokeLater(() -> {
+    public void onError(String message)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             appendOutput("Error: " + message);
             statusLabel.setText("Error: " + message);
         });

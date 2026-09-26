@@ -6,7 +6,8 @@ package com.tonic.ui.debug;
  * maps; the bytecode view maps via the disassembly line index. Both resolve to the same bytecode-offset
  * breakpoint, so a breakpoint set in one view appears in the other.
  */
-public interface BreakpointMapper {
+public interface BreakpointMapper
+{
 
     /** The dotted class name whose breakpoints this view renders. */
     String className();

@@ -8,12 +8,14 @@ import javax.swing.JPanel;
 import java.awt.BorderLayout;
 
 @Getter
-public class ResourceEditorTab extends JPanel {
+public class ResourceEditorTab extends JPanel
+{
 
     private final ResourceEntryModel resource;
     private final JPanel contentView;
 
-    public ResourceEditorTab(ResourceEntryModel resource) {
+    public ResourceEditorTab(ResourceEntryModel resource)
+    {
         this.resource = resource;
         setLayout(new BorderLayout());
 
@@ -21,9 +23,11 @@ public class ResourceEditorTab extends JPanel {
         add(contentView, BorderLayout.CENTER);
     }
 
-    private JPanel createViewForResource(ResourceEntryModel resource) {
+    private JPanel createViewForResource(ResourceEntryModel resource)
+    {
         ResourceType type = resource.getResourceType();
-        switch (type) {
+        switch (type)
+        {
             case IMAGE:
                 return new ImageResourceView(resource);
             case TEXT:
@@ -34,11 +38,13 @@ public class ResourceEditorTab extends JPanel {
         }
     }
 
-    public String getTitle() {
+    public String getTitle()
+    {
         return resource.getName();
     }
 
-    public String getTooltip() {
+    public String getTooltip()
+    {
         return resource.getPath();
     }
 }

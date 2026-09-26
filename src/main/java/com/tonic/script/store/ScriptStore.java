@@ -15,20 +15,26 @@ import java.util.regex.Pattern;
  * Handles persistence of JStudio scripts.
  * Scripts are stored as JSON files with .yabr-script extension.
  */
-public class ScriptStore {
+public class ScriptStore
+{
 
     private static final String USER_SCRIPTS_DIR = System.getProperty("user.home") +
-        File.separator + ".yabr" + File.separator + "scripts";
+            File.separator + ".yabr" + File.separator + "scripts";
 
     /**
      * Gets the user scripts directory, creating it if necessary.
      */
-    public static Path getUserScriptsDirectory() {
+    public static Path getUserScriptsDirectory()
+    {
         Path dir = Paths.get(USER_SCRIPTS_DIR);
-        if (!Files.exists(dir)) {
-            try {
+        if (!Files.exists(dir))
+        {
+            try
+            {
                 Files.createDirectories(dir);
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 ConsoleLogService.getInstance().error("Failed to create scripts directory: " + e.getMessage());
             }
         }
@@ -38,7 +44,8 @@ public class ScriptStore {
     /**
      * Saves a script to a file.
      */
-    public static void saveScript(Script script, File file) throws IOException {
+    public static void saveScript(Script script, File file) throws IOException
+    {
         String json = "{\n" +
                 "  \"name\": " + escapeJson(script.getName()) + ",\n" +
                 "  \"description\": " + escapeJson(script.getDescription()) + ",\n" +
@@ -54,7 +61,8 @@ public class ScriptStore {
     /**
      * Loads a script from a file.
      */
-    public static Script loadScript(File file) throws IOException {
+    public static Script loadScript(File file) throws IOException
+    {
         String json = Files.readString(file.toPath());
 
         Script script = new Script();
@@ -72,7 +80,8 @@ public class ScriptStore {
     /**
      * Loads a script from plain text (for .js files).
      */
-    public static Script loadPlainScript(File file) throws IOException {
+    public static Script loadPlainScript(File file) throws IOException
+    {
         String content = Files.readString(file.toPath());
 
         Script script = new Script();
@@ -87,38 +96,54 @@ public class ScriptStore {
     /**
      * Loads all user scripts from the scripts directory.
      */
-    public static List<Script> loadUserScripts() {
+    public static List<Script> loadUserScripts()
+    {
         List<Script> scripts = new ArrayList<>();
         Path dir = getUserScriptsDirectory();
 
-        if (!Files.exists(dir)) {
+        if (!Files.exists(dir))
+        {
             return scripts;
         }
 
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.yabr-script")) {
-            for (Path path : stream) {
-                try {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.yabr-script"))
+        {
+            for (Path path : stream)
+            {
+                try
+                {
                     Script script = loadScript(path.toFile());
                     scripts.add(script);
-                } catch (IOException e) {
+                }
+                catch (IOException e)
+                {
                     ConsoleLogService.getInstance().error("Failed to load script: " + path + " - " + e.getMessage());
                 }
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             ConsoleLogService.getInstance().error("Failed to list scripts directory: " + e.getMessage());
         }
 
         // Also load .js files
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.js")) {
-            for (Path path : stream) {
-                try {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.js"))
+        {
+            for (Path path : stream)
+            {
+                try
+                {
                     Script script = loadPlainScript(path.toFile());
                     scripts.add(script);
-                } catch (IOException e) {
+                }
+                catch (IOException e)
+                {
                     ConsoleLogService.getInstance().error("Failed to load script: " + path + " - " + e.getMessage());
                 }
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             // Ignore
         }
 
@@ -128,7 +153,8 @@ public class ScriptStore {
     /**
      * Saves a script to the user scripts directory.
      */
-    public static void saveToUserDirectory(Script script) throws IOException {
+    public static void saveToUserDirectory(Script script) throws IOException
+    {
         Path dir = getUserScriptsDirectory();
         String safeName = script.getName().replaceAll("[^a-zA-Z0-9_-]", "_");
         Path file = dir.resolve(safeName + ".yabr-script");
@@ -138,45 +164,70 @@ public class ScriptStore {
     /**
      * Deletes a script from the user scripts directory.
      */
-    public static boolean deleteFromUserDirectory(Script script) {
+    public static boolean deleteFromUserDirectory(Script script)
+    {
         Path dir = getUserScriptsDirectory();
         String safeName = script.getName().replaceAll("[^a-zA-Z0-9_-]", "_");
         Path file = dir.resolve(safeName + ".yabr-script");
 
-        try {
+        try
+        {
             return Files.deleteIfExists(file);
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             ConsoleLogService.getInstance().error("Failed to delete script: " + e.getMessage());
             return false;
         }
     }
 
-    private static Script.Mode parseMode(String mode) {
+    private static Script.Mode parseMode(String mode)
+    {
         if (mode == null) return Script.Mode.AST;
-        switch (mode.toLowerCase()) {
-            case "ir": return Script.Mode.IR;
-            case "both": return Script.Mode.BOTH;
-            default: return Script.Mode.AST;
+        switch (mode.toLowerCase())
+        {
+            case "ir":
+                return Script.Mode.IR;
+            case "both":
+                return Script.Mode.BOTH;
+            default:
+                return Script.Mode.AST;
         }
     }
 
     /**
      * Escapes a string for JSON output.
      */
-    private static String escapeJson(String s) {
+    private static String escapeJson(String s)
+    {
         if (s == null) return "null";
         StringBuilder sb = new StringBuilder("\"");
-        for (char c : s.toCharArray()) {
-            switch (c) {
-                case '"': sb.append("\\\""); break;
-                case '\\': sb.append("\\\\"); break;
-                case '\n': sb.append("\\n"); break;
-                case '\r': sb.append("\\r"); break;
-                case '\t': sb.append("\\t"); break;
+        for (char c : s.toCharArray())
+        {
+            switch (c)
+            {
+                case '"':
+                    sb.append("\\\"");
+                    break;
+                case '\\':
+                    sb.append("\\\\");
+                    break;
+                case '\n':
+                    sb.append("\\n");
+                    break;
+                case '\r':
+                    sb.append("\\r");
+                    break;
+                case '\t':
+                    sb.append("\\t");
+                    break;
                 default:
-                    if (c < 32) {
+                    if (c < 32)
+                    {
                         sb.append(String.format("\\u%04x", (int) c));
-                    } else {
+                    }
+                    else
+                    {
                         sb.append(c);
                     }
             }
@@ -188,11 +239,13 @@ public class ScriptStore {
     /**
      * Extracts a JSON string value by key.
      */
-    private static String extractJsonString(String json, String key, String defaultValue) {
+    private static String extractJsonString(String json, String key, String defaultValue)
+    {
         // Pattern: "key": "value" (handling escaped quotes)
         Pattern pattern = Pattern.compile("\"" + key + "\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
         Matcher matcher = pattern.matcher(json);
-        if (matcher.find()) {
+        if (matcher.find())
+        {
             return unescapeJson(matcher.group(1));
         }
         return defaultValue;
@@ -201,28 +254,51 @@ public class ScriptStore {
     /**
      * Unescapes a JSON string value.
      */
-    private static String unescapeJson(String s) {
+    private static String unescapeJson(String s)
+    {
         if (s == null) return null;
         StringBuilder sb = new StringBuilder();
         int i = 0;
-        while (i < s.length()) {
+        while (i < s.length())
+        {
             char c = s.charAt(i);
-            if (c == '\\' && i + 1 < s.length()) {
+            if (c == '\\' && i + 1 < s.length())
+            {
                 char next = s.charAt(i + 1);
-                switch (next) {
-                    case '"': sb.append('"'); i += 2; continue;
-                    case '\\': sb.append('\\'); i += 2; continue;
-                    case 'n': sb.append('\n'); i += 2; continue;
-                    case 'r': sb.append('\r'); i += 2; continue;
-                    case 't': sb.append('\t'); i += 2; continue;
+                switch (next)
+                {
+                    case '"':
+                        sb.append('"');
+                        i += 2;
+                        continue;
+                    case '\\':
+                        sb.append('\\');
+                        i += 2;
+                        continue;
+                    case 'n':
+                        sb.append('\n');
+                        i += 2;
+                        continue;
+                    case 'r':
+                        sb.append('\r');
+                        i += 2;
+                        continue;
+                    case 't':
+                        sb.append('\t');
+                        i += 2;
+                        continue;
                     case 'u':
-                        if (i + 5 < s.length()) {
+                        if (i + 5 < s.length())
+                        {
                             String hex = s.substring(i + 2, i + 6);
-                            try {
+                            try
+                            {
                                 sb.append((char) Integer.parseInt(hex, 16));
                                 i += 6;
                                 continue;
-                            } catch (NumberFormatException e) {
+                            }
+                            catch (NumberFormatException e)
+                            {
                                 // Fall through
                             }
                         }

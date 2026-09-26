@@ -13,7 +13,8 @@ import org.fife.ui.rsyntaxtextarea.parser.ParserNotice;
 import java.util.Collections;
 import java.util.List;
 
-public class SourceCompilerParser extends AbstractParser {
+public class SourceCompilerParser extends AbstractParser
+{
 
     private final SourceCompiler compiler;
     private ClassFile originalClass;
@@ -22,81 +23,89 @@ public class SourceCompilerParser extends AbstractParser {
     @Getter
     private boolean enabled;
 
-    public SourceCompilerParser() {
+    public SourceCompilerParser()
+    {
         this.compiler = new SourceCompiler();
         this.enabled = false;
     }
 
-    public void setOriginalClass(ClassFile originalClass) {
+    public void setOriginalClass(ClassFile originalClass)
+    {
         this.originalClass = originalClass;
     }
 
-    public void setEnabled(boolean enabled) {
+    public void setEnabled(boolean enabled)
+    {
         this.enabled = enabled;
     }
 
-    public boolean hasErrors() {
+    public boolean hasErrors()
+    {
         return lastErrors.stream().anyMatch(CompilationError::isError);
     }
 
-    public int getErrorCount() {
+    public int getErrorCount()
+    {
         return (int) lastErrors.stream().filter(CompilationError::isError).count();
     }
 
-    public int getWarningCount() {
+    public int getWarningCount()
+    {
         return (int) lastErrors.stream().filter(CompilationError::isWarning).count();
     }
 
     @Override
-    public ParseResult parse(RSyntaxDocument doc, String style) {
+    public ParseResult parse(RSyntaxDocument doc, String style)
+    {
         DefaultParseResult result = new DefaultParseResult(this);
 
-        if (!enabled || originalClass == null) {
+        if (!enabled || originalClass == null)
+        {
             lastErrors = Collections.emptyList();
             return result;
         }
 
-        try {
+        try
+        {
             String source = doc.getText(0, doc.getLength());
             List<CompilationError> errors = compiler.parseOnly(source);
             lastErrors = errors;
 
-            for (CompilationError error : errors) {
+            for (CompilationError error : errors)
+            {
                 int line = Math.max(0, error.getLine() - 1);
-                DefaultParserNotice notice = new DefaultParserNotice(
-                        this,
-                        error.getMessage(),
-                        line,
-                        error.getOffset(),
-                        error.getLength()
-                );
+                DefaultParserNotice notice = new DefaultParserNotice(this, error.getMessage(), line, error.getOffset(), error.getLength());
 
-                if (error.isError()) {
+                if (error.isError())
+                {
                     notice.setLevel(ParserNotice.Level.ERROR);
-                } else {
+                }
+                else
+                {
                     notice.setLevel(ParserNotice.Level.WARNING);
                 }
 
                 result.addNotice(notice);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             lastErrors = Collections.emptyList();
         }
 
         return result;
     }
 
-    public CompilationResult compile(String source, ClassPool classPool) {
+    public CompilationResult compile(String source, ClassPool classPool)
+    {
         return compile(source, classPool, null);
     }
 
-    public CompilationResult compile(String source, ClassPool classPool, java.util.Set<String> changedMethods) {
-        if (originalClass == null) {
-            return CompilationResult.failure(
-                    Collections.singletonList(CompilationError.error(1, 1, 0, 1, "No class file to compile against")),
-                    source,
-                    0
-            );
+    public CompilationResult compile(String source, ClassPool classPool, java.util.Set<String> changedMethods)
+    {
+        if (originalClass == null)
+        {
+            return CompilationResult.failure(Collections.singletonList(CompilationError.error(1, 1, 0, 1, "No class file to compile against")), source, 0);
         }
         return compiler.compile(source, originalClass, classPool, changedMethods);
     }

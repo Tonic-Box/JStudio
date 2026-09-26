@@ -21,7 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ExecuteMethodDialog extends JDialog {
+public class ExecuteMethodDialog extends JDialog
+{
 
     private MethodEntryModel methodModel;
     private MethodEntry method;
@@ -42,11 +43,13 @@ public class ExecuteMethodDialog extends JDialog {
     private final JLabel signatureLabel;
     private final JLabel statusLabel;
 
-    public ExecuteMethodDialog(Frame parent) {
+    public ExecuteMethodDialog(Frame parent)
+    {
         this(parent, null);
     }
 
-    public ExecuteMethodDialog(Frame parent, MethodEntryModel methodModel) {
+    public ExecuteMethodDialog(Frame parent, MethodEntryModel methodModel)
+    {
         super(parent, "Execute Method", true);
         this.methodModel = methodModel;
         this.method = methodModel != null ? methodModel.getMethodEntry() : null;
@@ -71,7 +74,8 @@ public class ExecuteMethodDialog extends JDialog {
 
         initializeComponents();
 
-        if (methodModel != null) {
+        if (methodModel != null)
+        {
             onMethodSelected(methodModel);
         }
 
@@ -80,7 +84,8 @@ public class ExecuteMethodDialog extends JDialog {
         setLocationRelativeTo(parent);
     }
 
-    private void initializeComponents() {
+    private void initializeComponents()
+    {
         setLayout(new BorderLayout(5, 5));
         getContentPane().setBackground(JStudioTheme.getBgPrimary());
         ((JPanel) getContentPane()).setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
@@ -95,13 +100,11 @@ public class ExecuteMethodDialog extends JDialog {
         updateUIState();
     }
 
-    private JPanel createToolbar() {
+    private JPanel createToolbar()
+    {
         JPanel toolbar = new JPanel(new BorderLayout());
         toolbar.setBackground(JStudioTheme.getBgSecondary());
-        toolbar.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(6, 8, 6, 8)
-        ));
+        toolbar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(6, 8, 6, 8)));
 
         JPanel leftButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         leftButtons.setOpaque(false);
@@ -109,29 +112,20 @@ public class ExecuteMethodDialog extends JDialog {
         executeButton.setBackground(JStudioTheme.getAccent());
         executeButton.setForeground(JStudioTheme.getTextPrimary());
         executeButton.setFocusPainted(false);
-        executeButton.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getAccent().darker()),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
+        executeButton.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getAccent().darker()), BorderFactory.createEmptyBorder(5, 15, 5, 15)));
         executeButton.addActionListener(e -> executeMethod());
         executeButton.setEnabled(false);
 
         clearButton.setBackground(JStudioTheme.getBgTertiary());
         clearButton.setForeground(JStudioTheme.getTextPrimary());
         clearButton.setFocusPainted(false);
-        clearButton.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(5, 12, 5, 12)
-        ));
+        clearButton.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(5, 12, 5, 12)));
         clearButton.addActionListener(e -> resultPanel.clear());
 
         closeButton.setBackground(JStudioTheme.getBgTertiary());
         closeButton.setForeground(JStudioTheme.getTextPrimary());
         closeButton.setFocusPainted(false);
-        closeButton.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(5, 12, 5, 12)
-        ));
+        closeButton.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(5, 12, 5, 12)));
         closeButton.addActionListener(e -> dispose());
 
         leftButtons.add(executeButton);
@@ -152,7 +146,8 @@ public class ExecuteMethodDialog extends JDialog {
         return toolbar;
     }
 
-    private JSplitPane createMainSplitPane() {
+    private JSplitPane createMainSplitPane()
+    {
         JSplitPane leftSplit = createLeftSplitPane();
         JPanel rightPanel = createRightPanel();
 
@@ -165,7 +160,8 @@ public class ExecuteMethodDialog extends JDialog {
         return mainSplit;
     }
 
-    private JSplitPane createLeftSplitPane() {
+    private JSplitPane createLeftSplitPane()
+    {
         methodSelector.setOnMethodSelected(this::onMethodSelected);
 
         setupConfigPanel();
@@ -179,7 +175,8 @@ public class ExecuteMethodDialog extends JDialog {
         return leftSplit;
     }
 
-    private void setupConfigPanel() {
+    private void setupConfigPanel()
+    {
         configPanel.setBackground(JStudioTheme.getBgPrimary());
 
         setupSignaturePanel();
@@ -189,16 +186,10 @@ public class ExecuteMethodDialog extends JDialog {
         configPanel.add(parametersPanel, BorderLayout.CENTER);
     }
 
-    private void setupSignaturePanel() {
+    private void setupSignaturePanel()
+    {
         signaturePanel.setBackground(JStudioTheme.getBgPrimary());
-        signaturePanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Method Signature",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            null,
-            JStudioTheme.getTextPrimary()
-        ));
+        signaturePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Method Signature", TitledBorder.LEFT, TitledBorder.TOP, null, JStudioTheme.getTextPrimary()));
 
         signatureLabel.setForeground(JStudioTheme.getTextSecondary());
         signatureLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
@@ -207,16 +198,10 @@ public class ExecuteMethodDialog extends JDialog {
         signaturePanel.add(signatureLabel, BorderLayout.CENTER);
     }
 
-    private void setupParametersPanel() {
+    private void setupParametersPanel()
+    {
         parametersPanel.setBackground(JStudioTheme.getBgPrimary());
-        parametersPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Parameters",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            null,
-            JStudioTheme.getTextPrimary()
-        ));
+        parametersPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Parameters", TitledBorder.LEFT, TitledBorder.TOP, null, JStudioTheme.getTextPrimary()));
 
         JLabel noMethodLabel = new JLabel("Select a method to configure parameters");
         noMethodLabel.setForeground(JStudioTheme.getTextSecondary());
@@ -224,28 +209,20 @@ public class ExecuteMethodDialog extends JDialog {
         parametersPanel.add(noMethodLabel, BorderLayout.CENTER);
     }
 
-    private JPanel createRightPanel() {
+    private JPanel createRightPanel()
+    {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(JStudioTheme.getBgPrimary());
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Execution Result",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            null,
-            JStudioTheme.getTextPrimary()
-        ));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Execution Result", TitledBorder.LEFT, TitledBorder.TOP, null, JStudioTheme.getTextPrimary()));
         panel.add(resultPanel, BorderLayout.CENTER);
         return panel;
     }
 
-    private JPanel createStatusBar() {
+    private JPanel createStatusBar()
+    {
         JPanel statusBar = new JPanel(new BorderLayout());
         statusBar.setBackground(JStudioTheme.getBgSecondary());
-        statusBar.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()),
-            BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
+        statusBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(4, 8, 4, 8)));
 
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
         statusLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
@@ -254,17 +231,21 @@ public class ExecuteMethodDialog extends JDialog {
         return statusBar;
     }
 
-    private void onMethodSelected(MethodEntryModel selectedMethod) {
+    private void onMethodSelected(MethodEntryModel selectedMethod)
+    {
         this.methodModel = selectedMethod;
         this.method = selectedMethod != null ? selectedMethod.getMethodEntry() : null;
 
-        if (method != null) {
+        if (method != null)
+        {
             signatureLabel.setText("<html>" + formatMethodSignature() + "</html>");
             signatureLabel.setForeground(JStudioTheme.getTextPrimary());
             rebuildParametersPanel();
             statusLabel.setText("Ready to execute: " + method.getOwnerName() + "." + method.getName());
             resultPanel.setMethodContext(method.getOwnerName(), method.getName(), method.getDesc());
-        } else {
+        }
+        else
+        {
             signatureLabel.setText("No method selected");
             signatureLabel.setForeground(JStudioTheme.getTextSecondary());
             clearParametersPanel();
@@ -275,7 +256,8 @@ public class ExecuteMethodDialog extends JDialog {
         updateUIState();
     }
 
-    private void rebuildParametersPanel() {
+    private void rebuildParametersPanel()
+    {
         parametersPanel.removeAll();
         parameterFields.clear();
         configureButtons.clear();
@@ -284,19 +266,23 @@ public class ExecuteMethodDialog extends JDialog {
         String desc = method.getDesc();
         List<String> paramTypes = parseParameterTypes(desc);
 
-        if (paramTypes.isEmpty()) {
+        if (paramTypes.isEmpty())
+        {
             JLabel noParams = new JLabel("This method has no parameters");
             noParams.setForeground(JStudioTheme.getTextSecondary());
             noParams.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
             parametersPanel.add(noParams, BorderLayout.CENTER);
-        } else {
+        }
+        else
+        {
             JPanel fieldsPanel = new JPanel(new GridBagLayout());
             fieldsPanel.setBackground(JStudioTheme.getBgPrimary());
             GridBagConstraints gbc = new GridBagConstraints();
             gbc.insets = new Insets(5, 5, 5, 5);
             gbc.fill = GridBagConstraints.HORIZONTAL;
 
-            for (int i = 0; i < paramTypes.size(); i++) {
+            for (int i = 0; i < paramTypes.size(); i++)
+            {
                 String paramType = paramTypes.get(i);
                 boolean isObjectType = isObjectType(paramType);
 
@@ -313,17 +299,15 @@ public class ExecuteMethodDialog extends JDialog {
                 field.setBackground(JStudioTheme.getBgSecondary());
                 field.setForeground(JStudioTheme.getTextPrimary());
                 field.setCaretColor(JStudioTheme.getTextPrimary());
-                field.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                    BorderFactory.createEmptyBorder(3, 5, 3, 5)
-                ));
+                field.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(3, 5, 3, 5)));
                 field.setToolTipText(getInputHint(paramType));
                 parameterFields.add(field);
                 fieldsPanel.add(field, gbc);
 
                 gbc.gridx = 2;
                 gbc.weightx = 0;
-                if (isObjectType && !paramType.equals("Ljava/lang/String;")) {
+                if (isObjectType && !paramType.equals("Ljava/lang/String;"))
+                {
                     final int paramIndex = i;
                     final String objType = paramType;
                     JButton configBtn = new JButton("Configure...");
@@ -332,7 +316,9 @@ public class ExecuteMethodDialog extends JDialog {
                     configBtn.addActionListener(e -> openObjectConfig(paramIndex, objType));
                     configureButtons.add(configBtn);
                     fieldsPanel.add(configBtn, gbc);
-                } else {
+                }
+                else
+                {
                     configureButtons.add(null);
                     fieldsPanel.add(Box.createHorizontalStrut(1), gbc);
                 }
@@ -354,24 +340,29 @@ public class ExecuteMethodDialog extends JDialog {
         parametersPanel.repaint();
     }
 
-    private boolean isObjectType(String typeDesc) {
+    private boolean isObjectType(String typeDesc)
+    {
         return typeDesc != null &&
-               (typeDesc.startsWith("L") || typeDesc.startsWith("["));
+                (typeDesc.startsWith("L") || typeDesc.startsWith("["));
     }
 
-    private void openObjectConfig(int paramIndex, String typeDesc) {
+    private void openObjectConfig(int paramIndex, String typeDesc)
+    {
         String typeName = typeDesc;
-        if (typeName.startsWith("L") && typeName.endsWith(";")) {
+        if (typeName.startsWith("L") && typeName.endsWith(";"))
+        {
             typeName = typeName.substring(1, typeName.length() - 1);
         }
 
         ObjectSpec existing = configuredObjects.get(paramIndex);
         ObjectSpec result = ObjectBuilderDialog.showDialog(this, typeName, existing);
 
-        if (result != null) {
+        if (result != null)
+        {
             configuredObjects.put(paramIndex, result);
             JButton btn = configureButtons.get(paramIndex);
-            if (btn != null) {
+            if (btn != null)
+            {
                 btn.setText("✓ Configured");
                 btn.setForeground(JStudioTheme.getSuccess());
             }
@@ -381,7 +372,8 @@ public class ExecuteMethodDialog extends JDialog {
         }
     }
 
-    private void clearParametersPanel() {
+    private void clearParametersPanel()
+    {
         parametersPanel.removeAll();
         parameterFields.clear();
         configureButtons.clear();
@@ -396,13 +388,16 @@ public class ExecuteMethodDialog extends JDialog {
         parametersPanel.repaint();
     }
 
-    private void updateUIState() {
+    private void updateUIState()
+    {
         boolean hasMethod = method != null;
         executeButton.setEnabled(hasMethod);
     }
 
-    private void executeMethod() {
-        if (method == null) {
+    private void executeMethod()
+    {
+        if (method == null)
+        {
             return;
         }
 
@@ -411,10 +406,12 @@ public class ExecuteMethodDialog extends JDialog {
         String descriptor = method.getDesc();
         boolean useRecursive = !stubInvokesCheckbox.isSelected();
 
-        try {
+        try
+        {
             Object[] args = collectArguments();
 
-            if (!VMExecutionService.getInstance().isInitialized()) {
+            if (!VMExecutionService.getInstance().isInitialized())
+            {
                 VMExecutionService.getInstance().initialize();
             }
 
@@ -423,35 +420,46 @@ public class ExecuteMethodDialog extends JDialog {
             resultPanel.showExecuting();
             statusLabel.setText("Executing " + methodName + "...");
 
-            SwingWorker<ExecutionResult, Void> worker = new SwingWorker<>() {
+            SwingWorker<ExecutionResult, Void> worker = new SwingWorker<>()
+            {
                 @Override
-                protected ExecutionResult doInBackground() {
-                    if (useRecursive) {
-                        return VMExecutionService.getInstance().traceStaticMethod(
-                            className, methodName, descriptor, args);
-                    } else {
-                        return VMExecutionService.getInstance().executeStaticMethod(
-                            className, methodName, descriptor, args);
+                protected ExecutionResult doInBackground()
+                {
+                    if (useRecursive)
+                    {
+                        return VMExecutionService.getInstance().traceStaticMethod(className, methodName, descriptor, args);
+                    }
+                    else
+                    {
+                        return VMExecutionService.getInstance().executeStaticMethod(className, methodName, descriptor, args);
                     }
                 }
 
                 @Override
-                protected void done() {
+                protected void done()
+                {
                     executeButton.setEnabled(true);
                     setCursor(Cursor.getDefaultCursor());
-                    try {
+                    try
+                    {
                         ExecutionResult result = get();
                         resultPanel.setExecutionContext(className, methodName, descriptor, args);
                         displayResult(result);
-                        if (result.isSuccess()) {
+                        if (result.isSuccess())
+                        {
                             statusLabel.setText("Execution complete: " + result.getFormattedReturnValue());
-                        } else {
+                        }
+                        else
+                        {
                             statusLabel.setText("Execution failed: " + (result.getException() != null ? result.getException().getMessage() : "Unknown error"));
-                            if (result.getException() != null) {
+                            if (result.getException() != null)
+                            {
                                 ConsoleLogService.getInstance().error("[ExecuteMethodDialog] Execution failed", result.getException());
                             }
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         ConsoleLogService.getInstance().error("[ExecuteMethodDialog] Error in done()", e);
                         displayError(e.getMessage());
                         statusLabel.setText("Execution failed: " + e.getMessage());
@@ -461,24 +469,31 @@ public class ExecuteMethodDialog extends JDialog {
 
             worker.execute();
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             ConsoleLogService.getInstance().error("[ExecuteMethodDialog] Failed to parse arguments", e);
             displayError("Failed to parse arguments: " + e.getMessage());
             statusLabel.setText("Error: " + e.getMessage());
         }
     }
 
-    private Object[] collectArguments() throws Exception {
+    private Object[] collectArguments() throws Exception
+    {
         Object[] args = new Object[parameterFields.size()];
         String desc = method.getDesc();
         List<String> paramTypes = parseParameterTypes(desc);
 
-        for (int i = 0; i < parameterFields.size(); i++) {
-            if (configuredObjects.containsKey(i)) {
+        for (int i = 0; i < parameterFields.size(); i++)
+        {
+            if (configuredObjects.containsKey(i))
+            {
                 ObjectSpec objSpec = configuredObjects.get(i);
                 List<Object> values = ObjectFactory.getInstance().generateObjectValues(objSpec, 1);
                 args[i] = values.isEmpty() ? null : values.get(0);
-            } else {
+            }
+            else
+            {
                 String value = parameterFields.get(i).getText().trim();
                 String type = paramTypes.get(i);
                 args[i] = parseArgumentValue(value, type);
@@ -488,18 +503,22 @@ public class ExecuteMethodDialog extends JDialog {
         return args;
     }
 
-    private Object parseArgumentValue(String value, String type) throws Exception {
-        if (value.isEmpty() || value.equals("null")) {
+    private Object parseArgumentValue(String value, String type) throws Exception
+    {
+        if (value.isEmpty() || value.equals("null"))
+        {
             return null;
         }
 
-        switch (type) {
+        switch (type)
+        {
             case "I":
             case "B":
             case "S":
                 return Integer.parseInt(value);
             case "C":
-                if (value.length() == 1) {
+                if (value.length() == 1)
+                {
                     return value.charAt(0);
                 }
                 return Integer.parseInt(value);
@@ -512,8 +531,10 @@ public class ExecuteMethodDialog extends JDialog {
             case "Z":
                 return Boolean.parseBoolean(value);
             default:
-                if (type.equals("Ljava/lang/String;")) {
-                    if (value.startsWith("\"") && value.endsWith("\"")) {
+                if (type.equals("Ljava/lang/String;"))
+                {
+                    if (value.startsWith("\"") && value.endsWith("\""))
+                    {
                         return value.substring(1, value.length() - 1);
                     }
                     return value;
@@ -522,19 +543,22 @@ public class ExecuteMethodDialog extends JDialog {
         }
     }
 
-    private void displayResult(ExecutionResult result) {
+    private void displayResult(ExecutionResult result)
+    {
         resultPanel.displayResult(result);
     }
 
-    private void displayError(String message) {
+    private void displayError(String message)
+    {
         ExecutionResult errorResult = ExecutionResult.builder()
-            .success(false)
-            .exception(new RuntimeException(message))
-            .build();
+                .success(false)
+                .exception(new RuntimeException(message))
+                .build();
         resultPanel.displayResult(errorResult);
     }
 
-    private String formatMethodSignature() {
+    private String formatMethodSignature()
+    {
         StringBuilder sb = new StringBuilder();
 
         int access = method.getAccess();
@@ -549,7 +573,8 @@ public class ExecuteMethodDialog extends JDialog {
         sb.append(method.getName()).append("(");
 
         List<String> paramTypes = parseParameterTypes(method.getDesc());
-        for (int i = 0; i < paramTypes.size(); i++) {
+        for (int i = 0; i < paramTypes.size(); i++)
+        {
             if (i > 0) sb.append(", ");
             sb.append(formatType(paramTypes.get(i))).append(" arg").append(i);
         }
@@ -558,17 +583,22 @@ public class ExecuteMethodDialog extends JDialog {
         return sb.toString();
     }
 
-    private List<String> parseParameterTypes(String descriptor) {
+    private List<String> parseParameterTypes(String descriptor)
+    {
         List<String> types = new ArrayList<>();
         int i = 1;
-        while (i < descriptor.length() && descriptor.charAt(i) != ')') {
+        while (i < descriptor.length() && descriptor.charAt(i) != ')')
+        {
             int start = i;
             while (descriptor.charAt(i) == '[') i++;
 
-            if (descriptor.charAt(i) == 'L') {
+            if (descriptor.charAt(i) == 'L')
+            {
                 int end = descriptor.indexOf(';', i);
                 i = end + 1;
-            } else {
+            }
+            else
+            {
                 i++;
             }
             types.add(descriptor.substring(start, i));
@@ -576,27 +606,41 @@ public class ExecuteMethodDialog extends JDialog {
         return types;
     }
 
-    private String getReturnType(String descriptor) {
+    private String getReturnType(String descriptor)
+    {
         int returnStart = descriptor.indexOf(')') + 1;
         return descriptor.substring(returnStart);
     }
 
-    private String formatType(String type) {
-        if (type.startsWith("[")) {
+    private String formatType(String type)
+    {
+        if (type.startsWith("["))
+        {
             return formatType(type.substring(1)) + "[]";
         }
-        switch (type) {
-            case "V": return "void";
-            case "Z": return "boolean";
-            case "B": return "byte";
-            case "C": return "char";
-            case "S": return "short";
-            case "I": return "int";
-            case "J": return "long";
-            case "F": return "float";
-            case "D": return "double";
+        switch (type)
+        {
+            case "V":
+                return "void";
+            case "Z":
+                return "boolean";
+            case "B":
+                return "byte";
+            case "C":
+                return "char";
+            case "S":
+                return "short";
+            case "I":
+                return "int";
+            case "J":
+                return "long";
+            case "F":
+                return "float";
+            case "D":
+                return "double";
             default:
-                if (type.startsWith("L") && type.endsWith(";")) {
+                if (type.startsWith("L") && type.endsWith(";"))
+                {
                     String className = type.substring(1, type.length() - 1);
                     int lastSlash = className.lastIndexOf('/');
                     return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
@@ -605,18 +649,30 @@ public class ExecuteMethodDialog extends JDialog {
         }
     }
 
-    private String getInputHint(String type) {
-        switch (type) {
-            case "I": return "Enter an integer (e.g., 42)";
-            case "J": return "Enter a long (e.g., 42L)";
-            case "F": return "Enter a float (e.g., 3.14f)";
-            case "D": return "Enter a double (e.g., 3.14)";
-            case "Z": return "Enter true or false";
-            case "B": return "Enter a byte (e.g., 127)";
-            case "C": return "Enter a character (e.g., a)";
-            case "S": return "Enter a short (e.g., 100)";
-            case "Ljava/lang/String;": return "Enter a string (e.g., \"hello\")";
-            default: return "Enter value (or null)";
+    private String getInputHint(String type)
+    {
+        switch (type)
+        {
+            case "I":
+                return "Enter an integer (e.g., 42)";
+            case "J":
+                return "Enter a long (e.g., 42L)";
+            case "F":
+                return "Enter a float (e.g., 3.14f)";
+            case "D":
+                return "Enter a double (e.g., 3.14)";
+            case "Z":
+                return "Enter true or false";
+            case "B":
+                return "Enter a byte (e.g., 127)";
+            case "C":
+                return "Enter a character (e.g., a)";
+            case "S":
+                return "Enter a short (e.g., 100)";
+            case "Ljava/lang/String;":
+                return "Enter a string (e.g., \"hello\")";
+            default:
+                return "Enter value (or null)";
         }
     }
 }

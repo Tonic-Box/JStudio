@@ -17,21 +17,26 @@ import java.util.Set;
  * <p>The package -> class-name index is built once from a snapshot; class bytes are fetched lazily (and live)
  * via {@link ClassEntryModel#getClassFile()} so only the classes javac actually reads get serialized.
  */
-public final class ProjectClasspath implements SnippetCompiler.Classpath {
+public final class ProjectClasspath implements SnippetCompiler.Classpath
+{
 
     private final ProjectModel project;
     private final Map<String, Set<String>> packageToBinaryNames;
 
-    public ProjectClasspath(ProjectModel project) {
+    public ProjectClasspath(ProjectModel project)
+    {
         this.project = project;
         this.packageToBinaryNames = buildIndex(project);
     }
 
-    private static Map<String, Set<String>> buildIndex(ProjectModel project) {
+    private static Map<String, Set<String>> buildIndex(ProjectModel project)
+    {
         Map<String, Set<String>> index = new HashMap<>();
-        for (ClassEntryModel entry : project.getAllClasses()) {
+        for (ClassEntryModel entry : project.getAllClasses())
+        {
             String internal = entry.getClassName();
-            if (internal == null || isPlatform(internal)) {
+            if (internal == null || isPlatform(internal))
+            {
                 continue;
             }
             String binary = internal.replace('/', '.');
@@ -43,39 +48,50 @@ public final class ProjectClasspath implements SnippetCompiler.Classpath {
     }
 
     @Override
-    public Set<String> classesInPackage(String packageName) {
+    public Set<String> classesInPackage(String packageName)
+    {
         return packageToBinaryNames.getOrDefault(packageName, Set.of());
     }
 
     @Override
-    public Set<String> allClassNames() {
+    public Set<String> allClassNames()
+    {
         Set<String> all = new HashSet<>();
-        for (Set<String> names : packageToBinaryNames.values()) {
+        for (Set<String> names : packageToBinaryNames.values())
+        {
             all.addAll(names);
         }
-        for (List<String> fqns : JdkClassIndex.simpleToFqn().values()) {
+        for (List<String> fqns : JdkClassIndex.simpleToFqn().values())
+        {
             all.addAll(fqns);
         }
         return all;
     }
 
     @Override
-    public byte[] classBytes(String binaryName) {
-        if (binaryName == null) {
+    public byte[] classBytes(String binaryName)
+    {
+        if (binaryName == null)
+        {
             return null;
         }
         ClassEntryModel entry = project.getClass(binaryName.replace('.', '/'));
-        if (entry == null) {
+        if (entry == null)
+        {
             return null;
         }
-        try {
+        try
+        {
             return entry.getClassFile().write();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return null;
         }
     }
 
-    private static boolean isPlatform(String internal) {
+    private static boolean isPlatform(String internal)
+    {
         return internal.startsWith("java/")
                 || internal.startsWith("javax/")
                 || internal.startsWith("jdk/")

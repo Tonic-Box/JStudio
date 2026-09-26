@@ -24,12 +24,14 @@ import java.awt.KeyboardFocusManager;
  * both. The source pane keeps annotations on so its line numbers stay aligned with the decompiler's
  * offset/line maps that the linking depends on.
  */
-public class DualView extends JPanel implements EditorView {
+public class DualView extends JPanel implements EditorView
+{
 
     private final BytecodeView bytecodeView;
     private final SourceCodeView sourceView;
 
-    public DualView(ClassEntryModel classEntry) {
+    public DualView(ClassEntryModel classEntry)
+    {
         setLayout(new BorderLayout());
         setBackground(JStudioTheme.getBgTertiary());
 
@@ -45,85 +47,112 @@ public class DualView extends JPanel implements EditorView {
         add(split, BorderLayout.CENTER);
     }
 
-    public void refresh() {
+    public void refresh()
+    {
         bytecodeView.refresh();
         sourceView.refresh();
     }
 
-    public void reload() {
+    public void reload()
+    {
         bytecodeView.reload();
         sourceView.reload();
     }
 
-    public void copySelection() {
-        if (isBytecodeFocused()) {
+    public void copySelection()
+    {
+        if (isBytecodeFocused())
+        {
             bytecodeView.copySelection();
-        } else {
+        }
+        else
+        {
             sourceView.copySelection();
         }
     }
 
-    public String getText() {
+    public String getText()
+    {
         return isBytecodeFocused() ? bytecodeView.getText() : sourceView.getText();
     }
 
-    public String getSelectedText() {
+    public String getSelectedText()
+    {
         return isBytecodeFocused() ? bytecodeView.getSelectedText() : sourceView.getSelectedText();
     }
 
-    public void showFindDialog() {
-        if (isBytecodeFocused()) {
+    public void showFindDialog()
+    {
+        if (isBytecodeFocused())
+        {
             bytecodeView.showFindDialog();
-        } else {
+        }
+        else
+        {
             sourceView.showFindDialog();
         }
     }
 
-    public void goToLine(int line) {
-        if (isBytecodeFocused()) {
+    public void goToLine(int line)
+    {
+        if (isBytecodeFocused())
+        {
             bytecodeView.goToLine(line);
-        } else {
+        }
+        else
+        {
             sourceView.goToLine(line);
         }
     }
 
-    public void scrollToText(String text) {
-        if (isBytecodeFocused()) {
+    public void scrollToText(String text)
+    {
+        if (isBytecodeFocused())
+        {
             bytecodeView.scrollToText(text);
-        } else {
+        }
+        else
+        {
             sourceView.scrollToText(text);
         }
     }
 
     /** Highlights a 1-based line in the source pane (the dual view's primary pane). */
-    public void highlightLine(int line) {
+    public void highlightLine(int line)
+    {
         sourceView.highlightLine(line - 1);
     }
 
-    public void scrollToMethod(String methodName, String methodDesc) {
+    public void scrollToMethod(String methodName, String methodDesc)
+    {
         bytecodeView.scrollToMethod(methodName, methodDesc);
         sourceView.scrollToMethodDeclaration(methodName, methodDesc);
     }
 
-    public void setFontSize(int size) {
+    public void setFontSize(int size)
+    {
         bytecodeView.setFontSize(size);
         sourceView.setFontSize(size);
     }
 
-    public void setWordWrap(boolean enabled) {
+    public void setWordWrap(boolean enabled)
+    {
         bytecodeView.setWordWrap(enabled);
         sourceView.setWordWrap(enabled);
     }
 
-    public void setProjectModel(ProjectModel projectModel) {
+    public void setProjectModel(ProjectModel projectModel)
+    {
         sourceView.setProjectModel(projectModel);
     }
 
-    public void setUsageLensEnabled(boolean enabled) {
+    public void setUsageLensEnabled(boolean enabled)
+    {
         sourceView.setUsageLensEnabled(enabled);
     }
 
-    private boolean isBytecodeFocused() {
+    private boolean isBytecodeFocused()
+    {
         Component owner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
         return owner != null && SwingUtilities.isDescendingFrom(owner, bytecodeView);
     }

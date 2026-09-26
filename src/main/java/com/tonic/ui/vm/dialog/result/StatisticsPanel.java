@@ -12,7 +12,8 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-public class StatisticsPanel extends ThemedJPanel {
+public class StatisticsPanel extends ThemedJPanel
+{
 
     private final JLabel totalTimeLabel;
     private final JLabel instructionsLabel;
@@ -23,7 +24,8 @@ public class StatisticsPanel extends ThemedJPanel {
 
     private final DefaultTableModel hotMethodsModel;
 
-    public StatisticsPanel() {
+    public StatisticsPanel()
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout(UIConstants.SPACING_MEDIUM + 2, UIConstants.SPACING_MEDIUM + 2));
         setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_MEDIUM + 2, UIConstants.SPACING_MEDIUM + 2, UIConstants.SPACING_MEDIUM + 2, UIConstants.SPACING_MEDIUM + 2));
 
@@ -57,9 +59,11 @@ public class StatisticsPanel extends ThemedJPanel {
         add(metricsPanel, BorderLayout.NORTH);
 
         String[] columns = {"Method", "Calls", "Total Time"};
-        hotMethodsModel = new DefaultTableModel(columns, 0) {
+        hotMethodsModel = new DefaultTableModel(columns, 0)
+        {
             @Override
-            public boolean isCellEditable(int row, int column) {
+            public boolean isCellEditable(int row, int column)
+            {
                 return false;
             }
         };
@@ -87,7 +91,8 @@ public class StatisticsPanel extends ThemedJPanel {
         showEmpty();
     }
 
-    private JLabel createSection(String title) {
+    private JLabel createSection(String title)
+    {
         JLabel label = new JLabel(title);
         label.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL).deriveFont(Font.BOLD));
         label.setForeground(JStudioTheme.getTextPrimary());
@@ -96,7 +101,8 @@ public class StatisticsPanel extends ThemedJPanel {
         return label;
     }
 
-    private JLabel createMetricLabel(String name, String value) {
+    private JLabel createMetricLabel(String name, String value)
+    {
         JLabel label = new JLabel("  " + name + "  " + value);
         label.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_NORMAL));
         label.setForeground(JStudioTheme.getTextPrimary());
@@ -104,11 +110,13 @@ public class StatisticsPanel extends ThemedJPanel {
         return label;
     }
 
-    private void updateMetricLabel(JLabel label, String name, String value) {
+    private void updateMetricLabel(JLabel label, String name, String value)
+    {
         label.setText("  " + name + "  " + value);
     }
 
-    public void showEmpty() {
+    public void showEmpty()
+    {
         updateMetricLabel(totalTimeLabel, "Total time:", "0ms");
         updateMetricLabel(instructionsLabel, "Total executed:", "0");
         updateMetricLabel(totalCallsLabel, "Total calls:", "0");
@@ -118,10 +126,10 @@ public class StatisticsPanel extends ThemedJPanel {
         hotMethodsModel.setRowCount(0);
     }
 
-    public void update(ExecutionResult result) {
+    public void update(ExecutionResult result)
+    {
         updateMetricLabel(totalTimeLabel, "Total time:", result.getExecutionTimeMs() + "ms");
-        updateMetricLabel(instructionsLabel, "Total executed:",
-            String.valueOf(result.getInstructionsExecuted()));
+        updateMetricLabel(instructionsLabel, "Total executed:", String.valueOf(result.getInstructionsExecuted()));
 
         List<MethodCall> calls = result.getMethodCalls();
         int totalCalls = calls.size();
@@ -132,7 +140,8 @@ public class StatisticsPanel extends ThemedJPanel {
         Map<String, Integer> callCounts = new HashMap<>();
         Map<String, Long> totalTimes = new HashMap<>();
 
-        for (MethodCall call : calls) {
+        for (MethodCall call : calls)
+        {
             String sig = call.getShortSignature();
             uniqueMethods.add(sig);
             maxDepth = Math.max(maxDepth, call.getDepth());
@@ -151,7 +160,8 @@ public class StatisticsPanel extends ThemedJPanel {
         List<Map.Entry<String, Integer>> sorted = new ArrayList<>(callCounts.entrySet());
         sorted.sort((a, b) -> b.getValue().compareTo(a.getValue()));
 
-        for (Map.Entry<String, Integer> entry : sorted) {
+        for (Map.Entry<String, Integer> entry : sorted)
+        {
             String method = entry.getKey();
             int count = entry.getValue();
             long nanos = totalTimes.getOrDefault(method, 0L);
@@ -161,7 +171,8 @@ public class StatisticsPanel extends ThemedJPanel {
         }
     }
 
-    private String buildDeepestPath(List<MethodCall> calls) {
+    private String buildDeepestPath(List<MethodCall> calls)
+    {
         if (calls.isEmpty()) return "-";
 
         int maxDepth = 0;
@@ -169,16 +180,19 @@ public class StatisticsPanel extends ThemedJPanel {
 
         Deque<String> currentPath = new ArrayDeque<>();
 
-        for (MethodCall call : calls) {
+        for (MethodCall call : calls)
+        {
             int depth = call.getDepth();
 
-            while (currentPath.size() > depth) {
+            while (currentPath.size() > depth)
+            {
                 currentPath.pollLast();
             }
 
             currentPath.addLast(call.getSimpleOwnerName() + "." + call.getMethodName());
 
-            if (depth > maxDepth) {
+            if (depth > maxDepth)
+            {
                 maxDepth = depth;
                 deepestPath = new ArrayList<>(currentPath);
             }
@@ -186,10 +200,11 @@ public class StatisticsPanel extends ThemedJPanel {
 
         if (deepestPath.isEmpty()) return "-";
 
-        if (deepestPath.size() > 4) {
+        if (deepestPath.size() > 4)
+        {
             return deepestPath.get(0) + " \u2192 ... \u2192 " +
-                   deepestPath.get(deepestPath.size() - 2) + " \u2192 " +
-                   deepestPath.get(deepestPath.size() - 1);
+                    deepestPath.get(deepestPath.size() - 2) + " \u2192 " +
+                    deepestPath.get(deepestPath.size() - 1);
         }
 
         return String.join(" \u2192 ", deepestPath);

@@ -7,14 +7,16 @@ import java.util.Objects;
  * descriptor), and the bytecode offset. The offset is the single source of truth, so the same breakpoint maps
  * to a source line (via the decompiler line map) and to a bytecode line (via the disassembly index).
  */
-public final class Breakpoint {
+public final class Breakpoint
+{
 
     public final String className;
     public final String methodName;
     public final String methodDesc;
     public final long pc;
 
-    public Breakpoint(String className, String methodName, String methodDesc, long pc) {
+    public Breakpoint(String className, String methodName, String methodDesc, long pc)
+    {
         this.className = className;
         this.methodName = methodName;
         this.methodDesc = methodDesc;
@@ -22,11 +24,14 @@ public final class Breakpoint {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
             return true;
         }
-        if (!(o instanceof Breakpoint)) {
+        if (!(o instanceof Breakpoint))
+        {
             return false;
         }
         Breakpoint b = (Breakpoint) o;
@@ -35,7 +40,8 @@ public final class Breakpoint {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(className, methodName, methodDesc, pc);
     }
 }

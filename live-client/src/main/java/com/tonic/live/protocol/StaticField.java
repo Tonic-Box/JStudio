@@ -8,13 +8,15 @@ import lombok.Getter;
  * tells the UI how the value may be edited.
  */
 @Getter
-public final class StaticField {
+public final class StaticField
+{
     private final String name;
     private final String typeDesc;
     private final String value;
     private final int kind;
 
-    public StaticField(String name, String typeDesc, String value, int kind) {
+    public StaticField(String name, String typeDesc, String value, int kind)
+    {
         this.name = name;
         this.typeDesc = typeDesc;
         this.value = value;

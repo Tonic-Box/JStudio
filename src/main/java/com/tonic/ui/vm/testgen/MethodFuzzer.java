@@ -10,9 +10,11 @@ import lombok.Getter;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class MethodFuzzer {
+public class MethodFuzzer
+{
 
-    public static class FuzzResult {
+    public static class FuzzResult
+    {
         private final Object[] inputs;
         @Getter
         private final ExecutionResult result;
@@ -25,12 +27,13 @@ public class MethodFuzzer {
         @Getter
         private final int uniqueBranchPoints;
 
-        public FuzzResult(Object[] inputs, ExecutionResult result) {
+        public FuzzResult(Object[] inputs, ExecutionResult result)
+        {
             this(inputs, result, "NO_BRANCHES", "No branches tracked", 0);
         }
 
-        public FuzzResult(Object[] inputs, ExecutionResult result,
-                          String branchPathSignature, String branchSummary, int uniqueBranchPoints) {
+        public FuzzResult(Object[] inputs, ExecutionResult result, String branchPathSignature, String branchSummary, int uniqueBranchPoints)
+        {
             this.inputs = inputs.clone();
             this.result = result;
             this.branchPathSignature = branchPathSignature;
@@ -39,29 +42,37 @@ public class MethodFuzzer {
             this.outcomeKey = computeGroupKey();
         }
 
-        private String computeGroupKey() {
+        private String computeGroupKey()
+        {
             return branchPathSignature + "|" + computeReturnKey(result);
         }
 
-        private String computeReturnKey(ExecutionResult result) {
-            if (result.getException() != null) {
+        private String computeReturnKey(ExecutionResult result)
+        {
+            if (result.getException() != null)
+            {
                 String excMsg = result.getException().getMessage();
-                if (excMsg != null && excMsg.contains(":")) {
+                if (excMsg != null && excMsg.contains(":"))
+                {
                     return "EX:" + excMsg.substring(0, Math.min(excMsg.indexOf(':') + 20, excMsg.length()));
                 }
                 return "EX:" + result.getException().getClass().getSimpleName();
             }
-            if (result.getReturnValue() == null) {
+            if (result.getReturnValue() == null)
+            {
                 return "NULL";
             }
             Object rv = result.getReturnValue();
-            if (rv instanceof Number) {
+            if (rv instanceof Number)
+            {
                 return "RV:" + categorizeNumber((Number) rv);
             }
-            if (rv instanceof Boolean) {
+            if (rv instanceof Boolean)
+            {
                 return "RV:" + rv;
             }
-            if (rv instanceof String) {
+            if (rv instanceof String)
+            {
                 String s = (String) rv;
                 if (s.isEmpty()) return "RV:EMPTY_STR";
                 if (s.length() < 10) return "RV:SHORT_STR";
@@ -70,7 +81,8 @@ public class MethodFuzzer {
             return "RV:" + rv.getClass().getSimpleName();
         }
 
-        private String categorizeNumber(Number n) {
+        private String categorizeNumber(Number n)
+        {
             long v = n.longValue();
             if (v == 0) return "ZERO";
             if (v == 1) return "ONE";
@@ -80,21 +92,27 @@ public class MethodFuzzer {
             return "POSITIVE";
         }
 
-        public Object[] getInputs() {
+        public Object[] getInputs()
+        {
             return inputs.clone();
         }
 
-        public String getOutcomeDescription() {
-            if (result.getException() != null) {
+        public String getOutcomeDescription()
+        {
+            if (result.getException() != null)
+            {
                 return "Throws " + extractExceptionName(result.getException().getMessage());
             }
-            if (result.getReturnValue() == null) {
+            if (result.getReturnValue() == null)
+            {
                 return "Returns null";
             }
             Object rv = result.getReturnValue();
-            if (rv instanceof String) {
+            if (rv instanceof String)
+            {
                 String s = (String) rv;
-                if (s.length() > 30) {
+                if (s.length() > 30)
+                {
                     return "Returns \"" + s.substring(0, 27) + "...\"";
                 }
                 return "Returns \"" + s + "\"";
@@ -102,14 +120,18 @@ public class MethodFuzzer {
             return "Returns " + rv;
         }
 
-        private String extractExceptionName(String msg) {
+        private String extractExceptionName(String msg)
+        {
             if (msg == null) return "Exception";
-            if (msg.contains("VM Exception:")) {
+            if (msg.contains("VM Exception:"))
+            {
                 String part = msg.substring(msg.indexOf(':') + 1).trim();
                 int space = part.indexOf(' ');
-                if (space > 0) {
+                if (space > 0)
+                {
                     String name = part.substring(0, space);
-                    if (name.contains("/")) {
+                    if (name.contains("/"))
+                    {
                         name = name.substring(name.lastIndexOf('/') + 1);
                     }
                     return name;
@@ -120,19 +142,32 @@ public class MethodFuzzer {
     }
 
     @Getter
-    public static class FuzzConfig {
+    public static class FuzzConfig
+    {
         private int iterationsPerType = 5;
         private boolean includeEdgeCases = true;
         private boolean includeNulls = true;
         private boolean includeRandom = true;
 
-        public void setIterationsPerType(int n) { this.iterationsPerType = n; }
+        public void setIterationsPerType(int n)
+        {
+            this.iterationsPerType = n;
+        }
 
-        public void setIncludeEdgeCases(boolean v) { this.includeEdgeCases = v; }
+        public void setIncludeEdgeCases(boolean v)
+        {
+            this.includeEdgeCases = v;
+        }
 
-        public void setIncludeNulls(boolean v) { this.includeNulls = v; }
+        public void setIncludeNulls(boolean v)
+        {
+            this.includeNulls = v;
+        }
 
-        public void setIncludeRandom(boolean v) { this.includeRandom = v; }
+        public void setIncludeRandom(boolean v)
+        {
+            this.includeRandom = v;
+        }
     }
 
     private final String className;
@@ -142,7 +177,8 @@ public class MethodFuzzer {
     private final FuzzConfig config;
     private List<ParamSpec> paramSpecs;
 
-    public MethodFuzzer(String className, String methodName, String descriptor, FuzzConfig config) {
+    public MethodFuzzer(String className, String methodName, String descriptor, FuzzConfig config)
+    {
         this.className = className;
         this.methodName = methodName;
         this.descriptor = descriptor;
@@ -150,17 +186,21 @@ public class MethodFuzzer {
         this.config = config != null ? config : new FuzzConfig();
     }
 
-    public void setParameterSpecs(List<ParamSpec> specs) {
+    public void setParameterSpecs(List<ParamSpec> specs)
+    {
         this.paramSpecs = specs;
     }
 
-    public List<String> getParamTypes() {
+    public List<String> getParamTypes()
+    {
         return new ArrayList<>(paramTypes);
     }
 
-    public List<ParamSpec> getDefaultParamSpecs() {
+    public List<ParamSpec> getDefaultParamSpecs()
+    {
         List<ParamSpec> specs = new ArrayList<>();
-        for (int i = 0; i < paramTypes.size(); i++) {
+        for (int i = 0; i < paramTypes.size(); i++)
+        {
             String type = paramTypes.get(i);
             ParamSpec spec = new ParamSpec("arg" + i, type);
             spec.setMode(ValueMode.FUZZ);
@@ -169,68 +209,89 @@ public class MethodFuzzer {
         return specs;
     }
 
-    public List<Object[]> generateInputSets() {
+    public List<Object[]> generateInputSets()
+    {
         List<Object[]> inputSets = new ArrayList<>();
 
-        if (paramTypes.isEmpty()) {
+        if (paramTypes.isEmpty())
+        {
             inputSets.add(new Object[0]);
             return inputSets;
         }
 
         List<List<Object>> valuesPerParam = new ArrayList<>();
 
-        if (paramSpecs != null && paramSpecs.size() == paramTypes.size()) {
+        if (paramSpecs != null && paramSpecs.size() == paramTypes.size())
+        {
             ObjectFactory factory = ObjectFactory.getInstance();
-            for (ParamSpec spec : paramSpecs) {
+            for (ParamSpec spec : paramSpecs)
+            {
                 valuesPerParam.add(factory.generateValues(spec, config.iterationsPerType));
             }
-        } else {
-            for (String type : paramTypes) {
+        }
+        else
+        {
+            for (String type : paramTypes)
+            {
                 valuesPerParam.add(generateValuesForType(type));
             }
         }
 
-        if (paramTypes.size() == 1) {
-            for (Object val : valuesPerParam.get(0)) {
+        if (paramTypes.size() == 1)
+        {
+            for (Object val : valuesPerParam.get(0))
+            {
                 inputSets.add(new Object[]{val});
             }
-        } else {
+        }
+        else
+        {
             generateCombinations(valuesPerParam, inputSets, config.iterationsPerType * 3);
         }
 
         return inputSets;
     }
 
-    private void generateCombinations(List<List<Object>> valuesPerParam, List<Object[]> result, int maxCombos) {
+    private void generateCombinations(List<List<Object>> valuesPerParam, List<Object[]> result, int maxCombos)
+    {
         int[] indices = new int[valuesPerParam.size()];
         int totalCombos = 1;
-        for (List<Object> vals : valuesPerParam) {
+        for (List<Object> vals : valuesPerParam)
+        {
             totalCombos *= vals.size();
         }
 
-        if (totalCombos <= maxCombos) {
-            for (int i = 0; i < totalCombos; i++) {
+        if (totalCombos <= maxCombos)
+        {
+            for (int i = 0; i < totalCombos; i++)
+            {
                 Object[] combo = new Object[valuesPerParam.size()];
                 int idx = i;
-                for (int p = valuesPerParam.size() - 1; p >= 0; p--) {
+                for (int p = valuesPerParam.size() - 1; p >= 0; p--)
+                {
                     int size = valuesPerParam.get(p).size();
                     combo[p] = valuesPerParam.get(p).get(idx % size);
                     idx /= size;
                 }
                 result.add(combo);
             }
-        } else {
+        }
+        else
+        {
             Set<String> seen = new HashSet<>();
             Random rand = ThreadLocalRandom.current();
             int attempts = 0;
-            while (result.size() < maxCombos && attempts < maxCombos * 10) {
+            while (result.size() < maxCombos && attempts < maxCombos * 10)
+            {
                 Object[] combo = new Object[valuesPerParam.size()];
-                for (int p = 0; p < valuesPerParam.size(); p++) {
+                for (int p = 0; p < valuesPerParam.size(); p++)
+                {
                     List<Object> vals = valuesPerParam.get(p);
                     combo[p] = vals.get(rand.nextInt(vals.size()));
                 }
                 String key = Arrays.toString(combo);
-                if (seen.add(key)) {
+                if (seen.add(key))
+                {
                     result.add(combo);
                 }
                 attempts++;
@@ -238,52 +299,64 @@ public class MethodFuzzer {
         }
     }
 
-    private List<Object> generateValuesForType(String type) {
+    private List<Object> generateValuesForType(String type)
+    {
         List<Object> values = new ArrayList<>();
 
-        switch (type) {
+        switch (type)
+        {
             case "I":
-                if (config.includeEdgeCases) {
+                if (config.includeEdgeCases)
+                {
                     values.addAll(Arrays.asList(0, 1, -1, Integer.MAX_VALUE, Integer.MIN_VALUE, 100, -100));
                 }
-                if (config.includeRandom) {
-                    for (int i = 0; i < config.iterationsPerType; i++) {
+                if (config.includeRandom)
+                {
+                    for (int i = 0; i < config.iterationsPerType; i++)
+                    {
                         values.add(ThreadLocalRandom.current().nextInt());
                     }
                 }
                 break;
 
             case "J":
-                if (config.includeEdgeCases) {
+                if (config.includeEdgeCases)
+                {
                     values.addAll(Arrays.asList(0L, 1L, -1L, Long.MAX_VALUE, Long.MIN_VALUE, 100L));
                 }
-                if (config.includeRandom) {
-                    for (int i = 0; i < config.iterationsPerType; i++) {
+                if (config.includeRandom)
+                {
+                    for (int i = 0; i < config.iterationsPerType; i++)
+                    {
                         values.add(ThreadLocalRandom.current().nextLong());
                     }
                 }
                 break;
 
             case "D":
-                if (config.includeEdgeCases) {
-                    values.addAll(Arrays.asList(0.0, 1.0, -1.0, Double.MAX_VALUE, Double.MIN_VALUE,
-                            Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.5, -0.5));
+                if (config.includeEdgeCases)
+                {
+                    values.addAll(Arrays.asList(0.0, 1.0, -1.0, Double.MAX_VALUE, Double.MIN_VALUE, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.5, -0.5));
                 }
-                if (config.includeRandom) {
-                    for (int i = 0; i < config.iterationsPerType; i++) {
+                if (config.includeRandom)
+                {
+                    for (int i = 0; i < config.iterationsPerType; i++)
+                    {
                         values.add(ThreadLocalRandom.current().nextDouble() * 1000 - 500);
                     }
                 }
                 break;
 
             case "F":
-                if (config.includeEdgeCases) {
-                    values.addAll(Arrays.asList(0.0f, 1.0f, -1.0f, Float.MAX_VALUE, Float.MIN_VALUE,
-                            Float.NaN, Float.POSITIVE_INFINITY, 0.5f));
+                if (config.includeEdgeCases)
+                {
+                    values.addAll(Arrays.asList(0.0f, 1.0f, -1.0f, Float.MAX_VALUE, Float.MIN_VALUE, Float.NaN, Float.POSITIVE_INFINITY, 0.5f));
                 }
-                if (config.includeRandom) {
-                    for (int i = 0; i < config.iterationsPerType; i++) {
-                        values.add((float)(ThreadLocalRandom.current().nextDouble() * 100 - 50));
+                if (config.includeRandom)
+                {
+                    for (int i = 0; i < config.iterationsPerType; i++)
+                    {
+                        values.add((float) (ThreadLocalRandom.current().nextDouble() * 100 - 50));
                     }
                 }
                 break;
@@ -293,110 +366,138 @@ public class MethodFuzzer {
                 break;
 
             case "B":
-                if (config.includeEdgeCases) {
-                    values.addAll(Arrays.asList((byte)0, (byte)1, (byte)-1, Byte.MAX_VALUE, Byte.MIN_VALUE));
+                if (config.includeEdgeCases)
+                {
+                    values.addAll(Arrays.asList((byte) 0, (byte) 1, (byte) -1, Byte.MAX_VALUE, Byte.MIN_VALUE));
                 }
-                if (config.includeRandom) {
-                    for (int i = 0; i < config.iterationsPerType; i++) {
-                        values.add((byte)ThreadLocalRandom.current().nextInt(-128, 128));
+                if (config.includeRandom)
+                {
+                    for (int i = 0; i < config.iterationsPerType; i++)
+                    {
+                        values.add((byte) ThreadLocalRandom.current().nextInt(-128, 128));
                     }
                 }
                 break;
 
             case "S":
-                if (config.includeEdgeCases) {
-                    values.addAll(Arrays.asList((short)0, (short)1, (short)-1, Short.MAX_VALUE, Short.MIN_VALUE));
+                if (config.includeEdgeCases)
+                {
+                    values.addAll(Arrays.asList((short) 0, (short) 1, (short) -1, Short.MAX_VALUE, Short.MIN_VALUE));
                 }
-                if (config.includeRandom) {
-                    for (int i = 0; i < config.iterationsPerType; i++) {
-                        values.add((short)ThreadLocalRandom.current().nextInt(-32768, 32768));
+                if (config.includeRandom)
+                {
+                    for (int i = 0; i < config.iterationsPerType; i++)
+                    {
+                        values.add((short) ThreadLocalRandom.current().nextInt(-32768, 32768));
                     }
                 }
                 break;
 
             case "C":
-                if (config.includeEdgeCases) {
-                    values.addAll(Arrays.asList('a', 'Z', '0', ' ', '\n', '\t', '\0', (char)255));
+                if (config.includeEdgeCases)
+                {
+                    values.addAll(Arrays.asList('a', 'Z', '0', ' ', '\n', '\t', '\0', (char) 255));
                 }
-                if (config.includeRandom) {
-                    for (int i = 0; i < config.iterationsPerType; i++) {
-                        values.add((char)ThreadLocalRandom.current().nextInt(32, 127));
+                if (config.includeRandom)
+                {
+                    for (int i = 0; i < config.iterationsPerType; i++)
+                    {
+                        values.add((char) ThreadLocalRandom.current().nextInt(32, 127));
                     }
                 }
                 break;
 
             case "Ljava/lang/String;":
-                if (config.includeNulls) {
+                if (config.includeNulls)
+                {
                     values.add(null);
                 }
-                if (config.includeEdgeCases) {
-                    values.addAll(Arrays.asList("", "test", "Hello World", "12345",
-                            "a", " ", "\n", "null", "true", "false",
-                            "ABCDEFGHIJ", "!@#$%^&*()", "\t\r\n"));
+                if (config.includeEdgeCases)
+                {
+                    values.addAll(Arrays.asList("", "test", "Hello World", "12345", "a", " ", "\n", "null", "true", "false", "ABCDEFGHIJ", "!@#$%^&*()", "\t\r\n"));
                 }
-                if (config.includeRandom) {
-                    for (int i = 0; i < config.iterationsPerType; i++) {
+                if (config.includeRandom)
+                {
+                    for (int i = 0; i < config.iterationsPerType; i++)
+                    {
                         values.add(generateRandomString(ThreadLocalRandom.current().nextInt(1, 20)));
                     }
                 }
                 break;
 
             default:
-                if (type.startsWith("[")) {
+                if (type.startsWith("["))
+                {
                     values.addAll(generateArrayValues(type));
-                } else if (type.startsWith("L")) {
-                    if (config.includeNulls) {
+                }
+                else if (type.startsWith("L"))
+                {
+                    if (config.includeNulls)
+                    {
                         values.add(null);
                     }
-                } else {
+                }
+                else
+                {
                     values.add(0);
                 }
         }
 
-        if (values.isEmpty()) {
+        if (values.isEmpty())
+        {
             values.add(null);
         }
 
         return values;
     }
 
-    private String generateRandomString(int length) {
+    private String generateRandomString(int length)
+    {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder sb = new StringBuilder(length);
         Random rand = ThreadLocalRandom.current();
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++)
+        {
             sb.append(chars.charAt(rand.nextInt(chars.length())));
         }
         return sb.toString();
     }
 
-    private List<Object> generateArrayValues(String arrayType) {
+    private List<Object> generateArrayValues(String arrayType)
+    {
         List<Object> values = new ArrayList<>();
         String componentType = arrayType.substring(1);
 
-        if (config.includeNulls) {
+        if (config.includeNulls)
+        {
             values.add(null);
         }
 
-        if (config.includeEdgeCases) {
+        if (config.includeEdgeCases)
+        {
             values.add(new Object[0]);
 
             Object singleElem = getSingleEdgeCaseElement(componentType);
-            if (singleElem != null) {
+            if (singleElem != null)
+            {
                 values.add(new Object[]{singleElem});
             }
 
             Object[] edgeCases = getEdgeCaseElements(componentType);
-            if (edgeCases.length > 0) {
+            if (edgeCases.length > 0)
+            {
                 values.add(edgeCases);
             }
         }
 
-        if (config.includeRandom) {
-            for (int i = 0; i < config.iterationsPerType; i++) {
+        if (config.includeRandom)
+        {
+            for (int i = 0; i < config.iterationsPerType; i++)
+            {
                 int len = ThreadLocalRandom.current().nextInt(1, 6);
                 Object[] arr = new Object[len];
-                for (int j = 0; j < len; j++) {
+                for (int j = 0; j < len; j++)
+                {
                     arr[j] = getRandomElement(componentType);
                 }
                 values.add(arr);
@@ -406,23 +507,37 @@ public class MethodFuzzer {
         return values;
     }
 
-    private Object getSingleEdgeCaseElement(String componentType) {
-        switch (componentType) {
-            case "I": return 0;
-            case "J": return 0L;
-            case "F": return 0.0f;
-            case "D": return 0.0;
-            case "B": return (byte) 0;
-            case "S": return (short) 0;
-            case "Z": return false;
-            case "C": return 'a';
-            case "Ljava/lang/String;": return "";
-            default: return null;
+    private Object getSingleEdgeCaseElement(String componentType)
+    {
+        switch (componentType)
+        {
+            case "I":
+                return 0;
+            case "J":
+                return 0L;
+            case "F":
+                return 0.0f;
+            case "D":
+                return 0.0;
+            case "B":
+                return (byte) 0;
+            case "S":
+                return (short) 0;
+            case "Z":
+                return false;
+            case "C":
+                return 'a';
+            case "Ljava/lang/String;":
+                return "";
+            default:
+                return null;
         }
     }
 
-    private Object[] getEdgeCaseElements(String componentType) {
-        switch (componentType) {
+    private Object[] getEdgeCaseElements(String componentType)
+    {
+        switch (componentType)
+        {
             case "I":
                 return new Object[]{0, 1, -1, Integer.MAX_VALUE, Integer.MIN_VALUE};
             case "J":
@@ -446,50 +561,68 @@ public class MethodFuzzer {
         }
     }
 
-    private Object getRandomElement(String componentType) {
+    private Object getRandomElement(String componentType)
+    {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
-        switch (componentType) {
-            case "I": return rand.nextInt();
-            case "J": return rand.nextLong();
-            case "F": return (float) (rand.nextDouble() * 100 - 50);
-            case "D": return rand.nextDouble() * 1000 - 500;
-            case "B": return (byte) rand.nextInt(-128, 128);
-            case "S": return (short) rand.nextInt(-32768, 32768);
-            case "Z": return rand.nextBoolean();
-            case "C": return (char) rand.nextInt(32, 127);
-            case "Ljava/lang/String;": return generateRandomString(rand.nextInt(1, 10));
-            default: return null;
+        switch (componentType)
+        {
+            case "I":
+                return rand.nextInt();
+            case "J":
+                return rand.nextLong();
+            case "F":
+                return (float) (rand.nextDouble() * 100 - 50);
+            case "D":
+                return rand.nextDouble() * 1000 - 500;
+            case "B":
+                return (byte) rand.nextInt(-128, 128);
+            case "S":
+                return (short) rand.nextInt(-32768, 32768);
+            case "Z":
+                return rand.nextBoolean();
+            case "C":
+                return (char) rand.nextInt(32, 127);
+            case "Ljava/lang/String;":
+                return generateRandomString(rand.nextInt(1, 10));
+            default:
+                return null;
         }
     }
 
-    public List<FuzzResult> runFuzz(ProgressCallback callback) {
+    public List<FuzzResult> runFuzz(ProgressCallback callback)
+    {
         List<Object[]> inputSets = generateInputSets();
         List<FuzzResult> results = new ArrayList<>();
 
         VMExecutionService service = VMExecutionService.getInstance();
-        if (!service.isInitialized()) {
+        if (!service.isInitialized())
+        {
             service.initialize();
         }
 
         int total = inputSets.size();
         int current = 0;
 
-        for (Object[] inputs : inputSets) {
-            if (callback != null) {
+        for (Object[] inputs : inputSets)
+        {
+            if (callback != null)
+            {
                 callback.onProgress(current, total, "Testing input " + (current + 1) + " of " + total);
             }
 
-            try {
+            try
+            {
                 BranchTrackingListener branchListener = new BranchTrackingListener();
-                ExecutionResult result = service.executeStaticMethodWithListener(
-                        className, methodName, descriptor, inputs, branchListener);
+                ExecutionResult result = service.executeStaticMethodWithListener(className, methodName, descriptor, inputs, branchListener);
 
                 String pathSig = branchListener.getPathSignature();
                 String summary = branchListener.getSummary();
                 int uniquePoints = branchListener.getUniqueBranchPoints();
 
                 results.add(new FuzzResult(inputs, result, pathSig, summary, uniquePoints));
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ExecutionResult errorResult = ExecutionResult.builder()
                         .success(false)
                         .exception(e)
@@ -500,54 +633,66 @@ public class MethodFuzzer {
             current++;
         }
 
-        if (callback != null) {
+        if (callback != null)
+        {
             callback.onComplete(results.size());
         }
 
         return results;
     }
 
-    public Map<String, List<FuzzResult>> groupByOutcome(List<FuzzResult> results) {
+    public Map<String, List<FuzzResult>> groupByOutcome(List<FuzzResult> results)
+    {
         Map<String, List<FuzzResult>> grouped = new LinkedHashMap<>();
-        for (FuzzResult r : results) {
+        for (FuzzResult r : results)
+        {
             grouped.computeIfAbsent(r.getOutcomeKey(), k -> new ArrayList<>()).add(r);
         }
         return grouped;
     }
 
-    public Map<String, List<FuzzResult>> groupByBranchPath(List<FuzzResult> results) {
+    public Map<String, List<FuzzResult>> groupByBranchPath(List<FuzzResult> results)
+    {
         Map<String, List<FuzzResult>> grouped = new LinkedHashMap<>();
-        for (FuzzResult r : results) {
+        for (FuzzResult r : results)
+        {
             grouped.computeIfAbsent(r.getBranchPathSignature(), k -> new ArrayList<>()).add(r);
         }
         return grouped;
     }
 
-    public int countUniqueBranchPaths(List<FuzzResult> results) {
+    public int countUniqueBranchPaths(List<FuzzResult> results)
+    {
         Set<String> paths = new HashSet<>();
-        for (FuzzResult r : results) {
+        for (FuzzResult r : results)
+        {
             paths.add(r.getBranchPathSignature());
         }
         return paths.size();
     }
 
-    public List<FuzzResult> selectDiverseResults(List<FuzzResult> results, int maxPerCategory) {
+    public List<FuzzResult> selectDiverseResults(List<FuzzResult> results, int maxPerCategory)
+    {
         Map<String, List<FuzzResult>> groupedByPath = groupByBranchPath(results);
         List<FuzzResult> diverse = new ArrayList<>();
 
-        for (Map.Entry<String, List<FuzzResult>> pathEntry : groupedByPath.entrySet()) {
+        for (Map.Entry<String, List<FuzzResult>> pathEntry : groupedByPath.entrySet())
+        {
             List<FuzzResult> pathResults = pathEntry.getValue();
 
             Map<String, FuzzResult> returnGroups = new LinkedHashMap<>();
-            for (FuzzResult r : pathResults) {
+            for (FuzzResult r : pathResults)
+            {
                 String returnKey = getReturnKey(r);
-                if (!returnGroups.containsKey(returnKey)) {
+                if (!returnGroups.containsKey(returnKey))
+                {
                     returnGroups.put(returnKey, r);
                 }
             }
 
             int count = 0;
-            for (FuzzResult r : returnGroups.values()) {
+            for (FuzzResult r : returnGroups.values())
+            {
                 if (count >= maxPerCategory) break;
                 diverse.add(r);
                 count++;
@@ -557,58 +702,74 @@ public class MethodFuzzer {
         return diverse;
     }
 
-    private String getReturnKey(FuzzResult r) {
+    private String getReturnKey(FuzzResult r)
+    {
         ExecutionResult result = r.getResult();
-        if (result.getException() != null) {
+        if (result.getException() != null)
+        {
             return "EX:" + result.getException().getClass().getSimpleName();
         }
-        if (result.getReturnValue() == null) {
+        if (result.getReturnValue() == null)
+        {
             return "NULL";
         }
         Object rv = result.getReturnValue();
-        if (rv instanceof Number) {
+        if (rv instanceof Number)
+        {
             long v = ((Number) rv).longValue();
             if (v == 0) return "RV:ZERO";
             if (v == 1) return "RV:ONE";
             if (v < 0) return "RV:NEGATIVE";
             return "RV:POSITIVE";
         }
-        if (rv instanceof Boolean) {
+        if (rv instanceof Boolean)
+        {
             return "RV:" + rv;
         }
         return "RV:OTHER";
     }
 
-    private List<String> parseParameterTypes(String descriptor) {
+    private List<String> parseParameterTypes(String descriptor)
+    {
         List<String> types = new ArrayList<>();
         int i = descriptor.indexOf('(');
         if (i < 0) return types;
         i++;
 
-        while (i < descriptor.length() && descriptor.charAt(i) != ')') {
+        while (i < descriptor.length() && descriptor.charAt(i) != ')')
+        {
             char c = descriptor.charAt(i);
-            if (c == 'L') {
+            if (c == 'L')
+            {
                 int end = descriptor.indexOf(';', i);
                 if (end < 0) break;
                 types.add(descriptor.substring(i, end + 1));
                 i = end + 1;
-            } else if (c == '[') {
+            }
+            else if (c == '[')
+            {
                 int start = i;
                 i++;
                 while (i < descriptor.length() && descriptor.charAt(i) == '[') i++;
-                if (i < descriptor.length()) {
+                if (i < descriptor.length())
+                {
                     char elem = descriptor.charAt(i);
-                    if (elem == 'L') {
+                    if (elem == 'L')
+                    {
                         int end = descriptor.indexOf(';', i);
                         if (end < 0) break;
                         types.add(descriptor.substring(start, end + 1));
                         i = end + 1;
-                    } else {
+                    }
+                    else
+                    {
                         types.add(descriptor.substring(start, i + 1));
                         i++;
                     }
                 }
-            } else {
+            }
+            else
+            {
                 types.add(String.valueOf(c));
                 i++;
             }
@@ -616,8 +777,10 @@ public class MethodFuzzer {
         return types;
     }
 
-    public interface ProgressCallback {
+    public interface ProgressCallback
+    {
         void onProgress(int current, int total, String message);
+
         void onComplete(int totalResults);
     }
 }

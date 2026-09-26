@@ -5,7 +5,8 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class CFGEdge {
+public class CFGEdge
+{
     private final CFGBlock target;
     private final CFGEdgeType type;
 }

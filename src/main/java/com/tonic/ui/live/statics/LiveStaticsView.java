@@ -47,7 +47,8 @@ import java.util.List;
  * reference fields can only be set to null, and {@code final} fields are read-only. The bottom list shows
  * static methods that can be invoked with primitive/String/null arguments.
  */
-public final class LiveStaticsView extends AbstractEditorView {
+public final class LiveStaticsView extends AbstractEditorView
+{
 
     private final String className;
 
@@ -57,10 +58,13 @@ public final class LiveStaticsView extends AbstractEditorView {
 
     private boolean programmaticEdit;
     private final List<StaticField> fieldRows = new ArrayList<>();
-    private final DefaultTableModel fieldModel = new DefaultTableModel(new Object[]{"Field", "Type", "Value"}, 0) {
+    private final DefaultTableModel fieldModel = new DefaultTableModel(new Object[]{"Field", "Type", "Value"}, 0)
+    {
         @Override
-        public boolean isCellEditable(int row, int column) {
-            if (column != 2 || row < 0 || row >= fieldRows.size()) {
+        public boolean isCellEditable(int row, int column)
+        {
+            if (column != 2 || row < 0 || row >= fieldRows.size())
+            {
                 return false;
             }
             int kind = fieldRows.get(row).getKind();
@@ -68,10 +72,14 @@ public final class LiveStaticsView extends AbstractEditorView {
         }
 
         @Override
-        public void setValueAt(Object value, int row, int column) {
-            if (column == 2 && !programmaticEdit) {
+        public void setValueAt(Object value, int row, int column)
+        {
+            if (column == 2 && !programmaticEdit)
+            {
                 commitFieldEdit(row, String.valueOf(value));
-            } else {
+            }
+            else
+            {
                 super.setValueAt(value, row, column);
             }
         }
@@ -82,7 +90,8 @@ public final class LiveStaticsView extends AbstractEditorView {
     private final JList<StaticMethod> methodList = new JList<>(methodModel);
     private JButton invokeButton;
 
-    public LiveStaticsView(ClassEntryModel classEntry) {
+    public LiveStaticsView(ClassEntryModel classEntry)
+    {
         super(new BorderLayout());
         this.className = classEntry.getClassName();
 
@@ -110,7 +119,8 @@ public final class LiveStaticsView extends AbstractEditorView {
         add(split, BorderLayout.CENTER);
     }
 
-    private JComponent buildFieldsPanel() {
+    private JComponent buildFieldsPanel()
+    {
         ThemedJPanel panel = new ThemedJPanel(BackgroundStyle.SECONDARY, new BorderLayout());
         JLabel header = sectionLabel("Static Fields");
         panel.add(header, BorderLayout.NORTH);
@@ -119,8 +129,10 @@ public final class LiveStaticsView extends AbstractEditorView {
         fieldTable.getColumnModel().getColumn(1).setPreferredWidth(120);
         fieldTable.getColumnModel().getColumn(2).setPreferredWidth(280);
         fieldTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        fieldTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
+        fieldTable.getSelectionModel().addListSelectionListener(e ->
+        {
+            if (!e.getValueIsAdjusting())
+            {
                 int row = fieldTable.getSelectedRow();
                 boolean nullable = row >= 0 && row < fieldRows.size()
                         && (fieldRows.get(row).getKind() == LiveProtocol.STATIC_STRING
@@ -128,14 +140,17 @@ public final class LiveStaticsView extends AbstractEditorView {
                 setNullButton.setEnabled(nullable);
             }
         });
-        fieldTable.addMouseListener(new MouseAdapter() {
+        fieldTable.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mousePressed(MouseEvent e)
+            {
                 maybeScanPopup(e);
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
+            public void mouseReleased(MouseEvent e)
+            {
                 maybeScanPopup(e);
             }
         });
@@ -144,48 +159,65 @@ public final class LiveStaticsView extends AbstractEditorView {
     }
 
     /** Right-click "Scan for this value" on a primitive/String field: seeds the live Value Scanner. */
-    private void maybeScanPopup(MouseEvent e) {
-        if (!e.isPopupTrigger()) {
+    private void maybeScanPopup(MouseEvent e)
+    {
+        if (!e.isPopupTrigger())
+        {
             return;
         }
         int row = fieldTable.rowAtPoint(e.getPoint());
-        if (row < 0 || row >= fieldRows.size()) {
+        if (row < 0 || row >= fieldRows.size())
+        {
             return;
         }
         fieldTable.setRowSelectionInterval(row, row);
         StaticField field = fieldRows.get(row);
         int valueType = scanTypeOf(field.getTypeDesc());
-        if (valueType < 0) {
+        if (valueType < 0)
+        {
             return;
         }
         JPopupMenu menu = new JPopupMenu();
         JMenuItem scan = new JMenuItem("Scan for this value");
-        scan.addActionListener(ev -> EventBus.getInstance().post(
-                new ScanSeedEvent(this, valueType, field.getValue(), "")));
+        scan.addActionListener(ev -> EventBus.getInstance().post(new ScanSeedEvent(this, valueType, field.getValue(), "")));
         menu.add(scan);
         menu.show(fieldTable, e.getX(), e.getY());
     }
 
     /** Maps a field descriptor to a scanner {@code SCAN_*} value type, or -1 for non-scannable types. */
-    private static int scanTypeOf(String desc) {
-        if (desc == null || desc.isEmpty()) {
+    private static int scanTypeOf(String desc)
+    {
+        if (desc == null || desc.isEmpty())
+        {
             return -1;
         }
-        switch (desc) {
-            case "I": return LiveProtocol.SCAN_INT;
-            case "J": return LiveProtocol.SCAN_LONG;
-            case "S": return LiveProtocol.SCAN_SHORT;
-            case "B": return LiveProtocol.SCAN_BYTE;
-            case "C": return LiveProtocol.SCAN_CHAR;
-            case "F": return LiveProtocol.SCAN_FLOAT;
-            case "D": return LiveProtocol.SCAN_DOUBLE;
-            case "Z": return LiveProtocol.SCAN_BOOLEAN;
-            case "Ljava/lang/String;": return LiveProtocol.SCAN_STRING;
-            default: return -1;
+        switch (desc)
+        {
+            case "I":
+                return LiveProtocol.SCAN_INT;
+            case "J":
+                return LiveProtocol.SCAN_LONG;
+            case "S":
+                return LiveProtocol.SCAN_SHORT;
+            case "B":
+                return LiveProtocol.SCAN_BYTE;
+            case "C":
+                return LiveProtocol.SCAN_CHAR;
+            case "F":
+                return LiveProtocol.SCAN_FLOAT;
+            case "D":
+                return LiveProtocol.SCAN_DOUBLE;
+            case "Z":
+                return LiveProtocol.SCAN_BOOLEAN;
+            case "Ljava/lang/String;":
+                return LiveProtocol.SCAN_STRING;
+            default:
+                return -1;
         }
     }
 
-    private JComponent buildMethodsPanel() {
+    private JComponent buildMethodsPanel()
+    {
         ThemedJPanel panel = new ThemedJPanel(BackgroundStyle.SECONDARY, new BorderLayout());
         panel.add(sectionLabel("Static Methods"), BorderLayout.NORTH);
 
@@ -194,8 +226,10 @@ public final class LiveStaticsView extends AbstractEditorView {
         methodList.setForeground(JStudioTheme.getTextPrimary());
         methodList.setFont(JStudioTheme.getCodeFont(12));
         methodList.setCellRenderer(new MethodCellRenderer());
-        methodList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
+        methodList.addListSelectionListener(e ->
+        {
+            if (!e.getValueIsAdjusting())
+            {
                 invokeButton.setEnabled(methodList.getSelectedValue() != null);
             }
         });
@@ -211,7 +245,8 @@ public final class LiveStaticsView extends AbstractEditorView {
         return panel;
     }
 
-    private JLabel sectionLabel(String text) {
+    private JLabel sectionLabel(String text)
+    {
         JLabel label = new JLabel(text);
         label.setFont(JStudioTheme.getUIFont(11));
         label.setForeground(JStudioTheme.getTextSecondary());
@@ -221,16 +256,20 @@ public final class LiveStaticsView extends AbstractEditorView {
 
     /** Called when the view becomes visible (EditorTab refresh). */
     @Override
-    public void refresh() {
-        if (!loaded) {
+    public void refresh()
+    {
+        if (!loaded)
+        {
             loaded = true;
             reloadData();
         }
     }
 
-    private void reloadData() {
+    private void reloadData()
+    {
         LiveSession session = LiveAttachService.getInstance().getSession();
-        if (session == null) {
+        if (session == null)
+        {
             fieldRows.clear();
             fieldModel.setRowCount(0);
             methodModel.clear();
@@ -239,122 +278,135 @@ public final class LiveStaticsView extends AbstractEditorView {
         }
         refreshButton.setEnabled(false);
         statusLabel.setText("Reading live state...");
-        SwingWorkers.run(
-                () -> new StaticsData(session.getStatics(className), session.listStaticMethods(className)),
-                this::populate,
-                err -> {
-                    refreshButton.setEnabled(true);
-                    statusLabel.setText("Failed: " + err.getMessage());
-                });
+        SwingWorkers.run(() -> new StaticsData(session.getStatics(className), session.listStaticMethods(className)), this::populate, err ->
+        {
+            refreshButton.setEnabled(true);
+            statusLabel.setText("Failed: " + err.getMessage());
+        });
     }
 
-    private void populate(StaticsData data) {
+    private void populate(StaticsData data)
+    {
         refreshButton.setEnabled(true);
         fieldRows.clear();
         fieldModel.setRowCount(0);
-        for (StaticField f : data.fields) {
+        for (StaticField f : data.fields)
+        {
             fieldRows.add(f);
             fieldModel.addRow(new Object[]{f.getName(), DescriptorParser.formatFieldDescriptor(f.getTypeDesc()), f.getValue()});
         }
         methodModel.clear();
-        for (StaticMethod m : data.methods) {
+        for (StaticMethod m : data.methods)
+        {
             methodModel.addElement(m);
         }
-        statusLabel.setText(data.fields.size() + " static field" + (data.fields.size() == 1 ? "" : "s")
-                + ", " + data.methods.size() + " method" + (data.methods.size() == 1 ? "" : "s"));
+        statusLabel.setText(data.fields.size() + " static field" + (data.fields.size() == 1 ? "" : "s") + ", " + data.methods.size() + " method" + (data.methods.size() == 1 ? "" : "s"));
     }
 
-    private void setDisplayValue(int row, String value) {
+    private void setDisplayValue(int row, String value)
+    {
         programmaticEdit = true;
         fieldModel.setValueAt(value, row, 2);
         programmaticEdit = false;
     }
 
-    private void commitFieldEdit(int row, String newValue) {
-        if (row < 0 || row >= fieldRows.size()) {
+    private void commitFieldEdit(int row, String newValue)
+    {
+        if (row < 0 || row >= fieldRows.size())
+        {
             return;
         }
         applySet(row, false, newValue);
     }
 
-    private void setSelectedNull() {
+    private void setSelectedNull()
+    {
         int row = fieldTable.getSelectedRow();
-        if (row >= 0 && row < fieldRows.size()) {
+        if (row >= 0 && row < fieldRows.size())
+        {
             applySet(row, true, "");
         }
     }
 
-    private void applySet(int row, boolean setNull, String value) {
+    private void applySet(int row, boolean setNull, String value)
+    {
         LiveSession session = LiveAttachService.getInstance().getSession();
-        if (session == null) {
+        if (session == null)
+        {
             statusLabel.setText("Not attached.");
             return;
         }
         final StaticField field = fieldRows.get(row);
         statusLabel.setText("Setting " + field.getName() + "...");
-        SwingWorkers.run(
-                () -> session.setStatic(className, field.getName(), setNull, value),
-                newValue -> {
-                    fieldRows.set(row, new StaticField(field.getName(), field.getTypeDesc(), newValue, field.getKind()));
-                    setDisplayValue(row, newValue);
-                    statusLabel.setText("Set " + field.getName() + " = " + newValue);
-                },
-                err -> {
-                    setDisplayValue(row, field.getValue());
-                    statusLabel.setText("Set failed: " + err.getMessage());
-                });
+        SwingWorkers.run(() -> session.setStatic(className, field.getName(), setNull, value), newValue ->
+        {
+            fieldRows.set(row, new StaticField(field.getName(), field.getTypeDesc(), newValue, field.getKind()));
+            setDisplayValue(row, newValue);
+            statusLabel.setText("Set " + field.getName() + " = " + newValue);
+        }, err ->
+        {
+            setDisplayValue(row, field.getValue());
+            statusLabel.setText("Set failed: " + err.getMessage());
+        });
     }
 
-    private void invokeSelected() {
+    private void invokeSelected()
+    {
         StaticMethod method = methodList.getSelectedValue();
-        if (method == null) {
+        if (method == null)
+        {
             return;
         }
         LiveSession session = LiveAttachService.getInstance().getSession();
-        if (session == null) {
+        if (session == null)
+        {
             statusLabel.setText("Not attached.");
             return;
         }
         List<String> paramTypes = DescriptorParser.parseParameterTypes(method.getDesc());
         List<String> args = new ArrayList<>();
-        if (!paramTypes.isEmpty()) {
+        if (!paramTypes.isEmpty())
+        {
             JPanel form = new JPanel(new GridLayout(paramTypes.size(), 2, 6, 4));
             List<JTextField> inputs = new ArrayList<>();
-            for (int i = 0; i < paramTypes.size(); i++) {
+            for (int i = 0; i < paramTypes.size(); i++)
+            {
                 String type = paramTypes.get(i);
                 form.add(new JLabel("arg" + i + " (" + type + "):"));
                 JTextField tf = new JTextField(isReferenceType(type) ? "null" : "");
                 inputs.add(tf);
                 form.add(tf);
             }
-            int ok = JOptionPane.showConfirmDialog(this, form, "Invoke " + method.getName(),
-                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-            if (ok != JOptionPane.OK_OPTION) {
+            int ok = JOptionPane.showConfirmDialog(this, form, "Invoke " + method.getName(), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (ok != JOptionPane.OK_OPTION)
+            {
                 return;
             }
-            for (JTextField tf : inputs) {
+            for (JTextField tf : inputs)
+            {
                 args.add(tf.getText());
             }
         }
         invokeButton.setEnabled(false);
         statusLabel.setText("Invoking " + method.getName() + "...");
-        SwingWorkers.run(
-                () -> session.invokeStatic(className, method.getName(), method.getDesc(), args),
-                result -> {
-                    invokeButton.setEnabled(true);
-                    statusLabel.setText(method.getName() + " -> " + result);
-                },
-                err -> {
-                    invokeButton.setEnabled(true);
-                    statusLabel.setText(method.getName() + " " + err.getMessage());
-                });
+        SwingWorkers.run(() -> session.invokeStatic(className, method.getName(), method.getDesc(), args), result ->
+        {
+            invokeButton.setEnabled(true);
+            statusLabel.setText(method.getName() + " -> " + result);
+        }, err ->
+        {
+            invokeButton.setEnabled(true);
+            statusLabel.setText(method.getName() + " " + err.getMessage());
+        });
     }
 
     // ---- helpers ------------------------------------------------------------------------------------
 
     /** True for non-primitive readable type names (used to pre-fill "null" in the invoke dialog). */
-    private static boolean isReferenceType(String readableType) {
-        switch (readableType) {
+    private static boolean isReferenceType(String readableType)
+    {
+        switch (readableType)
+        {
             case "boolean":
             case "byte":
             case "char":
@@ -370,32 +422,38 @@ public final class LiveStaticsView extends AbstractEditorView {
     }
 
     /** Carries the two lists fetched off the EDT so {@link #populate} can apply them together. */
-    private static final class StaticsData {
+    private static final class StaticsData
+    {
         final List<StaticField> fields;
         final List<StaticMethod> methods;
 
-        StaticsData(List<StaticField> fields, List<StaticMethod> methods) {
+        StaticsData(List<StaticField> fields, List<StaticMethod> methods)
+        {
             this.fields = fields;
             this.methods = methods;
         }
     }
 
-    private static final class MethodCellRenderer extends DefaultListCellRenderer {
+    private static final class MethodCellRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (value instanceof StaticMethod) {
+            if (value instanceof StaticMethod)
+            {
                 StaticMethod m = (StaticMethod) value;
-                setText(m.getName() + "(" + DescriptorParser.formatMethodParams(m.getDesc()) + "): "
-                        + DescriptorParser.formatReturnType(m.getDesc()));
+                setText(m.getName() + "(" + DescriptorParser.formatMethodParams(m.getDesc()) + "): " + DescriptorParser.formatReturnType(m.getDesc()));
             }
             setFont(JStudioTheme.getCodeFont(12));
             setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
-            if (isSelected) {
+            if (isSelected)
+            {
                 setBackground(JStudioTheme.getSelection());
                 setForeground(JStudioTheme.getTextPrimary());
-            } else {
+            }
+            else
+            {
                 setBackground(JStudioTheme.getBgSecondary());
                 setForeground(JStudioTheme.getTextPrimary());
             }

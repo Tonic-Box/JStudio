@@ -16,26 +16,32 @@ import java.util.Map;
  * skipped piece never drops a member. Plugin-safe: takes only {@link ClassEntryModel} + Strings (spans are YABR
  * types the plugin can't reach directly).
  */
-public final class SourceAssembler {
+public final class SourceAssembler
+{
 
-    private SourceAssembler() {
+    private SourceAssembler()
+    {
     }
 
     /** The region before the first method (package/imports/class decl + fields), or the whole source if no methods. */
-    public static String headerSource(ClassEntryModel classEntry, String source) {
+    public static String headerSource(ClassEntryModel classEntry, String source)
+    {
         String[] lines = source.split("\n", -1);
         int firstStart = firstMethodStart(classEntry, lines.length + 1);
         return join(lines, 1, firstStart - 1);
     }
 
     /** One method's full source slice (declaration through closing brace), or null when it has no span. */
-    public static String methodSource(ClassEntryModel classEntry, String source, String name, String desc) {
+    public static String methodSource(ClassEntryModel classEntry, String source, String name, String desc)
+    {
         Map<String, DecompileResult.MethodSpan> spans = classEntry.getMethodSpans();
-        if (spans == null) {
+        if (spans == null)
+        {
             return null;
         }
         DecompileResult.MethodSpan span = spans.get(name + desc);
-        if (span == null) {
+        if (span == null)
+        {
             return null;
         }
         return join(source.split("\n", -1), span.getStartLine(), span.getEndLine());
@@ -46,8 +52,8 @@ public final class SourceAssembler {
      * {@code name + descriptor}) replaces its method span, and everything else is kept from {@code source}. A
      * method with no entry in {@code cleanedBodiesByKey} keeps its original slice.
      */
-    public static String assemble(ClassEntryModel classEntry, String source, String cleanedShell,
-                                  Map<String, String> cleanedBodiesByKey) {
+    public static String assemble(ClassEntryModel classEntry, String source, String cleanedShell, Map<String, String> cleanedBodiesByKey)
+    {
         String[] lines = source.split("\n", -1);
         List<Span> ordered = orderedSpans(classEntry);
         int firstStart = ordered.isEmpty() ? lines.length + 1 : ordered.get(0).start;
@@ -57,14 +63,18 @@ public final class SourceAssembler {
 
         int i = firstStart;
         int spanIdx = 0;
-        while (i <= lines.length) {
-            if (spanIdx < ordered.size() && ordered.get(spanIdx).start == i) {
+        while (i <= lines.length)
+        {
+            if (spanIdx < ordered.size() && ordered.get(spanIdx).start == i)
+            {
                 Span span = ordered.get(spanIdx);
                 String body = cleanedBodiesByKey != null ? cleanedBodiesByKey.get(span.key) : null;
                 segments.add(body != null ? body : join(lines, span.start, span.end));
                 i = span.end + 1;
                 spanIdx++;
-            } else {
+            }
+            else
+            {
                 segments.add(lines[i - 1]);
                 i++;
             }
@@ -72,11 +82,14 @@ public final class SourceAssembler {
         return String.join("\n", segments);
     }
 
-    private static List<Span> orderedSpans(ClassEntryModel classEntry) {
+    private static List<Span> orderedSpans(ClassEntryModel classEntry)
+    {
         List<Span> ordered = new ArrayList<>();
         Map<String, DecompileResult.MethodSpan> spans = classEntry.getMethodSpans();
-        if (spans != null) {
-            for (Map.Entry<String, DecompileResult.MethodSpan> e : spans.entrySet()) {
+        if (spans != null)
+        {
+            for (Map.Entry<String, DecompileResult.MethodSpan> e : spans.entrySet())
+            {
                 ordered.add(new Span(e.getKey(), e.getValue().getStartLine(), e.getValue().getEndLine()));
             }
             ordered.sort(Comparator.comparingInt(a -> a.start));
@@ -84,28 +97,35 @@ public final class SourceAssembler {
         return ordered;
     }
 
-    private static int firstMethodStart(ClassEntryModel classEntry, int fallback) {
+    private static int firstMethodStart(ClassEntryModel classEntry, int fallback)
+    {
         Map<String, DecompileResult.MethodSpan> spans = classEntry.getMethodSpans();
-        if (spans == null || spans.isEmpty()) {
+        if (spans == null || spans.isEmpty())
+        {
             return fallback;
         }
         int min = Integer.MAX_VALUE;
-        for (DecompileResult.MethodSpan span : spans.values()) {
+        for (DecompileResult.MethodSpan span : spans.values())
+        {
             min = Math.min(min, span.getStartLine());
         }
         return min;
     }
 
     /** Lines {@code [from, to]} (1-based inclusive) joined by newline; empty when the range is empty. */
-    private static String join(String[] lines, int from, int to) {
+    private static String join(String[] lines, int from, int to)
+    {
         int start = Math.max(from, 1);
         int end = Math.min(to, lines.length);
-        if (start > end) {
+        if (start > end)
+        {
             return "";
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = start; i <= end; i++) {
-            if (i > start) {
+        for (int i = start; i <= end; i++)
+        {
+            if (i > start)
+            {
                 sb.append('\n');
             }
             sb.append(lines[i - 1]);
@@ -113,12 +133,14 @@ public final class SourceAssembler {
         return sb.toString();
     }
 
-    private static final class Span {
+    private static final class Span
+    {
         final String key;
         final int start;
         final int end;
 
-        Span(String key, int start, int end) {
+        Span(String key, int start, int end)
+        {
             this.key = key;
             this.start = start;
             this.end = end;

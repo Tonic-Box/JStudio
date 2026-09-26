@@ -37,43 +37,52 @@ import java.util.concurrent.ConcurrentHashMap;
  * Service for running symbolic simulation analysis on bytecode methods.
  * Wraps YABR's simulation engine and provides JStudio-specific analysis features.
  */
-public class SimulationService {
+public class SimulationService
+{
 
     private static final SimulationService INSTANCE = new SimulationService();
 
     private final Map<String, SimulationResultCache> resultCache = new ConcurrentHashMap<>();
 
-    private SimulationService() {
+    private SimulationService()
+    {
     }
 
-    public static SimulationService getInstance() {
+    public static SimulationService getInstance()
+    {
         return INSTANCE;
     }
 
     /**
      * Runs full simulation analysis on a method and caches the result.
      */
-    public SimulationAnalysisResult runAnalysis(MethodEntryModel methodModel) {
-        if (methodModel == null) {
+    public SimulationAnalysisResult runAnalysis(MethodEntryModel methodModel)
+    {
+        if (methodModel == null)
+        {
             return null;
         }
 
         String cacheKey = getCacheKey(methodModel);
         SimulationResultCache cached = resultCache.get(cacheKey);
-        if (cached != null && !cached.isStale()) {
+        if (cached != null && !cached.isStale())
+        {
             return cached.getResult();
         }
 
         ClassEntryModel classModel = methodModel.getOwner();
         MethodEntry method = methodModel.getMethodEntry();
 
-        if (method.getCodeAttribute() == null) {
+        if (method.getCodeAttribute() == null)
+        {
             return null;
         }
 
-        try {
+        try
+        {
             IRMethod irMethod = liftToIR(classModel.getClassFile(), method);
-            if (irMethod == null) {
+            if (irMethod == null)
+            {
                 return null;
             }
 
@@ -81,24 +90,29 @@ public class SimulationService {
             resultCache.put(cacheKey, new SimulationResultCache(result));
 
             return result;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             postStatus("Analysis error: " + e.getMessage());
             return null;
         }
     }
 
-    private IRMethod liftToIR(ClassFile classFile, MethodEntry method) {
-        try {
+    private IRMethod liftToIR(ClassFile classFile, MethodEntry method)
+    {
+        try
+        {
             SSA ssa = new SSA(classFile.getConstPool());
             return ssa.lift(method);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return null;
         }
     }
 
-    private SimulationAnalysisResult runFullAnalysis(IRMethod irMethod,
-                                                      ClassEntryModel classModel,
-                                                      MethodEntryModel methodModel) {
+    private SimulationAnalysisResult runFullAnalysis(IRMethod irMethod, ClassEntryModel classModel, MethodEntryModel methodModel)
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         ClassPool pool = project != null ? project.getClassPool() : null;
 
@@ -123,73 +137,43 @@ public class SimulationService {
 
         List<SimulationFinding> findings = new ArrayList<>();
 
-        for (OpaquePredicateListener.BranchAnalysis analysis : opaqueListener.getAnalyzedBranches()) {
-            if (analysis.isOpaque()) {
-                findings.add(new OpaquePredicate(
-                        classModel.getClassName(),
-                        methodModel.getMethodEntry().getName(),
-                        methodModel.getMethodEntry().getDesc(),
-                        analysis.getInstruction(),
-                        analysis.isAlwaysTrue(),
-                        analysis.getBlockId(),
-                        analysis.getBytecodeOffset()
-                ));
+        for (OpaquePredicateListener.BranchAnalysis analysis : opaqueListener.getAnalyzedBranches())
+        {
+            if (analysis.isOpaque())
+            {
+                findings.add(new OpaquePredicate(classModel.getClassName(), methodModel.getMethodEntry().getName(), methodModel.getMethodEntry().getDesc(), analysis.getInstruction(), analysis.isAlwaysTrue(), analysis.getBlockId(), analysis.getBytecodeOffset()));
             }
         }
 
         Set<IRBlock> deadBlocks = computeDeadCodeFromListener(irMethod, cfListener);
 
-        for (IRBlock deadBlock : deadBlocks) {
+        for (IRBlock deadBlock : deadBlocks)
+        {
             boolean isExceptionHandler = isExceptionHandlerBlock(deadBlock, irMethod);
-            findings.add(new DeadCodeBlock(
-                    classModel.getClassName(),
-                    methodModel.getMethodEntry().getName(),
-                    methodModel.getMethodEntry().getDesc(),
-                    deadBlock,
-                    isExceptionHandler
-            ));
+            findings.add(new DeadCodeBlock(classModel.getClassName(), methodModel.getMethodEntry().getName(), methodModel.getMethodEntry().getDesc(), deadBlock, isExceptionHandler));
         }
 
-        for (StringDecryptionListener.DecryptionResult dr : decryptionListener.getDecryptionResults()) {
-            findings.add(new DecryptedString(
-                    classModel.getClassName(),
-                    methodModel.getMethodEntry().getName(),
-                    methodModel.getMethodEntry().getDesc(),
-                    dr.getInstruction(),
-                    dr.getDecryptedValue(),
-                    dr.getEncryptedInput(),
-                    dr.getMethodUsed()
-            ));
+        for (StringDecryptionListener.DecryptionResult dr : decryptionListener.getDecryptionResults())
+        {
+            findings.add(new DecryptedString(classModel.getClassName(), methodModel.getMethodEntry().getName(), methodModel.getMethodEntry().getDesc(), dr.getInstruction(), dr.getDecryptedValue(), dr.getEncryptedInput(), dr.getMethodUsed()));
         }
 
-        for (TaintTrackingListener.TaintFlowResult tf : taintListener.getTaintFlows()) {
-            findings.add(new TaintFlow(
-                    classModel.getClassName(),
-                    methodModel.getMethodEntry().getName(),
-                    methodModel.getMethodEntry().getDesc(),
-                    tf.getSinkInstruction(),
-                    tf.getSourceDescription(),
-                    tf.getSinkDescription(),
-                    tf.getFlowPath(),
-                    tf.getCategory()
-            ));
+        for (TaintTrackingListener.TaintFlowResult tf : taintListener.getTaintFlows())
+        {
+            findings.add(new TaintFlow(classModel.getClassName(), methodModel.getMethodEntry().getName(), methodModel.getMethodEntry().getDesc(), tf.getSinkInstruction(), tf.getSourceDescription(), tf.getSinkDescription(), tf.getFlowPath(), tf.getCategory()));
         }
 
-        return new SimulationAnalysisResult(
-                methodModel,
-                result,
-                findings,
-                deadBlocks,
-                cfListener.getBlocksVisited(),
-                cfListener.getBranchCount()
-        );
+        return new SimulationAnalysisResult(methodModel, result, findings, deadBlocks, cfListener.getBlocksVisited(), cfListener.getBranchCount());
     }
 
-    private Set<IRBlock> computeDeadCodeFromListener(IRMethod irMethod, ControlFlowListener cfListener) {
+    private Set<IRBlock> computeDeadCodeFromListener(IRMethod irMethod, ControlFlowListener cfListener)
+    {
         Set<IRBlock> deadBlocks = new HashSet<>();
 
-        for (IRBlock block : irMethod.getBlocks()) {
-            if (!cfListener.wasVisited(block)) {
+        for (IRBlock block : irMethod.getBlocks())
+        {
+            if (!cfListener.wasVisited(block))
+            {
                 deadBlocks.add(block);
             }
         }
@@ -197,10 +181,14 @@ public class SimulationService {
         return deadBlocks;
     }
 
-    private boolean isExceptionHandlerBlock(IRBlock block, IRMethod irMethod) {
-        for (IRBlock methodBlock : irMethod.getBlocks()) {
-            for (var handler : methodBlock.getExceptionHandlers()) {
-                if (handler.getHandlerBlock() == block) {
+    private boolean isExceptionHandlerBlock(IRBlock block, IRMethod irMethod)
+    {
+        for (IRBlock methodBlock : irMethod.getBlocks())
+        {
+            for (var handler : methodBlock.getExceptionHandlers())
+            {
+                if (handler.getHandlerBlock() == block)
+                {
                     return true;
                 }
             }
@@ -208,33 +196,39 @@ public class SimulationService {
         return false;
     }
 
-    private String getCacheKey(MethodEntryModel methodModel) {
+    private String getCacheKey(MethodEntryModel methodModel)
+    {
         ClassEntryModel classModel = methodModel.getOwner();
         MethodEntry method = methodModel.getMethodEntry();
         return classModel.getClassName() + "#" + method.getName() + method.getDesc();
     }
 
-    private void postStatus(String message) {
+    private void postStatus(String message)
+    {
         EventBus.getInstance().post(new StatusMessageEvent(this, message));
     }
 
     /**
      * Cache entry for simulation results.
      */
-    private static class SimulationResultCache {
+    private static class SimulationResultCache
+    {
         private final SimulationAnalysisResult result;
         private final long timestamp;
 
-        SimulationResultCache(SimulationAnalysisResult result) {
+        SimulationResultCache(SimulationAnalysisResult result)
+        {
             this.result = result;
             this.timestamp = System.currentTimeMillis();
         }
 
-        SimulationAnalysisResult getResult() {
+        SimulationAnalysisResult getResult()
+        {
             return result;
         }
 
-        boolean isStale() {
+        boolean isStale()
+        {
             return System.currentTimeMillis() - timestamp > 5 * 60 * 1000;
         }
     }

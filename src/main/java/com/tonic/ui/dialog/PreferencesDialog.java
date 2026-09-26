@@ -37,7 +37,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.List;
 
-public class PreferencesDialog extends JDialog implements ThemeChangeListener {
+public class PreferencesDialog extends JDialog implements ThemeChangeListener
+{
 
     private JComboBox<String> fontComboBox;
     private JSpinner fontSizeSpinner;
@@ -57,7 +58,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
 
     private Runnable onApply;
 
-    public PreferencesDialog(Frame owner) {
+    public PreferencesDialog(Frame owner)
+    {
         super(owner, "Preferences", true);
 
         setSize(500, 580);
@@ -97,11 +99,13 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         SwingUtilities.invokeLater(this::applyTheme);
     }
 
-    private void applyTheme() {
+    private void applyTheme()
+    {
         mainPanel.setBackground(JStudioTheme.getBgSecondary());
 
         updatePanelTheme(editorPanel, "Editor Font");
@@ -113,22 +117,26 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         buttonPanel.setBackground(JStudioTheme.getBgSecondary());
         buttonPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
 
-        if (loadJdkClassesBox != null) {
+        if (loadJdkClassesBox != null)
+        {
             loadJdkClassesBox.setBackground(JStudioTheme.getBgSecondary());
             loadJdkClassesBox.setForeground(JStudioTheme.getTextPrimary());
         }
 
-        if (updateCheckBox != null) {
+        if (updateCheckBox != null)
+        {
             updateCheckBox.setBackground(JStudioTheme.getBgSecondary());
             updateCheckBox.setForeground(JStudioTheme.getTextPrimary());
         }
 
-        if (fontComboBox != null) {
+        if (fontComboBox != null)
+        {
             fontComboBox.setBackground(JStudioTheme.getBgTertiary());
             fontComboBox.setForeground(JStudioTheme.getTextPrimary());
         }
 
-        if (themeComboBox != null) {
+        if (themeComboBox != null)
+        {
             themeComboBox.setBackground(JStudioTheme.getBgTertiary());
             themeComboBox.setForeground(JStudioTheme.getTextPrimary());
         }
@@ -138,60 +146,60 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         repaint();
     }
 
-    private void updatePanelTheme(JPanel panel, String title) {
-        if (panel != null) {
+    private void updatePanelTheme(JPanel panel, String title)
+    {
+        if (panel != null)
+        {
             panel.setBackground(JStudioTheme.getBgSecondary());
-            panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                title,
-                TitledBorder.DEFAULT_JUSTIFICATION,
-                TitledBorder.DEFAULT_POSITION,
-                JStudioTheme.getUIFont(12),
-                JStudioTheme.getTextPrimary()
-            ));
+            panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), title, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, JStudioTheme.getUIFont(12), JStudioTheme.getTextPrimary()));
         }
     }
 
-    private void applyThemeToLabels(Component component) {
-        if (component instanceof JLabel) {
+    private void applyThemeToLabels(Component component)
+    {
+        if (component instanceof JLabel)
+        {
             JLabel label = (JLabel) component;
             Color fg = label.getForeground();
-            if (fg != null && !fg.equals(JStudioTheme.getAccent())) {
-                if (isSecondaryLabel(label)) {
+            if (fg != null && !fg.equals(JStudioTheme.getAccent()))
+            {
+                if (isSecondaryLabel(label))
+                {
                     label.setForeground(JStudioTheme.getTextSecondary());
-                } else {
+                }
+                else
+                {
                     label.setForeground(JStudioTheme.getTextPrimary());
                 }
             }
-        } else if (component instanceof Container) {
-            for (Component child : ((Container) component).getComponents()) {
+        }
+        else if (component instanceof Container)
+        {
+            for (Component child : ((Container) component).getComponents())
+            {
                 applyThemeToLabels(child);
             }
         }
     }
 
-    private boolean isSecondaryLabel(JLabel label) {
+    private boolean isSecondaryLabel(JLabel label)
+    {
         String text = label.getText();
         return text != null && (text.contains("take effect") || text.startsWith("Changes"));
     }
 
     @Override
-    public void dispose() {
+    public void dispose()
+    {
         ThemeManager.getInstance().removeThemeChangeListener(this);
         super.dispose();
     }
 
-    private JPanel createEditorSection() {
+    private JPanel createEditorSection()
+    {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(JStudioTheme.getBgSecondary());
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Editor Font",
-            TitledBorder.DEFAULT_JUSTIFICATION,
-            TitledBorder.DEFAULT_POSITION,
-            JStudioTheme.getUIFont(12),
-            JStudioTheme.getTextPrimary()
-        ));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Editor Font", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, JStudioTheme.getUIFont(12), JStudioTheme.getTextPrimary()));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
@@ -212,16 +220,19 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
 
         fontComboBox.addItem("(Default)");
         List<String> monoFonts = AbstractTheme.getAvailableMonospaceFonts();
-        for (String font : monoFonts) {
+        for (String font : monoFonts)
+        {
             fontComboBox.addItem(font);
         }
 
-        fontComboBox.setRenderer(new DefaultListCellRenderer() {
+        fontComboBox.setRenderer(new DefaultListCellRenderer()
+        {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value,
-                    int index, boolean isSelected, boolean cellHasFocus) {
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+            {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value != null && !value.equals("(Default)")) {
+                if (value != null && !value.equals("(Default)"))
+                {
                     setFont(new Font((String) value, Font.PLAIN, 12));
                 }
                 return this;
@@ -248,17 +259,11 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         return panel;
     }
 
-    private JPanel createAppearanceSection() {
+    private JPanel createAppearanceSection()
+    {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(JStudioTheme.getBgSecondary());
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Appearance",
-            TitledBorder.DEFAULT_JUSTIFICATION,
-            TitledBorder.DEFAULT_POSITION,
-            JStudioTheme.getUIFont(12),
-            JStudioTheme.getTextPrimary()
-        ));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Appearance", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, JStudioTheme.getUIFont(12), JStudioTheme.getTextPrimary()));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
@@ -277,16 +282,19 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         themeComboBox.setBackground(JStudioTheme.getBgTertiary());
         themeComboBox.setForeground(JStudioTheme.getTextPrimary());
 
-        for (Theme theme : ThemeManager.getInstance().getAvailableThemes()) {
+        for (Theme theme : ThemeManager.getInstance().getAvailableThemes())
+        {
             themeComboBox.addItem(theme);
         }
 
-        themeComboBox.setRenderer(new DefaultListCellRenderer() {
+        themeComboBox.setRenderer(new DefaultListCellRenderer()
+        {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value,
-                    int index, boolean isSelected, boolean cellHasFocus) {
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+            {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Theme) {
+                if (value instanceof Theme)
+                {
                     setText(((Theme) value).getDisplayName());
                 }
                 return this;
@@ -299,17 +307,11 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         return panel;
     }
 
-    private JPanel createExecutionSection() {
+    private JPanel createExecutionSection()
+    {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(JStudioTheme.getBgSecondary());
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Execution",
-            TitledBorder.DEFAULT_JUSTIFICATION,
-            TitledBorder.DEFAULT_POSITION,
-            JStudioTheme.getUIFont(12),
-            JStudioTheme.getTextPrimary()
-        ));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Execution", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, JStudioTheme.getUIFont(12), JStudioTheme.getTextPrimary()));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
@@ -332,17 +334,11 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         return panel;
     }
 
-    private JPanel createUpdatesSection() {
+    private JPanel createUpdatesSection()
+    {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(JStudioTheme.getBgSecondary());
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Updates",
-            TitledBorder.DEFAULT_JUSTIFICATION,
-            TitledBorder.DEFAULT_POSITION,
-            JStudioTheme.getUIFont(12),
-            JStudioTheme.getTextPrimary()
-        ));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Updates", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, JStudioTheme.getUIFont(12), JStudioTheme.getTextPrimary()));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
@@ -359,17 +355,11 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         return panel;
     }
 
-    private JPanel createPreviewSection() {
+    private JPanel createPreviewSection()
+    {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(JStudioTheme.getBgSecondary());
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-            "Preview",
-            TitledBorder.DEFAULT_JUSTIFICATION,
-            TitledBorder.DEFAULT_POSITION,
-            JStudioTheme.getUIFont(12),
-            JStudioTheme.getTextPrimary()
-        ));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Preview", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, JStudioTheme.getUIFont(12), JStudioTheme.getTextPrimary()));
 
         previewPane = new JTextPane();
         previewPane.setEditable(false);
@@ -383,7 +373,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         return panel;
     }
 
-    private JPanel createButtonPanel() {
+    private JPanel createButtonPanel()
+    {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
         panel.setBackground(JStudioTheme.getBgSecondary());
         panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
@@ -397,7 +388,8 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         panel.add(applyButton);
 
         JButton okButton = new JButton("OK");
-        okButton.addActionListener(e -> {
+        okButton.addActionListener(e ->
+        {
             applySettings();
             dispose();
         });
@@ -406,13 +398,17 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         return panel;
     }
 
-    private void loadSettings() {
+    private void loadSettings()
+    {
         Settings settings = Settings.getInstance();
 
         String fontFamily = settings.getFontFamily();
-        if (fontFamily == null || fontFamily.isEmpty()) {
+        if (fontFamily == null || fontFamily.isEmpty())
+        {
             fontComboBox.setSelectedIndex(0);
-        } else {
+        }
+        else
+        {
             fontComboBox.setSelectedItem(fontFamily);
         }
 
@@ -425,13 +421,16 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         updateCheckBox.setSelected(settings.isUpdateCheckEnabled());
     }
 
-    private void updatePreview() {
-        if (previewPane == null || fontComboBox == null || fontSizeSpinner == null || themeComboBox == null) {
+    private void updatePreview()
+    {
+        if (previewPane == null || fontComboBox == null || fontSizeSpinner == null || themeComboBox == null)
+        {
             return;
         }
 
         Theme selectedTheme = (Theme) themeComboBox.getSelectedItem();
-        if (selectedTheme == null) {
+        if (selectedTheme == null)
+        {
             selectedTheme = ThemeManager.getInstance().getCurrentTheme();
         }
 
@@ -439,9 +438,12 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         int size = (Integer) fontSizeSpinner.getValue();
 
         Font previewFont;
-        if (selectedFont == null || selectedFont.equals("(Default)")) {
+        if (selectedFont == null || selectedFont.equals("(Default)"))
+        {
             previewFont = selectedTheme.getCodeFont(size);
-        } else {
+        }
+        else
+        {
             previewFont = new Font(selectedFont, Font.PLAIN, size);
         }
 
@@ -450,17 +452,22 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         previewScrollPane.getViewport().setBackground(selectedTheme.getBgTertiary());
 
         StyledDocument doc = previewPane.getStyledDocument();
-        try {
+        try
+        {
             doc.remove(0, doc.getLength());
-        } catch (BadLocationException e) {
+        }
+        catch (BadLocationException e)
+        {
             // ignore
         }
 
         appendStyledCode(doc, selectedTheme, previewFont);
     }
 
-    private void appendStyledCode(StyledDocument doc, Theme theme, Font font) {
-        try {
+    private void appendStyledCode(StyledDocument doc, Theme theme, Font font)
+    {
+        try
+        {
             appendText(doc, "public", theme.getJavaKeyword(), font);
             appendText(doc, " ", theme.getTextPrimary(), font);
             appendText(doc, "class", theme.getJavaKeyword(), font);
@@ -497,12 +504,15 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
 
             appendText(doc, "    }\n", theme.getTextPrimary(), font);
             appendText(doc, "}", theme.getTextPrimary(), font);
-        } catch (BadLocationException e) {
+        }
+        catch (BadLocationException e)
+        {
             // ignore
         }
     }
 
-    private void appendText(StyledDocument doc, String text, Color color, Font font) throws BadLocationException {
+    private void appendText(StyledDocument doc, String text, Color color, Font font) throws BadLocationException
+    {
         SimpleAttributeSet style = new SimpleAttributeSet();
         StyleConstants.setForeground(style, color);
         StyleConstants.setFontFamily(style, font.getFamily());
@@ -510,32 +520,39 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener {
         doc.insertString(doc.getLength(), text, style);
     }
 
-    private void applySettings() {
+    private void applySettings()
+    {
         Settings settings = Settings.getInstance();
 
         String selectedFont = (String) fontComboBox.getSelectedItem();
-        if (selectedFont != null && selectedFont.equals("(Default)")) {
+        if (selectedFont != null && selectedFont.equals("(Default)"))
+        {
             settings.setFontFamily("");
-        } else {
+        }
+        else
+        {
             settings.setFontFamily(selectedFont);
         }
 
         settings.setFontSize((Integer) fontSizeSpinner.getValue());
 
         Theme selectedTheme = (Theme) themeComboBox.getSelectedItem();
-        if (selectedTheme != null) {
+        if (selectedTheme != null)
+        {
             ThemeManager.getInstance().setTheme(selectedTheme.getName());
         }
 
         settings.setLoadJdkClassesEnabled(loadJdkClassesBox.isSelected());
         settings.setUpdateCheckEnabled(updateCheckBox.isSelected());
 
-        if (onApply != null) {
+        if (onApply != null)
+        {
             SwingUtilities.invokeLater(onApply);
         }
     }
 
-    public void setOnApply(Runnable onApply) {
+    public void setOnApply(Runnable onApply)
+    {
         this.onApply = onApply;
     }
 }

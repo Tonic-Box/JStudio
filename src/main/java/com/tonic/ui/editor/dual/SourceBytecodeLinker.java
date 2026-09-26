@@ -18,13 +18,15 @@ import java.util.NavigableMap;
  * <p>Resolution is many-to-one in both directions and degrades gracefully: missing maps (plain
  * cached source, decompile failure) or unmapped lines simply highlight one side without the other.
  */
-public final class SourceBytecodeLinker {
+public final class SourceBytecodeLinker
+{
 
     private final ClassEntryModel classEntry;
     private final BytecodeView bytecodeView;
     private final SourceCodeView sourceView;
 
-    public SourceBytecodeLinker(ClassEntryModel classEntry, BytecodeView bytecodeView, SourceCodeView sourceView) {
+    public SourceBytecodeLinker(ClassEntryModel classEntry, BytecodeView bytecodeView, SourceCodeView sourceView)
+    {
         this.classEntry = classEntry;
         this.bytecodeView = bytecodeView;
         this.sourceView = sourceView;
@@ -32,40 +34,48 @@ public final class SourceBytecodeLinker {
         sourceView.setOnLineActivated(this::onSourceLineActivated);
     }
 
-    private void onBytecodeLineActivated(int displayLine) {
+    private void onBytecodeLineActivated(int displayLine)
+    {
         BcLocation location = bytecodeView.locationAtLine(displayLine);
-        if (location == null) {
+        if (location == null)
+        {
             return;
         }
         int sourceLine = SourceLineMaps.sourceLineForPc(lineMapFor(location.key()), location.getPc());
         clearBoth();
         bytecodeView.addHighlight(displayLine);
-        if (sourceLine > 0) {
+        if (sourceLine > 0)
+        {
             sourceView.highlightLinkedLine(sourceLine - 1);
         }
     }
 
-    private void onSourceLineActivated(int displayLine) {
+    private void onSourceLineActivated(int displayLine)
+    {
         int oneBasedLine = displayLine + 1;
         clearBoth();
         sourceView.highlightLinkedLine(displayLine);
 
         String methodKey = SourceLineMaps.methodKeyForSourceLine(classEntry.getMethodSpans(), oneBasedLine);
-        if (methodKey == null) {
+        if (methodKey == null)
+        {
             return;
         }
         int[] span = SourceLineMaps.pcSpanForSourceLine(lineMapFor(methodKey), oneBasedLine);
-        if (span != null) {
+        if (span != null)
+        {
             bytecodeView.highlightPcSpan(methodKey, span[0], span[1]);
         }
     }
 
-    private NavigableMap<Integer, Integer> lineMapFor(String methodKey) {
+    private NavigableMap<Integer, Integer> lineMapFor(String methodKey)
+    {
         Map<String, NavigableMap<Integer, Integer>> maps = classEntry.getSourceLineMaps();
         return maps == null ? null : maps.get(methodKey);
     }
 
-    private void clearBoth() {
+    private void clearBoth()
+    {
         bytecodeView.clearHighlights();
         sourceView.clearHighlight();
     }

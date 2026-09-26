@@ -16,23 +16,30 @@ import java.util.jar.JarOutputStream;
  * jar file. Shared by "Export as JAR" and the Run feature (which exports to a temp jar to launch), so both
  * reflect transforms/edits.
  */
-public final class ProjectJarExporter {
+public final class ProjectJarExporter
+{
 
     private static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
 
-    private ProjectJarExporter() {
+    private ProjectJarExporter()
+    {
     }
 
-    public static void export(ProjectModel project, File output) throws IOException {
-        try (JarOutputStream jar = new JarOutputStream(new FileOutputStream(output))) {
+    public static void export(ProjectModel project, File output) throws IOException
+    {
+        try (JarOutputStream jar = new JarOutputStream(new FileOutputStream(output)))
+        {
             writeManifest(jar, project);
-            for (ClassEntryModel entry : project.getUserClasses()) {
+            for (ClassEntryModel entry : project.getUserClasses())
+            {
                 jar.putNextEntry(new JarEntry(entry.getClassName() + ".class"));
                 jar.write(entry.getClassFile().write());
                 jar.closeEntry();
             }
-            for (ResourceEntryModel resource : project.getAllResources()) {
-                if (MANIFEST_PATH.equals(resource.getPath())) {
+            for (ResourceEntryModel resource : project.getAllResources())
+            {
+                if (MANIFEST_PATH.equals(resource.getPath()))
+                {
                     continue;
                 }
                 jar.putNextEntry(new JarEntry(resource.getPath()));
@@ -42,11 +49,11 @@ public final class ProjectJarExporter {
         }
     }
 
-    private static void writeManifest(JarOutputStream jar, ProjectModel project) throws IOException {
+    private static void writeManifest(JarOutputStream jar, ProjectModel project) throws IOException
+    {
         jar.putNextEntry(new JarEntry(MANIFEST_PATH));
         ResourceEntryModel existing = project.getResource(MANIFEST_PATH);
-        jar.write(existing != null ? existing.getData()
-                : "Manifest-Version: 1.0\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+        jar.write(existing != null ? existing.getData() : "Manifest-Version: 1.0\r\n\r\n".getBytes(StandardCharsets.UTF_8));
         jar.closeEntry();
     }
 }

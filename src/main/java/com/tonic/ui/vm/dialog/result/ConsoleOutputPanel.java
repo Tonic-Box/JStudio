@@ -11,21 +11,25 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.List;
 
-public class ConsoleOutputPanel extends ThemedJPanel {
+public class ConsoleOutputPanel extends ThemedJPanel
+{
 
     private final JTextPane outputPane;
     private final StyledDocument doc;
     private final JLabel lineCountLabel;
 
-    private static Color stdoutColor() {
+    private static Color stdoutColor()
+    {
         return JStudioTheme.getTextPrimary();
     }
 
-    private static Color stderrColor() {
+    private static Color stderrColor()
+    {
         return JStudioTheme.getError();
     }
 
-    public ConsoleOutputPanel() {
+    public ConsoleOutputPanel()
+    {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
 
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL + 1, 3));
@@ -68,7 +72,8 @@ public class ConsoleOutputPanel extends ThemedJPanel {
         showEmpty();
     }
 
-    private void initStyles() {
+    private void initStyles()
+    {
         Style defaultStyle = outputPane.addStyle("default", null);
         StyleConstants.setForeground(defaultStyle, stdoutColor());
 
@@ -83,50 +88,67 @@ public class ConsoleOutputPanel extends ThemedJPanel {
         StyleConstants.setFontSize(prefixStyle, 10);
     }
 
-    public void showEmpty() {
-        try {
+    public void showEmpty()
+    {
+        try
+        {
             doc.remove(0, doc.getLength());
             doc.insertString(0, "(No console output)", outputPane.getStyle("default"));
-        } catch (BadLocationException ignored) {}
+        }
+        catch (BadLocationException ignored)
+        {
+        }
         lineCountLabel.setText("Lines: 0");
     }
 
-    public void clear() {
+    public void clear()
+    {
         showEmpty();
     }
 
-    public void update(List<String> output) {
-        try {
+    public void update(List<String> output)
+    {
+        try
+        {
             doc.remove(0, doc.getLength());
 
-            if (output == null || output.isEmpty()) {
+            if (output == null || output.isEmpty())
+            {
                 doc.insertString(0, "(No console output)", outputPane.getStyle("default"));
                 lineCountLabel.setText("Lines: 0");
                 return;
             }
 
             int lineCount = 0;
-            for (String line : output) {
+            for (String line : output)
+            {
                 boolean isStderr = line.startsWith("[stderr]") || line.startsWith("ERROR:") ||
-                                   line.startsWith("Exception") || line.contains("Exception:");
+                        line.startsWith("Exception") || line.contains("Exception:");
 
                 String prefix;
                 Style lineStyle;
                 String content;
 
-                if (line.startsWith("[stdout]")) {
+                if (line.startsWith("[stdout]"))
+                {
                     prefix = "[stdout] ";
                     content = line.substring(8).trim();
                     lineStyle = outputPane.getStyle("stdout");
-                } else if (line.startsWith("[stderr]")) {
+                }
+                else if (line.startsWith("[stderr]"))
+                {
                     prefix = "[stderr] ";
                     content = line.substring(8).trim();
                     lineStyle = outputPane.getStyle("stderr");
-                } else if (isStderr) {
+                }
+                else if (isStderr)
+                {
                     prefix = "[stderr] ";
                     content = line;
                     lineStyle = outputPane.getStyle("stderr");
-                } else {
+                }
+                else
+                {
                     prefix = "[stdout] ";
                     content = line;
                     lineStyle = outputPane.getStyle("stdout");
@@ -140,25 +162,31 @@ public class ConsoleOutputPanel extends ThemedJPanel {
             lineCountLabel.setText("Lines: " + lineCount);
             outputPane.setCaretPosition(0);
 
-        } catch (BadLocationException ignored) {}
+        }
+        catch (BadLocationException ignored)
+        {
+        }
     }
 
-    private void exportToFile() {
+    private void exportToFile()
+    {
         JFileChooser chooser = new JFileChooser();
         chooser.setSelectedFile(new File("console_output.txt"));
         int result = chooser.showSaveDialog(this);
 
-        if (result == JFileChooser.APPROVE_OPTION) {
-            try {
+        if (result == JFileChooser.APPROVE_OPTION)
+        {
+            try
+            {
                 File file = chooser.getSelectedFile();
                 FileWriter writer = new FileWriter(file);
                 writer.write(outputPane.getText());
                 writer.close();
-                JOptionPane.showMessageDialog(this, "Exported to " + file.getName(),
-                    "Export Complete", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Export failed: " + e.getMessage(),
-                    "Export Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Exported to " + file.getName(), "Export Complete", JOptionPane.INFORMATION_MESSAGE);
+            }
+            catch (Exception e)
+            {
+                JOptionPane.showMessageDialog(this, "Export failed: " + e.getMessage(), "Export Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

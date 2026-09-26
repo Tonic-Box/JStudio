@@ -21,7 +21,8 @@ import java.util.function.Consumer;
  * LiveGuiPluginContext; every event subscription and tracked cleanup is appended to the plugin's
  * contribution list so the manager can undo them on unload.
  */
-final class JStudioHostImpl implements JStudioHost {
+final class JStudioHostImpl implements JStudioHost
+{
 
     private final MainFrame frame;
     private final PluginInfo info;
@@ -29,7 +30,8 @@ final class JStudioHostImpl implements JStudioHost {
     private final List<Registration> contributions;
     private final UiApiImpl ui;
 
-    JStudioHostImpl(MainFrame frame, PluginInfo info, PluginContext context, List<Registration> contributions) {
+    JStudioHostImpl(MainFrame frame, PluginInfo info, PluginContext context, List<Registration> contributions)
+    {
         this.frame = frame;
         this.info = info;
         this.context = context;
@@ -38,49 +40,58 @@ final class JStudioHostImpl implements JStudioHost {
     }
 
     @Override
-    public PluginContext context() {
+    public PluginContext context()
+    {
         return context;
     }
 
     @Override
-    public UiApi ui() {
+    public UiApi ui()
+    {
         return ui;
     }
 
     @Override
-    public EventBus events() {
+    public EventBus events()
+    {
         return EventBus.getInstance();
     }
 
     @Override
-    public JFrame frame() {
+    public JFrame frame()
+    {
         return frame;
     }
 
     @Override
-    public ProjectModel currentProject() {
+    public ProjectModel currentProject()
+    {
         return ProjectService.getInstance().getCurrentProject();
     }
 
     @Override
-    public PluginInfo info() {
+    public PluginInfo info()
+    {
         return info;
     }
 
     @Override
-    public PluginLogger log() {
+    public PluginLogger log()
+    {
         return context.getLogger();
     }
 
     @Override
-    public <T extends Event> void onEvent(Class<T> type, Consumer<T> handler) {
+    public <T extends Event> void onEvent(Class<T> type, Consumer<T> handler)
+    {
         EventBus.EventHandler<T> wrapper = handler::accept;
         EventBus.getInstance().register(type, wrapper);
         contributions.add(() -> EventBus.getInstance().unregister(type, wrapper));
     }
 
     @Override
-    public void track(Registration cleanup) {
+    public void track(Registration cleanup)
+    {
         contributions.add(cleanup);
     }
 }

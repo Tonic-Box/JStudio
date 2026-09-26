@@ -25,7 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class FloatingCompileToolbar extends JPanel implements ThemeChangeListener {
+public class FloatingCompileToolbar extends JPanel implements ThemeChangeListener
+{
 
     private final JButton compileButton;
     private final JButton discardButton;
@@ -38,7 +39,8 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
     private boolean errorListExpanded = false;
     private Consumer<Integer> lineNavigator;
 
-    public FloatingCompileToolbar(Runnable onCompile, Runnable onDiscard) {
+    public FloatingCompileToolbar(Runnable onCompile, Runnable onDiscard)
+    {
 
         setLayout(new BorderLayout());
         setOpaque(true);
@@ -48,10 +50,13 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
 
         statusLabel = new JLabel("Source modified");
         statusLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        statusLabel.addMouseListener(new MouseAdapter() {
+        statusLabel.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (!errorListModel.isEmpty()) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (!errorListModel.isEmpty())
+                {
                     toggleErrorList();
                 }
             }
@@ -70,16 +75,20 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         mainRow.add(toggleButton);
 
         compileButton = createButton("Recompile", "compile");
-        compileButton.addActionListener(e -> {
-            if (onCompile != null) {
+        compileButton.addActionListener(e ->
+        {
+            if (onCompile != null)
+            {
                 onCompile.run();
             }
         });
         mainRow.add(compileButton);
 
         discardButton = createButton("Discard", "undo");
-        discardButton.addActionListener(e -> {
-            if (onDiscard != null) {
+        discardButton.addActionListener(e ->
+        {
+            if (onDiscard != null)
+            {
                 onDiscard.run();
             }
         });
@@ -90,12 +99,16 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         errorListModel = new DefaultListModel<>();
         errorList = new JList<>(errorListModel);
         errorList.setCellRenderer(new ErrorCellRenderer());
-        errorList.addMouseListener(new MouseAdapter() {
+        errorList.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2 && lineNavigator != null) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2 && lineNavigator != null)
+                {
                     CompilationError selected = errorList.getSelectedValue();
-                    if (selected != null && selected.getLine() > 0) {
+                    if (selected != null && selected.getLine() > 0)
+                    {
                         lineNavigator.accept(selected.getLine());
                     }
                 }
@@ -119,7 +132,8 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         setVisible(false);
     }
 
-    private void toggleErrorList() {
+    private void toggleErrorList()
+    {
         errorListExpanded = !errorListExpanded;
         errorListPanel.setVisible(errorListExpanded);
         toggleButton.setText(errorListExpanded ? "▲" : "▼");
@@ -127,11 +141,13 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
-    public void setLineNavigator(Consumer<Integer> navigator) {
+    public void setLineNavigator(Consumer<Integer> navigator)
+    {
         this.lineNavigator = navigator;
     }
 
-    private JButton createButton(String text, String iconName) {
+    private JButton createButton(String text, String iconName)
+    {
         JButton button = new JButton(text, Icons.getIcon(iconName, 14));
         button.setFocusPainted(false);
         button.setBorderPainted(false);
@@ -139,14 +155,17 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         button.setFont(JStudioTheme.getUIFont(11));
 
-        button.addMouseListener(new MouseAdapter() {
+        button.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseEntered(MouseEvent e) {
+            public void mouseEntered(MouseEvent e)
+            {
                 button.setContentAreaFilled(true);
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
+            public void mouseExited(MouseEvent e)
+            {
                 button.setContentAreaFilled(false);
             }
         });
@@ -154,7 +173,8 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         return button;
     }
 
-    public void showModified() {
+    public void showModified()
+    {
         statusLabel.setText("Source modified");
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
         compileButton.setEnabled(true);
@@ -167,26 +187,33 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
-    public void showWithErrors(int errorCount, int warningCount) {
+    public void showWithErrors(int errorCount, int warningCount)
+    {
         showWithErrors(errorCount, warningCount, Collections.emptyList());
     }
 
-    public void showWithErrors(int errorCount, int warningCount, List<CompilationError> errors) {
+    public void showWithErrors(int errorCount, int warningCount, List<CompilationError> errors)
+    {
         errorListModel.clear();
-        for (CompilationError error : errors) {
+        for (CompilationError error : errors)
+        {
             errorListModel.addElement(error);
         }
 
-        if (errorCount > 0) {
-            statusLabel.setText(errorCount + " error" + (errorCount == 1 ? "" : "s") +
-                    (warningCount > 0 ? ", " + warningCount + " warning" + (warningCount == 1 ? "" : "s") : ""));
+        if (errorCount > 0)
+        {
+            statusLabel.setText(errorCount + " error" + (errorCount == 1 ? "" : "s") + (warningCount > 0 ? ", " + warningCount + " warning" + (warningCount == 1 ? "" : "s") : ""));
             statusLabel.setForeground(JStudioTheme.getError());
             compileButton.setEnabled(false);
-        } else if (warningCount > 0) {
+        }
+        else if (warningCount > 0)
+        {
             statusLabel.setText(warningCount + " warning" + (warningCount == 1 ? "" : "s"));
             statusLabel.setForeground(JStudioTheme.getWarning());
             compileButton.setEnabled(true);
-        } else {
+        }
+        else
+        {
             statusLabel.setText("Ready to compile");
             statusLabel.setForeground(JStudioTheme.getSuccess());
             compileButton.setEnabled(true);
@@ -195,7 +222,8 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         toggleButton.setVisible(!errors.isEmpty());
         toggleButton.setText("▼");
 
-        if (!errors.isEmpty() && !errorListExpanded) {
+        if (!errors.isEmpty() && !errorListExpanded)
+        {
             errorListExpanded = true;
             errorListPanel.setVisible(true);
             toggleButton.setText("▲");
@@ -206,7 +234,8 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
-    public void showCompiling() {
+    public void showCompiling()
+    {
         statusLabel.setText("Compiling...");
         statusLabel.setForeground(JStudioTheme.getInfo());
         compileButton.setEnabled(false);
@@ -219,12 +248,14 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
      * Switches the compile button between plain recompile and recompile + live-patch (used while attached to a
      * running JVM, where a recompile on its own has no effect on the target).
      */
-    public void setLivePatchMode(boolean on) {
+    public void setLivePatchMode(boolean on)
+    {
         compileButton.setText(on ? "Recompile & Patch" : "Recompile");
         compileButton.setToolTipText(on ? "Recompile and live-patch the attached JVM" : null);
     }
 
-    public void showPatching() {
+    public void showPatching()
+    {
         statusLabel.setText("Patching live JVM...");
         statusLabel.setForeground(JStudioTheme.getInfo());
         compileButton.setEnabled(false);
@@ -233,7 +264,8 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
-    public void showPatched() {
+    public void showPatched()
+    {
         statusLabel.setText("Compiled & patched live");
         statusLabel.setForeground(JStudioTheme.getSuccess());
         compileButton.setEnabled(true);
@@ -242,7 +274,8 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
-    public void showPatchFailed(String message) {
+    public void showPatchFailed(String message)
+    {
         statusLabel.setText("Live patch failed: " + message);
         statusLabel.setForeground(JStudioTheme.getError());
         compileButton.setEnabled(true);
@@ -251,7 +284,8 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
-    public void showSuccess(long timeMs) {
+    public void showSuccess(long timeMs)
+    {
         statusLabel.setText("Compiled successfully (" + timeMs + "ms)");
         statusLabel.setForeground(JStudioTheme.getSuccess());
         compileButton.setEnabled(true);
@@ -264,7 +298,8 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         repaint();
     }
 
-    public void hideToolbar() {
+    public void hideToolbar()
+    {
         setVisible(false);
         errorListModel.clear();
         errorListPanel.setVisible(false);
@@ -274,16 +309,15 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         applyTheme();
     }
 
-    private void applyTheme() {
+    private void applyTheme()
+    {
         setBackground(JStudioTheme.getBgSecondary());
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
+        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         statusLabel.setFont(JStudioTheme.getUIFont(11));
         compileButton.setFont(JStudioTheme.getUIFont(11));
         compileButton.setForeground(JStudioTheme.getTextPrimary());
@@ -298,23 +332,27 @@ public class FloatingCompileToolbar extends JPanel implements ThemeChangeListene
         errorList.setFont(JStudioTheme.getCodeFont(12));
     }
 
-    public void dispose() {
+    public void dispose()
+    {
         ThemeManager.getInstance().removeThemeChangeListener(this);
     }
 
-    private static class ErrorCellRenderer extends DefaultListCellRenderer {
+    private static class ErrorCellRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value,
-                                                      int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            if (value instanceof CompilationError) {
+            if (value instanceof CompilationError)
+            {
                 CompilationError error = (CompilationError) value;
                 String prefix = error.isError() ? "[ERROR]" : "[WARN]";
                 String lineInfo = error.getLine() > 0 ? " Line " + error.getLine() + ":" : "";
                 setText(prefix + lineInfo + " " + error.getMessage());
 
-                if (!isSelected) {
+                if (!isSelected)
+                {
                     setForeground(error.isError() ? JStudioTheme.getError() : JStudioTheme.getWarning());
                     setBackground(JStudioTheme.getBgTertiary());
                 }

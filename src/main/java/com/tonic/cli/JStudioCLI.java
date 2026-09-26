@@ -9,19 +9,21 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 @Command(
-    name = "jstudio",
-    mixinStandardHelpOptions = true,
-    version = "JStudio CLI 1.0",
-    description = "JStudio - Java bytecode analysis and transformation tool",
-    subcommands = {
-        RunCommand.class,
-        ReplCommand.class,
-        BatchCommand.class,
-        InfoCommand.class,
-        CommandLine.HelpCommand.class
-    }
+        name = "jstudio",
+        mixinStandardHelpOptions = true,
+        version = "JStudio CLI 1.0",
+        description = "JStudio - Java bytecode analysis and transformation tool",
+        subcommands =
+                {
+                        RunCommand.class,
+                        ReplCommand.class,
+                        BatchCommand.class,
+                        InfoCommand.class,
+                        CommandLine.HelpCommand.class
+                }
 )
-public class JStudioCLI implements Runnable {
+public class JStudioCLI implements Runnable
+{
 
     @Option(names = {"-v", "--verbose"}, description = "Enable verbose output")
     boolean verbose;
@@ -30,7 +32,8 @@ public class JStudioCLI implements Runnable {
     boolean quiet;
 
     @Override
-    public void run() {
+    public void run()
+    {
         System.out.println("JStudio CLI - Java bytecode analysis and transformation");
         System.out.println();
         System.out.println("Usage: jstudio <command> [options]");

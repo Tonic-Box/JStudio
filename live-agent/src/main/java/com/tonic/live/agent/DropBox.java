@@ -9,11 +9,13 @@ package com.tonic.live.agent;
  * <p>Lives under {@code com.tonic.live.agent} so it is hidden from the live class browser (the agent filters
  * that prefix) and so JDI can resolve it via {@code classesByName} on the agent's classloader.
  */
-public final class DropBox {
+public final class DropBox
+{
 
     /** References parked by JDI for the agent to consume; null when empty. */
     public static volatile Object[] BOX;
 
-    private DropBox() {
+    private DropBox()
+    {
     }
 }

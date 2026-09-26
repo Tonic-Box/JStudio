@@ -6,7 +6,8 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class SuspiciousString {
+public class SuspiciousString
+{
 
     private final ClassFile classFile;
     private final int constantPoolIndex;
@@ -14,12 +15,15 @@ public class SuspiciousString {
     private final SuspicionReason reason;
     private final double suspicionScore;
 
-    public String getClassName() {
+    public String getClassName()
+    {
         return classFile.getClassName();
     }
 
-    public String getDisplayValue() {
-        if (value.length() > 40) {
+    public String getDisplayValue()
+    {
+        if (value.length() > 40)
+        {
             return value.substring(0, 37) + "...";
         }
         return value;
@@ -27,7 +31,8 @@ public class SuspiciousString {
 
     @Getter
     @RequiredArgsConstructor
-    public enum SuspicionReason {
+    public enum SuspicionReason
+    {
         HIGH_ENTROPY("High entropy - random-looking characters"),
         BASE64_PATTERN("Matches Base64 encoding pattern"),
         NON_PRINTABLE("Contains non-printable characters"),
@@ -38,8 +43,8 @@ public class SuspiciousString {
     }
 
     @Override
-    public String toString() {
-        return String.format("%s[%d]: \"%s\" (%s)",
-            getClassName(), constantPoolIndex, getDisplayValue(), reason);
+    public String toString()
+    {
+        return String.format("%s[%d]: \"%s\" (%s)", getClassName(), constantPoolIndex, getDisplayValue(), reason);
     }
 }

@@ -13,7 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ThemeManager {
+public class ThemeManager
+{
 
     private static ThemeManager instance;
 
@@ -22,32 +23,40 @@ public class ThemeManager {
     private Theme currentTheme;
     private final List<ThemeChangeListener> listeners = new ArrayList<>();
 
-    private ThemeManager() {
+    private ThemeManager()
+    {
         registerBuiltInThemes();
         String savedTheme = Settings.getInstance().getTheme();
         currentTheme = themes.getOrDefault(savedTheme, themes.get("jstudio-dark"));
     }
 
-    public static synchronized ThemeManager getInstance() {
-        if (instance == null) {
+    public static synchronized ThemeManager getInstance()
+    {
+        if (instance == null)
+        {
             instance = new ThemeManager();
         }
         return instance;
     }
 
-    private void registerBuiltInThemes() {
-        for (Theme theme : ThemeLoader.loadAllThemes()) {
+    private void registerBuiltInThemes()
+    {
+        for (Theme theme : ThemeLoader.loadAllThemes())
+        {
             registerTheme(theme);
         }
     }
 
-    public void registerTheme(Theme theme) {
+    public void registerTheme(Theme theme)
+    {
         themes.put(theme.getName(), theme);
     }
 
-    public void setTheme(String themeName) {
+    public void setTheme(String themeName)
+    {
         Theme newTheme = themes.get(themeName);
-        if (newTheme != null && newTheme != currentTheme) {
+        if (newTheme != null && newTheme != currentTheme)
+        {
             currentTheme = newTheme;
             Settings.getInstance().setTheme(themeName);
             applyTheme();
@@ -55,11 +64,13 @@ public class ThemeManager {
         }
     }
 
-    public List<Theme> getAvailableThemes() {
+    public List<Theme> getAvailableThemes()
+    {
         return new ArrayList<>(themes.values());
     }
 
-    public void applyTheme() {
+    public void applyTheme()
+    {
         Theme theme = currentTheme;
 
         UIManager.put("Component.arc", 6);
@@ -159,36 +170,38 @@ public class ThemeManager {
         UIManager.put("SplitPane.dividerColor", theme.getBgPrimary());
         UIManager.put("SplitPaneDivider.draggingColor", theme.getAccent());
 
-        for (Window window : Window.getWindows()) {
+        for (Window window : Window.getWindows())
+        {
             SwingUtilities.updateComponentTreeUI(window);
             window.repaint();
         }
     }
 
-    private Color darker(Color color, float factor) {
-        return new Color(
-                Math.max((int) (color.getRed() * factor), 0),
-                Math.max((int) (color.getGreen() * factor), 0),
-                Math.max((int) (color.getBlue() * factor), 0),
-                color.getAlpha()
-        );
+    private Color darker(Color color, float factor)
+    {
+        return new Color(Math.max((int) (color.getRed() * factor), 0), Math.max((int) (color.getGreen() * factor), 0), Math.max((int) (color.getBlue() * factor), 0), color.getAlpha());
     }
 
-    public void addThemeChangeListener(ThemeChangeListener listener) {
+    public void addThemeChangeListener(ThemeChangeListener listener)
+    {
         listeners.add(listener);
     }
 
-    public void removeThemeChangeListener(ThemeChangeListener listener) {
+    public void removeThemeChangeListener(ThemeChangeListener listener)
+    {
         listeners.remove(listener);
     }
 
     /** The number of registered theme listeners (test-only hook for leak detection). */
-    public int getListenerCount() {
+    public int getListenerCount()
+    {
         return listeners.size();
     }
 
-    private void notifyListeners() {
-        for (ThemeChangeListener listener : listeners) {
+    private void notifyListeners()
+    {
+        for (ThemeChangeListener listener : listeners)
+        {
             listener.onThemeChanged(currentTheme);
         }
     }

@@ -7,9 +7,11 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class Comment {
+public class Comment
+{
 
-    public enum Type {
+    public enum Type
+    {
         LINE,
         BLOCK,
         PRE_METHOD,
@@ -25,38 +27,45 @@ public class Comment {
     private Type type;
     private long timestamp;
 
-    public Comment() {
+    public Comment()
+    {
         this.id = UUID.randomUUID().toString();
         this.lineNumber = -1;
         this.type = Type.LINE;
         this.timestamp = System.currentTimeMillis();
     }
 
-    public Comment(String className, int lineNumber, String text) {
+    public Comment(String className, int lineNumber, String text)
+    {
         this();
         this.className = className;
         this.lineNumber = lineNumber;
         this.text = text;
     }
 
-    public void setText(String text) {
+    public void setText(String text)
+    {
         this.text = text;
         this.timestamp = System.currentTimeMillis();
     }
 
-    public String getLocationKey() {
+    public String getLocationKey()
+    {
         StringBuilder key = new StringBuilder(className);
-        if (memberName != null && !memberName.isEmpty()) {
+        if (memberName != null && !memberName.isEmpty())
+        {
             key.append("#").append(memberName);
         }
-        if (lineNumber >= 0) {
+        if (lineNumber >= 0)
+        {
             key.append(":").append(lineNumber);
         }
         return key.toString();
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return getLocationKey() + " - " + (text.length() > 50 ? text.substring(0, 47) + "..." : text);
     }
 }

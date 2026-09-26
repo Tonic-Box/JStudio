@@ -30,17 +30,20 @@ import java.util.List;
  * A small modal dialog gathering a run configuration (JDK, program arguments, VM options, working directory)
  * before launching a {@code main} class. Theme-aware; last-used values persist via {@link Settings}.
  */
-public final class RunConfigDialog extends ThemedJDialog {
+public final class RunConfigDialog extends ThemedJDialog
+{
 
     /** A resolved run configuration. */
-    public static final class RunConfig {
+    public static final class RunConfig
+    {
         public final List<String> programArgs;
         public final List<String> vmOptions;
         public final File workingDir;
         public final File javaHome;
         public final int javaFeature;
 
-        RunConfig(List<String> programArgs, List<String> vmOptions, File workingDir, File javaHome, int javaFeature) {
+        RunConfig(List<String> programArgs, List<String> vmOptions, File workingDir, File javaHome, int javaFeature)
+        {
             this.programArgs = programArgs;
             this.vmOptions = vmOptions;
             this.workingDir = workingDir;
@@ -55,7 +58,8 @@ public final class RunConfigDialog extends ThemedJDialog {
     private final JTextField dirField = new JTextField(28);
     private RunConfig result;
 
-    private RunConfigDialog(Frame owner, String className, File defaultWorkingDir) {
+    private RunConfigDialog(Frame owner, String className, File defaultWorkingDir)
+    {
         super(owner, "Run " + className, true);
 
         Settings settings = Settings.getInstance();
@@ -63,8 +67,7 @@ public final class RunConfigDialog extends ThemedJDialog {
         argsField.setText(settings.getRunProgramArgs());
         vmField.setText(settings.getRunVmOptions());
         String savedDir = settings.getRunWorkingDir();
-        dirField.setText(!savedDir.isEmpty() ? savedDir
-                : defaultWorkingDir != null ? defaultWorkingDir.getAbsolutePath() : "");
+        dirField.setText(!savedDir.isEmpty() ? savedDir : defaultWorkingDir != null ? defaultWorkingDir.getAbsolutePath() : "");
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
@@ -95,72 +98,87 @@ public final class RunConfigDialog extends ThemedJDialog {
     }
 
     /** Shows the dialog; returns the chosen config, or null if cancelled. */
-    public static RunConfig show(Frame owner, String className, File defaultWorkingDir) {
+    public static RunConfig show(Frame owner, String className, File defaultWorkingDir)
+    {
         RunConfigDialog dialog = new RunConfigDialog(owner, className, defaultWorkingDir);
         dialog.setVisible(true);
         return dialog.result;
     }
 
-    private void populateJdks(String savedHome) {
+    private void populateJdks(String savedHome)
+    {
         List<Jdk> jdks = JdkDetector.detect();
         Jdk selected = null;
-        if (savedHome != null && !savedHome.isEmpty()) {
-            for (Jdk jdk : jdks) {
-                if (jdk.getHome().getAbsolutePath().equals(savedHome)) {
+        if (savedHome != null && !savedHome.isEmpty())
+        {
+            for (Jdk jdk : jdks)
+            {
+                if (jdk.getHome().getAbsolutePath().equals(savedHome))
+                {
                     selected = jdk;
                     break;
                 }
             }
-            if (selected == null) {
+            if (selected == null)
+            {
                 Jdk custom = JdkDetector.fromHome(new File(savedHome));
-                if (custom != null) {
+                if (custom != null)
+                {
                     jdks.add(custom);
                     selected = custom;
                 }
             }
         }
-        for (Jdk jdk : jdks) {
+        for (Jdk jdk : jdks)
+        {
             jdkCombo.addItem(jdk);
         }
         jdkCombo.setSelectedItem(selected != null ? selected : (jdks.isEmpty() ? null : jdks.get(0)));
     }
 
-    private void chooseJdk() {
+    private void chooseJdk()
+    {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setDialogTitle("Select a JDK/JRE home directory");
-        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) {
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
+        {
             return;
         }
         Jdk jdk = JdkDetector.fromHome(chooser.getSelectedFile());
-        if (jdk == null) {
-            JOptionPane.showMessageDialog(this, "No java executable under that directory's bin folder.",
-                    "Not a JDK/JRE", JOptionPane.WARNING_MESSAGE);
+        if (jdk == null)
+        {
+            JOptionPane.showMessageDialog(this, "No java executable under that directory's bin folder.", "Not a JDK/JRE", JOptionPane.WARNING_MESSAGE);
             return;
         }
         jdkCombo.addItem(jdk);
         jdkCombo.setSelectedItem(jdk);
     }
 
-    private void chooseDir() {
+    private void chooseDir()
+    {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        if (!dirField.getText().isEmpty()) {
+        if (!dirField.getText().isEmpty())
+        {
             chooser.setCurrentDirectory(new File(dirField.getText()));
         }
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
             dirField.setText(chooser.getSelectedFile().getAbsolutePath());
         }
     }
 
-    private JButton trailingButton(String text, ActionListener action) {
+    private JButton trailingButton(String text, ActionListener action)
+    {
         JButton button = new JButton(text);
         button.setFocusable(false);
         button.addActionListener(action);
         return button;
     }
 
-    private void addRow(JPanel form, int row, String label, JComponent field, JButton trailing) {
+    private void addRow(JPanel form, int row, String label, JComponent field, JButton trailing)
+    {
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(4, 4, 4, 4);
         c.gridx = 0;
@@ -173,7 +191,8 @@ public final class RunConfigDialog extends ThemedJDialog {
         c.weightx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         form.add(field, c);
-        if (trailing != null) {
+        if (trailing != null)
+        {
             c.gridx = 2;
             c.weightx = 0;
             c.fill = GridBagConstraints.NONE;
@@ -181,51 +200,62 @@ public final class RunConfigDialog extends ThemedJDialog {
         }
     }
 
-    private void onRun() {
+    private void onRun()
+    {
         Jdk jdk = (Jdk) jdkCombo.getSelectedItem();
         Settings settings = Settings.getInstance();
         settings.setRunProgramArgs(argsField.getText());
         settings.setRunVmOptions(vmField.getText());
         settings.setRunWorkingDir(dirField.getText());
-        if (jdk != null) {
+        if (jdk != null)
+        {
             settings.setRunJdkHome(jdk.getHome().getAbsolutePath());
         }
         File dir = dirField.getText().trim().isEmpty() ? null : new File(dirField.getText().trim());
-        result = new RunConfig(tokenize(argsField.getText()), tokenize(vmField.getText()), dir,
-                jdk != null ? jdk.getHome() : null, jdk != null ? jdk.getFeature() : 0);
+        result = new RunConfig(tokenize(argsField.getText()), tokenize(vmField.getText()), dir, jdk != null ? jdk.getHome() : null, jdk != null ? jdk.getFeature() : 0);
         dispose();
     }
 
     /** Splits a command-line string into tokens, honoring double quotes (so paths with spaces stay intact). */
-    static List<String> tokenize(String text) {
+    static List<String> tokenize(String text)
+    {
         List<String> tokens = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         boolean inQuotes = false;
         boolean has = false;
-        for (int i = 0; i < text.length(); i++) {
+        for (int i = 0; i < text.length(); i++)
+        {
             char ch = text.charAt(i);
-            if (ch == '"') {
+            if (ch == '"')
+            {
                 inQuotes = !inQuotes;
                 has = true;
-            } else if (Character.isWhitespace(ch) && !inQuotes) {
-                if (has) {
+            }
+            else if (Character.isWhitespace(ch) && !inQuotes)
+            {
+                if (has)
+                {
                     tokens.add(current.toString());
                     current.setLength(0);
                     has = false;
                 }
-            } else {
+            }
+            else
+            {
                 current.append(ch);
                 has = true;
             }
         }
-        if (has) {
+        if (has)
+        {
             tokens.add(current.toString());
         }
         return tokens;
     }
 
     @Override
-    public Dimension getPreferredSize() {
+    public Dimension getPreferredSize()
+    {
         Dimension d = super.getPreferredSize();
         return new Dimension(Math.max(d.width, 520), d.height);
     }

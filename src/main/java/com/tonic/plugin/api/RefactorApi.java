@@ -8,7 +8,8 @@ import lombok.Getter;
  * internal ({@code com/foo/Bar}) or dotted ({@code com.foo.Bar}) form; the implementation normalizes them. Returns a
  * plain DTO so callers need no host/YABR dependency.
  */
-public interface RefactorApi {
+public interface RefactorApi
+{
 
     /**
      * Renames a class and every reference to it. {@code newName} is the full target class name (with package); a bare
@@ -27,11 +28,13 @@ public interface RefactorApi {
 
     /** The outcome: whether the rename applied, and a human-readable message (what changed, or why it failed). */
     @Getter
-    final class RenameResult {
+    final class RenameResult
+    {
         private final boolean success;
         private final String message;
 
-        public RenameResult(boolean success, String message) {
+        public RenameResult(boolean success, String message)
+        {
             this.success = success;
             this.message = message;
         }

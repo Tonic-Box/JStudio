@@ -8,11 +8,13 @@ import lombok.Getter;
  * {@link LiveProtocol#MSG_SET_INSTANCE_FIELD}.
  */
 @Getter
-public final class LiveInstance {
+public final class LiveInstance
+{
     private final long handleId;
     private final String label;
 
-    public LiveInstance(long handleId, String label) {
+    public LiveInstance(long handleId, String label)
+    {
         this.handleId = handleId;
         this.label = label;
     }

@@ -18,7 +18,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ObjectInspectorDialog extends JDialog {
+public class ObjectInspectorDialog extends JDialog
+{
 
     private static final int VALUE_COLUMN = 2;
 
@@ -32,12 +33,13 @@ public class ObjectInspectorDialog extends JDialog {
     private final FieldEditCallback onFieldEdit;
 
     @FunctionalInterface
-    public interface FieldEditCallback {
+    public interface FieldEditCallback
+    {
         void onFieldEdit(ObjectInstance object, String owner, String name, String desc, Object newValue);
     }
 
-    public ObjectInspectorDialog(Window owner, ObjectInstance object, ClassResolver classResolver,
-                                 Set<Integer> visitedObjectIds, FieldEditCallback onFieldEdit) {
+    public ObjectInspectorDialog(Window owner, ObjectInstance object, ClassResolver classResolver, Set<Integer> visitedObjectIds, FieldEditCallback onFieldEdit)
+    {
         super(owner, buildTitle(object), ModalityType.APPLICATION_MODAL);
         this.object = object;
         this.classResolver = classResolver;
@@ -71,8 +73,10 @@ public class ObjectInspectorDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    private static String buildTitle(ObjectInstance object) {
-        if (object == null) {
+    private static String buildTitle(ObjectInstance object)
+    {
+        if (object == null)
+        {
             return "Object Inspector - null";
         }
 
@@ -83,7 +87,8 @@ public class ObjectInspectorDialog extends JDialog {
         return "Object Inspector - " + simpleName + " @" + Integer.toHexString(object.getId());
     }
 
-    private JPanel createHeaderPanel() {
+    private JPanel createHeaderPanel()
+    {
         JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
         panel.setOpaque(false);
 
@@ -96,7 +101,8 @@ public class ObjectInspectorDialog extends JDialog {
         idLabel.setForeground(JStudioTheme.getTextSecondary());
         panel.add(idLabel);
 
-        if (object instanceof ArrayInstance) {
+        if (object instanceof ArrayInstance)
+        {
             ArrayInstance array = (ArrayInstance) object;
             JLabel arrayLabel = new JLabel("Array Length: " + array.getLength());
             arrayLabel.setForeground(JStudioTheme.getTextSecondary());
@@ -106,7 +112,8 @@ public class ObjectInspectorDialog extends JDialog {
         return panel;
     }
 
-    private JTable createFieldsTable() {
+    private JTable createFieldsTable()
+    {
         JTable table = new JTable(tableModel);
         table.setBackground(JStudioTheme.getBgSecondary());
         table.setForeground(JStudioTheme.getTextPrimary());
@@ -124,10 +131,13 @@ public class ObjectInspectorDialog extends JDialog {
 
         table.setDefaultRenderer(Object.class, new FieldCellRenderer());
 
-        table.addMouseListener(new MouseAdapter() {
+        table.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
                     handleDoubleClick(e.getPoint());
                 }
             }
@@ -136,7 +146,8 @@ public class ObjectInspectorDialog extends JDialog {
         return table;
     }
 
-    private JPanel createButtonPanel() {
+    private JPanel createButtonPanel()
+    {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         panel.setOpaque(false);
 
@@ -150,84 +161,82 @@ public class ObjectInspectorDialog extends JDialog {
         return panel;
     }
 
-    private void loadFields() {
+    private void loadFields()
+    {
         List<FieldInfo> fields = enumerator.enumerate(object);
         tableModel.setFields(fields);
     }
 
-    private void handleDoubleClick(Point point) {
+    private void handleDoubleClick(Point point)
+    {
         int row = fieldsTable.rowAtPoint(point);
         int column = fieldsTable.columnAtPoint(point);
 
-        if (row < 0) {
+        if (row < 0)
+        {
             return;
         }
 
         FieldInfo field = tableModel.getFieldAt(row);
-        if (field == null) {
+        if (field == null)
+        {
             return;
         }
 
         ValueTag tag = field.getValueTag();
 
-        if (tag == ValueTag.REFERENCE || tag == ValueTag.NULL) {
+        if (tag == ValueTag.REFERENCE || tag == ValueTag.NULL)
+        {
             Object rawValue = field.getValue();
-            if (rawValue instanceof ObjectInstance) {
+            if (rawValue instanceof ObjectInstance)
+            {
                 ObjectInstance nestedObj = (ObjectInstance) rawValue;
-                if (visitedObjectIds.contains(nestedObj.getId())) {
-                    JOptionPane.showMessageDialog(this,
-                        "Circular reference detected.\nThis object is already being inspected.",
-                        "Circular Reference",
-                        JOptionPane.WARNING_MESSAGE);
+                if (visitedObjectIds.contains(nestedObj.getId()))
+                {
+                    JOptionPane.showMessageDialog(this, "Circular reference detected.\nThis object is already being inspected.", "Circular Reference", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
                 Set<Integer> newVisited = new HashSet<>(visitedObjectIds);
                 showDialog(this, nestedObj, classResolver, newVisited, onFieldEdit);
-            } else if (rawValue == null) {
-                JOptionPane.showMessageDialog(this,
-                    "Field value is null. Cannot inspect null references.",
-                    "Null Reference",
-                    JOptionPane.INFORMATION_MESSAGE);
+            }
+            else if (rawValue == null)
+            {
+                JOptionPane.showMessageDialog(this, "Field value is null. Cannot inspect null references.", "Null Reference", JOptionPane.INFORMATION_MESSAGE);
             }
             return;
         }
 
-        if (column != VALUE_COLUMN || field.isFinal()) {
+        if (column != VALUE_COLUMN || field.isFinal())
+        {
             return;
         }
 
-        if (!field.isEditable()) {
+        if (!field.isEditable())
+        {
             return;
         }
 
-        ConcreteValue newValue = ValueEditDialog.showDialog(
-            this,
-            "Edit Field: " + field.getName(),
-            field.getValueString(),
-            tag
-        );
+        ConcreteValue newValue = ValueEditDialog.showDialog(this, "Edit Field: " + field.getName(), field.getValueString(), tag);
 
-        if (newValue != null && onFieldEdit != null) {
+        if (newValue != null && onFieldEdit != null)
+        {
             Object converted = convertConcreteValue(newValue, field.getDescriptor());
-            onFieldEdit.onFieldEdit(
-                object,
-                field.getOwnerClass(),
-                field.getName(),
-                field.getDescriptor(),
-                converted
-            );
+            onFieldEdit.onFieldEdit(object, field.getOwnerClass(), field.getName(), field.getDescriptor(), converted);
 
             loadFields();
         }
     }
 
-    private Object convertConcreteValue(ConcreteValue value, String descriptor) {
-        if (value == null || value.isNull()) {
+    private Object convertConcreteValue(ConcreteValue value, String descriptor)
+    {
+        if (value == null || value.isNull())
+        {
             return null;
         }
 
-        switch (value.getTag()) {
+        switch (value.getTag())
+        {
             case INT:
                 return value.asInt();
             case LONG:
@@ -243,31 +252,41 @@ public class ObjectInspectorDialog extends JDialog {
         }
     }
 
-    private class FieldCellRenderer extends DefaultTableCellRenderer {
+    private class FieldCellRenderer extends DefaultTableCellRenderer
+    {
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+        {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
             FieldInfo field = tableModel.getFieldAt(row);
 
-            if (isSelected) {
+            if (isSelected)
+            {
                 setBackground(JStudioTheme.getAccent());
-            } else if (field != null && field.isFinal()) {
+            }
+            else if (field != null && field.isFinal())
+            {
                 setBackground(JStudioTheme.getBgPrimary());
-            } else {
+            }
+            else
+            {
                 setBackground(JStudioTheme.getBgSecondary());
             }
             setForeground(JStudioTheme.getTextPrimary());
 
-            if (field != null && column == VALUE_COLUMN) {
+            if (field != null && column == VALUE_COLUMN)
+            {
                 ValueTag tag = field.getValueTag();
                 if ((tag == ValueTag.REFERENCE || tag == ValueTag.NULL) &&
-                    field.getValue() instanceof ObjectInstance) {
+                        field.getValue() instanceof ObjectInstance)
+                {
                     setForeground(JStudioTheme.getAccent());
                     setText(value + " [click to inspect]");
                     setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                } else if (field.isEditable() && !field.isFinal()) {
+                }
+                else if (field.isEditable() && !field.isFinal())
+                {
                     setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                 }
             }
@@ -276,18 +295,15 @@ public class ObjectInspectorDialog extends JDialog {
         }
     }
 
-    public static void showDialog(Component parent, ObjectInstance object,
-                                  ClassResolver classResolver, FieldEditCallback onFieldEdit) {
+    public static void showDialog(Component parent, ObjectInstance object, ClassResolver classResolver, FieldEditCallback onFieldEdit)
+    {
         showDialog(parent, object, classResolver, null, onFieldEdit);
     }
 
-    public static void showDialog(Component parent, ObjectInstance object,
-                                  ClassResolver classResolver, Set<Integer> visitedObjectIds,
-                                  FieldEditCallback onFieldEdit) {
+    public static void showDialog(Component parent, ObjectInstance object, ClassResolver classResolver, Set<Integer> visitedObjectIds, FieldEditCallback onFieldEdit)
+    {
         Window window = SwingUtilities.getWindowAncestor(parent);
-        ObjectInspectorDialog dialog = new ObjectInspectorDialog(
-            window, object, classResolver, visitedObjectIds, onFieldEdit
-        );
+        ObjectInspectorDialog dialog = new ObjectInspectorDialog(window, object, classResolver, visitedObjectIds, onFieldEdit);
         dialog.setVisible(true);
     }
 }

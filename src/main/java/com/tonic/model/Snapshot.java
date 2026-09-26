@@ -10,11 +10,13 @@ import java.util.Map;
  * a snapshot only references them, so an unchanged class costs nothing across snapshots.
  */
 @Getter
-public final class Snapshot {
+public final class Snapshot
+{
 
     /** What caused a snapshot; drives the default label and the row icon in the history panel. */
     @Getter
-    public enum Trigger {
+    public enum Trigger
+    {
         MANUAL("Checkpoint"),
         SAVE("Saved"),
         BASELINE("Opened"),
@@ -27,7 +29,8 @@ public final class Snapshot {
 
         private final String defaultLabel;
 
-        Trigger(String defaultLabel) {
+        Trigger(String defaultLabel)
+        {
             this.defaultLabel = defaultLabel;
         }
     }
@@ -39,8 +42,8 @@ public final class Snapshot {
     private final Map<String, String> classes;   // internal class name -> blob hash
     private final Map<String, String> resources;  // resource path -> blob hash
 
-    public Snapshot(String id, long timestampMs, String label, Trigger trigger,
-                    Map<String, String> classes, Map<String, String> resources) {
+    public Snapshot(String id, long timestampMs, String label, Trigger trigger, Map<String, String> classes, Map<String, String> resources)
+    {
         this.id = id;
         this.timestampMs = timestampMs;
         this.label = label;

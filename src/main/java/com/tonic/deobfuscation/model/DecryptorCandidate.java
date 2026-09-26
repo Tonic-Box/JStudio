@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class DecryptorCandidate {
+public class DecryptorCandidate
+{
 
     private final ClassFile classFile;
     private final MethodEntry method;
@@ -16,8 +17,8 @@ public class DecryptorCandidate {
     private final double confidence;
     private final List<String> indicators;
 
-    public DecryptorCandidate(ClassFile classFile, MethodEntry method,
-                              DecryptorType type, double confidence) {
+    public DecryptorCandidate(ClassFile classFile, MethodEntry method, DecryptorType type, double confidence)
+    {
         this.classFile = classFile;
         this.method = method;
         this.type = type;
@@ -25,19 +26,23 @@ public class DecryptorCandidate {
         this.indicators = new ArrayList<>();
     }
 
-    public void addIndicator(String indicator) {
+    public void addIndicator(String indicator)
+    {
         indicators.add(indicator);
     }
 
-    public String getClassName() {
+    public String getClassName()
+    {
         return classFile.getClassName();
     }
 
-    public String getMethodName() {
+    public String getMethodName()
+    {
         return method.getName();
     }
 
-    public String getSimpleSignature() {
+    public String getSimpleSignature()
+    {
         String className = getClassName();
         int lastSlash = className.lastIndexOf('/');
         String simpleName = lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
@@ -45,7 +50,8 @@ public class DecryptorCandidate {
     }
 
     @Getter
-    public enum DecryptorType {
+    public enum DecryptorType
+    {
         STRING_TO_STRING("String -> String", "(Ljava/lang/String;)Ljava/lang/String;"),
         STRING_INT_TO_STRING("String, int -> String", "(Ljava/lang/String;I)Ljava/lang/String;"),
         INT_TO_STRING("int -> String (index-based)", "(I)Ljava/lang/String;"),
@@ -57,14 +63,18 @@ public class DecryptorCandidate {
         private final String description;
         private final String expectedDescriptor;
 
-        DecryptorType(String description, String expectedDescriptor) {
+        DecryptorType(String description, String expectedDescriptor)
+        {
             this.description = description;
             this.expectedDescriptor = expectedDescriptor;
         }
 
-        public static DecryptorType fromDescriptor(String descriptor) {
-            for (DecryptorType type : values()) {
-                if (type.expectedDescriptor != null && type.expectedDescriptor.equals(descriptor)) {
+        public static DecryptorType fromDescriptor(String descriptor)
+        {
+            for (DecryptorType type : values())
+            {
+                if (type.expectedDescriptor != null && type.expectedDescriptor.equals(descriptor))
+                {
                     return type;
                 }
             }
@@ -73,8 +83,8 @@ public class DecryptorCandidate {
     }
 
     @Override
-    public String toString() {
-        return String.format("%s [%s] (%.0f%% confidence)",
-            getSimpleSignature(), type.getDescription(), confidence * 100);
+    public String toString()
+    {
+        return String.format("%s [%s] (%.0f%% confidence)", getSimpleSignature(), type.getDescription(), confidence * 100);
     }
 }

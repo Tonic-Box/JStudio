@@ -2,16 +2,19 @@ package com.tonic.plugin.api;
 
 import lombok.Getter;
 
-public interface AnalyzerPlugin extends Plugin {
+public interface AnalyzerPlugin extends Plugin
+{
 
     AnalysisResult analyze(AnalysisScope scope);
 
     @Override
-    default void execute() {
+    default void execute()
+    {
         analyze(AnalysisScope.PROJECT);
     }
 
-    enum AnalysisScope {
+    enum AnalysisScope
+    {
         PROJECT,
         PACKAGE,
         CLASS,
@@ -19,24 +22,28 @@ public interface AnalyzerPlugin extends Plugin {
     }
 
     @Getter
-    final class AnalysisResult {
+    final class AnalysisResult
+    {
         private final boolean success;
         private final int findingsCount;
         private final long durationMs;
         private final String summary;
 
-        public AnalysisResult(boolean success, int findingsCount, long durationMs, String summary) {
+        public AnalysisResult(boolean success, int findingsCount, long durationMs, String summary)
+        {
             this.success = success;
             this.findingsCount = findingsCount;
             this.durationMs = durationMs;
             this.summary = summary;
         }
 
-        public static AnalysisResult success(int findings, long durationMs, String summary) {
+        public static AnalysisResult success(int findings, long durationMs, String summary)
+        {
             return new AnalysisResult(true, findings, durationMs, summary);
         }
 
-        public static AnalysisResult failure(String reason) {
+        public static AnalysisResult failure(String reason)
+        {
             return new AnalysisResult(false, 0, 0, reason);
         }
     }

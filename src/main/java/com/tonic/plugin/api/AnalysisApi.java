@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public interface AnalysisApi {
+public interface AnalysisApi
+{
 
     CallGraphApi getCallGraph();
 
@@ -27,7 +28,8 @@ public interface AnalysisApi {
 
     DeadCodeApi getDeadCode();
 
-    interface CallGraphApi {
+    interface CallGraphApi
+    {
 
         void build();
 
@@ -53,7 +55,8 @@ public interface AnalysisApi {
     }
 
     /** Decompiled Java source access, backed by the per-class decompilation cache. Call off the EDT. */
-    interface DecompileApi {
+    interface DecompileApi
+    {
 
         /** Full decompiled source for a class, or empty if it cannot be resolved/decompiled. */
         Optional<String> getSource(String className);
@@ -66,9 +69,11 @@ public interface AnalysisApi {
     }
 
     /** Cross-reference / "find usages" over user code. Call {@link #ensureBuilt()} (off the EDT) first. */
-    interface XrefApi {
+    interface XrefApi
+    {
 
-        enum TargetKind { CLASS, METHOD, FIELD }
+        enum TargetKind
+        {CLASS, METHOD, FIELD}
 
         /** Builds the xref database for the current project if needed (expensive; call off the EDT). */
         void ensureBuilt();
@@ -78,18 +83,21 @@ public interface AnalysisApi {
     }
 
     /** Runs a JStudio bytecode Query DSL query. Owns the query executor lifecycle. Call off the EDT. */
-    interface QueryApi {
+    interface QueryApi
+    {
 
         QueryResult run(String dsl, long timeBudgetMs, int limit);
     }
 
     /** Whole-project dead-code (reachability) analysis. Call off the EDT. */
-    interface DeadCodeApi {
+    interface DeadCodeApi
+    {
 
         DeadCodeResult analyze(boolean publicAsEntryPoints);
     }
 
-    interface DataFlowApi {
+    interface DataFlowApi
+    {
 
         DataFlowResult analyze(String className, String methodName);
 
@@ -102,7 +110,8 @@ public interface AnalysisApi {
         boolean hasUninitializedRead(String className, String methodName);
     }
 
-    interface PatternApi {
+    interface PatternApi
+    {
 
         List<PatternMatch> findPattern(String patternType);
 
@@ -117,7 +126,8 @@ public interface AnalysisApi {
         void registerCustomPattern(String name, PatternMatcher matcher);
     }
 
-    interface TypeApi {
+    interface TypeApi
+    {
 
         Optional<String> resolveType(String className, String descriptor);
 
@@ -130,7 +140,8 @@ public interface AnalysisApi {
         String getCommonSupertype(String type1, String type2);
     }
 
-    interface StringApi {
+    interface StringApi
+    {
 
         List<StringInfo> getAllStrings();
 
@@ -146,14 +157,16 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class CallSite {
+    final class CallSite
+    {
         private final String callerClass;
         private final String callerMethod;
         private final String calleeClass;
         private final String calleeMethod;
         private final int lineNumber;
 
-        public CallSite(String callerClass, String callerMethod, String calleeClass, String calleeMethod, int lineNumber) {
+        public CallSite(String callerClass, String callerMethod, String calleeClass, String calleeMethod, int lineNumber)
+        {
             this.callerClass = callerClass;
             this.callerMethod = callerMethod;
             this.calleeClass = calleeClass;
@@ -164,13 +177,15 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class DataFlowResult {
+    final class DataFlowResult
+    {
         private final String className;
         private final String methodName;
         private final List<DataFlowNode> nodes;
         private final List<DataFlowEdge> edges;
 
-        public DataFlowResult(String className, String methodName, List<DataFlowNode> nodes, List<DataFlowEdge> edges) {
+        public DataFlowResult(String className, String methodName, List<DataFlowNode> nodes, List<DataFlowEdge> edges)
+        {
             this.className = className;
             this.methodName = methodName;
             this.nodes = nodes;
@@ -180,13 +195,15 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class DataFlowNode {
+    final class DataFlowNode
+    {
         private final int id;
         private final String type;
         private final String value;
         private final int instructionIndex;
 
-        public DataFlowNode(int id, String type, String value, int instructionIndex) {
+        public DataFlowNode(int id, String type, String value, int instructionIndex)
+        {
             this.id = id;
             this.type = type;
             this.value = value;
@@ -196,12 +213,14 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class DataFlowEdge {
+    final class DataFlowEdge
+    {
         private final int fromNode;
         private final int toNode;
         private final String edgeType;
 
-        public DataFlowEdge(int fromNode, int toNode, String edgeType) {
+        public DataFlowEdge(int fromNode, int toNode, String edgeType)
+        {
             this.fromNode = fromNode;
             this.toNode = toNode;
             this.edgeType = edgeType;
@@ -210,12 +229,14 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class TaintFlow {
+    final class TaintFlow
+    {
         private final String source;
         private final String sink;
         private final List<String> path;
 
-        public TaintFlow(String source, String sink, List<String> path) {
+        public TaintFlow(String source, String sink, List<String> path)
+        {
             this.source = source;
             this.sink = sink;
             this.path = path;
@@ -224,14 +245,16 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class PatternMatch {
+    final class PatternMatch
+    {
         private final String className;
         private final String methodName;
         private final int lineNumber;
         private final String matchedText;
         private final Map<String, Object> metadata;
 
-        public PatternMatch(String className, String methodName, int lineNumber, String matchedText, Map<String, Object> metadata) {
+        public PatternMatch(String className, String methodName, int lineNumber, String matchedText, Map<String, Object> metadata)
+        {
             this.className = className;
             this.methodName = methodName;
             this.lineNumber = lineNumber;
@@ -242,13 +265,15 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class StringInfo {
+    final class StringInfo
+    {
         private final String value;
         private final String className;
         private final String methodName;
         private final int lineNumber;
 
-        public StringInfo(String value, String className, String methodName, int lineNumber) {
+        public StringInfo(String value, String className, String methodName, int lineNumber)
+        {
             this.value = value;
             this.className = className;
             this.methodName = methodName;
@@ -258,18 +283,21 @@ public interface AnalysisApi {
     }
 
     @FunctionalInterface
-    interface PatternMatcher {
+    interface PatternMatcher
+    {
         List<PatternMatch> match(ProjectApi.ClassInfo classInfo);
     }
 
     @Getter
-    final class CallNode {
+    final class CallNode
+    {
         private final String owner;
         private final String name;
         private final String descriptor;
         private final int depth;
 
-        public CallNode(String owner, String name, String descriptor, int depth) {
+        public CallNode(String owner, String name, String descriptor, int depth)
+        {
             this.owner = owner;
             this.name = name;
             this.descriptor = descriptor;
@@ -278,14 +306,16 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class MethodSourceInfo {
+    final class MethodSourceInfo
+    {
         private final String className;
         private final String methodName;
         private final String descriptor;
         private final int startLine;
         private final int endLine;
 
-        public MethodSourceInfo(String className, String methodName, String descriptor, int startLine, int endLine) {
+        public MethodSourceInfo(String className, String methodName, String descriptor, int startLine, int endLine)
+        {
             this.className = className;
             this.methodName = methodName;
             this.descriptor = descriptor;
@@ -295,15 +325,16 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class UsageInfo {
+    final class UsageInfo
+    {
         private final String sourceClass;
         private final String sourceMethod;
         private final String sourceMethodDesc;
         private final String type;
         private final String targetMember;
 
-        public UsageInfo(String sourceClass, String sourceMethod, String sourceMethodDesc,
-                         String type, String targetMember) {
+        public UsageInfo(String sourceClass, String sourceMethod, String sourceMethodDesc, String type, String targetMember)
+        {
             this.sourceClass = sourceClass;
             this.sourceMethod = sourceMethod;
             this.sourceMethodDesc = sourceMethodDesc;
@@ -313,7 +344,8 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class QueryResult {
+    final class QueryResult
+    {
         private final boolean error;
         private final String errorMessage;
         private final List<String> matchLabels;
@@ -321,8 +353,8 @@ public interface AnalysisApi {
         private final long executionMs;
         private final boolean truncated;
 
-        public QueryResult(boolean error, String errorMessage, List<String> matchLabels,
-                           int totalCount, long executionMs, boolean truncated) {
+        public QueryResult(boolean error, String errorMessage, List<String> matchLabels, int totalCount, long executionMs, boolean truncated)
+        {
             this.error = error;
             this.errorMessage = errorMessage;
             this.matchLabels = matchLabels;
@@ -333,7 +365,8 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class DeadCodeResult {
+    final class DeadCodeResult
+    {
         private final int deadClassCount;
         private final int deadMethodCount;
         private final int deadFieldCount;
@@ -341,8 +374,8 @@ public interface AnalysisApi {
         private final List<DeadItemInfo> deadMethods;
         private final List<DeadItemInfo> deadFields;
 
-        public DeadCodeResult(List<DeadItemInfo> deadClasses, List<DeadItemInfo> deadMethods,
-                              List<DeadItemInfo> deadFields) {
+        public DeadCodeResult(List<DeadItemInfo> deadClasses, List<DeadItemInfo> deadMethods, List<DeadItemInfo> deadFields)
+        {
             this.deadClasses = deadClasses;
             this.deadMethods = deadMethods;
             this.deadFields = deadFields;
@@ -353,11 +386,13 @@ public interface AnalysisApi {
     }
 
     @Getter
-    final class DeadItemInfo {
+    final class DeadItemInfo
+    {
         private final String owner;
         private final String displayLabel;
 
-        public DeadItemInfo(String owner, String displayLabel) {
+        public DeadItemInfo(String owner, String displayLabel)
+        {
             this.owner = owner;
             this.displayLabel = displayLabel;
         }

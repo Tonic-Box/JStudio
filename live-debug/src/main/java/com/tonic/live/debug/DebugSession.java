@@ -44,7 +44,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>All target interaction happens while the VM is suspended at a breakpoint. The event-thread callbacks on
  * {@link DebugListener} are invoked off the EDT.
  */
-public final class DebugSession {
+public final class DebugSession
+{
 
     private final VirtualMachine vm;
     private final DebugListener listener;
@@ -66,7 +67,8 @@ public final class DebugSession {
     private final List<BreakpointRequest> installed = new ArrayList<>();
     private final Map<String, ClassPrepareRequest> prepareRequests = new HashMap<>();
 
-    private DebugSession(VirtualMachine vm, DebugListener listener, boolean suspendAll, String agentThreadPrefix) {
+    private DebugSession(VirtualMachine vm, DebugListener listener, boolean suspendAll, String agentThreadPrefix)
+    {
         this.vm = vm;
         this.listener = listener;
         this.suspendAll = suspendAll;
@@ -80,7 +82,8 @@ public final class DebugSession {
      * (jdwp {@code suspend=y}) gets its requests in place before the initial VMStart event is resumed - which
      * is what lets pre-set breakpoints catch application startup.
      */
-    public void start() {
+    public void start()
+    {
         pump.start();
     }
 
@@ -89,18 +92,20 @@ public final class DebugSession {
      * agentThreadPrefix} names the in-process agent's thread(s) to keep running during a suspend-all pause so
      * the agent can scan/read/edit the frozen heap; pass null to leave them suspended with everything else.
      */
-    public static DebugSession attach(String host, int port, DebugListener listener, boolean suspendAll,
-                                      String agentThreadPrefix) throws IOException {
+    public static DebugSession attach(String host, int port, DebugListener listener, boolean suspendAll, String agentThreadPrefix) throws IOException
+    {
         VirtualMachine vm = DebugConnector.attach(host, port);
         return new DebugSession(vm, listener, suspendAll, agentThreadPrefix);
     }
 
-    public boolean isPaused() {
+    public boolean isPaused()
+    {
         return pausedThread != null;
     }
 
     /** Updates the suspend policy applied to breakpoints installed from now on (existing ones keep theirs). */
-    public void setSuspendAll(boolean suspendAll) {
+    public void setSuspendAll(boolean suspendAll)
+    {
         this.suspendAll = suspendAll;
     }
 
@@ -112,29 +117,42 @@ public final class DebugSession {
      * -1 if JDI can't do it (no instance-info capability, unavailable types) so the caller falls back to the
      * agent walk. The parked array strong-holds the set so it survives the resume until the agent consumes it.
      */
-    public synchronized int parkInstances(String dropBoxClass, String boxField, String className, int max) {
-        if (!vm.canGetInstanceInfo()) {
+    public synchronized int parkInstances(String dropBoxClass, String boxField, String className, int max)
+    {
+        if (!vm.canGetInstanceInfo())
+        {
             return -1;
         }
         boolean suspended = false;
-        try {
+        try
+        {
             vm.suspend();
             suspended = true;
             List<ObjectReference> refs = new ArrayList<>();
-            for (ReferenceType rt : vm.classesByName(className)) {
-                if (refs.size() >= max) {
+            for (ReferenceType rt : vm.classesByName(className))
+            {
+                if (refs.size() >= max)
+                {
                     break;
                 }
                 refs.addAll(rt.instances(max - refs.size()));
             }
             return parkArray(dropBoxClass, boxField, refs);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return -1;
-        } finally {
-            if (suspended) {
-                try {
+        }
+        finally
+        {
+            if (suspended)
+            {
+                try
+                {
                     vm.resume();
-                } catch (Exception ignored) {
+                }
+                catch (Exception ignored)
+                {
                 }
             }
         }
@@ -145,87 +163,124 @@ public final class DebugSession {
      * agent's reachability walk can't reach), parks them in the dropbox as extra scan roots, and resumes.
      * Returns the count parked, or -1 on failure (caller falls back to the agent-only roots).
      */
-    public synchronized int parkStackRoots(String dropBoxClass, String boxField, int max) {
+    public synchronized int parkStackRoots(String dropBoxClass, String boxField, int max)
+    {
         boolean suspended = false;
-        try {
+        try
+        {
             vm.suspend();
             suspended = true;
             List<ObjectReference> refs = new ArrayList<>();
-            for (ThreadReference t : vm.allThreads()) {
-                if (refs.size() >= max) {
+            for (ThreadReference t : vm.allThreads())
+            {
+                if (refs.size() >= max)
+                {
                     break;
                 }
                 List<StackFrame> frames;
-                try {
+                try
+                {
                     frames = t.frames();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     continue;
                 }
-                for (StackFrame frame : frames) {
-                    if (refs.size() >= max) {
+                for (StackFrame frame : frames)
+                {
+                    if (refs.size() >= max)
+                    {
                         break;
                     }
                     harvestFrame(frame, refs, max);
                 }
             }
             return parkArray(dropBoxClass, boxField, refs);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return -1;
-        } finally {
-            if (suspended) {
-                try {
+        }
+        finally
+        {
+            if (suspended)
+            {
+                try
+                {
                     vm.resume();
-                } catch (Exception ignored) {
+                }
+                catch (Exception ignored)
+                {
                 }
             }
         }
     }
 
     /** Adds the object references held by one frame: {@code this}, arguments, and locals (when LVT is present). */
-    private void harvestFrame(StackFrame frame, List<ObjectReference> refs, int max) {
-        try {
+    private void harvestFrame(StackFrame frame, List<ObjectReference> refs, int max)
+    {
+        try
+        {
             ObjectReference self = frame.thisObject();
-            if (self != null && refs.size() < max) {
+            if (self != null && refs.size() < max)
+            {
                 refs.add(self);
             }
-        } catch (Exception ignored) {
         }
-        try {
-            for (Value v : frame.getArgumentValues()) {
-                if (v instanceof ObjectReference && refs.size() < max) {
+        catch (Exception ignored)
+        {
+        }
+        try
+        {
+            for (Value v : frame.getArgumentValues())
+            {
+                if (v instanceof ObjectReference && refs.size() < max)
+                {
                     refs.add((ObjectReference) v);
                 }
             }
-        } catch (Exception ignored) {
         }
-        try {
-            for (Value v : frame.getValues(frame.visibleVariables()).values()) {
-                if (v instanceof ObjectReference && refs.size() < max) {
+        catch (Exception ignored)
+        {
+        }
+        try
+        {
+            for (Value v : frame.getValues(frame.visibleVariables()).values())
+            {
+                if (v instanceof ObjectReference && refs.size() < max)
+                {
                     refs.add((ObjectReference) v);
                 }
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
     }
 
     /** Creates an {@code Object[]} in the target, fills it with {@code refs}, and stores it in the static field. */
-    private int parkArray(String dropBoxClass, String boxField, List<ObjectReference> refs) throws Exception {
+    private int parkArray(String dropBoxClass, String boxField, List<ObjectReference> refs) throws Exception
+    {
         List<ReferenceType> arrayTypes = vm.classesByName("java.lang.Object[]");
-        if (arrayTypes.isEmpty() || !(arrayTypes.get(0) instanceof ArrayType)) {
+        if (arrayTypes.isEmpty() || !(arrayTypes.get(0) instanceof ArrayType))
+        {
             return -1;
         }
         ArrayType objectArrayType = (ArrayType) arrayTypes.get(0);
         ArrayReference array = objectArrayType.newInstance(refs.size());
-        if (!refs.isEmpty()) {
+        if (!refs.isEmpty())
+        {
             array.setValues(refs);
         }
         List<ReferenceType> boxTypes = vm.classesByName(dropBoxClass);
-        if (boxTypes.isEmpty() || !(boxTypes.get(0) instanceof ClassType)) {
+        if (boxTypes.isEmpty() || !(boxTypes.get(0) instanceof ClassType))
+        {
             return -1;
         }
         ClassType boxType = (ClassType) boxTypes.get(0);
         Field field = boxType.fieldByName(boxField);
-        if (field == null) {
+        if (field == null)
+        {
             return -1;
         }
         boxType.setValue(field, array);
@@ -235,13 +290,16 @@ public final class DebugSession {
     // ---- breakpoints --------------------------------------------------------------------------------
 
     /** Adds a breakpoint at a bytecode offset; installs on already-loaded classes and arms a class-prepare hook. */
-    public synchronized void addBreakpoint(String className, String methodName, String methodDesc, long pc) {
+    public synchronized void addBreakpoint(String className, String methodName, String methodDesc, long pc)
+    {
         BreakpointSpec spec = new BreakpointSpec(className, methodName, methodDesc, pc);
         breakpoints.add(spec);
-        for (ReferenceType rt : vm.classesByName(className)) {
+        for (ReferenceType rt : vm.classesByName(className))
+        {
             installSpec(rt, spec);
         }
-        prepareRequests.computeIfAbsent(className, cn -> {
+        prepareRequests.computeIfAbsent(className, cn ->
+        {
             ClassPrepareRequest req = vm.eventRequestManager().createClassPrepareRequest();
             req.addClassFilter(cn);
             req.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
@@ -250,42 +308,56 @@ public final class DebugSession {
         });
     }
 
-    public synchronized void removeBreakpoint(String className, String methodName, String methodDesc, long pc) {
+    public synchronized void removeBreakpoint(String className, String methodName, String methodDesc, long pc)
+    {
         breakpoints.removeIf(s -> s.matches(className, methodName, methodDesc, pc));
         List<BreakpointRequest> drop = new ArrayList<>();
-        for (BreakpointRequest req : installed) {
+        for (BreakpointRequest req : installed)
+        {
             Location loc = req.location();
             if (loc.declaringType().name().equals(className)
                     && loc.method().name().equals(methodName)
                     && loc.method().signature().equals(methodDesc)
-                    && loc.codeIndex() == pc) {
+                    && loc.codeIndex() == pc)
+            {
                 drop.add(req);
             }
         }
-        if (!drop.isEmpty()) {
-            try {
+        if (!drop.isEmpty())
+        {
+            try
+            {
                 vm.eventRequestManager().deleteEventRequests(drop);
-            } catch (VMDisconnectedException ignored) {
+            }
+            catch (VMDisconnectedException ignored)
+            {
             }
             installed.removeAll(drop);
         }
     }
 
-    private void installSpec(ReferenceType rt, BreakpointSpec spec) {
-        for (Method m : rt.methodsByName(spec.methodName)) {
-            if (!m.signature().equals(spec.methodDesc)) {
+    private void installSpec(ReferenceType rt, BreakpointSpec spec)
+    {
+        for (Method m : rt.methodsByName(spec.methodName))
+        {
+            if (!m.signature().equals(spec.methodDesc))
+            {
                 continue;
             }
-            try {
+            try
+            {
                 Location loc = m.locationOfCodeIndex(spec.pc);
-                if (loc == null) {
+                if (loc == null)
+                {
                     continue;
                 }
                 BreakpointRequest req = vm.eventRequestManager().createBreakpointRequest(loc);
                 req.setSuspendPolicy(suspendAll ? EventRequest.SUSPEND_ALL : EventRequest.SUSPEND_EVENT_THREAD);
                 req.enable();
                 installed.add(req);
-            } catch (Exception ignored) {
+            }
+            catch (Exception ignored)
+            {
             }
         }
     }
@@ -293,119 +365,164 @@ public final class DebugSession {
     // ---- execution control --------------------------------------------------------------------------
 
     /** Resumes the target from a breakpoint. */
-    public synchronized void resume() {
+    public synchronized void resume()
+    {
         ThreadReference t = pausedThread;
         pausedThread = null;
         listener.onResumed();
-        try {
-            if (pausedAll || t == null) {
+        try
+        {
+            if (pausedAll || t == null)
+            {
                 vm.resume();
-            } else {
+            }
+            else
+            {
                 t.resume();
             }
-        } catch (VMDisconnectedException ignored) {
+        }
+        catch (VMDisconnectedException ignored)
+        {
         }
     }
 
     /** Ends the session: disconnects JDI and stops the event pump. */
-    public void dispose() {
+    public void dispose()
+    {
         running = false;
-        try {
+        try
+        {
             vm.dispose();
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
         pump.interrupt();
     }
 
     // ---- inspection (only valid while paused) -------------------------------------------------------
 
-    public List<DebugFrame> frames() {
+    public List<DebugFrame> frames()
+    {
         List<DebugFrame> out = new ArrayList<>();
         ThreadReference t = pausedThread;
-        if (t == null) {
+        if (t == null)
+        {
             return out;
         }
-        try {
+        try
+        {
             List<StackFrame> frames = t.frames();
-            for (int i = 0; i < frames.size(); i++) {
+            for (int i = 0; i < frames.size(); i++)
+            {
                 DebugLocation loc = toLocation(frames.get(i).location());
                 out.add(new DebugFrame(i, loc, frameDisplay(loc)));
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
         return out;
     }
 
-    public List<DebugVariable> variables(int frameIndex) {
+    public List<DebugVariable> variables(int frameIndex)
+    {
         List<DebugVariable> out = new ArrayList<>();
         ThreadReference t = pausedThread;
-        if (t == null) {
+        if (t == null)
+        {
             return out;
         }
-        try {
+        try
+        {
             StackFrame frame = t.frame(frameIndex);
             ObjectReference self = frame.thisObject();
-            if (self != null) {
-                out.add(new DebugVariable("this", self.referenceType().signature(), label(self), true,
-                        register(self), false, 0));
+            if (self != null)
+            {
+                out.add(new DebugVariable("this", self.referenceType().signature(), label(self), true, register(self), false, 0));
             }
-            try {
-                for (LocalVariable lv : frame.visibleVariables()) {
+            try
+            {
+                for (LocalVariable lv : frame.visibleVariables())
+                {
                     out.add(toVar(lv.name(), lv.signature(), frame.getValue(lv)));
                 }
-            } catch (AbsentInformationException noLvt) {
+            }
+            catch (AbsentInformationException noLvt)
+            {
                 List<Value> args = frame.getArgumentValues();
-                for (int i = 0; i < args.size(); i++) {
+                for (int i = 0; i < args.size(); i++)
+                {
                     out.add(toVar("arg" + i, "", args.get(i)));
                 }
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
         return out;
     }
 
     // ---- event pump ---------------------------------------------------------------------------------
 
-    private void pumpLoop() {
-        try {
+    private void pumpLoop()
+    {
+        try
+        {
             EventQueue queue = vm.eventQueue();
-            while (running) {
+            while (running)
+            {
                 EventSet set = queue.remove();
                 boolean resumeAfter = true;
-                for (Event event : set) {
-                    if (event instanceof BreakpointEvent) {
+                for (Event event : set)
+                {
+                    if (event instanceof BreakpointEvent)
+                    {
                         handlePause(((BreakpointEvent) event).thread(), set.suspendPolicy());
                         resumeAfter = false;
-                    } else if (event instanceof ClassPrepareEvent) {
+                    }
+                    else if (event instanceof ClassPrepareEvent)
+                    {
                         ReferenceType prepared = ((ClassPrepareEvent) event).referenceType();
-                        if (installPending(prepared)) {
+                        if (installPending(prepared))
+                        {
                             listener.onClassPrepared(prepared.name());
                         }
-                    } else if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent) {
+                    }
+                    else if (event instanceof VMDeathEvent || event instanceof VMDisconnectEvent)
+                    {
                         running = false;
                         resumeAfter = false;
                         listener.onDisconnected();
                     }
                 }
-                if (resumeAfter && running) {
+                if (resumeAfter && running)
+                {
                     set.resume();
                 }
             }
-        } catch (VMDisconnectedException e) {
-            if (running) {
+        }
+        catch (VMDisconnectedException e)
+        {
+            if (running)
+            {
                 running = false;
                 listener.onDisconnected();
             }
-        } catch (InterruptedException ignored) {
+        }
+        catch (InterruptedException ignored)
+        {
             // shutting down
         }
     }
 
-    private void handlePause(ThreadReference thread, int suspendPolicy) {
+    private void handlePause(ThreadReference thread, int suspendPolicy)
+    {
         this.pausedThread = thread;
         this.pausedAll = suspendPolicy == EventRequest.SUSPEND_ALL;
         refHandles.clear();
-        if (pausedAll) {
+        if (pausedAll)
+        {
             resumeAgentThreads();
         }
         listener.onPaused(topLocation(thread), frames());
@@ -417,27 +534,38 @@ public final class DebugSession {
      * pause; the user's Resume releases everything together. The agent does only reflection (no application
      * code, no application locks), so the resumed thread cannot deadlock on a lock a frozen thread holds.
      */
-    private void resumeAgentThreads() {
-        if (agentThreadPrefix == null) {
+    private void resumeAgentThreads()
+    {
+        if (agentThreadPrefix == null)
+        {
             return;
         }
-        try {
-            for (ThreadReference t : vm.allThreads()) {
+        try
+        {
+            for (ThreadReference t : vm.allThreads())
+            {
                 String name = t.name();
-                if (name != null && name.startsWith(agentThreadPrefix)) {
-                    while (t.suspendCount() > 0) {
+                if (name != null && name.startsWith(agentThreadPrefix))
+                {
+                    while (t.suspendCount() > 0)
+                    {
                         t.resume();
                     }
                 }
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
     }
 
-    private synchronized boolean installPending(ReferenceType rt) {
+    private synchronized boolean installPending(ReferenceType rt)
+    {
         boolean hadBreakpoint = false;
-        for (BreakpointSpec spec : breakpoints) {
-            if (spec.className.equals(rt.name())) {
+        for (BreakpointSpec spec : breakpoints)
+        {
+            if (spec.className.equals(rt.name()))
+            {
                 installSpec(rt, spec);
                 hadBreakpoint = true;
             }
@@ -446,12 +574,14 @@ public final class DebugSession {
     }
 
     /** Whether the target VM supports {@link #redefineClasses} (HotSwap). */
-    public boolean canRedefineClasses() {
+    public boolean canRedefineClasses()
+    {
         return vm.canRedefineClasses();
     }
 
     /** Whether {@code className} (a binary/dotted name) is loaded in the target. */
-    public boolean isClassLoaded(String className) {
+    public boolean isClassLoaded(String className)
+    {
         return !vm.classesByName(className).isEmpty();
     }
 
@@ -460,17 +590,22 @@ public final class DebugSession {
      * synthetic LocalVariableTable onto otherwise-unchanged bytecode. Returns false (without throwing) when the
      * VM can't redefine, the class is not loaded, or JDI rejects the bytes - so debugging continues regardless.
      */
-    public synchronized boolean redefineClasses(String className, byte[] bytes) {
-        if (bytes == null || !vm.canRedefineClasses()) {
+    public synchronized boolean redefineClasses(String className, byte[] bytes)
+    {
+        if (bytes == null || !vm.canRedefineClasses())
+        {
             return false;
         }
         List<ReferenceType> types = vm.classesByName(className);
-        if (types.isEmpty()) {
+        if (types.isEmpty())
+        {
             return false;
         }
-        try {
+        try
+        {
             Map<ReferenceType, byte[]> redefs = new HashMap<>();
-            for (ReferenceType rt : types) {
+            for (ReferenceType rt : types)
+            {
                 redefs.put(rt, bytes);
             }
             vm.redefineClasses(redefs);
@@ -478,147 +613,196 @@ public final class DebugSession {
             // attribute changed, so code indices are unchanged and the requests re-install at the same locations.
             reinstallBreakpoints(className, types);
             return true;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return false;
         }
     }
 
     /** Drops the now-obsolete breakpoint requests for {@code className} and re-installs them from the specs. */
-    private void reinstallBreakpoints(String className, List<ReferenceType> types) {
+    private void reinstallBreakpoints(String className, List<ReferenceType> types)
+    {
         List<BreakpointRequest> stale = new ArrayList<>();
-        for (BreakpointRequest req : installed) {
+        for (BreakpointRequest req : installed)
+        {
             boolean forClass;
-            try {
+            try
+            {
                 forClass = req.location().declaringType().name().equals(className);
-            } catch (Exception obsolete) {
+            }
+            catch (Exception obsolete)
+            {
                 forClass = true;
             }
-            if (forClass) {
+            if (forClass)
+            {
                 stale.add(req);
             }
         }
-        if (!stale.isEmpty()) {
-            try {
+        if (!stale.isEmpty())
+        {
+            try
+            {
                 vm.eventRequestManager().deleteEventRequests(stale);
-            } catch (Exception ignored) {
+            }
+            catch (Exception ignored)
+            {
             }
             installed.removeAll(stale);
         }
-        for (ReferenceType rt : types) {
-            for (BreakpointSpec spec : breakpoints) {
-                if (spec.className.equals(className)) {
+        for (ReferenceType rt : types)
+        {
+            for (BreakpointSpec spec : breakpoints)
+            {
+                if (spec.className.equals(className))
+                {
                     installSpec(rt, spec);
                 }
             }
         }
     }
 
-    private DebugLocation topLocation(ThreadReference t) {
-        try {
+    private DebugLocation topLocation(ThreadReference t)
+    {
+        try
+        {
             return toLocation(t.frame(0).location());
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return null;
         }
     }
 
     // ---- marshalling --------------------------------------------------------------------------------
 
-    private static DebugLocation toLocation(Location loc) {
+    private static DebugLocation toLocation(Location loc)
+    {
         Method m = loc.method();
         int line;
-        try {
+        try
+        {
             line = loc.lineNumber();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             line = -1;
         }
         return new DebugLocation(loc.declaringType().name(), m.name(), m.signature(), loc.codeIndex(), line);
     }
 
-    private static String frameDisplay(DebugLocation loc) {
+    private static String frameDisplay(DebugLocation loc)
+    {
         String at = loc.getLineNumber() > 0 ? " : " + loc.getLineNumber() : "";
         return loc.getClassName() + "." + loc.getMethodName() + "()" + at;
     }
 
-    private DebugVariable toVar(String name, String signature, Value v) {
+    private DebugVariable toVar(String name, String signature, Value v)
+    {
         boolean ref = v instanceof ObjectReference && !(v instanceof StringReference);
         long handle = ref ? register((ObjectReference) v) : 0;
         boolean array = false;
         int arrayLength = 0;
-        if (v instanceof ArrayReference && !"char[]".equals(((ArrayReference) v).referenceType().name())) {
+        if (v instanceof ArrayReference && !"char[]".equals(((ArrayReference) v).referenceType().name()))
+        {
             array = true;
             arrayLength = ((ArrayReference) v).length();
         }
         return new DebugVariable(name, signature, label(v), ref, handle, array, arrayLength);
     }
 
-    private long register(ObjectReference o) {
+    private long register(ObjectReference o)
+    {
         long id = refIds.getAndIncrement();
         refHandles.put(id, o);
         return id;
     }
 
     /** Fields (or array elements) of a previously-handed-out reference value, for click-to-expand drilling. */
-    public List<DebugVariable> objectFields(long handle) {
+    public List<DebugVariable> objectFields(long handle)
+    {
         List<DebugVariable> out = new ArrayList<>();
         ObjectReference o = refHandles.get(handle);
-        if (o == null) {
+        if (o == null)
+        {
             return out;
         }
-        try {
-            if (o instanceof ArrayReference) {
+        try
+        {
+            if (o instanceof ArrayReference)
+            {
                 return arrayElements(handle, 200);
             }
             List<Field> fields = new ArrayList<>();
-            for (Field f : o.referenceType().allFields()) {
-                if (!f.isStatic()) {
+            for (Field f : o.referenceType().allFields())
+            {
+                if (!f.isStatic())
+                {
                     fields.add(f);
                 }
             }
             Map<Field, Value> values = o.getValues(fields);
-            for (Field f : fields) {
+            for (Field f : fields)
+            {
                 out.add(toVar(f.name(), f.signature(), values.get(f)));
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
         return out;
     }
 
     /** The first {@code max} elements of an array reference, index-labelled ({@code [0]}, {@code [1]}, ...). */
-    public List<DebugVariable> arrayElements(long handle, int max) {
+    public List<DebugVariable> arrayElements(long handle, int max)
+    {
         List<DebugVariable> out = new ArrayList<>();
         ObjectReference o = refHandles.get(handle);
-        if (!(o instanceof ArrayReference)) {
+        if (!(o instanceof ArrayReference))
+        {
             return out;
         }
-        try {
+        try
+        {
             ArrayReference arr = (ArrayReference) o;
             int n = Math.min(arr.length(), Math.max(0, max));
-            if (n > 0) {
+            if (n > 0)
+            {
                 List<Value> vals = arr.getValues(0, n);
-                for (int i = 0; i < vals.size(); i++) {
+                for (int i = 0; i < vals.size(); i++)
+                {
                     out.add(toVar("[" + i + "]", "", vals.get(i)));
                 }
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
         return out;
     }
 
-    private static String label(Value v) {
-        if (v == null) {
+    private static String label(Value v)
+    {
+        if (v == null)
+        {
             return "null";
         }
-        if (v instanceof StringReference) {
+        if (v instanceof StringReference)
+        {
             return "\"" + ((StringReference) v).value() + "\"";
         }
-        if (v instanceof ArrayReference) {
+        if (v instanceof ArrayReference)
+        {
             ArrayReference arr = (ArrayReference) v;
-            if ("char[]".equals(arr.referenceType().name())) {
+            if ("char[]".equals(arr.referenceType().name()))
+            {
                 return charArrayString(arr);
             }
             return arr.referenceType().name() + " (len " + arr.length() + ")";
         }
-        if (v instanceof ObjectReference) {
+        if (v instanceof ObjectReference)
+        {
             ObjectReference o = (ObjectReference) v;
             return o.referenceType().name() + "@" + o.uniqueID();
         }
@@ -626,38 +810,46 @@ public final class DebugSession {
     }
 
     /** Renders a {@code char[]} as its quoted string content (capped), e.g. an in-flight password buffer. */
-    private static String charArrayString(ArrayReference arr) {
+    private static String charArrayString(ArrayReference arr)
+    {
         int len = arr.length();
         int cap = Math.min(len, 200);
         StringBuilder sb = new StringBuilder("\"");
-        if (cap > 0) {
-            for (Value cv : arr.getValues(0, cap)) {
-                if (cv instanceof CharValue) {
+        if (cap > 0)
+        {
+            for (Value cv : arr.getValues(0, cap))
+            {
+                if (cv instanceof CharValue)
+                {
                     sb.append(((CharValue) cv).value());
                 }
             }
         }
         sb.append('"');
-        if (len > cap) {
+        if (len > cap)
+        {
             sb.append(" (").append(len).append(" chars)");
         }
         return sb.toString();
     }
 
-    private static final class BreakpointSpec {
+    private static final class BreakpointSpec
+    {
         final String className;
         final String methodName;
         final String methodDesc;
         final long pc;
 
-        BreakpointSpec(String className, String methodName, String methodDesc, long pc) {
+        BreakpointSpec(String className, String methodName, String methodDesc, long pc)
+        {
             this.className = className;
             this.methodName = methodName;
             this.methodDesc = methodDesc;
             this.pc = pc;
         }
 
-        boolean matches(String c, String n, String d, long p) {
+        boolean matches(String c, String n, String d, long p)
+        {
             return className.equals(c) && methodName.equals(n) && methodDesc.equals(d) && pc == p;
         }
     }

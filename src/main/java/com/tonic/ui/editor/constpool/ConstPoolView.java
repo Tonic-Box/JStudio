@@ -13,7 +13,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
 
-public class ConstPoolView extends AbstractEditorView {
+public class ConstPoolView extends AbstractEditorView
+{
 
     private final ClassEntryModel classEntry;
     private final JTable table;
@@ -23,19 +24,21 @@ public class ConstPoolView extends AbstractEditorView {
     private final JLabel statusLabel;
     private final JScrollPane scrollPane;
 
-    private static final String[] TYPE_OPTIONS = {
-            "All",
-            "Utf8",
-            "Integer", "Float", "Long", "Double",
-            "Class", "String",
-            "FieldRef", "MethodRef", "InterfaceRef",
-            "NameAndType",
-            "MethodHandle", "MethodType",
-            "Dynamic", "InvokeDynamic",
-            "Package", "Module"
-    };
+    private static final String[] TYPE_OPTIONS =
+            {
+                    "All",
+                    "Utf8",
+                    "Integer", "Float", "Long", "Double",
+                    "Class", "String",
+                    "FieldRef", "MethodRef", "InterfaceRef",
+                    "NameAndType",
+                    "MethodHandle", "MethodType",
+                    "Dynamic", "InvokeDynamic",
+                    "Package", "Module"
+            };
 
-    public ConstPoolView(ClassEntryModel classEntry) {
+    public ConstPoolView(ClassEntryModel classEntry)
+    {
         this.classEntry = classEntry;
 
         setBackground(JStudioTheme.getBgPrimary());
@@ -63,7 +66,8 @@ public class ConstPoolView extends AbstractEditorView {
         searchField = (JTextField) ((JPanel) toolbar.getComponent(0)).getComponent(3);
     }
 
-    private JPanel createToolbar() {
+    private JPanel createToolbar()
+    {
         JPanel toolbar = new JPanel(new BorderLayout());
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
@@ -81,9 +85,11 @@ public class ConstPoolView extends AbstractEditorView {
         filter.setForeground(JStudioTheme.getTextPrimary());
         filter.setFont(JStudioTheme.getUIFont(12));
         filter.setPreferredSize(new Dimension(120, 24));
-        filter.addActionListener(e -> {
+        filter.addActionListener(e ->
+        {
             String selected = (String) filter.getSelectedItem();
-            if (selected != null) {
+            if (selected != null)
+            {
                 tableModel.setTypeFilter(selected);
                 updateStatus();
             }
@@ -100,12 +106,12 @@ public class ConstPoolView extends AbstractEditorView {
         search.setForeground(JStudioTheme.getTextPrimary());
         search.setCaretColor(JStudioTheme.getTextPrimary());
         search.setFont(JStudioTheme.getUIFont(12));
-        search.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(2, 4, 2, 4)));
-        search.addKeyListener(new KeyAdapter() {
+        search.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(2, 4, 2, 4)));
+        search.addKeyListener(new KeyAdapter()
+        {
             @Override
-            public void keyReleased(KeyEvent e) {
+            public void keyReleased(KeyEvent e)
+            {
                 tableModel.setSearchText(search.getText());
                 updateStatus();
             }
@@ -117,7 +123,8 @@ public class ConstPoolView extends AbstractEditorView {
         return toolbar;
     }
 
-    private void configureTable() {
+    private void configureTable()
+    {
         table.setBackground(JStudioTheme.getBgPrimary());
         table.setForeground(JStudioTheme.getTextPrimary());
         table.setSelectionBackground(JStudioTheme.getSelection());
@@ -146,12 +153,14 @@ public class ConstPoolView extends AbstractEditorView {
         indexRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
         indexCol.setCellRenderer(indexRenderer);
 
-        DefaultTableCellRenderer typeRenderer = new DefaultTableCellRenderer() {
+        DefaultTableCellRenderer typeRenderer = new DefaultTableCellRenderer()
+        {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+            {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (!isSelected) {
+                if (!isSelected)
+                {
                     setForeground(getTypeColor((String) value));
                 }
                 return c;
@@ -159,13 +168,15 @@ public class ConstPoolView extends AbstractEditorView {
         };
         typeCol.setCellRenderer(typeRenderer);
 
-        DefaultTableCellRenderer valueRenderer = new DefaultTableCellRenderer() {
+        DefaultTableCellRenderer valueRenderer = new DefaultTableCellRenderer()
+        {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+            {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 setFont(JStudioTheme.getCodeFont(12));
-                if (value != null) {
+                if (value != null)
+                {
                     setToolTipText(value.toString());
                 }
                 return c;
@@ -174,9 +185,11 @@ public class ConstPoolView extends AbstractEditorView {
         table.getColumnModel().getColumn(2).setCellRenderer(valueRenderer);
     }
 
-    private Color getTypeColor(String type) {
+    private Color getTypeColor(String type)
+    {
         if (type == null) return JStudioTheme.getTextPrimary();
-        switch (type) {
+        switch (type)
+        {
             case "Utf8":
                 return new Color(152, 195, 121);
             case "Integer":
@@ -207,28 +220,36 @@ public class ConstPoolView extends AbstractEditorView {
     }
 
     @Override
-    public void refresh() {
+    public void refresh()
+    {
         cancelCurrentWorker();
 
         loadingOverlay.showLoading("Loading constant pool...");
 
-        SwingWorker<List<ConstPoolEntry>, Void> worker = new SwingWorker<>() {
+        SwingWorker<List<ConstPoolEntry>, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected List<ConstPoolEntry> doInBackground() {
+            protected List<ConstPoolEntry> doInBackground()
+            {
                 return ConstPoolTableModel.buildEntries(classEntry);
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 loadingOverlay.hideLoading();
-                if (isCancelled()) {
+                if (isCancelled())
+                {
                     return;
                 }
-                try {
+                try
+                {
                     List<ConstPoolEntry> entries = get();
                     tableModel.setEntries(entries);
                     updateStatus();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     // Ignore
                 }
             }
@@ -237,56 +258,62 @@ public class ConstPoolView extends AbstractEditorView {
         worker.execute();
     }
 
-    private void updateStatus() {
+    private void updateStatus()
+    {
         int total = tableModel.getTotalCount();
         int filtered = tableModel.getFilteredCount();
-        if (total == 0) {
+        if (total == 0)
+        {
             statusLabel.setText("No entries");
-        } else if (filtered == total) {
+        }
+        else if (filtered == total)
+        {
             statusLabel.setText(total + " entries");
-        } else {
+        }
+        else
+        {
             statusLabel.setText(total + " entries (" + filtered + " shown)");
         }
     }
 
     @Override
-    public String getText() {
+    public String getText()
+    {
         StringBuilder sb = new StringBuilder();
         sb.append("Constant Pool for ").append(classEntry.getClassName()).append("\n");
         sb.append("=".repeat(60)).append("\n\n");
 
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
-            sb.append(String.format("#%-4s  %-15s  %s%n",
-                    tableModel.getValueAt(i, 0),
-                    tableModel.getValueAt(i, 1),
-                    tableModel.getValueAt(i, 2)));
+        for (int i = 0; i < tableModel.getRowCount(); i++)
+        {
+            sb.append(String.format("#%-4s  %-15s  %s%n", tableModel.getValueAt(i, 0), tableModel.getValueAt(i, 1), tableModel.getValueAt(i, 2)));
         }
         return sb.toString();
     }
 
     @Override
-    public void copySelection() {
+    public void copySelection()
+    {
         int[] rows = table.getSelectedRows();
         if (rows.length == 0) return;
 
         StringBuilder sb = new StringBuilder();
-        for (int row : rows) {
-            sb.append(String.format("#%-4s  %-15s  %s%n",
-                    tableModel.getValueAt(row, 0),
-                    tableModel.getValueAt(row, 1),
-                    tableModel.getValueAt(row, 2)));
+        for (int row : rows)
+        {
+            sb.append(String.format("#%-4s  %-15s  %s%n", tableModel.getValueAt(row, 0), tableModel.getValueAt(row, 1), tableModel.getValueAt(row, 2)));
         }
         StringSelection selection = new StringSelection(sb.toString());
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
     }
 
     @Override
-    public String getSelectedText() {
+    public String getSelectedText()
+    {
         int[] rows = table.getSelectedRows();
         if (rows.length == 0) return null;
 
         StringBuilder sb = new StringBuilder();
-        for (int row : rows) {
+        for (int row : rows)
+        {
             if (sb.length() > 0) sb.append("\n");
             sb.append(tableModel.getValueAt(row, 2));
         }
@@ -294,10 +321,13 @@ public class ConstPoolView extends AbstractEditorView {
     }
 
     @Override
-    public void goToLine(int line) {
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
+    public void goToLine(int line)
+    {
+        for (int i = 0; i < tableModel.getRowCount(); i++)
+        {
             Object val = tableModel.getValueAt(i, 0);
-            if (val instanceof Integer && (Integer) val == line) {
+            if (val instanceof Integer && (Integer) val == line)
+            {
                 table.setRowSelectionInterval(i, i);
                 table.scrollRectToVisible(table.getCellRect(i, 0, true));
                 return;
@@ -306,9 +336,11 @@ public class ConstPoolView extends AbstractEditorView {
     }
 
     @Override
-    public void showFindDialog() {
+    public void showFindDialog()
+    {
         String input = JOptionPane.showInputDialog(this, "Search:", "Find", JOptionPane.PLAIN_MESSAGE);
-        if (input != null && !input.isEmpty()) {
+        if (input != null && !input.isEmpty())
+        {
             searchField.setText(input);
             tableModel.setSearchText(input);
             updateStatus();
@@ -316,27 +348,31 @@ public class ConstPoolView extends AbstractEditorView {
     }
 
     @Override
-    public void scrollToText(String text) {
+    public void scrollToText(String text)
+    {
         if (text == null || text.isEmpty()) return;
 
         searchField.setText(text);
         tableModel.setSearchText(text);
         updateStatus();
 
-        if (tableModel.getRowCount() > 0) {
+        if (tableModel.getRowCount() > 0)
+        {
             table.setRowSelectionInterval(0, 0);
             table.scrollRectToVisible(table.getCellRect(0, 0, true));
         }
     }
 
     @Override
-    public void setFontSize(int size) {
+    public void setFontSize(int size)
+    {
         table.setFont(JStudioTheme.getCodeFont(size));
         table.setRowHeight(size + 10);
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         setBackground(JStudioTheme.getBgPrimary());
 
         table.setBackground(JStudioTheme.getBgPrimary());

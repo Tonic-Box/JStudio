@@ -16,7 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class StatisticsView extends AbstractEditorView {
+public class StatisticsView extends AbstractEditorView
+{
 
     private final ClassEntryModel classEntry;
     private final JPanel contentPanel;
@@ -32,7 +33,8 @@ public class StatisticsView extends AbstractEditorView {
     private BarChart opcodeChart;
     private StatTable methodTable;
 
-    public StatisticsView(ClassEntryModel classEntry) {
+    public StatisticsView(ClassEntryModel classEntry)
+    {
         this.classEntry = classEntry;
 
         contentPanel = new JPanel();
@@ -51,7 +53,8 @@ public class StatisticsView extends AbstractEditorView {
         add(overlayWrap(scrollPane), BorderLayout.CENTER);
     }
 
-    private void buildUI() {
+    private void buildUI()
+    {
         JPanel overviewPanel = createOverviewPanel();
         overviewPanel.setAlignmentX(LEFT_ALIGNMENT);
         contentPanel.add(overviewPanel);
@@ -91,7 +94,8 @@ public class StatisticsView extends AbstractEditorView {
         contentPanel.add(Box.createVerticalGlue());
     }
 
-    private JScrollPane createChartScrollPane(JPanel chart) {
+    private JScrollPane createChartScrollPane(JPanel chart)
+    {
         JScrollPane sp = new JScrollPane(chart);
         sp.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
         sp.getViewport().setBackground(JStudioTheme.getBgSecondary());
@@ -100,7 +104,8 @@ public class StatisticsView extends AbstractEditorView {
         return sp;
     }
 
-    private JPanel createOverviewPanel() {
+    private JPanel createOverviewPanel()
+    {
         JPanel panel = new JPanel();
         panel.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 0));
         panel.setOpaque(false);
@@ -120,27 +125,34 @@ public class StatisticsView extends AbstractEditorView {
     }
 
     @Override
-    public void refresh() {
+    public void refresh()
+    {
         cancelCurrentWorker();
         loadingOverlay.showLoading("Calculating statistics...");
 
-        SwingWorker<ClassStatistics, Void> worker = new SwingWorker<>() {
+        SwingWorker<ClassStatistics, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected ClassStatistics doInBackground() {
+            protected ClassStatistics doInBackground()
+            {
                 StatisticsCalculator calculator = new StatisticsCalculator();
                 return calculator.calculate(classEntry);
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 loadingOverlay.hideLoading();
                 if (isCancelled()) return;
 
-                try {
+                try
+                {
                     ClassStatistics stats = get();
                     updateUI(stats);
                     loaded = true;
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     showError("Error calculating statistics: " + e.getMessage());
                 }
             }
@@ -149,26 +161,31 @@ public class StatisticsView extends AbstractEditorView {
         worker.execute();
     }
 
-    private void updateUI(ClassStatistics stats) {
+    private void updateUI(ClassStatistics stats)
+    {
         methodCountCard.setValue(String.valueOf(stats.getMethodCount()));
         fieldCountCard.setValue(String.valueOf(stats.getFieldCount()));
         bytecodeCard.setValue(formatBytes(stats.getTotalBytecodeSize()));
         complexityCard.setValue(String.format("%.1f", stats.getAverageComplexity()));
 
         List<BarChart.BarEntry> sizeEntries = new ArrayList<>();
-        for (ClassStatistics.MethodSizeInfo info : stats.getMethodSizes()) {
+        for (ClassStatistics.MethodSizeInfo info : stats.getMethodSizes())
+        {
             sizeEntries.add(new BarChart.BarEntry(info.getName(), info.getBytecodeSize()));
         }
         methodSizeChart.setData(sizeEntries);
 
         List<PieChart.PieSlice> complexitySlices = new ArrayList<>();
-        if (stats.getLowComplexityCount() > 0) {
+        if (stats.getLowComplexityCount() > 0)
+        {
             complexitySlices.add(new PieChart.PieSlice("Low (1-5)", stats.getLowComplexityCount(), JStudioTheme.getSuccess()));
         }
-        if (stats.getMediumComplexityCount() > 0) {
+        if (stats.getMediumComplexityCount() > 0)
+        {
             complexitySlices.add(new PieChart.PieSlice("Medium (6-10)", stats.getMediumComplexityCount(), JStudioTheme.getWarning()));
         }
-        if (stats.getHighComplexityCount() > 0) {
+        if (stats.getHighComplexityCount() > 0)
+        {
             complexitySlices.add(new PieChart.PieSlice("High (11+)", stats.getHighComplexityCount(), JStudioTheme.getError()));
         }
         int totalMethods = stats.getLowComplexityCount() + stats.getMediumComplexityCount() + stats.getHighComplexityCount();
@@ -176,30 +193,29 @@ public class StatisticsView extends AbstractEditorView {
         complexityPieChart.setData(complexitySlices);
 
         List<BarChart.BarEntry> opcodeEntries = new ArrayList<>();
-        Color[] opcodeColors = {
-                JStudioTheme.getAccent(),
-                JStudioTheme.getInfo(),
-                JStudioTheme.getSuccess(),
-                JStudioTheme.getWarning(),
-                JStudioTheme.getError(),
-                JStudioTheme.getAccentSecondary(),
-                new Color(156, 136, 255),
-                new Color(255, 136, 136),
-                new Color(136, 255, 200),
-                new Color(200, 200, 200),
-                JStudioTheme.getTextSecondary()
-        };
+        Color[] opcodeColors =
+                {
+                        JStudioTheme.getAccent(),
+                        JStudioTheme.getInfo(),
+                        JStudioTheme.getSuccess(),
+                        JStudioTheme.getWarning(),
+                        JStudioTheme.getError(),
+                        JStudioTheme.getAccentSecondary(),
+                        new Color(156, 136, 255),
+                        new Color(255, 136, 136),
+                        new Color(136, 255, 200),
+                        new Color(200, 200, 200),
+                        JStudioTheme.getTextSecondary()
+                };
 
         Map<ClassStatistics.OpcodeCategory, Integer> distribution = stats.getOpcodeDistribution();
         int colorIndex = 0;
-        for (ClassStatistics.OpcodeCategory category : ClassStatistics.OpcodeCategory.values()) {
+        for (ClassStatistics.OpcodeCategory category : ClassStatistics.OpcodeCategory.values())
+        {
             int count = distribution.getOrDefault(category, 0);
-            if (count > 0) {
-                opcodeEntries.add(new BarChart.BarEntry(
-                        category.getDisplayName(),
-                        count,
-                        opcodeColors[colorIndex % opcodeColors.length]
-                ));
+            if (count > 0)
+            {
+                opcodeEntries.add(new BarChart.BarEntry(category.getDisplayName(), count, opcodeColors[colorIndex % opcodeColors.length]));
             }
             colorIndex++;
         }
@@ -212,16 +228,21 @@ public class StatisticsView extends AbstractEditorView {
         repaint();
     }
 
-    private String formatBytes(int bytes) {
-        if (bytes >= 1024 * 1024) {
+    private String formatBytes(int bytes)
+    {
+        if (bytes >= 1024 * 1024)
+        {
             return String.format("%.1fMB", bytes / (1024.0 * 1024.0));
-        } else if (bytes >= 1024) {
+        }
+        else if (bytes >= 1024)
+        {
             return String.format("%.1fKB", bytes / 1024.0);
         }
         return String.valueOf(bytes);
     }
 
-    private void showError(String message) {
+    private void showError(String message)
+    {
         ConsoleLogService.getInstance().error(message);
         methodCountCard.setValue("?");
         fieldCountCard.setValue("?");
@@ -230,14 +251,16 @@ public class StatisticsView extends AbstractEditorView {
     }
 
     @Override
-    public String getText() {
+    public String getText()
+    {
         return "// Statistics for: " + classEntry.getClassName() + "\n\n" +
                 "Methods: " + methodCountCard + "\n" +
                 "Fields: " + fieldCountCard + "\n";
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         setBackground(JStudioTheme.getBgTertiary());
         contentPanel.setBackground(JStudioTheme.getBgTertiary());
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());

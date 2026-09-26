@@ -13,11 +13,14 @@ import com.tonic.simulation.metrics.ComplexityMetrics;
 
 import java.util.*;
 
-public class StatisticsCalculator {
+public class StatisticsCalculator
+{
 
-    public ClassStatistics calculate(ClassEntryModel classEntry) {
+    public ClassStatistics calculate(ClassEntryModel classEntry)
+    {
         ClassFile cf = classEntry.getClassFile();
-        if (cf == null) {
+        if (cf == null)
+        {
             return createEmptyStatistics();
         }
 
@@ -41,12 +44,15 @@ public class StatisticsCalculator {
         List<ClassStatistics.MethodDetailInfo> methodDetails = new ArrayList<>();
         Map<ClassStatistics.OpcodeCategory, Integer> opcodeDistribution = new EnumMap<>(ClassStatistics.OpcodeCategory.class);
 
-        for (ClassStatistics.OpcodeCategory cat : ClassStatistics.OpcodeCategory.values()) {
+        for (ClassStatistics.OpcodeCategory cat : ClassStatistics.OpcodeCategory.values())
+        {
             opcodeDistribution.put(cat, 0);
         }
 
-        if (methods != null) {
-            for (MethodEntryModel methodModel : methods) {
+        if (methods != null)
+        {
+            for (MethodEntryModel methodModel : methods)
+            {
                 MethodEntry method = methodModel.getMethodEntry();
                 String methodName = methodModel.getName();
                 String methodDesc = methodModel.getDescriptor();
@@ -67,13 +73,15 @@ public class StatisticsCalculator {
                 int loops = 0;
                 int branches = 0;
 
-                if (codeAttr != null) {
+                if (codeAttr != null)
+                {
                     bytecodeSize = codeAttr.getCode() != null ? codeAttr.getCode().length : 0;
                     maxStack = codeAttr.getMaxStack();
                     maxLocals = codeAttr.getMaxLocals();
                     totalBytecodeSize += bytecodeSize;
 
-                    try {
+                    try
+                    {
                         SSA ssa = new SSA(cf.getConstPool());
                         IRMethod irMethod = ssa.lift(method);
                         ComplexityMetrics metrics = new ComplexityMetrics(irMethod);
@@ -82,7 +90,9 @@ public class StatisticsCalculator {
                         branches = metrics.getBranchCount();
                         totalComplexity += ccn;
                         complexityCount++;
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         // Fallback to basic complexity
                     }
 
@@ -93,28 +103,12 @@ public class StatisticsCalculator {
                 else if (ccn <= 10) mediumComplexity++;
                 else highComplexity++;
 
-                if (bytecodeSize > 0) {
-                    methodSizes.add(ClassStatistics.MethodSizeInfo.builder()
-                            .name(methodName)
-                            .bytecodeSize(bytecodeSize)
-                            .maxStack(maxStack)
-                            .maxLocals(maxLocals)
-                            .build());
+                if (bytecodeSize > 0)
+                {
+                    methodSizes.add(ClassStatistics.MethodSizeInfo.builder().name(methodName).bytecodeSize(bytecodeSize).maxStack(maxStack).maxLocals(maxLocals).build());
                 }
 
-                methodDetails.add(ClassStatistics.MethodDetailInfo.builder()
-                        .name(methodName)
-                        .descriptor(methodDesc)
-                        .bytecodeSize(bytecodeSize)
-                        .maxStack(maxStack)
-                        .maxLocals(maxLocals)
-                        .cyclomaticComplexity(ccn)
-                        .loopCount(loops)
-                        .branchCount(branches)
-                        .isStatic(isStatic)
-                        .isAbstract(isAbstract)
-                        .isNative(isNative)
-                        .build());
+                methodDetails.add(ClassStatistics.MethodDetailInfo.builder().name(methodName).descriptor(methodDesc).bytecodeSize(bytecodeSize).maxStack(maxStack).maxLocals(maxLocals).cyclomaticComplexity(ccn).loopCount(loops).branchCount(branches).isStatic(isStatic).isAbstract(isAbstract).isNative(isNative).build());
             }
         }
 
@@ -141,69 +135,87 @@ public class StatisticsCalculator {
                 .build();
     }
 
-    private void countOpcodes(MethodEntry method, Map<ClassStatistics.OpcodeCategory, Integer> distribution) {
-        try {
+    private void countOpcodes(MethodEntry method, Map<ClassStatistics.OpcodeCategory, Integer> distribution)
+    {
+        try
+        {
             CodeWriter codeWriter = new CodeWriter(method);
-            for (Instruction instr : codeWriter.getInstructions()) {
+            for (Instruction instr : codeWriter.getInstructions())
+            {
                 String instrStr = instr.toString().toLowerCase();
                 String opName = instrStr.split("\\s+")[0];
 
                 ClassStatistics.OpcodeCategory category = categorizeOpcode(opName);
                 distribution.merge(category, 1, Integer::sum);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             // Ignore errors in opcode counting
         }
     }
 
-    private ClassStatistics.OpcodeCategory categorizeOpcode(String opcode) {
-        if (opcode.startsWith("invoke")) {
+    private ClassStatistics.OpcodeCategory categorizeOpcode(String opcode)
+    {
+        if (opcode.startsWith("invoke"))
+        {
             return ClassStatistics.OpcodeCategory.INVOKE;
         }
         if (opcode.endsWith("load") || opcode.startsWith("aload") || opcode.startsWith("iload") ||
-                opcode.startsWith("lload") || opcode.startsWith("fload") || opcode.startsWith("dload")) {
+                opcode.startsWith("lload") || opcode.startsWith("fload") || opcode.startsWith("dload"))
+        {
             return ClassStatistics.OpcodeCategory.LOAD;
         }
         if (opcode.endsWith("store") || opcode.startsWith("astore") || opcode.startsWith("istore") ||
-                opcode.startsWith("lstore") || opcode.startsWith("fstore") || opcode.startsWith("dstore")) {
+                opcode.startsWith("lstore") || opcode.startsWith("fstore") || opcode.startsWith("dstore"))
+        {
             return ClassStatistics.OpcodeCategory.STORE;
         }
         if (opcode.startsWith("if") || opcode.equals("goto") || opcode.equals("goto_w") ||
-                opcode.contains("switch") || opcode.equals("jsr") || opcode.equals("jsr_w")) {
+                opcode.contains("switch") || opcode.equals("jsr") || opcode.equals("jsr_w"))
+        {
             return ClassStatistics.OpcodeCategory.BRANCH;
         }
         if (opcode.startsWith("iconst") || opcode.startsWith("lconst") || opcode.startsWith("fconst") ||
                 opcode.startsWith("dconst") || opcode.equals("aconst_null") ||
-                opcode.equals("bipush") || opcode.equals("sipush") || opcode.startsWith("ldc")) {
+                opcode.equals("bipush") || opcode.equals("sipush") || opcode.startsWith("ldc"))
+        {
             return ClassStatistics.OpcodeCategory.CONST;
         }
         if (opcode.matches("^[ilfd](add|sub|mul|div|rem|neg)$") || opcode.matches("^[il](and|or|xor|shl|shr|ushr)$") ||
                 opcode.matches("^[ilfd]2[ilfd]$") || opcode.equals("iinc") ||
-                opcode.matches("^[dfl]cmp[gl]?$") || opcode.equals("lcmp")) {
+                opcode.matches("^[dfl]cmp[gl]?$") || opcode.equals("lcmp"))
+        {
             return ClassStatistics.OpcodeCategory.ARITHMETIC;
         }
         if (opcode.contains("aload") && opcode.length() > 5 || opcode.contains("astore") && opcode.length() > 6 ||
                 opcode.equals("arraylength") || opcode.contains("newarray") || opcode.equals("multianewarray") ||
                 opcode.matches("^[bcsilfd]aload$") || opcode.matches("^[bcsilfd]astore$") ||
-                opcode.equals("aaload") || opcode.equals("aastore")) {
+                opcode.equals("aaload") || opcode.equals("aastore"))
+        {
             return ClassStatistics.OpcodeCategory.ARRAY;
         }
-        if (opcode.startsWith("get") || opcode.startsWith("put")) {
+        if (opcode.startsWith("get") || opcode.startsWith("put"))
+        {
             return ClassStatistics.OpcodeCategory.FIELD;
         }
         if (opcode.equals("pop") || opcode.equals("pop2") || opcode.startsWith("dup") ||
-                opcode.equals("swap") || opcode.equals("nop")) {
+                opcode.equals("swap") || opcode.equals("nop"))
+        {
             return ClassStatistics.OpcodeCategory.STACK;
         }
-        if (opcode.contains("return") || opcode.equals("athrow")) {
+        if (opcode.contains("return") || opcode.equals("athrow"))
+        {
             return ClassStatistics.OpcodeCategory.RETURN;
         }
         return ClassStatistics.OpcodeCategory.OTHER;
     }
 
-    private ClassStatistics createEmptyStatistics() {
+    private ClassStatistics createEmptyStatistics()
+    {
         Map<ClassStatistics.OpcodeCategory, Integer> emptyDistribution = new EnumMap<>(ClassStatistics.OpcodeCategory.class);
-        for (ClassStatistics.OpcodeCategory cat : ClassStatistics.OpcodeCategory.values()) {
+        for (ClassStatistics.OpcodeCategory cat : ClassStatistics.OpcodeCategory.values())
+        {
             emptyDistribution.put(cat, 0);
         }
 

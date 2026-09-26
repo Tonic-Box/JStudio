@@ -16,65 +16,79 @@ import com.tonic.model.MethodEntryModel;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PDGView extends BaseGraphView {
+public class PDGView extends BaseGraphView
+{
 
     private final Map<MethodEntryModel, PDG> methodPDGs = new HashMap<>();
     private final PDGVertexRenderer renderer = new PDGVertexRenderer();
 
-    public PDGView(ClassEntryModel classEntry) {
+    public PDGView(ClassEntryModel classEntry)
+    {
         super(classEntry);
         populateMethodFilter();
     }
 
     @Override
-    protected void prepareGraphData() {
+    protected void prepareGraphData()
+    {
         methodPDGs.clear();
 
         String selectedMethod = (String) methodFilterCombo.getSelectedItem();
         boolean showAll = "All Methods".equals(selectedMethod);
 
-        for (MethodEntryModel method : classEntry.getMethods()) {
+        for (MethodEntryModel method : classEntry.getMethods())
+        {
             MethodEntry entry = method.getMethodEntry();
             if (entry.getCodeAttribute() == null) continue;
 
             String methodKey = method.getName() + entry.getDesc();
             if (!showAll && !methodKey.equals(selectedMethod)) continue;
 
-            try {
+            try
+            {
                 SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
                 IRMethod irMethod = ssa.lift(entry);
                 if (irMethod == null) continue;
 
                 PDG pdg = PDGBuilder.build(irMethod);
                 methodPDGs.put(method, pdg);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 // Skip methods that fail to analyze
             }
         }
     }
 
     @Override
-    protected void rebuildGraph() {
+    protected void rebuildGraph()
+    {
         clearGraph();
 
         graph.getModel().beginUpdate();
-        try {
+        try
+        {
             Object parent = graph.getDefaultParent();
 
-            for (Map.Entry<MethodEntryModel, PDG> entry : methodPDGs.entrySet()) {
+            for (Map.Entry<MethodEntryModel, PDG> entry : methodPDGs.entrySet())
+            {
                 renderPDG(parent, entry.getValue());
             }
 
             applyHierarchicalLayout();
-        } finally {
+        }
+        finally
+        {
             graph.getModel().endUpdate();
         }
     }
 
-    private void renderPDG(Object parent, PDG pdg) {
+    private void renderPDG(Object parent, PDG pdg)
+    {
         Map<PDGNode, Object> nodeMap = new HashMap<>();
 
-        for (PDGNode node : pdg.getNodes()) {
+        for (PDGNode node : pdg.getNodes())
+        {
             GraphVertex<PDGNode> vertex = new GraphVertex<>(node, renderer);
             String style = vertex.getStyle();
 
@@ -83,11 +97,13 @@ public class PDGView extends BaseGraphView {
             nodeMap.put(node, cell);
         }
 
-        for (PDGEdge edge : pdg.getEdges()) {
+        for (PDGEdge edge : pdg.getEdges())
+        {
             Object source = nodeMap.get(edge.getSource());
             Object target = nodeMap.get(edge.getTarget());
 
-            if (source != null && target != null) {
+            if (source != null && target != null)
+            {
                 String edgeLabel = getEdgeLabel(edge);
                 String edgeStyle = getEdgeStyle(edge);
                 graph.insertEdge(parent, null, edgeLabel, source, target, edgeStyle);
@@ -95,34 +111,41 @@ public class PDGView extends BaseGraphView {
         }
     }
 
-    private String getEdgeLabel(PDGEdge edge) {
+    private String getEdgeLabel(PDGEdge edge)
+    {
         String var = edge.getVariable();
-        if (var != null && !var.isEmpty()) {
+        if (var != null && !var.isEmpty())
+        {
             return var;
         }
         return "";
     }
 
-    private String getEdgeStyle(PDGEdge edge) {
-        if (edge.getType().isControlDependence()) {
+    private String getEdgeStyle(PDGEdge edge)
+    {
+        if (edge.getType().isControlDependence())
+        {
             return "CONTROL";
         }
         return "DATA";
     }
 
     @Override
-    protected String generateDOT() {
+    protected String generateDOT()
+    {
         StringBuilder sb = new StringBuilder();
 
         String selectedMethod = (String) methodFilterCombo.getSelectedItem();
         boolean showAll = "All Methods".equals(selectedMethod);
 
-        for (Map.Entry<MethodEntryModel, PDG> entry : methodPDGs.entrySet()) {
+        for (Map.Entry<MethodEntryModel, PDG> entry : methodPDGs.entrySet())
+        {
             String methodKey = entry.getKey().getName() + entry.getKey().getMethodEntry().getDesc();
             if (!showAll && !methodKey.equals(selectedMethod)) continue;
 
             PDG pdg = entry.getValue();
-            if (pdg != null) {
+            if (pdg != null)
+            {
                 PDGDOTExporter exporter = new PDGDOTExporter();
                 sb.append("// Method: ").append(entry.getKey().getName()).append("\n");
                 sb.append(exporter.export(pdg));
@@ -130,7 +153,8 @@ public class PDGView extends BaseGraphView {
             }
         }
 
-        if (sb.length() == 0) {
+        if (sb.length() == 0)
+        {
             return "// No PDG data available";
         }
 

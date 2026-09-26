@@ -9,24 +9,33 @@ import java.util.function.Consumer;
  * repeated {@link SwingWorker} subclass boilerplate. {@code work} runs on a background thread; exactly one
  * of {@code onSuccess}/{@code onError} is then invoked on the EDT (the error receives the unwrapped cause).
  */
-public final class SwingWorkers {
+public final class SwingWorkers
+{
 
-    private SwingWorkers() {
+    private SwingWorkers()
+    {
     }
 
-    public static <T> void run(Callable<T> work, Consumer<T> onSuccess, Consumer<Throwable> onError) {
-        new SwingWorker<T, Void>() {
+    public static <T> void run(Callable<T> work, Consumer<T> onSuccess, Consumer<Throwable> onError)
+    {
+        new SwingWorker<T, Void>()
+        {
             @Override
-            protected T doInBackground() throws Exception {
+            protected T doInBackground() throws Exception
+            {
                 return work.call();
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 T value;
-                try {
+                try
+                {
                     value = get();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     onError.accept(e.getCause() != null ? e.getCause() : e);
                     return;
                 }

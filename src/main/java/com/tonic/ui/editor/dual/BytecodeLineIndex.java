@@ -26,11 +26,13 @@ import java.util.regex.Pattern;
  *       comments do not match.</li>
  * </ul>
  */
-public final class BytecodeLineIndex {
+public final class BytecodeLineIndex
+{
 
     private static final Pattern INSTRUCTION = Pattern.compile("^\\s+(\\d+):\\s");
 
-    private static final class MethodBlock {
+    private static final class MethodBlock
+    {
         final String name;
         final String desc;
         final int headerLine;
@@ -38,7 +40,8 @@ public final class BytecodeLineIndex {
         final NavigableMap<Integer, Integer> pcToLine = new TreeMap<>();
         final Map<Integer, Integer> lineToPc = new HashMap<>();
 
-        MethodBlock(String name, String desc, int headerLine) {
+        MethodBlock(String name, String desc, int headerLine)
+        {
             this.name = name;
             this.desc = desc;
             this.headerLine = headerLine;
@@ -49,20 +52,25 @@ public final class BytecodeLineIndex {
     private final NavigableMap<Integer, MethodBlock> blockByHeaderLine = new TreeMap<>();
     private final Map<String, MethodBlock> blockByKey = new HashMap<>();
 
-    private BytecodeLineIndex() {
+    private BytecodeLineIndex()
+    {
     }
 
-    public static BytecodeLineIndex parse(String bytecodeText) {
+    public static BytecodeLineIndex parse(String bytecodeText)
+    {
         BytecodeLineIndex index = new BytecodeLineIndex();
-        if (bytecodeText == null || bytecodeText.isEmpty()) {
+        if (bytecodeText == null || bytecodeText.isEmpty())
+        {
             return index;
         }
         String[] lines = bytecodeText.split("\n", -1);
         MethodBlock current = null;
-        for (int line = 0; line < lines.length; line++) {
+        for (int line = 0; line < lines.length; line++)
+        {
             String text = lines[line];
             String headerToken = methodHeaderToken(text);
-            if (headerToken != null) {
+            if (headerToken != null)
+            {
                 int paren = headerToken.indexOf('(');
                 String name = headerToken.substring(0, paren);
                 String desc = headerToken.substring(paren);
@@ -71,16 +79,20 @@ public final class BytecodeLineIndex {
                 index.blockByKey.put(name + desc, current);
                 continue;
             }
-            if (current == null) {
+            if (current == null)
+            {
                 continue;
             }
             Matcher m = INSTRUCTION.matcher(text);
-            if (m.lookingAt()) {
+            if (m.lookingAt())
+            {
                 int pc = Integer.parseInt(m.group(1));
                 current.pcToLine.putIfAbsent(pc, line);
                 current.lineToPc.put(line, pc);
                 current.endLine = line;
-            } else if (!text.isEmpty()) {
+            }
+            else if (!text.isEmpty())
+            {
                 current.endLine = line;
             }
         }
@@ -91,12 +103,15 @@ public final class BytecodeLineIndex {
      * The token holding {@code name+desc} when {@code line} is a {@code BytecodeView} method header
      * (column-0 {@code //}, last token contains {@code '('}), otherwise null.
      */
-    private static String methodHeaderToken(String line) {
-        if (!line.startsWith("//")) {
+    private static String methodHeaderToken(String line)
+    {
+        if (!line.startsWith("//"))
+        {
             return null;
         }
         int lastSpace = line.lastIndexOf(' ');
-        if (lastSpace < 0) {
+        if (lastSpace < 0)
+        {
             return null;
         }
         String token = line.substring(lastSpace + 1).trim();
@@ -107,17 +122,21 @@ public final class BytecodeLineIndex {
      * The instruction location at a 0-based display line, or null when the line is not an instruction
      * line (header, comment, blank, or outside any method).
      */
-    public BcLocation locationAtLine(int displayLine) {
+    public BcLocation locationAtLine(int displayLine)
+    {
         Map.Entry<Integer, MethodBlock> entry = blockByHeaderLine.floorEntry(displayLine);
-        if (entry == null) {
+        if (entry == null)
+        {
             return null;
         }
         MethodBlock block = entry.getValue();
-        if (displayLine > block.endLine) {
+        if (displayLine > block.endLine)
+        {
             return null;
         }
         Integer pc = block.lineToPc.get(displayLine);
-        if (pc == null) {
+        if (pc == null)
+        {
             return null;
         }
         return new BcLocation(block.name, block.desc, pc);
@@ -128,9 +147,11 @@ public final class BytecodeLineIndex {
      * method keyed by {@code name+desc}, in ascending offset order. Empty when the method or range has
      * no mapped instructions.
      */
-    public List<Integer> displayLinesForPcRange(String methodKey, int pcLo, int pcHi) {
+    public List<Integer> displayLinesForPcRange(String methodKey, int pcLo, int pcHi)
+    {
         MethodBlock block = blockByKey.get(methodKey);
-        if (block == null || pcLo > pcHi) {
+        if (block == null || pcLo > pcHi)
+        {
             return new ArrayList<>();
         }
         return new ArrayList<>(block.pcToLine.subMap(pcLo, true, pcHi, true).values());

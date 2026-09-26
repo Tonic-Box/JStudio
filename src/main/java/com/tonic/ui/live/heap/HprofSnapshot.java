@@ -26,7 +26,8 @@ import java.util.Map;
  * {@code java.lang.String} text), and resolving references for navigation. {@link #close()} closes the file
  * and deletes it (the snapshot owns the temp dump).
  */
-public final class HprofSnapshot implements Closeable {
+public final class HprofSnapshot implements Closeable
+{
 
     // HPROF basic type tags.
     private static final int T_OBJECT = 2, T_BOOLEAN = 4, T_CHAR = 5, T_FLOAT = 6, T_DOUBLE = 7,
@@ -46,20 +47,23 @@ public final class HprofSnapshot implements Closeable {
     private final Map<Long, String> classNameByObjId = new HashMap<>();  // classObjId -> slashed internal name
 
     /** Field layout of a class: its own instance fields (in declared order) and its superclass. */
-    private static final class ClassDef {
+    private static final class ClassDef
+    {
         long superId;
         long[] fieldNameIds;
         int[] fieldTypes;
     }
 
     /** A decoded field value for display. */
-    public static final class FieldValue {
+    public static final class FieldValue
+    {
         public final String name;
         public final String type;
         public final String display;
         public final long refId; // referenced object id (0 = not a reference / null)
 
-        FieldValue(String name, String type, String display, long refId) {
+        FieldValue(String name, String type, String display, long refId)
+        {
             this.name = name;
             this.type = type;
             this.display = display;
@@ -68,19 +72,23 @@ public final class HprofSnapshot implements Closeable {
     }
 
     /** A decoded instance: its class name and ordered field values. */
-    public static final class InstanceData {
+    public static final class InstanceData
+    {
         public final String className;
         public final List<FieldValue> fields;
 
-        InstanceData(String className, List<FieldValue> fields) {
+        InstanceData(String className, List<FieldValue> fields)
+        {
             this.className = className;
             this.fields = fields;
         }
     }
 
-    public HprofSnapshot(File hprof) throws IOException {
+    public HprofSnapshot(File hprof) throws IOException
+    {
         this.file = hprof;
-        try (InputStream raw = new BufferedInputStream(new FileInputStream(hprof), 1 << 20)) {
+        try (InputStream raw = new BufferedInputStream(new FileInputStream(hprof), 1 << 20))
+        {
             Reader r = new Reader(raw);
             this.idSize = readHeader(r);
             indexRecords(r);
@@ -92,34 +100,42 @@ public final class HprofSnapshot implements Closeable {
     // ---- public API -------------------------------------------------------------------------------
 
     /** Instance object ids of {@code internalName} (exact class, slashed form). */
-    public List<Long> instancesOf(String internalName) {
+    public List<Long> instancesOf(String internalName)
+    {
         Long cid = nameToClassObjId.get(internalName);
-        if (cid == null) {
+        if (cid == null)
+        {
             return Collections.emptyList();
         }
         return instancesByClass.getOrDefault(cid, Collections.emptyList());
     }
 
-    public int countOf(String internalName) {
+    public int countOf(String internalName)
+    {
         return instancesOf(internalName).size();
     }
 
     /** Decode an instance's fields (walking the superclass chain). */
-    public synchronized InstanceData decode(long objId) throws IOException {
+    public synchronized InstanceData decode(long objId) throws IOException
+    {
         long[] idx = instanceIndex.get(objId);
-        if (idx == null) {
+        if (idx == null)
+        {
             return new InstanceData(labelClass(objId), Collections.emptyList());
         }
         byte[] blob = readBlob(idx[1], (int) idx[2]);
         Cursor c = new Cursor(blob);
         List<FieldValue> out = new ArrayList<>();
         long cid = idx[0];
-        while (cid != 0) {
+        while (cid != 0)
+        {
             ClassDef def = classDefs.get(cid);
-            if (def == null) {
+            if (def == null)
+            {
                 break;
             }
-            for (int i = 0; i < def.fieldTypes.length; i++) {
+            for (int i = 0; i < def.fieldTypes.length; i++)
+            {
                 String name = strings.getOrDefault(def.fieldNameIds[i], "?");
                 out.add(readField(name, def.fieldTypes[i], c));
             }
@@ -129,42 +145,55 @@ public final class HprofSnapshot implements Closeable {
     }
 
     /** A short label for an instance (class@hexId, or the text for java.lang.String). */
-    public String labelFor(long objId) {
-        if (objId == 0) {
+    public String labelFor(long objId)
+    {
+        if (objId == 0)
+        {
             return "null";
         }
         long[] idx = instanceIndex.get(objId);
-        if (idx != null) {
+        if (idx != null)
+        {
             String cls = classNameByObjId.getOrDefault(idx[0], "?");
-            if (cls.equals("java/lang/String")) {
+            if (cls.equals("java/lang/String"))
+            {
                 String s = stringText(objId);
                 return s == null ? "String@" + Long.toHexString(objId) : '"' + truncate(s) + '"';
             }
             return simpleName(cls) + "@" + Long.toHexString(objId);
         }
         long[] arr = primArrayIndex.get(objId);
-        if (arr != null) {
+        if (arr != null)
+        {
             return typeName((int) arr[2]) + "[" + arr[1] + "]";
         }
         return "@" + Long.toHexString(objId);
     }
 
     @Override
-    public void close() {
-        try {
+    public void close()
+    {
+        try
+        {
             raf.close();
-        } catch (IOException ignored) {
+        }
+        catch (IOException ignored)
+        {
         }
         file.delete();
     }
 
     // ---- field decoding ---------------------------------------------------------------------------
 
-    private FieldValue readField(String name, int type, Cursor c) {
-        switch (type) {
-            case T_OBJECT: {
+    private FieldValue readField(String name, int type, Cursor c)
+    {
+        switch (type)
+        {
+            case T_OBJECT:
+            {
                 long ref = c.id(idSize);
-                if (ref == 0) {
+                if (ref == 0)
+                {
                     return new FieldValue(name, "ref", "null", 0);
                 }
                 return new FieldValue(name, "ref", labelFor(ref), ref);
@@ -191,10 +220,13 @@ public final class HprofSnapshot implements Closeable {
     }
 
     /** Decode a java.lang.String's text from its char[]/byte[] value array. Null on failure. */
-    private String stringText(long objId) {
-        try {
+    private String stringText(long objId)
+    {
+        try
+        {
             long[] idx = instanceIndex.get(objId);
-            if (idx == null) {
+            if (idx == null)
+            {
                 return null;
             }
             byte[] blob = readBlob(idx[1], (int) idx[2]);
@@ -202,58 +234,76 @@ public final class HprofSnapshot implements Closeable {
             long valueRef = 0;
             int coder = -1;
             long cid = idx[0];
-            while (cid != 0) {
+            while (cid != 0)
+            {
                 ClassDef def = classDefs.get(cid);
-                if (def == null) {
+                if (def == null)
+                {
                     break;
                 }
-                for (int i = 0; i < def.fieldTypes.length; i++) {
+                for (int i = 0; i < def.fieldTypes.length; i++)
+                {
                     String fn = strings.get(def.fieldNameIds[i]);
                     int t = def.fieldTypes[i];
-                    if (t == T_OBJECT) {
+                    if (t == T_OBJECT)
+                    {
                         long ref = c.id(idSize);
-                        if ("value".equals(fn)) {
+                        if ("value".equals(fn))
+                        {
                             valueRef = ref;
                         }
-                    } else if (t == T_BYTE) {
+                    }
+                    else if (t == T_BYTE)
+                    {
                         int v = c.u1();
-                        if ("coder".equals(fn)) {
+                        if ("coder".equals(fn))
+                        {
                             coder = v;
                         }
-                    } else {
+                    }
+                    else
+                    {
                         c.skip(typeSize(t, idSize));
                     }
                 }
                 cid = def.superId;
             }
-            if (valueRef == 0) {
+            if (valueRef == 0)
+            {
                 return null;
             }
             long[] arr = primArrayIndex.get(valueRef);
-            if (arr == null) {
+            if (arr == null)
+            {
                 return null;
             }
             int count = (int) arr[1];
             int elem = (int) arr[2];
             byte[] data = readBlob(arr[0], count * typeSize(elem, idSize));
-            if (elem == T_CHAR) {
+            if (elem == T_CHAR)
+            {
                 char[] chars = new char[count];
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; i++)
+                {
                     chars[i] = (char) (((data[i * 2] & 0xFF) << 8) | (data[i * 2 + 1] & 0xFF));
                 }
                 return new String(chars);
             }
             // byte[] (JDK9+): coder 0 = LATIN1, 1 = UTF16
-            if (coder == 1) {
+            if (coder == 1)
+            {
                 return new String(data, StandardCharsets.UTF_16LE);
             }
             return new String(data, StandardCharsets.ISO_8859_1);
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             return null;
         }
     }
 
-    private synchronized byte[] readBlob(long offset, int len) throws IOException {
+    private synchronized byte[] readBlob(long offset, int len) throws IOException
+    {
         raf.seek(offset);
         byte[] b = new byte[len];
         raf.readFully(b);
@@ -262,11 +312,14 @@ public final class HprofSnapshot implements Closeable {
 
     // ---- parsing ----------------------------------------------------------------------------------
 
-    private int readHeader(Reader r) throws IOException {
+    private int readHeader(Reader r) throws IOException
+    {
         int b;
-        while ((b = r.u1()) != 0) {
+        while ((b = r.u1()) != 0)
+        {
             // version string up to NUL
-            if (b < 0) {
+            if (b < 0)
+            {
                 throw new EOFException();
             }
         }
@@ -275,23 +328,31 @@ public final class HprofSnapshot implements Closeable {
         return size;
     }
 
-    private void indexRecords(Reader r) throws IOException {
-        while (true) {
+    private void indexRecords(Reader r) throws IOException
+    {
+        while (true)
+        {
             int tag;
-            try {
+            try
+            {
                 tag = r.u1();
-            } catch (EOFException eof) {
+            }
+            catch (EOFException eof)
+            {
                 return;
             }
             r.u4(); // time
             long len = r.u4();
-            switch (tag) {
-                case 0x01: { // STRING_IN_UTF8
+            switch (tag)
+            {
+                case 0x01:
+                { // STRING_IN_UTF8
                     long id = r.id(idSize);
                     strings.put(id, r.utf8((int) (len - idSize)));
                     break;
                 }
-                case 0x02: { // LOAD_CLASS
+                case 0x02:
+                { // LOAD_CLASS
                     r.u4();
                     long classObjId = r.id(idSize);
                     r.u4();
@@ -310,12 +371,16 @@ public final class HprofSnapshot implements Closeable {
         }
     }
 
-    private void indexHeapSegment(Reader r, long len) throws IOException {
+    private void indexHeapSegment(Reader r, long len) throws IOException
+    {
         long end = r.pos + len;
-        while (r.pos < end) {
+        while (r.pos < end)
+        {
             int sub = r.u1();
-            switch (sub) {
-                case 0x21: { // INSTANCE_DUMP
+            switch (sub)
+            {
+                case 0x21:
+                { // INSTANCE_DUMP
                     long objId = r.id(idSize);
                     r.u4(); // stack serial
                     long classObjId = r.id(idSize);
@@ -326,7 +391,8 @@ public final class HprofSnapshot implements Closeable {
                     r.skip(numBytes);
                     break;
                 }
-                case 0x23: { // PRIMITIVE_ARRAY_DUMP
+                case 0x23:
+                { // PRIMITIVE_ARRAY_DUMP
                     long objId = r.id(idSize);
                     r.u4();
                     int count = (int) r.u4();
@@ -336,7 +402,8 @@ public final class HprofSnapshot implements Closeable {
                     r.skip((long) count * typeSize(elemType, idSize));
                     break;
                 }
-                case 0x22: { // OBJECT_ARRAY_DUMP
+                case 0x22:
+                { // OBJECT_ARRAY_DUMP
                     r.id(idSize);
                     r.u4();
                     int count = (int) r.u4();
@@ -371,13 +438,13 @@ public final class HprofSnapshot implements Closeable {
                     r.id(idSize);
                     break;
                 default:
-                    throw new IOException("unknown heap sub-record 0x" + Integer.toHexString(sub)
-                            + " at " + r.pos);
+                    throw new IOException("unknown heap sub-record 0x" + Integer.toHexString(sub) + " at " + r.pos);
             }
         }
     }
 
-    private void readClassDump(Reader r) throws IOException {
+    private void readClassDump(Reader r) throws IOException
+    {
         long classObjId = r.id(idSize);
         r.u4(); // stack serial
         long superId = r.id(idSize);
@@ -388,13 +455,15 @@ public final class HprofSnapshot implements Closeable {
         r.id(idSize); // reserved
         r.u4(); // instance size
         int cpCount = r.u2();
-        for (int i = 0; i < cpCount; i++) {
+        for (int i = 0; i < cpCount; i++)
+        {
             r.u2(); // cp index
             int type = r.u1();
             r.skip(typeSize(type, idSize));
         }
         int staticCount = r.u2();
-        for (int i = 0; i < staticCount; i++) {
+        for (int i = 0; i < staticCount; i++)
+        {
             r.id(idSize); // name string id
             int type = r.u1();
             r.skip(typeSize(type, idSize));
@@ -402,7 +471,8 @@ public final class HprofSnapshot implements Closeable {
         int instCount = r.u2();
         long[] names = new long[instCount];
         int[] types = new int[instCount];
-        for (int i = 0; i < instCount; i++) {
+        for (int i = 0; i < instCount; i++)
+        {
             names[i] = r.id(idSize);
             types[i] = r.u1();
         }
@@ -413,10 +483,13 @@ public final class HprofSnapshot implements Closeable {
         classDefs.put(classObjId, def);
     }
 
-    private void resolveClassNames() {
-        for (Map.Entry<Long, Long> e : classNameStringId.entrySet()) {
+    private void resolveClassNames()
+    {
+        for (Map.Entry<Long, Long> e : classNameStringId.entrySet())
+        {
             String name = strings.get(e.getValue());
-            if (name == null) {
+            if (name == null)
+            {
                 continue;
             }
             String slashed = name.replace('.', '/');
@@ -425,15 +498,18 @@ public final class HprofSnapshot implements Closeable {
         }
     }
 
-    private String labelClass(long objId) {
+    private String labelClass(long objId)
+    {
         long[] idx = instanceIndex.get(objId);
         return idx == null ? "?" : classNameByObjId.getOrDefault(idx[0], "?");
     }
 
     // ---- helpers ----------------------------------------------------------------------------------
 
-    private static int typeSize(int type, int idSize) {
-        switch (type) {
+    private static int typeSize(int type, int idSize)
+    {
+        switch (type)
+        {
             case T_OBJECT:
                 return idSize;
             case T_BOOLEAN:
@@ -453,76 +529,102 @@ public final class HprofSnapshot implements Closeable {
         }
     }
 
-    private static String typeName(int type) {
-        switch (type) {
-            case T_OBJECT: return "object";
-            case T_BOOLEAN: return "boolean";
-            case T_CHAR: return "char";
-            case T_FLOAT: return "float";
-            case T_DOUBLE: return "double";
-            case T_BYTE: return "byte";
-            case T_SHORT: return "short";
-            case T_INT: return "int";
-            case T_LONG: return "long";
-            default: return "?";
+    private static String typeName(int type)
+    {
+        switch (type)
+        {
+            case T_OBJECT:
+                return "object";
+            case T_BOOLEAN:
+                return "boolean";
+            case T_CHAR:
+                return "char";
+            case T_FLOAT:
+                return "float";
+            case T_DOUBLE:
+                return "double";
+            case T_BYTE:
+                return "byte";
+            case T_SHORT:
+                return "short";
+            case T_INT:
+                return "int";
+            case T_LONG:
+                return "long";
+            default:
+                return "?";
         }
     }
 
-    private static String simpleName(String internal) {
+    private static String simpleName(String internal)
+    {
         int slash = internal.lastIndexOf('/');
         return slash >= 0 ? internal.substring(slash + 1) : internal;
     }
 
-    private static String truncate(String s) {
+    private static String truncate(String s)
+    {
         return s.length() <= 64 ? s : s.substring(0, 64) + "...";
     }
 
     /** Position-tracking big-endian reader over the streaming parse. */
-    private static final class Reader {
+    private static final class Reader
+    {
         private final DataInputStream in;
         long pos;
 
-        Reader(InputStream s) {
+        Reader(InputStream s)
+        {
             this.in = new DataInputStream(s);
         }
 
-        int u1() throws IOException {
+        int u1() throws IOException
+        {
             int b = in.read();
-            if (b < 0) {
+            if (b < 0)
+            {
                 throw new EOFException();
             }
             pos++;
             return b;
         }
 
-        int u2() throws IOException {
+        int u2() throws IOException
+        {
             int v = in.readUnsignedShort();
             pos += 2;
             return v;
         }
 
-        long u4() throws IOException {
+        long u4() throws IOException
+        {
             long v = in.readInt() & 0xFFFFFFFFL;
             pos += 4;
             return v;
         }
 
-        long u8() throws IOException {
+        long u8() throws IOException
+        {
             long v = in.readLong();
             pos += 8;
             return v;
         }
 
-        long id(int idSize) throws IOException {
+        long id(int idSize) throws IOException
+        {
             return idSize == 8 ? u8() : u4();
         }
 
-        void skip(long n) throws IOException {
+        void skip(long n) throws IOException
+        {
             long left = n;
-            while (left > 0) {
+            while (left > 0)
+            {
                 long s = in.skip(left);
-                if (s <= 0) {
-                    if (in.read() < 0) {
+                if (s <= 0)
+                {
+                    if (in.read() < 0)
+                    {
                         throw new EOFException();
                     }
                     s = 1;
@@ -532,7 +634,8 @@ public final class HprofSnapshot implements Closeable {
             pos += n;
         }
 
-        String utf8(int n) throws IOException {
+        String utf8(int n) throws IOException
+        {
             byte[] b = new byte[n];
             in.readFully(b);
             pos += n;
@@ -541,39 +644,48 @@ public final class HprofSnapshot implements Closeable {
     }
 
     /** Big-endian cursor over a decoded field-value blob. */
-    private static final class Cursor {
+    private static final class Cursor
+    {
         private final byte[] b;
         private int p;
 
-        Cursor(byte[] b) {
+        Cursor(byte[] b)
+        {
             this.b = b;
         }
 
-        int u1() {
+        int u1()
+        {
             return b[p++] & 0xFF;
         }
 
-        int u2() {
+        int u2()
+        {
             return ((b[p++] & 0xFF) << 8) | (b[p++] & 0xFF);
         }
 
-        int i4() {
+        int i4()
+        {
             return ((b[p++] & 0xFF) << 24) | ((b[p++] & 0xFF) << 16) | ((b[p++] & 0xFF) << 8) | (b[p++] & 0xFF);
         }
 
-        long i8() {
+        long i8()
+        {
             long v = 0;
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < 8; i++)
+            {
                 v = (v << 8) | (b[p++] & 0xFF);
             }
             return v;
         }
 
-        long id(int idSize) {
+        long id(int idSize)
+        {
             return idSize == 8 ? i8() : (i4() & 0xFFFFFFFFL);
         }
 
-        void skip(int n) {
+        void skip(int n)
+        {
             p += n;
         }
     }

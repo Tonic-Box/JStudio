@@ -11,7 +11,8 @@ import lombok.Setter;
 
 
 @Getter
-public class MethodEntryModel {
+public class MethodEntryModel
+{
 
     private final MethodEntry methodEntry;
     private final ClassEntryModel owner;
@@ -38,93 +39,118 @@ public class MethodEntryModel {
     private String displaySignature;
     private String iconKey;
 
-    public MethodEntryModel(MethodEntry methodEntry, ClassEntryModel owner) {
+    public MethodEntryModel(MethodEntry methodEntry, ClassEntryModel owner)
+    {
         this.methodEntry = methodEntry;
         this.owner = owner;
         buildDisplayData();
     }
 
-    private void buildDisplayData() {
+    private void buildDisplayData()
+    {
         this.displaySignature = methodEntry.getName() + "(" +
-            DescriptorParser.formatMethodParams(methodEntry.getDesc()) + ")";
+                DescriptorParser.formatMethodParams(methodEntry.getDesc()) + ")";
 
         int access = methodEntry.getAccess();
-        if (AccessFlags.isPublic(access)) {
+        if (AccessFlags.isPublic(access))
+        {
             this.iconKey = "method_public";
-        } else if (AccessFlags.isPrivate(access)) {
+        }
+        else if (AccessFlags.isPrivate(access))
+        {
             this.iconKey = "method_private";
-        } else if (AccessFlags.isProtected(access)) {
+        }
+        else if (AccessFlags.isProtected(access))
+        {
             this.iconKey = "method_protected";
-        } else {
+        }
+        else
+        {
             this.iconKey = "method_package";
         }
     }
 
     // MethodEntry delegated methods
 
-    public String getName() {
+    public String getName()
+    {
         return methodEntry.getName();
     }
 
-    public String getDescriptor() {
+    public String getDescriptor()
+    {
         return methodEntry.getDesc();
     }
 
-    public int getAccessFlags() {
+    public int getAccessFlags()
+    {
         return methodEntry.getAccess();
     }
 
-    public boolean isStatic() {
+    public boolean isStatic()
+    {
         return AccessFlags.isStatic(methodEntry.getAccess());
     }
 
-    public boolean isAbstract() {
+    public boolean isAbstract()
+    {
         return AccessFlags.isAbstract(methodEntry.getAccess());
     }
 
-    public boolean isNative() {
+    public boolean isNative()
+    {
         return AccessFlags.isNative(methodEntry.getAccess());
     }
 
-    public boolean isSynchronized() {
+    public boolean isSynchronized()
+    {
         return AccessFlags.isSynchronized(methodEntry.getAccess());
     }
 
-    public boolean isFinal() {
+    public boolean isFinal()
+    {
         return AccessFlags.isFinal(methodEntry.getAccess());
     }
 
-    public boolean isPublic() {
+    public boolean isPublic()
+    {
         return AccessFlags.isPublic(methodEntry.getAccess());
     }
 
-    public boolean isPrivate() {
+    public boolean isPrivate()
+    {
         return AccessFlags.isPrivate(methodEntry.getAccess());
     }
 
-    public boolean isProtected() {
+    public boolean isProtected()
+    {
         return AccessFlags.isProtected(methodEntry.getAccess());
     }
 
-    public boolean hasCode() {
+    public boolean hasCode()
+    {
         return methodEntry.getCodeAttribute() != null;
     }
 
-    public boolean isConstructor() {
+    public boolean isConstructor()
+    {
         return "<init>".equals(methodEntry.getName());
     }
 
-    public boolean isStaticInitializer() {
+    public boolean isStaticInitializer()
+    {
         return "<clinit>".equals(methodEntry.getName());
     }
 
-    public void setCachedIR(IRMethod cachedIR) {
+    public void setCachedIR(IRMethod cachedIR)
+    {
         this.cachedIR = cachedIR;
         this.irCacheTimestamp = System.currentTimeMillis();
         this.complexityMetrics = null;
     }
 
-    public void invalidateIRCache() {
+    public void invalidateIRCache()
+    {
         this.cachedIR = null;
         this.irCacheTimestamp = 0;
         this.irStringCache = null;
@@ -133,38 +159,46 @@ public class MethodEntryModel {
         this.analysisState = AnalysisState.NOT_ANALYZED;
     }
 
-    public String getIrCache() {
+    public String getIrCache()
+    {
         return irStringCache;
     }
 
-    public void setIrCache(String irString) {
+    public void setIrCache(String irString)
+    {
         this.irStringCache = irString;
     }
 
-    public String getLlvmCache() {
+    public String getLlvmCache()
+    {
         return llvmStringCache;
     }
 
-    public void setLlvmCache(String llvmString) {
+    public void setLlvmCache(String llvmString)
+    {
         this.llvmStringCache = llvmString;
     }
 
-    public ComplexityMetrics getComplexityMetrics() {
-        if (complexityMetrics == null && cachedIR != null) {
+    public ComplexityMetrics getComplexityMetrics()
+    {
+        if (complexityMetrics == null && cachedIR != null)
+        {
             complexityMetrics = new ComplexityMetrics(cachedIR);
         }
         return complexityMetrics;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return displaySignature;
     }
 
     /**
      * Analysis state for a method.
      */
-    public enum AnalysisState {
+    public enum AnalysisState
+    {
         NOT_ANALYZED,
         IR_LIFTED,
         DECOMPILED,

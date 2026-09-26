@@ -9,47 +9,56 @@ import javax.swing.BorderFactory;
 import javax.swing.JScrollPane;
 import java.awt.Component;
 
-public class ThemedJScrollPane extends JScrollPane implements ThemeChangeListener {
+public class ThemedJScrollPane extends JScrollPane implements ThemeChangeListener
+{
 
-    public ThemedJScrollPane() {
+    public ThemedJScrollPane()
+    {
         super();
         initialize();
     }
 
-    public ThemedJScrollPane(Component view) {
+    public ThemedJScrollPane(Component view)
+    {
         super(view);
         initialize();
     }
 
-    public ThemedJScrollPane(int vsbPolicy, int hsbPolicy) {
+    public ThemedJScrollPane(int vsbPolicy, int hsbPolicy)
+    {
         super(vsbPolicy, hsbPolicy);
         initialize();
     }
 
-    public ThemedJScrollPane(Component view, int vsbPolicy, int hsbPolicy) {
+    public ThemedJScrollPane(Component view, int vsbPolicy, int hsbPolicy)
+    {
         super(view, vsbPolicy, hsbPolicy);
         initialize();
     }
 
-    private void initialize() {
+    private void initialize()
+    {
         applyTheme();
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         applyTheme();
         repaint();
     }
 
-    protected void applyTheme() {
+    protected void applyTheme()
+    {
         setBackground(JStudioTheme.getBgPrimary());
         getViewport().setBackground(JStudioTheme.getBgPrimary());
         setBorder(BorderFactory.createEmptyBorder());
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         super.removeNotify();
         ThemeManager.getInstance().removeThemeChangeListener(this);
     }

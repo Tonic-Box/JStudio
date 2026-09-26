@@ -15,10 +15,12 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BytecodeEngineTest {
+public class BytecodeEngineTest
+{
 
     @Test
-    void testArrayListClinit() throws Exception {
+    void testArrayListClinit() throws Exception
+    {
         ClassPool classPool = createClassPoolWithJdk();
         ClassResolver classResolver = new ClassResolver(classPool);
 
@@ -26,8 +28,10 @@ public class BytecodeEngineTest {
         assertNotNull(arrayListCf, "ArrayList should be in the class pool");
 
         MethodEntry clinit = null;
-        for (MethodEntry m : arrayListCf.getMethods()) {
-            if (m.getName().equals("<clinit>")) {
+        for (MethodEntry m : arrayListCf.getMethods())
+        {
+            if (m.getName().equals("<clinit>"))
+            {
                 clinit = m;
                 break;
             }
@@ -38,12 +42,12 @@ public class BytecodeEngineTest {
         heapManager.setClassResolver(classResolver);
 
         BytecodeContext ctx = new BytecodeContext.Builder()
-            .heapManager(heapManager)
-            .classResolver(classResolver)
-            .mode(ExecutionMode.RECURSIVE)
-            .maxCallDepth(100)
-            .maxInstructions(1_000_000)
-            .build();
+                .heapManager(heapManager)
+                .classResolver(classResolver)
+                .mode(ExecutionMode.RECURSIVE)
+                .maxCallDepth(100)
+                .maxInstructions(1_000_000)
+                .build();
 
         BytecodeEngine engine = new BytecodeEngine(ctx);
 
@@ -52,7 +56,8 @@ public class BytecodeEngineTest {
         System.out.println("[TEST] Execution completed: " + result.getStatus());
         System.out.println("[TEST] Instructions executed: " + result.getInstructionsExecuted());
 
-        if (result.getException() != null) {
+        if (result.getException() != null)
+        {
             System.out.println("[TEST] Exception: " + result.getException());
         }
 
@@ -60,7 +65,8 @@ public class BytecodeEngineTest {
     }
 
     @Test
-    void testArrayListConstructor() throws Exception {
+    void testArrayListConstructor() throws Exception
+    {
         ClassPool classPool = createClassPoolWithJdk();
         ClassResolver classResolver = new ClassResolver(classPool);
 
@@ -68,8 +74,10 @@ public class BytecodeEngineTest {
         assertNotNull(arrayListCf, "ArrayList should be in the class pool");
 
         MethodEntry constructor = null;
-        for (MethodEntry m : arrayListCf.getMethods()) {
-            if (m.getName().equals("<init>") && m.getDesc().equals("()V")) {
+        for (MethodEntry m : arrayListCf.getMethods())
+        {
+            if (m.getName().equals("<init>") && m.getDesc().equals("()V"))
+            {
                 constructor = m;
                 break;
             }
@@ -80,12 +88,12 @@ public class BytecodeEngineTest {
         heapManager.setClassResolver(classResolver);
 
         BytecodeContext ctx = new BytecodeContext.Builder()
-            .heapManager(heapManager)
-            .classResolver(classResolver)
-            .mode(ExecutionMode.RECURSIVE)
-            .maxCallDepth(100)
-            .maxInstructions(1_000_000)
-            .build();
+                .heapManager(heapManager)
+                .classResolver(classResolver)
+                .mode(ExecutionMode.RECURSIVE)
+                .maxCallDepth(100)
+                .maxInstructions(1_000_000)
+                .build();
 
         BytecodeEngine engine = new BytecodeEngine(ctx);
 
@@ -93,19 +101,20 @@ public class BytecodeEngineTest {
         var arrayListInstance = heapManager.newObject("java/util/ArrayList");
 
         System.out.println("[TEST] Starting execution of ArrayList.<init>()V");
-        BytecodeResult result = engine.execute(constructor,
-                com.tonic.analysis.execution.state.ConcreteValue.reference(arrayListInstance));
+        BytecodeResult result = engine.execute(constructor, com.tonic.analysis.execution.state.ConcreteValue.reference(arrayListInstance));
         System.out.println("[TEST] Execution completed: " + result.getStatus());
         System.out.println("[TEST] Instructions executed: " + result.getInstructionsExecuted());
 
-        if (result.getException() != null) {
+        if (result.getException() != null)
+        {
             System.out.println("[TEST] Exception: " + result.getException());
         }
 
         assertTrue(result.isSuccess(), "ArrayList constructor execution should succeed");
     }
 
-    private ClassPool createClassPoolWithJdk() throws IOException {
+    private ClassPool createClassPoolWithJdk() throws IOException
+    {
         return new ClassPool();
     }
 }

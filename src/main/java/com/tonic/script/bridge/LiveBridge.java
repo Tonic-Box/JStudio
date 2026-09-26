@@ -23,30 +23,35 @@ import java.util.Map;
  *
  * <p>Example: {@code let dl = live.deadlocks(); live.redefineFromProject("com/foo/Bar");}
  */
-public final class LiveBridge extends AbstractBridge {
+public final class LiveBridge extends AbstractBridge
+{
 
     private final LiveSession session;
 
-    public LiveBridge(ScriptInterpreter interpreter, LiveSession session) {
+    public LiveBridge(ScriptInterpreter interpreter, LiveSession session)
+    {
         super(interpreter, null);
         this.session = session;
     }
 
     @Override
-    public ScriptValue createBridgeObject() {
+    public ScriptValue createBridgeObject()
+    {
         Map<String, ScriptValue> p = new HashMap<>();
         p.put("threads", ScriptValue.function(ScriptFunction.native0("threads", this::threads)));
         p.put("deadlocks", ScriptValue.function(ScriptFunction.native0("deadlocks", this::deadlocks)));
         p.put("captureLoads", ScriptValue.function(ScriptFunction.native1("captureLoads", this::captureLoads)));
-        p.put("redefineFromProject", ScriptValue.function(
-                ScriptFunction.native1("redefineFromProject", this::redefineFromProject)));
+        p.put("redefineFromProject", ScriptValue.function(ScriptFunction.native1("redefineFromProject", this::redefineFromProject)));
         return ScriptValue.object(p);
     }
 
-    private ScriptValue threads() {
-        try {
+    private ScriptValue threads()
+    {
+        try
+        {
             List<ScriptValue> out = new ArrayList<>();
-            for (ThreadInfo t : session.getThreads()) {
+            for (ThreadInfo t : session.getThreads())
+            {
                 Map<String, ScriptValue> tm = new HashMap<>();
                 tm.put("id", ScriptValue.number(t.getId()));
                 tm.put("name", ScriptValue.string(t.getName()));
@@ -54,54 +59,71 @@ public final class LiveBridge extends AbstractBridge {
                 out.add(ScriptValue.object(tm));
             }
             return ScriptValue.array(out);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log("threads failed: " + e.getMessage());
             return ScriptValue.NULL;
         }
     }
 
-    private ScriptValue deadlocks() {
-        try {
+    private ScriptValue deadlocks()
+    {
+        try
+        {
             List<ContentionEdge> edges = session.getContention();
             List<List<ContentionEdge>> cycles = Deadlocks.find(edges);
             List<ScriptValue> out = new ArrayList<>();
-            for (List<ContentionEdge> cycle : cycles) {
+            for (List<ContentionEdge> cycle : cycles)
+            {
                 List<ScriptValue> ring = new ArrayList<>();
-                for (ContentionEdge e : cycle) {
+                for (ContentionEdge e : cycle)
+                {
                     ring.add(ScriptValue.string(e.toString()));
                 }
                 out.add(ScriptValue.array(ring));
             }
             return ScriptValue.array(out);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log("deadlocks failed: " + e.getMessage());
             return ScriptValue.NULL;
         }
     }
 
-    private ScriptValue captureLoads(ScriptValue onVal) {
-        try {
+    private ScriptValue captureLoads(ScriptValue onVal)
+    {
+        try
+        {
             session.setCaptureLoads(onVal.asBoolean());
             return ScriptValue.bool(true);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log("captureLoads failed: " + e.getMessage());
             return ScriptValue.bool(false);
         }
     }
 
     /** Pushes the current project's (possibly edited) bytes for {@code internalName} to the live JVM. */
-    private ScriptValue redefineFromProject(ScriptValue clsVal) {
-        try {
+    private ScriptValue redefineFromProject(ScriptValue clsVal)
+    {
+        try
+        {
             String internalName = clsVal.asString();
             ProjectModel project = ProjectService.getInstance().getCurrentProject();
             ClassEntryModel entry = project == null ? null : project.getClass(internalName);
-            if (entry == null) {
+            if (entry == null)
+            {
                 log("redefineFromProject: class not in project: " + internalName);
                 return ScriptValue.bool(false);
             }
             session.redefineClass(internalName, entry.getClassFile().write());
             return ScriptValue.bool(true);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log("redefineFromProject failed: " + e.getMessage());
             return ScriptValue.bool(false);
         }

@@ -13,34 +13,40 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class EventBusTest {
+class EventBusTest
+{
 
     private EventBus eventBus;
 
     @BeforeEach
-    void setUp() {
+    void setUp()
+    {
         eventBus = EventBus.getInstance();
         eventBus.clear();
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown()
+    {
         eventBus.clear();
     }
 
     @Test
-    void testSingletonInstance() {
+    void testSingletonInstance()
+    {
         EventBus instance1 = EventBus.getInstance();
         EventBus instance2 = EventBus.getInstance();
         assertSame(instance1, instance2);
     }
 
     @Test
-    void testRegisterAndPostEvent() throws Exception {
+    void testRegisterAndPostEvent() throws Exception
+    {
         List<TestEvent> receivedEvents = new ArrayList<>();
         CountDownLatch latch = new CountDownLatch(1);
 
-        eventBus.register(TestEvent.class, event -> {
+        eventBus.register(TestEvent.class, event ->
+        {
             receivedEvents.add(event);
             latch.countDown();
         });
@@ -55,12 +61,15 @@ class EventBusTest {
     }
 
     @Test
-    void testMultipleHandlersReceiveEvent() throws Exception {
+    void testMultipleHandlersReceiveEvent() throws Exception
+    {
         AtomicInteger callCount = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(3);
 
-        for (int i = 0; i < 3; i++) {
-            eventBus.register(TestEvent.class, event -> {
+        for (int i = 0; i < 3; i++)
+        {
+            eventBus.register(TestEvent.class, event ->
+            {
                 callCount.incrementAndGet();
                 latch.countDown();
             });
@@ -73,7 +82,8 @@ class EventBusTest {
     }
 
     @Test
-    void testUnregisterHandler() throws Exception {
+    void testUnregisterHandler() throws Exception
+    {
         AtomicInteger callCount = new AtomicInteger(0);
 
         EventBus.EventHandler<TestEvent> handler = event -> callCount.incrementAndGet();
@@ -88,16 +98,19 @@ class EventBusTest {
     }
 
     @Test
-    void testNoHandlersForEventType() {
+    void testNoHandlersForEventType()
+    {
         assertDoesNotThrow(() -> SwingUtilities.invokeAndWait(() -> eventBus.post(new TestEvent("s", "d"))));
     }
 
     @Test
-    void testEventTypeIsolation() throws Exception {
+    void testEventTypeIsolation() throws Exception
+    {
         List<String> received = new ArrayList<>();
         CountDownLatch latch = new CountDownLatch(1);
 
-        eventBus.register(TestEvent.class, event -> {
+        eventBus.register(TestEvent.class, event ->
+        {
             received.add("TestEvent");
             latch.countDown();
         });
@@ -112,7 +125,8 @@ class EventBusTest {
     }
 
     @Test
-    void testClearRemovesAllHandlers() throws Exception {
+    void testClearRemovesAllHandlers() throws Exception
+    {
         AtomicInteger callCount = new AtomicInteger(0);
 
         eventBus.register(TestEvent.class, event -> callCount.incrementAndGet());
@@ -120,7 +134,8 @@ class EventBusTest {
 
         eventBus.clear();
 
-        SwingUtilities.invokeAndWait(() -> {
+        SwingUtilities.invokeAndWait(() ->
+        {
             eventBus.post(new TestEvent("s", "d"));
             eventBus.post(new OtherEvent("s"));
         });
@@ -130,7 +145,8 @@ class EventBusTest {
     }
 
     @Test
-    void testEventTimestamp() {
+    void testEventTimestamp()
+    {
         long before = System.currentTimeMillis();
         TestEvent event = new TestEvent("source", "data");
         long after = System.currentTimeMillis();
@@ -140,27 +156,33 @@ class EventBusTest {
     }
 
     @Test
-    void testEventSource() {
+    void testEventSource()
+    {
         String source = "my-source";
         TestEvent event = new TestEvent(source, "data");
         assertEquals(source, event.getSource());
     }
 
-    static class TestEvent extends Event {
+    static class TestEvent extends Event
+    {
         private final String payload;
 
-        TestEvent(Object source, String payload) {
+        TestEvent(Object source, String payload)
+        {
             super(source);
             this.payload = payload;
         }
 
-        String getPayload() {
+        String getPayload()
+        {
             return payload;
         }
     }
 
-    static class OtherEvent extends Event {
-        OtherEvent(Object source) {
+    static class OtherEvent extends Event
+    {
+        OtherEvent(Object source)
+        {
             super(source);
         }
     }

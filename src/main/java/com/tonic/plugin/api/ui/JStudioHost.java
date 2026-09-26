@@ -21,7 +21,8 @@ import java.util.function.Consumer;
  * host exists only to expose the things a plugin can't otherwise reach (UI contribution) and to offer leak-safe
  * conveniences ({@link #onEvent}, {@link #track}).
  */
-public interface JStudioHost {
+public interface JStudioHost
+{
 
     /** Live analysis context (logger, config, project/analysis/YABR access, results) for this plugin. */
     PluginContext context();

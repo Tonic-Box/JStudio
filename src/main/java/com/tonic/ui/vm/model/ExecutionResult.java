@@ -6,7 +6,8 @@ import java.util.Collections;
 import java.util.List;
 
 @Getter
-public class ExecutionResult {
+public class ExecutionResult
+{
 
     private final boolean success;
     private final Object returnValue;
@@ -17,7 +18,8 @@ public class ExecutionResult {
     private final List<MethodCall> methodCalls;
     private final List<String> consoleOutput;
 
-    private ExecutionResult(Builder builder) {
+    private ExecutionResult(Builder builder)
+    {
         this.success = builder.success;
         this.returnValue = builder.returnValue;
         this.returnType = builder.returnType;
@@ -25,63 +27,77 @@ public class ExecutionResult {
         this.executionTimeMs = builder.executionTimeMs;
         this.instructionsExecuted = builder.instructionsExecuted;
         this.methodCalls = builder.methodCalls == null ?
-            Collections.emptyList() : List.copyOf(builder.methodCalls);
+                Collections.emptyList() : List.copyOf(builder.methodCalls);
         this.consoleOutput = builder.consoleOutput == null ?
-            Collections.emptyList() : List.copyOf(builder.consoleOutput);
+                Collections.emptyList() : List.copyOf(builder.consoleOutput);
     }
 
-    public String getFormattedReturnValue() {
-        if (!success) {
-            if (exception != null) {
+    public String getFormattedReturnValue()
+    {
+        if (!success)
+        {
+            if (exception != null)
+            {
                 return "Exception: " + exception.getClass().getSimpleName() + ": " + exception.getMessage();
             }
             return "Execution failed";
         }
 
-        if (returnValue == null) {
-            if ("V".equals(returnType)) {
+        if (returnValue == null)
+        {
+            if ("V".equals(returnType))
+            {
                 return "void";
             }
             return "null";
         }
 
-        if (returnValue instanceof String) {
+        if (returnValue instanceof String)
+        {
             return "\"" + returnValue + "\"";
         }
 
-        if (returnValue instanceof Character) {
+        if (returnValue instanceof Character)
+        {
             return "'" + returnValue + "'";
         }
 
-        if (returnValue instanceof Long) {
+        if (returnValue instanceof Long)
+        {
             return returnValue + "L";
         }
 
-        if (returnValue instanceof Float) {
+        if (returnValue instanceof Float)
+        {
             return returnValue + "f";
         }
 
-        if (returnValue instanceof Double) {
+        if (returnValue instanceof Double)
+        {
             return returnValue + "d";
         }
 
         return String.valueOf(returnValue);
     }
 
-    public String getFormattedStatistics() {
+    public String getFormattedStatistics()
+    {
         StringBuilder sb = new StringBuilder();
         sb.append("Time: ").append(executionTimeMs).append("ms");
-        if (instructionsExecuted > 0) {
+        if (instructionsExecuted > 0)
+        {
             sb.append(", Instructions: ").append(instructionsExecuted);
         }
         return sb.toString();
     }
 
-    public static Builder builder() {
+    public static Builder builder()
+    {
         return new Builder();
     }
 
-    public static class Builder {
+    public static class Builder
+    {
         private boolean success;
         private Object returnValue;
         private String returnType;
@@ -91,59 +107,71 @@ public class ExecutionResult {
         private List<MethodCall> methodCalls;
         private List<String> consoleOutput;
 
-        public Builder success(boolean success) {
+        public Builder success(boolean success)
+        {
             this.success = success;
             return this;
         }
 
-        public Builder returnValue(Object returnValue) {
+        public Builder returnValue(Object returnValue)
+        {
             this.returnValue = returnValue;
             return this;
         }
 
-        public Builder returnType(String returnType) {
+        public Builder returnType(String returnType)
+        {
             this.returnType = returnType;
             return this;
         }
 
-        public Builder exception(Throwable exception) {
+        public Builder exception(Throwable exception)
+        {
             this.exception = exception;
             return this;
         }
 
-        public Builder executionTimeMs(long executionTimeMs) {
+        public Builder executionTimeMs(long executionTimeMs)
+        {
             this.executionTimeMs = executionTimeMs;
             return this;
         }
 
-        public Builder instructionsExecuted(long instructionsExecuted) {
+        public Builder instructionsExecuted(long instructionsExecuted)
+        {
             this.instructionsExecuted = instructionsExecuted;
             return this;
         }
 
-        public Builder methodCalls(List<MethodCall> methodCalls) {
+        public Builder methodCalls(List<MethodCall> methodCalls)
+        {
             this.methodCalls = methodCalls;
             return this;
         }
 
-        public Builder consoleOutput(List<String> consoleOutput) {
+        public Builder consoleOutput(List<String> consoleOutput)
+        {
             this.consoleOutput = consoleOutput;
             return this;
         }
 
-        public ExecutionResult build() {
+        public ExecutionResult build()
+        {
             return new ExecutionResult(this);
         }
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuilder sb = new StringBuilder("ExecutionResult{");
         sb.append("success=").append(success);
-        if (returnValue != null) {
+        if (returnValue != null)
+        {
             sb.append(", returnValue=").append(getFormattedReturnValue());
         }
-        if (exception != null) {
+        if (exception != null)
+        {
             sb.append(", exception=").append(exception.getClass().getSimpleName());
         }
         sb.append(", time=").append(executionTimeMs).append("ms");

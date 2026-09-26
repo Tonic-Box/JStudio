@@ -5,7 +5,8 @@ import lombok.Getter;
 import java.util.Objects;
 
 @Getter
-public class Location {
+public class Location
+{
 
     private final String className;
     private final String methodName;
@@ -14,7 +15,8 @@ public class Location {
     private final int instructionIndex;
     private final String fieldName;
 
-    private Location(Builder builder) {
+    private Location(Builder builder)
+    {
         this.className = builder.className;
         this.methodName = builder.methodName;
         this.methodDescriptor = builder.methodDescriptor;
@@ -23,7 +25,8 @@ public class Location {
         this.fieldName = builder.fieldName;
     }
 
-    public String getSimpleClassName() {
+    public String getSimpleClassName()
+    {
         if (className == null) return null;
         int lastDot = className.lastIndexOf('.');
         int lastSlash = className.lastIndexOf('/');
@@ -31,7 +34,8 @@ public class Location {
         return index >= 0 ? className.substring(index + 1) : className;
     }
 
-    public String getPackageName() {
+    public String getPackageName()
+    {
         if (className == null) return null;
         int lastDot = className.lastIndexOf('.');
         int lastSlash = className.lastIndexOf('/');
@@ -39,42 +43,50 @@ public class Location {
         return index >= 0 ? className.substring(0, index).replace('/', '.') : "";
     }
 
-    public boolean isMethodLocation() {
+    public boolean isMethodLocation()
+    {
         return methodName != null && !methodName.isEmpty();
     }
 
-    public boolean isFieldLocation() {
+    public boolean isFieldLocation()
+    {
         return fieldName != null && !fieldName.isEmpty();
     }
 
-    public boolean isClassLocation() {
+    public boolean isClassLocation()
+    {
         return className != null && !isMethodLocation() && !isFieldLocation();
     }
 
-    public static Builder builder() {
+    public static Builder builder()
+    {
         return new Builder();
     }
 
-    public static Location ofClass(String className) {
+    public static Location ofClass(String className)
+    {
         return builder().className(className).build();
     }
 
-    public static Location ofMethod(String className, String methodName, String descriptor) {
+    public static Location ofMethod(String className, String methodName, String descriptor)
+    {
         return builder()
-            .className(className)
-            .methodName(methodName)
-            .methodDescriptor(descriptor)
-            .build();
+                .className(className)
+                .methodName(methodName)
+                .methodDescriptor(descriptor)
+                .build();
     }
 
-    public static Location ofField(String className, String fieldName) {
+    public static Location ofField(String className, String fieldName)
+    {
         return builder()
-            .className(className)
-            .fieldName(fieldName)
-            .build();
+                .className(className)
+                .fieldName(fieldName)
+                .build();
     }
 
-    public static class Builder {
+    public static class Builder
+    {
         private String className;
         private String methodName;
         private String methodDescriptor;
@@ -82,76 +94,92 @@ public class Location {
         private int instructionIndex = -1;
         private String fieldName;
 
-        public Builder className(String className) {
+        public Builder className(String className)
+        {
             this.className = className;
             return this;
         }
 
-        public Builder methodName(String methodName) {
+        public Builder methodName(String methodName)
+        {
             this.methodName = methodName;
             return this;
         }
 
-        public Builder methodDescriptor(String methodDescriptor) {
+        public Builder methodDescriptor(String methodDescriptor)
+        {
             this.methodDescriptor = methodDescriptor;
             return this;
         }
 
-        public Builder lineNumber(int lineNumber) {
+        public Builder lineNumber(int lineNumber)
+        {
             this.lineNumber = lineNumber;
             return this;
         }
 
-        public Builder instructionIndex(int instructionIndex) {
+        public Builder instructionIndex(int instructionIndex)
+        {
             this.instructionIndex = instructionIndex;
             return this;
         }
 
-        public Builder fieldName(String fieldName) {
+        public Builder fieldName(String fieldName)
+        {
             this.fieldName = fieldName;
             return this;
         }
 
-        public Location build() {
+        public Location build()
+        {
             return new Location(this);
         }
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuilder sb = new StringBuilder();
-        if (className != null) {
+        if (className != null)
+        {
             sb.append(className.replace('/', '.'));
         }
-        if (methodName != null) {
+        if (methodName != null)
+        {
             sb.append(".").append(methodName);
-            if (methodDescriptor != null) {
+            if (methodDescriptor != null)
+            {
                 sb.append(methodDescriptor);
             }
-        } else if (fieldName != null) {
+        }
+        else if (fieldName != null)
+        {
             sb.append(".").append(fieldName);
         }
-        if (lineNumber > 0) {
+        if (lineNumber > 0)
+        {
             sb.append(":").append(lineNumber);
         }
         return sb.toString();
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Location location = (Location) o;
         return lineNumber == location.lineNumber &&
-               instructionIndex == location.instructionIndex &&
-               Objects.equals(className, location.className) &&
-               Objects.equals(methodName, location.methodName) &&
-               Objects.equals(methodDescriptor, location.methodDescriptor) &&
-               Objects.equals(fieldName, location.fieldName);
+                instructionIndex == location.instructionIndex &&
+                Objects.equals(className, location.className) &&
+                Objects.equals(methodName, location.methodName) &&
+                Objects.equals(methodDescriptor, location.methodDescriptor) &&
+                Objects.equals(fieldName, location.fieldName);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(className, methodName, methodDescriptor, lineNumber, instructionIndex, fieldName);
     }
 }

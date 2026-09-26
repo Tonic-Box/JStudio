@@ -17,7 +17,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-public class REPLMode {
+public class REPLMode
+{
 
     private ProjectModel project;
     private PluginContextImpl context;
@@ -26,21 +27,23 @@ public class REPLMode {
     private final LineReader reader;
     private boolean running;
 
-    public REPLMode() throws IOException {
+    public REPLMode() throws IOException
+    {
         Terminal terminal = TerminalBuilder.builder()
-            .system(true)
-            .build();
+                .system(true)
+                .build();
 
         reader = LineReaderBuilder.builder()
-            .terminal(terminal)
-            .history(new DefaultHistory())
-            .build();
+                .terminal(terminal)
+                .history(new DefaultHistory())
+                .build();
 
         binding = new Binding();
         shell = new GroovyShell(binding);
     }
 
-    public void printBanner() {
+    public void printBanner()
+    {
         System.out.println("+=============================================================+");
         System.out.println("|           JStudio Interactive REPL                          |");
         System.out.println("|   Java Bytecode Analysis and Transformation Tool            |");
@@ -50,57 +53,78 @@ public class REPLMode {
         System.out.println();
     }
 
-    public void loadTarget(File file) throws Exception {
+    public void loadTarget(File file) throws Exception
+    {
         project = loadProjectFromFile(file);
         context = new PluginContextImpl(project, "repl");
         updateBindings();
         System.out.println("Loaded: " + file.getName() + " (" + project.getClassCount() + " classes)");
     }
 
-    private ProjectModel loadProjectFromFile(File file) throws Exception {
+    private ProjectModel loadProjectFromFile(File file) throws Exception
+    {
         ProjectService service = ProjectService.getInstance();
         String name = file.getName().toLowerCase();
 
-        if (file.isDirectory()) {
+        if (file.isDirectory())
+        {
             return service.loadDirectory(file, null);
-        } else if (name.endsWith(".jar") || name.endsWith(".zip")) {
+        }
+        else if (name.endsWith(".jar") || name.endsWith(".zip"))
+        {
             return service.loadJar(file, null);
-        } else if (name.endsWith(".class")) {
+        }
+        else if (name.endsWith(".class"))
+        {
             return service.loadClassFile(file);
-        } else {
+        }
+        else
+        {
             throw new IllegalArgumentException("Unsupported file type: " + name);
         }
     }
 
-    public void executeScript(File scriptFile) throws Exception {
+    public void executeScript(File scriptFile) throws Exception
+    {
         String script = new String(Files.readAllBytes(scriptFile.toPath()));
         Object result = shell.evaluate(script);
-        if (result != null) {
+        if (result != null)
+        {
             System.out.println("=> " + result);
         }
     }
 
-    public void run() {
+    public void run()
+    {
         running = true;
 
-        while (running) {
-            try {
+        while (running)
+        {
+            try
+            {
                 String line = reader.readLine("jstudio> ");
-                if (line == null) {
+                if (line == null)
+                {
                     break;
                 }
 
                 line = line.trim();
-                if (line.isEmpty()) {
+                if (line.isEmpty())
+                {
                     continue;
                 }
 
-                if (line.startsWith(":")) {
+                if (line.startsWith(":"))
+                {
                     handleCommand(line);
-                } else {
+                }
+                else
+                {
                     executeGroovy(line);
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 System.err.println("Error: " + e.getMessage());
             }
         }
@@ -108,12 +132,14 @@ public class REPLMode {
         System.out.println("Goodbye!");
     }
 
-    private void handleCommand(String line) throws Exception {
+    private void handleCommand(String line) throws Exception
+    {
         String[] parts = line.substring(1).split("\\s+", 2);
         String cmd = parts[0].toLowerCase();
         String arg = parts.length > 1 ? parts[1] : "";
 
-        switch (cmd) {
+        switch (cmd)
+        {
             case "help":
             case "h":
                 printHelp();
@@ -155,18 +181,24 @@ public class REPLMode {
         }
     }
 
-    private void executeGroovy(String code) {
-        try {
+    private void executeGroovy(String code)
+    {
+        try
+        {
             Object result = shell.evaluate(code);
-            if (result != null) {
+            if (result != null)
+            {
                 System.out.println("=> " + result);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.err.println("Error: " + e.getMessage());
         }
     }
 
-    private void printHelp() {
+    private void printHelp()
+    {
         System.out.println("Commands:");
         System.out.println("  :load <path>      Load JAR/class file/directory");
         System.out.println("  :classes [pat]    List classes (optional pattern filter)");
@@ -188,22 +220,28 @@ public class REPLMode {
         System.out.println("  project.classes.each { println it.name }");
     }
 
-    private void listClasses(String pattern) {
-        if (project == null) {
+    private void listClasses(String pattern)
+    {
+        if (project == null)
+        {
             System.out.println("No project loaded. Use :load <path>");
             return;
         }
 
-        for (ClassEntryModel entry : project.getAllClasses()) {
+        for (ClassEntryModel entry : project.getAllClasses())
+        {
             String name = entry.getClassName().replace('/', '.');
-            if (pattern.isEmpty() || name.contains(pattern)) {
+            if (pattern.isEmpty() || name.contains(pattern))
+            {
                 System.out.println("  " + name);
             }
         }
     }
 
-    private void listMethods(String className) {
-        if (project == null) {
+    private void listMethods(String className)
+    {
+        if (project == null)
+        {
             System.out.println("No project loaded. Use :load <path>");
             return;
         }
@@ -211,19 +249,23 @@ public class REPLMode {
         String normalized = className.replace('.', '/');
         ClassEntryModel entry = project.findClassByName(normalized);
 
-        if (entry == null) {
+        if (entry == null)
+        {
             System.out.println("Class not found: " + className);
             return;
         }
 
         System.out.println("Methods in " + className + ":");
-        for (MethodEntryModel method : entry.getMethods()) {
+        for (MethodEntryModel method : entry.getMethods())
+        {
             System.out.println("  " + method.getDisplaySignature());
         }
     }
 
-    private void showInfo(String className) {
-        if (project == null) {
+    private void showInfo(String className)
+    {
+        if (project == null)
+        {
             System.out.println("No project loaded. Use :load <path>");
             return;
         }
@@ -231,18 +273,20 @@ public class REPLMode {
         String normalized = className.replace('.', '/');
         ClassEntryModel entry = project.findClassByName(normalized);
 
-        if (entry == null) {
+        if (entry == null)
+        {
             System.out.println("Class not found: " + className);
             return;
         }
 
         System.out.println("Class: " + entry.getClassName().replace('/', '.'));
-        System.out.println("Superclass: " + (entry.getSuperClassName() != null ?
-            entry.getSuperClassName().replace('/', '.') : "none"));
+        System.out.println("Superclass: " + (entry.getSuperClassName() != null ? entry.getSuperClassName().replace('/', '.') : "none"));
 
-        if (!entry.getInterfaceNames().isEmpty()) {
+        if (!entry.getInterfaceNames().isEmpty())
+        {
             System.out.println("Interfaces:");
-            for (String iface : entry.getInterfaceNames()) {
+            for (String iface : entry.getInterfaceNames())
+            {
                 System.out.println("  " + iface.replace('/', '.'));
             }
         }
@@ -251,15 +295,18 @@ public class REPLMode {
         System.out.println("Fields: " + entry.getFields().size());
     }
 
-    private void showStats() {
-        if (project == null) {
+    private void showStats()
+    {
+        if (project == null)
+        {
             System.out.println("No project loaded. Use :load <path>");
             return;
         }
 
         int methodCount = 0;
         int fieldCount = 0;
-        for (ClassEntryModel entry : project.getAllClasses()) {
+        for (ClassEntryModel entry : project.getAllClasses())
+        {
             methodCount += entry.getMethods().size();
             fieldCount += entry.getFields().size();
         }
@@ -271,8 +318,10 @@ public class REPLMode {
         System.out.println("  Packages: " + project.getPackages().size());
     }
 
-    private void updateBindings() {
-        if (context != null) {
+    private void updateBindings()
+    {
+        if (context != null)
+        {
             binding.setVariable("project", context.getProject());
             binding.setVariable("analysis", context.getAnalysis());
             binding.setVariable("yabr", context.getYabr());

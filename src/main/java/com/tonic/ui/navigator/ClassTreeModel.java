@@ -15,20 +15,23 @@ import java.util.*;
 /**
  * Tree model for the class navigator, backed by a ProjectModel.
  */
-public class ClassTreeModel extends DefaultTreeModel {
+public class ClassTreeModel extends DefaultTreeModel
+{
 
     private ProjectModel project;
     private String filterText;
     private boolean showMembers = true;
 
-    public ClassTreeModel() {
+    public ClassTreeModel()
+    {
         super(new NavigatorNode.ProjectNode("No Project", 0));
     }
 
     /**
      * Load a project into the tree model.
      */
-    public void loadProject(ProjectModel project) {
+    public void loadProject(ProjectModel project)
+    {
         this.project = project;
         this.filterText = null;
         rebuildTree();
@@ -37,7 +40,8 @@ public class ClassTreeModel extends DefaultTreeModel {
     /**
      * Filter classes by name.
      */
-    public void setFilter(String filterText) {
+    public void setFilter(String filterText)
+    {
         this.filterText = filterText;
         rebuildTree();
     }
@@ -45,7 +49,8 @@ public class ClassTreeModel extends DefaultTreeModel {
     /**
      * Clear the filter.
      */
-    public void clearFilter() {
+    public void clearFilter()
+    {
         this.filterText = null;
         rebuildTree();
     }
@@ -53,7 +58,8 @@ public class ClassTreeModel extends DefaultTreeModel {
     /**
      * Set whether to show class members (methods, fields).
      */
-    public void setShowMembers(boolean showMembers) {
+    public void setShowMembers(boolean showMembers)
+    {
         this.showMembers = showMembers;
         rebuildTree();
     }
@@ -61,8 +67,10 @@ public class ClassTreeModel extends DefaultTreeModel {
     /**
      * Rebuild the tree structure from the project.
      */
-    private void rebuildTree() {
-        if (project == null) {
+    private void rebuildTree()
+    {
+        if (project == null)
+        {
             setRoot(new NavigatorNode.ProjectNode("No Project", 0));
             reload();
             return;
@@ -72,24 +80,24 @@ public class ClassTreeModel extends DefaultTreeModel {
         List<ClassEntryModel> classes = getFilteredClasses();
 
         // Create root node
-        NavigatorNode.ProjectNode root = new NavigatorNode.ProjectNode(
-                project.getProjectName(), classes.size());
+        NavigatorNode.ProjectNode root = new NavigatorNode.ProjectNode(project.getProjectName(), classes.size());
 
         // Build package hierarchy
         Map<String, NavigatorNode.PackageNode> packageNodes = new HashMap<>();
 
-        for (ClassEntryModel classEntry : classes) {
+        for (ClassEntryModel classEntry : classes)
+        {
             String packageName = classEntry.getPackageName();
 
             // Get or create package nodes
-            NavigatorNode.PackageNode packageNode = getOrCreatePackageNode(
-                    root, packageNodes, packageName);
+            NavigatorNode.PackageNode packageNode = getOrCreatePackageNode(root, packageNodes, packageName);
 
             // Create class node
             NavigatorNode.ClassNode classNode = new NavigatorNode.ClassNode(classEntry);
 
             // Add members if enabled
-            if (showMembers) {
+            if (showMembers)
+            {
                 addMembersToClass(classNode, classEntry);
             }
 
@@ -99,7 +107,8 @@ public class ClassTreeModel extends DefaultTreeModel {
         collapseEmptyPackages(root);
 
         List<ResourceEntryModel> resources = getFilteredResources();
-        if (!resources.isEmpty()) {
+        if (!resources.isEmpty())
+        {
             addResourceTree(root, resources);
         }
 
@@ -107,14 +116,18 @@ public class ClassTreeModel extends DefaultTreeModel {
         reload();
     }
 
-    private List<ResourceEntryModel> getFilteredResources() {
+    private List<ResourceEntryModel> getFilteredResources()
+    {
         List<ResourceEntryModel> resources = new ArrayList<>(project.getAllResources());
-        if (filterText != null && !filterText.isEmpty()) {
+        if (filterText != null && !filterText.isEmpty())
+        {
             String lowerFilter = filterText.toLowerCase();
             List<ResourceEntryModel> filtered = new ArrayList<>();
-            for (ResourceEntryModel res : resources) {
+            for (ResourceEntryModel res : resources)
+            {
                 if (res.getName().toLowerCase().contains(lowerFilter) ||
-                        res.getPath().toLowerCase().contains(lowerFilter)) {
+                        res.getPath().toLowerCase().contains(lowerFilter))
+                {
                     filtered.add(res);
                 }
             }
@@ -124,17 +137,22 @@ public class ClassTreeModel extends DefaultTreeModel {
         return resources;
     }
 
-    private void addResourceTree(NavigatorNode.ProjectNode root, List<ResourceEntryModel> resources) {
+    private void addResourceTree(NavigatorNode.ProjectNode root, List<ResourceEntryModel> resources)
+    {
         NavigatorNode.ResourcesRootNode resourcesRoot = new NavigatorNode.ResourcesRootNode(resources.size());
         Map<String, NavigatorNode.ResourceFolderNode> folderNodes = new HashMap<>();
 
-        for (ResourceEntryModel resource : resources) {
+        for (ResourceEntryModel resource : resources)
+        {
             String directory = resource.getDirectory();
             NavigatorNode parent;
 
-            if (directory.isEmpty()) {
+            if (directory.isEmpty())
+            {
                 parent = resourcesRoot;
-            } else {
+            }
+            else
+            {
                 parent = getOrCreateResourceFolder(resourcesRoot, folderNodes, directory);
             }
 
@@ -145,13 +163,12 @@ public class ClassTreeModel extends DefaultTreeModel {
         root.add(resourcesRoot);
     }
 
-    private NavigatorNode.ResourceFolderNode getOrCreateResourceFolder(
-            NavigatorNode.ResourcesRootNode root,
-            Map<String, NavigatorNode.ResourceFolderNode> folderNodes,
-            String folderPath) {
+    private NavigatorNode.ResourceFolderNode getOrCreateResourceFolder(NavigatorNode.ResourcesRootNode root, Map<String, NavigatorNode.ResourceFolderNode> folderNodes, String folderPath)
+    {
 
         NavigatorNode.ResourceFolderNode node = folderNodes.get(folderPath);
-        if (node != null) {
+        if (node != null)
+        {
             return node;
         }
 
@@ -159,8 +176,10 @@ public class ClassTreeModel extends DefaultTreeModel {
         StringBuilder fullPath = new StringBuilder();
         NavigatorNode parent = root;
 
-        for (String part : parts) {
-            if (fullPath.length() > 0) {
+        for (String part : parts)
+        {
+            if (fullPath.length() > 0)
+            {
                 fullPath.append("/");
             }
             fullPath.append(part);
@@ -168,7 +187,8 @@ public class ClassTreeModel extends DefaultTreeModel {
             String currentPath = fullPath.toString();
             NavigatorNode.ResourceFolderNode current = folderNodes.get(currentPath);
 
-            if (current == null) {
+            if (current == null)
+            {
                 current = new NavigatorNode.ResourceFolderNode(currentPath);
                 folderNodes.put(currentPath, current);
                 parent.add(current);
@@ -180,142 +200,180 @@ public class ClassTreeModel extends DefaultTreeModel {
         return folderNodes.get(folderPath);
     }
 
-    private void collapseEmptyResourceFolders(NavigatorNode.ResourcesRootNode root) {
+    private void collapseEmptyResourceFolders(NavigatorNode.ResourcesRootNode root)
+    {
         Deque<NavigatorNode> stack = new ArrayDeque<>();
-        for (int i = 0; i < root.getChildCount(); i++) {
+        for (int i = 0; i < root.getChildCount(); i++)
+        {
             TreeNode child = root.getChildAt(i);
-            if (child instanceof NavigatorNode.ResourceFolderNode) {
+            if (child instanceof NavigatorNode.ResourceFolderNode)
+            {
                 stack.push((NavigatorNode.ResourceFolderNode) child);
             }
         }
 
-        while (!stack.isEmpty()) {
+        while (!stack.isEmpty())
+        {
             NavigatorNode node = stack.pop();
-            if (!(node instanceof NavigatorNode.ResourceFolderNode)) {
+            if (!(node instanceof NavigatorNode.ResourceFolderNode))
+            {
                 continue;
             }
 
             NavigatorNode.ResourceFolderNode folderNode = (NavigatorNode.ResourceFolderNode) node;
 
-            while (hasSingleResourceFolderChild(folderNode)) {
+            while (hasSingleResourceFolderChild(folderNode))
+            {
                 NavigatorNode.ResourceFolderNode childFolder = getSingleResourceFolderChild(folderNode);
                 List<TreeNode> grandChildren = new ArrayList<>();
-                for (int i = 0; i < Objects.requireNonNull(childFolder).getChildCount(); i++) {
+                for (int i = 0; i < Objects.requireNonNull(childFolder).getChildCount(); i++)
+                {
                     grandChildren.add(childFolder.getChildAt(i));
                 }
 
                 folderNode.remove(childFolder);
 
-                for (TreeNode grandChild : grandChildren) {
-                    if (grandChild instanceof NavigatorNode) {
+                for (TreeNode grandChild : grandChildren)
+                {
+                    if (grandChild instanceof NavigatorNode)
+                    {
                         folderNode.add((NavigatorNode) grandChild);
                     }
                 }
             }
 
-            for (int i = 0; i < folderNode.getChildCount(); i++) {
+            for (int i = 0; i < folderNode.getChildCount(); i++)
+            {
                 TreeNode child = folderNode.getChildAt(i);
-                if (child instanceof NavigatorNode.ResourceFolderNode) {
+                if (child instanceof NavigatorNode.ResourceFolderNode)
+                {
                     stack.push((NavigatorNode.ResourceFolderNode) child);
                 }
             }
         }
     }
 
-    private boolean hasSingleResourceFolderChild(NavigatorNode.ResourceFolderNode node) {
-        if (node.getChildCount() != 1) {
+    private boolean hasSingleResourceFolderChild(NavigatorNode.ResourceFolderNode node)
+    {
+        if (node.getChildCount() != 1)
+        {
             return false;
         }
         return node.getChildAt(0) instanceof NavigatorNode.ResourceFolderNode;
     }
 
-    private NavigatorNode.ResourceFolderNode getSingleResourceFolderChild(NavigatorNode.ResourceFolderNode node) {
-        if (node.getChildCount() == 1 && node.getChildAt(0) instanceof NavigatorNode.ResourceFolderNode) {
+    private NavigatorNode.ResourceFolderNode getSingleResourceFolderChild(NavigatorNode.ResourceFolderNode node)
+    {
+        if (node.getChildCount() == 1 && node.getChildAt(0) instanceof NavigatorNode.ResourceFolderNode)
+        {
             return (NavigatorNode.ResourceFolderNode) node.getChildAt(0);
         }
         return null;
     }
 
-    private void collapseEmptyPackages(NavigatorNode.ProjectNode root) {
+    private void collapseEmptyPackages(NavigatorNode.ProjectNode root)
+    {
         Deque<NavigatorNode> stack = new ArrayDeque<>();
-        for (int i = 0; i < root.getChildCount(); i++) {
+        for (int i = 0; i < root.getChildCount(); i++)
+        {
             TreeNode child = root.getChildAt(i);
-            if (child instanceof NavigatorNode.PackageNode) {
+            if (child instanceof NavigatorNode.PackageNode)
+            {
                 stack.push((NavigatorNode.PackageNode) child);
             }
         }
 
-        while (!stack.isEmpty()) {
+        while (!stack.isEmpty())
+        {
             NavigatorNode node = stack.pop();
-            if (!(node instanceof NavigatorNode.PackageNode)) {
+            if (!(node instanceof NavigatorNode.PackageNode))
+            {
                 continue;
             }
 
             NavigatorNode.PackageNode pkgNode = (NavigatorNode.PackageNode) node;
 
-            while (hasSinglePackageChild(pkgNode)) {
+            while (hasSinglePackageChild(pkgNode))
+            {
                 NavigatorNode.PackageNode childPkg = getSinglePackageChild(pkgNode);
-                if (childPkg == null) {
+                if (childPkg == null)
+                {
                     break;
                 }
                 String combinedName = pkgNode.getPackageName() + "." + getLastSegment(childPkg.getPackageName());
                 pkgNode.setDisplayName(combinedName);
 
                 List<TreeNode> grandChildren = new ArrayList<>();
-                for (int i = 0; i < childPkg.getChildCount(); i++) {
+                for (int i = 0; i < childPkg.getChildCount(); i++)
+                {
                     grandChildren.add(childPkg.getChildAt(i));
                 }
 
                 pkgNode.remove(childPkg);
 
-                for (TreeNode grandChild : grandChildren) {
-                    if (grandChild instanceof NavigatorNode) {
+                for (TreeNode grandChild : grandChildren)
+                {
+                    if (grandChild instanceof NavigatorNode)
+                    {
                         pkgNode.add((NavigatorNode) grandChild);
                     }
                 }
             }
 
-            for (int i = 0; i < pkgNode.getChildCount(); i++) {
+            for (int i = 0; i < pkgNode.getChildCount(); i++)
+            {
                 TreeNode child = pkgNode.getChildAt(i);
-                if (child instanceof NavigatorNode.PackageNode) {
+                if (child instanceof NavigatorNode.PackageNode)
+                {
                     stack.push((NavigatorNode.PackageNode) child);
                 }
             }
         }
     }
 
-    private boolean hasSinglePackageChild(NavigatorNode.PackageNode node) {
-        if (node.getChildCount() != 1) {
+    private boolean hasSinglePackageChild(NavigatorNode.PackageNode node)
+    {
+        if (node.getChildCount() != 1)
+        {
             return false;
         }
         return node.getChildAt(0) instanceof NavigatorNode.PackageNode;
     }
 
-    private NavigatorNode.PackageNode getSinglePackageChild(NavigatorNode.PackageNode node) {
-        if (node.getChildCount() == 1 && node.getChildAt(0) instanceof NavigatorNode.PackageNode) {
+    private NavigatorNode.PackageNode getSinglePackageChild(NavigatorNode.PackageNode node)
+    {
+        if (node.getChildCount() == 1 && node.getChildAt(0) instanceof NavigatorNode.PackageNode)
+        {
             return (NavigatorNode.PackageNode) node.getChildAt(0);
         }
         return null;
     }
 
-    private String getLastSegment(String packageName) {
+    private String getLastSegment(String packageName)
+    {
         int lastDot = packageName.lastIndexOf('.');
         return lastDot >= 0 ? packageName.substring(lastDot + 1) : packageName;
     }
 
-    private List<ClassEntryModel> getFilteredClasses() {
+    private List<ClassEntryModel> getFilteredClasses()
+    {
         List<ClassEntryModel> classes = new ArrayList<>();
-        for (ClassEntryModel entry : project.getAllClasses()) {
-            if (!JdkClassFilter.isJdkClass(entry.getClassName())) {
+        for (ClassEntryModel entry : project.getAllClasses())
+        {
+            if (!JdkClassFilter.isJdkClass(entry.getClassName()))
+            {
                 classes.add(entry);
             }
         }
 
-        if (filterText != null && !filterText.isEmpty()) {
+        if (filterText != null && !filterText.isEmpty())
+        {
             String lowerFilter = filterText.toLowerCase();
             List<ClassEntryModel> filtered = new ArrayList<>();
-            for (ClassEntryModel entry : classes) {
-                if (matchesFilter(entry, lowerFilter)) {
+            for (ClassEntryModel entry : classes)
+            {
+                if (matchesFilter(entry, lowerFilter))
+                {
                     filtered.add(entry);
                 }
             }
@@ -327,20 +385,26 @@ public class ClassTreeModel extends DefaultTreeModel {
         return classes;
     }
 
-    private boolean matchesFilter(ClassEntryModel entry, String lowerFilter) {
+    private boolean matchesFilter(ClassEntryModel entry, String lowerFilter)
+    {
         if (entry.getSimpleName().toLowerCase().contains(lowerFilter) ||
-                entry.getClassName().toLowerCase().contains(lowerFilter)) {
+                entry.getClassName().toLowerCase().contains(lowerFilter))
+        {
             return true;
         }
 
-        for (MethodEntryModel method : entry.getMethods()) {
-            if (method.getName().toLowerCase().contains(lowerFilter)) {
+        for (MethodEntryModel method : entry.getMethods())
+        {
+            if (method.getName().toLowerCase().contains(lowerFilter))
+            {
                 return true;
             }
         }
 
-        for (MethodEntryModel ctor : entry.getConstructors()) {
-            if (ctor.getName().toLowerCase().contains(lowerFilter)) {
+        for (MethodEntryModel ctor : entry.getConstructors())
+        {
+            if (ctor.getName().toLowerCase().contains(lowerFilter))
+            {
                 return true;
             }
         }
@@ -348,17 +412,17 @@ public class ClassTreeModel extends DefaultTreeModel {
         return false;
     }
 
-    private NavigatorNode.PackageNode getOrCreatePackageNode(
-            NavigatorNode.ProjectNode root,
-            Map<String, NavigatorNode.PackageNode> packageNodes,
-            String packageName) {
+    private NavigatorNode.PackageNode getOrCreatePackageNode(NavigatorNode.ProjectNode root, Map<String, NavigatorNode.PackageNode> packageNodes, String packageName)
+    {
 
-        if (packageName.isEmpty()) {
+        if (packageName.isEmpty())
+        {
             packageName = "(default package)";
         }
 
         NavigatorNode.PackageNode node = packageNodes.get(packageName);
-        if (node != null) {
+        if (node != null)
+        {
             return node;
         }
 
@@ -367,14 +431,16 @@ public class ClassTreeModel extends DefaultTreeModel {
         StringBuilder fullName = new StringBuilder();
         NavigatorNode parent = root;
 
-        for (int i = 0; i < parts.length; i++) {
+        for (int i = 0; i < parts.length; i++)
+        {
             if (i > 0) fullName.append(".");
             fullName.append(parts[i]);
 
             String currentFullName = fullName.toString();
             NavigatorNode.PackageNode current = packageNodes.get(currentFullName);
 
-            if (current == null) {
+            if (current == null)
+            {
                 current = new NavigatorNode.PackageNode(currentFullName);
                 packageNodes.put(currentFullName, current);
 
@@ -388,11 +454,14 @@ public class ClassTreeModel extends DefaultTreeModel {
         return packageNodes.get(packageName);
     }
 
-    private void insertSorted(NavigatorNode parent, NavigatorNode child) {
+    private void insertSorted(NavigatorNode parent, NavigatorNode child)
+    {
         int count = parent.getChildCount();
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++)
+        {
             TreeNode existing = parent.getChildAt(i);
-            if (existing instanceof NavigatorNode) {
+            if (existing instanceof NavigatorNode)
+            {
                 String existingText = ((NavigatorNode) existing).getDisplayText();
                 String newText = child.getDisplayText();
 
@@ -400,12 +469,16 @@ public class ClassTreeModel extends DefaultTreeModel {
                 boolean existingIsPackage = existing instanceof NavigatorNode.PackageNode;
                 boolean newIsPackage = child instanceof NavigatorNode.PackageNode;
 
-                if (existingIsPackage == newIsPackage) {
-                    if (newText.compareToIgnoreCase(existingText) < 0) {
+                if (existingIsPackage == newIsPackage)
+                {
+                    if (newText.compareToIgnoreCase(existingText) < 0)
+                    {
                         parent.insert(child, i);
                         return;
                     }
-                } else if (newIsPackage) {
+                }
+                else if (newIsPackage)
+                {
                     parent.insert(child, i);
                     return;
                 }
@@ -414,17 +487,21 @@ public class ClassTreeModel extends DefaultTreeModel {
         parent.add(child);
     }
 
-    private void addMembersToClass(NavigatorNode.ClassNode classNode, ClassEntryModel classEntry) {
+    private void addMembersToClass(NavigatorNode.ClassNode classNode, ClassEntryModel classEntry)
+    {
         String lowerFilter = (filterText != null && !filterText.isEmpty()) ? filterText.toLowerCase() : null;
         boolean classNameMatches = lowerFilter == null ||
                 classEntry.getSimpleName().toLowerCase().contains(lowerFilter) ||
                 classEntry.getClassName().toLowerCase().contains(lowerFilter);
 
-        if (lowerFilter == null || classNameMatches) {
+        if (lowerFilter == null || classNameMatches)
+        {
             List<FieldEntryModel> fields = classEntry.getFields();
-            if (!fields.isEmpty()) {
+            if (!fields.isEmpty())
+            {
                 NavigatorNode.CategoryNode fieldsCategory = new NavigatorNode.CategoryNode("Fields", Icons.getIcon("field"));
-                for (FieldEntryModel field : fields) {
+                for (FieldEntryModel field : fields)
+                {
                     fieldsCategory.add(new NavigatorNode.FieldNode(field));
                 }
                 classNode.add(fieldsCategory);
@@ -433,51 +510,65 @@ public class ClassTreeModel extends DefaultTreeModel {
 
         List<MethodEntryModel> constructors = classEntry.getConstructors();
         List<MethodEntryModel> filteredCtors = new ArrayList<>();
-        for (MethodEntryModel ctor : constructors) {
+        for (MethodEntryModel ctor : constructors)
+        {
             if (lowerFilter == null || classNameMatches ||
-                    ctor.getName().toLowerCase().contains(lowerFilter)) {
+                    ctor.getName().toLowerCase().contains(lowerFilter))
+            {
                 filteredCtors.add(ctor);
             }
         }
-        if (!filteredCtors.isEmpty()) {
+        if (!filteredCtors.isEmpty())
+        {
             NavigatorNode.CategoryNode ctorCategory = new NavigatorNode.CategoryNode("Constructors", Icons.getIcon("constructor"));
-            for (MethodEntryModel ctor : filteredCtors) {
+            for (MethodEntryModel ctor : filteredCtors)
+            {
                 ctorCategory.add(new NavigatorNode.MethodNode(ctor));
             }
             classNode.add(ctorCategory);
         }
 
         List<MethodEntryModel> staticInits = new ArrayList<>();
-        for (MethodEntryModel method : classEntry.getMethods()) {
-            if (method.isStaticInitializer()) {
+        for (MethodEntryModel method : classEntry.getMethods())
+        {
+            if (method.isStaticInitializer())
+            {
                 if (lowerFilter == null || classNameMatches ||
                         method.getName().toLowerCase().contains(lowerFilter) ||
-                        "clinit".contains(lowerFilter) || "static".contains(lowerFilter)) {
+                        "clinit".contains(lowerFilter) || "static".contains(lowerFilter))
+                {
                     staticInits.add(method);
                 }
             }
         }
-        if (!staticInits.isEmpty()) {
+        if (!staticInits.isEmpty())
+        {
             NavigatorNode.CategoryNode clinitCategory = new NavigatorNode.CategoryNode("Static Initializers", Icons.getIcon("constructor"));
-            for (MethodEntryModel clinit : staticInits) {
+            for (MethodEntryModel clinit : staticInits)
+            {
                 clinitCategory.add(new NavigatorNode.MethodNode(clinit));
             }
             classNode.add(clinitCategory);
         }
 
         List<MethodEntryModel> filteredMethods = new ArrayList<>();
-        for (MethodEntryModel method : classEntry.getMethods()) {
-            if (!method.isConstructor() && !method.isStaticInitializer()) {
+        for (MethodEntryModel method : classEntry.getMethods())
+        {
+            if (!method.isConstructor() && !method.isStaticInitializer())
+            {
                 if (lowerFilter == null || classNameMatches ||
-                        method.getName().toLowerCase().contains(lowerFilter)) {
+                        method.getName().toLowerCase().contains(lowerFilter))
+                {
                     filteredMethods.add(method);
                 }
             }
         }
 
-        if (!filteredMethods.isEmpty()) {
+        if (!filteredMethods.isEmpty())
+        {
             NavigatorNode.CategoryNode methodsCategory = new NavigatorNode.CategoryNode("Methods", Icons.getIcon("method_public"));
-            for (MethodEntryModel method : filteredMethods) {
+            for (MethodEntryModel method : filteredMethods)
+            {
                 methodsCategory.add(new NavigatorNode.MethodNode(method));
             }
             classNode.add(methodsCategory);
@@ -487,23 +578,30 @@ public class ClassTreeModel extends DefaultTreeModel {
     /**
      * Find a class node in the tree.
      */
-    public NavigatorNode.ClassNode findClassNode(String className) {
+    public NavigatorNode.ClassNode findClassNode(String className)
+    {
         return findClassNode((NavigatorNode) getRoot(), className);
     }
 
-    private NavigatorNode.ClassNode findClassNode(NavigatorNode node, String className) {
-        if (node instanceof NavigatorNode.ClassNode) {
+    private NavigatorNode.ClassNode findClassNode(NavigatorNode node, String className)
+    {
+        if (node instanceof NavigatorNode.ClassNode)
+        {
             NavigatorNode.ClassNode classNode = (NavigatorNode.ClassNode) node;
-            if (classNode.getClassEntry().getClassName().equals(className)) {
+            if (classNode.getClassEntry().getClassName().equals(className))
+            {
                 return classNode;
             }
         }
 
-        for (int i = 0; i < node.getChildCount(); i++) {
+        for (int i = 0; i < node.getChildCount(); i++)
+        {
             TreeNode child = node.getChildAt(i);
-            if (child instanceof NavigatorNode) {
+            if (child instanceof NavigatorNode)
+            {
                 NavigatorNode.ClassNode found = findClassNode((NavigatorNode) child, className);
-                if (found != null) {
+                if (found != null)
+                {
                     return found;
                 }
             }
@@ -515,7 +613,8 @@ public class ClassTreeModel extends DefaultTreeModel {
     /**
      * Clear the tree.
      */
-    public void clear() {
+    public void clear()
+    {
         this.project = null;
         this.filterText = null;
         setRoot(new NavigatorNode.ProjectNode("No Project", 0));

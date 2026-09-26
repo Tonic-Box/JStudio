@@ -11,7 +11,8 @@ import java.util.List;
  * {@link #redefineClass} mutate / run code in the live process. Returns plain DTOs so callers need no live-client
  * dependency.
  */
-public interface LiveApi {
+public interface LiveApi
+{
 
     /** JFR category bits for {@link #jfr} (combine with {@code |}); consumed by plugins. */
     @SuppressWarnings("unused")
@@ -71,7 +72,8 @@ public interface LiveApi {
     // ---- DTOs -------------------------------------------------------------
 
     @Getter
-    final class Metrics {
+    final class Metrics
+    {
         private final long uptimeMs;
         private final long heapUsed;
         private final long heapMax;
@@ -88,10 +90,8 @@ public interface LiveApi {
         private final List<Gc> gc;
         private final List<Pool> pools;
 
-        public Metrics(long uptimeMs, long heapUsed, long heapMax, long nonHeapUsed, long nonHeapMax,
-                       double processCpuLoad, double systemCpuLoad, int availableProcessors, int threadCount,
-                       int daemonThreadCount, int peakThreadCount, int loadedClassCount, long totalLoadedClassCount,
-                       List<Gc> gc, List<Pool> pools) {
+        public Metrics(long uptimeMs, long heapUsed, long heapMax, long nonHeapUsed, long nonHeapMax, double processCpuLoad, double systemCpuLoad, int availableProcessors, int threadCount, int daemonThreadCount, int peakThreadCount, int loadedClassCount, long totalLoadedClassCount, List<Gc> gc, List<Pool> pools)
+        {
             this.uptimeMs = uptimeMs;
             this.heapUsed = heapUsed;
             this.heapMax = heapMax;
@@ -111,12 +111,14 @@ public interface LiveApi {
     }
 
     @Getter
-    final class Gc {
+    final class Gc
+    {
         private final String name;
         private final long count;
         private final long timeMs;
 
-        public Gc(String name, long count, long timeMs) {
+        public Gc(String name, long count, long timeMs)
+        {
             this.name = name;
             this.count = count;
             this.timeMs = timeMs;
@@ -124,12 +126,14 @@ public interface LiveApi {
     }
 
     @Getter
-    final class Pool {
+    final class Pool
+    {
         private final String name;
         private final long used;
         private final long max;
 
-        public Pool(String name, long used, long max) {
+        public Pool(String name, long used, long max)
+        {
             this.name = name;
             this.used = used;
             this.max = max;
@@ -137,13 +141,15 @@ public interface LiveApi {
     }
 
     @Getter
-    final class ThreadDump {
+    final class ThreadDump
+    {
         private final long id;
         private final String name;
         private final String state;
         private final List<Frame> frames;
 
-        public ThreadDump(long id, String name, String state, List<Frame> frames) {
+        public ThreadDump(long id, String name, String state, List<Frame> frames)
+        {
             this.id = id;
             this.name = name;
             this.state = state;
@@ -152,13 +158,15 @@ public interface LiveApi {
     }
 
     @Getter
-    final class Frame {
+    final class Frame
+    {
         private final String className;
         private final String method;
         private final String file;
         private final int line;
 
-        public Frame(String className, String method, String file, int line) {
+        public Frame(String className, String method, String file, int line)
+        {
             this.className = className;
             this.method = method;
             this.file = file;
@@ -167,22 +175,26 @@ public interface LiveApi {
     }
 
     @Getter
-    final class Deadlock {
+    final class Deadlock
+    {
         /** Human-readable edges of the cycle, e.g. "thread A waits on Lock held by thread B". */
         private final List<String> edges;
 
-        public Deadlock(List<String> edges) {
+        public Deadlock(List<String> edges)
+        {
             this.edges = edges;
         }
     }
 
     @Getter
-    final class StaticField {
+    final class StaticField
+    {
         private final String name;
         private final String type;
         private final String value;
 
-        public StaticField(String name, String type, String value) {
+        public StaticField(String name, String type, String value)
+        {
             this.name = name;
             this.type = type;
             this.value = value;
@@ -190,23 +202,27 @@ public interface LiveApi {
     }
 
     @Getter
-    final class EvalResult {
+    final class EvalResult
+    {
         private final boolean success;
         private final String output;
 
-        public EvalResult(boolean success, String output) {
+        public EvalResult(boolean success, String output)
+        {
             this.success = success;
             this.output = output;
         }
     }
 
     @Getter
-    final class Instances {
+    final class Instances
+    {
         private final String className;
         private final int total;
         private final List<InstanceRef> page;
 
-        public Instances(String className, int total, List<InstanceRef> page) {
+        public Instances(String className, int total, List<InstanceRef> page)
+        {
             this.className = className;
             this.total = total;
             this.page = page;
@@ -214,23 +230,27 @@ public interface LiveApi {
     }
 
     @Getter
-    final class InstanceRef {
+    final class InstanceRef
+    {
         private final String id;
         private final String label;
 
-        public InstanceRef(String id, String label) {
+        public InstanceRef(String id, String label)
+        {
             this.id = id;
             this.label = label;
         }
     }
 
     @Getter
-    final class InstanceInfo {
+    final class InstanceInfo
+    {
         private final String id;
         private final String className;
         private final List<Field> fields;
 
-        public InstanceInfo(String id, String className, List<Field> fields) {
+        public InstanceInfo(String id, String className, List<Field> fields)
+        {
             this.id = id;
             this.className = className;
             this.fields = fields;
@@ -238,14 +258,16 @@ public interface LiveApi {
     }
 
     @Getter
-    final class Field {
+    final class Field
+    {
         private final String name;
         private final String type;
         private final String value;
         /** Object id of the referenced instance when {@code type == "ref"} (drill in via {@link #instance}), else null. */
         private final String refId;
 
-        public Field(String name, String type, String value, String refId) {
+        public Field(String name, String type, String value, String refId)
+        {
             this.name = name;
             this.type = type;
             this.value = value;

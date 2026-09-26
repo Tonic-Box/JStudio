@@ -15,9 +15,11 @@ import java.util.List;
  * One plugin tracked by the {@link GuiPluginManager}: its metadata, the jar/class-loader it came from, its current
  * lifecycle state, and the list of UI contributions to undo when it is disabled or the app exits. EDT-confined.
  */
-public final class LoadedPlugin {
+public final class LoadedPlugin
+{
 
-    public enum State {
+    public enum State
+    {
         /** Active: its contributions are live. */
         ENABLED,
         /** Loaded but not started (user-disabled, or a non-active sibling). */
@@ -44,7 +46,8 @@ public final class LoadedPlugin {
     @Getter
     volatile Throwable error;
 
-    LoadedPlugin(File jar, PluginInfo info, URLClassLoader loader, Plugin plugin, State state) {
+    LoadedPlugin(File jar, PluginInfo info, URLClassLoader loader, Plugin plugin, State state)
+    {
         this.jar = jar;
         this.info = info;
         this.loader = loader;
@@ -52,7 +55,8 @@ public final class LoadedPlugin {
         this.state = state;
     }
 
-    boolean isUi() {
+    boolean isUi()
+    {
         return plugin instanceof UiPlugin;
     }
 

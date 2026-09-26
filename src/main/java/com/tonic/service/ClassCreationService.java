@@ -9,19 +9,24 @@ import lombok.Getter;
 import java.util.Iterator;
 import java.util.List;
 
-public class ClassCreationService implements AccessFlags {
+public class ClassCreationService implements AccessFlags
+{
 
     private static final ClassCreationService INSTANCE = new ClassCreationService();
 
-    private ClassCreationService() {
+    private ClassCreationService()
+    {
     }
 
-    public static ClassCreationService getInstance() {
+    public static ClassCreationService getInstance()
+    {
         return INSTANCE;
     }
 
-    public ClassFile createClass(ClassCreationParams params) {
-        switch (params.getClassType()) {
+    public ClassFile createClass(ClassCreationParams params)
+    {
+        switch (params.getClassType())
+        {
             case INTERFACE:
                 return createInterface(params);
             case ENUM:
@@ -34,7 +39,8 @@ public class ClassCreationService implements AccessFlags {
         }
     }
 
-    private ClassFile createRegularClass(ClassCreationParams params) {
+    private ClassFile createRegularClass(ClassCreationParams params)
+    {
         int accessFlags = computeClassAccessFlags(params);
 
         ClassBuilder builder = ClassBuilder.create(params.getFullClassName())
@@ -49,7 +55,8 @@ public class ClassCreationService implements AccessFlags {
         return cf;
     }
 
-    private ClassFile createInterface(ClassCreationParams params) {
+    private ClassFile createInterface(ClassCreationParams params)
+    {
         ClassBuilder builder = ClassBuilder.create(params.getFullClassName())
                 .version(params.getMajorVersion(), 0)
                 .access(ACC_PUBLIC, ACC_INTERFACE, ACC_ABSTRACT)
@@ -63,7 +70,8 @@ public class ClassCreationService implements AccessFlags {
         return cf;
     }
 
-    private ClassFile createEnum(ClassCreationParams params) {
+    private ClassFile createEnum(ClassCreationParams params)
+    {
         String className = params.getFullClassName();
 
         ClassBuilder builder = ClassBuilder.create(className)
@@ -122,7 +130,8 @@ public class ClassCreationService implements AccessFlags {
         return cf;
     }
 
-    private ClassFile createAnnotation(ClassCreationParams params) {
+    private ClassFile createAnnotation(ClassCreationParams params)
+    {
         ClassBuilder builder = ClassBuilder.create(params.getFullClassName())
                 .version(params.getMajorVersion(), 0)
                 .access(ACC_PUBLIC, ACC_INTERFACE, ACC_ABSTRACT, ACC_ANNOTATION)
@@ -135,35 +144,44 @@ public class ClassCreationService implements AccessFlags {
         return cf;
     }
 
-    private int computeClassAccessFlags(ClassCreationParams params) {
+    private int computeClassAccessFlags(ClassCreationParams params)
+    {
         int flags = 0;
 
-        if (params.isPublicAccess()) {
+        if (params.isPublicAccess())
+        {
             flags |= ACC_PUBLIC;
         }
 
-        if (params.isAbstract()) {
+        if (params.isAbstract())
+        {
             flags |= ACC_ABSTRACT;
         }
 
-        if (params.isFinal()) {
+        if (params.isFinal())
+        {
             flags |= ACC_FINAL;
         }
 
         return flags;
     }
 
-    private void addInterfaces(ClassBuilder builder, List<String> interfaces) {
-        if (interfaces != null && !interfaces.isEmpty()) {
+    private void addInterfaces(ClassBuilder builder, List<String> interfaces)
+    {
+        if (interfaces != null && !interfaces.isEmpty())
+        {
             builder.interfaces(interfaces.toArray(new String[0]));
         }
     }
 
-    private void removeMethod(ClassFile cf, String name, String desc) {
+    private void removeMethod(ClassFile cf, String name, String desc)
+    {
         Iterator<MethodEntry> it = cf.getMethods().iterator();
-        while (it.hasNext()) {
+        while (it.hasNext())
+        {
             MethodEntry method = it.next();
-            if (name.equals(method.getName()) && desc.equals(method.getDesc())) {
+            if (name.equals(method.getName()) && desc.equals(method.getDesc()))
+            {
                 it.remove();
                 break;
             }
@@ -172,7 +190,8 @@ public class ClassCreationService implements AccessFlags {
 
 
     @Getter
-    public enum ClassType {
+    public enum ClassType
+    {
         CLASS("Class"),
         INTERFACE("Interface"),
         ENUM("Enum"),
@@ -180,13 +199,15 @@ public class ClassCreationService implements AccessFlags {
 
         private final String displayName;
 
-        ClassType(String displayName) {
+        ClassType(String displayName)
+        {
             this.displayName = displayName;
         }
 
     }
 
-    public static class ClassCreationParams {
+    public static class ClassCreationParams
+    {
         @Getter
         private final String fullClassName;
         @Getter
@@ -202,7 +223,8 @@ public class ClassCreationService implements AccessFlags {
         @Getter
         private final int majorVersion;
 
-        private ClassCreationParams(Builder builder) {
+        private ClassCreationParams(Builder builder)
+        {
             this.fullClassName = builder.fullClassName;
             this.classType = builder.classType;
             this.publicAccess = builder.publicAccess;
@@ -213,19 +235,23 @@ public class ClassCreationService implements AccessFlags {
             this.majorVersion = builder.majorVersion;
         }
 
-        public boolean isAbstract() {
+        public boolean isAbstract()
+        {
             return isAbstract;
         }
 
-        public boolean isFinal() {
+        public boolean isFinal()
+        {
             return isFinal;
         }
 
-        public static Builder builder(String fullClassName) {
+        public static Builder builder(String fullClassName)
+        {
             return new Builder(fullClassName);
         }
 
-        public static class Builder {
+        public static class Builder
+        {
             private final String fullClassName;
             private ClassType classType = ClassType.CLASS;
             private boolean publicAccess = true;
@@ -235,46 +261,55 @@ public class ClassCreationService implements AccessFlags {
             private List<String> interfaces;
             private int majorVersion = V1_8;
 
-            private Builder(String fullClassName) {
+            private Builder(String fullClassName)
+            {
                 this.fullClassName = fullClassName;
             }
 
-            public Builder majorVersion(int majorVersion) {
+            public Builder majorVersion(int majorVersion)
+            {
                 this.majorVersion = majorVersion;
                 return this;
             }
 
-            public Builder classType(ClassType classType) {
+            public Builder classType(ClassType classType)
+            {
                 this.classType = classType;
                 return this;
             }
 
-            public Builder publicAccess(boolean publicAccess) {
+            public Builder publicAccess(boolean publicAccess)
+            {
                 this.publicAccess = publicAccess;
                 return this;
             }
 
-            public Builder isAbstract(boolean isAbstract) {
+            public Builder isAbstract(boolean isAbstract)
+            {
                 this.isAbstract = isAbstract;
                 return this;
             }
 
-            public Builder isFinal(boolean isFinal) {
+            public Builder isFinal(boolean isFinal)
+            {
                 this.isFinal = isFinal;
                 return this;
             }
 
-            public Builder superClass(String superClass) {
+            public Builder superClass(String superClass)
+            {
                 this.superClass = superClass;
                 return this;
             }
 
-            public Builder interfaces(List<String> interfaces) {
+            public Builder interfaces(List<String> interfaces)
+            {
                 this.interfaces = interfaces;
                 return this;
             }
 
-            public ClassCreationParams build() {
+            public ClassCreationParams build()
+            {
                 return new ClassCreationParams(this);
             }
         }

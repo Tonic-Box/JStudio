@@ -18,20 +18,25 @@ import java.util.function.Supplier;
  * Icon provider for JStudio.
  * Uses programmatically drawn icons that fetch colors at paint time for theme support.
  */
-public class Icons {
+public class Icons
+{
 
     private static final int DEFAULT_SIZE = 16;
 
-    public static Icon getIcon(String name) {
+    public static Icon getIcon(String name)
+    {
         return getIcon(name, DEFAULT_SIZE);
     }
 
-    public static Icon getIcon(String name, int size) {
+    public static Icon getIcon(String name, int size)
+    {
         return createIcon(name, size);
     }
 
-    private static Icon createIcon(String name, int size) {
-        switch (name) {
+    private static Icon createIcon(String name, int size)
+    {
+        switch (name)
+        {
             case "open":
                 return new FolderOpenIcon(size);
             case "save":
@@ -171,25 +176,30 @@ public class Icons {
         }
     }
 
-    private static abstract class BaseIcon implements Icon {
+    private static abstract class BaseIcon implements Icon
+    {
         protected final int size;
 
-        BaseIcon(int size) {
+        BaseIcon(int size)
+        {
             this.size = size;
         }
 
         @Override
-        public int getIconWidth() {
+        public int getIconWidth()
+        {
             return size;
         }
 
         @Override
-        public int getIconHeight() {
+        public int getIconHeight()
+        {
             return size;
         }
 
         @Override
-        public void paintIcon(Component c, Graphics g, int x, int y) {
+        public void paintIcon(Component c, Graphics g, int x, int y)
+        {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
@@ -200,23 +210,27 @@ public class Icons {
 
         protected abstract void paintIconContent(Graphics2D g2);
 
-        protected BasicStroke getStroke() {
+        protected BasicStroke getStroke()
+        {
             return new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
         }
     }
 
-    private static class LetterIcon extends BaseIcon {
+    private static class LetterIcon extends BaseIcon
+    {
         private final String letter;
         private final Supplier<Color> colorSupplier;
 
-        LetterIcon(int size, String letter, Supplier<Color> colorSupplier) {
+        LetterIcon(int size, String letter, Supplier<Color> colorSupplier)
+        {
             super(size);
             this.letter = letter;
             this.colorSupplier = colorSupplier;
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             int inset = 2;
             int rectSize = size - inset * 2;
 
@@ -232,29 +246,35 @@ public class Icons {
         }
     }
 
-    private static class MethodIcon extends BaseIcon {
+    private static class MethodIcon extends BaseIcon
+    {
         private final Supplier<Color> colorSupplier;
 
-        MethodIcon(int size, Supplier<Color> colorSupplier) {
+        MethodIcon(int size, Supplier<Color> colorSupplier)
+        {
             super(size);
             this.colorSupplier = colorSupplier;
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             int inset = 3;
             g2.setColor(colorSupplier.get());
             g2.fillOval(inset, inset, size - inset * 2, size - inset * 2);
         }
     }
 
-    private static class FolderOpenIcon extends BaseIcon {
-        FolderOpenIcon(int size) {
+    private static class FolderOpenIcon extends BaseIcon
+    {
+        FolderOpenIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             Path2D path = new Path2D.Float();
@@ -270,13 +290,16 @@ public class Icons {
         }
     }
 
-    private static class SaveIcon extends BaseIcon {
-        SaveIcon(int size) {
+    private static class SaveIcon extends BaseIcon
+    {
+        SaveIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawRoundRect(2, 2, 12, 12, 2, 2);
@@ -285,13 +308,16 @@ public class Icons {
         }
     }
 
-    private static class CloseIcon extends BaseIcon {
-        CloseIcon(int size) {
+    private static class CloseIcon extends BaseIcon
+    {
+        CloseIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             int inset = 4;
@@ -300,13 +326,16 @@ public class Icons {
         }
     }
 
-    private static class RefreshIcon extends BaseIcon {
-        RefreshIcon(int size) {
+    private static class RefreshIcon extends BaseIcon
+    {
+        RefreshIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             int inset = 2;
@@ -316,24 +345,30 @@ public class Icons {
         }
     }
 
-    private static class ArrowIcon extends BaseIcon {
+    private static class ArrowIcon extends BaseIcon
+    {
         private final boolean left;
 
-        ArrowIcon(int size, boolean left) {
+        ArrowIcon(int size, boolean left)
+        {
             super(size);
             this.left = left;
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             int mid = size / 2;
-            if (left) {
+            if (left)
+            {
                 g2.drawLine(10, mid, 4, mid);
                 g2.drawLine(4, mid, 7, mid - 3);
                 g2.drawLine(4, mid, 7, mid + 3);
-            } else {
+            }
+            else
+            {
                 g2.drawLine(6, mid, 12, mid);
                 g2.drawLine(12, mid, 9, mid - 3);
                 g2.drawLine(12, mid, 9, mid + 3);
@@ -341,24 +376,30 @@ public class Icons {
         }
     }
 
-    private static class VerticalArrowIcon extends BaseIcon {
+    private static class VerticalArrowIcon extends BaseIcon
+    {
         private final boolean up;
 
-        VerticalArrowIcon(int size, boolean up) {
+        VerticalArrowIcon(int size, boolean up)
+        {
             super(size);
             this.up = up;
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             int mid = size / 2;
-            if (up) {
+            if (up)
+            {
                 g2.drawLine(mid, 10, mid, 4);
                 g2.drawLine(mid, 4, mid - 3, 7);
                 g2.drawLine(mid, 4, mid + 3, 7);
-            } else {
+            }
+            else
+            {
                 g2.drawLine(mid, 4, mid, 10);
                 g2.drawLine(mid, 10, mid - 3, 7);
                 g2.drawLine(mid, 10, mid + 3, 7);
@@ -366,13 +407,16 @@ public class Icons {
         }
     }
 
-    private static class SearchIcon extends BaseIcon {
-        SearchIcon(int size) {
+    private static class SearchIcon extends BaseIcon
+    {
+        SearchIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawOval(3, 3, 8, 8);
@@ -380,13 +424,16 @@ public class Icons {
         }
     }
 
-    private static class CodeIcon extends BaseIcon {
-        CodeIcon(int size) {
+    private static class CodeIcon extends BaseIcon
+    {
+        CodeIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawLine(5, 4, 3, 8);
@@ -396,26 +443,32 @@ public class Icons {
         }
     }
 
-    private static class BinaryIcon extends BaseIcon {
-        BinaryIcon(int size) {
+    private static class BinaryIcon extends BaseIcon
+    {
+        BinaryIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setFont(JStudioTheme.getCodeFont(9));
             g2.drawString("01", 3, 10);
         }
     }
 
-    private static class FlowIcon extends BaseIcon {
-        FlowIcon(int size) {
+    private static class FlowIcon extends BaseIcon
+    {
+        FlowIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawRoundRect(5, 2, 6, 3, 1, 1);
@@ -427,13 +480,16 @@ public class Icons {
         }
     }
 
-    private static class TreeIcon extends BaseIcon {
-        TreeIcon(int size) {
+    private static class TreeIcon extends BaseIcon
+    {
+        TreeIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getAccentSecondary());
             g2.setStroke(getStroke());
             g2.fillOval(6, 1, 4, 4);
@@ -447,13 +503,16 @@ public class Icons {
         }
     }
 
-    private static class PackageIcon extends BaseIcon {
-        PackageIcon(int size) {
+    private static class PackageIcon extends BaseIcon
+    {
+        PackageIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getWarning());
             g2.setStroke(getStroke());
             Path2D path = new Path2D.Float();
@@ -468,13 +527,16 @@ public class Icons {
         }
     }
 
-    private static class PlayIcon extends BaseIcon {
-        PlayIcon(int size) {
+    private static class PlayIcon extends BaseIcon
+    {
+        PlayIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getSuccess());
             Path2D path = new Path2D.Float();
             path.moveTo(4, 3);
@@ -490,13 +552,16 @@ public class Icons {
      * {@link PlayIcon} (the run/play triangle) so "Run Analysis" is not confused with running a main method,
      * and from the node-based {@link GraphIcon}. Rendered in the accent colour rather than play's green.
      */
-    private static class AnalyzeIcon extends BaseIcon {
-        AnalyzeIcon(int size) {
+    private static class AnalyzeIcon extends BaseIcon
+    {
+        AnalyzeIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getAccent());
             g2.fill(new Rectangle2D.Float(2.5f, 9f, 2.6f, 4.5f));
             g2.fill(new Rectangle2D.Float(6.7f, 6f, 2.6f, 7.5f));
@@ -504,26 +569,32 @@ public class Icons {
         }
     }
 
-    private static class StopIcon extends BaseIcon {
-        StopIcon(int size) {
+    private static class StopIcon extends BaseIcon
+    {
+        StopIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getError());
             int inset = 4;
             g2.fillRect(inset, inset, size - 2 * inset, size - 2 * inset);
         }
     }
 
-    private static class GraphIcon extends BaseIcon {
-        GraphIcon(int size) {
+    private static class GraphIcon extends BaseIcon
+    {
+        GraphIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.fillOval(2, 6, 4, 4);
@@ -537,13 +608,16 @@ public class Icons {
         }
     }
 
-    private static class DependencyIcon extends BaseIcon {
-        DependencyIcon(int size) {
+    private static class DependencyIcon extends BaseIcon
+    {
+        DependencyIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawRect(2, 2, 5, 5);
@@ -552,13 +626,16 @@ public class Icons {
         }
     }
 
-    private static class TransformIcon extends BaseIcon {
-        TransformIcon(int size) {
+    private static class TransformIcon extends BaseIcon
+    {
+        TransformIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getAccentSecondary());
             g2.setStroke(getStroke());
             g2.drawLine(3, 13, 13, 3);
@@ -569,16 +646,19 @@ public class Icons {
         }
     }
 
-    private static class CheckIcon extends BaseIcon {
+    private static class CheckIcon extends BaseIcon
+    {
         private final Supplier<Color> colorSupplier;
 
-        CheckIcon(int size, Supplier<Color> colorSupplier) {
+        CheckIcon(int size, Supplier<Color> colorSupplier)
+        {
             super(size);
             this.colorSupplier = colorSupplier;
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(colorSupplier.get());
             g2.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             g2.drawLine(3, 8, 6, 11);
@@ -586,13 +666,16 @@ public class Icons {
         }
     }
 
-    private static class WarningTriangleIcon extends BaseIcon {
-        WarningTriangleIcon(int size) {
+    private static class WarningTriangleIcon extends BaseIcon
+    {
+        WarningTriangleIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getWarning());
             Path2D path = new Path2D.Float();
             path.moveTo(8, 2);
@@ -606,13 +689,16 @@ public class Icons {
         }
     }
 
-    private static class ErrorCircleIcon extends BaseIcon {
-        ErrorCircleIcon(int size) {
+    private static class ErrorCircleIcon extends BaseIcon
+    {
+        ErrorCircleIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getError());
             g2.fillOval(2, 2, 12, 12);
             g2.setColor(JStudioTheme.getBgPrimary());
@@ -622,13 +708,16 @@ public class Icons {
         }
     }
 
-    private static class InfoIcon extends BaseIcon {
-        InfoIcon(int size) {
+    private static class InfoIcon extends BaseIcon
+    {
+        InfoIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getInfo());
             g2.fillOval(2, 2, 12, 12);
             g2.setColor(JStudioTheme.getBgPrimary());
@@ -637,13 +726,16 @@ public class Icons {
         }
     }
 
-    private static class HomeIcon extends BaseIcon {
-        HomeIcon(int size) {
+    private static class HomeIcon extends BaseIcon
+    {
+        HomeIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             Path2D roof = new Path2D.Float();
@@ -657,13 +749,16 @@ public class Icons {
         }
     }
 
-    private static class FolderIcon extends BaseIcon {
-        FolderIcon(int size) {
+    private static class FolderIcon extends BaseIcon
+    {
+        FolderIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getWarning());
             g2.setStroke(getStroke());
             Path2D path = new Path2D.Float();
@@ -678,38 +773,45 @@ public class Icons {
         }
     }
 
-    private static class SettingsIcon extends BaseIcon {
-        SettingsIcon(int size) {
+    private static class SettingsIcon extends BaseIcon
+    {
+        SettingsIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             int cx = size / 2;
             int cy = size / 2;
             int outerR = 6;
             int innerR = 3;
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < 8; i++)
+            {
                 double angle = i * Math.PI / 4;
-                int x1 = cx + (int)(Math.cos(angle) * innerR);
-                int y1 = cy + (int)(Math.sin(angle) * innerR);
-                int x2 = cx + (int)(Math.cos(angle) * outerR);
-                int y2 = cy + (int)(Math.sin(angle) * outerR);
+                int x1 = cx + (int) (Math.cos(angle) * innerR);
+                int y1 = cy + (int) (Math.sin(angle) * innerR);
+                int x2 = cx + (int) (Math.cos(angle) * outerR);
+                int y2 = cy + (int) (Math.sin(angle) * outerR);
                 g2.drawLine(x1, y1, x2, y2);
             }
             g2.drawOval(cx - innerR, cy - innerR, innerR * 2, innerR * 2);
         }
     }
 
-    private static class BookmarkIcon extends BaseIcon {
-        BookmarkIcon(int size) {
+    private static class BookmarkIcon extends BaseIcon
+    {
+        BookmarkIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getWarning());
             Path2D path = new Path2D.Float();
             path.moveTo(3, 2);
@@ -722,13 +824,16 @@ public class Icons {
         }
     }
 
-    private static class CommentIcon extends BaseIcon {
-        CommentIcon(int size) {
+    private static class CommentIcon extends BaseIcon
+    {
+        CommentIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getInfo());
             g2.setStroke(getStroke());
             g2.drawRoundRect(2, 2, 12, 9, 3, 3);
@@ -738,13 +843,16 @@ public class Icons {
         }
     }
 
-    private static class DeleteIcon extends BaseIcon {
-        DeleteIcon(int size) {
+    private static class DeleteIcon extends BaseIcon
+    {
+        DeleteIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getError());
             g2.setStroke(getStroke());
             g2.drawLine(3, 4, 13, 4);
@@ -758,13 +866,16 @@ public class Icons {
         }
     }
 
-    private static class EditIcon extends BaseIcon {
-        EditIcon(int size) {
+    private static class EditIcon extends BaseIcon
+    {
+        EditIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getAccent());
             g2.setStroke(getStroke());
             g2.drawLine(3, 13, 13, 3);
@@ -775,13 +886,16 @@ public class Icons {
         }
     }
 
-    private static class AddIcon extends BaseIcon {
-        AddIcon(int size) {
+    private static class AddIcon extends BaseIcon
+    {
+        AddIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getSuccess());
             g2.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             int mid = size / 2;
@@ -790,13 +904,16 @@ public class Icons {
         }
     }
 
-    private static class CopyIcon extends BaseIcon {
-        CopyIcon(int size) {
+    private static class CopyIcon extends BaseIcon
+    {
+        CopyIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawRoundRect(4, 1, 9, 11, 2, 2);
@@ -804,13 +921,16 @@ public class Icons {
         }
     }
 
-    private static class PlaceholderIcon extends BaseIcon {
-        PlaceholderIcon(int size) {
+    private static class PlaceholderIcon extends BaseIcon
+    {
+        PlaceholderIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextSecondary());
             g2.setStroke(getStroke());
             g2.drawRect(2, 2, size - 4, size - 4);
@@ -819,13 +939,16 @@ public class Icons {
         }
     }
 
-    private static class OpaquePredicateIcon extends BaseIcon {
-        OpaquePredicateIcon(int size) {
+    private static class OpaquePredicateIcon extends BaseIcon
+    {
+        OpaquePredicateIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(new Color(255, 180, 100));
             g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             g2.drawOval(2, 2, 12, 12);
@@ -834,13 +957,16 @@ public class Icons {
         }
     }
 
-    private static class DeadCodeIcon extends BaseIcon {
-        DeadCodeIcon(int size) {
+    private static class DeadCodeIcon extends BaseIcon
+    {
+        DeadCodeIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(new Color(128, 128, 128));
             g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             g2.drawLine(3, 3, 13, 13);
@@ -848,13 +974,16 @@ public class Icons {
         }
     }
 
-    private static class BrowserIcon extends BaseIcon {
-        BrowserIcon(int size) {
+    private static class BrowserIcon extends BaseIcon
+    {
+        BrowserIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getAccent());
             g2.setStroke(getStroke());
             g2.drawRoundRect(2, 2, 12, 12, 2, 2);
@@ -865,13 +994,16 @@ public class Icons {
         }
     }
 
-    private static class ConstPoolIcon extends BaseIcon {
-        ConstPoolIcon(int size) {
+    private static class ConstPoolIcon extends BaseIcon
+    {
+        ConstPoolIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getInfo());
             g2.setStroke(getStroke());
             g2.drawOval(3, 2, 10, 4);
@@ -884,13 +1016,16 @@ public class Icons {
         }
     }
 
-    private static class ConsoleIcon extends BaseIcon {
-        ConsoleIcon(int size) {
+    private static class ConsoleIcon extends BaseIcon
+    {
+        ConsoleIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawRoundRect(2, 3, 12, 10, 2, 2);
@@ -902,13 +1037,16 @@ public class Icons {
         }
     }
 
-    private static class DebugIcon extends BaseIcon {
-        DebugIcon(int size) {
+    private static class DebugIcon extends BaseIcon
+    {
+        DebugIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getError());
             g2.fillOval(5, 5, 6, 6);
             g2.setColor(JStudioTheme.getTextPrimary());
@@ -923,13 +1061,16 @@ public class Icons {
         }
     }
 
-    private static class HeapIcon extends BaseIcon {
-        HeapIcon(int size) {
+    private static class HeapIcon extends BaseIcon
+    {
+        HeapIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getAccentSecondary());
             g2.setStroke(getStroke());
             g2.drawRect(2, 2, 5, 4);
@@ -944,13 +1085,16 @@ public class Icons {
         }
     }
 
-    private static class ZoomInIcon extends BaseIcon {
-        ZoomInIcon(int size) {
+    private static class ZoomInIcon extends BaseIcon
+    {
+        ZoomInIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawOval(2, 2, 9, 9);
@@ -960,13 +1104,16 @@ public class Icons {
         }
     }
 
-    private static class ZoomOutIcon extends BaseIcon {
-        ZoomOutIcon(int size) {
+    private static class ZoomOutIcon extends BaseIcon
+    {
+        ZoomOutIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawOval(2, 2, 9, 9);
@@ -975,13 +1122,16 @@ public class Icons {
         }
     }
 
-    private static class FitIcon extends BaseIcon {
-        FitIcon(int size) {
+    private static class FitIcon extends BaseIcon
+    {
+        FitIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawRect(4, 4, 8, 8);
@@ -996,13 +1146,16 @@ public class Icons {
         }
     }
 
-    private static class PDGIcon extends BaseIcon {
-        PDGIcon(int size) {
+    private static class PDGIcon extends BaseIcon
+    {
+        PDGIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getAccent());
             g2.setStroke(getStroke());
             g2.fillOval(6, 1, 4, 4);
@@ -1017,13 +1170,16 @@ public class Icons {
         }
     }
 
-    private static class SDGIcon extends BaseIcon {
-        SDGIcon(int size) {
+    private static class SDGIcon extends BaseIcon
+    {
+        SDGIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getAccentSecondary());
             g2.setStroke(getStroke());
             g2.drawRoundRect(1, 1, 6, 4, 2, 2);
@@ -1037,13 +1193,16 @@ public class Icons {
         }
     }
 
-    private static class CPGIcon extends BaseIcon {
-        CPGIcon(int size) {
+    private static class CPGIcon extends BaseIcon
+    {
+        CPGIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getSuccess());
             g2.setStroke(getStroke());
             g2.drawOval(6, 1, 4, 4);
@@ -1061,13 +1220,16 @@ public class Icons {
         }
     }
 
-    private static class HexIcon extends BaseIcon {
-        HexIcon(int size) {
+    private static class HexIcon extends BaseIcon
+    {
+        HexIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setFont(JStudioTheme.getCodeFont(8));
             g2.drawString("0x", 2, 8);
@@ -1076,13 +1238,16 @@ public class Icons {
         }
     }
 
-    private static class ResourceIcon extends BaseIcon {
-        ResourceIcon(int size) {
+    private static class ResourceIcon extends BaseIcon
+    {
+        ResourceIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getAccentSecondary());
             g2.setStroke(getStroke());
             Path2D path = new Path2D.Float();
@@ -1099,13 +1264,16 @@ public class Icons {
         }
     }
 
-    private static class ImageIcon extends BaseIcon {
-        ImageIcon(int size) {
+    private static class ImageIcon extends BaseIcon
+    {
+        ImageIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawRect(2, 3, 12, 10);
@@ -1123,13 +1291,16 @@ public class Icons {
         }
     }
 
-    private static class ActualSizeIcon extends BaseIcon {
-        ActualSizeIcon(int size) {
+    private static class ActualSizeIcon extends BaseIcon
+    {
+        ActualSizeIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(getStroke());
             g2.drawRect(4, 4, 8, 8);
@@ -1138,13 +1309,16 @@ public class Icons {
         }
     }
 
-    private static class CompileIcon extends BaseIcon {
-        CompileIcon(int size) {
+    private static class CompileIcon extends BaseIcon
+    {
+        CompileIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getSuccess());
             g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             g2.drawOval(2, 2, 12, 12);
@@ -1157,13 +1331,16 @@ public class Icons {
         }
     }
 
-    private static class UndoIcon extends BaseIcon {
-        UndoIcon(int size) {
+    private static class UndoIcon extends BaseIcon
+    {
+        UndoIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             g2.drawArc(4, 4, 10, 10, 45, 270);
@@ -1173,13 +1350,16 @@ public class Icons {
     }
 
     /** A plug being inserted - attach to a live JVM. */
-    private static class LiveAttachIcon extends BaseIcon {
-        LiveAttachIcon(int size) {
+    private static class LiveAttachIcon extends BaseIcon
+    {
+        LiveAttachIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getAccent());
             g2.setStroke(getStroke());
             g2.drawLine(6, 2, 6, 5);
@@ -1190,13 +1370,16 @@ public class Icons {
     }
 
     /** A plug pulled away (gap) - detach. */
-    private static class LiveDetachIcon extends BaseIcon {
-        LiveDetachIcon(int size) {
+    private static class LiveDetachIcon extends BaseIcon
+    {
+        LiveDetachIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getTextSecondary());
             g2.setStroke(getStroke());
             g2.drawLine(6, 1, 6, 4);
@@ -1208,13 +1391,16 @@ public class Icons {
     }
 
     /** A wait-for cycle with an arrowhead - find deadlocks. */
-    private static class LiveDeadlockIcon extends BaseIcon {
-        LiveDeadlockIcon(int size) {
+    private static class LiveDeadlockIcon extends BaseIcon
+    {
+        LiveDeadlockIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getError());
             g2.setStroke(getStroke());
             g2.drawArc(3, 3, 10, 10, 30, 300);
@@ -1224,13 +1410,16 @@ public class Icons {
     }
 
     /** A bandage - live patch. */
-    private static class LivePatchIcon extends BaseIcon {
-        LivePatchIcon(int size) {
+    private static class LivePatchIcon extends BaseIcon
+    {
+        LivePatchIcon(int size)
+        {
             super(size);
         }
 
         @Override
-        protected void paintIconContent(Graphics2D g2) {
+        protected void paintIconContent(Graphics2D g2)
+        {
             g2.setColor(JStudioTheme.getSuccess());
             g2.setStroke(getStroke());
             AffineTransform old = g2.getTransform();

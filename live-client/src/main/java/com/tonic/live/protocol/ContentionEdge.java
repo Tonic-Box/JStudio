@@ -7,15 +7,16 @@ import lombok.Getter;
  * owns that monitor. A cycle among these edges is a deadlock (see {@link com.tonic.live.Deadlocks}).
  */
 @Getter
-public final class ContentionEdge {
+public final class ContentionEdge
+{
     private final long threadId;
     private final String threadName;
     private final String monitorClass;
     private final long ownerThreadId;
     private final String ownerThreadName;
 
-    public ContentionEdge(long threadId, String threadName, String monitorClass,
-                          long ownerThreadId, String ownerThreadName) {
+    public ContentionEdge(long threadId, String threadName, String monitorClass, long ownerThreadId, String ownerThreadName)
+    {
         this.threadId = threadId;
         this.threadName = threadName;
         this.monitorClass = monitorClass;
@@ -24,7 +25,8 @@ public final class ContentionEdge {
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return threadName + " (t#" + threadId + ") waits on " + monitorClass + " held by "
                 + ownerThreadName + " (t#" + ownerThreadId + ")";
     }

@@ -5,9 +5,11 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public abstract class SimulationFinding {
+public abstract class SimulationFinding
+{
 
-    public enum FindingType {
+    public enum FindingType
+    {
         OPAQUE_PREDICATE,
         DEAD_CODE,
         CONSTANT_VALUE,
@@ -15,7 +17,8 @@ public abstract class SimulationFinding {
         DECRYPTED_STRING
     }
 
-    public enum Severity {
+    public enum Severity
+    {
         INFO,
         LOW,
         MEDIUM,
@@ -30,7 +33,8 @@ public abstract class SimulationFinding {
     protected final Severity severity;
     protected final int bytecodeOffset;
 
-    public String getMethodSignature() {
+    public String getMethodSignature()
+    {
         return className + "." + methodName + methodDesc;
     }
 

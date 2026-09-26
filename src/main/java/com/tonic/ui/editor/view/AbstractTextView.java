@@ -11,14 +11,16 @@ import org.fife.ui.rtextarea.RTextScrollPane;
  * implementations of the common {@link EditorView} text operations. Subclasses add their own syntax/token styling
  * (in {@code applyChildThemes}, after calling {@link #applyTextTheme()}) and override the ops that differ.
  */
-public abstract class AbstractTextView extends AbstractEditorView {
+public abstract class AbstractTextView extends AbstractEditorView
+{
 
     protected RSyntaxTextArea textArea;
     protected RTextScrollPane scrollPane;
     protected SearchPanel searchPanel;
 
     /** Creates the read-only code text area, its line-numbered scroll pane, and a find panel. */
-    protected void initTextArea(String syntaxStyle) {
+    protected void initTextArea(String syntaxStyle)
+    {
         textArea = new RSyntaxTextArea();
         textArea.setSyntaxEditingStyle(syntaxStyle);
         textArea.setEditable(false);
@@ -38,7 +40,8 @@ public abstract class AbstractTextView extends AbstractEditorView {
      * Applies the shared code-area + gutter colors. Subclasses call this from {@code applyChildThemes()} and then
      * apply their own syntax-scheme token styling.
      */
-    protected void applyTextTheme() {
+    protected void applyTextTheme()
+    {
         setBackground(JStudioTheme.getBgTertiary());
 
         textArea.setBackground(JStudioTheme.getBgTertiary());
@@ -54,43 +57,53 @@ public abstract class AbstractTextView extends AbstractEditorView {
     }
 
     @Override
-    public String getText() {
+    public String getText()
+    {
         return textArea.getText();
     }
 
     @Override
-    public void copySelection() {
+    public void copySelection()
+    {
         copyToClipboard(textArea.getSelectedText());
     }
 
     @Override
-    public String getSelectedText() {
+    public String getSelectedText()
+    {
         return textArea.getSelectedText();
     }
 
     @Override
-    public void goToLine(int line) {
-        try {
+    public void goToLine(int line)
+    {
+        try
+        {
             int offset = textArea.getLineStartOffset(line - 1);
             textArea.setCaretPosition(offset);
             textArea.requestFocus();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             // Line out of range
         }
     }
 
     @Override
-    public void showFindDialog() {
+    public void showFindDialog()
+    {
         searchPanel.showPanel();
     }
 
     @Override
-    public void setFontSize(int size) {
+    public void setFontSize(int size)
+    {
         textArea.setFont(JStudioTheme.getCodeFont(size));
     }
 
     @Override
-    public void setWordWrap(boolean enabled) {
+    public void setWordWrap(boolean enabled)
+    {
         textArea.setLineWrap(enabled);
         textArea.setWrapStyleWord(enabled);
     }

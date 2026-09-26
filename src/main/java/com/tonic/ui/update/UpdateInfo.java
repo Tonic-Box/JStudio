@@ -9,7 +9,8 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public final class UpdateInfo {
+public final class UpdateInfo
+{
 
     private final String tag;
     private final int version;

@@ -32,11 +32,14 @@ import java.util.List;
  * {@link BreakpointMapper}, so the same controller drives both the source and bytecode views; dots are rendered
  * from the shared {@link BreakpointService}.
  */
-public final class BreakpointGutterController {
+public final class BreakpointGutterController
+{
 
-    private static final Icon BREAKPOINT_ICON = new Icon() {
+    private static final Icon BREAKPOINT_ICON = new Icon()
+    {
         @Override
-        public void paintIcon(Component c, Graphics g, int x, int y) {
+        public void paintIcon(Component c, Graphics g, int x, int y)
+        {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setColor(new Color(0xE0, 0x4A, 0x40));
@@ -45,20 +48,24 @@ public final class BreakpointGutterController {
         }
 
         @Override
-        public int getIconWidth() {
+        public int getIconWidth()
+        {
             return 11;
         }
 
         @Override
-        public int getIconHeight() {
+        public int getIconHeight()
+        {
             return 11;
         }
     };
 
     /** Shown on the breakpoint that is currently hit (paused): a yellow pause badge - click it to resume. */
-    private static final Icon PAUSE_ICON = new Icon() {
+    private static final Icon PAUSE_ICON = new Icon()
+    {
         @Override
-        public void paintIcon(Component c, Graphics g, int x, int y) {
+        public void paintIcon(Component c, Graphics g, int x, int y)
+        {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             int w = getIconWidth();
@@ -74,12 +81,14 @@ public final class BreakpointGutterController {
         }
 
         @Override
-        public int getIconWidth() {
+        public int getIconWidth()
+        {
             return 11;
         }
 
         @Override
-        public int getIconHeight() {
+        public int getIconHeight()
+        {
             return 11;
         }
     };
@@ -95,28 +104,35 @@ public final class BreakpointGutterController {
     private final EventBus.EventHandler<DebugPausedEvent> pausedHandler = e -> refresh();
     private final EventBus.EventHandler<DebugResumedEvent> resumedHandler = e -> refresh();
 
-    public BreakpointGutterController(RSyntaxTextArea textArea, RTextScrollPane scrollPane, BreakpointMapper mapper) {
+    public BreakpointGutterController(RSyntaxTextArea textArea, RTextScrollPane scrollPane, BreakpointMapper mapper)
+    {
         this.textArea = textArea;
         this.scrollPane = scrollPane;
         this.mapper = mapper;
-        this.mouse = new MouseAdapter() {
+        this.mouse = new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getButton() != MouseEvent.BUTTON1) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getButton() != MouseEvent.BUTTON1)
+                {
                     return;
                 }
                 int line = lineAt(e);
-                if (line <= 0) {
+                if (line <= 0)
+                {
                     return;
                 }
                 // Clicking the paused line resumes - even if its breakpoint was removed mid-pause, so the
                 // resume affordance never disappears while suspended. Any other line toggles a breakpoint.
-                if (line == pausedLineInView()) {
+                if (line == pausedLineInView())
+                {
                     DebugManager.getInstance().resume();
                     return;
                 }
                 Breakpoint bp = mapper.breakpointAtLine(line);
-                if (bp != null) {
+                if (bp != null)
+                {
                     BreakpointService.getInstance().toggle(bp);
                 }
             }
@@ -128,20 +144,24 @@ public final class BreakpointGutterController {
      * The breakpoint a right-click on {@code line} (1-based) would toggle, or null when the line isn't an
      * executable location. Breakpoints are settable any time (even before attach) and arm on connect.
      */
-    public Breakpoint breakpointAt(int line) {
+    public Breakpoint breakpointAt(int line)
+    {
         return mapper.breakpointAtLine(line);
     }
 
-    public boolean isSet(Breakpoint bp) {
+    public boolean isSet(Breakpoint bp)
+    {
         return BreakpointService.getInstance().contains(bp);
     }
 
-    public void toggle(Breakpoint bp) {
+    public void toggle(Breakpoint bp)
+    {
         BreakpointService.getInstance().toggle(bp);
     }
 
     /** Subscribes to breakpoint/session changes and renders existing dots; call from the host view's addNotify. */
-    public void attach() {
+    public void attach()
+    {
         EventBus.getInstance().register(BreakpointsChangedEvent.class, bpHandler);
         EventBus.getInstance().register(DebugSessionEvent.class, sessionHandler);
         EventBus.getInstance().register(DebugPausedEvent.class, pausedHandler);
@@ -149,52 +169,66 @@ public final class BreakpointGutterController {
         updateIcons();
     }
 
-    public void detach() {
+    public void detach()
+    {
         EventBus.getInstance().unregister(BreakpointsChangedEvent.class, bpHandler);
         EventBus.getInstance().unregister(DebugSessionEvent.class, sessionHandler);
         EventBus.getInstance().unregister(DebugPausedEvent.class, pausedHandler);
         EventBus.getInstance().unregister(DebugResumedEvent.class, resumedHandler);
     }
 
-    public void updateIcons() {
+    public void updateIcons()
+    {
         wireGutter();
         Gutter gutter = scrollPane.getGutter();
-        for (GutterIconInfo info : icons) {
+        for (GutterIconInfo info : icons)
+        {
             gutter.removeTrackingIcon(info);
         }
         icons.clear();
         int pausedLine = pausedLineInView();
-        for (Breakpoint bp : BreakpointService.getInstance().forClass(mapper.className())) {
+        for (Breakpoint bp : BreakpointService.getInstance().forClass(mapper.className()))
+        {
             int line = mapper.lineForBreakpoint(bp);
-            if (line <= 0 || line == pausedLine) {
+            if (line <= 0 || line == pausedLine)
+            {
                 continue;
             }
-            try {
+            try
+            {
                 icons.add(gutter.addLineTrackingIcon(line - 1, BREAKPOINT_ICON, "Breakpoint"));
-            } catch (BadLocationException ignored) {
+            }
+            catch (BadLocationException ignored)
+            {
             }
         }
         // The paused line always carries the pause/resume badge - on top of (or without) a breakpoint - so
         // removing the breakpoint mid-pause leaves the resume affordance intact.
-        if (pausedLine > 0) {
-            try {
+        if (pausedLine > 0)
+        {
+            try
+            {
                 icons.add(gutter.addLineTrackingIcon(pausedLine - 1, PAUSE_ICON, "Paused here - click to resume"));
-            } catch (BadLocationException ignored) {
+            }
+            catch (BadLocationException ignored)
+            {
             }
         }
     }
 
     /** The 1-based line in THIS view where the target is currently paused, or -1 if it isn't paused here. */
-    private int pausedLineInView() {
+    private int pausedLineInView()
+    {
         DebugLocation loc = DebugManager.getInstance().getPausedLocation();
-        if (loc == null || !mapper.className().equals(loc.getClassName())) {
+        if (loc == null || !mapper.className().equals(loc.getClassName()))
+        {
             return -1;
         }
-        return mapper.lineForBreakpoint(new Breakpoint(
-                loc.getClassName(), loc.getMethodName(), loc.getMethodDescriptor(), loc.getCodeIndex()));
+        return mapper.lineForBreakpoint(new Breakpoint(loc.getClassName(), loc.getMethodName(), loc.getMethodDescriptor(), loc.getCodeIndex()));
     }
 
-    private void refresh() {
+    private void refresh()
+    {
         SwingUtilities.invokeLater(this::updateIcons);
     }
 
@@ -203,25 +237,33 @@ public final class BreakpointGutterController {
      * before adding so it stays EXACTLY one listener even after a re-decompile re-creates/re-adds the gutter
      * components - otherwise a click would toggle twice (set then unset) and the breakpoint would never take.
      */
-    private void wireGutter() {
+    private void wireGutter()
+    {
         Gutter gutter = scrollPane.getGutter();
-        for (Component child : gutter.getComponents()) {
-            if (child.getClass().getSimpleName().contains("IconRowHeader")) {
+        for (Component child : gutter.getComponents())
+        {
+            if (child.getClass().getSimpleName().contains("IconRowHeader"))
+            {
                 child.removeMouseListener(mouse);
                 child.addMouseListener(mouse);
             }
         }
     }
 
-    private int lineAt(MouseEvent e) {
+    private int lineAt(MouseEvent e)
+    {
         Point inText = SwingUtilities.convertPoint((Component) e.getSource(), e.getPoint(), textArea);
         int offset = textArea.viewToModel2D(inText);
-        if (offset < 0) {
+        if (offset < 0)
+        {
             return -1;
         }
-        try {
+        try
+        {
             return textArea.getLineOfOffset(offset) + 1;
-        } catch (BadLocationException ex) {
+        }
+        catch (BadLocationException ex)
+        {
             return -1;
         }
     }

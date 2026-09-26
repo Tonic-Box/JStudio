@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class CFGBlock {
+public class CFGBlock
+{
     private final int id;
     private final int startOffset;
     @Setter
@@ -21,27 +22,32 @@ public class CFGBlock {
     @Setter
     private String handlerType;
 
-    public CFGBlock(int id, int startOffset) {
+    public CFGBlock(int id, int startOffset)
+    {
         this.id = id;
         this.startOffset = startOffset;
         this.endOffset = startOffset;
     }
 
-    public void addInstruction(Instruction instruction) {
+    public void addInstruction(Instruction instruction)
+    {
         instructions.add(instruction);
         endOffset = instruction.getOffset() + instruction.getLength();
     }
 
-    public void addEdge(CFGBlock target, CFGEdgeType type) {
+    public void addEdge(CFGBlock target, CFGEdgeType type)
+    {
         outEdges.add(new CFGEdge(target, type));
         target.predecessors.add(this);
     }
 
-    public Instruction getLastInstruction() {
+    public Instruction getLastInstruction()
+    {
         return instructions.isEmpty() ? null : instructions.get(instructions.size() - 1);
     }
 
-    public boolean isEmpty() {
+    public boolean isEmpty()
+    {
         return instructions.isEmpty();
     }
 }

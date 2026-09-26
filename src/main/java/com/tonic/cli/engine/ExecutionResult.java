@@ -9,7 +9,8 @@ import java.util.List;
 
 @Getter
 @Builder
-public class ExecutionResult {
+public class ExecutionResult
+{
 
     private final boolean success;
     private final int classesProcessed;
@@ -21,26 +22,28 @@ public class ExecutionResult {
     private final List<Finding> findings;
     private final String errorMessage;
 
-    public int getFindingsCount() {
+    public int getFindingsCount()
+    {
         return findings != null ? findings.size() : 0;
     }
 
-    public static ExecutionResult success(int classes, int methods, long durationMs,
-                                         String summary, List<Finding> findings) {
+    public static ExecutionResult success(int classes, int methods, long durationMs, String summary, List<Finding> findings)
+    {
         return ExecutionResult.builder()
-            .success(true)
-            .classesProcessed(classes)
-            .methodsProcessed(methods)
-            .durationMs(durationMs)
-            .summary(summary)
-            .findings(findings)
-            .build();
+                .success(true)
+                .classesProcessed(classes)
+                .methodsProcessed(methods)
+                .durationMs(durationMs)
+                .summary(summary)
+                .findings(findings)
+                .build();
     }
 
-    public static ExecutionResult failure(String errorMessage) {
+    public static ExecutionResult failure(String errorMessage)
+    {
         return ExecutionResult.builder()
-            .success(false)
-            .errorMessage(errorMessage)
-            .build();
+                .success(false)
+                .errorMessage(errorMessage)
+                .build();
     }
 }

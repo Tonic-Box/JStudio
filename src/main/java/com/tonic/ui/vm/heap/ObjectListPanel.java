@@ -15,7 +15,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ObjectListPanel extends ThemedJPanel {
+public class ObjectListPanel extends ThemedJPanel
+{
 
     private final JTable table;
     private final ObjectTableModel tableModel;
@@ -24,7 +25,8 @@ public class ObjectListPanel extends ThemedJPanel {
     private Consumer<HeapObject> onObjectSelected;
     private List<HeapObject> allObjects = new ArrayList<>();
 
-    public ObjectListPanel() {
+    public ObjectListPanel()
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL, 2));
@@ -53,10 +55,13 @@ public class ObjectListPanel extends ThemedJPanel {
 
         table.setDefaultRenderer(Object.class, new ObjectCellRenderer());
 
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && onObjectSelected != null) {
+        table.getSelectionModel().addListSelectionListener(e ->
+        {
+            if (!e.getValueIsAdjusting() && onObjectSelected != null)
+            {
                 int row = table.getSelectedRow();
-                if (row >= 0 && row < allObjects.size()) {
+                if (row >= 0 && row < allObjects.size())
+                {
                     onObjectSelected.accept(allObjects.get(row));
                 }
             }
@@ -68,21 +73,26 @@ public class ObjectListPanel extends ThemedJPanel {
         add(scroll, BorderLayout.CENTER);
     }
 
-    public void setOnObjectSelected(Consumer<HeapObject> callback) {
+    public void setOnObjectSelected(Consumer<HeapObject> callback)
+    {
         this.onObjectSelected = callback;
     }
 
-    public void setObjects(List<HeapObject> objects) {
+    public void setObjects(List<HeapObject> objects)
+    {
         this.allObjects = new ArrayList<>(objects);
         sortAndRefresh();
-        if (!allObjects.isEmpty()) {
+        if (!allObjects.isEmpty())
+        {
             table.setRowSelectionInterval(0, 0);
         }
     }
 
-    private void sortAndRefresh() {
+    private void sortAndRefresh()
+    {
         int sortIndex = sortCombo.getSelectedIndex();
-        switch (sortIndex) {
+        switch (sortIndex)
+        {
             case 0:
                 allObjects.sort(Comparator.comparingInt(HeapObject::getId));
                 break;
@@ -99,68 +109,91 @@ public class ObjectListPanel extends ThemedJPanel {
         tableModel.fireTableDataChanged();
     }
 
-    private class ObjectTableModel extends AbstractTableModel {
+    private class ObjectTableModel extends AbstractTableModel
+    {
         private final String[] columns = {"ID", "Class", "Age", "Provenance"};
 
         @Override
-        public int getRowCount() {
+        public int getRowCount()
+        {
             return allObjects.size();
         }
 
         @Override
-        public int getColumnCount() {
+        public int getColumnCount()
+        {
             return columns.length;
         }
 
         @Override
-        public String getColumnName(int column) {
+        public String getColumnName(int column)
+        {
             return columns[column];
         }
 
         @Override
-        public Object getValueAt(int row, int column) {
+        public Object getValueAt(int row, int column)
+        {
             HeapObject obj = allObjects.get(row);
-            switch (column) {
-                case 0: return obj.getId();
-                case 1: return obj.getSimpleClassName();
-                case 2: return obj.getAllocationTime();
+            switch (column)
+            {
+                case 0:
+                    return obj.getId();
+                case 1:
+                    return obj.getSimpleClassName();
+                case 2:
+                    return obj.getAllocationTime();
                 case 3:
                     ProvenanceInfo prov = obj.getProvenance();
                     if (prov == null) return "-";
                     String method = prov.getMethodName();
                     return method != null ? method : "-";
-                default: return null;
+                default:
+                    return null;
             }
         }
     }
 
-    private class ObjectCellRenderer extends DefaultTableCellRenderer {
+    private class ObjectCellRenderer extends DefaultTableCellRenderer
+    {
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+        {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
             setBackground(isSelected ? JStudioTheme.getAccent() : JStudioTheme.getBgSecondary());
             setForeground(JStudioTheme.getTextPrimary());
 
-            if (column == 0 && value instanceof Integer) {
+            if (column == 0 && value instanceof Integer)
+            {
                 setText("#" + value);
-            } else if (column == 2 && value instanceof Long) {
+            }
+            else if (column == 2 && value instanceof Long)
+            {
                 long age = (Long) value;
-                if (age >= 1000) {
+                if (age >= 1000)
+                {
                     setText(String.format("%.1fk", age / 1000.0));
-                } else {
+                }
+                else
+                {
                     setText(String.valueOf(age));
                 }
             }
 
-            if (row < allObjects.size()) {
+            if (row < allObjects.size())
+            {
                 HeapObject obj = allObjects.get(row);
-                if (obj.isLambda()) {
+                if (obj.isLambda())
+                {
                     if (!isSelected) setForeground(JStudioTheme.getAccentSecondary());
-                } else if (obj.isArray()) {
+                }
+                else if (obj.isArray())
+                {
                     if (!isSelected) setForeground(JStudioTheme.getInfo());
-                } else if (obj.isString()) {
+                }
+                else if (obj.isString())
+                {
                     if (!isSelected) setForeground(JStudioTheme.getWarning());
                 }
             }

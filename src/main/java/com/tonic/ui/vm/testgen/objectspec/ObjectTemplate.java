@@ -5,7 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ObjectTemplate {
+public class ObjectTemplate
+{
 
     private String name;
     private String description;
@@ -15,12 +16,14 @@ public class ObjectTemplate {
     private long createdAt;
     private long modifiedAt;
 
-    public ObjectTemplate() {
+    public ObjectTemplate()
+    {
         this.createdAt = System.currentTimeMillis();
         this.modifiedAt = this.createdAt;
     }
 
-    public ObjectTemplate(String name, String typeName, ObjectSpec spec) {
+    public ObjectTemplate(String name, String typeName, ObjectSpec spec)
+    {
         this.name = name;
         this.typeName = typeName;
         this.spec = spec;
@@ -28,20 +31,24 @@ public class ObjectTemplate {
         this.modifiedAt = this.createdAt;
     }
 
-    public String getDisplayName() {
-        if (description != null && !description.isEmpty()) {
+    public String getDisplayName()
+    {
+        if (description != null && !description.isEmpty())
+        {
             return name + " - " + description;
         }
         return name;
     }
 
-    public void setSpec(ObjectSpec spec) {
+    public void setSpec(ObjectSpec spec)
+    {
         this.spec = spec;
         this.modifiedAt = System.currentTimeMillis();
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return name + " (" + typeName + ")";
     }
 }

@@ -7,7 +7,8 @@ import com.tonic.ui.theme.JStudioTheme;
 import javax.swing.*;
 import java.awt.*;
 
-public class ParamConfigPanel extends ThemedJPanel {
+public class ParamConfigPanel extends ThemedJPanel
+{
 
     private final Window ownerWindow;
     private ParamSpec spec;
@@ -17,7 +18,8 @@ public class ParamConfigPanel extends ThemedJPanel {
     private JButton configButton;
     private JLabel summaryLabel;
 
-    public ParamConfigPanel(Window owner, ParamSpec spec) {
+    public ParamConfigPanel(Window owner, ParamSpec spec)
+    {
         super(BackgroundStyle.PRIMARY);
         this.ownerWindow = owner;
         this.spec = spec;
@@ -25,7 +27,8 @@ public class ParamConfigPanel extends ThemedJPanel {
         updateDisplay();
     }
 
-    private void initComponents() {
+    private void initComponents()
+    {
         setLayout(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_SMALL + 1, UIConstants.SPACING_TINY));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
 
@@ -59,17 +62,23 @@ public class ParamConfigPanel extends ThemedJPanel {
         add(summaryLabel);
     }
 
-    private void populateModeCombo() {
+    private void populateModeCombo()
+    {
         modeCombo.removeAllItems();
 
-        if (spec.isPrimitive()) {
+        if (spec.isPrimitive())
+        {
             modeCombo.addItem(ValueMode.FUZZ);
             modeCombo.addItem(ValueMode.FIXED);
-        } else if (spec.isString()) {
+        }
+        else if (spec.isString())
+        {
             modeCombo.addItem(ValueMode.FUZZ);
             modeCombo.addItem(ValueMode.FIXED);
             modeCombo.addItem(ValueMode.NULL);
-        } else {
+        }
+        else
+        {
             modeCombo.addItem(ValueMode.OBJECT_SPEC);
             modeCombo.addItem(ValueMode.FUZZ);
             modeCombo.addItem(ValueMode.NULL);
@@ -78,7 +87,8 @@ public class ParamConfigPanel extends ThemedJPanel {
         modeCombo.setSelectedItem(spec.getMode());
     }
 
-    private void onModeChanged() {
+    private void onModeChanged()
+    {
         ValueMode mode = (ValueMode) modeCombo.getSelectedItem();
         if (mode == null) return;
 
@@ -91,43 +101,51 @@ public class ParamConfigPanel extends ThemedJPanel {
         revalidate();
     }
 
-    private void openObjectBuilder() {
+    private void openObjectBuilder()
+    {
         if (!spec.isObjectType()) return;
 
         String objectTypeName = spec.getTypeDescriptor();
-        if (objectTypeName.startsWith("L") && objectTypeName.endsWith(";")) {
+        if (objectTypeName.startsWith("L") && objectTypeName.endsWith(";"))
+        {
             objectTypeName = objectTypeName.substring(1, objectTypeName.length() - 1);
         }
 
         ObjectSpec existing = spec.getNestedObjectSpec();
         ObjectSpec result = ObjectBuilderDialog.showDialog(ownerWindow, objectTypeName, existing);
 
-        if (result != null) {
+        if (result != null)
+        {
             spec.setNestedObjectSpec(result);
             updateSummary();
         }
     }
 
-    private void updateDisplay() {
-        if (spec.getMode() != null) {
+    private void updateDisplay()
+    {
+        if (spec.getMode() != null)
+        {
             modeCombo.setSelectedItem(spec.getMode());
         }
 
-        if (spec.getMode() == ValueMode.FIXED && spec.getFixedValue() != null) {
+        if (spec.getMode() == ValueMode.FIXED && spec.getFixedValue() != null)
+        {
             valueField.setText(String.valueOf(spec.getFixedValue()));
         }
 
         onModeChanged();
     }
 
-    private void updateSummary() {
+    private void updateSummary()
+    {
         ValueMode mode = (ValueMode) modeCombo.getSelectedItem();
-        if(mode == null)
+        if (mode == null)
         {
             return;
         }
 
-        switch (mode) {
+        switch (mode)
+        {
             case FUZZ:
                 FuzzStrategy strategy = spec.getFuzzStrategy();
                 summaryLabel.setText("🎲 " + (strategy != null ? strategy.getDescription() : "default"));
@@ -136,9 +154,12 @@ public class ParamConfigPanel extends ThemedJPanel {
                 summaryLabel.setText("");
                 break;
             case OBJECT_SPEC:
-                if (spec.getNestedObjectSpec() != null) {
+                if (spec.getNestedObjectSpec() != null)
+                {
                     summaryLabel.setText("-> " + spec.getNestedObjectSpec().getSummary());
-                } else {
+                }
+                else
+                {
                     summaryLabel.setText("(not configured)");
                 }
                 break;
@@ -148,11 +169,13 @@ public class ParamConfigPanel extends ThemedJPanel {
         }
     }
 
-    public ParamSpec getParamSpec() {
+    public ParamSpec getParamSpec()
+    {
         ValueMode mode = (ValueMode) modeCombo.getSelectedItem();
         spec.setMode(mode);
 
-        if (mode == ValueMode.FIXED) {
+        if (mode == ValueMode.FIXED)
+        {
             String text = valueField.getText();
             spec.setFixedValue(parseValue(text, spec.getTypeDescriptor()));
         }
@@ -160,32 +183,48 @@ public class ParamConfigPanel extends ThemedJPanel {
         return spec;
     }
 
-    public void loadSpec(ParamSpec newSpec) {
+    public void loadSpec(ParamSpec newSpec)
+    {
         this.spec = newSpec.copy();
         updateDisplay();
     }
 
-    private Object parseValue(String text, String typeDesc) {
+    private Object parseValue(String text, String typeDesc)
+    {
         if (text == null || text.isEmpty()) return null;
 
-        try {
-            switch (typeDesc) {
-                case "Z": return Boolean.parseBoolean(text);
-                case "B": return Byte.parseByte(text);
-                case "C": return text.charAt(0);
-                case "S": return Short.parseShort(text);
-                case "I": return Integer.parseInt(text);
-                case "J": return Long.parseLong(text);
-                case "F": return Float.parseFloat(text);
-                case "D": return Double.parseDouble(text);
-                default: return text;
+        try
+        {
+            switch (typeDesc)
+            {
+                case "Z":
+                    return Boolean.parseBoolean(text);
+                case "B":
+                    return Byte.parseByte(text);
+                case "C":
+                    return text.charAt(0);
+                case "S":
+                    return Short.parseShort(text);
+                case "I":
+                    return Integer.parseInt(text);
+                case "J":
+                    return Long.parseLong(text);
+                case "F":
+                    return Float.parseFloat(text);
+                case "D":
+                    return Double.parseDouble(text);
+                default:
+                    return text;
             }
-        } catch (NumberFormatException e) {
+        }
+        catch (NumberFormatException e)
+        {
             return text;
         }
     }
 
-    private JLabel createLabel(String text) {
+    private JLabel createLabel(String text)
+    {
         JLabel label = new JLabel(text);
         label.setForeground(JStudioTheme.getTextPrimary());
         return label;

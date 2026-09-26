@@ -28,12 +28,14 @@ import java.util.List;
  * Path bar with breadcrumb navigation and editable path input.
  * Click path segments to navigate, click empty area to edit path directly.
  */
-public class PathBar extends JPanel {
+public class PathBar extends JPanel
+{
 
     /**
      * Listener for navigation events.
      */
-    public interface NavigationListener {
+    public interface NavigationListener
+    {
         void onNavigate(File directory);
     }
 
@@ -60,15 +62,13 @@ public class PathBar extends JPanel {
     private File currentDirectory;
     private boolean inEditMode = false;
 
-    public PathBar(NavigationListener listener) {
+    public PathBar(NavigationListener listener)
+    {
         this.listener = listener;
 
         setLayout(new BorderLayout(4, 0));
         setBackground(JStudioTheme.getBgSecondary());
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
+        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         setPreferredSize(new Dimension(0, 36));
 
         // Navigation buttons
@@ -98,9 +98,11 @@ public class PathBar extends JPanel {
         breadcrumbPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         breadcrumbPanel.setOpaque(false);
         breadcrumbPanel.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
-        breadcrumbPanel.addMouseListener(new MouseAdapter() {
+        breadcrumbPanel.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 // Click on empty area enters edit mode
                 enterEditMode();
             }
@@ -112,25 +114,29 @@ public class PathBar extends JPanel {
         pathTextField.setBackground(JStudioTheme.getBgTertiary());
         pathTextField.setForeground(JStudioTheme.getTextPrimary());
         pathTextField.setCaretColor(JStudioTheme.getTextPrimary());
-        pathTextField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getAccent()),
-                BorderFactory.createEmptyBorder(2, 6, 2, 6)
-        ));
+        pathTextField.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getAccent()), BorderFactory.createEmptyBorder(2, 6, 2, 6)));
 
-        pathTextField.addKeyListener(new KeyAdapter() {
+        pathTextField.addKeyListener(new KeyAdapter()
+        {
             @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+            public void keyPressed(KeyEvent e)
+            {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER)
+                {
                     applyEditedPath();
-                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+                {
                     exitEditMode();
                 }
             }
         });
 
-        pathTextField.addFocusListener(new FocusAdapter() {
+        pathTextField.addFocusListener(new FocusAdapter()
+        {
             @Override
-            public void focusLost(FocusEvent e) {
+            public void focusLost(FocusEvent e)
+            {
                 exitEditMode();
             }
         });
@@ -143,7 +149,8 @@ public class PathBar extends JPanel {
         updateNavigationButtons();
     }
 
-    private JButton createNavButton(String text, String tooltip) {
+    private JButton createNavButton(String text, String tooltip)
+    {
         JButton button = new JButton(text);
         button.setToolTipText(tooltip);
         button.setFont(JStudioTheme.getUIFont(12));
@@ -154,16 +161,20 @@ public class PathBar extends JPanel {
         button.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        button.addMouseListener(new MouseAdapter() {
+        button.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseEntered(MouseEvent e) {
-                if (button.isEnabled()) {
+            public void mouseEntered(MouseEvent e)
+            {
+                if (button.isEnabled())
+                {
                     button.setBackground(JStudioTheme.getHover());
                 }
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
+            public void mouseExited(MouseEvent e)
+            {
                 button.setBackground(JStudioTheme.getBgTertiary());
             }
         });
@@ -174,17 +185,21 @@ public class PathBar extends JPanel {
     /**
      * Set the current directory and update breadcrumbs.
      */
-    public void setCurrentDirectory(File directory) {
-        if (directory == null || !directory.exists()) {
+    public void setCurrentDirectory(File directory)
+    {
+        if (directory == null || !directory.exists())
+        {
             return;
         }
 
         this.currentDirectory = directory;
 
         // Add to history
-        if (historyIndex < 0 || !directory.equals(history.get(historyIndex))) {
+        if (historyIndex < 0 || !directory.equals(history.get(historyIndex)))
+        {
             // Remove forward history
-            while (history.size() > historyIndex + 1) {
+            while (history.size() > historyIndex + 1)
+            {
                 history.remove(history.size() - 1);
             }
             history.add(directory);
@@ -198,10 +213,12 @@ public class PathBar extends JPanel {
     /**
      * Update the breadcrumb display.
      */
-    private void updateBreadcrumbs() {
+    private void updateBreadcrumbs()
+    {
         breadcrumbPanel.removeAll();
 
-        if (currentDirectory == null) {
+        if (currentDirectory == null)
+        {
             breadcrumbPanel.revalidate();
             breadcrumbPanel.repaint();
             return;
@@ -210,16 +227,19 @@ public class PathBar extends JPanel {
         // Build path segments
         List<File> segments = new ArrayList<>();
         File current = currentDirectory;
-        while (current != null) {
+        while (current != null)
+        {
             segments.add(0, current);
             current = current.getParentFile();
         }
 
         // Create breadcrumb buttons
-        for (int i = 0; i < segments.size(); i++) {
+        for (int i = 0; i < segments.size(); i++)
+        {
             File segment = segments.get(i);
 
-            if (i > 0) {
+            if (i > 0)
+            {
                 JButton separator = createSeparator();
                 breadcrumbPanel.add(separator);
             }
@@ -232,9 +252,11 @@ public class PathBar extends JPanel {
         breadcrumbPanel.repaint();
     }
 
-    private JButton createBreadcrumb(File segment) {
+    private JButton createBreadcrumb(File segment)
+    {
         String name = FileSystemWorker.getDisplayName(segment);
-        if (name.isEmpty()) {
+        if (name.isEmpty())
+        {
             name = segment.getAbsolutePath();
         }
 
@@ -247,20 +269,25 @@ public class PathBar extends JPanel {
         button.setContentAreaFilled(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        button.addMouseListener(new MouseAdapter() {
+        button.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseEntered(MouseEvent e) {
+            public void mouseEntered(MouseEvent e)
+            {
                 button.setForeground(JStudioTheme.getAccent());
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
+            public void mouseExited(MouseEvent e)
+            {
                 button.setForeground(JStudioTheme.getTextPrimary());
             }
         });
 
-        button.addActionListener(e -> {
-            if (listener != null) {
+        button.addActionListener(e ->
+        {
+            if (listener != null)
+            {
                 listener.onNavigate(segment);
             }
         });
@@ -268,7 +295,8 @@ public class PathBar extends JPanel {
         return button;
     }
 
-    private JButton createSeparator() {
+    private JButton createSeparator()
+    {
         JButton sep = new JButton(">");
         sep.setFont(JStudioTheme.getUIFont(10));
         sep.setForeground(JStudioTheme.getTextSecondary());
@@ -283,14 +311,15 @@ public class PathBar extends JPanel {
     /**
      * Enter edit mode to type/paste a path.
      */
-    public void enterEditMode() {
-        if (inEditMode) {
+    public void enterEditMode()
+    {
+        if (inEditMode)
+        {
             return;
         }
 
         inEditMode = true;
-        pathTextField.setText(currentDirectory != null ?
-                currentDirectory.getAbsolutePath() : "");
+        pathTextField.setText(currentDirectory != null ? currentDirectory.getAbsolutePath() : "");
         pathCardLayout.show(pathContainer, "edit");
         pathTextField.requestFocusInWindow();
         pathTextField.selectAll();
@@ -299,8 +328,10 @@ public class PathBar extends JPanel {
     /**
      * Exit edit mode without applying changes.
      */
-    private void exitEditMode() {
-        if (!inEditMode) {
+    private void exitEditMode()
+    {
+        if (!inEditMode)
+        {
             return;
         }
 
@@ -311,26 +342,35 @@ public class PathBar extends JPanel {
     /**
      * Apply the edited path and navigate.
      */
-    private void applyEditedPath() {
+    private void applyEditedPath()
+    {
         String path = pathTextField.getText().trim();
         exitEditMode();
 
-        if (path.isEmpty()) {
+        if (path.isEmpty())
+        {
             return;
         }
 
         File dir = new File(path);
-        if (dir.exists() && dir.isDirectory()) {
-            if (listener != null) {
+        if (dir.exists() && dir.isDirectory())
+        {
+            if (listener != null)
+            {
                 listener.onNavigate(dir);
             }
-        } else if (dir.exists() && dir.isFile()) {
+        }
+        else if (dir.exists() && dir.isFile())
+        {
             // If user typed a file, navigate to its parent
             File parent = dir.getParentFile();
-            if (parent != null && listener != null) {
+            if (parent != null && listener != null)
+            {
                 listener.onNavigate(parent);
             }
-        } else {
+        }
+        else
+        {
             // Invalid path - flash red briefly
             Color original = pathTextField.getBackground();
             Color errorBg = new Color(JStudioTheme.getError().getRed() / 3, JStudioTheme.getError().getGreen() / 6, JStudioTheme.getError().getBlue() / 6);
@@ -345,24 +385,27 @@ public class PathBar extends JPanel {
     /**
      * Update navigation button enabled states.
      */
-    private void updateNavigationButtons() {
+    private void updateNavigationButtons()
+    {
         backButton.setEnabled(historyIndex > 0);
         forwardButton.setEnabled(historyIndex < history.size() - 1);
-        upButton.setEnabled(currentDirectory != null &&
-                currentDirectory.getParentFile() != null);
+        upButton.setEnabled(currentDirectory != null && currentDirectory.getParentFile() != null);
     }
 
     /**
      * Navigate back in history.
      */
-    public void goBack() {
-        if (historyIndex > 0) {
+    public void goBack()
+    {
+        if (historyIndex > 0)
+        {
             historyIndex--;
             File dir = history.get(historyIndex);
             currentDirectory = dir;
             updateBreadcrumbs();
             updateNavigationButtons();
-            if (listener != null) {
+            if (listener != null)
+            {
                 listener.onNavigate(dir);
             }
         }
@@ -371,14 +414,17 @@ public class PathBar extends JPanel {
     /**
      * Navigate forward in history.
      */
-    public void goForward() {
-        if (historyIndex < history.size() - 1) {
+    public void goForward()
+    {
+        if (historyIndex < history.size() - 1)
+        {
             historyIndex++;
             File dir = history.get(historyIndex);
             currentDirectory = dir;
             updateBreadcrumbs();
             updateNavigationButtons();
-            if (listener != null) {
+            if (listener != null)
+            {
                 listener.onNavigate(dir);
             }
         }
@@ -387,10 +433,13 @@ public class PathBar extends JPanel {
     /**
      * Navigate to parent directory.
      */
-    public void goUp() {
-        if (currentDirectory != null) {
+    public void goUp()
+    {
+        if (currentDirectory != null)
+        {
             File parent = currentDirectory.getParentFile();
-            if (parent != null && listener != null) {
+            if (parent != null && listener != null)
+            {
                 listener.onNavigate(parent);
             }
         }
@@ -399,7 +448,8 @@ public class PathBar extends JPanel {
     /**
      * Focus the path bar for editing (Ctrl+L shortcut).
      */
-    public void focusPathBar() {
+    public void focusPathBar()
+    {
         enterEditMode();
     }
 }

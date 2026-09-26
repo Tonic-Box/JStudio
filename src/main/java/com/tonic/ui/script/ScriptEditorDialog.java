@@ -14,7 +14,8 @@ import java.awt.event.WindowEvent;
  * Dialog wrapper for the script editor panel.
  */
 @Getter
-public class ScriptEditorDialog extends JDialog {
+public class ScriptEditorDialog extends JDialog
+{
 
     /**
      * -- GETTER --
@@ -22,7 +23,8 @@ public class ScriptEditorDialog extends JDialog {
      */
     private final ScriptEditorPanel editorPanel;
 
-    public ScriptEditorDialog(MainFrame parent) {
+    public ScriptEditorDialog(MainFrame parent)
+    {
         super(parent, "JStudio Script Editor", false);
 
         editorPanel = new ScriptEditorPanel();
@@ -36,9 +38,11 @@ public class ScriptEditorDialog extends JDialog {
 
         // Handle close
         setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
+        addWindowListener(new WindowAdapter()
+        {
             @Override
-            public void windowClosing(WindowEvent e) {
+            public void windowClosing(WindowEvent e)
+            {
                 // Just hide, don't dispose - keeps state
             }
         });
@@ -47,21 +51,24 @@ public class ScriptEditorDialog extends JDialog {
     /**
      * Sets the project model for the editor.
      */
-    public void setProjectModel(ProjectModel model) {
+    public void setProjectModel(ProjectModel model)
+    {
         editorPanel.setProjectModel(model);
     }
 
     /**
      * Sets the current class for targeting.
      */
-    public void setClass(ClassEntryModel classEntry) {
+    public void setClass(ClassEntryModel classEntry)
+    {
         editorPanel.setClass(classEntry);
     }
 
     /**
      * Sets a callback to run when transforms complete.
      */
-    public void setOnTransformComplete(Runnable callback) {
+    public void setOnTransformComplete(Runnable callback)
+    {
         editorPanel.setOnTransformComplete(callback);
     }
 

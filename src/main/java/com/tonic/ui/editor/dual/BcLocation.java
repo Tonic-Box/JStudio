@@ -7,20 +7,23 @@ import lombok.Getter;
  * descriptor plus the instruction's bytecode offset.
  */
 @Getter
-public final class BcLocation {
+public final class BcLocation
+{
 
     private final String methodName;
     private final String methodDesc;
     private final int pc;
 
-    public BcLocation(String methodName, String methodDesc, int pc) {
+    public BcLocation(String methodName, String methodDesc, int pc)
+    {
         this.methodName = methodName;
         this.methodDesc = methodDesc;
         this.pc = pc;
     }
 
     /** The {@code name + desc} key used by the decompiler's per-method maps. */
-    public String key() {
+    public String key()
+    {
         return methodName + methodDesc;
     }
 }

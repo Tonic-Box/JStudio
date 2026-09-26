@@ -13,7 +13,8 @@ import java.util.Set;
 /**
  * Contains the complete results of simulation analysis for a single method.
  */
-public class SimulationAnalysisResult {
+public class SimulationAnalysisResult
+{
 
     @Getter
     private final MethodEntryModel method;
@@ -26,12 +27,8 @@ public class SimulationAnalysisResult {
     @Getter
     private final int branchCount;
 
-    public SimulationAnalysisResult(MethodEntryModel method,
-                                    SimulationResult engineResult,
-                                    List<SimulationFinding> findings,
-                                    Set<IRBlock> deadBlocks,
-                                    int blocksVisited,
-                                    int branchCount) {
+    public SimulationAnalysisResult(MethodEntryModel method, SimulationResult engineResult, List<SimulationFinding> findings, Set<IRBlock> deadBlocks, int blocksVisited, int branchCount)
+    {
         this.method = method;
         this.engineResult = engineResult;
         this.findings = findings != null ? findings : Collections.emptyList();
@@ -40,42 +37,51 @@ public class SimulationAnalysisResult {
         this.branchCount = branchCount;
     }
 
-    public List<SimulationFinding> getFindings() {
+    public List<SimulationFinding> getFindings()
+    {
         return Collections.unmodifiableList(findings);
     }
 
-    public Set<IRBlock> getDeadBlocks() {
+    public Set<IRBlock> getDeadBlocks()
+    {
         return Collections.unmodifiableSet(deadBlocks);
     }
 
-    public boolean hasFindings() {
+    public boolean hasFindings()
+    {
         return !findings.isEmpty() || !deadBlocks.isEmpty();
     }
 
-    public int getOpaquePredicateCount() {
+    public int getOpaquePredicateCount()
+    {
         return (int) findings.stream()
                 .filter(f -> f.getType() == SimulationFinding.FindingType.OPAQUE_PREDICATE)
                 .count();
     }
 
-    public int getDeadBlockCount() {
+    public int getDeadBlockCount()
+    {
         return deadBlocks.size();
     }
 
-    public int getTotalInstructions() {
+    public int getTotalInstructions()
+    {
         return engineResult != null ? engineResult.getTotalInstructions() : 0;
     }
 
-    public int getMaxStackDepth() {
+    public int getMaxStackDepth()
+    {
         return engineResult != null ? engineResult.getMaxStackDepth() : 0;
     }
 
-    public double getSimulationTimeMillis() {
+    public double getSimulationTimeMillis()
+    {
         return engineResult != null ? engineResult.getSimulationTimeMillis() : 0;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "SimulationAnalysisResult[" +
                 "method=" + (method != null ? method.getDisplaySignature() : "null") +
                 ", findings=" + findings.size() +

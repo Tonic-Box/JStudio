@@ -10,31 +10,37 @@ import java.util.Objects;
  * ({@code -1} when unknown). JFR reports class names dotted, so callers convert before constructing.
  */
 @Getter
-public final class FrameKey {
+public final class FrameKey
+{
 
     private final String classInternal;
     private final String method;
     private final int line;
 
-    public FrameKey(String classInternal, String method, int line) {
+    public FrameKey(String classInternal, String method, int line)
+    {
         this.classInternal = classInternal;
         this.method = method;
         this.line = line;
     }
 
     /** Simple class name + method, for display (e.g. {@code Bar.doWork}). */
-    public String displayLabel() {
+    public String displayLabel()
+    {
         int slash = classInternal.lastIndexOf('/');
         String simple = slash >= 0 ? classInternal.substring(slash + 1) : classInternal;
         return simple + "." + method;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
             return true;
         }
-        if (!(o instanceof FrameKey)) {
+        if (!(o instanceof FrameKey))
+        {
             return false;
         }
         FrameKey other = (FrameKey) o;
@@ -42,7 +48,8 @@ public final class FrameKey {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(classInternal, method, line);
     }
 }

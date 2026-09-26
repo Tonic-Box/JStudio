@@ -21,7 +21,8 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
-public class HeapForensicsListener implements BytecodeListener {
+public class HeapForensicsListener implements BytecodeListener
+{
 
     private final HeapForensicsTracker tracker;
     private final Deque<StackFrame> callStackFrames = new ArrayDeque<>();
@@ -39,86 +40,91 @@ public class HeapForensicsListener implements BytecodeListener {
     @Getter
     private long instructionCount = 0;
 
-    public HeapForensicsListener(HeapForensicsTracker tracker) {
+    public HeapForensicsListener(HeapForensicsTracker tracker)
+    {
         this.tracker = tracker;
     }
 
-    public void setProvenanceDepth(int depth) {
+    public void setProvenanceDepth(int depth)
+    {
         this.provenanceDepth = Math.max(0, Math.min(depth, 10));
     }
 
     @Override
-    public void onExecutionStart(MethodEntry entryPoint) {
+    public void onExecutionStart(MethodEntry entryPoint)
+    {
         callStackFrames.clear();
-        ConsoleLogService.getInstance().debug("[HeapForensics] === START: " +
-            (entryPoint != null ? entryPoint.getOwnerName() + "." + entryPoint.getName() : "null") + " ===");
+        ConsoleLogService.getInstance().debug("[HeapForensics] === START: " + (entryPoint != null ? entryPoint.getOwnerName() + "." + entryPoint.getName() : "null") + " ===");
         instructionCount = 0;
         tracker.onExecutionStart();
     }
 
     @Override
-    public void onExecutionEnd(BytecodeResult result) {
-        ConsoleLogService.getInstance().debug("[HeapForensics] === END: instructions=" + instructionCount +
-            ", allocations=" + tracker.getTotalAllocationCount() +
-            ", result=" + (result != null ? result : "null") + " ===");
-        if (result != null && result.getException() != null) {
+    public void onExecutionEnd(BytecodeResult result)
+    {
+        ConsoleLogService.getInstance().debug("[HeapForensics] === END: instructions=" + instructionCount + ", allocations=" + tracker.getTotalAllocationCount() + ", result=" + (result != null ? result : "null") + " ===");
+        if (result != null && result.getException() != null)
+        {
             ConsoleLogService.getInstance().error("[HeapForensics] EXCEPTION", result.getException());
         }
         tracker.onExecutionEnd(instructionCount);
     }
 
     @Override
-    public void beforeInstruction(StackFrame frame, Instruction instruction) {
+    public void beforeInstruction(StackFrame frame, Instruction instruction)
+    {
         currentFrame = frame;
     }
 
     @Override
-    public void afterInstruction(StackFrame frame, Instruction instruction) {
+    public void afterInstruction(StackFrame frame, Instruction instruction)
+    {
         instructionCount++;
         currentFrame = frame;
     }
 
     @Override
-    public void onObjectAllocation(ObjectInstance instance) {
-        ConsoleLogService.getInstance().debug("[HeapForensics] OBJECT ALLOC: " + instance.getClassName() +
-            " id=" + instance.getId() + " at instruction " + instructionCount);
+    public void onObjectAllocation(ObjectInstance instance)
+    {
+        ConsoleLogService.getInstance().debug("[HeapForensics] OBJECT ALLOC: " + instance.getClassName() + " id=" + instance.getId() + " at instruction " + instructionCount);
 
         ProvenanceInfo provenance = captureProvenance();
 
         AllocationEvent event = AllocationEvent.builder()
-            .objectId(instance.getId())
-            .className(instance.getClassName())
-            .opcode(0xBB)
-            .instructionCount(instructionCount)
-            .provenance(provenance)
-            .build();
+                .objectId(instance.getId())
+                .className(instance.getClassName())
+                .opcode(0xBB)
+                .instructionCount(instructionCount)
+                .provenance(provenance)
+                .build();
 
         tracker.recordAllocation(event, instance);
     }
 
     @Override
-    public void onArrayAllocation(ArrayInstance array) {
-        ConsoleLogService.getInstance().debug("[HeapForensics] ARRAY ALLOC: " + array.getComponentType() + "[] " +
-            "length=" + array.getLength() + " id=" + array.getId() + " at instruction " + instructionCount);
+    public void onArrayAllocation(ArrayInstance array)
+    {
+        ConsoleLogService.getInstance().debug("[HeapForensics] ARRAY ALLOC: " + array.getComponentType() + "[] " + "length=" + array.getLength() + " id=" + array.getId() + " at instruction " + instructionCount);
 
         ProvenanceInfo provenance = captureProvenance();
 
         AllocationEvent event = AllocationEvent.builder()
-            .objectId(array.getId())
-            .className(array.getComponentType() + "[]")
-            .opcode(0xBD)
-            .instructionCount(instructionCount)
-            .provenance(provenance)
-            .arrayLength(array.getLength())
-            .build();
+                .objectId(array.getId())
+                .className(array.getComponentType() + "[]")
+                .opcode(0xBD)
+                .instructionCount(instructionCount)
+                .provenance(provenance)
+                .arrayLength(array.getLength())
+                .build();
 
         tracker.recordAllocation(event, array);
     }
 
     @Override
-    public void onFieldWrite(ObjectInstance instance, String fieldName,
-                             ConcreteValue oldValue, ConcreteValue newValue) {
-        if (!trackMutations) {
+    public void onFieldWrite(ObjectInstance instance, String fieldName, ConcreteValue oldValue, ConcreteValue newValue)
+    {
+        if (!trackMutations)
+        {
             return;
         }
 
@@ -128,60 +134,66 @@ public class HeapForensicsListener implements BytecodeListener {
         String fieldDescriptor = inferDescriptor(newValue);
 
         MutationEvent event = MutationEvent.builder()
-            .objectId(instance.getId())
-            .fieldOwner(fieldOwner)
-            .fieldName(fieldName)
-            .fieldDescriptor(fieldDescriptor)
-            .oldValue(unwrapValue(oldValue))
-            .newValue(unwrapValue(newValue))
-            .instructionCount(instructionCount)
-            .opcode(0xB5)
-            .provenance(provenance)
-            .build();
+                .objectId(instance.getId())
+                .fieldOwner(fieldOwner)
+                .fieldName(fieldName)
+                .fieldDescriptor(fieldDescriptor)
+                .oldValue(unwrapValue(oldValue))
+                .newValue(unwrapValue(newValue))
+                .instructionCount(instructionCount)
+                .opcode(0xB5)
+                .provenance(provenance)
+                .build();
 
         tracker.recordMutation(event);
     }
 
     @Override
-    public void onArrayWrite(ArrayInstance array, int index,
-                             ConcreteValue oldValue, ConcreteValue newValue) {
-        if (!trackMutations) {
+    public void onArrayWrite(ArrayInstance array, int index, ConcreteValue oldValue, ConcreteValue newValue)
+    {
+        if (!trackMutations)
+        {
             return;
         }
 
         ProvenanceInfo provenance = provenanceDepth > 0 ? captureProvenance() : null;
 
         MutationEvent event = MutationEvent.builder()
-            .objectId(array.getId())
-            .fieldOwner(array.getComponentType() + "[]")
-            .fieldName("[" + index + "]")
-            .fieldDescriptor(array.getComponentType())
-            .oldValue(unwrapValue(oldValue))
-            .newValue(unwrapValue(newValue))
-            .instructionCount(instructionCount)
-            .opcode(0x4F)
-            .provenance(provenance)
-            .build();
+                .objectId(array.getId())
+                .fieldOwner(array.getComponentType() + "[]")
+                .fieldName("[" + index + "]")
+                .fieldDescriptor(array.getComponentType())
+                .oldValue(unwrapValue(oldValue))
+                .newValue(unwrapValue(newValue))
+                .instructionCount(instructionCount)
+                .opcode(0x4F)
+                .provenance(provenance)
+                .build();
 
         tracker.recordMutation(event);
     }
 
     @Override
-    public void onFramePush(StackFrame frame) {
+    public void onFramePush(StackFrame frame)
+    {
         callStackFrames.push(frame);
         currentFrame = frame;
     }
 
     @Override
-    public void onFramePop(StackFrame frame, ConcreteValue returnValue) {
-        if (!callStackFrames.isEmpty()) {
+    public void onFramePop(StackFrame frame, ConcreteValue returnValue)
+    {
+        if (!callStackFrames.isEmpty())
+        {
             callStackFrames.pop();
         }
         currentFrame = callStackFrames.peek();
     }
 
-    private ProvenanceInfo captureProvenance() {
-        if (provenanceDepth == 0 || currentFrame == null) {
+    private ProvenanceInfo captureProvenance()
+    {
+        if (provenanceDepth == 0 || currentFrame == null)
+        {
             return null;
         }
 
@@ -190,14 +202,15 @@ public class HeapForensicsListener implements BytecodeListener {
         int lineNumber = getLineNumber(method, pc);
 
         ProvenanceInfo.Builder builder = ProvenanceInfo.builder()
-            .className(method.getOwnerName())
-            .methodName(method.getName())
-            .descriptor(method.getDesc())
-            .methodSignature(method.getOwnerName() + "." + method.getName() + method.getDesc())
-            .pc(pc)
-            .lineNumber(lineNumber);
+                .className(method.getOwnerName())
+                .methodName(method.getName())
+                .descriptor(method.getDesc())
+                .methodSignature(method.getOwnerName() + "." + method.getName() + method.getDesc())
+                .pc(pc)
+                .lineNumber(lineNumber);
 
-        if (provenanceDepth > 1) {
+        if (provenanceDepth > 1)
+        {
             List<ProvenanceInfo.StackFrameInfo> callStack = captureCallStack(provenanceDepth - 1);
             builder.callStack(callStack);
         }
@@ -205,46 +218,53 @@ public class HeapForensicsListener implements BytecodeListener {
         return builder.build();
     }
 
-    private List<ProvenanceInfo.StackFrameInfo> captureCallStack(int maxFrames) {
+    private List<ProvenanceInfo.StackFrameInfo> captureCallStack(int maxFrames)
+    {
         List<ProvenanceInfo.StackFrameInfo> frames = new ArrayList<>();
         int count = 0;
-        for (StackFrame frame : callStackFrames) {
-            if (frame == currentFrame) {
+        for (StackFrame frame : callStackFrames)
+        {
+            if (frame == currentFrame)
+            {
                 continue;
             }
-            if (count >= maxFrames) {
+            if (count >= maxFrames)
+            {
                 break;
             }
             MethodEntry method = frame.getMethod();
             int pc = frame.getPC();
             int lineNumber = getLineNumber(method, pc);
-            frames.add(new ProvenanceInfo.StackFrameInfo(
-                method.getOwnerName(),
-                method.getName(),
-                method.getDesc(),
-                pc,
-                lineNumber
-            ));
+            frames.add(new ProvenanceInfo.StackFrameInfo(method.getOwnerName(), method.getName(), method.getDesc(), pc, lineNumber));
             count++;
         }
         return frames;
     }
 
-    private int getLineNumber(MethodEntry method, int pc) {
-        try {
+    private int getLineNumber(MethodEntry method, int pc)
+    {
+        try
+        {
             var codeAttr = method.getCodeAttribute();
-            if (codeAttr != null) {
-                for (var attr : codeAttr.getAttributes()) {
-                    if (attr instanceof LineNumberTableAttribute) {
+            if (codeAttr != null)
+            {
+                for (var attr : codeAttr.getAttributes())
+                {
+                    if (attr instanceof LineNumberTableAttribute)
+                    {
                         var lnt = (LineNumberTableAttribute) attr;
                         var entries = lnt.getLineNumberTable();
                         if (entries == null || entries.isEmpty()) return -1;
 
                         int lineNum = -1;
-                        for (var entry : entries) {
-                            if (entry.getStartPc() <= pc) {
+                        for (var entry : entries)
+                        {
+                            if (entry.getStartPc() <= pc)
+                            {
                                 lineNum = entry.getLineNumber();
-                            } else {
+                            }
+                            else
+                            {
                                 break;
                             }
                         }
@@ -252,23 +272,33 @@ public class HeapForensicsListener implements BytecodeListener {
                     }
                 }
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
         return -1;
     }
 
-    private String inferDescriptor(ConcreteValue value) {
-        if (value == null || value.isNull()) {
+    private String inferDescriptor(ConcreteValue value)
+    {
+        if (value == null || value.isNull())
+        {
             return "Ljava/lang/Object;";
         }
-        switch (value.getTag()) {
-            case INT: return "I";
-            case LONG: return "J";
-            case FLOAT: return "F";
-            case DOUBLE: return "D";
+        switch (value.getTag())
+        {
+            case INT:
+                return "I";
+            case LONG:
+                return "J";
+            case FLOAT:
+                return "F";
+            case DOUBLE:
+                return "D";
             case REFERENCE:
                 ObjectInstance ref = value.asReference();
-                if (ref != null) {
+                if (ref != null)
+                {
                     return "L" + ref.getClassName() + ";";
                 }
                 return "Ljava/lang/Object;";
@@ -277,21 +307,31 @@ public class HeapForensicsListener implements BytecodeListener {
         }
     }
 
-    private Object unwrapValue(ConcreteValue value) {
-        if (value == null || value.isNull()) {
+    private Object unwrapValue(ConcreteValue value)
+    {
+        if (value == null || value.isNull())
+        {
             return null;
         }
-        switch (value.getTag()) {
-            case INT: return value.asInt();
-            case LONG: return value.asLong();
-            case FLOAT: return value.asFloat();
-            case DOUBLE: return value.asDouble();
-            case REFERENCE: return value.asReference();
-            default: return null;
+        switch (value.getTag())
+        {
+            case INT:
+                return value.asInt();
+            case LONG:
+                return value.asLong();
+            case FLOAT:
+                return value.asFloat();
+            case DOUBLE:
+                return value.asDouble();
+            case REFERENCE:
+                return value.asReference();
+            default:
+                return null;
         }
     }
 
-    public void reset() {
+    public void reset()
+    {
         instructionCount = 0;
         currentFrame = null;
         callStackFrames.clear();

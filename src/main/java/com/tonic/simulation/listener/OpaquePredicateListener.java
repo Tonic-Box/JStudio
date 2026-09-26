@@ -24,28 +24,33 @@ import java.util.Map;
  * - Add dead code paths
  * - Implement anti-tampering checks
  */
-public class OpaquePredicateListener extends AbstractListener {
+public class OpaquePredicateListener extends AbstractListener
+{
 
     private final Map<Integer, BranchAnalysis> branchAnalyses = new HashMap<>();
     private final List<BranchAnalysis> confirmedOpaquePredicates = new ArrayList<>();
 
     @Override
-    public void onSimulationStart(IRMethod method) {
+    public void onSimulationStart(IRMethod method)
+    {
         super.onSimulationStart(method);
         branchAnalyses.clear();
         confirmedOpaquePredicates.clear();
     }
 
     @Override
-    public void onBranch(BranchInstruction instr, boolean taken, SimulationState state) {
-        if (instr == null || instr.getCondition() == null) {
+    public void onBranch(BranchInstruction instr, boolean taken, SimulationState state)
+    {
+        if (instr == null || instr.getCondition() == null)
+        {
             return;
         }
 
         int instrId = System.identityHashCode(instr);
         BranchAnalysis analysis = branchAnalyses.get(instrId);
 
-        if (analysis == null) {
+        if (analysis == null)
+        {
             analysis = new BranchAnalysis(instr);
             branchAnalyses.put(instrId, analysis);
         }
@@ -55,48 +60,62 @@ public class OpaquePredicateListener extends AbstractListener {
     }
 
     @Override
-    public void onSimulationEnd(IRMethod method, SimulationResult result) {
+    public void onSimulationEnd(IRMethod method, SimulationResult result)
+    {
         super.onSimulationEnd(method, result);
 
-        for (BranchAnalysis analysis : branchAnalyses.values()) {
-            if (analysis.isOpaque()) {
+        for (BranchAnalysis analysis : branchAnalyses.values())
+        {
+            if (analysis.isOpaque())
+            {
                 confirmedOpaquePredicates.add(analysis);
             }
         }
     }
 
-    public List<BranchAnalysis> getAnalyzedBranches() {
+    public List<BranchAnalysis> getAnalyzedBranches()
+    {
         return List.copyOf(branchAnalyses.values());
     }
 
-    public List<BranchAnalysis> getOpaquePredicates() {
+    public List<BranchAnalysis> getOpaquePredicates()
+    {
         return Collections.unmodifiableList(confirmedOpaquePredicates);
     }
 
-    public int getOpaquePredicateCount() {
+    public int getOpaquePredicateCount()
+    {
         return confirmedOpaquePredicates.size();
     }
 
-    public boolean hasOpaquePredicates() {
+    public boolean hasOpaquePredicates()
+    {
         return !confirmedOpaquePredicates.isEmpty();
     }
 
-    private boolean evaluateCondition(BranchInstruction instr, SimulationState state) {
-        if (state == null || state.stackDepth() == 0) {
+    private boolean evaluateCondition(BranchInstruction instr, SimulationState state)
+    {
+        if (state == null || state.stackDepth() == 0)
+        {
             return true;
         }
 
         SimValue topValue = state.peek(0);
-        if (topValue == null) {
+        if (topValue == null)
+        {
             return true;
         }
 
-        if (topValue.isConstant()) {
+        if (topValue.isConstant())
+        {
             Object constant = topValue.getConstantValue();
-            if (constant instanceof Number) {
+            if (constant instanceof Number)
+            {
                 int value = ((Number) constant).intValue();
                 return evaluateComparisonResult(instr.getCondition(), value);
-            } else if (constant instanceof Boolean) {
+            }
+            else if (constant instanceof Boolean)
+            {
                 return (Boolean) constant;
             }
         }
@@ -104,12 +123,15 @@ public class OpaquePredicateListener extends AbstractListener {
         return true;
     }
 
-    private boolean evaluateComparisonResult(CompareOp op, int value) {
-        if (op == null) {
+    private boolean evaluateComparisonResult(CompareOp op, int value)
+    {
+        if (op == null)
+        {
             return true;
         }
 
-        switch (op) {
+        switch (op)
+        {
             case EQ:
             case IFEQ:
             case ACMPEQ:
@@ -147,56 +169,71 @@ public class OpaquePredicateListener extends AbstractListener {
      * Tracks the analysis state of a single branch instruction.
      */
     @Getter
-    public static class BranchAnalysis {
+    public static class BranchAnalysis
+    {
         private final BranchInstruction instruction;
         private int trueCount = 0;
         private int falseCount = 0;
         private int executionCount = 0;
 
-        public BranchAnalysis(BranchInstruction instruction) {
+        public BranchAnalysis(BranchInstruction instruction)
+        {
             this.instruction = instruction;
         }
 
-        public void recordExecution(boolean conditionResult) {
+        public void recordExecution(boolean conditionResult)
+        {
             executionCount++;
-            if (conditionResult) {
+            if (conditionResult)
+            {
                 trueCount++;
-            } else {
+            }
+            else
+            {
                 falseCount++;
             }
         }
 
-        public boolean isOpaque() {
-            if (executionCount == 0) {
+        public boolean isOpaque()
+        {
+            if (executionCount == 0)
+            {
                 return false;
             }
             return trueCount == 0 || falseCount == 0;
         }
 
-        public boolean isAlwaysTrue() {
+        public boolean isAlwaysTrue()
+        {
             return executionCount > 0 && falseCount == 0;
         }
 
-        public boolean isAlwaysFalse() {
+        public boolean isAlwaysFalse()
+        {
             return executionCount > 0 && trueCount == 0;
         }
 
-        public int getBlockId() {
-            if (instruction != null && instruction.getBlock() != null) {
+        public int getBlockId()
+        {
+            if (instruction != null && instruction.getBlock() != null)
+            {
                 return instruction.getBlock().getId();
             }
             return -1;
         }
 
-        public int getBytecodeOffset() {
-            if (instruction != null) {
+        public int getBytecodeOffset()
+        {
+            if (instruction != null)
+            {
                 return instruction.getId();
             }
             return -1;
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return "BranchAnalysis[" +
                     "block=" + getBlockId() +
                     ", executions=" + executionCount +

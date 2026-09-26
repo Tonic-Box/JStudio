@@ -41,23 +41,27 @@ import java.util.Objects;
  * <p>Event-driven, not polling: the only timer is a client-side clock for the "Recording mm:ss" label, so the
  * (serial) connection stays free. Network calls run off the EDT via {@link SwingWorkers}.
  */
-public final class LiveRecorderPanel extends ThemedJPanel {
+public final class LiveRecorderPanel extends ThemedJPanel
+{
 
     /** A base JFR configuration: display label + the {@code jdk.jfr} configuration name. */
-    private enum Profile {
+    private enum Profile
+    {
         PROFILE("Profile (detailed)", "profile"),
         DEFAULT("Default (low overhead)", "default");
 
         private final String label;
         private final String config;
 
-        Profile(String label, String config) {
+        Profile(String label, String config)
+        {
             this.label = label;
             this.config = config;
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return label;
         }
     }
@@ -86,7 +90,8 @@ public final class LiveRecorderPanel extends ThemedJPanel {
     private long startNanos;
     private boolean recording;
 
-    public LiveRecorderPanel(MainFrame mainFrame) {
+    public LiveRecorderPanel(MainFrame mainFrame)
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.mainFrame = mainFrame;
 
@@ -101,10 +106,13 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         saveAsButton.addActionListener(e -> saveSelectedAs());
         clearButton.addActionListener(e -> clearCaptured());
         capturedList.addListSelectionListener(e -> updateButtons());
-        capturedList.addMouseListener(new MouseAdapter() {
+        capturedList.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
                     analyzeSelected();
                 }
             }
@@ -113,7 +121,8 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         updateButtons();
     }
 
-    private ThemedJPanel buildControls() {
+    private ThemedJPanel buildControls()
+    {
         ThemedJPanel panel = new ThemedJPanel(BackgroundStyle.PRIMARY, null);
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
@@ -124,7 +133,8 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         profileRow.add(profileCombo);
 
         ThemedJPanel eventRow = new ThemedJPanel(BackgroundStyle.PRIMARY, new FlowLayout(FlowLayout.LEFT, 6, 0));
-        for (JCheckBox box : new JCheckBox[]{cpu, alloc, locks, exceptions}) {
+        for (JCheckBox box : new JCheckBox[]{cpu, alloc, locks, exceptions})
+        {
             box.setOpaque(false);
             box.setForeground(JStudioTheme.getTextPrimary());
             box.setFocusable(false);
@@ -132,7 +142,8 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         }
 
         ThemedJPanel buttonRow = new ThemedJPanel(BackgroundStyle.PRIMARY, new FlowLayout(FlowLayout.LEFT, 6, 2));
-        for (JButton button : new JButton[]{startButton, stopButton, snapshotButton}) {
+        for (JButton button : new JButton[]{startButton, stopButton, snapshotButton})
+        {
             button.setFocusable(false);
             buttonRow.add(button);
         }
@@ -149,7 +160,8 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         return panel;
     }
 
-    private ThemedJScrollPane buildCapturedList() {
+    private ThemedJScrollPane buildCapturedList()
+    {
         capturedList.setBackground(JStudioTheme.getBgSecondary());
         capturedList.setForeground(JStudioTheme.getTextPrimary());
         capturedList.setSelectionBackground(JStudioTheme.getSelection());
@@ -158,9 +170,11 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         return new ThemedJScrollPane(capturedList);
     }
 
-    private ThemedJPanel buildActions() {
+    private ThemedJPanel buildActions()
+    {
         ThemedJPanel panel = new ThemedJPanel(BackgroundStyle.PRIMARY, new FlowLayout(FlowLayout.LEFT, 6, 2));
-        for (JButton button : new JButton[]{analyzeButton, saveAsButton, clearButton}) {
+        for (JButton button : new JButton[]{analyzeButton, saveAsButton, clearButton})
+        {
             button.setFocusable(false);
             panel.add(button);
         }
@@ -168,74 +182,83 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         return panel;
     }
 
-    private void analyzeSelected() {
+    private void analyzeSelected()
+    {
         CapturedRecording rec = capturedList.getSelectedValue();
-        if (rec != null) {
+        if (rec != null)
+        {
             mainFrame.showJfrAnalysis(rec.file);
         }
     }
 
-    private void start() {
+    private void start()
+    {
         LiveSession session = LiveAttachService.getInstance().getSession();
-        if (session == null) {
+        if (session == null)
+        {
             statusLabel.setText("Not attached.");
             return;
         }
         String config = ((Profile) Objects.requireNonNull(profileCombo.getSelectedItem())).config;
         int mask = categoryMask();
         setBusy("Starting recording...");
-        SwingWorkers.run(
-                () -> {
-                    session.startRecording(config, mask, 0);
-                    return null;
-                },
-                ignored -> {
-                    recording = true;
-                    startNanos = System.nanoTime();
-                    clock.start();
-                    tickClock();
-                    updateButtons();
-                },
-                err -> {
-                    statusLabel.setText("Start failed: " + err.getMessage());
-                    updateButtons();
-                });
+        SwingWorkers.run(() ->
+        {
+            session.startRecording(config, mask, 0);
+            return null;
+        }, ignored ->
+        {
+            recording = true;
+            startNanos = System.nanoTime();
+            clock.start();
+            tickClock();
+            updateButtons();
+        }, err ->
+        {
+            statusLabel.setText("Start failed: " + err.getMessage());
+            updateButtons();
+        });
     }
 
-    private void stop() {
+    private void stop()
+    {
         LiveSession session = LiveAttachService.getInstance().getSession();
         runCapture(session == null ? null : session::stopRecording, true, "Stopping...");
     }
 
-    private void snapshot() {
+    private void snapshot()
+    {
         LiveSession session = LiveAttachService.getInstance().getSession();
         runCapture(session == null ? null : session::snapshotRecording, false, "Snapshotting...");
     }
 
     /** Shared stop/snapshot flow: call the agent, add the resulting file to the list, and (for stop) go idle. */
-    private void runCapture(CaptureCall call, boolean stops, String busyText) {
-        if (call == null) {
+    private void runCapture(CaptureCall call, boolean stops, String busyText)
+    {
+        if (call == null)
+        {
             statusLabel.setText("Not attached.");
             return;
         }
         setBusy(busyText);
-        SwingWorkers.run(
-                call::invoke,
-                path -> {
-                    if (stops) {
-                        recording = false;
-                        clock.stop();
-                    }
-                    addCaptured(path);
-                    updateButtons();
-                },
-                err -> {
-                    statusLabel.setText((stops ? "Stop" : "Snapshot") + " failed: " + err.getMessage());
-                    updateButtons();
-                });
+        SwingWorkers.run(call::invoke, path ->
+        {
+            if (stops)
+            {
+                recording = false;
+                clock.stop();
+            }
+            addCaptured(path);
+            updateButtons();
+        }, err ->
+        {
+            statusLabel.setText((stops ? "Stop" : "Snapshot") + " failed: " + err.getMessage());
+            updateButtons();
+        });
     }
 
-    private void addCaptured(String path) {
+    private void addCaptured(String path)
+    {
         File file = new File(path);
         CapturedRecording rec = new CapturedRecording(file, LocalTime.now().format(TIME), file.length());
         captured.addElement(rec);
@@ -243,63 +266,80 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         statusLabel.setText("Captured " + rec.file.getName() + " (" + humanBytes(rec.size) + ").");
     }
 
-    private void saveSelectedAs() {
+    private void saveSelectedAs()
+    {
         CapturedRecording rec = capturedList.getSelectedValue();
-        if (rec == null) {
+        if (rec == null)
+        {
             return;
         }
         JFileChooser chooser = new JFileChooser();
         chooser.setSelectedFile(new File(rec.file.getName()));
         chooser.setFileFilter(new FileNameExtensionFilter("Flight Recorder file (*.jfr)", "jfr"));
-        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+        {
             return;
         }
-        try {
+        try
+        {
             Files.copy(rec.file.toPath(), chooser.getSelectedFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
             statusLabel.setText("Saved to " + chooser.getSelectedFile().getName() + ".");
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Could not save: " + e.getMessage(),
-                    "Save failed", JOptionPane.ERROR_MESSAGE);
+        }
+        catch (IOException e)
+        {
+            JOptionPane.showMessageDialog(this, "Could not save: " + e.getMessage(), "Save failed", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void clearCaptured() {
-        for (int i = 0; i < captured.size(); i++) {
-            try {
+    private void clearCaptured()
+    {
+        for (int i = 0; i < captured.size(); i++)
+        {
+            try
+            {
                 Files.deleteIfExists(captured.get(i).file.toPath());
-            } catch (IOException ignored) {
+            }
+            catch (IOException ignored)
+            {
             }
         }
         captured.clear();
         updateButtons();
     }
 
-    private int categoryMask() {
+    private int categoryMask()
+    {
         int mask = 0;
-        if (cpu.isSelected()) {
+        if (cpu.isSelected())
+        {
             mask |= LiveProtocol.JFR_CAT_CPU;
         }
-        if (alloc.isSelected()) {
+        if (alloc.isSelected())
+        {
             mask |= LiveProtocol.JFR_CAT_ALLOC;
         }
-        if (locks.isSelected()) {
+        if (locks.isSelected())
+        {
             mask |= LiveProtocol.JFR_CAT_LOCKS;
         }
-        if (exceptions.isSelected()) {
+        if (exceptions.isSelected())
+        {
             mask |= LiveProtocol.JFR_CAT_EXCEPTIONS;
         }
         return mask;
     }
 
     /** Disables every action button while a request is in flight (the connection is serial). */
-    private void setBusy(String text) {
+    private void setBusy(String text)
+    {
         statusLabel.setText(text);
         startButton.setEnabled(false);
         stopButton.setEnabled(false);
         snapshotButton.setEnabled(false);
     }
 
-    private void updateButtons() {
+    private void updateButtons()
+    {
         startButton.setEnabled(!recording);
         stopButton.setEnabled(recording);
         snapshotButton.setEnabled(recording);
@@ -314,13 +354,15 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         clearButton.setEnabled(!captured.isEmpty());
     }
 
-    private void tickClock() {
+    private void tickClock()
+    {
         long seconds = (System.nanoTime() - startNanos) / 1_000_000_000L;
         statusLabel.setText(String.format("Recording  %d:%02d", seconds / 60, seconds % 60));
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         clock.stop();
         recording = false;
         statusLabel.setText("Idle.");
@@ -328,38 +370,45 @@ public final class LiveRecorderPanel extends ThemedJPanel {
         super.removeNotify();
     }
 
-    private static String humanBytes(long bytes) {
-        if (bytes < 1024) {
+    private static String humanBytes(long bytes)
+    {
+        if (bytes < 1024)
+        {
             return bytes + " B";
         }
         double kb = bytes / 1024.0;
-        if (kb < 1024) {
+        if (kb < 1024)
+        {
             return Math.round(kb) + " KB";
         }
         return String.format("%.1f MB", kb / 1024.0);
     }
 
     /** A captured {@code .jfr} file on the local (target == JStudio host) filesystem. */
-    private static final class CapturedRecording {
+    private static final class CapturedRecording
+    {
         private final File file;
         private final String time;
         private final long size;
 
-        CapturedRecording(File file, String time, long size) {
+        CapturedRecording(File file, String time, long size)
+        {
             this.file = file;
             this.time = time;
             this.size = size;
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return time + "   " + file.getName() + "   (" + humanBytes(size) + ")";
         }
     }
 
     /** A stop/snapshot agent call that returns the captured file path. */
     @FunctionalInterface
-    private interface CaptureCall {
+    private interface CaptureCall
+    {
         String invoke() throws IOException;
     }
 }

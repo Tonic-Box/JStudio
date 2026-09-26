@@ -20,7 +20,8 @@ import java.awt.FlowLayout;
 /**
  * Status bar component showing messages, progress, and memory usage.
  */
-public class StatusBar extends ThemedJPanel {
+public class StatusBar extends ThemedJPanel
+{
 
     private final JLabel messageLabel;
     private final JLabel positionLabel;
@@ -31,7 +32,8 @@ public class StatusBar extends ThemedJPanel {
     private final Timer memoryTimer;
     private Timer clearMessageTimer;
 
-    public StatusBar() {
+    public StatusBar()
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
         setPreferredSize(new Dimension(0, UIConstants.STATUSBAR_HEIGHT));
         setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
@@ -77,7 +79,8 @@ public class StatusBar extends ThemedJPanel {
 
         EventBus.getInstance().register(StatusMessageEvent.class, this::handleStatusMessage);
 
-        clearMessageTimer = new Timer(5000, e -> {
+        clearMessageTimer = new Timer(5000, e ->
+        {
             messageLabel.setText("");
             clearMessageTimer.stop();
         });
@@ -85,7 +88,8 @@ public class StatusBar extends ThemedJPanel {
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
 
         messageLabel.setForeground(JStudioTheme.getTextSecondary());
@@ -103,21 +107,24 @@ public class StatusBar extends ThemedJPanel {
         progressBar.setBackground(JStudioTheme.getBgTertiary());
     }
 
-    private JLabel createLabel(String text) {
+    private JLabel createLabel(String text)
+    {
         JLabel label = new JLabel(text);
         label.setForeground(JStudioTheme.getTextSecondary());
         label.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         return label;
     }
 
-    private JSeparator createSeparator() {
+    private JSeparator createSeparator()
+    {
         JSeparator sep = new JSeparator(SwingConstants.VERTICAL);
         sep.setPreferredSize(new Dimension(1, UIConstants.ICON_SIZE_SMALL));
         sep.setForeground(JStudioTheme.getBorder());
         return sep;
     }
 
-    private String sanitize(String text) {
+    private String sanitize(String text)
+    {
         if (text == null) return "";
         return text
                 .replace("&", "&amp;")
@@ -125,24 +132,28 @@ public class StatusBar extends ThemedJPanel {
                 .replace(">", "&gt;");
     }
 
-    private void handleStatusMessage(StatusMessageEvent event) {
+    private void handleStatusMessage(StatusMessageEvent event)
+    {
         setMessage(event.getMessage(), event.getType());
     }
 
     /**
      * Set the status message.
      */
-    public void setMessage(String message) {
+    public void setMessage(String message)
+    {
         setMessage(message, StatusMessageEvent.MessageType.INFO);
     }
 
     /**
      * Set the status message with type.
      */
-    public void setMessage(String message, StatusMessageEvent.MessageType type) {
+    public void setMessage(String message, StatusMessageEvent.MessageType type)
+    {
         messageLabel.setText(sanitize(message));
 
-        switch (type) {
+        switch (type)
+        {
             case WARNING:
                 messageLabel.setForeground(JStudioTheme.getWarning());
                 break;
@@ -161,21 +172,24 @@ public class StatusBar extends ThemedJPanel {
     /**
      * Set the position label (e.g., "Line 42, Col 10").
      */
-    public void setPosition(String position) {
+    public void setPosition(String position)
+    {
         positionLabel.setText(position);
     }
 
     /**
      * Set the mode label (e.g., "Source", "Bytecode", "IR").
      */
-    public void setMode(String mode) {
+    public void setMode(String mode)
+    {
         modeLabel.setText(mode);
     }
 
     /**
      * Show the progress bar with indeterminate state.
      */
-    public void showProgress(String message) {
+    public void showProgress(String message)
+    {
         progressBar.setIndeterminate(true);
         progressBar.setString(sanitize(message));
         progressBar.setVisible(true);
@@ -184,7 +198,8 @@ public class StatusBar extends ThemedJPanel {
     /**
      * Show the progress bar with determinate state.
      */
-    public void showProgress(int current, int total, String message) {
+    public void showProgress(int current, int total, String message)
+    {
         progressBar.setIndeterminate(false);
         progressBar.setMaximum(total);
         progressBar.setValue(current);
@@ -195,11 +210,13 @@ public class StatusBar extends ThemedJPanel {
     /**
      * Hide the progress bar.
      */
-    public void hideProgress() {
+    public void hideProgress()
+    {
         progressBar.setVisible(false);
     }
 
-    private void updateMemory() {
+    private void updateMemory()
+    {
         Runtime rt = Runtime.getRuntime();
         long used = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024);
         long max = rt.maxMemory() / (1024 * 1024);
@@ -207,11 +224,16 @@ public class StatusBar extends ThemedJPanel {
 
         // Change color based on usage
         double usage = (double) used / max;
-        if (usage > 0.85) {
+        if (usage > 0.85)
+        {
             memoryLabel.setForeground(JStudioTheme.getError());
-        } else if (usage > 0.70) {
+        }
+        else if (usage > 0.70)
+        {
             memoryLabel.setForeground(JStudioTheme.getWarning());
-        } else {
+        }
+        else
+        {
             memoryLabel.setForeground(JStudioTheme.getTextSecondary());
         }
     }
@@ -219,11 +241,14 @@ public class StatusBar extends ThemedJPanel {
     /**
      * Clean up timers when the status bar is no longer needed.
      */
-    public void dispose() {
-        if (memoryTimer != null) {
+    public void dispose()
+    {
+        if (memoryTimer != null)
+        {
             memoryTimer.stop();
         }
-        if (clearMessageTimer != null) {
+        if (clearMessageTimer != null)
+        {
             clearMessageTimer.stop();
         }
     }

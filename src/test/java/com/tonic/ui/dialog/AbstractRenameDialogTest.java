@@ -6,10 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Covers the shared Java-identifier validation used by all three rename dialogs. */
-class AbstractRenameDialogTest {
+class AbstractRenameDialogTest
+{
 
     @Test
-    void acceptsValidIdentifiers() {
+    void acceptsValidIdentifiers()
+    {
         assertTrue(AbstractRenameDialog.isValidJavaIdentifier("foo"));
         assertTrue(AbstractRenameDialog.isValidJavaIdentifier("_bar"));
         assertTrue(AbstractRenameDialog.isValidJavaIdentifier("a1b2"));
@@ -17,7 +19,8 @@ class AbstractRenameDialogTest {
     }
 
     @Test
-    void rejectsInvalidIdentifiers() {
+    void rejectsInvalidIdentifiers()
+    {
         assertFalse(AbstractRenameDialog.isValidJavaIdentifier(null));
         assertFalse(AbstractRenameDialog.isValidJavaIdentifier(""));
         assertFalse(AbstractRenameDialog.isValidJavaIdentifier("1abc"));

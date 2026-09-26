@@ -14,7 +14,8 @@ import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PieChart extends JPanel implements ThemeChangeListener {
+public class PieChart extends JPanel implements ThemeChangeListener
+{
 
     private final String title;
     private String centerLabel;
@@ -25,25 +26,29 @@ public class PieChart extends JPanel implements ThemeChangeListener {
     private static final int LEGEND_ITEM_HEIGHT = 18;
     private static final float DONUT_THICKNESS = 0.35f;
 
-    public PieChart(String title) {
+    public PieChart(String title)
+    {
         this.title = title;
         setOpaque(false);
         setPreferredSize(new Dimension(250, 220));
         ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
-    public void setData(List<PieSlice> slices) {
+    public void setData(List<PieSlice> slices)
+    {
         this.slices = slices != null ? new ArrayList<>(slices) : new ArrayList<>();
         repaint();
     }
 
-    public void setCenterLabel(String centerLabel) {
+    public void setCenterLabel(String centerLabel)
+    {
         this.centerLabel = centerLabel;
         repaint();
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g)
+    {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g.create();
 
@@ -63,7 +68,8 @@ public class PieChart extends JPanel implements ThemeChangeListener {
         g2.setFont(JStudioTheme.getCodeFont(12).deriveFont(Font.BOLD));
         g2.drawString(title, PADDING, PADDING + 14);
 
-        if (slices.isEmpty()) {
+        if (slices.isEmpty())
+        {
             g2.setColor(JStudioTheme.getTextSecondary());
             g2.setFont(JStudioTheme.getCodeFont(11));
             g2.drawString("No data available", PADDING, TITLE_HEIGHT + PADDING + 20);
@@ -72,7 +78,8 @@ public class PieChart extends JPanel implements ThemeChangeListener {
         }
 
         double total = slices.stream().mapToDouble(PieSlice::getValue).sum();
-        if (total == 0) {
+        if (total == 0)
+        {
             g2.setColor(JStudioTheme.getTextSecondary());
             g2.setFont(JStudioTheme.getCodeFont(11));
             g2.drawString("No data available", PADDING, TITLE_HEIGHT + PADDING + 20);
@@ -94,7 +101,8 @@ public class PieChart extends JPanel implements ThemeChangeListener {
         int innerY = pieY + (diameter - innerDiameter) / 2;
 
         double startAngle = 90;
-        for (PieSlice slice : slices) {
+        for (PieSlice slice : slices)
+        {
             double sweepAngle = (slice.getValue() / total) * 360;
 
             g2.setColor(slice.getColor());
@@ -107,7 +115,8 @@ public class PieChart extends JPanel implements ThemeChangeListener {
         g2.setColor(JStudioTheme.getBgSecondary());
         g2.fill(new Ellipse2D.Double(innerX, innerY, innerDiameter, innerDiameter));
 
-        if (centerLabel != null && !centerLabel.isEmpty()) {
+        if (centerLabel != null && !centerLabel.isEmpty())
+        {
             g2.setColor(JStudioTheme.getTextPrimary());
             g2.setFont(JStudioTheme.getCodeFont(14).deriveFont(Font.BOLD));
             FontMetrics fm = g2.getFontMetrics();
@@ -122,7 +131,8 @@ public class PieChart extends JPanel implements ThemeChangeListener {
         int itemWidth = (w - PADDING * 2) / itemsPerRow;
 
         g2.setFont(JStudioTheme.getCodeFont(10));
-        for (int i = 0; i < slices.size(); i++) {
+        for (int i = 0; i < slices.size(); i++)
+        {
             PieSlice slice = slices.get(i);
             int row = i / itemsPerRow;
             int col = i % itemsPerRow;
@@ -142,8 +152,10 @@ public class PieChart extends JPanel implements ThemeChangeListener {
         g2.dispose();
     }
 
-    private String truncateLabel(String label, FontMetrics fm, int maxWidth) {
-        if (fm.stringWidth(label) <= maxWidth) {
+    private String truncateLabel(String label, FontMetrics fm, int maxWidth)
+    {
+        if (fm.stringWidth(label) <= maxWidth)
+        {
             return label;
         }
         String ellipsis = "...";
@@ -151,8 +163,10 @@ public class PieChart extends JPanel implements ThemeChangeListener {
         int availableWidth = maxWidth - ellipsisWidth;
 
         StringBuilder sb = new StringBuilder();
-        for (char c : label.toCharArray()) {
-            if (fm.stringWidth(sb.toString() + c) > availableWidth) {
+        for (char c : label.toCharArray())
+        {
+            if (fm.stringWidth(sb.toString() + c) > availableWidth)
+            {
                 break;
             }
             sb.append(c);
@@ -161,19 +175,22 @@ public class PieChart extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         super.removeNotify();
         ThemeManager.getInstance().removeThemeChangeListener(this);
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         repaint();
     }
 
     @Getter
     @AllArgsConstructor
-    public static class PieSlice {
+    public static class PieSlice
+    {
         private final String label;
         private final double value;
         private final Color color;

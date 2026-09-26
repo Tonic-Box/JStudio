@@ -8,7 +8,8 @@ import lombok.Getter;
  * to a primitive, {@code null}, or String.
  */
 @Getter
-public final class DebugVariable {
+public final class DebugVariable
+{
     private final String name;
     private final String typeDescriptor;
     private final String display;
@@ -20,8 +21,8 @@ public final class DebugVariable {
     /** Element count when {@link #array}, else 0. */
     private final int arrayLength;
 
-    public DebugVariable(String name, String typeDescriptor, String display, boolean reference, long refHandle,
-                         boolean array, int arrayLength) {
+    public DebugVariable(String name, String typeDescriptor, String display, boolean reference, long refHandle, boolean array, int arrayLength)
+    {
         this.name = name;
         this.typeDescriptor = typeDescriptor;
         this.display = display;

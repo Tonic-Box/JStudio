@@ -21,31 +21,39 @@ import java.util.Map;
  * {@code VMExecutionService}'s arg conversion accepts. Arrays and objects are recursive (elements / constructor
  * args / field values are themselves built).
  */
-final class VmValueBuilder {
+final class VmValueBuilder
+{
 
     private static final String PRIMITIVE_DESCRIPTORS = "ZBCSIJFD";
 
-    private VmValueBuilder() {
+    private VmValueBuilder()
+    {
     }
 
-    static Object[] build(VmInstance vm, List<ArgSpec> specs) {
-        if (specs == null) {
+    static Object[] build(VmInstance vm, List<ArgSpec> specs)
+    {
+        if (specs == null)
+        {
             return new Object[0];
         }
         Object[] out = new Object[specs.size()];
-        for (int i = 0; i < specs.size(); i++) {
+        for (int i = 0; i < specs.size(); i++)
+        {
             out[i] = build(vm, specs.get(i));
         }
         return out;
     }
 
     /** Builds one value: boxed primitive | ObjectInstance | ArrayInstance | null. */
-    static Object build(VmInstance vm, ArgSpec spec) {
-        if (spec == null) {
+    static Object build(VmInstance vm, ArgSpec spec)
+    {
+        if (spec == null)
+        {
             return null;
         }
         SimpleHeapManager heap = vm.getHeapManager();
-        switch (spec.getKind()) {
+        switch (spec.getKind())
+        {
             case NULL:
                 return null;
             case INT:
@@ -75,27 +83,34 @@ final class VmValueBuilder {
         }
     }
 
-    private static ArrayInstance buildArray(VmInstance vm, SimpleHeapManager heap, ArgSpec spec) {
+    private static ArrayInstance buildArray(VmInstance vm, SimpleHeapManager heap, ArgSpec spec)
+    {
         String component = spec.getComponentType();
         List<ArgSpec> elements = spec.getElements() != null ? spec.getElements() : Collections.emptyList();
         ArrayInstance array = heap.newArray(component, elements.size());
         boolean primitive = component.length() == 1 && PRIMITIVE_DESCRIPTORS.indexOf(component.charAt(0)) >= 0;
-        for (int i = 0; i < elements.size(); i++) {
+        for (int i = 0; i < elements.size(); i++)
+        {
             Object value = build(vm, elements.get(i));
-            if (primitive) {
+            if (primitive)
+            {
                 setPrimitiveElement(array, component.charAt(0), i, value);
-            } else {
+            }
+            else
+            {
                 array.set(i, value);
             }
         }
         return array;
     }
 
-    private static void setPrimitiveElement(ArrayInstance array, char type, int index, Object value) {
+    private static void setPrimitiveElement(ArrayInstance array, char type, int index, Object value)
+    {
         long bits = value instanceof Boolean ? (((Boolean) value) ? 1 : 0)
                 : value instanceof Character ? (long) (Character) value
                 : asNumber(value).longValue();
-        switch (type) {
+        switch (type)
+        {
             case 'I':
                 array.setInt(index, (int) bits);
                 break;
@@ -129,41 +144,51 @@ final class VmValueBuilder {
      * Narrows a built primitive-array element to {@link Number}, throwing a descriptive
      * {@link IllegalArgumentException} for a malformed spec instead of a raw {@link ClassCastException}.
      */
-    private static Number asNumber(Object value) {
-        if (value instanceof Number) {
+    private static Number asNumber(Object value)
+    {
+        if (value instanceof Number)
+        {
             return (Number) value;
         }
-        throw new IllegalArgumentException("Expected a numeric array element but got "
-                + (value == null ? "null" : value.getClass().getName()));
+        throw new IllegalArgumentException("Expected a numeric array element but got " + (value == null ? "null" : value.getClass().getName()));
     }
 
-    private static ObjectInstance buildObject(VmInstance vm, SimpleHeapManager heap, ArgSpec spec) {
+    private static ObjectInstance buildObject(VmInstance vm, SimpleHeapManager heap, ArgSpec spec)
+    {
         ObjectInstance object = heap.newObject(spec.getClassName());
-        if (spec.getFields() != null) {
-            for (Map.Entry<String, ArgSpec> entry : spec.getFields().entrySet()) {
+        if (spec.getFields() != null)
+        {
+            for (Map.Entry<String, ArgSpec> entry : spec.getFields().entrySet())
+            {
                 String descriptor = resolveFieldDescriptor(spec.getClassName(), entry.getKey());
                 object.setField(spec.getClassName(), entry.getKey(), descriptor, build(vm, entry.getValue()));
             }
-        } else if (spec.getConstructorDescriptor() != null) {
+        }
+        else if (spec.getConstructorDescriptor() != null)
+        {
             Object[] ctorArgs = build(vm, spec.getConstructorArgs());
-            BytecodeResult result = vm.executeMethod(spec.getClassName(), "<init>", spec.getConstructorDescriptor(),
-                    object, ctorArgs);
-            if (!result.isSuccess()) {
+            BytecodeResult result = vm.executeMethod(spec.getClassName(), "<init>", spec.getConstructorDescriptor(), object, ctorArgs);
+            if (!result.isSuccess())
+            {
                 String reason = result.hasException() ? String.valueOf(result.getException()) : "unknown";
-                throw new IllegalArgumentException("Constructor " + spec.getClassName()
-                        + spec.getConstructorDescriptor() + " failed: " + reason);
+                throw new IllegalArgumentException("Constructor " + spec.getClassName() + spec.getConstructorDescriptor() + " failed: " + reason);
             }
         }
         return object;
     }
 
-    private static String resolveFieldDescriptor(String className, String fieldName) {
+    private static String resolveFieldDescriptor(String className, String fieldName)
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
+        if (project != null)
+        {
             ClassEntryModel entry = project.findClassByName(className);
-            if (entry != null) {
-                for (FieldEntryModel field : entry.getFields()) {
-                    if (field.getName().equals(fieldName)) {
+            if (entry != null)
+            {
+                for (FieldEntryModel field : entry.getFields())
+                {
+                    if (field.getName().equals(fieldName))
+                    {
                         return field.getDescriptor();
                     }
                 }
@@ -172,21 +197,27 @@ final class VmValueBuilder {
         throw new IllegalArgumentException("Field not found: " + className + "." + fieldName);
     }
 
-    private static boolean asBoolean(Object value) {
-        if (value instanceof Boolean) {
+    private static boolean asBoolean(Object value)
+    {
+        if (value instanceof Boolean)
+        {
             return (Boolean) value;
         }
-        if (value instanceof Number) {
+        if (value instanceof Number)
+        {
             return ((Number) value).intValue() != 0;
         }
         return Boolean.parseBoolean(String.valueOf(value));
     }
 
-    private static char asChar(Object value) {
-        if (value instanceof Character) {
+    private static char asChar(Object value)
+    {
+        if (value instanceof Character)
+        {
             return (Character) value;
         }
-        if (value instanceof Number) {
+        if (value instanceof Number)
+        {
             return (char) ((Number) value).intValue();
         }
         String s = String.valueOf(value);

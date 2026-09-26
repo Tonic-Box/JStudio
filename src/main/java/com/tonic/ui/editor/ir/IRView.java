@@ -19,11 +19,13 @@ import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.Color;
 
-public class IRView extends AbstractTextView {
+public class IRView extends AbstractTextView
+{
 
     private static final String SYNTAX_STYLE_IR = "text/ir";
 
-    static {
+    static
+    {
         AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
         atmf.putMapping(SYNTAX_STYLE_IR, "com.tonic.ui.editor.ir.IRTokenMaker");
     }
@@ -32,7 +34,8 @@ public class IRView extends AbstractTextView {
 
     private static final String METHOD_DIVIDER = "=========================================================================";
 
-    public IRView(ClassEntryModel classEntry) {
+    public IRView(ClassEntryModel classEntry)
+    {
         this.classEntry = classEntry;
 
         initTextArea(SYNTAX_STYLE_IR);
@@ -41,7 +44,8 @@ public class IRView extends AbstractTextView {
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         applyTextTheme();
 
         SyntaxScheme scheme = textArea.getSyntaxScheme();
@@ -71,35 +75,45 @@ public class IRView extends AbstractTextView {
         repaint();
     }
 
-    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color) {
-        if (scheme.getStyle(tokenType) != null) {
+    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color)
+    {
+        if (scheme.getStyle(tokenType) != null)
+        {
             scheme.getStyle(tokenType).foreground = color;
         }
     }
 
     @Override
-    public void refresh() {
+    public void refresh()
+    {
         cancelCurrentWorker();
         loadingOverlay.showLoading("Lifting to SSA IR...");
 
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
+        SwingWorker<String, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected String doInBackground() {
+            protected String doInBackground()
+            {
                 return generateIR();
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 loadingOverlay.hideLoading();
-                if (isCancelled()) {
+                if (isCancelled())
+                {
                     return;
                 }
-                try {
+                try
+                {
                     String irText = get();
                     textArea.setText(irText);
                     textArea.setCaretPosition(0);
                     loaded = true;
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     textArea.setText("// Failed to generate IR: " + e.getMessage());
                 }
             }
@@ -108,12 +122,14 @@ public class IRView extends AbstractTextView {
         worker.execute();
     }
 
-    private String generateIR() {
+    private String generateIR()
+    {
         StringBuilder sb = new StringBuilder();
 
         sb.append("// Class: ").append(classEntry.getClassName()).append("\n");
         sb.append("// Super: ").append(classEntry.getSuperClassName()).append("\n");
-        if (!classEntry.getInterfaceNames().isEmpty()) {
+        if (!classEntry.getInterfaceNames().isEmpty())
+        {
             sb.append("// Implements: ").append(String.join(", ", classEntry.getInterfaceNames())).append("\n");
         }
         sb.append("\n");
@@ -122,7 +138,8 @@ public class IRView extends AbstractTextView {
 
         int methodIndex = 0;
         int totalMethods = classEntry.getMethods().size();
-        for (MethodEntryModel methodModel : classEntry.getMethods()) {
+        for (MethodEntryModel methodModel : classEntry.getMethods())
+        {
             methodIndex++;
             MethodEntry method = methodModel.getMethodEntry();
 
@@ -133,21 +150,30 @@ public class IRView extends AbstractTextView {
             sb.append("//").append(formatAccessFlags(method.getAccess()));
             sb.append(" ").append(method.getName()).append(method.getDesc()).append("\n");
 
-            if (method.getCodeAttribute() != null) {
+            if (method.getCodeAttribute() != null)
+            {
                 String cachedIR = methodModel.getIrCache();
-                if (cachedIR != null) {
+                if (cachedIR != null)
+                {
                     sb.append(cachedIR);
-                } else {
-                    try {
+                }
+                else
+                {
+                    try
+                    {
                         IRFormatter formatter = new IRFormatter(method, ssa);
                         String ir = formatter.format();
                         methodModel.setIrCache(ir);
                         sb.append(ir);
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         sb.append("  // Error lifting: ").append(e.getMessage()).append("\n");
                     }
                 }
-            } else {
+            }
+            else
+            {
                 sb.append("  // No code (abstract or native)\n");
             }
 
@@ -157,7 +183,8 @@ public class IRView extends AbstractTextView {
         return sb.toString();
     }
 
-    private String formatAccessFlags(int flags) {
+    private String formatAccessFlags(int flags)
+    {
         StringBuilder sb = new StringBuilder();
         if ((flags & 0x0001) != 0) sb.append(" public");
         if ((flags & 0x0002) != 0) sb.append(" private");
@@ -173,24 +200,19 @@ public class IRView extends AbstractTextView {
     private String lastSearch;
 
     @Override
-    public void showFindDialog() {
-        String input = (String) JOptionPane.showInputDialog(
-            this,
-            "Find:",
-            "Find",
-            JOptionPane.PLAIN_MESSAGE,
-            null,
-            null,
-            lastSearch
-        );
+    public void showFindDialog()
+    {
+        String input = (String) JOptionPane.showInputDialog(this, "Find:", "Find", JOptionPane.PLAIN_MESSAGE, null, null, lastSearch);
         lastSearch = input;
-        if (input != null && !input.isEmpty()) {
+        if (input != null && !input.isEmpty())
+        {
             scrollToText(input);
         }
     }
 
     @Override
-    public void scrollToText(String searchText) {
+    public void scrollToText(String searchText)
+    {
         if (searchText == null || searchText.isEmpty()) return;
 
         SearchContext context = new SearchContext(searchText);

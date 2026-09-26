@@ -8,25 +8,29 @@ import java.util.Map;
 /**
  * Variable scope for script execution.
  */
-public class ScriptContext {
+public class ScriptContext
+{
 
     @Getter
     private final ScriptContext parent;
     private final Map<String, ScriptValue> variables = new HashMap<>();
     private final Map<String, Boolean> constants = new HashMap<>();
 
-    public ScriptContext() {
+    public ScriptContext()
+    {
         this.parent = null;
     }
 
-    public ScriptContext(ScriptContext parent) {
+    public ScriptContext(ScriptContext parent)
+    {
         this.parent = parent;
     }
 
     /**
      * Defines a new variable in this scope.
      */
-    public void define(String name, ScriptValue value) {
+    public void define(String name, ScriptValue value)
+    {
         variables.put(name, value);
         constants.put(name, false);
     }
@@ -34,7 +38,8 @@ public class ScriptContext {
     /**
      * Defines a new constant in this scope.
      */
-    public void defineConstant(String name, ScriptValue value) {
+    public void defineConstant(String name, ScriptValue value)
+    {
         variables.put(name, value);
         constants.put(name, true);
     }
@@ -42,11 +47,14 @@ public class ScriptContext {
     /**
      * Gets a variable, searching up the scope chain.
      */
-    public ScriptValue get(String name) {
-        if (variables.containsKey(name)) {
+    public ScriptValue get(String name)
+    {
+        if (variables.containsKey(name))
+        {
             return variables.get(name);
         }
-        if (parent != null) {
+        if (parent != null)
+        {
             return parent.get(name);
         }
         return ScriptValue.NULL;
@@ -55,16 +63,21 @@ public class ScriptContext {
     /**
      * Sets a variable, searching up the scope chain.
      */
-    public void set(String name, ScriptValue value) {
+    public void set(String name, ScriptValue value)
+    {
         // Find the scope where this variable is defined
         ScriptContext scope = findScope(name);
 
-        if (scope != null) {
-            if (scope.constants.getOrDefault(name, false)) {
+        if (scope != null)
+        {
+            if (scope.constants.getOrDefault(name, false))
+            {
                 throw new RuntimeException("Cannot reassign constant: " + name);
             }
             scope.variables.put(name, value);
-        } else {
+        }
+        else
+        {
             // Define in current scope if not found
             variables.put(name, value);
             constants.put(name, false);
@@ -74,11 +87,14 @@ public class ScriptContext {
     /**
      * Finds the scope where a variable is defined.
      */
-    private ScriptContext findScope(String name) {
-        if (variables.containsKey(name)) {
+    private ScriptContext findScope(String name)
+    {
+        if (variables.containsKey(name))
+        {
             return this;
         }
-        if (parent != null) {
+        if (parent != null)
+        {
             return parent.findScope(name);
         }
         return null;
@@ -87,7 +103,8 @@ public class ScriptContext {
     /**
      * Creates a child scope.
      */
-    public ScriptContext child() {
+    public ScriptContext child()
+    {
         return new ScriptContext(this);
     }
 

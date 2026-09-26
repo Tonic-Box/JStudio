@@ -30,7 +30,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SimulationPanel extends ThemedJPanel {
+public class SimulationPanel extends ThemedJPanel
+{
 
     private final ProjectModel project;
     private final JTable findingsTable;
@@ -46,7 +47,8 @@ public class SimulationPanel extends ThemedJPanel {
     private final List<FindingEntry> filteredFindings = new ArrayList<>();
     private String currentFilter = "All";
 
-    public SimulationPanel(ProjectModel project) {
+    public SimulationPanel(ProjectModel project)
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
 
@@ -126,16 +128,21 @@ public class SimulationPanel extends ThemedJPanel {
 
         findingsTable.setDefaultRenderer(Object.class, new FindingTableCellRenderer());
 
-        findingsTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
+        findingsTable.getSelectionModel().addListSelectionListener(e ->
+        {
+            if (!e.getValueIsAdjusting())
+            {
                 showSelectedFindingDetails();
             }
         });
 
-        findingsTable.addMouseListener(new MouseAdapter() {
+        findingsTable.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
                     navigateToSelectedFinding();
                 }
             }
@@ -178,16 +185,20 @@ public class SimulationPanel extends ThemedJPanel {
         add(statusPanel, BorderLayout.SOUTH);
     }
 
-    public void refresh() {
+    public void refresh()
+    {
         tableModel.fireTableDataChanged();
     }
 
-    private void analyzeCurrentSelection() {
+    private void analyzeCurrentSelection()
+    {
         statusLabel.setText("Analysis feature - select a method first");
     }
 
-    public void analyzeMethod(MethodEntryModel methodModel) {
-        if (methodModel == null) {
+    public void analyzeMethod(MethodEntryModel methodModel)
+    {
+        if (methodModel == null)
+        {
             statusLabel.setText("No method selected.");
             return;
         }
@@ -195,24 +206,33 @@ public class SimulationPanel extends ThemedJPanel {
         setAnalyzing(true);
         statusLabel.setText("Analyzing " + methodModel.getDisplaySignature() + "...");
 
-        SwingWorker<SimulationAnalysisResult, Void> worker = new SwingWorker<>() {
+        SwingWorker<SimulationAnalysisResult, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected SimulationAnalysisResult doInBackground() {
+            protected SimulationAnalysisResult doInBackground()
+            {
                 return SimulationService.getInstance().runAnalysis(methodModel);
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 setAnalyzing(false);
-                try {
+                try
+                {
                     SimulationAnalysisResult result = get();
-                    if (result != null) {
+                    if (result != null)
+                    {
                         addFindingsFromResult(result);
                         updateStatusWithCounts();
-                    } else {
+                    }
+                    else
+                    {
                         statusLabel.setText("Analysis returned no results.");
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     statusLabel.setText("Analysis error: " + e.getMessage());
                 }
             }
@@ -220,8 +240,10 @@ public class SimulationPanel extends ThemedJPanel {
         worker.execute();
     }
 
-    public void analyzeClass(ClassEntryModel classModel) {
-        if (classModel == null) {
+    public void analyzeClass(ClassEntryModel classModel)
+    {
+        if (classModel == null)
+        {
             statusLabel.setText("No class selected.");
             return;
         }
@@ -231,13 +253,17 @@ public class SimulationPanel extends ThemedJPanel {
         progressBar.setMaximum(classModel.getMethods().size());
         progressBar.setValue(0);
 
-        SwingWorker<Void, Integer> worker = new SwingWorker<>() {
+        SwingWorker<Void, Integer> worker = new SwingWorker<>()
+        {
             @Override
-            protected Void doInBackground() {
+            protected Void doInBackground()
+            {
                 int count = 0;
-                for (MethodEntryModel methodModel : classModel.getMethods()) {
+                for (MethodEntryModel methodModel : classModel.getMethods())
+                {
                     SimulationAnalysisResult result = SimulationService.getInstance().runAnalysis(methodModel);
-                    if (result != null) {
+                    if (result != null)
+                    {
                         SwingUtilities.invokeLater(() -> addFindingsFromResult(result));
                     }
                     count++;
@@ -247,14 +273,17 @@ public class SimulationPanel extends ThemedJPanel {
             }
 
             @Override
-            protected void process(List<Integer> chunks) {
-                if (!chunks.isEmpty()) {
+            protected void process(List<Integer> chunks)
+            {
+                if (!chunks.isEmpty())
+                {
                     progressBar.setValue(chunks.get(chunks.size() - 1));
                 }
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 setAnalyzing(false);
                 updateStatusWithCounts();
             }
@@ -262,8 +291,10 @@ public class SimulationPanel extends ThemedJPanel {
         worker.execute();
     }
 
-    private void analyzeProject() {
-        if (project.getClassPool() == null) {
+    private void analyzeProject()
+    {
+        if (project.getClassPool() == null)
+        {
             statusLabel.setText("No project loaded.");
             return;
         }
@@ -277,14 +308,19 @@ public class SimulationPanel extends ThemedJPanel {
         progressBar.setMaximum(totalMethods);
         progressBar.setValue(0);
 
-        SwingWorker<Void, Integer> worker = new SwingWorker<>() {
+        SwingWorker<Void, Integer> worker = new SwingWorker<>()
+        {
             @Override
-            protected Void doInBackground() {
+            protected Void doInBackground()
+            {
                 int count = 0;
-                for (ClassEntryModel classModel : classes) {
-                    for (MethodEntryModel methodModel : classModel.getMethods()) {
+                for (ClassEntryModel classModel : classes)
+                {
+                    for (MethodEntryModel methodModel : classModel.getMethods())
+                    {
                         SimulationAnalysisResult result = SimulationService.getInstance().runAnalysis(methodModel);
-                        if (result != null && result.hasFindings()) {
+                        if (result != null && result.hasFindings())
+                        {
                             SwingUtilities.invokeLater(() -> addFindingsFromResult(result));
                         }
                         count++;
@@ -295,8 +331,10 @@ public class SimulationPanel extends ThemedJPanel {
             }
 
             @Override
-            protected void process(List<Integer> chunks) {
-                if (!chunks.isEmpty()) {
+            protected void process(List<Integer> chunks)
+            {
+                if (!chunks.isEmpty())
+                {
                     int value = chunks.get(chunks.size() - 1);
                     progressBar.setValue(value);
                     statusLabel.setText("Analyzing... (" + value + "/" + progressBar.getMaximum() + ")");
@@ -304,7 +342,8 @@ public class SimulationPanel extends ThemedJPanel {
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 setAnalyzing(false);
                 updateStatusWithCounts();
             }
@@ -312,20 +351,25 @@ public class SimulationPanel extends ThemedJPanel {
         worker.execute();
     }
 
-    private void addFindingsFromResult(SimulationAnalysisResult result) {
-        for (SimulationFinding finding : result.getFindings()) {
+    private void addFindingsFromResult(SimulationAnalysisResult result)
+    {
+        for (SimulationFinding finding : result.getFindings())
+        {
             FindingEntry entry = new FindingEntry(finding, result.getMethod());
             allFindings.add(entry);
         }
         applyFilter();
     }
 
-    private void applyFilter() {
+    private void applyFilter()
+    {
         currentFilter = (String) filterCombo.getSelectedItem();
         filteredFindings.clear();
 
-        for (FindingEntry entry : allFindings) {
-            if (matchesFilter(entry.finding)) {
+        for (FindingEntry entry : allFindings)
+        {
+            if (matchesFilter(entry.finding))
+            {
                 filteredFindings.add(entry);
             }
         }
@@ -334,11 +378,14 @@ public class SimulationPanel extends ThemedJPanel {
         updateStatusWithCounts();
     }
 
-    private boolean matchesFilter(SimulationFinding finding) {
-        if (currentFilter == null || "All".equals(currentFilter)) {
+    private boolean matchesFilter(SimulationFinding finding)
+    {
+        if (currentFilter == null || "All".equals(currentFilter))
+        {
             return true;
         }
-        switch (currentFilter) {
+        switch (currentFilter)
+        {
             case "Opaque Predicates":
                 return finding.getType() == SimulationFinding.FindingType.OPAQUE_PREDICATE;
             case "Dead Code":
@@ -352,29 +399,36 @@ public class SimulationPanel extends ThemedJPanel {
         }
     }
 
-    private void updateStatusWithCounts() {
+    private void updateStatusWithCounts()
+    {
         int opaqueCount = 0;
         int deadCount = 0;
         int decryptedCount = 0;
         int taintCount = 0;
-        for (FindingEntry entry : allFindings) {
-            if (entry.finding.getType() == SimulationFinding.FindingType.OPAQUE_PREDICATE) {
+        for (FindingEntry entry : allFindings)
+        {
+            if (entry.finding.getType() == SimulationFinding.FindingType.OPAQUE_PREDICATE)
+            {
                 opaqueCount++;
-            } else if (entry.finding.getType() == SimulationFinding.FindingType.DEAD_CODE) {
+            }
+            else if (entry.finding.getType() == SimulationFinding.FindingType.DEAD_CODE)
+            {
                 deadCount++;
-            } else if (entry.finding.getType() == SimulationFinding.FindingType.DECRYPTED_STRING) {
+            }
+            else if (entry.finding.getType() == SimulationFinding.FindingType.DECRYPTED_STRING)
+            {
                 decryptedCount++;
-            } else if (entry.finding.getType() == SimulationFinding.FindingType.TAINTED_VALUE) {
+            }
+            else if (entry.finding.getType() == SimulationFinding.FindingType.TAINTED_VALUE)
+            {
                 taintCount++;
             }
         }
-        statusLabel.setText("Findings: " + allFindings.size() + " (" +
-                opaqueCount + " opaque, " + deadCount + " dead, " +
-                decryptedCount + " decrypted, " + taintCount + " taint) | " +
-                "Showing: " + filteredFindings.size());
+        statusLabel.setText("Findings: " + allFindings.size() + " (" + opaqueCount + " opaque, " + deadCount + " dead, " + decryptedCount + " decrypted, " + taintCount + " taint) | " + "Showing: " + filteredFindings.size());
     }
 
-    private void clearFindings() {
+    private void clearFindings()
+    {
         allFindings.clear();
         filteredFindings.clear();
         detailsArea.setText("");
@@ -382,56 +436,68 @@ public class SimulationPanel extends ThemedJPanel {
         statusLabel.setText("Findings cleared.");
     }
 
-    private void exportFindings() {
-        if (allFindings.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No findings to export.",
-                    "Export", JOptionPane.INFORMATION_MESSAGE);
+    private void exportFindings()
+    {
+        if (allFindings.isEmpty())
+        {
+            JOptionPane.showMessageDialog(this, "No findings to export.", "Export", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Export Findings");
-        chooser.setFileFilter(new FileNameExtensionFilter(
-                "JSON or HTML files", "json", "html"));
+        chooser.setFileFilter(new FileNameExtensionFilter("JSON or HTML files", "json", "html"));
 
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
             File file = chooser.getSelectedFile();
             String path = file.getAbsolutePath();
 
-            try {
+            try
+            {
                 List<SimulationFinding> findings = new ArrayList<>();
-                for (FindingEntry entry : allFindings) {
+                for (FindingEntry entry : allFindings)
+                {
                     findings.add(entry.finding);
                 }
 
-                if (path.endsWith(".html") || path.endsWith(".htm")) {
+                if (path.endsWith(".html") || path.endsWith(".htm"))
+                {
                     FindingsExporter.exportToHtml(findings, path);
-                } else {
-                    if (!path.endsWith(".json")) {
+                }
+                else
+                {
+                    if (!path.endsWith(".json"))
+                    {
                         path += ".json";
                     }
                     FindingsExporter.exportToJson(findings, path);
                 }
                 statusLabel.setText("Exported " + findings.size() + " findings to " + file.getName());
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Export failed: " + ex.getMessage(),
-                        "Export Error", JOptionPane.ERROR_MESSAGE);
+            }
+            catch (IOException ex)
+            {
+                JOptionPane.showMessageDialog(this, "Export failed: " + ex.getMessage(), "Export Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    private void setAnalyzing(boolean analyzing) {
+    private void setAnalyzing(boolean analyzing)
+    {
         analyzeCurrentButton.setEnabled(!analyzing);
         analyzeAllButton.setEnabled(!analyzing);
         progressBar.setVisible(analyzing);
-        if (!analyzing) {
+        if (!analyzing)
+        {
             progressBar.setValue(0);
         }
     }
 
-    private void showSelectedFindingDetails() {
+    private void showSelectedFindingDetails()
+    {
         int row = findingsTable.getSelectedRow();
-        if (row < 0 || row >= filteredFindings.size()) {
+        if (row < 0 || row >= filteredFindings.size())
+        {
             detailsArea.setText("");
             return;
         }
@@ -452,50 +518,61 @@ public class SimulationPanel extends ThemedJPanel {
         detailsArea.setCaretPosition(0);
     }
 
-    private void navigateToSelectedFinding() {
+    private void navigateToSelectedFinding()
+    {
         int row = findingsTable.getSelectedRow();
-        if (row < 0 || row >= filteredFindings.size()) {
+        if (row < 0 || row >= filteredFindings.size())
+        {
             return;
         }
 
         FindingEntry entry = filteredFindings.get(row);
-        if (entry.method != null) {
+        if (entry.method != null)
+        {
             ClassEntryModel classModel = entry.method.getOwner();
-            if (classModel != null) {
+            if (classModel != null)
+            {
                 EventBus.getInstance().post(new ClassSelectedEvent(this, classModel));
                 EventBus.getInstance().post(new MethodSelectedEvent(this, entry.method));
             }
         }
     }
 
-    private class FindingsTableModel extends AbstractTableModel {
+    private class FindingsTableModel extends AbstractTableModel
+    {
         private final String[] columns = {"Type", "Severity", "Class", "Method", "Block"};
 
         @Override
-        public int getRowCount() {
+        public int getRowCount()
+        {
             return filteredFindings.size();
         }
 
         @Override
-        public int getColumnCount() {
+        public int getColumnCount()
+        {
             return columns.length;
         }
 
         @Override
-        public String getColumnName(int column) {
+        public String getColumnName(int column)
+        {
             return columns[column];
         }
 
         @Override
-        public Object getValueAt(int rowIndex, int columnIndex) {
-            if (rowIndex < 0 || rowIndex >= filteredFindings.size()) {
+        public Object getValueAt(int rowIndex, int columnIndex)
+        {
+            if (rowIndex < 0 || rowIndex >= filteredFindings.size())
+            {
                 return null;
             }
 
             FindingEntry entry = filteredFindings.get(rowIndex);
             SimulationFinding finding = entry.finding;
 
-            switch (columnIndex) {
+            switch (columnIndex)
+            {
                 case 0:
                     return finding.getType().name();
                 case 1:
@@ -507,13 +584,20 @@ public class SimulationPanel extends ThemedJPanel {
                 case 3:
                     return finding.getMethodName();
                 case 4:
-                    if (finding instanceof OpaquePredicate) {
+                    if (finding instanceof OpaquePredicate)
+                    {
                         return "B" + ((OpaquePredicate) finding).getBlockId();
-                    } else if (finding instanceof DeadCodeBlock) {
+                    }
+                    else if (finding instanceof DeadCodeBlock)
+                    {
                         return "B" + ((DeadCodeBlock) finding).getBlockId();
-                    } else if (finding instanceof DecryptedString) {
+                    }
+                    else if (finding instanceof DecryptedString)
+                    {
                         return "B" + ((DecryptedString) finding).getBlockId();
-                    } else if (finding instanceof TaintFlow) {
+                    }
+                    else if (finding instanceof TaintFlow)
+                    {
                         return "B" + ((TaintFlow) finding).getBlockId();
                     }
                     return "-";
@@ -523,20 +607,23 @@ public class SimulationPanel extends ThemedJPanel {
         }
     }
 
-    private static class FindingTableCellRenderer extends DefaultTableCellRenderer {
+    private static class FindingTableCellRenderer extends DefaultTableCellRenderer
+    {
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                                                       boolean isSelected, boolean hasFocus,
-                                                       int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+        {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-            if (!isSelected) {
+            if (!isSelected)
+            {
                 c.setBackground(JStudioTheme.getBgTertiary());
                 c.setForeground(JStudioTheme.getTextPrimary());
 
-                if (column == 1 && value != null) {
+                if (column == 1 && value != null)
+                {
                     String severity = value.toString();
-                    switch (severity) {
+                    switch (severity)
+                    {
                         case "CRITICAL":
                         case "HIGH":
                             c.setForeground(JStudioTheme.getError());
@@ -558,11 +645,13 @@ public class SimulationPanel extends ThemedJPanel {
         }
     }
 
-    private static class FindingEntry {
+    private static class FindingEntry
+    {
         final SimulationFinding finding;
         final MethodEntryModel method;
 
-        FindingEntry(SimulationFinding finding, MethodEntryModel method) {
+        FindingEntry(SimulationFinding finding, MethodEntryModel method)
+        {
             this.finding = finding;
             this.method = method;
         }

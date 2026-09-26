@@ -10,34 +10,37 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class UsageLensTest {
+class UsageLensTest
+{
 
-    private static final String[] SOURCE = {
-            "package com.example;",          // line 1
-            "",                              // line 2 (blank above class)
-            "public class Foo {",            // line 3
-            "    private int x;",            // line 4 (field, no blank line above)
-            "",                              // line 5 (blank above method)
-            "    public void bar() {",       // line 6
-            "    }",                         // line 7
-            "}"                              // line 8
-    };
+    private static final String[] SOURCE =
+            {
+                    "package com.example;",          // line 1
+                    "",                              // line 2 (blank above class)
+                    "public class Foo {",            // line 3
+                    "    private int x;",            // line 4 (field, no blank line above)
+                    "",                              // line 5 (blank above method)
+                    "    public void bar() {",       // line 6
+                    "    }",                         // line 7
+                    "}"                              // line 8
+            };
 
-    private static DecompileResult.MemberSpan span(int startLine) {
+    private static DecompileResult.MemberSpan span(int startLine)
+    {
         DecompileResult.MemberSpan span = mock(DecompileResult.MemberSpan.class);
         when(span.getStartLine()).thenReturn(startLine);
         return span;
     }
 
-    private static UsageLens.LensTarget target(FindUsagesEvent.TargetType type, String name,
-                                               String desc, int startLine, int count) {
+    private static UsageLens.LensTarget target(FindUsagesEvent.TargetType type, String name, String desc, int startLine, int count)
+    {
         return new UsageLens.LensTarget(type, name, desc, span(startLine), count);
     }
 
     @Test
-    void fieldWithoutBlankAboveUsesEndOfLine() {
-        List<UsageLens.LensEntry> entries = UsageLens.compute(SOURCE,
-                List.of(target(FindUsagesEvent.TargetType.FIELD, "x", "I", 4, 2)));
+    void fieldWithoutBlankAboveUsesEndOfLine()
+    {
+        List<UsageLens.LensEntry> entries = UsageLens.compute(SOURCE, List.of(target(FindUsagesEvent.TargetType.FIELD, "x", "I", 4, 2)));
 
         assertEquals(1, entries.size());
         UsageLens.LensEntry e = entries.get(0);
@@ -51,9 +54,9 @@ class UsageLensTest {
     }
 
     @Test
-    void classWithBlankAboveUsesAboveLine() {
-        List<UsageLens.LensEntry> entries = UsageLens.compute(SOURCE,
-                List.of(target(FindUsagesEvent.TargetType.CLASS, "com/example/Foo", null, 3, 5)));
+    void classWithBlankAboveUsesAboveLine()
+    {
+        List<UsageLens.LensEntry> entries = UsageLens.compute(SOURCE, List.of(target(FindUsagesEvent.TargetType.CLASS, "com/example/Foo", null, 3, 5)));
 
         assertEquals(1, entries.size());
         UsageLens.LensEntry e = entries.get(0);
@@ -65,11 +68,9 @@ class UsageLensTest {
     }
 
     @Test
-    void mixedTargetsSortedByAnchorLine() {
-        List<UsageLens.LensEntry> entries = UsageLens.compute(SOURCE, List.of(
-                target(FindUsagesEvent.TargetType.METHOD, "bar", "()V", 6, 1),
-                target(FindUsagesEvent.TargetType.CLASS, "com/example/Foo", null, 3, 5),
-                target(FindUsagesEvent.TargetType.FIELD, "x", "I", 4, 2)));
+    void mixedTargetsSortedByAnchorLine()
+    {
+        List<UsageLens.LensEntry> entries = UsageLens.compute(SOURCE, List.of(target(FindUsagesEvent.TargetType.METHOD, "bar", "()V", 6, 1), target(FindUsagesEvent.TargetType.CLASS, "com/example/Foo", null, 3, 5), target(FindUsagesEvent.TargetType.FIELD, "x", "I", 4, 2)));
 
         assertEquals(3, entries.size());
         assertEquals(FindUsagesEvent.TargetType.CLASS, entries.get(0).targetType);
@@ -78,58 +79,58 @@ class UsageLensTest {
     }
 
     @Test
-    void pluralizesAndHandlesZero() {
-        assertEquals("1 usage", UsageLens.compute(SOURCE,
-                List.of(target(FindUsagesEvent.TargetType.METHOD, "bar", "()V", 6, 1))).get(0).text);
-        assertEquals("no usages", UsageLens.compute(SOURCE,
-                List.of(target(FindUsagesEvent.TargetType.METHOD, "bar", "()V", 6, 0))).get(0).text);
+    void pluralizesAndHandlesZero()
+    {
+        assertEquals("1 usage", UsageLens.compute(SOURCE, List.of(target(FindUsagesEvent.TargetType.METHOD, "bar", "()V", 6, 1))).get(0).text);
+        assertEquals("no usages", UsageLens.compute(SOURCE, List.of(target(FindUsagesEvent.TargetType.METHOD, "bar", "()V", 6, 0))).get(0).text);
     }
 
     @Test
-    void skipsNullSpanAndOutOfRange() {
+    void skipsNullSpanAndOutOfRange()
+    {
         UsageLens.LensTarget noSpan =
                 new UsageLens.LensTarget(FindUsagesEvent.TargetType.METHOD, "bar", "()V", null, 3);
         assertTrue(UsageLens.compute(SOURCE, List.of(noSpan)).isEmpty());
-        assertTrue(UsageLens.compute(SOURCE,
-                List.of(target(FindUsagesEvent.TargetType.METHOD, "bar", "()V", 99, 1))).isEmpty());
+        assertTrue(UsageLens.compute(SOURCE, List.of(target(FindUsagesEvent.TargetType.METHOD, "bar", "()V", 99, 1))).isEmpty());
     }
 
     @Test
-    void handlesNullInputs() {
+    void handlesNullInputs()
+    {
         assertTrue(UsageLens.compute(null, List.of()).isEmpty());
         assertTrue(UsageLens.compute(SOURCE, null).isEmpty());
     }
 
     // Filtered view (annotations hidden): original lines 3 (@Deprecated) and 5 (@Inject) removed.
-    private static final String[] FILTERED = {
-            "package com.example;",   // original line 1 -> 0
-            "",                       // original line 2 -> 1
-            "public class Foo {",     // original line 4 -> 2
-            "    private int x;"      // original line 6 -> 3
-    };
+    private static final String[] FILTERED =
+            {
+                    "package com.example;",   // original line 1 -> 0
+                    "",                       // original line 2 -> 1
+                    "public class Foo {",     // original line 4 -> 2
+                    "    private int x;"      // original line 6 -> 3
+            };
     private static final int[] LINE_MAP = {0, 1, -1, 2, -1, 3};
 
     @Test
-    void translatesLinesThroughAnnotationLineMap() {
+    void translatesLinesThroughAnnotationLineMap()
+    {
         // Class decl at original line 4 -> filtered index 2, with a blank line above (filtered index 1).
-        UsageLens.LensEntry cls = UsageLens.compute(FILTERED,
-                List.of(target(FindUsagesEvent.TargetType.CLASS, "com/example/Foo", null, 4, 5)), LINE_MAP).get(0);
+        UsageLens.LensEntry cls = UsageLens.compute(FILTERED, List.of(target(FindUsagesEvent.TargetType.CLASS, "com/example/Foo", null, 4, 5)), LINE_MAP).get(0);
         assertEquals(2, cls.declarationLine);
         assertEquals(1, cls.anchorLine);
         assertFalse(cls.endOfLine);
 
         // Field decl at original line 6 -> filtered index 3, no blank above (the class line).
-        UsageLens.LensEntry field = UsageLens.compute(FILTERED,
-                List.of(target(FindUsagesEvent.TargetType.FIELD, "x", "I", 6, 2)), LINE_MAP).get(0);
+        UsageLens.LensEntry field = UsageLens.compute(FILTERED, List.of(target(FindUsagesEvent.TargetType.FIELD, "x", "I", 6, 2)), LINE_MAP).get(0);
         assertEquals(3, field.declarationLine);
         assertTrue(field.endOfLine);
     }
 
     @Test
-    void spanOnRemovedLineFallsForwardToNextKeptLine() {
+    void spanOnRemovedLineFallsForwardToNextKeptLine()
+    {
         // Span points at the removed @Deprecated line (original line 3) -> falls forward to the class decl.
-        UsageLens.LensEntry e = UsageLens.compute(FILTERED,
-                List.of(target(FindUsagesEvent.TargetType.CLASS, "com/example/Foo", null, 3, 5)), LINE_MAP).get(0);
+        UsageLens.LensEntry e = UsageLens.compute(FILTERED, List.of(target(FindUsagesEvent.TargetType.CLASS, "com/example/Foo", null, 3, 5)), LINE_MAP).get(0);
         assertEquals(2, e.declarationLine);
     }
 }

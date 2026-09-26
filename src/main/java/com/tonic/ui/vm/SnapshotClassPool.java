@@ -12,30 +12,38 @@ import java.util.Map;
  * project cannot perturb a running VM. JDK / library classes (never edited) are delegated read-only to the live
  * project pool, so only the project's own classes are copied.
  */
-public final class SnapshotClassPool extends ClassPool {
+public final class SnapshotClassPool extends ClassPool
+{
 
     private final Map<String, byte[]> frozenUserClasses;
     private final ClassPool delegate;
 
-    public SnapshotClassPool(Map<String, byte[]> frozenUserClasses, ClassPool delegate) {
+    public SnapshotClassPool(Map<String, byte[]> frozenUserClasses, ClassPool delegate)
+    {
         super(true);
         this.frozenUserClasses = frozenUserClasses;
         this.delegate = delegate;
     }
 
     @Override
-    public ClassFile get(String internalName) {
+    public ClassFile get(String internalName)
+    {
         ClassFile materialized = super.get(internalName);
-        if (materialized != null) {
+        if (materialized != null)
+        {
             return materialized;
         }
         byte[] frozen = frozenUserClasses.get(internalName);
-        if (frozen != null) {
-            try {
+        if (frozen != null)
+        {
+            try
+            {
                 ClassFile parsed = new ClassFile(new ByteArrayInputStream(frozen));
                 put(parsed);
                 return parsed;
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 return null;
             }
         }

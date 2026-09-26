@@ -22,7 +22,8 @@ import java.util.regex.PatternSyntaxException;
 /**
  * Dialog for searching text across all decompiled source files.
  */
-public class FindInFilesDialog extends JDialog {
+public class FindInFilesDialog extends JDialog
+{
 
     private final ProjectModel project;
     private final JTextField searchField;
@@ -37,7 +38,8 @@ public class FindInFilesDialog extends JDialog {
     private List<SearchMatch> allMatches = new ArrayList<>();
     private SwingWorker<List<SearchMatch>, SearchMatch> currentWorker;
 
-    public FindInFilesDialog(Frame owner, ProjectModel project) {
+    public FindInFilesDialog(Frame owner, ProjectModel project)
+    {
         super(owner, "Find in Files", false);
         this.project = project;
 
@@ -117,10 +119,13 @@ public class FindInFilesDialog extends JDialog {
         resultsTable.getTableHeader().setFont(JStudioTheme.getUIFont(11));
 
         // Double-click to navigate
-        resultsTable.addMouseListener(new MouseAdapter() {
+        resultsTable.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
                     navigateToSelectedMatch();
                 }
             }
@@ -157,20 +162,24 @@ public class FindInFilesDialog extends JDialog {
     /**
      * Perform the search.
      */
-    private void performSearch() {
+    private void performSearch()
+    {
         String searchText = searchField.getText();
-        if (searchText.isEmpty()) {
+        if (searchText.isEmpty())
+        {
             statusLabel.setText("Enter search text.");
             return;
         }
 
-        if (project.getClassPool() == null) {
+        if (project.getClassPool() == null)
+        {
             statusLabel.setText("No project loaded.");
             return;
         }
 
         // Cancel any running search
-        if (currentWorker != null && !currentWorker.isDone()) {
+        if (currentWorker != null && !currentWorker.isDone())
+        {
             currentWorker.cancel(true);
         }
 
@@ -181,27 +190,35 @@ public class FindInFilesDialog extends JDialog {
 
         // Build pattern
         Pattern pattern;
-        try {
+        try
+        {
             pattern = buildPattern(searchText);
-        } catch (PatternSyntaxException e) {
+        }
+        catch (PatternSyntaxException e)
+        {
             statusLabel.setText("Invalid regex: " + e.getMessage());
             searchButton.setEnabled(true);
             return;
         }
 
-        currentWorker = new SwingWorker<>() {
+        currentWorker = new SwingWorker<>()
+        {
             @Override
-            protected List<SearchMatch> doInBackground() {
+            protected List<SearchMatch> doInBackground()
+            {
                 List<SearchMatch> matches = new ArrayList<>();
                 List<ClassEntryModel> classes = project.getAllClasses();
                 int processed = 0;
 
-                for (ClassEntryModel classEntry : classes) {
+                for (ClassEntryModel classEntry : classes)
+                {
                     if (isCancelled()) break;
 
-                    try {
+                    try
+                    {
                         String source = classEntry.getDecompilationCache();
-                        if (source == null) {
+                        if (source == null)
+                        {
                             ClassDecompiler decompiler = new ClassDecompiler(classEntry.getClassFile());
                             source = decompiler.decompile();
                             classEntry.setDecompilationCache(source);
@@ -209,25 +226,26 @@ public class FindInFilesDialog extends JDialog {
 
                         // Search for matches
                         String[] lines = source.split("\n");
-                        for (int lineNum = 0; lineNum < lines.length; lineNum++) {
+                        for (int lineNum = 0; lineNum < lines.length; lineNum++)
+                        {
                             String line = lines[lineNum];
                             Matcher matcher = pattern.matcher(line);
-                            if (matcher.find()) {
-                                SearchMatch match = new SearchMatch(
-                                        classEntry,
-                                        lineNum + 1,
-                                        line.trim()
-                                );
+                            if (matcher.find())
+                            {
+                                SearchMatch match = new SearchMatch(classEntry, lineNum + 1, line.trim());
                                 matches.add(match);
                                 publish(match);
                             }
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         // Skip classes that fail to decompile
                     }
 
                     processed++;
-                    if (processed % 10 == 0) {
+                    if (processed % 10 == 0)
+                    {
                         setProgress((processed * 100) / classes.size());
                     }
                 }
@@ -236,21 +254,27 @@ public class FindInFilesDialog extends JDialog {
             }
 
             @Override
-            protected void process(List<SearchMatch> chunks) {
+            protected void process(List<SearchMatch> chunks)
+            {
                 allMatches.addAll(chunks);
                 tableModel.setMatches(allMatches);
                 statusLabel.setText("Found " + allMatches.size() + " matches...");
             }
 
             @Override
-            protected void done() {
-                try {
-                    if (!isCancelled()) {
+            protected void done()
+            {
+                try
+                {
+                    if (!isCancelled())
+                    {
                         allMatches = get();
                         tableModel.setMatches(allMatches);
                         statusLabel.setText("Found " + allMatches.size() + " matches. Double-click to navigate.");
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     statusLabel.setText("Search error: " + e.getMessage());
                 }
                 searchButton.setEnabled(true);
@@ -260,15 +284,18 @@ public class FindInFilesDialog extends JDialog {
         currentWorker.execute();
     }
 
-    private Pattern buildPattern(String searchText) {
+    private Pattern buildPattern(String searchText)
+    {
         String patternText = searchText;
 
-        if (!regexBox.isSelected()) {
+        if (!regexBox.isSelected())
+        {
             // Escape regex special characters
             patternText = Pattern.quote(patternText);
         }
 
-        if (wholeWordBox.isSelected()) {
+        if (wholeWordBox.isSelected())
+        {
             patternText = "\\b" + patternText + "\\b";
         }
 
@@ -276,13 +303,15 @@ public class FindInFilesDialog extends JDialog {
         return Pattern.compile(patternText, flags);
     }
 
-    private void navigateToSelectedMatch() {
+    private void navigateToSelectedMatch()
+    {
         int viewRow = resultsTable.getSelectedRow();
         if (viewRow < 0) return;
 
         int modelRow = resultsTable.convertRowIndexToModel(viewRow);
         SearchMatch match = tableModel.getMatchAt(modelRow);
-        if (match != null && match.classEntry != null) {
+        if (match != null && match.classEntry != null)
+        {
             EventBus.getInstance().post(new ClassSelectedEvent(this, match.classEntry));
             // Could also navigate to specific line if we had that capability
         }
@@ -291,7 +320,8 @@ public class FindInFilesDialog extends JDialog {
     /**
      * Show the dialog and focus the search field.
      */
-    public void showDialog() {
+    public void showDialog()
+    {
         searchField.requestFocus();
         setVisible(true);
     }
@@ -299,19 +329,22 @@ public class FindInFilesDialog extends JDialog {
     /**
      * Show with pre-filled search text.
      */
-    public void showDialog(String searchText) {
+    public void showDialog(String searchText)
+    {
         searchField.setText(searchText);
         searchField.selectAll();
         showDialog();
     }
 
     // Data classes
-    private static class SearchMatch {
+    private static class SearchMatch
+    {
         final ClassEntryModel classEntry;
         final int lineNumber;
         final String lineText;
 
-        SearchMatch(ClassEntryModel classEntry, int lineNumber, String lineText) {
+        SearchMatch(ClassEntryModel classEntry, int lineNumber, String lineText)
+        {
             this.classEntry = classEntry;
             this.lineNumber = lineNumber;
             this.lineText = lineText;
@@ -319,45 +352,58 @@ public class FindInFilesDialog extends JDialog {
     }
 
     // Table model
-    private static class ResultsTableModel extends AbstractTableModel {
+    private static class ResultsTableModel extends AbstractTableModel
+    {
         private final String[] COLUMNS = {"Class", "Line", "Match"};
         private List<SearchMatch> matches = new ArrayList<>();
 
-        void setMatches(List<SearchMatch> matches) {
+        void setMatches(List<SearchMatch> matches)
+        {
             this.matches = new ArrayList<>(matches);
             fireTableDataChanged();
         }
 
-        SearchMatch getMatchAt(int row) {
-            if (row >= 0 && row < matches.size()) {
+        SearchMatch getMatchAt(int row)
+        {
+            if (row >= 0 && row < matches.size())
+            {
                 return matches.get(row);
             }
             return null;
         }
 
         @Override
-        public int getRowCount() {
+        public int getRowCount()
+        {
             return matches.size();
         }
 
         @Override
-        public int getColumnCount() {
+        public int getColumnCount()
+        {
             return COLUMNS.length;
         }
 
         @Override
-        public String getColumnName(int column) {
+        public String getColumnName(int column)
+        {
             return COLUMNS[column];
         }
 
         @Override
-        public Object getValueAt(int rowIndex, int columnIndex) {
+        public Object getValueAt(int rowIndex, int columnIndex)
+        {
             SearchMatch match = matches.get(rowIndex);
-            switch (columnIndex) {
-                case 0: return match.classEntry.getClassName().replace('/', '.');
-                case 1: return match.lineNumber;
-                case 2: return match.lineText;
-                default: return "";
+            switch (columnIndex)
+            {
+                case 0:
+                    return match.classEntry.getClassName().replace('/', '.');
+                case 1:
+                    return match.lineNumber;
+                case 2:
+                    return match.lineText;
+                default:
+                    return "";
             }
         }
     }

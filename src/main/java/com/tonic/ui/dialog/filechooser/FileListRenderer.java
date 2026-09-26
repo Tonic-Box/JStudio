@@ -12,29 +12,36 @@ import java.awt.Component;
 /**
  * Custom renderer for file list cells with proper styling.
  */
-public class FileListRenderer extends DefaultTableCellRenderer {
+public class FileListRenderer extends DefaultTableCellRenderer
+{
 
     private final FileListModel model;
 
-    public FileListRenderer(FileListModel model) {
+    public FileListRenderer(FileListModel model)
+    {
         this.model = model;
     }
 
     @Override
-    public Component getTableCellRendererComponent(JTable table, Object value,
-                                                   boolean isSelected, boolean hasFocus,
-                                                   int row, int column) {
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+    {
         super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
         // Background colors
-        if (isSelected) {
+        if (isSelected)
+        {
             setBackground(JStudioTheme.getSelection());
             setForeground(JStudioTheme.getTextPrimary());
-        } else {
+        }
+        else
+        {
             // Alternating row colors
-            if (row % 2 == 0) {
+            if (row % 2 == 0)
+            {
                 setBackground(JStudioTheme.getBgTertiary());
-            } else {
+            }
+            else
+            {
                 setBackground(JStudioTheme.getBgSecondary());
             }
             setForeground(JStudioTheme.getTextPrimary());
@@ -48,11 +55,13 @@ public class FileListRenderer extends DefaultTableCellRenderer {
         int modelColumn = table.convertColumnIndexToModel(column);
         FileListModel.FileEntry entry = model.getEntryAt(table.convertRowIndexToModel(row));
 
-        if (entry == null) {
+        if (entry == null)
+        {
             return this;
         }
 
-        switch (modelColumn) {
+        switch (modelColumn)
+        {
             case FileListModel.COL_ICON:
                 setIcon((Icon) value);
                 setText("");
@@ -66,7 +75,8 @@ public class FileListRenderer extends DefaultTableCellRenderer {
             case FileListModel.COL_SIZE:
                 setText(entry.getFormattedSize());
                 setHorizontalAlignment(JLabel.RIGHT);
-                if (entry.isDirectory()) {
+                if (entry.isDirectory())
+                {
                     setForeground(JStudioTheme.getTextSecondary());
                 }
                 break;
@@ -81,7 +91,8 @@ public class FileListRenderer extends DefaultTableCellRenderer {
                 break;
 
             default:
-                if (value != null) {
+                if (value != null)
+                {
                     setText(value.toString());
                 }
         }

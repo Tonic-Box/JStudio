@@ -16,7 +16,8 @@ import java.nio.file.Path;
  * and may update (download with SHA-256 verification, then swap-and-relaunch via
  * {@link UpdateInstaller}/{@link com.tonic.cli.Updater}), skip the version, or defer.
  */
-public final class UpdateManager {
+public final class UpdateManager
+{
 
     private static volatile boolean startupCheckDisabled = false;
 
@@ -24,7 +25,8 @@ public final class UpdateManager {
     private final UpdateChecker checker = new UpdateChecker();
     private final UpdateInstaller installer = new UpdateInstaller();
 
-    public UpdateManager(JFrame parent) {
+    public UpdateManager(JFrame parent)
+    {
         this.parent = parent;
     }
 
@@ -32,7 +34,8 @@ public final class UpdateManager {
      * Suppresses the automatic startup check for this session (the {@code -dev} launch flag). The
      * manual "Check for Updates" action is unaffected.
      */
-    public static void disableStartupCheck() {
+    public static void disableStartupCheck()
+    {
         startupCheckDisabled = true;
     }
 
@@ -40,8 +43,10 @@ public final class UpdateManager {
      * Startup check: silently does nothing in a dev run or when disabled, and only prompts for a
      * newer, non-skipped release. Runs on every launch.
      */
-    public void checkOnStartup() {
-        if (startupCheckDisabled || !AppVersion.isPackaged() || !Settings.getInstance().isUpdateCheckEnabled()) {
+    public void checkOnStartup()
+    {
+        if (startupCheckDisabled || !AppVersion.isPackaged() || !Settings.getInstance().isUpdateCheckEnabled())
+        {
             return;
         }
         runCheck(false);
@@ -50,29 +55,36 @@ public final class UpdateManager {
     /**
      * Manual check (Help menu): ignores the throttle and the opt-out, and always reports a result.
      */
-    public void checkNow() {
-        if (!AppVersion.isPackaged()) {
-            JOptionPane.showMessageDialog(parent,
-                    "Update checks are only available in the packaged release build.",
-                    "Check for Updates", JOptionPane.INFORMATION_MESSAGE);
+    public void checkNow()
+    {
+        if (!AppVersion.isPackaged())
+        {
+            JOptionPane.showMessageDialog(parent, "Update checks are only available in the packaged release build.", "Check for Updates", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         runCheck(true);
     }
 
-    private void runCheck(boolean manual) {
-        new SwingWorker<UpdateInfo, Void>() {
+    private void runCheck(boolean manual)
+    {
+        new SwingWorker<UpdateInfo, Void>()
+        {
             @Override
-            protected UpdateInfo doInBackground() {
+            protected UpdateInfo doInBackground()
+            {
                 return checker.fetchLatest();
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 UpdateInfo info;
-                try {
+                try
+                {
                     info = get();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     info = null;
                 }
                 handleResult(info, manual);
@@ -80,123 +92,140 @@ public final class UpdateManager {
         }.execute();
     }
 
-    private void handleResult(UpdateInfo info, boolean manual) {
-        if (info == null) {
-            if (manual) {
-                JOptionPane.showMessageDialog(parent,
-                        "Couldn't check for updates (network error or rate limit).",
-                        "Check for Updates", JOptionPane.WARNING_MESSAGE);
+    private void handleResult(UpdateInfo info, boolean manual)
+    {
+        if (info == null)
+        {
+            if (manual)
+            {
+                JOptionPane.showMessageDialog(parent, "Couldn't check for updates (network error or rate limit).", "Check for Updates", JOptionPane.WARNING_MESSAGE);
             }
             return;
         }
         int current = AppVersion.parse(AppVersion.current());
-        if (info.getVersion() <= current) {
-            if (manual) {
-                JOptionPane.showMessageDialog(parent,
-                        "You're up to date (version " + current + ").",
-                        "Check for Updates", JOptionPane.INFORMATION_MESSAGE);
+        if (info.getVersion() <= current)
+        {
+            if (manual)
+            {
+                JOptionPane.showMessageDialog(parent, "You're up to date (version " + current + ").", "Check for Updates", JOptionPane.INFORMATION_MESSAGE);
             }
             return;
         }
-        if (!manual && info.getTag().equals(Settings.getInstance().getSkippedVersion())) {
+        if (!manual && info.getTag().equals(Settings.getInstance().getSkippedVersion()))
+        {
             return;
         }
         promptUpdate(info, current);
     }
 
-    private void promptUpdate(UpdateInfo info, int current) {
+    private void promptUpdate(UpdateInfo info, int current)
+    {
         String[] options = {"Update now", "Skip this version", "Later"};
-        int choice = JOptionPane.showOptionDialog(parent,
-                "Version " + info.getTag() + " is available (you have version " + current + ").\n\n"
-                        + "Update now? JStudio will download it, then restart to apply.",
-                "Update available", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
-                null, options, options[0]);
-        if (choice == 0) {
+        int choice = JOptionPane.showOptionDialog(parent, "Version " + info.getTag() + " is available (you have version " + current + ").\n\n" + "Update now? JStudio will download it, then restart to apply.", "Update available", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+        if (choice == 0)
+        {
             startInstall(info);
-        } else if (choice == 1) {
+        }
+        else if (choice == 1)
+        {
             Settings.getInstance().setSkippedVersion(info.getTag());
         }
     }
 
-    private void startInstall(UpdateInfo info) {
-        if (info.getJarUrl() == null) {
-            JOptionPane.showMessageDialog(parent,
-                    "Release " + info.getTag() + " has no downloadable jar.\nOpening the release page instead.",
-                    "Update", JOptionPane.WARNING_MESSAGE);
+    private void startInstall(UpdateInfo info)
+    {
+        if (info.getJarUrl() == null)
+        {
+            JOptionPane.showMessageDialog(parent, "Release " + info.getTag() + " has no downloadable jar.\nOpening the release page instead.", "Update", JOptionPane.WARNING_MESSAGE);
             browse(info.getReleaseUrl());
             return;
         }
 
-        ProgressMonitor monitor = new ProgressMonitor(parent,
-                "Downloading " + info.getTag() + "…", "", 0, 100);
+        ProgressMonitor monitor = new ProgressMonitor(parent, "Downloading " + info.getTag() + "…", "", 0, 100);
         monitor.setMillisToDecideToPopup(0);
         monitor.setMillisToPopup(0);
 
-        SwingWorker<Path, Void> worker = new SwingWorker<>() {
+        SwingWorker<Path, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected Path doInBackground() throws Exception {
-                return installer.download(info, percent -> {
-                    if (percent >= 0) {
+            protected Path doInBackground() throws Exception
+            {
+                return installer.download(info, percent ->
+                {
+                    if (percent >= 0)
+                    {
                         setProgress((int) Math.min(100, percent));
                     }
                 });
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 monitor.close();
                 Path jar;
-                try {
+                try
+                {
                     jar = get();
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(parent,
-                            "Update failed: " + rootMessage(e) + "\nOpening the release page instead.",
-                            "Update", JOptionPane.ERROR_MESSAGE);
+                }
+                catch (Exception e)
+                {
+                    JOptionPane.showMessageDialog(parent, "Update failed: " + rootMessage(e) + "\nOpening the release page instead.", "Update", JOptionPane.ERROR_MESSAGE);
                     browse(info.getReleaseUrl());
                     return;
                 }
                 confirmRestart(info, jar);
             }
         };
-        worker.addPropertyChangeListener(event -> {
-            if ("progress".equals(event.getPropertyName())) {
+        worker.addPropertyChangeListener(event ->
+        {
+            if ("progress".equals(event.getPropertyName()))
+            {
                 monitor.setProgress((Integer) event.getNewValue());
             }
         });
         worker.execute();
     }
 
-    private void confirmRestart(UpdateInfo info, Path jar) {
-        int restart = JOptionPane.showConfirmDialog(parent,
-                info.getTag() + " downloaded. Restart now to finish updating?",
-                "Update ready", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-        if (restart != JOptionPane.YES_OPTION) {
+    private void confirmRestart(UpdateInfo info, Path jar)
+    {
+        int restart = JOptionPane.showConfirmDialog(parent, info.getTag() + " downloaded. Restart now to finish updating?", "Update ready", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (restart != JOptionPane.YES_OPTION)
+        {
             return;
         }
-        try {
+        try
+        {
             installer.applyAndRestart(jar);
             System.exit(0);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(parent,
-                    "Couldn't apply the update: " + rootMessage(e),
-                    "Update", JOptionPane.ERROR_MESSAGE);
+        }
+        catch (Exception e)
+        {
+            JOptionPane.showMessageDialog(parent, "Couldn't apply the update: " + rootMessage(e), "Update", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void browse(String url) {
-        if (url == null || !Desktop.isDesktopSupported()) {
+    private void browse(String url)
+    {
+        if (url == null || !Desktop.isDesktopSupported())
+        {
             return;
         }
-        try {
+        try
+        {
             Desktop.getDesktop().browse(URI.create(url));
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
             // best effort
         }
     }
 
-    private static String rootMessage(Throwable t) {
+    private static String rootMessage(Throwable t)
+    {
         Throwable cause = t;
-        while (cause.getCause() != null && cause.getCause() != cause) {
+        while (cause.getCause() != null && cause.getCause() != cause)
+        {
             cause = cause.getCause();
         }
         String message = cause.getMessage();

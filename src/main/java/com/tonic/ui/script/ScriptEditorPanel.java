@@ -25,7 +25,8 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.File;
 
-public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListener {
+public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListener
+{
 
     // UI Components
     private RSyntaxTextArea codeEditor;
@@ -43,7 +44,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
     private Script currentScript;
     private Runnable onTransformComplete;
 
-    public ScriptEditorPanel() {
+    public ScriptEditorPanel()
+    {
         super(BackgroundStyle.TERTIARY, new BorderLayout());
         this.currentScript = new Script("Untitled", Script.Mode.AST, "");
 
@@ -74,12 +76,14 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         applySyntaxColors();
         updateEditorColors();
     }
 
-    private void applySyntaxColors() {
+    private void applySyntaxColors()
+    {
         if (codeEditor == null) return;
 
         Theme theme = ThemeManager.getInstance().getCurrentTheme();
@@ -109,7 +113,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         codeEditor.repaint();
     }
 
-    private void updateEditorColors() {
+    private void updateEditorColors()
+    {
         if (codeEditor == null) return;
 
         Theme theme = ThemeManager.getInstance().getCurrentTheme();
@@ -119,7 +124,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         codeEditor.setCurrentLineHighlightColor(theme.getBgSecondary());
         codeEditor.setSelectionColor(theme.getSelection());
 
-        if (editorScrollPane != null) {
+        if (editorScrollPane != null)
+        {
             editorScrollPane.getGutter().setBackground(theme.getBgSecondary());
             editorScrollPane.getGutter().setLineNumberColor(theme.getTextSecondary());
             editorScrollPane.getGutter().setBorderColor(theme.getBorder());
@@ -129,7 +135,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         codeEditor.repaint();
     }
 
-    private JPanel createToolbar() {
+    private JPanel createToolbar()
+    {
         JPanel toolbar = new JPanel(new BorderLayout());
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
@@ -196,7 +203,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         return toolbar;
     }
 
-    private JPanel createLibraryPanel() {
+    private JPanel createLibraryPanel()
+    {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(JStudioTheme.getBgSecondary());
         panel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, JStudioTheme.getBorder()));
@@ -214,10 +222,13 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         scriptList.setSelectionBackground(JStudioTheme.getSelection());
         scriptList.setSelectionForeground(JStudioTheme.getTextPrimary());
         scriptList.setCellRenderer(new ScriptListRenderer());
-        scriptList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
+        scriptList.addListSelectionListener(e ->
+        {
+            if (!e.getValueIsAdjusting())
+            {
                 Script selected = scriptList.getSelectedValue();
-                if (selected != null) {
+                if (selected != null)
+                {
                     loadScriptToEditor(selected);
                 }
             }
@@ -237,7 +248,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         return panel;
     }
 
-    private JPanel createEditorPanel() {
+    private JPanel createEditorPanel()
+    {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(JStudioTheme.getBgTertiary());
 
@@ -266,7 +278,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         return panel;
     }
 
-    private JPanel createConsolePanel() {
+    private JPanel createConsolePanel()
+    {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(JStudioTheme.getBgTertiary());
 
@@ -302,7 +315,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         return panel;
     }
 
-    private JPanel createStatusBar() {
+    private JPanel createStatusBar()
+    {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.setBackground(JStudioTheme.getBgSecondary());
         panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()));
@@ -314,21 +328,23 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         return panel;
     }
 
-    private String getDefaultScriptContent() {
+    private String getDefaultScriptContent()
+    {
         return "// @mode: ast\n" +
-               "// @name: My Transform\n" +
-               "\n" +
-               "// Example: Log all method calls\n" +
-               "ast.onMethodCall((call) => {\n" +
-               "    log(\"Found method call: \" + call.name);\n" +
-               "    // Return null to remove, or return modified node\n" +
-               "    // return null;\n" +
-               "});\n";
+                "// @name: My Transform\n" +
+                "\n" +
+                "// Example: Log all method calls\n" +
+                "ast.onMethodCall((call) => {\n" +
+                "    log(\"Found method call: \" + call.name);\n" +
+                "    // Return null to remove, or return modified node\n" +
+                "    // return null;\n" +
+                "});\n";
     }
 
     // ==================== Script Execution ====================
 
-    private void runScript() {
+    private void runScript()
+    {
         String code = codeEditor.getText();
         Script.Mode mode = (Script.Mode) modeComboBox.getSelectedItem();
         String target = (String) targetComboBox.getSelectedItem();
@@ -340,12 +356,17 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         ScriptRunner.Scope scope;
         ClassEntryModel targetClass = null;
         MethodEntryModel targetMethod = null;
-        if ("All Classes".equals(target)) {
+        if ("All Classes".equals(target))
+        {
             scope = ScriptRunner.Scope.ALL;
-        } else if ("Current Class".equals(target)) {
+        }
+        else if ("Current Class".equals(target))
+        {
             scope = ScriptRunner.Scope.CLASS;
             targetClass = (ClassEntryModel) classComboBox.getSelectedItem();
-        } else {
+        }
+        else
+        {
             scope = ScriptRunner.Scope.METHOD;
             targetClass = (ClassEntryModel) classComboBox.getSelectedItem();
             targetMethod = (MethodEntryModel) methodComboBox.getSelectedItem();
@@ -356,27 +377,33 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
 
         com.tonic.service.history.LocalHistoryService.getInstance()
                 .snapshot("Script transform", com.tonic.model.Snapshot.Trigger.SCRIPT);
-        SwingWorker<Integer, Void> worker = new SwingWorker<>() {
+        SwingWorker<Integer, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected Integer doInBackground() {
+            protected Integer doInBackground()
+            {
                 ProjectModel project = ProjectService.getInstance().getCurrentProject();
                 LiveSession live = LiveAttachService.getInstance().getSession();
-                return ScriptRunner.run(code, mode, project, live, fScope, fClass, fMethod,
-                    msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg)));
+                return ScriptRunner.run(code, mode, project, live, fScope, fClass, fMethod, msg -> SwingUtilities.invokeLater(() -> appendToConsole(msg)));
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     int count = get();
                     statusLabel.setText("Completed: " + count + " modifications");
                     appendToConsole("\nTransform completed with " + count + " modifications.\n");
 
                     // Notify that transforms are complete
-                    if (onTransformComplete != null) {
+                    if (onTransformComplete != null)
+                    {
                         onTransformComplete.run();
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     statusLabel.setText("Error: " + e.getMessage());
                     appendToConsole("ERROR: " + e.getMessage() + "\n");
                 }
@@ -388,69 +415,19 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
 
     // ==================== Script Management ====================
 
-    private void loadBuiltInScripts() {
+    private void loadBuiltInScripts()
+    {
         // Add built-in example scripts
-        Script example1 = new Script("Remove Debug Prints", Script.Mode.AST,
-            "// @mode: ast\n// @name: Remove Debug Prints\n\n" +
-            "ast.onMethodCall((call) => {\n" +
-            "    if (call.owner == \"java/io/PrintStream\"\n" +
-            "        && (call.name == \"println\" || call.name == \"print\")) {\n" +
-            "        log(\"Removing: \" + call.name);\n" +
-            "        return ast.remove();\n" +
-            "    }\n" +
-            "    // return nothing / the call to keep it\n" +
-            "});\n");
+        Script example1 = new Script("Remove Debug Prints", Script.Mode.AST, "// @mode: ast\n// @name: Remove Debug Prints\n\n" + "ast.onMethodCall((call) => {\n" + "    if (call.owner == \"java/io/PrintStream\"\n" + "        && (call.name == \"println\" || call.name == \"print\")) {\n" + "        log(\"Removing: \" + call.name);\n" + "        return ast.remove();\n" + "    }\n" + "    // return nothing / the call to keep it\n" + "});\n");
         example1.setBuiltIn(true);
 
-        Script example2 = new Script("Log Method Calls", Script.Mode.AST,
-            "// @mode: ast\n// @name: Log Method Calls\n\n" +
-            "// Analysis only - logs every call, makes no changes (0 modifications is expected).\n" +
-            "// NOTE: handlers run per-method, so a top-level running total can't aggregate across methods;\n" +
-            "// log inside the handler instead.\n" +
-            "ast.onMethodCall((call) => {\n" +
-            "    log((call.owner || \"?\") + \".\" + call.name);\n" +
-            "});\n");
+        Script example2 = new Script("Log Method Calls", Script.Mode.AST, "// @mode: ast\n// @name: Log Method Calls\n\n" + "// Analysis only - logs every call, makes no changes (0 modifications is expected).\n" + "// NOTE: handlers run per-method, so a top-level running total can't aggregate across methods;\n" + "// log inside the handler instead.\n" + "ast.onMethodCall((call) => {\n" + "    log((call.owner || \"?\") + \".\" + call.name);\n" + "});\n");
         example2.setBuiltIn(true);
 
-        Script example3 = new Script("Constant Folding (IR)", Script.Mode.IR,
-            "// @mode: ir\n// @name: Fold Constants\n\n" +
-            "ir.onBinaryOp((instr) => {\n" +
-            "    if (instr.left.isConstant && instr.right.isConstant) {\n" +
-            "        let leftVal = instr.left.value;\n" +
-            "        let rightVal = instr.right.value;\n" +
-            "        log(\"Folding: \" + leftVal + \" \" + instr.op + \" \" + rightVal);\n" +
-            "        // Return constant with computed value\n" +
-            "        // return ir.intConstant(leftVal + rightVal);\n" +
-            "    }\n" +
-            "});\n");
+        Script example3 = new Script("Constant Folding (IR)", Script.Mode.IR, "// @mode: ir\n// @name: Fold Constants\n\n" + "ir.onBinaryOp((instr) => {\n" + "    if (instr.left.isConstant && instr.right.isConstant) {\n" + "        let leftVal = instr.left.value;\n" + "        let rightVal = instr.right.value;\n" + "        log(\"Folding: \" + leftVal + \" \" + instr.op + \" \" + rightVal);\n" + "        // Return constant with computed value\n" + "        // return ir.intConstant(leftVal + rightVal);\n" + "    }\n" + "});\n");
         example3.setBuiltIn(true);
 
-        Script example4 = new Script("Strip @Named Annotations", Script.Mode.AST,
-            "// @name: Strip @Named Annotations\n\n" +
-            "// Remove @Named from classes\n" +
-            "annotations.onClassAnnotation((anno) => {\n" +
-            "    if (anno.simpleName == \"Named\") {\n" +
-            "        log(\"Removing @Named from class\");\n" +
-            "        return annotations.remove();\n" +
-            "    }\n" +
-            "    return anno;\n" +
-            "});\n\n" +
-            "// Remove @Named from methods\n" +
-            "annotations.onMethodAnnotation((anno) => {\n" +
-            "    if (anno.simpleName == \"Named\") {\n" +
-            "        log(\"Removing @Named from \" + anno.target);\n" +
-            "        return annotations.remove();\n" +
-            "    }\n" +
-            "    return anno;\n" +
-            "});\n\n" +
-            "// Remove @Named from fields\n" +
-            "annotations.onFieldAnnotation((anno) => {\n" +
-            "    if (anno.simpleName == \"Named\") {\n" +
-            "        log(\"Removing @Named from \" + anno.target);\n" +
-            "        return annotations.remove();\n" +
-            "    }\n" +
-            "    return anno;\n" +
-            "});\n");
+        Script example4 = new Script("Strip @Named Annotations", Script.Mode.AST, "// @name: Strip @Named Annotations\n\n" + "// Remove @Named from classes\n" + "annotations.onClassAnnotation((anno) => {\n" + "    if (anno.simpleName == \"Named\") {\n" + "        log(\"Removing @Named from class\");\n" + "        return annotations.remove();\n" + "    }\n" + "    return anno;\n" + "});\n\n" + "// Remove @Named from methods\n" + "annotations.onMethodAnnotation((anno) => {\n" + "    if (anno.simpleName == \"Named\") {\n" + "        log(\"Removing @Named from \" + anno.target);\n" + "        return annotations.remove();\n" + "    }\n" + "    return anno;\n" + "});\n\n" + "// Remove @Named from fields\n" + "annotations.onFieldAnnotation((anno) => {\n" + "    if (anno.simpleName == \"Named\") {\n" + "        log(\"Removing @Named from \" + anno.target);\n" + "        return annotations.remove();\n" + "    }\n" + "    return anno;\n" + "});\n");
         example4.setBuiltIn(true);
 
         scriptListModel.addElement(example1);
@@ -462,7 +439,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         ScriptStore.loadUserScripts().forEach(scriptListModel::addElement);
     }
 
-    private void loadScriptToEditor(Script script) {
+    private void loadScriptToEditor(Script script)
+    {
         currentScript = script;
         codeEditor.setText(script.getContent());
         modeComboBox.setSelectedItem(script.getMode());
@@ -470,20 +448,25 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
     }
 
     /** Rebuilds the list from the built-ins + the (possibly just-changed) user scripts directory. */
-    public void reloadUserScripts() {
+    public void reloadUserScripts()
+    {
         scriptListModel.clear();
         loadBuiltInScripts();
     }
 
     /** Reloads the list and selects/opens the user script with this name (e.g. one the AI just wrote). */
-    public void selectScriptByName(String name) {
+    public void selectScriptByName(String name)
+    {
         reloadUserScripts();
-        if (name == null) {
+        if (name == null)
+        {
             return;
         }
-        for (int i = 0; i < scriptListModel.size(); i++) {
+        for (int i = 0; i < scriptListModel.size(); i++)
+        {
             Script script = scriptListModel.get(i);
-            if (!script.isBuiltIn() && name.equals(script.getName())) {
+            if (!script.isBuiltIn() && name.equals(script.getName()))
+            {
                 scriptList.setSelectedValue(script, true);
                 loadScriptToEditor(script);
                 return;
@@ -491,14 +474,16 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         }
     }
 
-    private void createNewScript() {
+    private void createNewScript()
+    {
         Script newScript = new Script("New Script", Script.Mode.AST, getDefaultScriptContent());
         scriptListModel.addElement(newScript);
         scriptList.setSelectedValue(newScript, true);
         loadScriptToEditor(newScript);
     }
 
-    private void saveScript() {
+    private void saveScript()
+    {
         currentScript.setContent(codeEditor.getText());
         currentScript.setMode((Script.Mode) modeComboBox.getSelectedItem());
         currentScript.setName(Script.parseNameFromContent(codeEditor.getText()));
@@ -507,51 +492,60 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         chooser.setDialogTitle("Save Script");
         chooser.setSelectedFile(new File(currentScript.getName() + ".jstudio-script"));
 
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
+            try
+            {
                 ScriptStore.saveScript(currentScript, chooser.getSelectedFile());
                 statusLabel.setText("Saved: " + chooser.getSelectedFile().getName());
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Save failed: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+            catch (Exception e)
+            {
+                JOptionPane.showMessageDialog(this, "Save failed: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    private void loadScript() {
+    private void loadScript()
+    {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Load Script");
-        chooser.setFileFilter(new FileNameExtensionFilter(
-            "JStudio Scripts", "jstudio-script", "js"));
+        chooser.setFileFilter(new FileNameExtensionFilter("JStudio Scripts", "jstudio-script", "js"));
 
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
+            try
+            {
                 Script loaded = ScriptStore.loadScript(chooser.getSelectedFile());
                 scriptListModel.addElement(loaded);
                 scriptList.setSelectedValue(loaded, true);
                 loadScriptToEditor(loaded);
                 statusLabel.setText("Loaded: " + chooser.getSelectedFile().getName());
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Load failed: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+            catch (Exception e)
+            {
+                JOptionPane.showMessageDialog(this, "Load failed: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     // ==================== UI Helpers ====================
 
-    private void showDocumentation() {
+    private void showDocumentation()
+    {
         Window owner = SwingUtilities.getWindowAncestor(this);
         ScriptDocumentationDialog dialog = new ScriptDocumentationDialog(owner);
         dialog.setVisible(true);
     }
 
-    private void appendToConsole(String text) {
+    private void appendToConsole(String text)
+    {
         consoleOutput.append(text);
         consoleOutput.setCaretPosition(consoleOutput.getDocument().getLength());
     }
 
-    private JButton createToolbarButton(String text, Icon icon, ActionListener listener) {
+    private JButton createToolbarButton(String text, Icon icon, ActionListener listener)
+    {
         JButton button = new JButton(text, icon);
         button.setBackground(JStudioTheme.getBgTertiary());
         button.setForeground(JStudioTheme.getTextPrimary());
@@ -560,18 +554,23 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         return button;
     }
 
-    private void styleComboBox(JComboBox<?> combo) {
+    private void styleComboBox(JComboBox<?> combo)
+    {
         combo.setBackground(JStudioTheme.getBgTertiary());
         combo.setForeground(JStudioTheme.getTextPrimary());
         combo.setMaximumSize(new Dimension(200, 25));
     }
 
-    private void updateMethodComboBox() {
+    private void updateMethodComboBox()
+    {
         methodComboBox.removeAllItems();
         ClassEntryModel selected = (ClassEntryModel) classComboBox.getSelectedItem();
-        if (selected != null) {
-            for (MethodEntryModel method : selected.getMethods()) {
-                if (method.getMethodEntry().getCodeAttribute() != null) {
+        if (selected != null)
+        {
+            for (MethodEntryModel method : selected.getMethods())
+            {
+                if (method.getMethodEntry().getCodeAttribute() != null)
+                {
                     methodComboBox.addItem(method);
                 }
             }
@@ -580,60 +579,71 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
 
     // ==================== Public API ====================
 
-    public void setProjectModel(ProjectModel model) {
+    public void setProjectModel(ProjectModel model)
+    {
         classComboBox.removeAllItems();
-        if (model != null) {
-            for (ClassEntryModel classEntry : model.getAllClasses()) {
+        if (model != null)
+        {
+            for (ClassEntryModel classEntry : model.getAllClasses())
+            {
                 classComboBox.addItem(classEntry);
             }
         }
     }
 
-    public void setClass(ClassEntryModel classEntry) {
-        if (classEntry != null) {
+    public void setClass(ClassEntryModel classEntry)
+    {
+        if (classEntry != null)
+        {
             classComboBox.setSelectedItem(classEntry);
         }
     }
 
-    public void setOnTransformComplete(Runnable callback) {
+    public void setOnTransformComplete(Runnable callback)
+    {
         this.onTransformComplete = callback;
     }
 
     // ==================== Renderers ====================
 
-    private static class ScriptListRenderer extends DefaultListCellRenderer {
+    private static class ScriptListRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value,
-                int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (value instanceof Script) {
+            if (value instanceof Script)
+            {
                 Script script = (Script) value;
                 setText((script.isBuiltIn() ? "[Built-in] " : "") + script.getName());
-                setForeground(isSelected ? JStudioTheme.getTextPrimary() :
-                    (script.isBuiltIn() ? JStudioTheme.getTextSecondary() : JStudioTheme.getTextPrimary()));
+                setForeground(isSelected ? JStudioTheme.getTextPrimary() : (script.isBuiltIn() ? JStudioTheme.getTextSecondary() : JStudioTheme.getTextPrimary()));
             }
             return this;
         }
     }
 
-    private static class ClassComboRenderer extends DefaultListCellRenderer {
+    private static class ClassComboRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value,
-                int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (value instanceof ClassEntryModel) {
+            if (value instanceof ClassEntryModel)
+            {
                 setText(((ClassEntryModel) value).getSimpleName());
             }
             return this;
         }
     }
 
-    private static class MethodComboRenderer extends DefaultListCellRenderer {
+    private static class MethodComboRenderer extends DefaultListCellRenderer
+    {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value,
-                int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+        {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if (value instanceof MethodEntryModel) {
+            if (value instanceof MethodEntryModel)
+            {
                 setText(((MethodEntryModel) value).getDisplaySignature());
             }
             return this;

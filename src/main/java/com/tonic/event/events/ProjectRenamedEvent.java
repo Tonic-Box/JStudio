@@ -9,9 +9,11 @@ import lombok.Getter;
  * the chat worker thread.
  */
 @Getter
-public class ProjectRenamedEvent extends Event {
+public class ProjectRenamedEvent extends Event
+{
 
-    public enum Kind {
+    public enum Kind
+    {
         CLASS, METHOD, FIELD
     }
 
@@ -20,7 +22,8 @@ public class ProjectRenamedEvent extends Event {
     private final String newClass;
     private final String member;
 
-    public ProjectRenamedEvent(Object source, Kind kind, String oldClass, String newClass, String member) {
+    public ProjectRenamedEvent(Object source, Kind kind, String oldClass, String newClass, String member)
+    {
         super(source);
         this.kind = kind;
         this.oldClass = oldClass;

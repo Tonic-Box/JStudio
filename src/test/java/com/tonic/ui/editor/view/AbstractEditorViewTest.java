@@ -11,31 +11,37 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Covers the no-op/fallback defaults and the load scaffolding in {@link AbstractEditorView}. */
-class AbstractEditorViewTest {
+class AbstractEditorViewTest
+{
 
     @BeforeAll
-    static void headless() {
+    static void headless()
+    {
         System.setProperty("java.awt.headless", "true");
     }
 
     /** Minimal concrete view that records the calls the base routes to it. */
-    private static class TestView extends AbstractEditorView {
+    private static class TestView extends AbstractEditorView
+    {
         final AtomicInteger refreshes = new AtomicInteger();
         int goToLineArg = Integer.MIN_VALUE;
 
         @Override
-        public void refresh() {
+        public void refresh()
+        {
             refreshes.incrementAndGet();
         }
 
         @Override
-        public void goToLine(int line) {
+        public void goToLine(int line)
+        {
             goToLineArg = line;
         }
     }
 
     @Test
-    void reloadClearsLoadedThenRefreshes() {
+    void reloadClearsLoadedThenRefreshes()
+    {
         TestView v = new TestView();
         v.loaded = true;
         v.reload();
@@ -44,14 +50,16 @@ class AbstractEditorViewTest {
     }
 
     @Test
-    void highlightLineFallsBackToGoToLine() {
+    void highlightLineFallsBackToGoToLine()
+    {
         TestView v = new TestView();
         v.highlightLine(42);
         assertEquals(42, v.goToLineArg);
     }
 
     @Test
-    void contractDefaultsAreNoOps() {
+    void contractDefaultsAreNoOps()
+    {
         TestView v = new TestView();
         assertEquals("", v.getText());
         assertNull(v.getSelectedText());

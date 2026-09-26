@@ -23,7 +23,8 @@ import java.awt.FlowLayout;
  * threads, and loaded classes, sampled once a second from its JMX MXBeans via the agent. Sampling pauses
  * while the tab is not visible, and at most one request is outstanding at a time (the connection is serial).
  */
-public final class LiveProfilerPanel extends ThemedJPanel {
+public final class LiveProfilerPanel extends ThemedJPanel
+{
 
     private static final int INTERVAL_MS = 1000;
 
@@ -49,7 +50,8 @@ public final class LiveProfilerPanel extends ThemedJPanel {
     private long prevGcTimeTotal = -1;
     private long prevUptime = -1;
 
-    public LiveProfilerPanel() {
+    public LiveProfilerPanel()
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
 
         cpuProc = cpu.addSeries(new Color(90, 200, 130));
@@ -67,7 +69,8 @@ public final class LiveProfilerPanel extends ThemedJPanel {
         add(topBar, BorderLayout.NORTH);
 
         Box stack = Box.createVerticalBox();
-        for (MetricChart chart : new MetricChart[]{cpu, heap, meta, gc, threads, classes}) {
+        for (MetricChart chart : new MetricChart[]{cpu, heap, meta, gc, threads, classes})
+        {
             chart.setAlignmentX(Component.LEFT_ALIGNMENT);
             chart.setMaximumSize(new Dimension(Integer.MAX_VALUE, 92));
             stack.add(chart);
@@ -79,40 +82,44 @@ public final class LiveProfilerPanel extends ThemedJPanel {
     }
 
     @Override
-    public void addNotify() {
+    public void addNotify()
+    {
         super.addNotify();
         timer.start();
         poll();
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         timer.stop();
         super.removeNotify();
     }
 
-    private void poll() {
+    private void poll()
+    {
         // Poll regardless of whether the side tab is currently visible, so sampling starts as soon as the panel is
         // added on attach (the timer stops on removeNotify/detach). Metrics are global JVM stats, not view-specific.
-        if (inFlight) {
+        if (inFlight)
+        {
             return;
         }
         LiveSession session = LiveAttachService.getInstance().getSession();
-        if (session == null) {
+        if (session == null)
+        {
             status.setText("Not attached.");
             return;
         }
         inFlight = true;
-        SwingWorkers.run(
-                session::getMetrics,
-                this::apply,
-                err -> {
-                    inFlight = false;
-                    status.setText("Profiler error: " + err.getMessage());
-                });
+        SwingWorkers.run(session::getMetrics, this::apply, err ->
+        {
+            inFlight = false;
+            status.setText("Profiler error: " + err.getMessage());
+        });
     }
 
-    private void apply(MetricsSnapshot m) {
+    private void apply(MetricsSnapshot m)
+    {
         inFlight = false;
 
         cpu.push(cpuProc, percentValue(m.processCpuLoad));
@@ -123,19 +130,22 @@ public final class LiveProfilerPanel extends ThemedJPanel {
         heap.setReadout(bytes(m.heapUsed) + " / " + bytes(m.heapMax > 0 ? m.heapMax : m.heapCommitted));
 
         MetricsSnapshot.MemoryPool metaspace = findPool(m, "Metaspace");
-        if (metaspace != null) {
+        if (metaspace != null)
+        {
             meta.push(metaUsed, metaspace.used);
             meta.setReadout(bytes(metaspace.used) + " / " + bytes(metaspace.committed));
         }
 
         long gcTimeTotal = 0;
         long gcCountTotal = 0;
-        for (MetricsSnapshot.GcStat g : m.gcStats) {
+        for (MetricsSnapshot.GcStat g : m.gcStats)
+        {
             gcTimeTotal += g.collectionTimeMs;
             gcCountTotal += g.collectionCount;
         }
         double msPerSec = 0;
-        if (prevGcTimeTotal >= 0 && prevUptime >= 0 && m.uptimeMs > prevUptime) {
+        if (prevGcTimeTotal >= 0 && prevUptime >= 0 && m.uptimeMs > prevUptime)
+        {
             double intervalSec = (m.uptimeMs - prevUptime) / 1000.0;
             msPerSec = Math.max(0, (gcTimeTotal - prevGcTimeTotal) / intervalSec);
         }
@@ -152,47 +162,59 @@ public final class LiveProfilerPanel extends ThemedJPanel {
 
         status.setText("Uptime " + uptime(m.uptimeMs) + "  -  " + m.availableProcessors + " CPUs");
 
-        for (JComponent chart : new JComponent[]{cpu, heap, meta, gc, threads, classes}) {
+        for (JComponent chart : new JComponent[]{cpu, heap, meta, gc, threads, classes})
+        {
             chart.repaint();
         }
     }
 
-    private static MetricsSnapshot.MemoryPool findPool(MetricsSnapshot m, String nameContains) {
-        for (MetricsSnapshot.MemoryPool p : m.memoryPools) {
-            if (p.name != null && p.name.contains(nameContains)) {
+    private static MetricsSnapshot.MemoryPool findPool(MetricsSnapshot m, String nameContains)
+    {
+        for (MetricsSnapshot.MemoryPool p : m.memoryPools)
+        {
+            if (p.name != null && p.name.contains(nameContains))
+            {
                 return p;
             }
         }
         return null;
     }
 
-    private static double percentValue(double load) {
+    private static double percentValue(double load)
+    {
         return load < 0 ? 0 : load * 100.0;
     }
 
-    private static String percent(double load) {
+    private static String percent(double load)
+    {
         return load < 0 ? "n/a" : Math.round(load * 100) + "%";
     }
 
-    private static String bytes(long b) {
-        if (b < 0) {
+    private static String bytes(long b)
+    {
+        if (b < 0)
+        {
             return "?";
         }
-        if (b < 1024) {
+        if (b < 1024)
+        {
             return b + " B";
         }
         double kb = b / 1024.0;
-        if (kb < 1024) {
+        if (kb < 1024)
+        {
             return Math.round(kb) + " KB";
         }
         double mb = kb / 1024.0;
-        if (mb < 1024) {
+        if (mb < 1024)
+        {
             return String.format("%.0f MB", mb);
         }
         return String.format("%.1f GB", mb / 1024.0);
     }
 
-    private static String uptime(long ms) {
+    private static String uptime(long ms)
+    {
         long s = ms / 1000;
         return String.format("%d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60);
     }

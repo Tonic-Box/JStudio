@@ -13,34 +13,40 @@ import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FlowGraphBuilder {
+public class FlowGraphBuilder
+{
 
     private int orientation = SwingConstants.NORTH;
     private int interRankSpacing = 60;
     private int intraCellSpacing = 30;
     private boolean orthogonalEdges = true;
 
-    public static FlowGraphBuilder create() {
+    public static FlowGraphBuilder create()
+    {
         return new FlowGraphBuilder();
     }
 
-    public FlowGraphBuilder withOrientation(int orientation) {
+    public FlowGraphBuilder withOrientation(int orientation)
+    {
         this.orientation = orientation;
         return this;
     }
 
-    public FlowGraphBuilder withSpacing(int interRank, int intraCell) {
+    public FlowGraphBuilder withSpacing(int interRank, int intraCell)
+    {
         this.interRankSpacing = interRank;
         this.intraCellSpacing = intraCell;
         return this;
     }
 
-    public FlowGraphBuilder withOrthogonalEdges(boolean orthogonal) {
+    public FlowGraphBuilder withOrthogonalEdges(boolean orthogonal)
+    {
         this.orthogonalEdges = orthogonal;
         return this;
     }
 
-    public FlowGraph build() {
+    public FlowGraph build()
+    {
         mxGraph graph = new mxGraph();
 
         mxStylesheet stylesheet = new mxStylesheet();
@@ -50,7 +56,8 @@ public class FlowGraphBuilder {
         edgeStyle.put(mxConstants.STYLE_STROKEWIDTH, 1.5);
         edgeStyle.put(mxConstants.STYLE_ENDARROW, mxConstants.ARROW_CLASSIC);
         edgeStyle.put(mxConstants.STYLE_ROUNDED, true);
-        if (orthogonalEdges) {
+        if (orthogonalEdges)
+        {
             edgeStyle.put(mxConstants.STYLE_EDGE, mxConstants.EDGESTYLE_ORTHOGONAL);
         }
         stylesheet.setDefaultEdgeStyle(edgeStyle);
@@ -77,25 +84,29 @@ public class FlowGraphBuilder {
         return new FlowGraph(graph, orientation, interRankSpacing, intraCellSpacing);
     }
 
-    private static String toHex(Color c) {
+    private static String toHex(Color c)
+    {
         return String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue());
     }
 
     @Getter
-    public static class FlowGraph {
+    public static class FlowGraph
+    {
         private final mxGraph graph;
         private final int orientation;
         private final int interRankSpacing;
         private final int intraCellSpacing;
 
-        FlowGraph(mxGraph graph, int orientation, int interRank, int intraCell) {
+        FlowGraph(mxGraph graph, int orientation, int interRank, int intraCell)
+        {
             this.graph = graph;
             this.orientation = orientation;
             this.interRankSpacing = interRank;
             this.intraCellSpacing = intraCell;
         }
 
-        public mxGraphComponent createComponent() {
+        public mxGraphComponent createComponent()
+        {
             mxGraphComponent component = new mxGraphComponent(graph);
             component.setBackground(JStudioTheme.getBgTertiary());
             component.getViewport().setBackground(JStudioTheme.getBgTertiary());
@@ -104,11 +115,13 @@ public class FlowGraphBuilder {
             return component;
         }
 
-        public void applyLayout() {
+        public void applyLayout()
+        {
             applyLayout(graph.getDefaultParent());
         }
 
-        public void applyLayout(Object parent) {
+        public void applyLayout(Object parent)
+        {
             mxHierarchicalLayout layout = new mxHierarchicalLayout(graph, orientation);
             layout.setInterRankCellSpacing(interRankSpacing);
             layout.setIntraCellSpacing(intraCellSpacing);
@@ -116,12 +129,15 @@ public class FlowGraphBuilder {
             layout.execute(parent);
         }
 
-        public void addVertexStyle(String name, Map<String, Object> style) {
+        public void addVertexStyle(String name, Map<String, Object> style)
+        {
             graph.getStylesheet().putCellStyle(name, style);
         }
 
-        public void addEdgeStyle(String name, Map<String, Object> style) {
-            if (!style.containsKey(mxConstants.STYLE_STROKECOLOR)) {
+        public void addEdgeStyle(String name, Map<String, Object> style)
+        {
+            if (!style.containsKey(mxConstants.STYLE_STROKECOLOR))
+            {
                 style.put(mxConstants.STYLE_STROKECOLOR, toHex(JStudioTheme.getTextSecondary()));
             }
             graph.getStylesheet().putCellStyle(name, style);

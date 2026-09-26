@@ -9,11 +9,12 @@ import java.io.File;
 import java.util.concurrent.Callable;
 
 @Command(
-    name = "repl",
-    description = "Start interactive REPL mode for bytecode exploration",
-    mixinStandardHelpOptions = true
+        name = "repl",
+        description = "Start interactive REPL mode for bytecode exploration",
+        mixinStandardHelpOptions = true
 )
-public class ReplCommand implements Callable<Integer> {
+public class ReplCommand implements Callable<Integer>
+{
 
     @Parameters(index = "0", arity = "0..1", description = "Optional: JAR or class file to preload")
     private File target;
@@ -25,25 +26,32 @@ public class ReplCommand implements Callable<Integer> {
     private boolean noBanner;
 
     @Override
-    public Integer call() {
-        try {
+    public Integer call()
+    {
+        try
+        {
             REPLMode repl = new REPLMode();
 
-            if (!noBanner) {
+            if (!noBanner)
+            {
                 repl.printBanner();
             }
 
-            if (target != null && target.exists()) {
+            if (target != null && target.exists())
+            {
                 repl.loadTarget(target);
             }
 
-            if (initScript != null && initScript.exists()) {
+            if (initScript != null && initScript.exists())
+            {
                 repl.executeScript(initScript);
             }
 
             repl.run();
             return 0;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.err.println("Error starting REPL: " + e.getMessage());
             return 1;
         }

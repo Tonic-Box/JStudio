@@ -9,7 +9,8 @@ import java.util.List;
 
 @Value
 @Builder
-public class CompilationResult {
+public class CompilationResult
+{
 
     boolean success;
     @Builder.Default
@@ -18,23 +19,28 @@ public class CompilationResult {
     String sourceCode;
     long compilationTimeMs;
 
-    public boolean hasErrors() {
+    public boolean hasErrors()
+    {
         return errors.stream().anyMatch(CompilationError::isError);
     }
 
-    public boolean hasWarnings() {
+    public boolean hasWarnings()
+    {
         return errors.stream().anyMatch(CompilationError::isWarning);
     }
 
-    public int getErrorCount() {
+    public int getErrorCount()
+    {
         return (int) errors.stream().filter(CompilationError::isError).count();
     }
 
-    public int getWarningCount() {
+    public int getWarningCount()
+    {
         return (int) errors.stream().filter(CompilationError::isWarning).count();
     }
 
-    public static CompilationResult success(ClassFile compiledClass, String sourceCode, long timeMs) {
+    public static CompilationResult success(ClassFile compiledClass, String sourceCode, long timeMs)
+    {
         return CompilationResult.builder()
                 .success(true)
                 .compiledClass(compiledClass)
@@ -43,7 +49,8 @@ public class CompilationResult {
                 .build();
     }
 
-    public static CompilationResult failure(List<CompilationError> errors, String sourceCode, long timeMs) {
+    public static CompilationResult failure(List<CompilationError> errors, String sourceCode, long timeMs)
+    {
         return CompilationResult.builder()
                 .success(false)
                 .errors(errors)

@@ -42,7 +42,8 @@ import java.io.IOException;
  * independent of the inline thumbnail. Embeddable anywhere - hosted by {@link DotGraphDialog} (a popup window) and
  * opened as an editor tab from the AI chat. Fits to view the first time it is shown at a non-zero size.
  */
-public final class DotGraphPanel extends JPanel {
+public final class DotGraphPanel extends JPanel
+{
 
     private final String dotSource;
     private final mxGraph graph;
@@ -54,7 +55,8 @@ public final class DotGraphPanel extends JPanel {
     private Point panStartViewport;
     private boolean fitted;
 
-    public DotGraphPanel(String dotSource) {
+    public DotGraphPanel(String dotSource)
+    {
         super(new BorderLayout());
         this.dotSource = dotSource;
         this.graph = buildGraph(dotSource);
@@ -68,10 +70,13 @@ public final class DotGraphPanel extends JPanel {
         add(content, BorderLayout.CENTER);
         setBackground(JStudioTheme.getBgPrimary());
 
-        addComponentListener(new ComponentAdapter() {
+        addComponentListener(new ComponentAdapter()
+        {
             @Override
-            public void componentResized(ComponentEvent e) {
-                if (!fitted && getWidth() > 0 && getHeight() > 0) {
+            public void componentResized(ComponentEvent e)
+            {
+                if (!fitted && getWidth() > 0 && getHeight() > 0)
+                {
                     fitted = true;
                     SwingUtilities.invokeLater(DotGraphPanel.this::fit);
                 }
@@ -79,47 +84,62 @@ public final class DotGraphPanel extends JPanel {
         });
     }
 
-    private static mxGraph buildGraph(String dot) {
-        try {
+    private static mxGraph buildGraph(String dot)
+    {
+        try
+        {
             return DotGraphBuilder.build(DotParser.parse(dot));
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e)
+        {
             return new mxGraph();
         }
     }
 
-    private mxGraphComponent createGraphComponent() {
+    private mxGraphComponent createGraphComponent()
+    {
         mxGraphComponent component = new mxGraphComponent(graph);
         component.setConnectable(false);
         component.setDragEnabled(false);
         component.setBorder(null);
         component.getViewport().setBackground(JStudioTheme.getBgPrimary());
         component.setBackground(JStudioTheme.getBgPrimary());
-        component.getGraphControl().addMouseWheelListener(e -> {
-            if (e.getWheelRotation() < 0) {
+        component.getGraphControl().addMouseWheelListener(e ->
+        {
+            if (e.getWheelRotation() < 0)
+            {
                 component.zoomIn();
-            } else {
+            }
+            else
+            {
                 component.zoomOut();
             }
         });
-        component.getGraphControl().addMouseListener(new MouseAdapter() {
+        component.getGraphControl().addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mousePressed(MouseEvent e)
+            {
                 panStartScreen = e.getLocationOnScreen();
                 panStartViewport = component.getViewport().getViewPosition();
                 component.getGraphControl().setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
+            public void mouseReleased(MouseEvent e)
+            {
                 panStartScreen = null;
                 panStartViewport = null;
                 component.getGraphControl().setCursor(Cursor.getDefaultCursor());
             }
         });
-        component.getGraphControl().addMouseMotionListener(new MouseMotionAdapter() {
+        component.getGraphControl().addMouseMotionListener(new MouseMotionAdapter()
+        {
             @Override
-            public void mouseDragged(MouseEvent e) {
-                if (panStartScreen == null || panStartViewport == null) {
+            public void mouseDragged(MouseEvent e)
+            {
+                if (panStartScreen == null || panStartViewport == null)
+                {
                     return;
                 }
                 Point now = e.getLocationOnScreen();
@@ -135,14 +155,16 @@ public final class DotGraphPanel extends JPanel {
         return component;
     }
 
-    private JComponent wrap(JComponent c) {
+    private JComponent wrap(JComponent c)
+    {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(JStudioTheme.getBgPrimary());
         panel.add(c, BorderLayout.CENTER);
         return panel;
     }
 
-    private JComponent dotPanel(String dot) {
+    private JComponent dotPanel(String dot)
+    {
         JTextArea area = new JTextArea(dot == null ? "" : dot.trim());
         area.setEditable(false);
         area.setBackground(JStudioTheme.getBgPrimary());
@@ -154,7 +176,8 @@ public final class DotGraphPanel extends JPanel {
         return scroll;
     }
 
-    private JToolBar buildToolbar() {
+    private JToolBar buildToolbar()
+    {
         JToolBar bar = new JToolBar();
         bar.setFloatable(false);
         bar.setBackground(JStudioTheme.getBgSecondary());
@@ -167,7 +190,8 @@ public final class DotGraphPanel extends JPanel {
 
         JToggleButton viewDot = new JToggleButton("View DOT");
         style(viewDot);
-        viewDot.addActionListener(e -> {
+        viewDot.addActionListener(e ->
+        {
             cards.show(content, viewDot.isSelected() ? "dot" : "graph");
             viewDot.setText(viewDot.isSelected() ? "View graph" : "View DOT");
         });
@@ -178,62 +202,72 @@ public final class DotGraphPanel extends JPanel {
         return bar;
     }
 
-    private JButton button(String text, Runnable action) {
+    private JButton button(String text, Runnable action)
+    {
         JButton b = new JButton(text);
         style(b);
         b.addActionListener(e -> action.run());
         return b;
     }
 
-    private void style(javax.swing.AbstractButton b) {
+    private void style(javax.swing.AbstractButton b)
+    {
         b.setFont(JStudioTheme.getUIFont(12));
         b.setBackground(JStudioTheme.getBgSurface());
         b.setForeground(JStudioTheme.getTextPrimary());
         b.setFocusPainted(false);
     }
 
-    private void fit() {
+    private void fit()
+    {
         mxRectangle bounds = graph.getGraphBounds();
-        if (bounds == null || bounds.getWidth() <= 0 || bounds.getHeight() <= 0) {
+        if (bounds == null || bounds.getWidth() <= 0 || bounds.getHeight() <= 0)
+        {
             return;
         }
         Dimension port = graphComponent.getViewport().getExtentSize();
-        if (port.width <= 0 || port.height <= 0) {
+        if (port.width <= 0 || port.height <= 0)
+        {
             return;
         }
-        double scale = Math.min(
-                port.width / (bounds.getWidth() + 60),
-                port.height / (bounds.getHeight() + 60));
+        double scale = Math.min(port.width / (bounds.getWidth() + 60), port.height / (bounds.getHeight() + 60));
         scale = Math.max(0.1, Math.min(scale, 2.0));
         graphComponent.zoomTo(scale, false);
     }
 
-    private void copyDot() {
+    private void copyDot()
+    {
         Toolkit.getDefaultToolkit().getSystemClipboard()
                 .setContents(new StringSelection(dotSource == null ? "" : dotSource), null);
     }
 
-    private void savePng() {
+    private void savePng()
+    {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Save diagram as PNG");
         chooser.setFileFilter(new FileNameExtensionFilter("PNG Images", "png"));
         chooser.setSelectedFile(new File("diagram.png"));
-        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+        {
             return;
         }
         File file = chooser.getSelectedFile();
-        if (!file.getName().toLowerCase().endsWith(".png")) {
+        if (!file.getName().toLowerCase().endsWith(".png"))
+        {
             file = new File(file.getAbsolutePath() + ".png");
         }
-        try {
-            BufferedImage image = mxCellRenderer.createBufferedImage(
-                    graph, null, 2, JStudioTheme.getBgPrimary(), true, null);
-            if (image == null) {
+        try
+        {
+            BufferedImage image = mxCellRenderer.createBufferedImage(graph, null, 2, JStudioTheme.getBgPrimary(), true, null);
+            if (image == null)
+            {
                 JOptionPane.showMessageDialog(this, "Nothing to export (empty graph).");
                 return;
             }
             ImageIO.write(image, "PNG", file);
-        } catch (IOException ex) {
+        }
+        catch (IOException ex)
+        {
             JOptionPane.showMessageDialog(this, "Failed to save: " + ex.getMessage());
         }
     }

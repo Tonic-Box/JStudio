@@ -8,7 +8,8 @@ import java.util.prefs.Preferences;
 /**
  * Manages pinned and recent directories for the file chooser using Java Preferences API.
  */
-public class QuickAccessManager {
+public class QuickAccessManager
+{
 
     private static final String PINNED_PREFIX = "pinnedDir_";
     private static final String PINNED_COUNT = "pinnedDirCount";
@@ -22,12 +23,15 @@ public class QuickAccessManager {
     private final List<File> recentDirectories;
     private final List<QuickAccessListener> listeners;
 
-    public interface QuickAccessListener {
+    public interface QuickAccessListener
+    {
         void onPinnedChanged(List<File> pinned);
+
         void onRecentChanged(List<File> recent);
     }
 
-    private QuickAccessManager() {
+    private QuickAccessManager()
+    {
         prefs = Preferences.userNodeForPackage(QuickAccessManager.class);
         pinnedDirectories = new ArrayList<>();
         recentDirectories = new ArrayList<>();
@@ -35,19 +39,24 @@ public class QuickAccessManager {
         loadFromPreferences();
     }
 
-    public static synchronized QuickAccessManager getInstance() {
-        if (instance == null) {
+    public static synchronized QuickAccessManager getInstance()
+    {
+        if (instance == null)
+        {
             instance = new QuickAccessManager();
         }
         return instance;
     }
 
-    public void addPinned(File dir) {
-        if (dir == null || !dir.isDirectory()) {
+    public void addPinned(File dir)
+    {
+        if (dir == null || !dir.isDirectory())
+        {
             return;
         }
 
-        if (isPinned(dir)) {
+        if (isPinned(dir))
+        {
             return;
         }
 
@@ -56,24 +65,27 @@ public class QuickAccessManager {
         notifyPinnedChanged();
     }
 
-    public void removePinned(File dir) {
-        if (dir == null) {
+    public void removePinned(File dir)
+    {
+        if (dir == null)
+        {
             return;
         }
 
-        boolean removed = pinnedDirectories.removeIf(
-                f -> f.getAbsolutePath().equals(dir.getAbsolutePath())
-        );
+        boolean removed = pinnedDirectories.removeIf(f -> f.getAbsolutePath().equals(dir.getAbsolutePath()));
 
-        if (removed) {
+        if (removed)
+        {
             savePinnedToPreferences();
             notifyPinnedChanged();
         }
     }
 
-    public void reorderPinned(int fromIndex, int toIndex) {
+    public void reorderPinned(int fromIndex, int toIndex)
+    {
         if (fromIndex < 0 || fromIndex >= pinnedDirectories.size() ||
-            toIndex < 0 || toIndex >= pinnedDirectories.size()) {
+                toIndex < 0 || toIndex >= pinnedDirectories.size())
+        {
             return;
         }
 
@@ -83,62 +95,75 @@ public class QuickAccessManager {
         notifyPinnedChanged();
     }
 
-    public void movePinnedUp(File dir) {
+    public void movePinnedUp(File dir)
+    {
         int index = indexOfPinned(dir);
-        if (index > 0) {
+        if (index > 0)
+        {
             reorderPinned(index, index - 1);
         }
     }
 
-    public void movePinnedDown(File dir) {
+    public void movePinnedDown(File dir)
+    {
         int index = indexOfPinned(dir);
-        if (index >= 0 && index < pinnedDirectories.size() - 1) {
+        if (index >= 0 && index < pinnedDirectories.size() - 1)
+        {
             reorderPinned(index, index + 1);
         }
     }
 
-    private int indexOfPinned(File dir) {
+    private int indexOfPinned(File dir)
+    {
         if (dir == null) return -1;
-        for (int i = 0; i < pinnedDirectories.size(); i++) {
-            if (pinnedDirectories.get(i).getAbsolutePath().equals(dir.getAbsolutePath())) {
+        for (int i = 0; i < pinnedDirectories.size(); i++)
+        {
+            if (pinnedDirectories.get(i).getAbsolutePath().equals(dir.getAbsolutePath()))
+            {
                 return i;
             }
         }
         return -1;
     }
 
-    public boolean isPinned(File dir) {
+    public boolean isPinned(File dir)
+    {
         if (dir == null) return false;
         return pinnedDirectories.stream()
                 .anyMatch(f -> f.getAbsolutePath().equals(dir.getAbsolutePath()));
     }
 
-    public List<File> getPinnedDirectories() {
+    public List<File> getPinnedDirectories()
+    {
         List<File> result = new ArrayList<>();
-        for (File dir : pinnedDirectories) {
-            if (dir.exists() && dir.isDirectory()) {
+        for (File dir : pinnedDirectories)
+        {
+            if (dir.exists() && dir.isDirectory())
+            {
                 result.add(dir);
             }
         }
         return result;
     }
 
-    public void addRecent(File dir) {
-        if (dir == null || !dir.isDirectory()) {
+    public void addRecent(File dir)
+    {
+        if (dir == null || !dir.isDirectory())
+        {
             return;
         }
 
-        if (isPinned(dir)) {
+        if (isPinned(dir))
+        {
             return;
         }
 
-        recentDirectories.removeIf(
-                f -> f.getAbsolutePath().equals(dir.getAbsolutePath())
-        );
+        recentDirectories.removeIf(f -> f.getAbsolutePath().equals(dir.getAbsolutePath()));
 
         recentDirectories.add(0, dir);
 
-        while (recentDirectories.size() > MAX_RECENT) {
+        while (recentDirectories.size() > MAX_RECENT)
+        {
             recentDirectories.remove(recentDirectories.size() - 1);
         }
 
@@ -146,55 +171,67 @@ public class QuickAccessManager {
         notifyRecentChanged();
     }
 
-    public void removeRecent(File dir) {
-        if (dir == null) {
+    public void removeRecent(File dir)
+    {
+        if (dir == null)
+        {
             return;
         }
 
-        boolean removed = recentDirectories.removeIf(
-                f -> f.getAbsolutePath().equals(dir.getAbsolutePath())
-        );
+        boolean removed = recentDirectories.removeIf(f -> f.getAbsolutePath().equals(dir.getAbsolutePath()));
 
-        if (removed) {
+        if (removed)
+        {
             saveRecentToPreferences();
             notifyRecentChanged();
         }
     }
 
-    public void clearRecent() {
+    public void clearRecent()
+    {
         recentDirectories.clear();
         saveRecentToPreferences();
         notifyRecentChanged();
     }
 
-    public List<File> getRecentDirectories() {
+    public List<File> getRecentDirectories()
+    {
         List<File> result = new ArrayList<>();
-        for (File dir : recentDirectories) {
-            if (dir.exists() && dir.isDirectory()) {
+        for (File dir : recentDirectories)
+        {
+            if (dir.exists() && dir.isDirectory())
+            {
                 result.add(dir);
             }
         }
         return result;
     }
 
-    public void addListener(QuickAccessListener listener) {
-        if (!listeners.contains(listener)) {
+    public void addListener(QuickAccessListener listener)
+    {
+        if (!listeners.contains(listener))
+        {
             listeners.add(listener);
         }
     }
 
-    public void removeListener(QuickAccessListener listener) {
+    public void removeListener(QuickAccessListener listener)
+    {
         listeners.remove(listener);
     }
 
-    private void loadFromPreferences() {
+    private void loadFromPreferences()
+    {
         pinnedDirectories.clear();
         int pinnedCount = prefs.getInt(PINNED_COUNT, 0);
-        for (int i = 0; i < pinnedCount; i++) {
+        for (int i = 0; i < pinnedCount; i++)
+        {
             String path = prefs.get(PINNED_PREFIX + i, null);
-            if (path != null) {
+            if (path != null)
+            {
                 File dir = new File(path);
-                if (dir.exists() && dir.isDirectory()) {
+                if (dir.exists() && dir.isDirectory())
+                {
                     pinnedDirectories.add(dir);
                 }
             }
@@ -202,51 +239,64 @@ public class QuickAccessManager {
 
         recentDirectories.clear();
         int recentCount = prefs.getInt(RECENT_COUNT, 0);
-        for (int i = 0; i < recentCount && i < MAX_RECENT; i++) {
+        for (int i = 0; i < recentCount && i < MAX_RECENT; i++)
+        {
             String path = prefs.get(RECENT_PREFIX + i, null);
-            if (path != null) {
+            if (path != null)
+            {
                 File dir = new File(path);
-                if (dir.exists() && dir.isDirectory()) {
+                if (dir.exists() && dir.isDirectory())
+                {
                     recentDirectories.add(dir);
                 }
             }
         }
     }
 
-    private void savePinnedToPreferences() {
+    private void savePinnedToPreferences()
+    {
         int oldCount = prefs.getInt(PINNED_COUNT, 0);
-        for (int i = 0; i < oldCount; i++) {
+        for (int i = 0; i < oldCount; i++)
+        {
             prefs.remove(PINNED_PREFIX + i);
         }
 
         prefs.putInt(PINNED_COUNT, pinnedDirectories.size());
-        for (int i = 0; i < pinnedDirectories.size(); i++) {
+        for (int i = 0; i < pinnedDirectories.size(); i++)
+        {
             prefs.put(PINNED_PREFIX + i, pinnedDirectories.get(i).getAbsolutePath());
         }
     }
 
-    private void saveRecentToPreferences() {
+    private void saveRecentToPreferences()
+    {
         int oldCount = prefs.getInt(RECENT_COUNT, 0);
-        for (int i = 0; i < oldCount; i++) {
+        for (int i = 0; i < oldCount; i++)
+        {
             prefs.remove(RECENT_PREFIX + i);
         }
 
         prefs.putInt(RECENT_COUNT, recentDirectories.size());
-        for (int i = 0; i < recentDirectories.size(); i++) {
+        for (int i = 0; i < recentDirectories.size(); i++)
+        {
             prefs.put(RECENT_PREFIX + i, recentDirectories.get(i).getAbsolutePath());
         }
     }
 
-    private void notifyPinnedChanged() {
+    private void notifyPinnedChanged()
+    {
         List<File> pinned = getPinnedDirectories();
-        for (QuickAccessListener listener : listeners) {
+        for (QuickAccessListener listener : listeners)
+        {
             listener.onPinnedChanged(pinned);
         }
     }
 
-    private void notifyRecentChanged() {
+    private void notifyRecentChanged()
+    {
         List<File> recent = getRecentDirectories();
-        for (QuickAccessListener listener : listeners) {
+        for (QuickAccessListener listener : listeners)
+        {
             listener.onRecentChanged(recent);
         }
     }

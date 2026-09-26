@@ -5,7 +5,8 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class LocalEntry {
+public class LocalEntry
+{
     private final int slot;
     private final String name;
     private final String typeName;
@@ -13,7 +14,8 @@ public class LocalEntry {
     private final boolean changed;
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "[" + slot + "] " + name + " (" + typeName + "): " + value;
     }
 }

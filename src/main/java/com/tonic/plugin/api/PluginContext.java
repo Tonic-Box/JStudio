@@ -6,7 +6,8 @@ import java.io.File;
 import java.util.Map;
 import java.util.Optional;
 
-public interface PluginContext {
+public interface PluginContext
+{
 
     PluginLogger getLogger();
 

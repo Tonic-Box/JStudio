@@ -30,7 +30,8 @@ import java.util.TreeMap;
  * JFR event schemas differ (e.g. {@code jdk.ObjectAllocationSample} on 16+ vs the TLAB events on 11).
  */
 @Getter
-public final class JfrRecording {
+public final class JfrRecording
+{
 
     private final Duration duration;
     private final long totalEvents;
@@ -55,7 +56,8 @@ public final class JfrRecording {
     private final List<ExceptionStat> exceptions;
     private final long exceptionCount;
 
-    private JfrRecording(Builder b) {
+    private JfrRecording(Builder b)
+    {
         this.duration = b.duration();
         this.totalEvents = b.totalEvents;
         this.eventCounts = b.eventCounts;
@@ -73,36 +75,44 @@ public final class JfrRecording {
     }
 
     /** Reads and aggregates {@code jfr} in a single pass. */
-    public static JfrRecording parse(File jfr) throws IOException {
+    public static JfrRecording parse(File jfr) throws IOException
+    {
         Builder b = new Builder();
-        try (RecordingFile file = new RecordingFile(jfr.toPath())) {
-            while (file.hasMoreEvents()) {
+        try (RecordingFile file = new RecordingFile(jfr.toPath()))
+        {
+            while (file.hasMoreEvents())
+            {
                 b.accept(file.readEvent());
             }
         }
         return new JfrRecording(b);
     }
 
-    public boolean hasCpu() {
+    public boolean hasCpu()
+    {
         return cpuSamples > 0;
     }
 
-    public boolean hasAllocations() {
+    public boolean hasAllocations()
+    {
         return allocBytes > 0 || !allocByType.isEmpty();
     }
 
-    public boolean hasLocks() {
+    public boolean hasLocks()
+    {
         return !lockContention.isEmpty();
     }
 
-    public boolean hasExceptions() {
+    public boolean hasExceptions()
+    {
         return exceptionCount > 0;
     }
 
     // ---- parsing ------------------------------------------------------------------------------------
 
     /** Mutable accumulator used during the single parse pass. */
-    private static final class Builder {
+    private static final class Builder
+    {
         private long totalEvents;
         private final Map<String, Long> eventCounts = new TreeMap<>();
         private Instant first;
@@ -123,13 +133,15 @@ public final class JfrRecording {
         private final Map<String, ExceptionStat> exceptionTypes = new LinkedHashMap<>();
         private long exceptionCount;
 
-        void accept(RecordedEvent event) {
+        void accept(RecordedEvent event)
+        {
             totalEvents++;
             String name = event.getEventType().getName();
             eventCounts.merge(name, 1L, Long::sum);
             track(event.getStartTime());
 
-            switch (name) {
+            switch (name)
+            {
                 case "jdk.ExecutionSample":
                 case "jdk.NativeMethodSample":
                     cpuSamples++;
@@ -138,36 +150,43 @@ public final class JfrRecording {
                     break;
                 case "jdk.ObjectAllocationSample":
                 case "jdk.ObjectAllocationInNewTLAB":
-                case "jdk.ObjectAllocationOutsideTLAB": {
+                case "jdk.ObjectAllocationOutsideTLAB":
+                {
                     long bytes = allocationBytes(event);
                     allocBytes += bytes;
                     addStack(allocTree, event.getStackTrace(), bytes);
                     String type = className(event, "objectClass");
-                    if (type != null) {
+                    if (type != null)
+                    {
                         allocTypes.computeIfAbsent(type, TypeStat::new).add(bytes);
                     }
                     break;
                 }
                 case "jdk.JavaMonitorEnter":
                 case "jdk.JavaMonitorWait":
-                case "jdk.ThreadPark": {
+                case "jdk.ThreadPark":
+                {
                     long nanos = event.getDuration() != null ? event.getDuration().toNanos() : 0;
                     lockNanos += nanos;
                     addStack(lockTree, event.getStackTrace(), nanos);
                     String monitor = className(event, "monitorClass");
-                    if (monitor == null) {
+                    if (monitor == null)
+                    {
                         monitor = className(event, "parkedClass");
                     }
-                    if (monitor != null) {
+                    if (monitor != null)
+                    {
                         locks.computeIfAbsent(monitor, LockStat::new).add(nanos);
                     }
                     break;
                 }
                 case "jdk.JavaExceptionThrow":
-                case "jdk.JavaErrorThrow": {
+                case "jdk.JavaErrorThrow":
+                {
                     exceptionCount++;
                     String type = className(event, "thrownClass");
-                    if (type == null) {
+                    if (type == null)
+                    {
                         type = "(unknown)";
                     }
                     exceptionTypes.computeIfAbsent(type, ExceptionStat::new).add();
@@ -178,33 +197,42 @@ public final class JfrRecording {
             }
         }
 
-        private void track(Instant time) {
-            if (time == null) {
+        private void track(Instant time)
+        {
+            if (time == null)
+            {
                 return;
             }
-            if (first == null || time.isBefore(first)) {
+            if (first == null || time.isBefore(first))
+            {
                 first = time;
             }
-            if (last == null || time.isAfter(last)) {
+            if (last == null || time.isAfter(last))
+            {
                 last = time;
             }
         }
 
-        Duration duration() {
+        Duration duration()
+        {
             return first != null && last != null ? Duration.between(first, last) : Duration.ZERO;
         }
 
         /** Adds an event's stack (outermost-first) to {@code root}, weighting every node on the path. */
-        private static void addStack(CallTreeNode root, RecordedStackTrace stack, long weight) {
+        private static void addStack(CallTreeNode root, RecordedStackTrace stack, long weight)
+        {
             root.addTotal(weight);
-            if (stack == null) {
+            if (stack == null)
+            {
                 return;
             }
             List<RecordedFrame> frames = stack.getFrames();
             CallTreeNode node = root;
-            for (int i = frames.size() - 1; i >= 0; i--) {
+            for (int i = frames.size() - 1; i >= 0; i--)
+            {
                 FrameKey key = frameKey(frames.get(i));
-                if (key == null) {
+                if (key == null)
+                {
                     continue;
                 }
                 node = node.child(key);
@@ -214,79 +242,97 @@ public final class JfrRecording {
         }
 
         /** Adds {@code weight} as self to the innermost frame's method and as total to every distinct method. */
-        private void accumulateMethods(RecordedStackTrace stack, long weight) {
-            if (stack == null) {
+        private void accumulateMethods(RecordedStackTrace stack, long weight)
+        {
+            if (stack == null)
+            {
                 return;
             }
             List<RecordedFrame> frames = stack.getFrames();
             boolean selfAssigned = false;
             Set<String> seen = new HashSet<>();
-            for (RecordedFrame frame : frames) {
+            for (RecordedFrame frame : frames)
+            {
                 FrameKey key = frameKey(frame);
-                if (key == null) {
+                if (key == null)
+                {
                     continue;
                 }
                 String methodKey = key.getClassInternal() + '#' + key.getMethod();
                 MethodStat stat = methods.computeIfAbsent(methodKey, k -> new MethodStat(key));
-                if (seen.add(methodKey)) {
+                if (seen.add(methodKey))
+                {
                     stat.addTotal(weight);
                 }
-                if (!selfAssigned) {
+                if (!selfAssigned)
+                {
                     stat.addSelf(weight);
                     selfAssigned = true;
                 }
             }
         }
 
-        private static FrameKey frameKey(RecordedFrame frame) {
-            if (!frame.isJavaFrame()) {
+        private static FrameKey frameKey(RecordedFrame frame)
+        {
+            if (!frame.isJavaFrame())
+            {
                 return null;
             }
             RecordedMethod method = frame.getMethod();
-            if (method == null || method.getType() == null) {
+            if (method == null || method.getType() == null)
+            {
                 return null;
             }
             String dotted = method.getType().getName();
             return new FrameKey(dotted.replace('.', '/'), method.getName(), frame.getLineNumber());
         }
 
-        private static long allocationBytes(RecordedEvent event) {
-            if (event.hasField("allocationSize")) {
+        private static long allocationBytes(RecordedEvent event)
+        {
+            if (event.hasField("allocationSize"))
+            {
                 return event.getLong("allocationSize");
             }
-            if (event.hasField("weight")) {
+            if (event.hasField("weight"))
+            {
                 return event.getLong("weight");
             }
             return 0;
         }
 
-        private static String className(RecordedEvent event, String field) {
-            if (!event.hasField(field)) {
+        private static String className(RecordedEvent event, String field)
+        {
+            if (!event.hasField(field))
+            {
                 return null;
             }
             Object value = event.getValue(field);
             return value instanceof RecordedClass ? ((RecordedClass) value).getName() : null;
         }
 
-        List<MethodStat> hotMethods() {
+        List<MethodStat> hotMethods()
+        {
             List<MethodStat> list = new ArrayList<>(methods.values());
             list.sort(Comparator.comparingLong(MethodStat::getSelf).reversed());
             return list;
         }
 
-        List<TypeStat> allocByType() {
+        List<TypeStat> allocByType()
+        {
             List<TypeStat> list = new ArrayList<>(allocTypes.values());
             list.sort(Comparator.comparingLong(TypeStat::getBytes).reversed());
             return list;
         }
 
-        List<LockStat> lockContention() {
+        List<LockStat> lockContention()
+        {
             List<LockStat> list = new ArrayList<>(locks.values());
             list.sort(Comparator.comparingLong(LockStat::getNanos).reversed());
             return list;
         }
 
-        List<ExceptionStat> exceptions() {
+        List<ExceptionStat> exceptions()
+        {
             List<ExceptionStat> list = new ArrayList<>(exceptionTypes.values());
             list.sort(Comparator.comparingLong(ExceptionStat::getCount).reversed());
             return list;
@@ -297,20 +343,24 @@ public final class JfrRecording {
 
     /** A method's self vs total weight (CPU samples). Carries a {@link FrameKey} for source navigation. */
     @Getter
-    public static final class MethodStat {
+    public static final class MethodStat
+    {
         private final FrameKey frame;
         private long self;
         private long total;
 
-        MethodStat(FrameKey frame) {
+        MethodStat(FrameKey frame)
+        {
             this.frame = frame;
         }
 
-        void addSelf(long w) {
+        void addSelf(long w)
+        {
             self += w;
         }
 
-        void addTotal(long w) {
+        void addTotal(long w)
+        {
             total += w;
         }
 
@@ -318,16 +368,19 @@ public final class JfrRecording {
 
     /** Allocation totals for one allocated type. */
     @Getter
-    public static final class TypeStat {
+    public static final class TypeStat
+    {
         private final String className;
         private long count;
         private long bytes;
 
-        TypeStat(String className) {
+        TypeStat(String className)
+        {
             this.className = className;
         }
 
-        void add(long b) {
+        void add(long b)
+        {
             count++;
             bytes += b;
         }
@@ -336,16 +389,19 @@ public final class JfrRecording {
 
     /** Contention totals for one monitor/parked type. */
     @Getter
-    public static final class LockStat {
+    public static final class LockStat
+    {
         private final String className;
         private long count;
         private long nanos;
 
-        LockStat(String className) {
+        LockStat(String className)
+        {
             this.className = className;
         }
 
-        void add(long n) {
+        void add(long n)
+        {
             count++;
             nanos += n;
         }
@@ -354,15 +410,18 @@ public final class JfrRecording {
 
     /** Throw count for one exception type. */
     @Getter
-    public static final class ExceptionStat {
+    public static final class ExceptionStat
+    {
         private final String className;
         private long count;
 
-        ExceptionStat(String className) {
+        ExceptionStat(String className)
+        {
             this.className = className;
         }
 
-        void add() {
+        void add()
+        {
             count++;
         }
 

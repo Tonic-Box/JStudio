@@ -31,7 +31,8 @@ import java.util.function.BooleanSupplier;
  * handler onto the gutter, and (via {@link #attach()}/{@link #detach()}) subscribes to run-state and live-session
  * events so the badge reflects the current state. The actual launch is delegated to a supplied {@code runMain}.
  */
-final class RunGutterController {
+final class RunGutterController
+{
 
     private final RSyntaxTextArea textArea;
     private final RTextScrollPane scrollPane;
@@ -45,8 +46,8 @@ final class RunGutterController {
     private final EventBus.EventHandler<RunStateEvent> runStateHandler = e -> refresh();
     private final EventBus.EventHandler<LiveSessionEvent> liveSessionHandler = e -> refresh();
 
-    RunGutterController(RSyntaxTextArea textArea, RTextScrollPane scrollPane, ClassEntryModel classEntry,
-                        BooleanSupplier omitAnnotations, Runnable runMain) {
+    RunGutterController(RSyntaxTextArea textArea, RTextScrollPane scrollPane, ClassEntryModel classEntry, BooleanSupplier omitAnnotations, Runnable runMain)
+    {
         this.textArea = textArea;
         this.scrollPane = scrollPane;
         this.classEntry = classEntry;
@@ -55,27 +56,34 @@ final class RunGutterController {
         // Make the Run gutter icon clickable + show a hand cursor over it. The icon lives on the gutter's
         // IconRowHeader child, so the listener must be on the children (AWT dispatches to the deepest
         // component, not the parent gutter); convertPoint maps the click into the text area (corrects scroll).
-        this.runGutterMouse = new MouseAdapter() {
+        this.runGutterMouse = new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (lineAtRunIcon(e) > 0) {
-                    if (RunStateService.getInstance().isRunning()) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (lineAtRunIcon(e) > 0)
+                {
+                    if (RunStateService.getInstance().isRunning())
+                    {
                         RunStateService.getInstance().terminate();
-                    } else {
+                    }
+                    else
+                    {
                         runMain.run();
                     }
                 }
             }
 
             @Override
-            public void mouseMoved(MouseEvent e) {
+            public void mouseMoved(MouseEvent e)
+            {
                 Component src = (Component) e.getSource();
-                src.setCursor(Cursor.getPredefinedCursor(
-                        lineAtRunIcon(e) > 0 ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
+                src.setCursor(Cursor.getPredefinedCursor(lineAtRunIcon(e) > 0 ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
+            public void mouseExited(MouseEvent e)
+            {
                 ((Component) e.getSource()).setCursor(Cursor.getDefaultCursor());
             }
         };
@@ -83,27 +91,32 @@ final class RunGutterController {
     }
 
     /** Subscribes to run/live events and shows the initial badge; call from the host view's {@code addNotify}. */
-    void attach() {
+    void attach()
+    {
         EventBus.getInstance().register(RunStateEvent.class, runStateHandler);
         EventBus.getInstance().register(LiveSessionEvent.class, liveSessionHandler);
         updateIcons();
     }
 
     /** Unsubscribes from run/live events; call from the host view's {@code removeNotify}. */
-    void detach() {
+    void detach()
+    {
         EventBus.getInstance().unregister(RunStateEvent.class, runStateHandler);
         EventBus.getInstance().unregister(LiveSessionEvent.class, liveSessionHandler);
     }
 
     /** Refreshes the gutter run/stop badge when run or live-attach state changes (marshals to the EDT). */
-    private void refresh() {
+    private void refresh()
+    {
         SwingUtilities.invokeLater(this::updateIcons);
     }
 
-    void updateIcons() {
+    void updateIcons()
+    {
         wireGutterMouse();
         Gutter gutter = scrollPane.getGutter();
-        for (GutterIconInfo info : runIcons) {
+        for (GutterIconInfo info : runIcons)
+        {
             gutter.removeTrackingIcon(info);
         }
         runIcons.clear();
@@ -114,31 +127,39 @@ final class RunGutterController {
         boolean running = RunStateService.getInstance().isRunning();
         if (omitAnnotations.getAsBoolean() || classEntry == null || classEntry.getMethodSpans() == null
                 || !classEntry.hasMainMethod()
-                || (LiveAttachService.getInstance().isAttached() && !running)) {
+                || (LiveAttachService.getInstance().isAttached() && !running))
+        {
             return;
         }
         DecompileResult.MethodSpan span = classEntry.getMethodSpans().get("main([Ljava/lang/String;)V");
-        if (span == null) {
+        if (span == null)
+        {
             return;
         }
         int line = span.getStartLine();
-        try {
-            runIcons.add(gutter.addLineTrackingIcon(line - 1,
-                    Icons.getIcon(running ? "stop" : "run"), running ? "Terminate" : "Run main()"));
+        try
+        {
+            runIcons.add(gutter.addLineTrackingIcon(line - 1, Icons.getIcon(running ? "stop" : "run"), running ? "Terminate" : "Run main()"));
             runLines.add(line);
-        } catch (BadLocationException ignored) {
+        }
+        catch (BadLocationException ignored)
+        {
         }
     }
 
     /** Attaches the run click/cursor adapter to the gutter and any child components not yet wired (idempotent). */
-    private void wireGutterMouse() {
+    private void wireGutterMouse()
+    {
         Gutter gutter = scrollPane.getGutter();
-        if (wiredGutter.add(gutter)) {
+        if (wiredGutter.add(gutter))
+        {
             gutter.addMouseListener(runGutterMouse);
             gutter.addMouseMotionListener(runGutterMouse);
         }
-        for (Component child : gutter.getComponents()) {
-            if (wiredGutter.add(child)) {
+        for (Component child : gutter.getComponents())
+        {
+            if (wiredGutter.add(child))
+            {
                 child.addMouseListener(runGutterMouse);
                 child.addMouseMotionListener(runGutterMouse);
             }
@@ -146,20 +167,25 @@ final class RunGutterController {
     }
 
     /** Resolves the run-method source line under a gutter mouse event, or -1 if the cursor isn't on a run icon. */
-    private int lineAtRunIcon(MouseEvent e) {
-        if (runLines.isEmpty()) {
+    private int lineAtRunIcon(MouseEvent e)
+    {
+        if (runLines.isEmpty())
+        {
             return -1;
         }
-        Point inText = SwingUtilities.convertPoint(
-                (Component) e.getSource(), e.getPoint(), textArea);
+        Point inText = SwingUtilities.convertPoint((Component) e.getSource(), e.getPoint(), textArea);
         int offset = textArea.viewToModel2D(inText);
-        if (offset < 0) {
+        if (offset < 0)
+        {
             return -1;
         }
-        try {
+        try
+        {
             int line = textArea.getLineOfOffset(offset) + 1;
             return runLines.contains(line) ? line : -1;
-        } catch (BadLocationException ex) {
+        }
+        catch (BadLocationException ex)
+        {
             return -1;
         }
     }

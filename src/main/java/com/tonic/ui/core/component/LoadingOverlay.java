@@ -16,7 +16,8 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Arc2D;
 
-public class LoadingOverlay extends JPanel implements ThemeChangeListener {
+public class LoadingOverlay extends JPanel implements ThemeChangeListener
+{
 
     private static final int SPINNER_SIZE = 32;
     private static final int SPINNER_THICKNESS = 3;
@@ -30,18 +31,21 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
     @Getter
     private boolean loading = false;
 
-    public LoadingOverlay() {
+    public LoadingOverlay()
+    {
         setOpaque(false);
         setVisible(false);
         ThemeManager.getInstance().addThemeChangeListener(this);
 
-        animationTimer = new Timer(ANIMATION_DELAY, e -> {
+        animationTimer = new Timer(ANIMATION_DELAY, e ->
+        {
             rotation = (rotation + 10) % 360;
             repaint();
         });
     }
 
-    public void showLoading(String message) {
+    public void showLoading(String message)
+    {
         this.message = message != null ? message : "Loading...";
         this.subMessage = "";
         this.loading = true;
@@ -55,14 +59,17 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
      * Sets an optional second status line shown under the main message (e.g. a live progress detail). No-op
      * unless currently loading; pass null/empty to clear it.
      */
-    public void setSubMessage(String subMessage) {
+    public void setSubMessage(String subMessage)
+    {
         this.subMessage = subMessage != null ? subMessage : "";
-        if (loading) {
+        if (loading)
+        {
             repaint();
         }
     }
 
-    public void hideLoading() {
+    public void hideLoading()
+    {
         this.loading = false;
         this.subMessage = "";
         animationTimer.stop();
@@ -70,7 +77,8 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g)
+    {
         super.paintComponent(g);
         if (!loading) return;
 
@@ -92,26 +100,13 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
         Color trackColor = JStudioTheme.getBorder();
         g2.setColor(trackColor);
         g2.setStroke(new BasicStroke(SPINNER_THICKNESS, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        g2.drawOval(
-                centerX - SPINNER_SIZE / 2,
-                centerY - SPINNER_SIZE / 2 - 15,
-                SPINNER_SIZE,
-                SPINNER_SIZE
-        );
+        g2.drawOval(centerX - SPINNER_SIZE / 2, centerY - SPINNER_SIZE / 2 - 15, SPINNER_SIZE, SPINNER_SIZE);
 
         Color spinnerColor = JStudioTheme.getAccent();
         g2.setColor(spinnerColor);
         g2.setStroke(new BasicStroke(SPINNER_THICKNESS, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
-        Arc2D arc = new Arc2D.Double(
-                centerX - SPINNER_SIZE / 2.0,
-                centerY - SPINNER_SIZE / 2.0 - 15,
-                SPINNER_SIZE,
-                SPINNER_SIZE,
-                rotation,
-                ARC_ANGLE,
-                Arc2D.OPEN
-        );
+        Arc2D arc = new Arc2D.Double(centerX - SPINNER_SIZE / 2.0, centerY - SPINNER_SIZE / 2.0 - 15, SPINNER_SIZE, SPINNER_SIZE, rotation, ARC_ANGLE, Arc2D.OPEN);
         g2.draw(arc);
 
         g2.setColor(JStudioTheme.getTextPrimary());
@@ -122,7 +117,8 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
         int textY = centerY + SPINNER_SIZE / 2 + 10;
         g2.drawString(message, textX, textY);
 
-        if (!subMessage.isEmpty()) {
+        if (!subMessage.isEmpty())
+        {
             g2.setColor(JStudioTheme.getTextSecondary());
             g2.setFont(JStudioTheme.getUIFont(11));
             FontMetrics subFm = g2.getFontMetrics();
@@ -137,16 +133,20 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
      * Truncates {@code s} from the LEFT so it fits within {@code maxWidth} pixels, keeping the tail (the newest
      * text for a live status line) with a leading ellipsis. Returns {@code s} unchanged when it already fits.
      */
-    private static String fitLeft(FontMetrics fm, String s, int maxWidth) {
-        if (fm.stringWidth(s) <= maxWidth) {
+    private static String fitLeft(FontMetrics fm, String s, int maxWidth)
+    {
+        if (fm.stringWidth(s) <= maxWidth)
+        {
             return s;
         }
         int ellipsisWidth = fm.stringWidth("... ");
         StringBuilder sb = new StringBuilder();
         int width = 0;
-        for (int i = s.length() - 1; i >= 0; i--) {
+        for (int i = s.length() - 1; i >= 0; i--)
+        {
             int charWidth = fm.charWidth(s.charAt(i));
-            if (width + charWidth + ellipsisWidth > maxWidth) {
+            if (width + charWidth + ellipsisWidth > maxWidth)
+            {
                 break;
             }
             sb.insert(0, s.charAt(i));
@@ -156,12 +156,14 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener {
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         repaint();
     }
 
     @Override
-    public void removeNotify() {
+    public void removeNotify()
+    {
         super.removeNotify();
         animationTimer.stop();
         ThemeManager.getInstance().removeThemeChangeListener(this);

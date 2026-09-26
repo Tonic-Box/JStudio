@@ -1,4 +1,5 @@
 package com.tonic.script.engine;
+
 import com.tonic.analysis.ClassFactory;
 
 import com.tonic.analysis.source.ast.stmt.BlockStmt;
@@ -34,13 +35,16 @@ import java.util.function.Consumer;
  * <p>Extracted from {@code ScriptEditorPanel} so the editor and the assistant share one implementation of the
  * bytecode-mutation logic.
  */
-public final class ScriptRunner {
+public final class ScriptRunner
+{
 
-    private ScriptRunner() {
+    private ScriptRunner()
+    {
     }
 
     /** Which targets a run touches. */
-    public enum Scope {
+    public enum Scope
+    {
         ALL, CLASS, METHOD
     }
 
@@ -49,60 +53,75 @@ public final class ScriptRunner {
      * {@link Scope#CLASS}/{@link Scope#METHOD} respectively. {@code live} may be null (no attached JVM). Returns
      * the total modification count.
      */
-    public static int run(String source, Script.Mode mode, ProjectModel project, LiveSession live,
-                          Scope scope, ClassEntryModel targetClass, MethodEntryModel targetMethod,
-                          Consumer<String> out) {
+    public static int run(String source, Script.Mode mode, ProjectModel project, LiveSession live, Scope scope, ClassEntryModel targetClass, MethodEntryModel targetMethod, Consumer<String> out)
+    {
         int count = 0;
-        try {
-            if (scope == Scope.ALL) {
-                if (project == null) {
+        try
+        {
+            if (scope == Scope.ALL)
+            {
+                if (project == null)
+                {
                     out.accept("ERROR: No project loaded\n");
                     return 0;
                 }
-                for (ClassEntryModel classEntry : project.getAllClasses()) {
+                for (ClassEntryModel classEntry : project.getAllClasses())
+                {
                     int before = count;
                     count += runAnnotationsOnClass(source, classEntry, project, live, out);
-                    for (MethodEntryModel methodModel : classEntry.getMethods()) {
+                    for (MethodEntryModel methodModel : classEntry.getMethods())
+                    {
                         count += runOnMethod(source, mode, classEntry, methodModel, project, live, out);
                     }
-                    if (count > before) {
+                    if (count > before)
+                    {
                         commitClass(classEntry, out);
                     }
                 }
-            } else if (scope == Scope.CLASS) {
-                if (targetClass == null) {
+            }
+            else if (scope == Scope.CLASS)
+            {
+                if (targetClass == null)
+                {
                     out.accept("ERROR: No class selected\n");
                     return 0;
                 }
                 int before = count;
                 count += runAnnotationsOnClass(source, targetClass, project, live, out);
-                for (MethodEntryModel methodModel : targetClass.getMethods()) {
+                for (MethodEntryModel methodModel : targetClass.getMethods())
+                {
                     count += runOnMethod(source, mode, targetClass, methodModel, project, live, out);
                 }
-                if (count > before) {
+                if (count > before)
+                {
                     commitClass(targetClass, out);
                 }
-            } else {
-                if (targetClass == null || targetMethod == null) {
+            }
+            else
+            {
+                if (targetClass == null || targetMethod == null)
+                {
                     out.accept("ERROR: No method selected\n");
                     return 0;
                 }
                 int before = count;
                 count += runAnnotationsOnClass(source, targetClass, project, live, out);
                 count += runOnMethod(source, mode, targetClass, targetMethod, project, live, out);
-                if (count > before) {
+                if (count > before)
+                {
                     commitClass(targetClass, out);
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             out.accept("ERROR: " + e.getMessage() + "\n");
         }
         return count;
     }
 
-    private static int runOnMethod(String code, Script.Mode mode, ClassEntryModel classEntry,
-                                   MethodEntryModel methodModel, ProjectModel project, LiveSession live,
-                                   Consumer<String> out) {
+    private static int runOnMethod(String code, Script.Mode mode, ClassEntryModel classEntry, MethodEntryModel methodModel, ProjectModel project, LiveSession live, Consumer<String> out)
+    {
         MethodEntry method = methodModel.getMethodEntry();
         if (method.getCodeAttribute() == null) return 0;
         if (method.getName().startsWith("<")) return 0;
@@ -113,14 +132,11 @@ public final class ScriptRunner {
 
         CommonAPI commonAPI = new CommonAPI();
         commonAPI.setContext(classEntry.getClassName(), method.getName(), method.getDesc());
-        commonAPI.setCallbacks(
-            msg -> out.accept(msg + "\n"),
-            msg -> out.accept("WARN: " + msg + "\n"),
-            msg -> out.accept("ERROR: " + msg + "\n")
-        );
+        commonAPI.setCallbacks(msg -> out.accept(msg + "\n"), msg -> out.accept("WARN: " + msg + "\n"), msg -> out.accept("ERROR: " + msg + "\n"));
         commonAPI.registerIn(interpreter);
 
-        if (project != null) {
+        if (project != null)
+        {
             BridgeRegistry registry = new BridgeRegistry(interpreter, project);
             registry.setLogCallback(msg -> out.accept(msg + "\n"));
             registry.registerAll();
@@ -129,8 +145,10 @@ public final class ScriptRunner {
 
         ScriptLexer lexer = new ScriptLexer(code);
         List<ScriptToken> tokens = lexer.tokenize();
-        if (!lexer.getErrors().isEmpty()) {
-            for (String err : lexer.getErrors()) {
+        if (!lexer.getErrors().isEmpty())
+        {
+            for (String err : lexer.getErrors())
+            {
                 out.accept("Lexer error: " + err + "\n");
             }
             return 0;
@@ -138,27 +156,31 @@ public final class ScriptRunner {
 
         ScriptParser parser = new ScriptParser(tokens);
         List<ScriptAST> statements = parser.parse();
-        if (!parser.getErrors().isEmpty()) {
-            for (String err : parser.getErrors()) {
+        if (!parser.getErrors().isEmpty())
+        {
+            for (String err : parser.getErrors())
+            {
                 out.accept("Parser error: " + err + "\n");
             }
             return 0;
         }
 
-        if (mode == Script.Mode.AST || mode == Script.Mode.BOTH) {
+        if (mode == Script.Mode.AST || mode == Script.Mode.BOTH)
+        {
             count += runASTMode(interpreter, statements, classEntry, method, project, out);
         }
-        if (mode == Script.Mode.IR || mode == Script.Mode.BOTH) {
+        if (mode == Script.Mode.IR || mode == Script.Mode.BOTH)
+        {
             count += runIRMode(interpreter, statements, method, methodModel, classEntry, out);
         }
 
         return count;
     }
 
-    private static int runASTMode(ScriptInterpreter interpreter, List<ScriptAST> statements,
-                                  ClassEntryModel classEntry, MethodEntry method, ProjectModel project,
-                                  Consumer<String> out) {
-        try {
+    private static int runASTMode(ScriptInterpreter interpreter, List<ScriptAST> statements, ClassEntryModel classEntry, MethodEntry method, ProjectModel project, Consumer<String> out)
+    {
+        try
+        {
             SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
             IRMethod irMethod = ssa.lift(method);
             if (irMethod == null || irMethod.getEntryBlock() == null) return 0;
@@ -174,8 +196,7 @@ public final class ScriptRunner {
 
             interpreter.execute(statements);
 
-            ASTEditor editor = new ASTEditor(methodBody, method.getName(), method.getDesc(),
-                classEntry.getClassName());
+            ASTEditor editor = new ASTEditor(methodBody, method.getName(), method.getDesc(), classEntry.getClassName());
             int count = astBridge.applyTo(editor);
             if (count == 0) return 0;
 
@@ -187,33 +208,32 @@ public final class ScriptRunner {
             List<String> intended = callSignatures(methodBody, method, classEntry.getClassName());
             IRMethod pristine = new SSA(classEntry.getClassFile().getConstPool()).lift(method);
 
-            ASTLowerer lowerer = new ASTLowerer(classEntry.getClassFile().getConstPool(),
-                    project != null ? project.getClassPool() : null);
+            ASTLowerer lowerer = new ASTLowerer(classEntry.getClassFile().getConstPool(), project != null ? project.getClassPool() : null);
             lowerer.replaceBody(methodBody, irMethod);
             ssa.lower(irMethod, method);
 
-            BlockStmt check = MethodRecoverer.recoverMethod(
-                    new SSA(classEntry.getClassFile().getConstPool()).lift(method), method);
+            BlockStmt check = MethodRecoverer.recoverMethod(new SSA(classEntry.getClassFile().getConstPool()).lift(method), method);
             List<String> actual = check == null ? null : callSignatures(check, method, classEntry.getClassName());
-            if (actual == null || !actual.equals(intended)) {
+            if (actual == null || !actual.equals(intended))
+            {
                 new SSA(classEntry.getClassFile().getConstPool()).lower(pristine, method);
-                out.accept("Skipped " + classEntry.getClassName() + "." + method.getName()
-                        + ": the decompiler could not round-trip this method losslessly, so it was left "
-                        + "unchanged (no partial/corrupt edit).\n");
+                out.accept("Skipped " + classEntry.getClassName() + "." + method.getName() + ": the decompiler could not round-trip this method losslessly, so it was left " + "unchanged (no partial/corrupt edit).\n");
                 return 0;
             }
             return count;
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             out.accept("AST mode error: " + e.getMessage() + "\n");
             return 0;
         }
     }
 
-    private static int runIRMode(ScriptInterpreter interpreter, List<ScriptAST> statements,
-                                 MethodEntry method, MethodEntryModel methodModel, ClassEntryModel classEntry,
-                                 Consumer<String> out) {
-        try {
+    private static int runIRMode(ScriptInterpreter interpreter, List<ScriptAST> statements, MethodEntry method, MethodEntryModel methodModel, ClassEntryModel classEntry, Consumer<String> out)
+    {
+        try
+        {
             SSA ssa = new SSA(classEntry.getClassFile().getConstPool());
             IRMethod irMethod = ssa.lift(method);
             if (irMethod == null || irMethod.getEntryBlock() == null) return 0;
@@ -229,7 +249,8 @@ public final class ScriptRunner {
             int count = irBridge.applyTo(irMethod);
 
             // Cement the edited IR back to bytecode into the method.
-            if (count > 0) {
+            if (count > 0)
+            {
                 ssa.lower(irMethod, method);
             }
 
@@ -237,27 +258,27 @@ public final class ScriptRunner {
 
             return count;
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             out.accept("IR mode error: " + e.getMessage() + "\n");
             return 0;
         }
     }
 
-    private static int runAnnotationsOnClass(String code, ClassEntryModel classEntry, ProjectModel project,
-                                             LiveSession live, Consumer<String> out) {
-        try {
+    private static int runAnnotationsOnClass(String code, ClassEntryModel classEntry, ProjectModel project, LiveSession live, Consumer<String> out)
+    {
+        try
+        {
             ScriptInterpreter interpreter = new ScriptInterpreter();
 
             CommonAPI commonAPI = new CommonAPI();
             commonAPI.setContext(classEntry.getClassName(), "", "");
-            commonAPI.setCallbacks(
-                msg -> out.accept(msg + "\n"),
-                msg -> out.accept("WARN: " + msg + "\n"),
-                msg -> out.accept("ERROR: " + msg + "\n")
-            );
+            commonAPI.setCallbacks(msg -> out.accept(msg + "\n"), msg -> out.accept("WARN: " + msg + "\n"), msg -> out.accept("ERROR: " + msg + "\n"));
             commonAPI.registerIn(interpreter);
 
-            if (project != null) {
+            if (project != null)
+            {
                 BridgeRegistry registry = new BridgeRegistry(interpreter, project);
                 registry.setLogCallback(msg -> out.accept(msg + "\n"));
                 registry.registerAll();
@@ -272,35 +293,42 @@ public final class ScriptRunner {
 
             ScriptLexer lexer = new ScriptLexer(code);
             List<ScriptToken> tokens = lexer.tokenize();
-            if (!lexer.getErrors().isEmpty()) {
+            if (!lexer.getErrors().isEmpty())
+            {
                 return 0;
             }
 
             ScriptParser parser = new ScriptParser(tokens);
             List<ScriptAST> statements = parser.parse();
-            if (!parser.getErrors().isEmpty()) {
+            if (!parser.getErrors().isEmpty())
+            {
                 return 0;
             }
 
             interpreter.execute(statements);
 
-            if (annotationBridge.hasHandlers()) {
+            if (annotationBridge.hasHandlers())
+            {
                 return annotationBridge.applyToClass(classEntry);
             }
 
             return 0;
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             out.accept("Annotation processing error: " + e.getMessage() + "\n");
             return 0;
         }
     }
 
     /** The sorted multiset of {@code owner#name} method-call signatures in a recovered body (round-trip check). */
-    private static List<String> callSignatures(BlockStmt body, MethodEntry method, String className) {
+    private static List<String> callSignatures(BlockStmt body, MethodEntry method, String className)
+    {
         List<String> sigs = new ArrayList<>();
         ASTEditor editor = new ASTEditor(body, method.getName(), method.getDesc(), className);
-        editor.onMethodCall((ctx, call) -> {
+        editor.onMethodCall((ctx, call) ->
+        {
             sigs.add(call.getOwnerClass() + "#" + call.getMethodName());
             return Replacement.keep();
         });
@@ -314,16 +342,19 @@ public final class ScriptRunner {
      * pass without hitting an undefined bridge ("Cannot call non-function"). Each pass keeps its own real bridge
      * for the handlers it actually applies; these stand in for the others (their handlers are simply never applied).
      */
-    private static void defineInertBridges(ScriptInterpreter interp, boolean ast, boolean ir, boolean annotations) {
-        if (ast) {
+    private static void defineInertBridges(ScriptInterpreter interp, boolean ast, boolean ir, boolean annotations)
+    {
+        if (ast)
+        {
             interp.getGlobalContext().defineConstant("ast", new ASTBridge(interp).createAstObject());
         }
-        if (ir) {
+        if (ir)
+        {
             interp.getGlobalContext().defineConstant("ir", new IRBridge(interp).createIRObject());
         }
-        if (annotations) {
-            interp.getGlobalContext().defineConstant("annotations",
-                    new AnnotationBridge(interp).createAnnotationObject());
+        if (annotations)
+        {
+            interp.getGlobalContext().defineConstant("annotations", new AnnotationBridge(interp).createAnnotationObject());
         }
     }
 
@@ -331,14 +362,19 @@ public final class ScriptRunner {
      * After a class was modified: recompute its stack-map frames, then invalidate JStudio's caches (decompiled
      * source + per-method IR) so every view regenerates from the new bytecode.
      */
-    private static void commitClass(ClassEntryModel classEntry, Consumer<String> out) {
-        try {
+    private static void commitClass(ClassEntryModel classEntry, Consumer<String> out)
+    {
+        try
+        {
             ClassFactory.computeFrames(classEntry.getClassFile());
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             out.accept("Frame computation failed for " + classEntry.getClassName() + ": " + e.getMessage() + "\n");
         }
         classEntry.invalidateDecompilationCache();
-        for (MethodEntryModel methodModel : classEntry.getMethods()) {
+        for (MethodEntryModel methodModel : classEntry.getMethods())
+        {
             methodModel.invalidateIRCache();
         }
     }

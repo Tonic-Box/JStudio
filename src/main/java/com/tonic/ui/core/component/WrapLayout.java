@@ -14,28 +14,35 @@ import java.awt.Insets;
  * {@code FlowLayout} always reports a single-row height, so a parent layout under-allocates space
  * and clips the wrapped rows; this fixes that, keeping all components visible in narrow containers.
  */
-public class WrapLayout extends FlowLayout {
+public class WrapLayout extends FlowLayout
+{
 
-    public WrapLayout(int align, int hgap, int vgap) {
+    public WrapLayout(int align, int hgap, int vgap)
+    {
         super(align, hgap, vgap);
     }
 
     @Override
-    public Dimension preferredLayoutSize(Container target) {
+    public Dimension preferredLayoutSize(Container target)
+    {
         return layoutSize(target, true);
     }
 
     @Override
-    public Dimension minimumLayoutSize(Container target) {
+    public Dimension minimumLayoutSize(Container target)
+    {
         Dimension minimum = layoutSize(target, false);
         minimum.width -= (getHgap() + 1);
         return minimum;
     }
 
-    private Dimension layoutSize(Container target, boolean preferred) {
-        synchronized (target.getTreeLock()) {
+    private Dimension layoutSize(Container target, boolean preferred)
+    {
+        synchronized (target.getTreeLock())
+        {
             int targetWidth = target.getSize().width;
-            if (targetWidth == 0) {
+            if (targetWidth == 0)
+            {
                 targetWidth = Integer.MAX_VALUE;
             }
 
@@ -50,18 +57,22 @@ public class WrapLayout extends FlowLayout {
             int rowHeight = 0;
 
             int count = target.getComponentCount();
-            for (int i = 0; i < count; i++) {
+            for (int i = 0; i < count; i++)
+            {
                 Component m = target.getComponent(i);
-                if (!m.isVisible()) {
+                if (!m.isVisible())
+                {
                     continue;
                 }
                 Dimension d = preferred ? m.getPreferredSize() : m.getMinimumSize();
-                if (rowWidth + d.width > maxWidth) {
+                if (rowWidth + d.width > maxWidth)
+                {
                     addRow(dim, rowWidth, rowHeight, vgap);
                     rowWidth = 0;
                     rowHeight = 0;
                 }
-                if (rowWidth != 0) {
+                if (rowWidth != 0)
+                {
                     rowWidth += hgap;
                 }
                 rowWidth += d.width;
@@ -73,16 +84,19 @@ public class WrapLayout extends FlowLayout {
             dim.height += insets.top + insets.bottom + vgap * 2;
 
             Container scrollPane = SwingUtilities.getAncestorOfClass(JScrollPane.class, target);
-            if (scrollPane != null && target.isValid()) {
+            if (scrollPane != null && target.isValid())
+            {
                 dim.width -= (hgap + 1);
             }
             return dim;
         }
     }
 
-    private void addRow(Dimension dim, int rowWidth, int rowHeight, int vgap) {
+    private void addRow(Dimension dim, int rowWidth, int rowHeight, int vgap)
+    {
         dim.width = Math.max(dim.width, rowWidth);
-        if (dim.height > 0) {
+        if (dim.height > 0)
+        {
             dim.height += vgap;
         }
         dim.height += rowHeight;

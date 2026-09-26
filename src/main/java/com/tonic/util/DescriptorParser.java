@@ -3,30 +3,40 @@ package com.tonic.util;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DescriptorParser {
+public class DescriptorParser
+{
 
-    private DescriptorParser() {
+    private DescriptorParser()
+    {
     }
 
     /** Parses a method descriptor's parameters into a list of readable type names (e.g. {@code [int, String]}). */
-    public static List<String> parseParameterTypes(String methodDescriptor) {
+    public static List<String> parseParameterTypes(String methodDescriptor)
+    {
         List<String> out = new ArrayList<>();
-        if (methodDescriptor == null) {
+        if (methodDescriptor == null)
+        {
             return out;
         }
         int i = methodDescriptor.indexOf('(') + 1;
         int end = methodDescriptor.indexOf(')');
-        if (i <= 0 || end < 0) {
+        if (i <= 0 || end < 0)
+        {
             return out;
         }
-        while (i < end) {
+        while (i < end)
+        {
             int start = i;
-            while (i < end && methodDescriptor.charAt(i) == '[') {
+            while (i < end && methodDescriptor.charAt(i) == '[')
+            {
                 i++;
             }
-            if (i < end && methodDescriptor.charAt(i) == 'L') {
+            if (i < end && methodDescriptor.charAt(i) == 'L')
+            {
                 i = methodDescriptor.indexOf(';', i) + 1;
-            } else {
+            }
+            else
+            {
                 i++;
             }
             out.add(formatFieldDescriptor(methodDescriptor.substring(start, i)));
@@ -34,8 +44,10 @@ public class DescriptorParser {
         return out;
     }
 
-    public static String formatFieldDescriptor(String desc) {
-        if (desc == null || desc.isEmpty()) {
+    public static String formatFieldDescriptor(String desc)
+    {
+        if (desc == null || desc.isEmpty())
+        {
             return "?";
         }
 
@@ -43,26 +55,48 @@ public class DescriptorParser {
         int i = 0;
 
         int arrayDim = 0;
-        while (i < desc.length() && desc.charAt(i) == '[') {
+        while (i < desc.length() && desc.charAt(i) == '[')
+        {
             arrayDim++;
             i++;
         }
 
-        if (i < desc.length()) {
+        if (i < desc.length())
+        {
             char c = desc.charAt(i);
-            switch (c) {
-                case 'B': result.append("byte"); break;
-                case 'C': result.append("char"); break;
-                case 'D': result.append("double"); break;
-                case 'F': result.append("float"); break;
-                case 'I': result.append("int"); break;
-                case 'J': result.append("long"); break;
-                case 'S': result.append("short"); break;
-                case 'Z': result.append("boolean"); break;
-                case 'V': result.append("void"); break;
+            switch (c)
+            {
+                case 'B':
+                    result.append("byte");
+                    break;
+                case 'C':
+                    result.append("char");
+                    break;
+                case 'D':
+                    result.append("double");
+                    break;
+                case 'F':
+                    result.append("float");
+                    break;
+                case 'I':
+                    result.append("int");
+                    break;
+                case 'J':
+                    result.append("long");
+                    break;
+                case 'S':
+                    result.append("short");
+                    break;
+                case 'Z':
+                    result.append("boolean");
+                    break;
+                case 'V':
+                    result.append("void");
+                    break;
                 case 'L':
                     int semicolon = desc.indexOf(';', i);
-                    if (semicolon > i) {
+                    if (semicolon > i)
+                    {
                         String className = desc.substring(i + 1, semicolon);
                         result.append(extractSimpleName(className));
                     }
@@ -78,25 +112,31 @@ public class DescriptorParser {
         return result.toString();
     }
 
-    public static String formatReturnType(String methodDescriptor) {
-        if (methodDescriptor == null || methodDescriptor.isEmpty()) {
+    public static String formatReturnType(String methodDescriptor)
+    {
+        if (methodDescriptor == null || methodDescriptor.isEmpty())
+        {
             return "void";
         }
         int parenEnd = methodDescriptor.indexOf(')');
-        if (parenEnd < 0 || parenEnd + 1 >= methodDescriptor.length()) {
+        if (parenEnd < 0 || parenEnd + 1 >= methodDescriptor.length())
+        {
             return "void";
         }
         return formatFieldDescriptor(methodDescriptor.substring(parenEnd + 1));
     }
 
-    public static String formatMethodParams(String methodDescriptor) {
-        if (methodDescriptor == null || methodDescriptor.isEmpty()) {
+    public static String formatMethodParams(String methodDescriptor)
+    {
+        if (methodDescriptor == null || methodDescriptor.isEmpty())
+        {
             return "";
         }
 
         int paramStart = methodDescriptor.indexOf('(') + 1;
         int paramEnd = methodDescriptor.indexOf(')');
-        if (paramStart <= 0 || paramEnd < 0 || paramStart >= paramEnd) {
+        if (paramStart <= 0 || paramEnd < 0 || paramStart >= paramEnd)
+        {
             return "";
         }
 
@@ -104,44 +144,82 @@ public class DescriptorParser {
         return formatParamList(params);
     }
 
-    private static String formatParamList(String params) {
+    private static String formatParamList(String params)
+    {
         StringBuilder result = new StringBuilder();
         int i = 0;
         boolean first = true;
 
-        while (i < params.length()) {
+        while (i < params.length())
+        {
             if (!first) result.append(", ");
             first = false;
 
             char c = params.charAt(i);
-            switch (c) {
-                case 'B': result.append("byte"); i++; break;
-                case 'C': result.append("char"); i++; break;
-                case 'D': result.append("double"); i++; break;
-                case 'F': result.append("float"); i++; break;
-                case 'I': result.append("int"); i++; break;
-                case 'J': result.append("long"); i++; break;
-                case 'S': result.append("short"); i++; break;
-                case 'Z': result.append("boolean"); i++; break;
-                case 'V': result.append("void"); i++; break;
+            switch (c)
+            {
+                case 'B':
+                    result.append("byte");
+                    i++;
+                    break;
+                case 'C':
+                    result.append("char");
+                    i++;
+                    break;
+                case 'D':
+                    result.append("double");
+                    i++;
+                    break;
+                case 'F':
+                    result.append("float");
+                    i++;
+                    break;
+                case 'I':
+                    result.append("int");
+                    i++;
+                    break;
+                case 'J':
+                    result.append("long");
+                    i++;
+                    break;
+                case 'S':
+                    result.append("short");
+                    i++;
+                    break;
+                case 'Z':
+                    result.append("boolean");
+                    i++;
+                    break;
+                case 'V':
+                    result.append("void");
+                    i++;
+                    break;
                 case '[':
                     int arrayDim = 0;
-                    while (i < params.length() && params.charAt(i) == '[') {
+                    while (i < params.length() && params.charAt(i) == '[')
+                    {
                         arrayDim++;
                         i++;
                     }
-                    if (i < params.length()) {
+                    if (i < params.length())
+                    {
                         String elem;
-                        if (params.charAt(i) == 'L') {
+                        if (params.charAt(i) == 'L')
+                        {
                             int semi = params.indexOf(';', i);
-                            if (semi > i) {
+                            if (semi > i)
+                            {
                                 elem = extractSimpleName(params.substring(i + 1, semi));
                                 i = semi + 1;
-                            } else {
+                            }
+                            else
+                            {
                                 elem = "?";
                                 i++;
                             }
-                        } else {
+                        }
+                        else
+                        {
                             elem = formatPrimitive(params.charAt(i));
                             i++;
                         }
@@ -151,10 +229,13 @@ public class DescriptorParser {
                     break;
                 case 'L':
                     int semicolon = params.indexOf(';', i);
-                    if (semicolon > i) {
+                    if (semicolon > i)
+                    {
                         result.append(extractSimpleName(params.substring(i + 1, semicolon)));
                         i = semicolon + 1;
-                    } else {
+                    }
+                    else
+                    {
                         i++;
                     }
                     break;
@@ -166,27 +247,42 @@ public class DescriptorParser {
         return result.toString();
     }
 
-    private static String formatPrimitive(char c) {
-        switch (c) {
-            case 'B': return "byte";
-            case 'C': return "char";
-            case 'D': return "double";
-            case 'F': return "float";
-            case 'I': return "int";
-            case 'J': return "long";
-            case 'S': return "short";
-            case 'Z': return "boolean";
-            case 'V': return "void";
-            default: return String.valueOf(c);
+    private static String formatPrimitive(char c)
+    {
+        switch (c)
+        {
+            case 'B':
+                return "byte";
+            case 'C':
+                return "char";
+            case 'D':
+                return "double";
+            case 'F':
+                return "float";
+            case 'I':
+                return "int";
+            case 'J':
+                return "long";
+            case 'S':
+                return "short";
+            case 'Z':
+                return "boolean";
+            case 'V':
+                return "void";
+            default:
+                return String.valueOf(c);
         }
     }
 
-    public static String extractSimpleName(String internalName) {
-        if (internalName == null || internalName.isEmpty()) {
+    public static String extractSimpleName(String internalName)
+    {
+        if (internalName == null || internalName.isEmpty())
+        {
             return "";
         }
         int lastSlash = internalName.lastIndexOf('/');
-        if (lastSlash >= 0) {
+        if (lastSlash >= 0)
+        {
             return internalName.substring(lastSlash + 1);
         }
         return internalName;

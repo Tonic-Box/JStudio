@@ -29,7 +29,8 @@ import lombok.Getter;
  * and their show/toFront lifecycle. Constructed with the {@link MainFrame} (dialog parent + facade for the
  * console, status bar, warning popups, and post-mutation refreshes) and its {@link EditorPanel}.
  */
-public final class DialogManager {
+public final class DialogManager
+{
 
     private final MainFrame mainFrame;
     private final EditorPanel editorPanel;
@@ -59,14 +60,17 @@ public final class DialogManager {
     private DeobfuscationPanel deobfuscationPanel;
     private RemoveDeadCodeDialog removeDeadCodeDialog;
 
-    public DialogManager(MainFrame mainFrame, EditorPanel editorPanel) {
+    public DialogManager(MainFrame mainFrame, EditorPanel editorPanel)
+    {
         this.mainFrame = mainFrame;
         this.editorPanel = editorPanel;
     }
 
     /** Disposes the cached analysis dialog (e.g. when the project is replaced/closed). No-op when absent. */
-    public void disposeAnalysisDialog() {
-        if (analysisDialog != null) {
+    public void disposeAnalysisDialog()
+    {
+        if (analysisDialog != null)
+        {
             analysisDialog.dispose();
             analysisDialog = null;
             analysisPanel = null;
@@ -76,16 +80,21 @@ public final class DialogManager {
 
     // === Analysis Operations ===
 
-    public void runAnalysis() {
+    public void runAnalysis()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             mainFrame.showWarning("No project loaded.");
             return;
         }
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass != null) {
+        if (currentClass != null)
+        {
             mainFrame.getConsolePanel().log("Running analysis on " + currentClass.getClassName() + "...");
-        } else {
+        }
+        else
+        {
             mainFrame.getConsolePanel().log("Opening analysis tools...");
         }
         showAnalysisDialog();
@@ -95,17 +104,21 @@ public final class DialogManager {
      * Show the analysis dialog (creates it if needed).
      * Recreates the panel if the project has changed.
      */
-    private void showAnalysisDialog() {
+    private void showAnalysisDialog()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             mainFrame.showWarning("No project loaded.");
             return;
         }
 
         boolean needsRecreate = analysisDialog == null || analysisPanel == null || analysisProjectRef != project;
 
-        if (needsRecreate) {
-            if (analysisDialog != null) {
+        if (needsRecreate)
+        {
+            if (analysisDialog != null)
+            {
                 analysisDialog.dispose();
             }
             analysisPanel = new AnalysisPanel(project);
@@ -120,26 +133,34 @@ public final class DialogManager {
         analysisDialog.toFront();
     }
 
-    public void showSimilarityAnalysis() {
-        if (openAnalysisDialog()) {
+    public void showSimilarityAnalysis()
+    {
+        if (openAnalysisDialog())
+        {
             analysisPanel.showSimilarity();
         }
     }
 
-    public void showSearchAnalysis() {
-        if (openAnalysisDialog()) {
+    public void showSearchAnalysis()
+    {
+        if (openAnalysisDialog())
+        {
             analysisPanel.showSearch();
         }
     }
 
-    public void showStringsAnalysis() {
-        if (openAnalysisDialog()) {
+    public void showStringsAnalysis()
+    {
+        if (openAnalysisDialog())
+        {
             analysisPanel.showStrings();
         }
     }
 
-    private boolean openAnalysisDialog() {
-        if (ProjectService.getInstance().getCurrentProject() == null) {
+    private boolean openAnalysisDialog()
+    {
+        if (ProjectService.getInstance().getCurrentProject() == null)
+        {
             mainFrame.showWarning("No project loaded.");
             return false;
         }
@@ -150,9 +171,11 @@ public final class DialogManager {
     /**
      * Run simulation analysis on the current method or class.
      */
-    public void runCodeAnalysis() {
+    public void runCodeAnalysis()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             mainFrame.showWarning("No project loaded.");
             return;
         }
@@ -161,13 +184,19 @@ public final class DialogManager {
         analysisPanel.showSimulation();
 
         MethodEntryModel currentMethod = editorPanel.getCurrentMethod();
-        if (currentMethod != null) {
+        if (currentMethod != null)
+        {
             analysisPanel.getSimulationPanel().analyzeMethod(currentMethod);
-        } else {
+        }
+        else
+        {
             ClassEntryModel currentClass = editorPanel.getCurrentClass();
-            if (currentClass != null) {
+            if (currentClass != null)
+            {
                 analysisPanel.getSimulationPanel().analyzeClass(currentClass);
-            } else {
+            }
+            else
+            {
                 mainFrame.getConsolePanel().log("Select a method or class to analyze.");
             }
         }
@@ -176,12 +205,15 @@ public final class DialogManager {
     // === Transform Operations ===
 
     /** Opens (reusing one instance) the Remove Dead Code analysis dialog. */
-    public void showRemoveDeadCodeDialog() {
-        if (ProjectService.getInstance().getCurrentProject() == null) {
+    public void showRemoveDeadCodeDialog()
+    {
+        if (ProjectService.getInstance().getCurrentProject() == null)
+        {
             mainFrame.showWarning("No project loaded.");
             return;
         }
-        if (removeDeadCodeDialog == null) {
+        if (removeDeadCodeDialog == null)
+        {
             removeDeadCodeDialog = new RemoveDeadCodeDialog(mainFrame);
         }
         removeDeadCodeDialog.setVisible(true);
@@ -189,26 +221,31 @@ public final class DialogManager {
     }
 
     /** After dead-code removal: close tabs of removed classes and reload the navigator/editor. */
-    public void refreshAfterDeadCodeRemoval(Collection<String> removedClassesInternal) {
-        for (String internal : removedClassesInternal) {
+    public void refreshAfterDeadCodeRemoval(Collection<String> removedClassesInternal)
+    {
+        for (String internal : removedClassesInternal)
+        {
             editorPanel.closeTabForClass(internal);
         }
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
-            EventBus.getInstance().post(
-                    new ProjectUpdatedEvent(mainFrame, project, -removedClassesInternal.size()));
+        if (project != null)
+        {
+            EventBus.getInstance().post(new ProjectUpdatedEvent(mainFrame, project, -removedClassesInternal.size()));
         }
         mainFrame.refreshCurrentView();
     }
 
-    public void showTransformDialog() {
+    public void showTransformDialog()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             mainFrame.showWarning("No project loaded.");
             return;
         }
 
-        if (transformDialog == null || transformPanel == null) {
+        if (transformDialog == null || transformPanel == null)
+        {
             transformPanel = new TransformPanel(project);
             transformPanel.setTransformCallback(mainFrame::refreshCurrentView);
             transformDialog = new JDialog(mainFrame, "SSA Transforms", false);
@@ -218,7 +255,8 @@ public final class DialogManager {
         }
 
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass != null) {
+        if (currentClass != null)
+        {
             transformPanel.setClass(currentClass);
         }
 
@@ -229,14 +267,17 @@ public final class DialogManager {
     /**
      * Shows the script editor dialog.
      */
-    public void showScriptEditor() {
+    public void showScriptEditor()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             mainFrame.showWarning("No project loaded.");
             return;
         }
 
-        if (scriptEditorDialog == null) {
+        if (scriptEditorDialog == null)
+        {
             scriptEditorDialog = new ScriptEditorDialog(mainFrame);
             scriptEditorDialog.setOnTransformComplete(mainFrame::refreshCurrentView);
         }
@@ -244,7 +285,8 @@ public final class DialogManager {
         scriptEditorDialog.setProjectModel(project);
 
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass != null) {
+        if (currentClass != null)
+        {
             scriptEditorDialog.setClass(currentClass);
         }
 
@@ -252,20 +294,25 @@ public final class DialogManager {
         scriptEditorDialog.toFront();
     }
 
-    public void showDeobfuscationPanel() {
+    public void showDeobfuscationPanel()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             mainFrame.showWarning("No project loaded. Load a project before using deobfuscation tools.");
             return;
         }
 
-        if (deobfuscationDialog == null || deobfuscationPanel == null) {
+        if (deobfuscationDialog == null || deobfuscationPanel == null)
+        {
             deobfuscationPanel = new DeobfuscationPanel(project);
             deobfuscationDialog = new JDialog(mainFrame, "String Deobfuscation", false);
             deobfuscationDialog.setSize(1000, 700);
             deobfuscationDialog.setLocationRelativeTo(mainFrame);
             deobfuscationDialog.add(deobfuscationPanel);
-        } else {
+        }
+        else
+        {
             deobfuscationPanel.setProject(project);
         }
 
@@ -275,9 +322,11 @@ public final class DialogManager {
         mainFrame.getStatusBar().setMessage("String Deobfuscation");
     }
 
-    public void applyTransform(String transformName) {
+    public void applyTransform(String transformName)
+    {
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass == null) {
+        if (currentClass == null)
+        {
             mainFrame.showWarning("No class selected for transformation.");
             return;
         }
@@ -289,29 +338,37 @@ public final class DialogManager {
 
     // === Find ===
 
-    public void showFindInProjectDialog() {
+    public void showFindInProjectDialog()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             mainFrame.showWarning("No project loaded.");
             return;
         }
 
-        if (findInFilesDialog == null) {
+        if (findInFilesDialog == null)
+        {
             findInFilesDialog = new FindInFilesDialog(mainFrame, project);
         }
 
         String selectedText = editorPanel.getSelectedText();
-        if (selectedText != null && !selectedText.isEmpty() && selectedText.length() < 100) {
+        if (selectedText != null && !selectedText.isEmpty() && selectedText.length() < 100)
+        {
             findInFilesDialog.showDialog(selectedText.trim());
-        } else {
+        }
+        else
+        {
             findInFilesDialog.showDialog();
         }
     }
 
     // === Preferences ===
 
-    public void showPreferencesDialog() {
-        if (preferencesDialog == null) {
+    public void showPreferencesDialog()
+    {
+        if (preferencesDialog == null)
+        {
             preferencesDialog = new PreferencesDialog(mainFrame);
             preferencesDialog.setOnApply(mainFrame::applyFontSizeFromSettings);
         }
@@ -320,14 +377,17 @@ public final class DialogManager {
 
     // === VM ===
 
-    public void showVMConsole() {
+    public void showVMConsole()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             mainFrame.showWarning("No project loaded. Load a project before using the VM Console.");
             return;
         }
 
-        if (vmConsoleDialog == null || vmConsolePanel == null) {
+        if (vmConsoleDialog == null || vmConsolePanel == null)
+        {
             vmConsolePanel = new VMConsolePanel();
             vmConsoleDialog = new JDialog(mainFrame, "VM Console", false);
             vmConsoleDialog.setSize(800, 500);
@@ -340,14 +400,17 @@ public final class DialogManager {
         vmConsolePanel.focusInput();
     }
 
-    public void showBytecodeDebugger() {
+    public void showBytecodeDebugger()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             mainFrame.showWarning("No project loaded. Load a project before using the Bytecode Debugger.");
             return;
         }
 
-        if (debuggerFrame == null || debuggerPanel == null) {
+        if (debuggerFrame == null || debuggerPanel == null)
+        {
             debuggerPanel = new DebuggerPanel();
             debuggerFrame = new JFrame("Bytecode Debugger");
             debuggerFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
@@ -358,10 +421,13 @@ public final class DialogManager {
         }
 
         MethodEntryModel currentMethod = editorPanel.getCurrentMethod();
-        if (currentMethod != null) {
+        if (currentMethod != null)
+        {
             debuggerPanel.setMethod(currentMethod.getMethodEntry());
             mainFrame.getConsolePanel().log("Bytecode Debugger: Opened for " + currentMethod.getMethodEntry().getName());
-        } else {
+        }
+        else
+        {
             mainFrame.getConsolePanel().log("Bytecode Debugger: Opened - select a method to debug");
         }
 
@@ -370,8 +436,10 @@ public final class DialogManager {
         mainFrame.getStatusBar().setMessage("Bytecode Debugger opened");
     }
 
-    public void showHeapForensics() {
-        if (heapForensicsDialog == null || heapForensicsPanel == null) {
+    public void showHeapForensics()
+    {
+        if (heapForensicsDialog == null || heapForensicsPanel == null)
+        {
             heapForensicsPanel = new HeapForensicsPanel();
             heapForensicsDialog = new JDialog(mainFrame, "Heap Forensics", false);
             heapForensicsDialog.setSize(1200, 800);

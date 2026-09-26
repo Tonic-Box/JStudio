@@ -6,7 +6,8 @@ import java.util.List;
  * Callbacks from the JDI event pump. These are invoked off the EDT (on the session's event thread), so an
  * implementation that touches Swing must marshal to the UI thread.
  */
-public interface DebugListener {
+public interface DebugListener
+{
     /** The target suspended at {@code location}; {@code frames} is the paused thread's call stack (top first). */
     void onPaused(DebugLocation location, List<DebugFrame> frames);
 
@@ -21,6 +22,7 @@ public interface DebugListener {
      * The hook for injecting a synthetic LocalVariableTable into a stripped class before it executes. No-op by
      * default. Invoked on the event thread while the prepared thread is suspended.
      */
-    default void onClassPrepared(String className) {
+    default void onClassPrepared(String className)
+    {
     }
 }

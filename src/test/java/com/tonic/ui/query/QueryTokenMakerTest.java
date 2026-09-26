@@ -13,13 +13,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Verifies the Query DSL token maker classifies the closed grammar (keywords, operators, literals)
  * while leaving open-vocabulary accessor atoms as plain identifiers.
  */
-class QueryTokenMakerTest {
+class QueryTokenMakerTest
+{
 
-    private Map<String, Integer> tokenize(String src) {
+    private Map<String, Integer> tokenize(String src)
+    {
         Segment seg = new Segment(src.toCharArray(), 0, src.length());
         Token t = new QueryTokenMaker().getTokenList(seg, Token.NULL, 0);
         Map<String, Integer> byLexeme = new HashMap<>();
-        while (t != null && t.isPaintable()) {
+        while (t != null && t.isPaintable())
+        {
             byLexeme.put(t.getLexeme(), t.getType());
             t = t.getNextToken();
         }
@@ -27,7 +30,8 @@ class QueryTokenMakerTest {
     }
 
     @Test
-    void classifiesClosedGrammar() {
+    void classifiesClosedGrammar()
+    {
         Map<String, Integer> t = tokenize("FIND methods WHERE arg(0).value == 999 and name matches /^get/i");
         assertEquals(Token.RESERVED_WORD, t.get("FIND"));
         assertEquals(Token.RESERVED_WORD, t.get("WHERE"));
@@ -42,7 +46,8 @@ class QueryTokenMakerTest {
     }
 
     @Test
-    void classifiesSequenceConstruct() {
+    void classifiesSequenceConstruct()
+    {
         Map<String, Integer> t = tokenize("SEQUENCE [ new+, _, (opcode matches /^invoke/){1,2} ]");
         assertEquals(Token.RESERVED_WORD, t.get("SEQUENCE"));
         assertEquals(Token.SEPARATOR, t.get("["));
@@ -59,7 +64,8 @@ class QueryTokenMakerTest {
     }
 
     @Test
-    void classifiesTypesStringsAndConstants() {
+    void classifiesTypesStringsAndConstants()
+    {
         Map<String, Integer> t = tokenize("arg(0).type == int and recursive == true and name == \"println\"");
         assertEquals(Token.DATA_TYPE, t.get("int"));
         assertEquals(Token.LITERAL_BOOLEAN, t.get("true"));

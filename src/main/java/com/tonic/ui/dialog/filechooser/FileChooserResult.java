@@ -10,7 +10,8 @@ import java.util.List;
  * Result from a file chooser dialog operation.
  */
 @Getter
-public class FileChooserResult {
+public class FileChooserResult
+{
 
     /**
      * -- GETTER --
@@ -23,7 +24,8 @@ public class FileChooserResult {
      */
     private final List<File> selectedFiles;
 
-    private FileChooserResult(boolean approved, List<File> selectedFiles) {
+    private FileChooserResult(boolean approved, List<File> selectedFiles)
+    {
         this.approved = approved;
         this.selectedFiles = selectedFiles != null ?
                 List.copyOf(selectedFiles) :
@@ -33,35 +35,40 @@ public class FileChooserResult {
     /**
      * Create a result for when the user approved (clicked Open/Save).
      */
-    public static FileChooserResult approved(File file) {
+    public static FileChooserResult approved(File file)
+    {
         return new FileChooserResult(true, Collections.singletonList(file));
     }
 
     /**
      * Create a result for when the user approved with multiple files.
      */
-    public static FileChooserResult approved(List<File> files) {
+    public static FileChooserResult approved(List<File> files)
+    {
         return new FileChooserResult(true, files);
     }
 
     /**
      * Create a result for when the user cancelled.
      */
-    public static FileChooserResult cancelled() {
+    public static FileChooserResult cancelled()
+    {
         return new FileChooserResult(false, null);
     }
 
     /**
      * Whether the user cancelled the dialog.
      */
-    public boolean isCancelled() {
+    public boolean isCancelled()
+    {
         return !approved;
     }
 
     /**
      * Get the selected file (first file if multiple were selected).
      */
-    public File getSelectedFile() {
+    public File getSelectedFile()
+    {
         return selectedFiles.isEmpty() ? null : selectedFiles.get(0);
     }
 

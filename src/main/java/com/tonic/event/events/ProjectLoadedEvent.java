@@ -5,11 +5,13 @@ import com.tonic.model.ProjectModel;
 import lombok.Getter;
 
 @Getter
-public class ProjectLoadedEvent extends Event {
+public class ProjectLoadedEvent extends Event
+{
 
     private final ProjectModel project;
 
-    public ProjectLoadedEvent(Object source, ProjectModel project) {
+    public ProjectLoadedEvent(Object source, ProjectModel project)
+    {
         super(source);
         this.project = project;
     }

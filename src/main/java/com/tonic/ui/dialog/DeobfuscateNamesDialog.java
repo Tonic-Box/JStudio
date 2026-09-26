@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DeobfuscateNamesDialog extends ThemedJDialog {
+public class DeobfuscateNamesDialog extends ThemedJDialog
+{
 
     private final JCheckBox renameClassesBox;
     private final JCheckBox renameMethodsBox;
@@ -38,7 +39,8 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
     private int methodCounter = 1;
     private int fieldCounter = 1;
 
-    public DeobfuscateNamesDialog(MainFrame mainFrame) {
+    public DeobfuscateNamesDialog(MainFrame mainFrame)
+    {
         super(mainFrame, "Deobfuscate Names", ModalityType.APPLICATION_MODAL);
         this.mainFrame = mainFrame;
 
@@ -48,9 +50,7 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
 
         JPanel optionsPanel = new JPanel(new GridLayout(0, 1, 5, 5));
         optionsPanel.setBackground(JStudioTheme.getBgPrimary());
-        optionsPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                "Options"));
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Options"));
 
         renameClassesBox = createCheckBox("Rename classes to Class1, Class2, ...", true);
         renameMethodsBox = createCheckBox("Rename methods to method1, method2, ...", true);
@@ -71,9 +71,7 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
         logArea.setForeground(JStudioTheme.getTextPrimary());
 
         JScrollPane scrollPane = new JScrollPane(logArea);
-        scrollPane.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                "Log"));
+        scrollPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Log"));
         content.add(scrollPane, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -97,38 +95,44 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
         setMinimumSize(new Dimension(500, 400));
     }
 
-    private JCheckBox createCheckBox(String text, boolean selected) {
+    private JCheckBox createCheckBox(String text, boolean selected)
+    {
         JCheckBox box = new JCheckBox(text, selected);
         box.setBackground(JStudioTheme.getBgPrimary());
         box.setForeground(JStudioTheme.getTextPrimary());
         return box;
     }
 
-    private void styleButton(JButton button, boolean primary) {
-        if (primary) {
+    private void styleButton(JButton button, boolean primary)
+    {
+        if (primary)
+        {
             button.setBackground(JStudioTheme.getAccent());
             button.setForeground(Color.WHITE);
-        } else {
+        }
+        else
+        {
             button.setBackground(JStudioTheme.getBgSecondary());
             button.setForeground(JStudioTheme.getTextPrimary());
         }
         button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(JStudioTheme.getBorder()),
-                BorderFactory.createEmptyBorder(6, 16, 6, 16)
-        ));
+        button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(6, 16, 6, 16)));
     }
 
-    private void log(String message) {
-        SwingUtilities.invokeLater(() -> {
+    private void log(String message)
+    {
+        SwingUtilities.invokeLater(() ->
+        {
             logArea.append(message + "\n");
             logArea.setCaretPosition(logArea.getDocument().getLength());
         });
     }
 
-    private void applyDeobfuscation() {
+    private void applyDeobfuscation()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassPool() == null) {
+        if (project == null || project.getClassPool() == null)
+        {
             log("ERROR: No project loaded");
             return;
         }
@@ -137,7 +141,8 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
         logArea.setText("");
         mainFrame.setNavigatorLoading(true);
 
-        new SwingWorker<Void, String>() {
+        new SwingWorker<Void, String>()
+        {
             private int classesRenamed = 0;
             private int methodsRenamed = 0;
             private int fieldsRenamed = 0;
@@ -145,8 +150,10 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
             private boolean success = false;
 
             @Override
-            protected Void doInBackground() {
-                try {
+            protected Void doInBackground()
+            {
+                try
+                {
                     ClassPool classPool = project.getClassPool();
                     Renamer renamer = new Renamer(classPool);
 
@@ -158,15 +165,18 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
                     publish("Starting deobfuscation...");
                     publish("User classes: " + userClasses.size());
 
-                    for (String className : userClasses) {
+                    for (String className : userClasses)
+                    {
                         ClassFile cf = classPool.get(className);
                         if (cf == null) continue;
 
-                        if (skipJdkBox.isSelected() && isLibraryClass(className)) {
+                        if (skipJdkBox.isSelected() && isLibraryClass(className))
+                        {
                             continue;
                         }
 
-                        if (renameClassesBox.isSelected()) {
+                        if (renameClassesBox.isSelected())
+                        {
                             String newClassName = generateClassName(className);
                             renamer.mapClass(className, newClassName);
                             classNameMappings.put(className, newClassName);
@@ -175,8 +185,10 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
                             classesRenamed++;
                         }
 
-                        if (renameMethodsBox.isSelected()) {
-                            for (MethodEntry method : cf.getMethods()) {
+                        if (renameMethodsBox.isSelected())
+                        {
+                            for (MethodEntry method : cf.getMethods())
+                            {
                                 String name = method.getName();
                                 if (isSpecialMethod(name)) continue;
 
@@ -191,8 +203,10 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
                             }
                         }
 
-                        if (renameFieldsBox.isSelected()) {
-                            for (FieldEntry field : cf.getFields()) {
+                        if (renameFieldsBox.isSelected())
+                        {
+                            for (FieldEntry field : cf.getFields())
+                            {
                                 String name = field.getName();
 
                                 String key = className + "." + name + field.getDesc();
@@ -214,7 +228,8 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
                             .snapshot("Deobfuscate names", com.tonic.model.Snapshot.Trigger.DEOBFUSCATE);
                     renamer.apply();
 
-                    if (!classNameMappings.isEmpty()) {
+                    if (!classNameMappings.isEmpty())
+                    {
                         project.applyClassNameMappings(classNameMappings);
                     }
 
@@ -228,59 +243,72 @@ public class DeobfuscateNamesDialog extends ThemedJDialog {
 
                     success = true;
 
-                } catch (RenameException e) {
+                }
+                catch (RenameException e)
+                {
                     publish("ERROR: Rename failed - " + e.getMessage());
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     publish("ERROR: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                 }
                 return null;
             }
 
             @Override
-            protected void process(List<String> chunks) {
-                for (String msg : chunks) {
+            protected void process(List<String> chunks)
+            {
+                for (String msg : chunks)
+                {
                     log(msg);
                 }
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 applyButton.setEnabled(true);
-                if (success) {
+                if (success)
+                {
                     int total = classesRenamed + methodsRenamed + fieldsRenamed;
                     mainFrame.refreshAfterBulkRename(renamedOldClassNames, total);
-                } else {
+                }
+                else
+                {
                     mainFrame.setNavigatorLoading(false);
                 }
             }
         }.execute();
     }
 
-    private String generateClassName(String oldName) {
+    private String generateClassName(String oldName)
+    {
         int lastSlash = oldName.lastIndexOf('/');
         String pkg = lastSlash >= 0 ? oldName.substring(0, lastSlash + 1) : "";
         return pkg + "Class" + (classCounter++);
     }
 
-    private boolean isSpecialMethod(String name) {
+    private boolean isSpecialMethod(String name)
+    {
         return name.equals("<init>") ||
-               name.equals("<clinit>") ||
-               name.equals("main") ||
-               name.equals("toString") ||
-               name.equals("hashCode") ||
-               name.equals("equals") ||
-               name.equals("clone") ||
-               name.equals("finalize");
+                name.equals("<clinit>") ||
+                name.equals("main") ||
+                name.equals("toString") ||
+                name.equals("hashCode") ||
+                name.equals("equals") ||
+                name.equals("clone") ||
+                name.equals("finalize");
     }
 
-    private boolean isLibraryClass(String className) {
+    private boolean isLibraryClass(String className)
+    {
         return className.startsWith("java/") ||
-               className.startsWith("javax/") ||
-               className.startsWith("sun/") ||
-               className.startsWith("com/sun/") ||
-               className.startsWith("jdk/") ||
-               className.startsWith("org/w3c/") ||
-               className.startsWith("org/xml/") ||
-               className.startsWith("org/ietf/");
+                className.startsWith("javax/") ||
+                className.startsWith("sun/") ||
+                className.startsWith("com/sun/") ||
+                className.startsWith("jdk/") ||
+                className.startsWith("org/w3c/") ||
+                className.startsWith("org/xml/") ||
+                className.startsWith("org/ietf/");
     }
 }

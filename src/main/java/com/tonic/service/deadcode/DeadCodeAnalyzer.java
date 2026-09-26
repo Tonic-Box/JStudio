@@ -31,7 +31,8 @@ import java.util.function.Consumer;
  * read/write + type references), and {@code ClassPool.loadSystemClass}/{@code loadPlatformClass} to resolve
  * external supertypes for the override rule.
  */
-public final class DeadCodeAnalyzer {
+public final class DeadCodeAnalyzer
+{
 
     private final ProjectModel project;
     private final DeadCodeConfig config;
@@ -39,10 +40,12 @@ public final class DeadCodeAnalyzer {
     private final Set<String> userClasses;
     private final Set<String> skip;
     private final Map<String, ExternalInfo> externalSignatureCache = new HashMap<>();
-    private Consumer<String> progress = m -> {
+    private Consumer<String> progress = m ->
+    {
     };
 
-    public DeadCodeAnalyzer(ProjectModel project, DeadCodeConfig config) {
+    public DeadCodeAnalyzer(ProjectModel project, DeadCodeConfig config)
+    {
         this.project = project;
         this.config = config;
         this.pool = project.getClassPool();
@@ -51,13 +54,16 @@ public final class DeadCodeAnalyzer {
     }
 
     /** Sets a listener notified of each analysis phase (fired off the EDT; marshal to the EDT to display). */
-    public void setProgressListener(Consumer<String> listener) {
-        this.progress = listener != null ? listener : m -> {
+    public void setProgressListener(Consumer<String> listener)
+    {
+        this.progress = listener != null ? listener : m ->
+        {
         };
     }
 
     /** Runs the analysis. Builds the call graph + xref database, so call off the EDT. */
-    public DeadCodeReport analyze() {
+    public DeadCodeReport analyze()
+    {
         progress.accept("Building call graph...");
         CallGraph callGraph = CallGraph.build(pool);
         progress.accept("Building cross-references...");
@@ -73,37 +79,47 @@ public final class DeadCodeAnalyzer {
         Set<String> liveClasses = computeLiveClasses(callGraph, xref, reachable);
 
         DeadCodeReport report = new DeadCodeReport();
-        for (ClassEntryModel entry : project.getUserClasses()) {
+        for (ClassEntryModel entry : project.getUserClasses())
+        {
             String owner = entry.getClassName();
-            if (owner == null || skip.contains(owner)) {
+            if (owner == null || skip.contains(owner))
+            {
                 continue;
             }
-            if (!liveClasses.contains(owner)) {
+            if (!liveClasses.contains(owner))
+            {
                 report.getDeadClasses().add(DeadItem.ofClass(owner));
                 continue;
             }
             ClassFile cf = entry.getClassFile();
-            for (MethodEntry m : cf.getMethods()) {
+            for (MethodEntry m : cf.getMethods())
+            {
                 MethodReference ref = new MethodReference(owner, m.getName(), m.getDesc());
-                if (!reachable.contains(ref)) {
+                if (!reachable.contains(ref))
+                {
                     report.getDeadMethods().add(DeadItem.ofMethod(owner, m.getName(), m.getDesc()));
                 }
             }
-            for (FieldEntry f : cf.getFields()) {
+            for (FieldEntry f : cf.getFields())
+            {
                 classifyField(xref, reachable, report, owner, f);
             }
         }
         return report;
     }
 
-    private Set<MethodReference> collectRoots() {
+    private Set<MethodReference> collectRoots()
+    {
         Set<MethodReference> roots = new HashSet<>();
-        for (ClassEntryModel entry : project.getUserClasses()) {
+        for (ClassEntryModel entry : project.getUserClasses())
+        {
             String owner = entry.getClassName();
-            if (owner == null || skip.contains(owner)) {
+            if (owner == null || skip.contains(owner))
+            {
                 continue;
             }
-            for (MethodEntry m : entry.getClassFile().getMethods()) {
+            for (MethodEntry m : entry.getClassFile().getMethods())
+            {
                 String name = m.getName();
                 String desc = m.getDesc();
                 int access = m.getAccess();
@@ -112,7 +128,8 @@ public final class DeadCodeAnalyzer {
                         || (config.isPublicAsEntryPoints() && AccessFlags.isPublic(access))
                         || config.keeps(owner, name, desc)
                         || overridesExternal(owner, name, desc);
-                if (root) {
+                if (root)
+                {
                     roots.add(new MethodReference(owner, name, desc));
                 }
             }
@@ -120,52 +137,66 @@ public final class DeadCodeAnalyzer {
         return roots;
     }
 
-    private void classifyField(XrefDatabase xref, Set<MethodReference> reachable, DeadCodeReport report,
-                               String owner, FieldEntry f) {
+    private void classifyField(XrefDatabase xref, Set<MethodReference> reachable, DeadCodeReport report, String owner, FieldEntry f)
+    {
         String name = f.getName();
         String desc = f.getDesc();
-        if (config.keeps(owner, name, desc) || isInlinableConstant(f)) {
+        if (config.keeps(owner, name, desc) || isInlinableConstant(f))
+        {
             return;
         }
         boolean reachableRead = false;
         List<MethodReference> writers = new ArrayList<>();
-        for (Xref ref : xref.getRefsToField(owner, name, desc)) {
+        for (Xref ref : xref.getRefsToField(owner, name, desc))
+        {
             MethodReference source = sourceRef(ref);
-            if (source == null || !reachable.contains(source)) {
+            if (source == null || !reachable.contains(source))
+            {
                 continue;
             }
-            if (ref.getType() == XrefType.FIELD_READ) {
+            if (ref.getType() == XrefType.FIELD_READ)
+            {
                 reachableRead = true;
                 break;
             }
-            if (ref.getType() == XrefType.FIELD_WRITE && !writers.contains(source)) {
+            if (ref.getType() == XrefType.FIELD_WRITE && !writers.contains(source))
+            {
                 writers.add(source);
             }
         }
-        if (reachableRead) {
+        if (reachableRead)
+        {
             return;
         }
         report.getDeadFields().add(DeadItem.ofField(owner, name, desc, !writers.isEmpty(), writers));
     }
 
     /** A class is live if it has a reachable method, is referenced as a type by reachable code, or is a (user) supertype of a live class. */
-    private Set<String> computeLiveClasses(CallGraph callGraph, XrefDatabase xref, Set<MethodReference> reachable) {
+    private Set<String> computeLiveClasses(CallGraph callGraph, XrefDatabase xref, Set<MethodReference> reachable)
+    {
         Set<String> live = new HashSet<>();
-        for (MethodReference ref : reachable) {
-            if (userClasses.contains(ref.getOwner())) {
+        for (MethodReference ref : reachable)
+        {
+            if (userClasses.contains(ref.getOwner()))
+            {
                 live.add(ref.getOwner());
             }
         }
-        for (ClassEntryModel entry : project.getUserClasses()) {
+        for (ClassEntryModel entry : project.getUserClasses())
+        {
             String owner = entry.getClassName();
-            if (owner == null || skip.contains(owner) || live.contains(owner)) {
+            if (owner == null || skip.contains(owner) || live.contains(owner))
+            {
                 continue;
             }
-            for (Xref ref : xref.getRefsToClass(owner)) {
+            for (Xref ref : xref.getRefsToClass(owner))
+            {
                 XrefType type = ref.getType();
-                if (type.isTypeRef() && !type.isInheritanceRef()) {
+                if (type.isTypeRef() && !type.isInheritanceRef())
+                {
                     MethodReference source = sourceRef(ref);
-                    if (source != null && reachable.contains(source)) {
+                    if (source != null && reachable.contains(source))
+                    {
                         live.add(owner);
                         break;
                     }
@@ -175,14 +206,18 @@ public final class DeadCodeAnalyzer {
         // A live class needs its (user) supertypes kept too, or the hierarchy breaks.
         Deque<String> worklist = new ArrayDeque<>(live);
         ClassHierarchy hierarchy = callGraph.getHierarchy();
-        while (!worklist.isEmpty()) {
+        while (!worklist.isEmpty())
+        {
             ClassNode node = hierarchy.getNode(worklist.poll());
-            if (node == null) {
+            if (node == null)
+            {
                 continue;
             }
-            for (ClassNode ancestor : node.getAllAncestors()) {
+            for (ClassNode ancestor : node.getAllAncestors())
+            {
                 String an = ancestor.getName();
-                if (userClasses.contains(an) && !skip.contains(an) && live.add(an)) {
+                if (userClasses.contains(an) && !skip.contains(an) && live.add(an))
+                {
                     worklist.add(an);
                 }
             }
@@ -193,8 +228,10 @@ public final class DeadCodeAnalyzer {
     // ---- external-override rule ---------------------------------------------------------------------
 
     /** True if {@code name+desc} on {@code owner} overrides a method declared by a non-user (JDK/library) supertype. */
-    private boolean overridesExternal(String owner, String name, String desc) {
-        if (name.equals("<init>") || name.equals("<clinit>")) {
+    private boolean overridesExternal(String owner, String name, String desc)
+    {
+        if (name.equals("<init>") || name.equals("<clinit>"))
+        {
             return false;
         }
         ExternalInfo info = externalSignatureCache.computeIfAbsent(owner, this::computeExternalSignatures);
@@ -207,39 +244,51 @@ public final class DeadCodeAnalyzer {
      * supertypes are resolved by reflection, which reliably covers the JDK and anything on the classpath
      * regardless of whether the project's pool loaded JDK classes.
      */
-    private ExternalInfo computeExternalSignatures(String owner) {
+    private ExternalInfo computeExternalSignatures(String owner)
+    {
         Set<String> signatures = new HashSet<>();
         boolean[] unresolved = {false};
         Set<String> visited = new HashSet<>();
         Deque<String> stack = new ArrayDeque<>();
         pushUserSupertypes(project.getClass(owner), stack);
-        while (!stack.isEmpty()) {
+        while (!stack.isEmpty())
+        {
             String c = stack.pop();
-            if (!visited.add(c)) {
+            if (!visited.add(c))
+            {
                 continue;
             }
-            if (userClasses.contains(c)) {
+            if (userClasses.contains(c))
+            {
                 pushUserSupertypes(project.getClass(c), stack);
-            } else if (!collectReflective(c, signatures)) {
+            }
+            else if (!collectReflective(c, signatures))
+            {
                 unresolved[0] = true;
             }
         }
         return new ExternalInfo(signatures, unresolved[0]);
     }
 
-    private static void pushUserSupertypes(ClassEntryModel entry, Deque<String> stack) {
-        if (entry == null || entry.getClassFile() == null) {
+    private static void pushUserSupertypes(ClassEntryModel entry, Deque<String> stack)
+    {
+        if (entry == null || entry.getClassFile() == null)
+        {
             return;
         }
         ClassFile cf = entry.getClassFile();
         String superName = cf.getSuperClassName();
-        if (superName != null && !superName.isEmpty()) {
+        if (superName != null && !superName.isEmpty())
+        {
             stack.push(superName);
         }
         List<String> interfaces = cf.getInterfaceNames();
-        if (interfaces != null) {
-            for (String iface : interfaces) {
-                if (iface != null && !iface.isEmpty()) {
+        if (interfaces != null)
+        {
+            for (String iface : interfaces)
+            {
+                if (iface != null && !iface.isEmpty())
+                {
                     stack.push(iface);
                 }
             }
@@ -247,40 +296,51 @@ public final class DeadCodeAnalyzer {
     }
 
     /** Adds every method (any access, full hierarchy) of an external class to {@code signatures} via reflection. */
-    private boolean collectReflective(String internalName, Set<String> signatures) {
-        try {
+    private boolean collectReflective(String internalName, Set<String> signatures)
+    {
+        try
+        {
             Class<?> root = Class.forName(internalName.replace('/', '.'), false, getClass().getClassLoader());
             Set<Class<?>> visited = new HashSet<>();
             Deque<Class<?>> queue = new ArrayDeque<>();
             queue.add(root);
-            while (!queue.isEmpty()) {
+            while (!queue.isEmpty())
+            {
                 Class<?> k = queue.poll();
-                if (!visited.add(k)) {
+                if (!visited.add(k))
+                {
                     continue;
                 }
-                for (Method m : k.getDeclaredMethods()) {
+                for (Method m : k.getDeclaredMethods())
+                {
                     signatures.add(m.getName() + ' ' + methodDescriptor(m));
                 }
-                if (k.getSuperclass() != null) {
+                if (k.getSuperclass() != null)
+                {
                     queue.add(k.getSuperclass());
                 }
                 Collections.addAll(queue, k.getInterfaces());
             }
             return true;
-        } catch (Throwable t) {
+        }
+        catch (Throwable t)
+        {
             return false;
         }
     }
 
-    private static String methodDescriptor(Method m) {
+    private static String methodDescriptor(Method m)
+    {
         StringBuilder sb = new StringBuilder("(");
-        for (Class<?> p : m.getParameterTypes()) {
+        for (Class<?> p : m.getParameterTypes())
+        {
             sb.append(typeDescriptor(p));
         }
         return sb.append(')').append(typeDescriptor(m.getReturnType())).toString();
     }
 
-    private static String typeDescriptor(Class<?> c) {
+    private static String typeDescriptor(Class<?> c)
+    {
         if (c == void.class) return "V";
         if (c == boolean.class) return "Z";
         if (c == byte.class) return "B";
@@ -294,28 +354,34 @@ public final class DeadCodeAnalyzer {
         return "L" + c.getName().replace('.', '/') + ";";
     }
 
-    private MethodReference sourceRef(Xref ref) {
-        if (ref.getSourceMethod() == null) {
+    private MethodReference sourceRef(Xref ref)
+    {
+        if (ref.getSourceMethod() == null)
+        {
             return null;
         }
         return new MethodReference(ref.getSourceClass(), ref.getSourceMethod(), ref.getSourceMethodDesc());
     }
 
     /** Compile-time constants (static final primitive/String) inline at use sites, so they look unreferenced; keep them. */
-    private static boolean isInlinableConstant(FieldEntry f) {
+    private static boolean isInlinableConstant(FieldEntry f)
+    {
         int access = f.getAccess();
-        if (!AccessFlags.isStatic(access) || !AccessFlags.isFinal(access)) {
+        if (!AccessFlags.isStatic(access) || !AccessFlags.isFinal(access))
+        {
             return false;
         }
         String desc = f.getDesc();
         return desc.length() == 1 || desc.equals("Ljava/lang/String;");
     }
 
-    private static final class ExternalInfo {
+    private static final class ExternalInfo
+    {
         private final Set<String> signatures;
         private final boolean unresolved;
 
-        ExternalInfo(Set<String> signatures, boolean unresolved) {
+        ExternalInfo(Set<String> signatures, boolean unresolved)
+        {
             this.signatures = signatures;
             this.unresolved = unresolved;
         }

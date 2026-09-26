@@ -17,7 +17,8 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProjectDatabaseService {
+public class ProjectDatabaseService
+{
 
     private static final ProjectDatabaseService INSTANCE = new ProjectDatabaseService();
 
@@ -29,14 +30,17 @@ public class ProjectDatabaseService {
     private Timer autoSaveTimer;
     private final List<DatabaseChangeListener> listeners = new ArrayList<>();
 
-    private ProjectDatabaseService() {
+    private ProjectDatabaseService()
+    {
     }
 
-    public static ProjectDatabaseService getInstance() {
+    public static ProjectDatabaseService getInstance()
+    {
         return INSTANCE;
     }
 
-    public void create(File targetFile) {
+    public void create(File targetFile)
+    {
         currentDatabase = new ProjectDatabase(targetFile);
         currentDatabase.setTargetHash(computeFileHash(targetFile));
         projectFile = ProjectDatabase.getDefaultProjectFile(targetFile);
@@ -44,24 +48,28 @@ public class ProjectDatabaseService {
         notifyListeners();
     }
 
-    public void open(File jstudioFile) throws IOException {
+    public void open(File jstudioFile) throws IOException
+    {
         currentDatabase = JsonSerializer.load(jstudioFile);
         projectFile = jstudioFile;
         dirty = false;
         notifyListeners();
-        EventBus.getInstance().post(new StatusMessageEvent(this,
-            "Loaded project: " + projectFile.getName()));
+        EventBus.getInstance().post(new StatusMessageEvent(this, "Loaded project: " + projectFile.getName()));
     }
 
-    public void save() throws IOException {
-        if (projectFile == null) {
+    public void save() throws IOException
+    {
+        if (projectFile == null)
+        {
             throw new IOException("No project file set");
         }
         saveAs(projectFile);
     }
 
-    public void saveAs(File file) throws IOException {
-        if (currentDatabase == null) {
+    public void saveAs(File file) throws IOException
+    {
+        if (currentDatabase == null)
+        {
             throw new IOException("No project database to save");
         }
         currentDatabase.touch();
@@ -69,11 +77,11 @@ public class ProjectDatabaseService {
         projectFile = file;
         dirty = false;
         notifyListeners();
-        EventBus.getInstance().post(new StatusMessageEvent(this,
-            "Saved project: " + file.getName()));
+        EventBus.getInstance().post(new StatusMessageEvent(this, "Saved project: " + file.getName()));
     }
 
-    public void close() {
+    public void close()
+    {
         currentDatabase = null;
         projectFile = null;
         dirty = false;
@@ -81,100 +89,131 @@ public class ProjectDatabaseService {
         notifyListeners();
     }
 
-    public void markDirty() {
-        if (!dirty) {
+    public void markDirty()
+    {
+        if (!dirty)
+        {
             dirty = true;
             notifyListeners();
         }
     }
 
-    public boolean hasDatabase() {
+    public boolean hasDatabase()
+    {
         return currentDatabase != null;
     }
 
-    public ProjectDatabase getDatabase() {
+    public ProjectDatabase getDatabase()
+    {
         return currentDatabase;
     }
 
-    public void addComment(Comment comment) {
-        if (currentDatabase != null) {
+    public void addComment(Comment comment)
+    {
+        if (currentDatabase != null)
+        {
             currentDatabase.getComments().addComment(comment);
             markDirty();
         }
     }
 
-    public void removeComment(String id) {
-        if (currentDatabase != null) {
+    public void removeComment(String id)
+    {
+        if (currentDatabase != null)
+        {
             currentDatabase.getComments().removeComment(id);
             markDirty();
         }
     }
 
-    public void updateComment(String id, String newText) {
-        if (currentDatabase != null) {
+    public void updateComment(String id, String newText)
+    {
+        if (currentDatabase != null)
+        {
             currentDatabase.getComments().updateComment(id, newText);
             markDirty();
         }
     }
 
-    public List<Comment> getCommentsForClass(String className) {
-        if (currentDatabase != null) {
+    public List<Comment> getCommentsForClass(String className)
+    {
+        if (currentDatabase != null)
+        {
             return currentDatabase.getComments().getCommentsForClass(className);
         }
         return new ArrayList<>();
     }
 
-    public void addBookmark(Bookmark bookmark) {
-        if (currentDatabase != null) {
+    public void addBookmark(Bookmark bookmark)
+    {
+        if (currentDatabase != null)
+        {
             currentDatabase.getBookmarks().addBookmark(bookmark);
             markDirty();
         }
     }
 
-    public void removeBookmark(String id) {
-        if (currentDatabase != null) {
+    public void removeBookmark(String id)
+    {
+        if (currentDatabase != null)
+        {
             currentDatabase.getBookmarks().removeBookmark(id);
             markDirty();
         }
     }
 
-    public void setQuickSlot(int slot, Bookmark bookmark) {
-        if (currentDatabase != null) {
+    public void setQuickSlot(int slot, Bookmark bookmark)
+    {
+        if (currentDatabase != null)
+        {
             currentDatabase.getBookmarks().setQuickSlot(slot, bookmark);
             markDirty();
         }
     }
 
-    public List<Bookmark> getAllBookmarks() {
-        if (currentDatabase != null) {
+    public List<Bookmark> getAllBookmarks()
+    {
+        if (currentDatabase != null)
+        {
             return currentDatabase.getBookmarks().getAll();
         }
         return new ArrayList<>();
     }
 
-    public void addRename(String original, String renamed) {
-        if (currentDatabase != null) {
+    public void addRename(String original, String renamed)
+    {
+        if (currentDatabase != null)
+        {
             currentDatabase.addRename(original, renamed);
             markDirty();
         }
     }
 
-    public String getRenamedName(String original) {
-        if (currentDatabase != null) {
+    public String getRenamedName(String original)
+    {
+        if (currentDatabase != null)
+        {
             return currentDatabase.getRenamedName(original);
         }
         return original;
     }
 
-    public void enableAutoSave(int intervalSeconds) {
+    public void enableAutoSave(int intervalSeconds)
+    {
         stopAutoSave();
-        if (intervalSeconds > 0) {
-            autoSaveTimer = new Timer(intervalSeconds * 1000, e -> {
-                if (dirty && projectFile != null) {
-                    try {
+        if (intervalSeconds > 0)
+        {
+            autoSaveTimer = new Timer(intervalSeconds * 1000, e ->
+            {
+                if (dirty && projectFile != null)
+                {
+                    try
+                    {
                         save();
                         EventBus.getInstance().post(new StatusMessageEvent(this, "Auto-saved project"));
-                    } catch (IOException ex) {
+                    }
+                    catch (IOException ex)
+                    {
                         ConsoleLogService.getInstance().warn("Auto-save failed: " + ex.getMessage());
                     }
                 }
@@ -183,77 +222,102 @@ public class ProjectDatabaseService {
         }
     }
 
-    public void stopAutoSave() {
-        if (autoSaveTimer != null) {
+    public void stopAutoSave()
+    {
+        if (autoSaveTimer != null)
+        {
             autoSaveTimer.stop();
             autoSaveTimer = null;
         }
     }
 
-    public void initializeForProject(ProjectModel project) {
-        if (project == null || project.getSourceFile() == null) {
+    public void initializeForProject(ProjectModel project)
+    {
+        if (project == null || project.getSourceFile() == null)
+        {
             return;
         }
         File sourceFile = project.getSourceFile();
         File defaultDbFile = ProjectDatabase.getDefaultProjectFile(sourceFile);
-        if (defaultDbFile.exists()) {
-            try {
+        if (defaultDbFile.exists())
+        {
+            try
+            {
                 open(defaultDbFile);
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 ConsoleLogService.getInstance().warn("Failed to load existing project database: " + e.getMessage());
                 create(sourceFile);
             }
-        } else {
+        }
+        else
+        {
             create(sourceFile);
         }
     }
 
-    public void addListener(DatabaseChangeListener listener) {
-        if (!listeners.contains(listener)) {
+    public void addListener(DatabaseChangeListener listener)
+    {
+        if (!listeners.contains(listener))
+        {
             listeners.add(listener);
         }
     }
 
-    public void removeListener(DatabaseChangeListener listener) {
+    public void removeListener(DatabaseChangeListener listener)
+    {
         listeners.remove(listener);
     }
 
     /** The number of registered listeners (test-only hook for leak detection). */
-    public int getListenerCount() {
+    public int getListenerCount()
+    {
         return listeners.size();
     }
 
-    private void notifyListeners() {
-        for (DatabaseChangeListener listener : listeners) {
+    private void notifyListeners()
+    {
+        for (DatabaseChangeListener listener : listeners)
+        {
             listener.onDatabaseChanged(currentDatabase, dirty);
         }
     }
 
-    private String computeFileHash(File file) {
-        if (file == null || !file.exists()) {
+    private String computeFileHash(File file)
+    {
+        if (file == null || !file.exists())
+        {
             return null;
         }
-        try {
+        try
+        {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            try (FileInputStream fis = new FileInputStream(file)) {
+            try (FileInputStream fis = new FileInputStream(file))
+            {
                 byte[] buffer = new byte[8192];
                 int read;
-                while ((read = fis.read(buffer)) != -1) {
+                while ((read = fis.read(buffer)) != -1)
+                {
                     md.update(buffer, 0, read);
                 }
             }
             byte[] hash = md.digest();
             StringBuilder sb = new StringBuilder();
-            for (byte b : hash) {
+            for (byte b : hash)
+            {
                 sb.append(String.format("%02x", b));
             }
             return sb.toString();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return null;
         }
     }
 
-    public interface DatabaseChangeListener {
+    public interface DatabaseChangeListener
+    {
         void onDatabaseChanged(ProjectDatabase database, boolean dirty);
     }
 }

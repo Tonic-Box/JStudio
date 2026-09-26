@@ -5,41 +5,50 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SettingsTest {
+class SettingsTest
+{
 
     private Settings settings;
 
     @BeforeEach
-    void setUp() {
+    void setUp()
+    {
         settings = Settings.getInstance();
     }
 
     @Test
-    void testSingletonInstance() {
+    void testSingletonInstance()
+    {
         Settings instance1 = Settings.getInstance();
         Settings instance2 = Settings.getInstance();
         assertSame(instance1, instance2);
     }
 
     @Test
-    void testDefaultFontSize() {
+    void testDefaultFontSize()
+    {
         int defaultSize = settings.getFontSize();
         assertTrue(defaultSize >= 8 && defaultSize <= 32);
     }
 
     @Test
-    void testSetAndGetFontSize() {
+    void testSetAndGetFontSize()
+    {
         int originalSize = settings.getFontSize();
-        try {
+        try
+        {
             settings.setFontSize(16);
             assertEquals(16, settings.getFontSize());
-        } finally {
+        }
+        finally
+        {
             settings.setFontSize(originalSize);
         }
     }
 
     @Test
-    void testDefaultWindowDimensions() {
+    void testDefaultWindowDimensions()
+    {
         int width = settings.getWindowWidth();
         int height = settings.getWindowHeight();
         assertTrue(width > 0);
@@ -47,144 +56,182 @@ class SettingsTest {
     }
 
     @Test
-    void testSetAndGetWindowBounds() {
+    void testSetAndGetWindowBounds()
+    {
         int origX = settings.getWindowX();
         int origY = settings.getWindowY();
         int origW = settings.getWindowWidth();
         int origH = settings.getWindowHeight();
         boolean origMax = settings.isWindowMaximized();
 
-        try {
+        try
+        {
             settings.saveWindowBounds(100, 200, 800, 600, false);
             assertEquals(100, settings.getWindowX());
             assertEquals(200, settings.getWindowY());
             assertEquals(800, settings.getWindowWidth());
             assertEquals(600, settings.getWindowHeight());
             assertFalse(settings.isWindowMaximized());
-        } finally {
+        }
+        finally
+        {
             settings.saveWindowBounds(origX, origY, origW, origH, origMax);
         }
     }
 
     @Test
-    void testDefaultNavigatorWidth() {
+    void testDefaultNavigatorWidth()
+    {
         int width = settings.getNavigatorWidth();
         assertTrue(width >= 0);
     }
 
     @Test
-    void testSetAndGetDividerPositions() {
+    void testSetAndGetDividerPositions()
+    {
         int origNav = settings.getNavigatorWidth();
         int origProps = settings.getPropertiesWidth();
         int origConsole = settings.getConsoleHeight();
 
-        try {
+        try
+        {
             settings.saveDividerPositions(300, 350, 200);
             assertEquals(300, settings.getNavigatorWidth());
             assertEquals(350, settings.getPropertiesWidth());
             assertEquals(200, settings.getConsoleHeight());
-        } finally {
+        }
+        finally
+        {
             settings.saveDividerPositions(origNav, origProps, origConsole);
         }
     }
 
     @Test
-    void testDefaultWordWrap() {
+    void testDefaultWordWrap()
+    {
         assertNotNull(String.valueOf(settings.isWordWrapEnabled()));
     }
 
     @Test
-    void testSetAndGetWordWrap() {
+    void testSetAndGetWordWrap()
+    {
         boolean original = settings.isWordWrapEnabled();
-        try {
+        try
+        {
             settings.setWordWrapEnabled(true);
             assertTrue(settings.isWordWrapEnabled());
             settings.setWordWrapEnabled(false);
             assertFalse(settings.isWordWrapEnabled());
-        } finally {
+        }
+        finally
+        {
             settings.setWordWrapEnabled(original);
         }
     }
 
     @Test
-    void testDefaultTheme() {
+    void testDefaultTheme()
+    {
         String theme = settings.getTheme();
         assertNotNull(theme);
         assertFalse(theme.isEmpty());
     }
 
     @Test
-    void testSetAndGetTheme() {
+    void testSetAndGetTheme()
+    {
         String original = settings.getTheme();
-        try {
+        try
+        {
             settings.setTheme("test-theme");
             assertEquals("test-theme", settings.getTheme());
-        } finally {
+        }
+        finally
+        {
             settings.setTheme(original);
         }
     }
 
     @Test
-    void testDefaultFontFamily() {
+    void testDefaultFontFamily()
+    {
         String fontFamily = settings.getFontFamily();
         assertNotNull(fontFamily);
     }
 
     @Test
-    void testSetAndGetFontFamily() {
+    void testSetAndGetFontFamily()
+    {
         String original = settings.getFontFamily();
-        try {
+        try
+        {
             settings.setFontFamily("Consolas");
             assertEquals("Consolas", settings.getFontFamily());
 
             settings.setFontFamily(null);
             assertEquals("", settings.getFontFamily());
-        } finally {
+        }
+        finally
+        {
             settings.setFontFamily(original);
         }
     }
 
     @Test
-    void testDefaultLastDirectory() {
+    void testDefaultLastDirectory()
+    {
         String dir = settings.getLastDirectory();
         assertNotNull(dir);
     }
 
     @Test
-    void testSetAndGetLastDirectory() {
+    void testSetAndGetLastDirectory()
+    {
         String original = settings.getLastDirectory();
-        try {
+        try
+        {
             settings.setLastDirectory("/test/path");
             assertEquals("/test/path", settings.getLastDirectory());
-        } finally {
+        }
+        finally
+        {
             settings.setLastDirectory(original);
         }
     }
 
     @Test
-    void testRestoreSessionEnabled() {
+    void testRestoreSessionEnabled()
+    {
         boolean original = settings.isRestoreSessionEnabled();
-        try {
+        try
+        {
             settings.setRestoreSessionEnabled(true);
             assertTrue(settings.isRestoreSessionEnabled());
             settings.setRestoreSessionEnabled(false);
             assertFalse(settings.isRestoreSessionEnabled());
-        } finally {
+        }
+        finally
+        {
             settings.setRestoreSessionEnabled(original);
         }
     }
 
     @Test
-    void testLastProject() {
+    void testLastProject()
+    {
         String original = settings.getLastProject();
-        try {
+        try
+        {
             settings.setLastProject("/path/to/project.jar");
             assertEquals("/path/to/project.jar", settings.getLastProject());
 
             settings.setLastProject(null);
             assertEquals("", settings.getLastProject());
-        } finally {
-            if (original != null) {
+        }
+        finally
+        {
+            if (original != null)
+            {
                 settings.setLastProject(original);
             }
         }

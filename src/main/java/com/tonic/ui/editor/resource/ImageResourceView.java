@@ -23,7 +23,8 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 
-public class ImageResourceView extends AbstractEditorView {
+public class ImageResourceView extends AbstractEditorView
+{
 
     private final ResourceEntryModel resource;
     private final JLabel imageLabel;
@@ -37,7 +38,8 @@ public class ImageResourceView extends AbstractEditorView {
     private static final double MIN_ZOOM = 0.1;
     private static final double MAX_ZOOM = 10.0;
 
-    public ImageResourceView(ResourceEntryModel resource) {
+    public ImageResourceView(ResourceEntryModel resource)
+    {
         this.resource = resource;
 
         toolbar = createToolbar();
@@ -47,9 +49,11 @@ public class ImageResourceView extends AbstractEditorView {
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.CENTER);
 
-        JPanel imagePanel = new JPanel(new BorderLayout()) {
+        JPanel imagePanel = new JPanel(new BorderLayout())
+        {
             @Override
-            protected void paintComponent(Graphics g) {
+            protected void paintComponent(Graphics g)
+            {
                 super.paintComponent(g);
                 paintCheckerboard(g);
             }
@@ -68,7 +72,8 @@ public class ImageResourceView extends AbstractEditorView {
         loadImage();
     }
 
-    private JToolBar createToolbar() {
+    private JToolBar createToolbar()
+    {
         JToolBar tb = new JToolBar();
         tb.setFloatable(false);
 
@@ -107,22 +112,30 @@ public class ImageResourceView extends AbstractEditorView {
         return tb;
     }
 
-    private void loadImage() {
-        try {
+    private void loadImage()
+    {
+        try
+        {
             ByteArrayInputStream bais = new ByteArrayInputStream(resource.getData());
             originalImage = ImageIO.read(bais);
-            if (originalImage != null) {
+            if (originalImage != null)
+            {
                 updateImageDisplay();
                 updateInfoLabel();
-            } else {
+            }
+            else
+            {
                 imageLabel.setText("Unable to load image");
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             imageLabel.setText("Error loading image: " + e.getMessage());
         }
     }
 
-    private void updateImageDisplay() {
+    private void updateImageDisplay()
+    {
         if (originalImage == null) return;
 
         int newWidth = (int) (originalImage.getWidth() * zoomFactor);
@@ -130,9 +143,7 @@ public class ImageResourceView extends AbstractEditorView {
 
         BufferedImage scaled = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = scaled.createGraphics();
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                zoomFactor < 1 ? RenderingHints.VALUE_INTERPOLATION_BILINEAR
-                        : RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, zoomFactor < 1 ? RenderingHints.VALUE_INTERPOLATION_BILINEAR : RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g2d.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
         g2d.dispose();
 
@@ -141,48 +152,53 @@ public class ImageResourceView extends AbstractEditorView {
         scrollPane.revalidate();
     }
 
-    private void updateInfoLabel() {
-        if (originalImage != null) {
-            String info = String.format("%s | %dx%d | %s | Zoom: %.0f%%",
-                    resource.getName(),
-                    originalImage.getWidth(),
-                    originalImage.getHeight(),
-                    resource.getFormattedSize(),
-                    zoomFactor * 100);
+    private void updateInfoLabel()
+    {
+        if (originalImage != null)
+        {
+            String info = String.format("%s | %dx%d | %s | Zoom: %.0f%%", resource.getName(), originalImage.getWidth(), originalImage.getHeight(), resource.getFormattedSize(), zoomFactor * 100);
             infoLabel.setText(info);
         }
     }
 
-    private void paintCheckerboard(Graphics g) {
+    private void paintCheckerboard(Graphics g)
+    {
         int tileSize = 10;
         Color light = new Color(200, 200, 200);
         Color dark = new Color(150, 150, 150);
 
-        for (int y = 0; y < getHeight(); y += tileSize) {
-            for (int x = 0; x < getWidth(); x += tileSize) {
+        for (int y = 0; y < getHeight(); y += tileSize)
+        {
+            for (int x = 0; x < getWidth(); x += tileSize)
+            {
                 g.setColor(((x + y) / tileSize) % 2 == 0 ? light : dark);
                 g.fillRect(x, y, tileSize, tileSize);
             }
         }
     }
 
-    public void zoomIn() {
-        if (zoomFactor < MAX_ZOOM) {
+    public void zoomIn()
+    {
+        if (zoomFactor < MAX_ZOOM)
+        {
             zoomFactor = Math.min(MAX_ZOOM, zoomFactor + ZOOM_INCREMENT);
             updateImageDisplay();
             updateInfoLabel();
         }
     }
 
-    public void zoomOut() {
-        if (zoomFactor > MIN_ZOOM) {
+    public void zoomOut()
+    {
+        if (zoomFactor > MIN_ZOOM)
+        {
             zoomFactor = Math.max(MIN_ZOOM, zoomFactor - ZOOM_INCREMENT);
             updateImageDisplay();
             updateInfoLabel();
         }
     }
 
-    public void fitToWindow() {
+    public void fitToWindow()
+    {
         if (originalImage == null) return;
 
         Dimension viewSize = scrollPane.getViewport().getSize();
@@ -194,14 +210,16 @@ public class ImageResourceView extends AbstractEditorView {
         updateInfoLabel();
     }
 
-    public void actualSize() {
+    public void actualSize()
+    {
         zoomFactor = 1.0;
         updateImageDisplay();
         updateInfoLabel();
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());

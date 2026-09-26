@@ -19,7 +19,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
-public class FuzzTestGeneratorDialog extends JDialog {
+public class FuzzTestGeneratorDialog extends JDialog
+{
 
     private final TestCaseGenerator generator = new TestCaseGenerator();
 
@@ -49,7 +50,8 @@ public class FuzzTestGeneratorDialog extends JDialog {
     private List<FuzzResult> fuzzResults = new ArrayList<>();
     private List<ParamSpec> paramSpecs = new ArrayList<>();
 
-    public FuzzTestGeneratorDialog(Window owner) {
+    public FuzzTestGeneratorDialog(Window owner)
+    {
         super(owner, "Fuzz & Generate Tests", ModalityType.APPLICATION_MODAL);
         initComponents();
         pack();
@@ -57,7 +59,8 @@ public class FuzzTestGeneratorDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    private void initComponents() {
+    private void initComponents()
+    {
         setLayout(new BorderLayout(10, 10));
         ((JPanel) getContentPane()).setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -118,25 +121,30 @@ public class FuzzTestGeneratorDialog extends JDialog {
         resultsTable.getColumnModel().getColumn(3).setPreferredWidth(180);
         resultsTable.getSelectionModel().addListSelectionListener(e -> updatePreview());
 
-        resultsTable.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+        resultsTable.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer()
+        {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+            {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 FuzzResult result = tableModel.getResultAt(row);
-                if (result != null && result.getResult().getException() != null) {
+                if (result != null && result.getResult().getException() != null)
+                {
                     setForeground(JStudioTheme.getError());
-                } else {
+                }
+                else
+                {
                     setForeground(isSelected ? JStudioTheme.getTextPrimary() : JStudioTheme.getSuccess());
                 }
                 return this;
             }
         });
 
-        resultsTable.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+        resultsTable.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer()
+        {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+            {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 setForeground(isSelected ? JStudioTheme.getTextPrimary() : JStudioTheme.getInfo());
                 return this;
@@ -174,12 +182,14 @@ public class FuzzTestGeneratorDialog extends JDialog {
         previewConfig.add(new JLabel("JUnit Version:"));
         versionCombo = new JComboBox<>(TestCaseGenerator.JUnitVersion.values());
         versionCombo.setSelectedItem(TestCaseGenerator.JUnitVersion.JUNIT5);
-        versionCombo.setRenderer(new DefaultListCellRenderer() {
+        versionCombo.setRenderer(new DefaultListCellRenderer()
+        {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value,
-                    int index, boolean isSelected, boolean cellHasFocus) {
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+            {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof TestCaseGenerator.JUnitVersion) {
+                if (value instanceof TestCaseGenerator.JUnitVersion)
+                {
                     setText(((TestCaseGenerator.JUnitVersion) value).getDisplayName());
                 }
                 return this;
@@ -191,10 +201,22 @@ public class FuzzTestGeneratorDialog extends JDialog {
         previewConfig.add(Box.createHorizontalStrut(20));
         previewConfig.add(new JLabel("Test Class:"));
         classNameField = new JTextField(20);
-        classNameField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { updatePreview(); }
-            public void removeUpdate(DocumentEvent e) { updatePreview(); }
-            public void changedUpdate(DocumentEvent e) { updatePreview(); }
+        classNameField.getDocument().addDocumentListener(new DocumentListener()
+        {
+            public void insertUpdate(DocumentEvent e)
+            {
+                updatePreview();
+            }
+
+            public void removeUpdate(DocumentEvent e)
+            {
+                updatePreview();
+            }
+
+            public void changedUpdate(DocumentEvent e)
+            {
+                updatePreview();
+            }
         });
         previewConfig.add(classNameField);
 
@@ -229,7 +251,8 @@ public class FuzzTestGeneratorDialog extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    public void setMethod(String className, String methodName, String descriptor) {
+    public void setMethod(String className, String methodName, String descriptor)
+    {
         this.className = className;
         this.methodName = methodName;
         this.descriptor = descriptor;
@@ -246,42 +269,55 @@ public class FuzzTestGeneratorDialog extends JDialog {
         updateParamsConfigLabel();
     }
 
-    private void updateParamsConfigLabel() {
-        if (paramSpecs.isEmpty()) {
+    private void updateParamsConfigLabel()
+    {
+        if (paramSpecs.isEmpty())
+        {
             paramsConfigLabel.setText("(no parameters)");
             configParamsButton.setEnabled(false);
-        } else {
+        }
+        else
+        {
             int configuredCount = 0;
-            for (ParamSpec spec : paramSpecs) {
+            for (ParamSpec spec : paramSpecs)
+            {
                 if (spec.getMode() == ValueMode.OBJECT_SPEC ||
-                    spec.getMode() == ValueMode.FIXED) {
+                        spec.getMode() == ValueMode.FIXED)
+                {
                     configuredCount++;
                 }
             }
-            if (configuredCount > 0) {
+            if (configuredCount > 0)
+            {
                 paramsConfigLabel.setText(configuredCount + "/" + paramSpecs.size() + " configured");
-            } else {
+            }
+            else
+            {
                 paramsConfigLabel.setText(paramSpecs.size() + " params (auto)");
             }
             configParamsButton.setEnabled(true);
         }
     }
 
-    private void openParamsConfig() {
+    private void openParamsConfig()
+    {
         if (paramSpecs.isEmpty()) return;
 
         ParameterConfigDialog dialog = new ParameterConfigDialog(this, paramSpecs);
         dialog.setVisible(true);
 
         List<ParamSpec> result = dialog.getResult();
-        if (result != null) {
+        if (result != null)
+        {
             paramSpecs = result;
             updateParamsConfigLabel();
         }
     }
 
-    private void runFuzz() {
-        if (className == null || methodName == null || descriptor == null) {
+    private void runFuzz()
+    {
+        if (className == null || methodName == null || descriptor == null)
+        {
             JOptionPane.showMessageDialog(this, "No method configured", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -293,7 +329,8 @@ public class FuzzTestGeneratorDialog extends JDialog {
         config.setIncludeRandom(randomCheckbox.isSelected());
 
         MethodFuzzer fuzzer = new MethodFuzzer(className, methodName, descriptor, config);
-        if (!paramSpecs.isEmpty()) {
+        if (!paramSpecs.isEmpty())
+        {
             fuzzer.setParameterSpecs(paramSpecs);
         }
 
@@ -302,48 +339,59 @@ public class FuzzTestGeneratorDialog extends JDialog {
         progressBar.setValue(0);
         statusLabel.setText("Fuzzing...");
 
-        SwingWorker<List<FuzzResult>, Integer> worker = new SwingWorker<>() {
+        SwingWorker<List<FuzzResult>, Integer> worker = new SwingWorker<>()
+        {
             @Override
-            protected List<FuzzResult> doInBackground() {
-                return fuzzer.runFuzz(new MethodFuzzer.ProgressCallback() {
+            protected List<FuzzResult> doInBackground()
+            {
+                return fuzzer.runFuzz(new MethodFuzzer.ProgressCallback()
+                {
                     @Override
-                    public void onProgress(int current, int total, String message) {
+                    public void onProgress(int current, int total, String message)
+                    {
                         int percent = (int) ((current / (double) total) * 100);
                         publish(percent);
                     }
 
                     @Override
-                    public void onComplete(int totalResults) {
+                    public void onComplete(int totalResults)
+                    {
                         publish(100);
                     }
                 });
             }
 
             @Override
-            protected void process(List<Integer> chunks) {
-                if (!chunks.isEmpty()) {
+            protected void process(List<Integer> chunks)
+            {
+                if (!chunks.isEmpty())
+                {
                     progressBar.setValue(chunks.get(chunks.size() - 1));
                 }
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     fuzzResults = get();
                     tableModel.setResults(fuzzResults);
 
                     int uniquePaths = fuzzer.countUniqueBranchPaths(fuzzResults);
                     Map<String, List<FuzzResult>> grouped = fuzzer.groupByOutcome(fuzzResults);
-                    statusLabel.setText(fuzzResults.size() + " executions, " +
-                                        uniquePaths + " unique paths, " +
-                                        grouped.size() + " outcomes");
+                    statusLabel.setText(fuzzResults.size() + " executions, " + uniquePaths + " unique paths, " + grouped.size() + " outcomes");
 
                     selectDiverse();
                     updatePreview();
 
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     statusLabel.setText("Fuzz failed: " + e.getMessage());
-                } finally {
+                }
+                finally
+                {
                     runFuzzButton.setEnabled(true);
                     progressBar.setVisible(false);
                 }
@@ -353,15 +401,18 @@ public class FuzzTestGeneratorDialog extends JDialog {
         worker.execute();
     }
 
-    private void selectDiverse() {
+    private void selectDiverse()
+    {
         if (fuzzResults.isEmpty()) return;
 
         tableModel.setAllSelected(false);
 
         Set<String> seenOutcomes = new HashSet<>();
-        for (int i = 0; i < fuzzResults.size(); i++) {
+        for (int i = 0; i < fuzzResults.size(); i++)
+        {
             FuzzResult r = fuzzResults.get(i);
-            if (seenOutcomes.add(r.getOutcomeKey())) {
+            if (seenOutcomes.add(r.getOutcomeKey()))
+            {
                 tableModel.setSelected(i, true);
             }
         }
@@ -369,9 +420,11 @@ public class FuzzTestGeneratorDialog extends JDialog {
         updatePreview();
     }
 
-    private void updatePreview() {
+    private void updatePreview()
+    {
         List<FuzzResult> selected = tableModel.getSelectedResults();
-        if (selected.isEmpty()) {
+        if (selected.isEmpty())
+        {
             previewArea.setText("// Select results to generate tests");
             copyButton.setEnabled(false);
             saveButton.setEnabled(false);
@@ -392,9 +445,8 @@ public class FuzzTestGeneratorDialog extends JDialog {
         saveButton.setEnabled(true);
     }
 
-    private String generateMultiTestClass(List<FuzzResult> results,
-                                           TestCaseGenerator.JUnitVersion version,
-                                           String testClassName) {
+    private String generateMultiTestClass(List<FuzzResult> results, TestCaseGenerator.JUnitVersion version, String testClassName)
+    {
         StringBuilder sb = new StringBuilder();
 
         String targetClass = className.replace('/', '.');
@@ -402,15 +454,18 @@ public class FuzzTestGeneratorDialog extends JDialog {
         String packageName = lastDot >= 0 ? targetClass.substring(0, lastDot) : "";
         String simpleTargetClass = lastDot >= 0 ? targetClass.substring(lastDot + 1) : targetClass;
 
-        if (!packageName.isEmpty()) {
+        if (!packageName.isEmpty())
+        {
             sb.append("package ").append(packageName).append(";\n\n");
         }
 
         sb.append("import ").append(version.getTestAnnotationImport()).append(";\n");
         sb.append("import static ").append(version.getAssertionsImport()).append(".*;\n");
-        if (version == TestCaseGenerator.JUnitVersion.JUNIT5) {
+        if (version == TestCaseGenerator.JUnitVersion.JUNIT5)
+        {
             boolean hasException = results.stream().anyMatch(r -> r.getResult().getException() != null);
-            if (hasException) {
+            if (hasException)
+            {
                 sb.append("import static org.junit.jupiter.api.Assertions.assertThrows;\n");
             }
         }
@@ -419,7 +474,8 @@ public class FuzzTestGeneratorDialog extends JDialog {
         sb.append("public class ").append(testClassName).append(" {\n\n");
 
         int testNum = 1;
-        for (FuzzResult result : results) {
+        for (FuzzResult result : results)
+        {
             String testMethodName = "test" + capitalize(methodName) + "_" + testNum;
             generateTestMethod(sb, result, version, testMethodName, simpleTargetClass);
             sb.append("\n");
@@ -430,57 +486,72 @@ public class FuzzTestGeneratorDialog extends JDialog {
         return sb.toString();
     }
 
-    private void generateTestMethod(StringBuilder sb, FuzzResult result,
-                                     TestCaseGenerator.JUnitVersion version,
-                                     String testMethodName, String targetClass) {
+    private void generateTestMethod(StringBuilder sb, FuzzResult result, TestCaseGenerator.JUnitVersion version, String testMethodName, String targetClass)
+    {
         boolean hasException = result.getResult().getException() != null;
         Object returnValue = result.getResult().getReturnValue();
         Object[] args = result.getInputs();
 
         String exceptionClass = "RuntimeException";
-        if (hasException) {
+        if (hasException)
+        {
             String msg = result.getResult().getException().getMessage();
-            if (msg != null && msg.contains("VM Exception:")) {
+            if (msg != null && msg.contains("VM Exception:"))
+            {
                 String part = msg.substring(msg.indexOf(':') + 1).trim();
                 int space = part.indexOf(' ');
-                if (space > 0) {
+                if (space > 0)
+                {
                     exceptionClass = part.substring(0, space);
-                    if (exceptionClass.contains("/")) {
+                    if (exceptionClass.contains("/"))
+                    {
                         exceptionClass = exceptionClass.substring(exceptionClass.lastIndexOf('/') + 1);
                     }
                 }
             }
         }
 
-        if (hasException && version == TestCaseGenerator.JUnitVersion.JUNIT4) {
+        if (hasException && version == TestCaseGenerator.JUnitVersion.JUNIT4)
+        {
             sb.append("    @Test(expected = ").append(exceptionClass).append(".class)\n");
-        } else {
+        }
+        else
+        {
             sb.append("    @Test\n");
         }
 
-        if (version == TestCaseGenerator.JUnitVersion.JUNIT4) {
+        if (version == TestCaseGenerator.JUnitVersion.JUNIT4)
+        {
             sb.append("    public void ").append(testMethodName).append("() {\n");
-        } else {
+        }
+        else
+        {
             sb.append("    void ").append(testMethodName).append("() {\n");
         }
 
         String argsString = formatArguments(args);
 
-        if (hasException && version == TestCaseGenerator.JUnitVersion.JUNIT5) {
+        if (hasException && version == TestCaseGenerator.JUnitVersion.JUNIT5)
+        {
             sb.append("        assertThrows(").append(exceptionClass).append(".class, () -> {\n");
             sb.append("            ").append(targetClass).append(".").append(methodName);
             sb.append("(").append(argsString).append(");\n");
             sb.append("        });\n");
-        } else if (returnValue != null) {
+        }
+        else if (returnValue != null)
+        {
             String returnType = inferReturnType(returnValue);
             sb.append("        ").append(returnType).append(" result = ");
             sb.append(targetClass).append(".").append(methodName);
             sb.append("(").append(argsString).append(");\n");
             sb.append("        assertEquals(").append(generator.formatLiteral(returnValue)).append(", result);\n");
-        } else {
+        }
+        else
+        {
             sb.append("        ").append(targetClass).append(".").append(methodName);
             sb.append("(").append(argsString).append(");\n");
-            if (!hasException) {
+            if (!hasException)
+            {
                 sb.append("        // Completed without exception\n");
             }
         }
@@ -488,17 +559,20 @@ public class FuzzTestGeneratorDialog extends JDialog {
         sb.append("    }\n");
     }
 
-    private String formatArguments(Object[] args) {
+    private String formatArguments(Object[] args)
+    {
         if (args == null || args.length == 0) return "";
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < args.length; i++) {
+        for (int i = 0; i < args.length; i++)
+        {
             if (i > 0) sb.append(", ");
             sb.append(generator.formatLiteral(args[i]));
         }
         return sb.toString();
     }
 
-    private String inferReturnType(Object value) {
+    private String inferReturnType(Object value)
+    {
         if (value instanceof Integer) return "int";
         if (value instanceof Long) return "long";
         if (value instanceof Float) return "float";
@@ -511,22 +585,25 @@ public class FuzzTestGeneratorDialog extends JDialog {
         return "Object";
     }
 
-    private String capitalize(String s) {
+    private String capitalize(String s)
+    {
         if (s == null || s.isEmpty()) return s;
         return Character.toUpperCase(s.charAt(0)) + (s.length() > 1 ? s.substring(1) : "");
     }
 
-    private void copyToClipboard() {
+    private void copyToClipboard()
+    {
         String code = previewArea.getText();
-        if (!code.isEmpty()) {
+        if (!code.isEmpty())
+        {
             StringSelection selection = new StringSelection(code);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-            JOptionPane.showMessageDialog(this, "Test code copied to clipboard!",
-                    "Copied", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Test code copied to clipboard!", "Copied", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
-    private void saveToFile() {
+    private void saveToFile()
+    {
         String code = previewArea.getText();
         if (code.isEmpty()) return;
 
@@ -537,128 +614,162 @@ public class FuzzTestGeneratorDialog extends JDialog {
         chooser.setSelectedFile(new File(suggestedName + ".java"));
         chooser.setDialogTitle("Save Test File");
 
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
             File file = chooser.getSelectedFile();
-            if (!file.getName().endsWith(".java")) {
+            if (!file.getName().endsWith(".java"))
+            {
                 file = new File(file.getAbsolutePath() + ".java");
             }
 
-            if (file.exists()) {
-                int result = JOptionPane.showConfirmDialog(this,
-                        "File already exists. Overwrite?", "Confirm Overwrite",
-                        JOptionPane.YES_NO_OPTION);
+            if (file.exists())
+            {
+                int result = JOptionPane.showConfirmDialog(this, "File already exists. Overwrite?", "Confirm Overwrite", JOptionPane.YES_NO_OPTION);
                 if (result != JOptionPane.YES_OPTION) return;
             }
 
-            try (FileWriter writer = new FileWriter(file)) {
+            try (FileWriter writer = new FileWriter(file))
+            {
                 writer.write(code);
-                JOptionPane.showMessageDialog(this, "Test saved to: " + file.getAbsolutePath(),
-                        "Saved", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Failed to save: " + e.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Test saved to: " + file.getAbsolutePath(), "Saved", JOptionPane.INFORMATION_MESSAGE);
+            }
+            catch (IOException e)
+            {
+                JOptionPane.showMessageDialog(this, "Failed to save: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    private class FuzzResultTableModel extends AbstractTableModel {
+    private class FuzzResultTableModel extends AbstractTableModel
+    {
         private List<FuzzResult> results = new ArrayList<>();
         private List<Boolean> selected = new ArrayList<>();
 
-        public void setResults(List<FuzzResult> results) {
+        public void setResults(List<FuzzResult> results)
+        {
             this.results = new ArrayList<>(results);
             this.selected = new ArrayList<>();
-            for (int i = 0; i < results.size(); i++) {
+            for (int i = 0; i < results.size(); i++)
+            {
                 selected.add(false);
             }
             fireTableDataChanged();
         }
 
-        public void setAllSelected(boolean value) {
+        public void setAllSelected(boolean value)
+        {
             Collections.fill(selected, value);
             fireTableDataChanged();
             updatePreview();
         }
 
-        public void setSelected(int row, boolean value) {
-            if (row >= 0 && row < selected.size()) {
+        public void setSelected(int row, boolean value)
+        {
+            if (row >= 0 && row < selected.size())
+            {
                 selected.set(row, value);
                 fireTableRowsUpdated(row, row);
             }
         }
 
-        public List<FuzzResult> getSelectedResults() {
+        public List<FuzzResult> getSelectedResults()
+        {
             List<FuzzResult> sel = new ArrayList<>();
-            for (int i = 0; i < results.size(); i++) {
-                if (selected.get(i)) {
+            for (int i = 0; i < results.size(); i++)
+            {
+                if (selected.get(i))
+                {
                     sel.add(results.get(i));
                 }
             }
             return sel;
         }
 
-        public FuzzResult getResultAt(int row) {
-            if (row >= 0 && row < results.size()) {
+        public FuzzResult getResultAt(int row)
+        {
+            if (row >= 0 && row < results.size())
+            {
                 return results.get(row);
             }
             return null;
         }
 
         @Override
-        public int getRowCount() {
+        public int getRowCount()
+        {
             return results.size();
         }
 
         @Override
-        public int getColumnCount() {
+        public int getColumnCount()
+        {
             return 4;
         }
 
         @Override
-        public String getColumnName(int column) {
-            switch (column) {
-                case 1: return "Inputs";
-                case 2: return "Outcome";
-                case 3: return "Branch Path";
-                default: return "";
+        public String getColumnName(int column)
+        {
+            switch (column)
+            {
+                case 1:
+                    return "Inputs";
+                case 2:
+                    return "Outcome";
+                case 3:
+                    return "Branch Path";
+                default:
+                    return "";
             }
         }
 
         @Override
-        public Class<?> getColumnClass(int column) {
+        public Class<?> getColumnClass(int column)
+        {
             if (column == 0) return Boolean.class;
             return String.class;
         }
 
         @Override
-        public boolean isCellEditable(int row, int column) {
+        public boolean isCellEditable(int row, int column)
+        {
             return column == 0;
         }
 
         @Override
-        public Object getValueAt(int row, int column) {
+        public Object getValueAt(int row, int column)
+        {
             FuzzResult r = results.get(row);
-            switch (column) {
-                case 0: return selected.get(row);
-                case 1: return formatInputs(r.getInputs());
-                case 2: return r.getOutcomeDescription();
-                case 3: return r.getBranchSummary();
-                default: return "";
+            switch (column)
+            {
+                case 0:
+                    return selected.get(row);
+                case 1:
+                    return formatInputs(r.getInputs());
+                case 2:
+                    return r.getOutcomeDescription();
+                case 3:
+                    return r.getBranchSummary();
+                default:
+                    return "";
             }
         }
 
         @Override
-        public void setValueAt(Object value, int row, int column) {
-            if (column == 0) {
+        public void setValueAt(Object value, int row, int column)
+        {
+            if (column == 0)
+            {
                 selected.set(row, (Boolean) value);
                 updatePreview();
             }
         }
 
-        private String formatInputs(Object[] inputs) {
+        private String formatInputs(Object[] inputs)
+        {
             if (inputs == null || inputs.length == 0) return "()";
             StringBuilder sb = new StringBuilder("(");
-            for (int i = 0; i < inputs.length; i++) {
+            for (int i = 0; i < inputs.length; i++)
+            {
                 if (i > 0) sb.append(", ");
                 sb.append(formatArg(inputs[i]));
             }
@@ -666,9 +777,11 @@ public class FuzzTestGeneratorDialog extends JDialog {
             return sb.toString();
         }
 
-        private String formatArg(Object arg) {
+        private String formatArg(Object arg)
+        {
             if (arg == null) return "null";
-            if (arg instanceof String) {
+            if (arg instanceof String)
+            {
                 String s = (String) arg;
                 if (s.length() > 20) return "\"" + s.substring(0, 17) + "...\"";
                 return "\"" + s + "\"";

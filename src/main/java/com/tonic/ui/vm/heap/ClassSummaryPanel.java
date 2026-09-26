@@ -15,7 +15,8 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ClassSummaryPanel extends ThemedJPanel {
+public class ClassSummaryPanel extends ThemedJPanel
+{
 
     private final JTable table;
     private final ClassTableModel tableModel;
@@ -26,16 +27,29 @@ public class ClassSummaryPanel extends ThemedJPanel {
     private Map<String, Integer> currentCounts = new HashMap<>();
     private Map<String, Integer> snapshotCounts = new HashMap<>();
 
-    public ClassSummaryPanel() {
+    public ClassSummaryPanel()
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
         filterField = new JTextField();
         filterField.putClientProperty("JTextField.placeholderText", "Filter classes...");
         filterField.addActionListener(e -> applyFilter());
-        filterField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { applyFilter(); }
-            public void removeUpdate(DocumentEvent e) { applyFilter(); }
-            public void changedUpdate(DocumentEvent e) { applyFilter(); }
+        filterField.getDocument().addDocumentListener(new DocumentListener()
+        {
+            public void insertUpdate(DocumentEvent e)
+            {
+                applyFilter();
+            }
+
+            public void removeUpdate(DocumentEvent e)
+            {
+                applyFilter();
+            }
+
+            public void changedUpdate(DocumentEvent e)
+            {
+                applyFilter();
+            }
         });
         add(filterField, BorderLayout.NORTH);
 
@@ -56,10 +70,13 @@ public class ClassSummaryPanel extends ThemedJPanel {
 
         table.setDefaultRenderer(Object.class, new ClassCellRenderer());
 
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && onClassSelected != null) {
+        table.getSelectionModel().addListSelectionListener(e ->
+        {
+            if (!e.getValueIsAdjusting() && onClassSelected != null)
+            {
                 int row = table.getSelectedRow();
-                if (row >= 0) {
+                if (row >= 0)
+                {
                     String className = (String) tableModel.getValueAt(row, 0);
                     onClassSelected.accept(className);
                 }
@@ -77,43 +94,52 @@ public class ClassSummaryPanel extends ThemedJPanel {
         add(totalsLabel, BorderLayout.SOUTH);
     }
 
-    public void setOnClassSelected(Consumer<String> callback) {
+    public void setOnClassSelected(Consumer<String> callback)
+    {
         this.onClassSelected = callback;
     }
 
-    public void selectFirstRow() {
-        if (table.getRowCount() > 0) {
+    public void selectFirstRow()
+    {
+        if (table.getRowCount() > 0)
+        {
             table.setRowSelectionInterval(0, 0);
         }
     }
 
-    public void update(Map<String, Integer> counts, HeapSnapshot snapshot) {
+    public void update(Map<String, Integer> counts, HeapSnapshot snapshot)
+    {
         this.currentCounts = new HashMap<>(counts);
         this.snapshotCounts = snapshot != null ? new HashMap<>(snapshot.getClassCounts()) : new HashMap<>();
         applyFilter();
         updateTotals();
     }
 
-    public void incrementClass(String className) {
+    public void incrementClass(String className)
+    {
         currentCounts.merge(className, 1, Integer::sum);
         applyFilter();
         updateTotals();
     }
 
-    public void clear() {
+    public void clear()
+    {
         currentCounts.clear();
         snapshotCounts.clear();
         tableModel.setData(List.of());
         updateTotals();
     }
 
-    private void applyFilter() {
+    private void applyFilter()
+    {
         String filter = filterField.getText().toLowerCase().trim();
         List<ClassEntry> entries = new ArrayList<>();
 
-        for (Map.Entry<String, Integer> e : currentCounts.entrySet()) {
+        for (Map.Entry<String, Integer> e : currentCounts.entrySet())
+        {
             String className = e.getKey();
-            if (filter.isEmpty() || className.toLowerCase().contains(filter)) {
+            if (filter.isEmpty() || className.toLowerCase().contains(filter))
+            {
                 int count = e.getValue();
                 int snapshotCount = snapshotCounts.getOrDefault(className, 0);
                 int delta = count - snapshotCount;
@@ -125,89 +151,113 @@ public class ClassSummaryPanel extends ThemedJPanel {
         tableModel.setData(entries);
     }
 
-    private void updateTotals() {
+    private void updateTotals()
+    {
         int totalClasses = currentCounts.size();
         int totalObjects = currentCounts.values().stream().mapToInt(Integer::intValue).sum();
         totalsLabel.setText(String.format("%d classes, %d objects", totalClasses, totalObjects));
     }
 
-    private String getSimpleClassName(String fullName) {
+    private String getSimpleClassName(String fullName)
+    {
         if (fullName == null) return "null";
         int lastSlash = fullName.lastIndexOf('/');
         return lastSlash >= 0 ? fullName.substring(lastSlash + 1) : fullName;
     }
 
-    private static class ClassEntry {
+    private static class ClassEntry
+    {
         final String className;
         final int count;
         final int delta;
 
-        ClassEntry(String className, int count, int delta) {
+        ClassEntry(String className, int count, int delta)
+        {
             this.className = className;
             this.count = count;
             this.delta = delta;
         }
     }
 
-    private static class ClassTableModel extends AbstractTableModel {
+    private static class ClassTableModel extends AbstractTableModel
+    {
         private final String[] columns = {"Class", "Count", "Δ"};
         private List<ClassEntry> data = new ArrayList<>();
 
-        public void setData(List<ClassEntry> data) {
+        public void setData(List<ClassEntry> data)
+        {
             this.data = data;
             fireTableDataChanged();
         }
 
         @Override
-        public int getRowCount() {
+        public int getRowCount()
+        {
             return data.size();
         }
 
         @Override
-        public int getColumnCount() {
+        public int getColumnCount()
+        {
             return columns.length;
         }
 
         @Override
-        public String getColumnName(int column) {
+        public String getColumnName(int column)
+        {
             return columns[column];
         }
 
         @Override
-        public Object getValueAt(int row, int column) {
+        public Object getValueAt(int row, int column)
+        {
             ClassEntry entry = data.get(row);
-            switch (column) {
-                case 0: return entry.className;
-                case 1: return entry.count;
-                case 2: return entry.delta;
-                default: return null;
+            switch (column)
+            {
+                case 0:
+                    return entry.className;
+                case 1:
+                    return entry.count;
+                case 2:
+                    return entry.delta;
+                default:
+                    return null;
             }
         }
     }
 
-    private class ClassCellRenderer extends DefaultTableCellRenderer {
+    private class ClassCellRenderer extends DefaultTableCellRenderer
+    {
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
+        {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
             setBackground(isSelected ? JStudioTheme.getAccent() : JStudioTheme.getBgSecondary());
             setForeground(JStudioTheme.getTextPrimary());
 
-            if (column == 0 && value instanceof String) {
+            if (column == 0 && value instanceof String)
+            {
                 String className = (String) value;
                 String simple = getSimpleClassName(className);
                 setText(simple);
                 setToolTipText(className);
-            } else if (column == 2 && value instanceof Integer) {
+            }
+            else if (column == 2 && value instanceof Integer)
+            {
                 int delta = (Integer) value;
-                if (delta > 0) {
+                if (delta > 0)
+                {
                     setText("+" + delta);
                     if (!isSelected) setForeground(JStudioTheme.getSuccess());
-                } else if (delta < 0) {
+                }
+                else if (delta < 0)
+                {
                     setText(String.valueOf(delta));
                     if (!isSelected) setForeground(JStudioTheme.getError());
-                } else {
+                }
+                else
+                {
                     setText("0");
                 }
             }

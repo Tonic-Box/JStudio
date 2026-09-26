@@ -28,7 +28,8 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
-public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeListener {
+public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeListener
+{
 
     @Setter
     private ProjectModel project;
@@ -45,7 +46,8 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
     @Getter
     private String tabTitle = "Find Usages";
 
-    public FindUsagesResultsPanel() {
+    public FindUsagesResultsPanel()
+    {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
 
         rootNode = new DefaultMutableTreeNode("Usages");
@@ -58,10 +60,13 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
         resultsTree.setShowsRootHandles(true);
         resultsTree.setCellRenderer(new UsageTreeCellRenderer());
 
-        resultsTree.addMouseListener(new MouseAdapter() {
+        resultsTree.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getClickCount() == 2)
+                {
                     navigateToSelection();
                 }
             }
@@ -84,10 +89,12 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
         setMinimumSize(new Dimension(0, 100));
     }
 
-    public void showUsages(FindUsagesEvent event) {
+    public void showUsages(FindUsagesEvent event)
+    {
         this.tabTitle = event.getTargetDisplay();
 
-        if (project == null || project.getClassPool() == null) {
+        if (project == null || project.getClassPool() == null)
+        {
             statusLabel.setText("No project loaded.");
             rootNode.removeAllChildren();
             treeModel.reload();
@@ -98,26 +105,31 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
         rootNode.removeAllChildren();
         treeModel.reload();
 
-        SwingWorker<Map<XrefType, List<Xref>>, String> worker = new SwingWorker<>() {
+        SwingWorker<Map<XrefType, List<Xref>>, String> worker = new SwingWorker<>()
+        {
             @Override
-            protected Map<XrefType, List<Xref>> doInBackground() {
+            protected Map<XrefType, List<Xref>> doInBackground()
+            {
                 XrefQueryService.ensureDatabase(project);
                 publish("Querying database...");
-                List<Xref> results = XrefQueryService.getUsages(project, event.getTargetType(),
-                        event.getClassName(), event.getMemberName(), event.getMemberDescriptor());
+                List<Xref> results = XrefQueryService.getUsages(project, event.getTargetType(), event.getClassName(), event.getMemberName(), event.getMemberDescriptor());
                 return groupByType(results);
             }
 
             @Override
-            protected void process(List<String> chunks) {
-                if (!chunks.isEmpty()) {
+            protected void process(List<String> chunks)
+            {
+                if (!chunks.isEmpty())
+                {
                     statusLabel.setText(chunks.get(chunks.size() - 1));
                 }
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     Map<XrefType, List<Xref>> grouped = get();
                     buildResultsTree(grouped);
                     treeModel.reload();
@@ -126,7 +138,9 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
                     int totalUsages = grouped.values().stream().mapToInt(List::size).sum();
                     int typeCount = grouped.size();
                     statusLabel.setText("Found " + totalUsages + " usages in " + typeCount + " categories. Double-click to navigate.");
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     statusLabel.setText("Error: " + e.getMessage());
                 }
             }
@@ -136,25 +150,29 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
         setVisible(true);
     }
 
-    private Map<XrefType, List<Xref>> groupByType(List<Xref> results) {
+    private Map<XrefType, List<Xref>> groupByType(List<Xref> results)
+    {
         Map<XrefType, List<Xref>> grouped = new LinkedHashMap<>();
-        for (Xref xref : results) {
+        for (Xref xref : results)
+        {
             grouped.computeIfAbsent(xref.getType(), k -> new ArrayList<>()).add(xref);
         }
         return grouped;
     }
 
-    private void buildResultsTree(Map<XrefType, List<Xref>> grouped) {
+    private void buildResultsTree(Map<XrefType, List<Xref>> grouped)
+    {
         rootNode.removeAllChildren();
 
-        for (Map.Entry<XrefType, List<Xref>> entry : grouped.entrySet()) {
+        for (Map.Entry<XrefType, List<Xref>> entry : grouped.entrySet())
+        {
             XrefType type = entry.getKey();
             List<Xref> xrefs = entry.getValue();
 
-            DefaultMutableTreeNode typeNode = new DefaultMutableTreeNode(
-                    new UsageNode(type.getDisplayName() + " (" + xrefs.size() + ")", null, type));
+            DefaultMutableTreeNode typeNode = new DefaultMutableTreeNode(new UsageNode(type.getDisplayName() + " (" + xrefs.size() + ")", null, type));
 
-            for (Xref xref : xrefs) {
+            for (Xref xref : xrefs)
+            {
                 String label = xref.getSourceDisplay();
                 typeNode.add(new DefaultMutableTreeNode(new UsageNode(label, xref, type)));
             }
@@ -164,8 +182,10 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
     }
 
     /** The simple (innermost) name of an internal or qualified class name, for token selection. */
-    private static String simpleName(String className) {
-        if (className == null) {
+    private static String simpleName(String className)
+    {
+        if (className == null)
+        {
             return null;
         }
         int sep = Math.max(className.lastIndexOf('/'), className.lastIndexOf('.'));
@@ -174,29 +194,36 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
         return dollar >= 0 ? simple.substring(dollar + 1) : simple;
     }
 
-    private void expandAll() {
-        for (int i = 0; i < resultsTree.getRowCount(); i++) {
+    private void expandAll()
+    {
+        for (int i = 0; i < resultsTree.getRowCount(); i++)
+        {
             resultsTree.expandRow(i);
         }
     }
 
-    private void navigateToSelection() {
+    private void navigateToSelection()
+    {
         TreePath path = resultsTree.getSelectionPath();
         if (path == null) return;
 
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
         Object userObject = node.getUserObject();
 
-        if (userObject instanceof UsageNode) {
+        if (userObject instanceof UsageNode)
+        {
             UsageNode usageNode = (UsageNode) userObject;
-            if (usageNode.xref != null) {
+            if (usageNode.xref != null)
+            {
                 Xref xref = usageNode.xref;
                 String className = xref.getSourceClass();
                 ClassEntryModel classEntry = project.findClassByName(className);
-                if (classEntry != null) {
+                if (classEntry != null)
+                {
                     EventBus.getInstance().post(new ClassSelectedEvent(this, classEntry));
 
-                    if (editorPanel != null) {
+                    if (editorPanel != null)
+                    {
                         int pc = xref.getBytecodeOffset();
                         String methodName = xref.getSourceMethod();
                         String methodDesc = xref.getSourceMethodDesc();
@@ -204,12 +231,15 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
                         String targetMember = xref.getTargetMember();
                         String token = targetMember != null ? targetMember : simpleName(xref.getTargetClass());
 
-                        SwingUtilities.invokeLater(() -> {
+                        SwingUtilities.invokeLater(() ->
+                        {
                             boolean navigated = methodName != null && pc >= 0
                                     && editorPanel.navigateToSourceOffset(classEntry, methodName, methodDesc, pc, token);
-                            if (!navigated && methodName != null && !methodName.isEmpty()) {
+                            if (!navigated && methodName != null && !methodName.isEmpty())
+                            {
                                 MethodEntryModel method = classEntry.getMethod(methodName, methodDesc);
-                                if (method != null) {
+                                if (method != null)
+                                {
                                     editorPanel.scrollToMethod(method);
                                 }
                             }
@@ -221,51 +251,62 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         SwingUtilities.invokeLater(this::applyThemeToComponents);
     }
 
-    private void applyThemeToComponents() {
+    private void applyThemeToComponents()
+    {
         resultsTree.setBackground(JStudioTheme.getBgTertiary());
         resultsTree.setForeground(JStudioTheme.getTextPrimary());
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
     }
 
-    private static class UsageNode {
+    private static class UsageNode
+    {
         final String label;
         final Xref xref;
         final XrefType type;
 
-        UsageNode(String label, Xref xref, XrefType type) {
+        UsageNode(String label, Xref xref, XrefType type)
+        {
             this.label = label;
             this.xref = xref;
             this.type = type;
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return label;
         }
     }
 
-    private static class UsageTreeCellRenderer extends DefaultTreeCellRenderer {
+    private static class UsageTreeCellRenderer extends DefaultTreeCellRenderer
+    {
         @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel,
-                                                      boolean expanded, boolean leaf, int row, boolean hasFocus) {
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus)
+        {
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 
             setBackground(sel ? JStudioTheme.getSelection() : JStudioTheme.getBgTertiary());
             setForeground(JStudioTheme.getTextPrimary());
 
-            if (value instanceof DefaultMutableTreeNode) {
+            if (value instanceof DefaultMutableTreeNode)
+            {
                 Object userObject = ((DefaultMutableTreeNode) value).getUserObject();
-                if (userObject instanceof UsageNode) {
+                if (userObject instanceof UsageNode)
+                {
                     UsageNode node = (UsageNode) userObject;
-                    if (node.xref == null) {
+                    if (node.xref == null)
+                    {
                         setForeground(JStudioTheme.getAccent());
                         setFont(getFont().deriveFont(Font.BOLD));
-                    } else {
+                    }
+                    else
+                    {
                         setForeground(JStudioTheme.getTextPrimary());
                         setFont(getFont().deriveFont(Font.PLAIN));
                     }

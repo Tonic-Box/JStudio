@@ -7,10 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Covers the pure descriptor/source signature matching extracted from the source view's navigation. */
-class MethodSignatureMatcherTest {
+class MethodSignatureMatcherTest
+{
 
     @Test
-    void countsSourceParams() {
+    void countsSourceParams()
+    {
         assertEquals(0, MethodSignatureMatcher.countParams(""));
         assertEquals(1, MethodSignatureMatcher.countParams("int a"));
         assertEquals(2, MethodSignatureMatcher.countParams("int a, String b"));
@@ -18,7 +20,8 @@ class MethodSignatureMatcherTest {
     }
 
     @Test
-    void countsDescriptorParams() {
+    void countsDescriptorParams()
+    {
         assertEquals(0, MethodSignatureMatcher.countDescriptorParams("()V"));
         assertEquals(1, MethodSignatureMatcher.countDescriptorParams("(I)V"));
         assertEquals(2, MethodSignatureMatcher.countDescriptorParams("(ILjava/lang/String;)V"));
@@ -26,14 +29,16 @@ class MethodSignatureMatcherTest {
     }
 
     @Test
-    void paramsMatch() {
+    void paramsMatch()
+    {
         assertTrue(MethodSignatureMatcher.paramsMatch("int a", "(I)V"));
         assertTrue(MethodSignatureMatcher.paramsMatch("String s", "(Ljava/lang/String;)V"));
         assertFalse(MethodSignatureMatcher.paramsMatch("int a", "(J)V"));
     }
 
     @Test
-    void returnTypes() {
+    void returnTypes()
+    {
         assertEquals("void", MethodSignatureMatcher.extractReturnTypeFromDesc("(I)V"));
         assertEquals("String", MethodSignatureMatcher.extractReturnTypeFromDesc("(I)Ljava/lang/String;"));
         assertEquals("int", MethodSignatureMatcher.extractReturnTypeFromDesc("()I"));

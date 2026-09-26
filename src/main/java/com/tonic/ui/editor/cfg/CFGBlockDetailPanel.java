@@ -25,12 +25,14 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 
-public class CFGBlockDetailPanel extends ThemedJPanel {
+public class CFGBlockDetailPanel extends ThemedJPanel
+{
 
     private static final String SYNTAX_STYLE_BYTECODE = "text/bytecode";
     private static final String SYNTAX_STYLE_IR = "text/ir";
 
-    static {
+    static
+    {
         AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
         atmf.putMapping(SYNTAX_STYLE_BYTECODE, "com.tonic.ui.editor.bytecode.BytecodeTokenMaker");
         atmf.putMapping(SYNTAX_STYLE_IR, "com.tonic.ui.editor.ir.IRTokenMaker");
@@ -42,7 +44,8 @@ public class CFGBlockDetailPanel extends ThemedJPanel {
 
     private boolean currentShowIR = false;
 
-    public CFGBlockDetailPanel() {
+    public CFGBlockDetailPanel()
+    {
         super(BackgroundStyle.TERTIARY, new BorderLayout());
 
         headerLabel = new JLabel();
@@ -66,22 +69,26 @@ public class CFGBlockDetailPanel extends ThemedJPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    public void showBlock(CFGBlockVertex vertex) {
+    public void showBlock(CFGBlockVertex vertex)
+    {
         CFGBlock block = vertex.getBlock();
         boolean showIR = vertex.isShowIR();
 
-        headerLabel.setText(String.format("Block %d (offset: %d - %d)",
-                block.getId(), block.getStartOffset(), block.getEndOffset()));
+        headerLabel.setText(String.format("Block %d (offset: %d - %d)", block.getId(), block.getStartOffset(), block.getEndOffset()));
 
-        if (showIR != currentShowIR) {
+        if (showIR != currentShowIR)
+        {
             currentShowIR = showIR;
             textArea.setSyntaxEditingStyle(showIR ? SYNTAX_STYLE_IR : SYNTAX_STYLE_BYTECODE);
         }
 
         String content;
-        if (showIR) {
+        if (showIR)
+        {
             content = generateIRContent(vertex);
-        } else {
+        }
+        else
+        {
             content = generateBytecodeContent(vertex);
         }
 
@@ -90,72 +97,87 @@ public class CFGBlockDetailPanel extends ThemedJPanel {
         applyThemeColors();
     }
 
-    private String generateBytecodeContent(CFGBlockVertex vertex) {
+    private String generateBytecodeContent(CFGBlockVertex vertex)
+    {
         StringBuilder sb = new StringBuilder();
         CFGBlock block = vertex.getBlock();
 
-        if (block.isExceptionHandler()) {
+        if (block.isExceptionHandler())
+        {
             sb.append("// Exception handler: catch (").append(block.getHandlerType()).append(")\n\n");
         }
 
-        if (block.getStartOffset() == 0) {
+        if (block.getStartOffset() == 0)
+        {
             sb.append("// Entry block\n\n");
         }
 
-        for (Instruction instr : block.getInstructions()) {
+        for (Instruction instr : block.getInstructions())
+        {
             sb.append(String.format("%04d: %s\n", instr.getOffset(), instr));
         }
 
         return sb.toString();
     }
 
-    private String generateIRContent(CFGBlockVertex vertex) {
+    private String generateIRContent(CFGBlockVertex vertex)
+    {
         StringBuilder sb = new StringBuilder();
         CFGBlock block = vertex.getBlock();
 
-        if (block.isExceptionHandler()) {
+        if (block.isExceptionHandler())
+        {
             sb.append("// Exception handler: catch (").append(block.getHandlerType()).append(")\n\n");
         }
 
-        if (block.getStartOffset() == 0) {
+        if (block.getStartOffset() == 0)
+        {
             sb.append("// Entry block\n\n");
         }
 
         IRBlock irBlock = findMatchingIRBlock(vertex);
-        if (irBlock == null) {
+        if (irBlock == null)
+        {
             sb.append("// No IR available for this block\n");
             return sb.toString();
         }
 
         sb.append("BLOCK ").append(irBlock.getId()).append(":\n");
 
-        for (IRInstruction phi : irBlock.getPhiInstructions()) {
+        for (IRInstruction phi : irBlock.getPhiInstructions())
+        {
             sb.append("  ").append(phi.toString()).append("\n");
         }
 
-        for (IRInstruction instr : irBlock.getInstructions()) {
+        for (IRInstruction instr : irBlock.getInstructions())
+        {
             sb.append("  ").append(instr.toString()).append("\n");
         }
 
         return sb.toString();
     }
 
-    private IRBlock findMatchingIRBlock(CFGBlockVertex vertex) {
+    private IRBlock findMatchingIRBlock(CFGBlockVertex vertex)
+    {
         IRMethod irMethod = vertex.getIrMethod();
         if (irMethod == null) return null;
 
         CFGBlock block = vertex.getBlock();
         int targetOffset = block.getStartOffset();
 
-        for (IRBlock irBlock : irMethod.getBlocks()) {
-            if (irBlock.getBytecodeOffset() == targetOffset) {
+        for (IRBlock irBlock : irMethod.getBlocks())
+        {
+            if (irBlock.getBytecodeOffset() == targetOffset)
+            {
                 return irBlock;
             }
         }
 
-        for (IRBlock irBlock : irMethod.getBlocks()) {
+        for (IRBlock irBlock : irMethod.getBlocks())
+        {
             int blockOffset = irBlock.getBytecodeOffset();
-            if (blockOffset >= block.getStartOffset() && blockOffset < block.getEndOffset()) {
+            if (blockOffset >= block.getStartOffset() && blockOffset < block.getEndOffset())
+            {
                 return irBlock;
             }
         }
@@ -164,17 +186,20 @@ public class CFGBlockDetailPanel extends ThemedJPanel {
     }
 
     @Override
-    public void onThemeChanged(Theme newTheme) {
+    public void onThemeChanged(Theme newTheme)
+    {
         super.onThemeChanged(newTheme);
         SwingUtilities.invokeLater(this::applyThemeColors);
     }
 
     @Override
-    protected void applyChildThemes() {
+    protected void applyChildThemes()
+    {
         applyThemeColors();
     }
 
-    private void applyThemeColors() {
+    private void applyThemeColors()
+    {
         headerLabel.setForeground(JStudioTheme.getTextPrimary());
 
         textArea.setBackground(JStudioTheme.getBgTertiary());
@@ -194,16 +219,20 @@ public class CFGBlockDetailPanel extends ThemedJPanel {
         setTokenStyle(scheme, Token.WHITESPACE, JStudioTheme.getTextPrimary());
         setTokenStyle(scheme, Token.SEPARATOR, JStudioTheme.getTextSecondary());
 
-        if (currentShowIR) {
+        if (currentShowIR)
+        {
             applyIRTheme(scheme);
-        } else {
+        }
+        else
+        {
             applyBytecodeTheme(scheme);
         }
 
         repaint();
     }
 
-    private void applyBytecodeTheme(SyntaxScheme scheme) {
+    private void applyBytecodeTheme(SyntaxScheme scheme)
+    {
         setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_COMMENT, JStudioTheme.getTextSecondary());
         setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_DIVIDER, JStudioTheme.getAccentSecondary());
         setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_HEADER, JStudioTheme.getAccent());
@@ -222,7 +251,8 @@ public class CFGBlockDetailPanel extends ThemedJPanel {
         setTokenStyle(scheme, BytecodeTokenMaker.TOKEN_OPCODE_TYPE, SyntaxColors.getBcType());
     }
 
-    private void applyIRTheme(SyntaxScheme scheme) {
+    private void applyIRTheme(SyntaxScheme scheme)
+    {
         setTokenStyle(scheme, Token.OPERATOR, SyntaxColors.getIrOperator());
         setTokenStyle(scheme, Token.LITERAL_STRING_DOUBLE_QUOTE, SyntaxColors.getJavaString());
         setTokenStyle(scheme, Token.LITERAL_CHAR, SyntaxColors.getJavaString());
@@ -243,8 +273,10 @@ public class CFGBlockDetailPanel extends ThemedJPanel {
         setTokenStyle(scheme, IRTokenMaker.TOKEN_CAST, SyntaxColors.getIrCast());
     }
 
-    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color) {
-        if (scheme.getStyle(tokenType) != null) {
+    private void setTokenStyle(SyntaxScheme scheme, int tokenType, Color color)
+    {
+        if (scheme.getStyle(tokenType) != null)
+        {
             scheme.getStyle(tokenType).foreground = color;
         }
     }

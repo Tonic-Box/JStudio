@@ -16,30 +16,36 @@ import java.awt.datatransfer.StringSelection;
  * ({@link #loadingOverlay}, the {@link #loaded} flag, {@link #cancelCurrentWorker()}, {@link #overlayWrap}), and
  * no-op/fallback defaults for the whole {@link EditorView} contract so views only implement what they support.
  */
-public abstract class AbstractEditorView extends ThemedJPanel implements EditorView {
+public abstract class AbstractEditorView extends ThemedJPanel implements EditorView
+{
 
     protected boolean loaded = false;
     protected SwingWorker<?, ?> currentWorker;
     protected final LoadingOverlay loadingOverlay = new LoadingOverlay();
 
-    protected AbstractEditorView() {
+    protected AbstractEditorView()
+    {
         super(BackgroundStyle.TERTIARY, new java.awt.BorderLayout());
     }
 
-    protected AbstractEditorView(java.awt.LayoutManager layout) {
+    protected AbstractEditorView(java.awt.LayoutManager layout)
+    {
         super(BackgroundStyle.TERTIARY, layout);
     }
 
     /** Cancels any in-flight load worker and hides the loading spinner. */
-    protected final void cancelCurrentWorker() {
-        if (currentWorker != null && !currentWorker.isDone()) {
+    protected final void cancelCurrentWorker()
+    {
+        if (currentWorker != null && !currentWorker.isDone())
+        {
             currentWorker.cancel(true);
             loadingOverlay.hideLoading();
         }
     }
 
     /** Wraps {@code content} and the loading overlay in a centered {@link OverlayLayout} panel. */
-    protected final JPanel overlayWrap(JComponent content) {
+    protected final JPanel overlayWrap(JComponent content)
+    {
         JPanel wrapper = new JPanel();
         wrapper.setLayout(new OverlayLayout(wrapper));
         loadingOverlay.setAlignmentX(0.5f);
@@ -52,8 +58,10 @@ public abstract class AbstractEditorView extends ThemedJPanel implements EditorV
     }
 
     /** Copies {@code text} to the system clipboard when non-empty. */
-    protected final void copyToClipboard(String text) {
-        if (text != null && !text.isEmpty()) {
+    protected final void copyToClipboard(String text)
+    {
+        if (text != null && !text.isEmpty())
+        {
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text), null);
         }
     }
@@ -61,51 +69,62 @@ public abstract class AbstractEditorView extends ThemedJPanel implements EditorV
     // ---- EditorView defaults (views override only what they support) ----
 
     @Override
-    public void refresh() {
+    public void refresh()
+    {
     }
 
     @Override
-    public void reload() {
+    public void reload()
+    {
         loaded = false;
         refresh();
     }
 
     @Override
-    public String getText() {
+    public String getText()
+    {
         return "";
     }
 
     @Override
-    public void copySelection() {
+    public void copySelection()
+    {
     }
 
     @Override
-    public String getSelectedText() {
+    public String getSelectedText()
+    {
         return null;
     }
 
     @Override
-    public void goToLine(int line) {
+    public void goToLine(int line)
+    {
     }
 
     @Override
-    public void showFindDialog() {
+    public void showFindDialog()
+    {
     }
 
     @Override
-    public void scrollToText(String text) {
+    public void scrollToText(String text)
+    {
     }
 
     @Override
-    public void highlightLine(int line) {
+    public void highlightLine(int line)
+    {
         goToLine(line);
     }
 
     @Override
-    public void setFontSize(int size) {
+    public void setFontSize(int size)
+    {
     }
 
     @Override
-    public void setWordWrap(boolean enabled) {
+    public void setWordWrap(boolean enabled)
+    {
     }
 }

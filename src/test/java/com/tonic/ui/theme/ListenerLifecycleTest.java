@@ -12,13 +12,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * the {@link ThemeManager} listener count to baseline after its {@code removeNotify} (so closed views/dialogs no
  * longer accumulate in the long-lived singleton).
  */
-class ListenerLifecycleTest {
+class ListenerLifecycleTest
+{
 
     @Test
-    void themeManagerAddRemoveBalances() {
+    void themeManagerAddRemoveBalances()
+    {
         ThemeManager mgr = ThemeManager.getInstance();
         int before = mgr.getListenerCount();
-        ThemeChangeListener l = t -> { };
+        ThemeChangeListener l = t ->
+        {
+        };
         mgr.addThemeChangeListener(l);
         assertEquals(before + 1, mgr.getListenerCount());
         mgr.removeThemeChangeListener(l);
@@ -26,10 +30,13 @@ class ListenerLifecycleTest {
     }
 
     @Test
-    void projectDatabaseServiceAddRemoveBalances() {
+    void projectDatabaseServiceAddRemoveBalances()
+    {
         ProjectDatabaseService svc = ProjectDatabaseService.getInstance();
         int before = svc.getListenerCount();
-        ProjectDatabaseService.DatabaseChangeListener l = (db, dirty) -> { };
+        ProjectDatabaseService.DatabaseChangeListener l = (db, dirty) ->
+        {
+        };
         svc.addListener(l);
         assertEquals(before + 1, svc.getListenerCount());
         svc.removeListener(l);
@@ -37,10 +44,13 @@ class ListenerLifecycleTest {
     }
 
     @Test
-    void localHistoryServiceAddRemoveBalances() {
+    void localHistoryServiceAddRemoveBalances()
+    {
         LocalHistoryService svc = LocalHistoryService.getInstance();
         int before = svc.getListenerCount();
-        Runnable l = () -> { };
+        Runnable l = () ->
+        {
+        };
         svc.addListener(l);
         assertEquals(before + 1, svc.getListenerCount());
         svc.removeListener(l);
@@ -48,7 +58,8 @@ class ListenerLifecycleTest {
     }
 
     @Test
-    void themedPanelRegistersInCtorAndUnregistersOnRemoveNotify() {
+    void themedPanelRegistersInCtorAndUnregistersOnRemoveNotify()
+    {
         System.setProperty("java.awt.headless", "true");
         ThemeManager mgr = ThemeManager.getInstance();
         int before = mgr.getListenerCount();

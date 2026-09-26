@@ -13,7 +13,8 @@ import lombok.Getter;
  * Formats SSA IR for display in the UI.
  * Uses IRPrinter for instruction formatting but adds structure for UI display.
  */
-public class IRFormatter {
+public class IRFormatter
+{
 
     /**
      * -- GETTER --
@@ -23,7 +24,8 @@ public class IRFormatter {
     private final MethodEntry method;
     private final SSA ssa;
 
-    public IRFormatter(MethodEntry method, SSA ssa) {
+    public IRFormatter(MethodEntry method, SSA ssa)
+    {
         this.method = method;
         this.ssa = ssa;
     }
@@ -31,15 +33,20 @@ public class IRFormatter {
     /**
      * Format the method's IR for display.
      */
-    public String format() {
-        if (method.getCodeAttribute() == null) {
+    public String format()
+    {
+        if (method.getCodeAttribute() == null)
+        {
             return "// No code (abstract or native)\n";
         }
 
-        try {
+        try
+        {
             IRMethod irMethod = ssa.lift(method);
             return formatIRMethod(irMethod);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return "// Error lifting to IR: " + e.getMessage() + "\n";
         }
     }
@@ -47,7 +54,8 @@ public class IRFormatter {
     /**
      * Format an IRMethod for display with block structure.
      */
-    private String formatIRMethod(IRMethod irMethod) {
+    private String formatIRMethod(IRMethod irMethod)
+    {
         StringBuilder sb = new StringBuilder();
 
         // Method header
@@ -56,7 +64,8 @@ public class IRFormatter {
         sb.append("\n");
 
         // Each block
-        for (IRBlock block : irMethod.getBlocksInOrder()) {
+        for (IRBlock block : irMethod.getBlocksInOrder())
+        {
             sb.append(formatBlock(block));
             sb.append("\n");
         }
@@ -67,17 +76,20 @@ public class IRFormatter {
     /**
      * Format a single block with predecessors/successors and instructions.
      */
-    private String formatBlock(IRBlock block) {
+    private String formatBlock(IRBlock block)
+    {
         StringBuilder sb = new StringBuilder();
 
         // Block header
         sb.append("BLOCK ").append(block.getName()).append(":\n");
 
         // Predecessors
-        if (!block.getPredecessors().isEmpty()) {
+        if (!block.getPredecessors().isEmpty())
+        {
             sb.append("  // pred: ");
             boolean first = true;
-            for (IRBlock pred : block.getPredecessors()) {
+            for (IRBlock pred : block.getPredecessors())
+            {
                 if (!first) sb.append(", ");
                 sb.append(pred.getName());
                 first = false;
@@ -86,10 +98,12 @@ public class IRFormatter {
         }
 
         // Successors
-        if (!block.getSuccessors().isEmpty()) {
+        if (!block.getSuccessors().isEmpty())
+        {
             sb.append("  // succ: ");
             boolean first = true;
-            for (IRBlock succ : block.getSuccessors()) {
+            for (IRBlock succ : block.getSuccessors())
+            {
                 if (!first) sb.append(", ");
                 sb.append(succ.getName());
                 first = false;
@@ -98,12 +112,14 @@ public class IRFormatter {
         }
 
         // Phi instructions
-        for (PhiInstruction phi : block.getPhiInstructions()) {
+        for (PhiInstruction phi : block.getPhiInstructions())
+        {
             sb.append("  PHI: ").append(IRPrinter.format(phi)).append("\n");
         }
 
         // Regular instructions
-        for (IRInstruction instr : block.getInstructions()) {
+        for (IRInstruction instr : block.getInstructions())
+        {
             sb.append("  ").append(IRPrinter.format(instr)).append("\n");
         }
 

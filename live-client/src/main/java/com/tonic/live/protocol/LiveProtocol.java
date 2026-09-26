@@ -8,9 +8,11 @@ package com.tonic.live.protocol;
  * ({@code com/foo/Bar}). Types {@code >= 0x40} are unsolicited events; {@code MSG_ERROR} (0x7F) is a
  * response to the in-flight request (the client demuxes events as {@code [0x40, 0x7F)}).
  */
-public final class LiveProtocol {
+public final class LiveProtocol
+{
 
-    private LiveProtocol() {
+    private LiveProtocol()
+    {
     }
 
     public static final int MSG_HELLO = 0x01;            // resp: u32 version, u32 capBits, u32 classCount

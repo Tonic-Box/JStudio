@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class ExecutionStep {
+public class ExecutionStep
+{
 
     private final String className;
     private final String methodName;
@@ -20,8 +21,8 @@ public class ExecutionStep {
     private final int callDepth;
     private String note;
 
-    public ExecutionStep(String className, String methodName, String descriptor,
-                         int pc, int lineNumber, String instruction, int callDepth) {
+    public ExecutionStep(String className, String methodName, String descriptor, int pc, int lineNumber, String instruction, int callDepth)
+    {
         this.className = className;
         this.methodName = methodName;
         this.descriptor = descriptor;
@@ -34,22 +35,26 @@ public class ExecutionStep {
         this.locals = new ArrayList<>();
     }
 
-    public void setStackBefore(List<String> stack) {
+    public void setStackBefore(List<String> stack)
+    {
         stackBefore.clear();
         stackBefore.addAll(stack);
     }
 
-    public void setStackAfter(List<String> stack) {
+    public void setStackAfter(List<String> stack)
+    {
         stackAfter.clear();
         stackAfter.addAll(stack);
     }
 
-    public void setLocals(List<String> localVars) {
+    public void setLocals(List<String> localVars)
+    {
         locals.clear();
         locals.addAll(localVars);
     }
 
-    public void setNote(String note) {
+    public void setNote(String note)
+    {
         this.note = note;
     }
 

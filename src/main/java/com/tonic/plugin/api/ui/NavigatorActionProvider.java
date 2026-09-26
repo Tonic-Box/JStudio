@@ -7,7 +7,8 @@ import java.util.List;
  * selection, so the entries can depend on what was right-clicked.
  */
 @FunctionalInterface
-public interface NavigatorActionProvider {
+public interface NavigatorActionProvider
+{
 
     /** Returns the entries to show for this selection (possibly empty). */
     List<NavigatorAction> actionsFor(NavigatorContext context);

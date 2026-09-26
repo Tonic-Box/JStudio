@@ -5,7 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ParamSpec {
+public class ParamSpec
+{
 
     private String name;
     private String typeDescriptor;
@@ -15,92 +16,118 @@ public class ParamSpec {
     private ObjectSpec nestedObjectSpec;
     private String templateName;
 
-    public ParamSpec() {
+    public ParamSpec()
+    {
         this.fuzzStrategy = FuzzStrategy.defaultStrategy();
     }
 
-    public ParamSpec(String name, String typeDescriptor) {
+    public ParamSpec(String name, String typeDescriptor)
+    {
         this.name = name;
         this.typeDescriptor = typeDescriptor;
         this.fuzzStrategy = FuzzStrategy.defaultStrategy();
     }
 
-    public static ParamSpec fixed(String name, String typeDesc, Object value) {
+    public static ParamSpec fixed(String name, String typeDesc, Object value)
+    {
         ParamSpec spec = new ParamSpec(name, typeDesc);
         spec.mode = ValueMode.FIXED;
         spec.fixedValue = value;
         return spec;
     }
 
-    public static ParamSpec fuzz(String name, String typeDesc) {
+    public static ParamSpec fuzz(String name, String typeDesc)
+    {
         ParamSpec spec = new ParamSpec(name, typeDesc);
         spec.mode = ValueMode.FUZZ;
         return spec;
     }
 
-    public static ParamSpec fuzz(String name, String typeDesc, FuzzStrategy strategy) {
+    public static ParamSpec fuzz(String name, String typeDesc, FuzzStrategy strategy)
+    {
         ParamSpec spec = new ParamSpec(name, typeDesc);
         spec.mode = ValueMode.FUZZ;
         spec.fuzzStrategy = strategy;
         return spec;
     }
 
-    public static ParamSpec nullValue(String name, String typeDesc) {
+    public static ParamSpec nullValue(String name, String typeDesc)
+    {
         ParamSpec spec = new ParamSpec(name, typeDesc);
         spec.mode = ValueMode.NULL;
         return spec;
     }
 
-    public static ParamSpec object(String name, String typeDesc, ObjectSpec objectSpec) {
+    public static ParamSpec object(String name, String typeDesc, ObjectSpec objectSpec)
+    {
         ParamSpec spec = new ParamSpec(name, typeDesc);
         spec.mode = ValueMode.OBJECT_SPEC;
         spec.nestedObjectSpec = objectSpec;
         return spec;
     }
 
-    public boolean isPrimitive() {
+    public boolean isPrimitive()
+    {
         if (typeDescriptor == null) return false;
         return typeDescriptor.length() == 1 && "ZBCSIJFD".contains(typeDescriptor);
     }
 
-    public boolean isString() {
+    public boolean isString()
+    {
         return "Ljava/lang/String;".equals(typeDescriptor);
     }
 
-    public boolean isObjectType() {
+    public boolean isObjectType()
+    {
         return typeDescriptor != null &&
-               (typeDescriptor.startsWith("L") || typeDescriptor.startsWith("["));
+                (typeDescriptor.startsWith("L") || typeDescriptor.startsWith("["));
     }
 
-    public String getSimpleTypeName() {
+    public String getSimpleTypeName()
+    {
         if (typeDescriptor == null) return "?";
-        switch (typeDescriptor) {
-            case "Z": return "boolean";
-            case "B": return "byte";
-            case "C": return "char";
-            case "S": return "short";
-            case "I": return "int";
-            case "J": return "long";
-            case "F": return "float";
-            case "D": return "double";
-            case "V": return "void";
-            case "Ljava/lang/String;": return "String";
+        switch (typeDescriptor)
+        {
+            case "Z":
+                return "boolean";
+            case "B":
+                return "byte";
+            case "C":
+                return "char";
+            case "S":
+                return "short";
+            case "I":
+                return "int";
+            case "J":
+                return "long";
+            case "F":
+                return "float";
+            case "D":
+                return "double";
+            case "V":
+                return "void";
+            case "Ljava/lang/String;":
+                return "String";
             default:
-                if (typeDescriptor.startsWith("L") && typeDescriptor.endsWith(";")) {
+                if (typeDescriptor.startsWith("L") && typeDescriptor.endsWith(";"))
+                {
                     String className = typeDescriptor.substring(1, typeDescriptor.length() - 1);
                     int lastSlash = className.lastIndexOf('/');
                     return lastSlash >= 0 ? className.substring(lastSlash + 1) : className;
                 }
-                if (typeDescriptor.startsWith("[")) {
+                if (typeDescriptor.startsWith("["))
+                {
                     return getArrayTypeName(typeDescriptor);
                 }
                 return typeDescriptor;
         }
     }
 
-    private String getArrayTypeName(String desc) {
+    private String getArrayTypeName(String desc)
+    {
         int dims = 0;
-        while (dims < desc.length() && desc.charAt(dims) == '[') {
+        while (dims < desc.length() && desc.charAt(dims) == '[')
+        {
             dims++;
         }
         String base = desc.substring(dims);
@@ -108,11 +135,14 @@ public class ParamSpec {
         return temp.getSimpleTypeName() + "[]".repeat(dims);
     }
 
-    public String getSummary() {
-        switch (mode) {
+    public String getSummary()
+    {
+        switch (mode)
+        {
             case FIXED:
                 if (fixedValue == null) return "null";
-                if (fixedValue instanceof String) {
+                if (fixedValue instanceof String)
+                {
                     String s = (String) fixedValue;
                     if (s.length() > 20) return "\"" + s.substring(0, 17) + "...\"";
                     return "\"" + s + "\"";
@@ -121,7 +151,8 @@ public class ParamSpec {
             case FUZZ:
                 return "🎲 " + (fuzzStrategy != null ? fuzzStrategy.getDescription() : "fuzz");
             case OBJECT_SPEC:
-                if (nestedObjectSpec != null) {
+                if (nestedObjectSpec != null)
+                {
                     return "-> " + nestedObjectSpec.getSummary();
                 }
                 return "-> configured";
@@ -132,7 +163,8 @@ public class ParamSpec {
         }
     }
 
-    public ParamSpec copy() {
+    public ParamSpec copy()
+    {
         ParamSpec copy = new ParamSpec(name, typeDescriptor);
         copy.mode = mode;
         copy.fixedValue = fixedValue;

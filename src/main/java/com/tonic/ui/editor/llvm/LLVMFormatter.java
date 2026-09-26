@@ -12,7 +12,8 @@ import lombok.Getter;
  * Methods outside the lowerer's computational subset are reported as a comment rather than
  * aborting the whole view.
  */
-public class LLVMFormatter {
+public class LLVMFormatter
+{
 
     /**
      * -- GETTER --
@@ -23,7 +24,8 @@ public class LLVMFormatter {
     private final SSA ssa;
     private final LlvmLowering lowering;
 
-    public LLVMFormatter(MethodEntry method, SSA ssa) {
+    public LLVMFormatter(MethodEntry method, SSA ssa)
+    {
         this.method = method;
         this.ssa = ssa;
         this.lowering = new LlvmLowering(LlvmLoweringConfig.fullObjectModel());
@@ -32,17 +34,24 @@ public class LLVMFormatter {
     /**
      * Format the method's LLVM IR for display.
      */
-    public String format() {
-        if (method.getCodeAttribute() == null) {
+    public String format()
+    {
+        if (method.getCodeAttribute() == null)
+        {
             return "; No code (abstract or native)\n";
         }
 
-        try {
+        try
+        {
             IRMethod irMethod = ssa.lift(method);
             return lowering.lower(irMethod);
-        } catch (UnsupportedOperationException e) {
+        }
+        catch (UnsupportedOperationException e)
+        {
             return "; [not lowerable to LLVM: " + e.getMessage() + "]\n";
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return "; Error lowering to LLVM: " + e.getMessage() + "\n";
         }
     }

@@ -4,9 +4,11 @@ import com.tonic.event.Event;
 import lombok.Getter;
 
 @Getter
-public class StatusMessageEvent extends Event {
+public class StatusMessageEvent extends Event
+{
 
-    public enum MessageType {
+    public enum MessageType
+    {
         INFO,
         WARNING,
         ERROR
@@ -15,11 +17,13 @@ public class StatusMessageEvent extends Event {
     private final String message;
     private final MessageType type;
 
-    public StatusMessageEvent(Object source, String message) {
+    public StatusMessageEvent(Object source, String message)
+    {
         this(source, message, MessageType.INFO);
     }
 
-    public StatusMessageEvent(Object source, String message, MessageType type) {
+    public StatusMessageEvent(Object source, String message, MessageType type)
+    {
         super(source);
         this.message = message;
         this.type = type;

@@ -27,28 +27,32 @@ import java.util.UUID;
  * an opaque handle, so concurrent callers (e.g. subagents) run independent sessions that don't disturb each other or
  * the Bytecode Debugger UI. Maps YABR debug state to the public DTOs.
  */
-public class VmDebugApiImpl implements VmDebugApi {
+public class VmDebugApiImpl implements VmDebugApi
+{
 
     private static final int MAX_SESSIONS = 16;
 
     private final Map<String, Session> sessions = new LinkedHashMap<>();
 
-    private static final class Session {
+    private static final class Session
+    {
         final VmInstance instance;
         final VMDebugSession debug;
 
-        Session(VmInstance instance, VMDebugSession debug) {
+        Session(VmInstance instance, VMDebugSession debug)
+        {
             this.instance = instance;
             this.debug = debug;
         }
     }
 
     @Override
-    public synchronized DebugState start(String className, String methodName, String descriptor,
-                                         List<ArgSpec> args, boolean recursive) {
+    public synchronized DebugState start(String className, String methodName, String descriptor, List<ArgSpec> args, boolean recursive)
+    {
         VmInstance instance = VMExecutionService.getInstance().createSnapshotInstance();
         MethodEntry method = instance.findMethod(className, methodName, descriptor);
-        if (method == null) {
+        if (method == null)
+        {
             instance.dispose();
             throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
         }
@@ -63,12 +67,15 @@ public class VmDebugApiImpl implements VmDebugApi {
     }
 
     @Override
-    public synchronized DebugState step(String handle, StepMode mode) {
+    public synchronized DebugState step(String handle, StepMode mode)
+    {
         Session s = sessions.get(handle);
-        if (s == null || !s.debug.isStarted()) {
+        if (s == null || !s.debug.isStarted())
+        {
             return inactive(handle);
         }
-        switch (mode) {
+        switch (mode)
+        {
             case OVER:
                 s.debug.stepOver();
                 break;
@@ -83,31 +90,38 @@ public class VmDebugApiImpl implements VmDebugApi {
     }
 
     @Override
-    public synchronized DebugState current(String handle) {
+    public synchronized DebugState current(String handle)
+    {
         Session s = sessions.get(handle);
         return s != null ? toState(handle, s.debug) : inactive(handle);
     }
 
     @Override
-    public synchronized boolean isActive(String handle) {
+    public synchronized boolean isActive(String handle)
+    {
         Session s = sessions.get(handle);
         return s != null && s.debug.isStarted() && !s.debug.isStopped();
     }
 
     @Override
-    public synchronized void stop(String handle) {
+    public synchronized void stop(String handle)
+    {
         Session s = sessions.remove(handle);
-        if (s != null) {
+        if (s != null)
+        {
             s.debug.stop();
             s.instance.dispose();
         }
     }
 
     /** Disposes the oldest session(s) when the live-session cap is reached (backstop against leaked handles). */
-    private void evictIfFull() {
-        while (sessions.size() >= MAX_SESSIONS) {
+    private void evictIfFull()
+    {
+        while (sessions.size() >= MAX_SESSIONS)
+        {
             Iterator<Map.Entry<String, Session>> it = sessions.entrySet().iterator();
-            if (!it.hasNext()) {
+            if (!it.hasNext())
+            {
                 return;
             }
             Session oldest = it.next().getValue();
@@ -117,63 +131,74 @@ public class VmDebugApiImpl implements VmDebugApi {
         }
     }
 
-    private static DebugState inactive(String handle) {
-        return new DebugState(handle, false, false, null, "", "", "", -1, -1,
-                Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+    private static DebugState inactive(String handle)
+    {
+        return new DebugState(handle, false, false, null, "", "", "", -1, -1, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     }
 
-    private static DebugState toState(String handle, VMDebugSession s) {
+    private static DebugState toState(String handle, VMDebugSession s)
+    {
         boolean terminated = s.isStopped();
         boolean active = s.isStarted() && !terminated;
         DebugResult result = terminated ? terminalResult(s) : null;
 
         DebugStateModel m = s.getLastState();
-        if (m == null) {
-            return new DebugState(handle, active, terminated, result, "", "", "", -1, -1,
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        if (m == null)
+        {
+            return new DebugState(handle, active, terminated, result, "", "", "", -1, -1, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
         }
 
         List<StackSlot> stack = new ArrayList<>();
-        for (StackEntry e : m.getOperandStack()) {
+        for (StackEntry e : m.getOperandStack())
+        {
             stack.add(new StackSlot(e.getIndex(), e.getValue(), e.getTypeName(), e.isWide()));
         }
         List<Local> locals = new ArrayList<>();
-        for (LocalEntry e : m.getLocalVariables()) {
+        for (LocalEntry e : m.getLocalVariables())
+        {
             locals.add(new Local(e.getSlot(), e.getName(), e.getTypeName(), e.getValue()));
         }
         List<Frame> frames = new ArrayList<>();
-        for (FrameEntry f : m.getCallStack()) {
-            frames.add(new Frame(f.getClassName(), f.getMethodName(), f.getDescriptor(),
-                    f.getInstructionIndex(), f.getLineNumber(), f.isCurrent()));
+        for (FrameEntry f : m.getCallStack())
+        {
+            frames.add(new Frame(f.getClassName(), f.getMethodName(), f.getDescriptor(), f.getInstructionIndex(), f.getLineNumber(), f.isCurrent()));
         }
-        return new DebugState(handle, active, terminated, result, m.getClassName(), m.getMethodName(),
-                m.getDescriptor(), m.getInstructionIndex(), m.getLineNumber(), stack, locals, frames);
+        return new DebugState(handle, active, terminated, result, m.getClassName(), m.getMethodName(), m.getDescriptor(), m.getInstructionIndex(), m.getLineNumber(), stack, locals, frames);
     }
 
-    private static DebugResult terminalResult(VMDebugSession s) {
+    private static DebugResult terminalResult(VMDebugSession s)
+    {
         DebugSession yabr = s.getYabrSession();
-        if (yabr == null) {
+        if (yabr == null)
+        {
             return null;
         }
         BytecodeResult result = yabr.getResult();
-        if (result == null) {
+        if (result == null)
+        {
             return null;
         }
         String returnValue = null;
         String exception = null;
-        if (result.hasException()) {
+        if (result.hasException())
+        {
             exception = String.valueOf(result.getException());
-        } else if (result.getReturnValue() != null) {
+        }
+        else if (result.getReturnValue() != null)
+        {
             returnValue = formatValue(result.getReturnValue());
         }
         return new DebugResult(result.isSuccess(), returnValue, exception, result.getInstructionsExecuted());
     }
 
-    private static String formatValue(ConcreteValue v) {
-        if (v == null || v.isNull()) {
+    private static String formatValue(ConcreteValue v)
+    {
+        if (v == null || v.isNull())
+        {
             return "null";
         }
-        switch (v.getTag()) {
+        switch (v.getTag())
+        {
             case INT:
                 return String.valueOf(v.asInt());
             case LONG:

@@ -8,11 +8,13 @@ import lombok.Getter;
  * can refresh its list and open to the new script.
  */
 @Getter
-public class ScriptWrittenEvent extends Event {
+public class ScriptWrittenEvent extends Event
+{
 
     private final String scriptName;
 
-    public ScriptWrittenEvent(Object source, String scriptName) {
+    public ScriptWrittenEvent(Object source, String scriptName)
+    {
         super(source);
         this.scriptName = scriptName;
     }
