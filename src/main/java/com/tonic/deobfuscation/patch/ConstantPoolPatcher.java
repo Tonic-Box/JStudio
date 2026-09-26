@@ -10,12 +10,12 @@ import com.tonic.service.ConsoleLogService;
 
 import java.util.List;
 
-/** Writes decrypted strings back into a class's constant pool by rewriting the UTF8 entry a string constant points to. */
+/** Writes decrypted strings back into a class's constant pool by pointing each string constant at a UTF8 entry holding the new text, leaving shared entries untouched. */
 public class ConstantPoolPatcher
 {
 
     /**
-     * Replaces the text of a string constant.
+     * Replaces the text of a string constant without changing any other constant that shares its UTF8 entry.
      *
      * @param classFile the class to patch
      * @param cpIndex the constant-pool index of the string constant
@@ -52,8 +52,7 @@ public class ConstantPoolPatcher
             throw new IllegalArgumentException("StringRef points to non-UTF8 item");
         }
 
-        Utf8Item utf8 = (Utf8Item) utf8Item;
-        utf8.setValue(newValue);
+        stringRef.setValue(cp.utf8Index(newValue));
     }
 
     /**

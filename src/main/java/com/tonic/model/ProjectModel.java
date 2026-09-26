@@ -6,6 +6,7 @@ import com.tonic.parser.ClassPool;
 import com.tonic.util.Settings;
 import lombok.Getter;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -463,29 +464,42 @@ public class ProjectModel
      *
      * @param classBytes the class bytes, keyed by internal name
      * @param resourceBytes the resource bytes, keyed by path
-     * @throws IllegalStateException if a class fails to parse
+     * @throws IllegalStateException if any class or resource has no bytes or a class fails to parse, in which case nothing is replaced
      */
     public void replaceUserClasses(Map<String, byte[]> classBytes, Map<String, byte[]> resourceBytes)
     {
-        for (String name : new ArrayList<>(userClassNames))
-        {
-            classEntries.remove(name);
-        }
-        userClassNames.clear();
-
+        Map<String, ClassEntryModel> parsed = new LinkedHashMap<>();
         for (Map.Entry<String, byte[]> entry : classBytes.entrySet())
         {
+            if (entry.getValue() == null)
+            {
+                throw new IllegalStateException("Failed to restore class " + entry.getKey() + ": no bytes");
+            }
             try
             {
-                ClassFile cf = new ClassFile(new java.io.ByteArrayInputStream(entry.getValue()));
-                classEntries.put(cf.getClassName(), new ClassEntryModel(cf));
-                userClassNames.add(cf.getClassName());
+                ClassFile cf = new ClassFile(new ByteArrayInputStream(entry.getValue()));
+                parsed.put(cf.getClassName(), new ClassEntryModel(cf));
             }
             catch (Exception e)
             {
                 throw new IllegalStateException("Failed to restore class " + entry.getKey() + ": " + e.getMessage(), e);
             }
         }
+        for (Map.Entry<String, byte[]> entry : resourceBytes.entrySet())
+        {
+            if (entry.getValue() == null)
+            {
+                throw new IllegalStateException("Failed to restore resource " + entry.getKey() + ": no bytes");
+            }
+        }
+
+        for (String name : new ArrayList<>(userClassNames))
+        {
+            classEntries.remove(name);
+        }
+        userClassNames.clear();
+        classEntries.putAll(parsed);
+        userClassNames.addAll(parsed.keySet());
 
         rebuildClassPool();
 

@@ -287,7 +287,7 @@ public class YabrAccessImpl implements YabrAccess
         @Override
         public void clear()
         {
-            projectModel.clear();
+            throw new UnsupportedOperationException("plugins cannot clear the open project");
         }
 
         @Override

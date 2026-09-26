@@ -173,7 +173,11 @@ public interface YabrAccess
          */
         void putClassNode(String name, Object classNode);
 
-        /** Removes every class and resource from the project and resets it; there is no undo. */
+        /**
+         * Refuses to clear the project; plugins cannot remove the open project's classes wholesale.
+         *
+         * @throws UnsupportedOperationException always
+         */
         void clear();
 
         /**

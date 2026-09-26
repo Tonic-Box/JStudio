@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -36,7 +37,7 @@ public final class LocalHistoryService
 
     private final Gson gson = new Gson();
     private final AtomicLong seq = new AtomicLong();
-    private final List<Runnable> listeners = new ArrayList<>();
+    private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
     private final Map<String, byte[]> pendingBlobs = new HashMap<>();
 
     private File storeFile;
@@ -251,7 +252,7 @@ public final class LocalHistoryService
      * Replaces the current project's user classes and resources with a snapshot's; the caller refreshes the UI.
      *
      * @param snapshot the snapshot
-     * @return true if restored; false when no project is open, the snapshot is null, or reading or applying it fails
+     * @return true if restored; false when no project is open, the snapshot is null, a stored blob is missing, or reading or applying it fails, in which case the project is unchanged
      */
     public synchronized boolean restore(Snapshot snapshot)
     {
@@ -265,6 +266,11 @@ public final class LocalHistoryService
             Set<String> hashes = new HashSet<>(snapshot.getClasses().values());
             hashes.addAll(snapshot.getResources().values());
             Map<String, byte[]> byHash = readBlobs(hashes);
+            if (!byHash.keySet().containsAll(hashes))
+            {
+                ConsoleLogService.getInstance().warn("History: restore failed: " + (hashes.size() - byHash.size()) + " stored blob(s) are missing");
+                return false;
+            }
 
             Map<String, byte[]> classBytes = new LinkedHashMap<>();
             snapshot.getClasses().forEach((name, hash) -> classBytes.put(name, byHash.get(hash)));
@@ -286,7 +292,7 @@ public final class LocalHistoryService
      *
      * @param snapshot the snapshot
      * @param internalName the class's internal name, with slashes
-     * @return true if restored; false when no project is open, the snapshot lacks the class, or applying it fails
+     * @return true if restored; false when no project is open, the snapshot is null or lacks the class, or applying it fails
      */
     public synchronized boolean restoreClass(Snapshot snapshot, String internalName)
     {
@@ -313,10 +319,14 @@ public final class LocalHistoryService
      *
      * @param snapshot the snapshot
      * @param internalName the class's internal name, with slashes
-     * @return the bytes, or null when the snapshot lacks the class or its blob cannot be read
+     * @return the bytes, or null when the snapshot is null or lacks the class, or its blob cannot be read
      */
     public synchronized byte[] classBytes(Snapshot snapshot, String internalName)
     {
+        if (snapshot == null)
+        {
+            return null;
+        }
         String hash = snapshot.getClasses().get(internalName);
         if (hash == null)
         {
@@ -337,11 +347,11 @@ public final class LocalHistoryService
      * Removes a snapshot from memory; the removal reaches disk on the next flush.
      *
      * @param snapshot the snapshot, matched by id
-     * @return true if it was present
+     * @return true if it was present; false for a null snapshot
      */
     public synchronized boolean delete(Snapshot snapshot)
     {
-        if (!snapshots.removeIf(s -> s.getId().equals(snapshot.getId())))
+        if (snapshot == null || !snapshots.removeIf(s -> s.getId().equals(snapshot.getId())))
         {
             return false;
         }

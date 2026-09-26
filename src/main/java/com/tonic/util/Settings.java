@@ -342,11 +342,11 @@ public class Settings
     /**
      * Saves the last directory used in a file chooser.
      *
-     * @param dir the directory; must not be null
+     * @param dir the directory, or null to clear it
      */
     public void setLastDirectory(String dir)
     {
-        prefs.put(PREF_LAST_DIR, dir);
+        putOrRemove(PREF_LAST_DIR, dir);
     }
 
     /**
@@ -540,11 +540,12 @@ public class Settings
     /**
      * Reads the last opened project.
      *
-     * @return the project path, null if never saved, or empty if cleared
+     * @return the project path, or null when none is saved
      */
     public String getLastProject()
     {
-        return prefs.get(PREF_LAST_PROJECT, null);
+        String path = prefs.get(PREF_LAST_PROJECT, null);
+        return path == null || path.isEmpty() ? null : path;
     }
 
     /**
@@ -554,7 +555,7 @@ public class Settings
      */
     public void setLastProject(String path)
     {
-        prefs.put(PREF_LAST_PROJECT, path != null ? path : "");
+        putOrRemove(PREF_LAST_PROJECT, path);
     }
 
     /**
@@ -570,11 +571,23 @@ public class Settings
     /**
      * Saves the UI theme name.
      *
-     * @param themeName the theme name; must not be null
+     * @param themeName the theme name, or null to return to the default
      */
     public void setTheme(String themeName)
     {
-        prefs.put(PREF_THEME, themeName);
+        putOrRemove(PREF_THEME, themeName);
+    }
+
+    private void putOrRemove(String key, String value)
+    {
+        if (value == null)
+        {
+            prefs.remove(key);
+        }
+        else
+        {
+            prefs.put(key, value);
+        }
     }
 
     /**

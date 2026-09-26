@@ -162,38 +162,84 @@ public class ScriptStore
     }
 
     /**
-     * Saves a script into the user scripts directory, named after the script with unsafe characters replaced by underscores.
+     * Saves a script into the user scripts directory under a file named after the script plus a hash of its exact name, so names differing only in punctuation get separate files; an older file of the same script under the unhashed name is removed.
      *
      * @param script the script to save
      * @throws IOException if the file cannot be written
      */
     public static void saveToUserDirectory(Script script) throws IOException
     {
-        Path dir = getUserScriptsDirectory();
-        String safeName = script.getName().replaceAll("[^a-zA-Z0-9_-]", "_");
-        Path file = dir.resolve(safeName + ".yabr-script");
-        saveScript(script, file.toFile());
+        saveTo(getUserScriptsDirectory(), script);
+    }
+
+    static void saveTo(Path dir, Script script) throws IOException
+    {
+        saveScript(script, fileFor(dir, script.getName()).toFile());
+        Path legacy = legacyFileFor(dir, script.getName());
+        if (holds(legacy, script.getName()))
+        {
+            Files.delete(legacy);
+        }
     }
 
     /**
-     * Deletes a script's file from the user scripts directory; a failure is logged.
+     * Deletes a script's file from the user scripts directory, including an older file of the same script under the unhashed name; a failure is logged.
      *
      * @param script the script whose file to delete
      * @return true if a file was deleted, false if none existed or deletion failed
      */
     public static boolean deleteFromUserDirectory(Script script)
     {
-        Path dir = getUserScriptsDirectory();
-        String safeName = script.getName().replaceAll("[^a-zA-Z0-9_-]", "_");
-        Path file = dir.resolve(safeName + ".yabr-script");
+        return deleteFrom(getUserScriptsDirectory(), script);
+    }
 
+    static boolean deleteFrom(Path dir, Script script)
+    {
         try
         {
-            return Files.deleteIfExists(file);
+            boolean deleted = Files.deleteIfExists(fileFor(dir, script.getName()));
+            Path legacy = legacyFileFor(dir, script.getName());
+            if (holds(legacy, script.getName()))
+            {
+                Files.delete(legacy);
+                deleted = true;
+            }
+            return deleted;
         }
         catch (IOException e)
         {
             ConsoleLogService.getInstance().error("Failed to delete script: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static Path fileFor(Path dir, String name)
+    {
+        return dir.resolve(safeName(name) + "-" + String.format("%08x", name.hashCode()) + ".yabr-script");
+    }
+
+    private static Path legacyFileFor(Path dir, String name)
+    {
+        return dir.resolve(safeName(name) + ".yabr-script");
+    }
+
+    private static String safeName(String name)
+    {
+        return name.replaceAll("[^a-zA-Z0-9_-]", "_");
+    }
+
+    private static boolean holds(Path file, String name)
+    {
+        if (!Files.isRegularFile(file))
+        {
+            return false;
+        }
+        try
+        {
+            return name.equals(loadScript(file.toFile()).getName());
+        }
+        catch (IOException unreadable)
+        {
             return false;
         }
     }

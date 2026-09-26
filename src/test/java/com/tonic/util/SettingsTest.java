@@ -226,7 +226,7 @@ class SettingsTest
             assertEquals("/path/to/project.jar", settings.getLastProject());
 
             settings.setLastProject(null);
-            assertEquals("", settings.getLastProject());
+            assertNull(settings.getLastProject());
         }
         finally
         {

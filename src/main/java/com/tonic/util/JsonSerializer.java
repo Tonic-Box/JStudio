@@ -6,12 +6,11 @@ import com.tonic.model.Comment;
 import com.tonic.model.CommentStore;
 import com.tonic.model.ProjectDatabase;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +21,7 @@ public class JsonSerializer
 {
 
     /**
-     * Writes a project database to a file, replacing its contents.
+     * Writes a project database to a file as UTF-8, replacing its contents.
      *
      * @param db the database to write
      * @param file the destination
@@ -30,31 +29,22 @@ public class JsonSerializer
      */
     public static void save(ProjectDatabase db, File file) throws IOException
     {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file)))
+        try (BufferedWriter writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8))
         {
             writer.write(toJson(db));
         }
     }
 
     /**
-     * Reads a project database from a file.
+     * Reads a project database from a UTF-8 file.
      *
      * @param file the JSON file
-     * @return the database, with fields absent from the file left at their defaults
+     * @return the database, with fields absent from the file left at their defaults and comments or bookmarks without a class dropped
      * @throws IOException if the file cannot be read
      */
     public static ProjectDatabase load(File file) throws IOException
     {
-        StringBuilder content = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file)))
-        {
-            String line;
-            while ((line = reader.readLine()) != null)
-            {
-                content.append(line).append("\n");
-            }
-        }
-        return fromJson(content.toString());
+        return fromJson(new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8));
     }
 
     private static String toJson(ProjectDatabase db)
@@ -203,11 +193,24 @@ public class JsonSerializer
                     sb.append("\\t");
                     break;
                 default:
-                    sb.append(c);
+                    if (c < 0x20)
+                    {
+                        sb.append(String.format("\\u%04x", (int) c));
+                    }
+                    else
+                    {
+                        sb.append(c);
+                    }
             }
         }
         sb.append("\"");
         return sb.toString();
+    }
+
+    private static int intOr(Map<String, Object> map, String key, int fallback)
+    {
+        Object value = map.get(key);
+        return value instanceof Number ? ((Number) value).intValue() : fallback;
     }
 
     private static ProjectDatabase fromJson(String json)
@@ -245,12 +248,19 @@ public class JsonSerializer
             List<Comment> comments = new ArrayList<>();
             for (Map<String, Object> cm : commentsList)
             {
+                if (cm.get("class") == null)
+                {
+                    continue;
+                }
                 Comment c = new Comment();
-                c.setId((String) cm.get("id"));
+                if (cm.get("id") != null)
+                {
+                    c.setId((String) cm.get("id"));
+                }
                 c.setClassName((String) cm.get("class"));
                 c.setMemberName((String) cm.get("member"));
-                c.setLineNumber(((Number) cm.get("line")).intValue());
-                c.setText((String) cm.get("text"));
+                c.setLineNumber(intOr(cm, "line", -1));
+                c.setText(cm.get("text") == null ? "" : (String) cm.get("text"));
                 String typeStr = (String) cm.get("type");
                 if (typeStr != null)
                 {
@@ -272,13 +282,20 @@ public class JsonSerializer
             List<Bookmark> bookmarks = new ArrayList<>();
             for (Map<String, Object> bm : bookmarksList)
             {
+                if (bm.get("class") == null)
+                {
+                    continue;
+                }
                 Bookmark b = new Bookmark();
-                b.setId((String) bm.get("id"));
+                if (bm.get("id") != null)
+                {
+                    b.setId((String) bm.get("id"));
+                }
                 b.setName((String) bm.get("name"));
                 b.setClassName((String) bm.get("class"));
                 b.setMemberName((String) bm.get("member"));
-                b.setLineNumber(((Number) bm.get("line")).intValue());
-                b.setSlot(((Number) bm.get("slot")).intValue());
+                b.setLineNumber(intOr(bm, "line", -1));
+                b.setSlot(intOr(bm, "slot", Bookmark.NO_SLOT));
                 b.setNotes((String) bm.get("notes"));
                 if (bm.containsKey("timestamp"))
                 {

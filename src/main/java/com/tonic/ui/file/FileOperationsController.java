@@ -84,38 +84,12 @@ public final class FileOperationsController
 
         if (result.isApproved())
         {
-            List<File> files = result.getSelectedFiles();
-            if (ProjectService.getInstance().hasProject())
-            {
-                int choice = showAppendOrReplaceDialog(files.size());
-                if (choice == 0)
-                {
-                    appendFiles(files);
-                }
-                else if (choice == 1)
-                {
-                    editorPanel().closeAllTabs();
-                    navigatorPanel().clear();
-                    mainFrame.clearNavigationHistory();
-                    mainFrame.disposeAnalysisDialog();
-                    for (File file : files)
-                    {
-                        openFile(file.getAbsolutePath());
-                    }
-                }
-            }
-            else
-            {
-                for (File file : files)
-                {
-                    openFile(file.getAbsolutePath());
-                }
-            }
+            openOrAppend(result.getSelectedFiles());
         }
     }
 
     /**
-     * Loads a JAR, class file or directory as the current project in the background, detaching any live session first; failures are shown to the user.
+     * Loads a JAR, class file or directory as the current project in the background, after offering to save unsaved project changes; failures are shown to the user.
      *
      * @param path the file or directory to load
      */
@@ -127,7 +101,40 @@ public final class FileOperationsController
             mainFrame.showError("File not found: " + path);
             return;
         }
+        if (!confirmCloseIfDirty())
+        {
+            return;
+        }
+        load(file, List.of());
+    }
 
+    private void openOrAppend(List<File> files)
+    {
+        if (!ProjectService.getInstance().hasProject())
+        {
+            if (confirmCloseIfDirty())
+            {
+                load(files.get(0), files.subList(1, files.size()));
+            }
+            return;
+        }
+        int choice = showAppendOrReplaceDialog(files.size());
+        if (choice == 0)
+        {
+            appendFiles(files);
+        }
+        else if (choice == 1 && confirmCloseIfDirty())
+        {
+            editorPanel().closeAllTabs();
+            navigatorPanel().clear();
+            mainFrame.clearNavigationHistory();
+            mainFrame.disposeAnalysisDialog();
+            load(files.get(0), files.subList(1, files.size()));
+        }
+    }
+
+    private void load(File file, List<File> appendAfter)
+    {
         if (LiveAttachService.getInstance().isAttached())
         {
             mainFrame.detachLive();
@@ -169,6 +176,10 @@ public final class FileOperationsController
                     consolePanel().log("Loaded " + project.getClassCount() + " classes from " + project.getProjectName());
 
                     RecentFilesManager.getInstance().addFile(file);
+                    if (!appendAfter.isEmpty())
+                    {
+                        appendFiles(List.copyOf(appendAfter));
+                    }
                 }
                 catch (Exception e)
                 {
@@ -216,34 +227,8 @@ public final class FileOperationsController
                     return;
                 }
 
-                if (ProjectService.getInstance().hasProject())
-                {
-                    int choice = showAppendOrReplaceDialog(validFiles.size());
-                    if (choice == 0)
-                    {
-                        appendFiles(validFiles);
-                    }
-                    else if (choice == 1)
-                    {
-                        editorPanel().closeAllTabs();
-                        navigatorPanel().clear();
-                        mainFrame.clearNavigationHistory();
-                        mainFrame.disposeAnalysisDialog();
-                        for (File file : validFiles)
-                        {
-                            openFile(file.getAbsolutePath());
-                        }
-                    }
-                }
-                else
-                {
-                    for (File file : validFiles)
-                    {
-                        openFile(file.getAbsolutePath());
-                    }
-                }
-
                 dtde.dropComplete(true);
+                openOrAppend(validFiles);
             }
             else
             {
@@ -483,7 +468,7 @@ public final class FileOperationsController
     {
         FileChooserResult result = FileChooserDialog.showOpenDialog(mainFrame, "Open JStudio Project", new ExtensionFileFilter("JStudio Project", "jstudio"));
 
-        if (result.isApproved())
+        if (result.isApproved() && confirmCloseIfDirty())
         {
             File file = result.getSelectedFile();
             try
@@ -495,7 +480,7 @@ public final class FileOperationsController
                     File targetFile = new File(targetPath);
                     if (targetFile.exists())
                     {
-                        openFile(targetPath);
+                        load(targetFile, List.of());
                     }
                     else
                     {
@@ -511,8 +496,12 @@ public final class FileOperationsController
         }
     }
 
-    /** Saves the project database, creating it for the loaded file if none exists, and takes a local history snapshot. */
-    public void saveProject()
+    /**
+     * Saves the project database, creating it for the loaded file if none exists, and takes a local history snapshot; failures are shown to the user.
+     *
+     * @return true when the database was written
+     */
+    public boolean saveProject()
     {
         ProjectDatabaseService dbService = ProjectDatabaseService.getInstance();
         if (!dbService.hasDatabase())
@@ -525,7 +514,7 @@ public final class FileOperationsController
             else
             {
                 mainFrame.showWarning("No project loaded to save.");
-                return;
+                return false;
             }
         }
         try
@@ -535,10 +524,12 @@ public final class FileOperationsController
             LocalHistoryService.getInstance().flush();
             updateTitleBar();
             consolePanel().log("Project saved: " + dbService.getProjectFile().getName());
+            return true;
         }
         catch (IOException e)
         {
             mainFrame.showError("Failed to save project: " + e.getMessage());
+            return false;
         }
     }
 
@@ -595,7 +586,7 @@ public final class FileOperationsController
     /**
      * Offers to save when the project database has unsaved changes.
      *
-     * @return true when it is safe to proceed (saved, declined, or nothing to save), false when the user cancelled
+     * @return true when it is safe to proceed (saved, declined, or nothing to save), false when the user cancelled or the save failed
      */
     public boolean confirmCloseIfDirty()
     {
@@ -605,8 +596,7 @@ public final class FileOperationsController
             int result = JOptionPane.showConfirmDialog(mainFrame, "You have unsaved project changes. Would you like to save before closing?", "Save Changes?", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION)
             {
-                saveProject();
-                return true;
+                return saveProject();
             }
             else return result == JOptionPane.NO_OPTION;
         }
