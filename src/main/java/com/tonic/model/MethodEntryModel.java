@@ -9,7 +9,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Getter
 public class MethodEntryModel
 {
@@ -17,7 +16,6 @@ public class MethodEntryModel
     private final MethodEntry methodEntry;
     private final ClassEntryModel owner;
 
-    // UI state
     @Setter
     private boolean selected;
     @Setter
@@ -25,7 +23,6 @@ public class MethodEntryModel
     @Setter
     private String userNotes;
 
-    // Analysis state
     @Setter
     private AnalysisState analysisState = AnalysisState.NOT_ANALYZED;
     private IRMethod cachedIR;
@@ -35,7 +32,6 @@ public class MethodEntryModel
     @Getter(AccessLevel.NONE)
     private ComplexityMetrics complexityMetrics;
 
-    // Display data
     private String displaySignature;
     private String iconKey;
 
@@ -69,8 +65,6 @@ public class MethodEntryModel
             this.iconKey = "method_package";
         }
     }
-
-    // MethodEntry delegated methods
 
     public String getName()
     {

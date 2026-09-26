@@ -33,8 +33,6 @@ public class ProjectModel
     private ClassPool classPool;
     @Getter
     private XrefDatabase xrefDatabase;
-    // Concurrent: live capture/attach pulls classes in on a background thread while the EDT iterates them
-    // (navigator rebuild, etc.). Weakly-consistent iteration avoids ConcurrentModificationException.
     private final Map<String, ClassEntryModel> classEntries = new ConcurrentHashMap<>();
     private final Set<String> userClassNames = ConcurrentHashMap.newKeySet();
     private final Map<String, ResourceEntryModel> resources = new LinkedHashMap<>();
@@ -47,7 +45,6 @@ public class ProjectModel
     public ProjectModel()
     {
         this.projectName = "Untitled";
-        // Start with no class pool - it will be set when a file is loaded
         this.classPool = null;
     }
 
@@ -113,10 +110,6 @@ public class ProjectModel
         return true;
     }
 
-    /**
-     * Rebuild the ClassPool from the current user classes.
-     * This creates a fresh ClassPool and repopulates it with all remaining classes.
-     */
     private void rebuildClassPool()
     {
         ClassPool newPool;
@@ -296,8 +289,6 @@ public class ProjectModel
         dirty = false;
     }
 
-    // Getters and setters
-
     public void setProjectName(String projectName)
     {
         this.projectName = projectName;
@@ -320,16 +311,13 @@ public class ProjectModel
     {
         if (name == null) return null;
 
-        // Try direct lookup
         ClassEntryModel entry = classEntries.get(name);
         if (entry != null) return entry;
 
-        // Try with dots replaced by slashes
         String internalName = name.replace('.', '/');
         entry = classEntries.get(internalName);
         if (entry != null) return entry;
 
-        // Try partial match
         for (Map.Entry<String, ClassEntryModel> e : classEntries.entrySet())
         {
             if (e.getKey().endsWith("/" + name) || e.getKey().endsWith(name))

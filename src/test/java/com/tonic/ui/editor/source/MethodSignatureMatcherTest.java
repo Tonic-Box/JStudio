@@ -1,12 +1,13 @@
 package com.tonic.ui.editor.source;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Covers the pure descriptor/source signature matching extracted from the source view's navigation. */
+@DisplayName("descriptor and source signature matching used by source navigation")
 class MethodSignatureMatcherTest
 {
 

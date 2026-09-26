@@ -66,7 +66,6 @@ public class Settings
         return instance;
     }
 
-    // Window bounds
     public int getWindowX()
     {
         return prefs.getInt(PREF_WINDOW_X, -1);
@@ -117,7 +116,6 @@ public class Settings
         prefs.putBoolean(PREF_WINDOW_MAXIMIZED, maximized);
     }
 
-    // Divider positions
     public int getNavigatorWidth()
     {
         return prefs.getInt(PREF_NAV_WIDTH, 250);
@@ -148,7 +146,6 @@ public class Settings
         prefs.putInt(PREF_CONSOLE_HEIGHT, height);
     }
 
-    // Editor settings
     public int getFontSize()
     {
         return prefs.getInt(PREF_FONT_SIZE, 13);
@@ -199,7 +196,6 @@ public class Settings
         prefs.put(PREF_LIVE_AGENT_PATH, path != null ? path : "");
     }
 
-    // File chooser
     public String getLastDirectory()
     {
         return prefs.get(PREF_LAST_DIR, System.getProperty("user.home"));
@@ -210,7 +206,6 @@ public class Settings
         prefs.put(PREF_LAST_DIR, dir);
     }
 
-    // Remove Dead Code
     public boolean isDeadCodePublicEntryPoints()
     {
         return prefs.getBoolean(PREF_DEADCODE_PUBLIC, false);
@@ -260,7 +255,6 @@ public class Settings
         prefs.put(PREF_PLUGINS_DISABLED, ids == null ? "" : String.join("\n", ids));
     }
 
-    // Run configuration
     public String getRunProgramArgs()
     {
         return prefs.get(PREF_RUN_ARGS, "");
@@ -301,7 +295,6 @@ public class Settings
         prefs.put(PREF_RUN_JDK, v != null ? v : "");
     }
 
-    // Session restore
     public boolean isRestoreSessionEnabled()
     {
         return prefs.getBoolean(PREF_RESTORE_SESSION, false);
@@ -322,7 +315,6 @@ public class Settings
         prefs.put(PREF_LAST_PROJECT, path != null ? path : "");
     }
 
-    // Theme
     public String getTheme()
     {
         return prefs.get(PREF_THEME, "jstudio-dark");
@@ -355,7 +347,6 @@ public class Settings
         setConsoleHeight(consoleHeight);
     }
 
-    // Execution settings
     public boolean isLoadJdkClassesEnabled()
     {
         return prefs.getBoolean(PREF_LOAD_JDK_CLASSES, true);
@@ -366,7 +357,6 @@ public class Settings
         prefs.putBoolean(PREF_LOAD_JDK_CLASSES, enabled);
     }
 
-    // Debugger (JDI): suspend the whole VM on a breakpoint hit (off = only the thread that hit)
     public boolean isDebuggerSuspendAll()
     {
         return prefs.getBoolean(PREF_DEBUG_SUSPEND_ALL, true);
@@ -377,7 +367,6 @@ public class Settings
         prefs.putBoolean(PREF_DEBUG_SUSPEND_ALL, enabled);
     }
 
-    // Update checks
     public boolean isUpdateCheckEnabled()
     {
         return prefs.getBoolean(PREF_UPDATE_CHECK, true);

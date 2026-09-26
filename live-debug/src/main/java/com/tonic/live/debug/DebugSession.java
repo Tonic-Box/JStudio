@@ -50,8 +50,6 @@ public final class DebugSession
     private final VirtualMachine vm;
     private final DebugListener listener;
     private final Thread pump;
-    /** Name prefix of the in-process agent's thread(s) to keep running while suspended, so the agent can work
-     * against the frozen heap; null disables it. */
     private final String agentThreadPrefix;
     private volatile boolean suspendAll;
 
@@ -59,7 +57,6 @@ public final class DebugSession
     private volatile ThreadReference pausedThread;
     private volatile boolean pausedAll;
 
-    /** Handles to the paused frame's reference values, for click-to-expand; cleared each pause. */
     private final Map<Long, ObjectReference> refHandles = new ConcurrentHashMap<>();
     private final AtomicLong refIds = new AtomicLong(1);
 
@@ -108,8 +105,6 @@ public final class DebugSession
     {
         this.suspendAll = suspendAll;
     }
-
-    // ---- JDI-backed object reach (the "dropbox" hand-off to the agent) -------------------------------
 
     /**
      * Suspends the VM, enumerates up to {@code max} live instances of {@code className}, parks them in the
@@ -216,7 +211,6 @@ public final class DebugSession
         }
     }
 
-    /** Adds the object references held by one frame: {@code this}, arguments, and locals (when LVT is present). */
     private void harvestFrame(StackFrame frame, List<ObjectReference> refs, int max)
     {
         try
@@ -258,7 +252,6 @@ public final class DebugSession
         }
     }
 
-    /** Creates an {@code Object[]} in the target, fills it with {@code refs}, and stores it in the static field. */
     private int parkArray(String dropBoxClass, String boxField, List<ObjectReference> refs) throws Exception
     {
         List<ReferenceType> arrayTypes = vm.classesByName("java.lang.Object[]");
@@ -286,8 +279,6 @@ public final class DebugSession
         boxType.setValue(field, array);
         return refs.size();
     }
-
-    // ---- breakpoints --------------------------------------------------------------------------------
 
     /** Adds a breakpoint at a bytecode offset; installs on already-loaded classes and arms a class-prepare hook. */
     public synchronized void addBreakpoint(String className, String methodName, String methodDesc, long pc)
@@ -362,8 +353,6 @@ public final class DebugSession
         }
     }
 
-    // ---- execution control --------------------------------------------------------------------------
-
     /** Resumes the target from a breakpoint. */
     public synchronized void resume()
     {
@@ -399,8 +388,6 @@ public final class DebugSession
         }
         pump.interrupt();
     }
-
-    // ---- inspection (only valid while paused) -------------------------------------------------------
 
     public List<DebugFrame> frames()
     {
@@ -463,8 +450,6 @@ public final class DebugSession
         return out;
     }
 
-    // ---- event pump ---------------------------------------------------------------------------------
-
     private void pumpLoop()
     {
         try
@@ -512,7 +497,6 @@ public final class DebugSession
         }
         catch (InterruptedException ignored)
         {
-            // shutting down
         }
     }
 
@@ -528,12 +512,6 @@ public final class DebugSession
         listener.onPaused(topLocation(thread), frames());
     }
 
-    /**
-     * Resumes just the in-process agent's thread(s) while every application thread stays frozen, so the agent
-     * can scan/read/edit a stable, frozen-moment heap. They re-suspend automatically on the next suspend-all
-     * pause; the user's Resume releases everything together. The agent does only reflection (no application
-     * code, no application locks), so the resumed thread cannot deadlock on a lock a frozen thread holds.
-     */
     private void resumeAgentThreads()
     {
         if (agentThreadPrefix == null)
@@ -609,8 +587,6 @@ public final class DebugSession
                 redefs.put(rt, bytes);
             }
             vm.redefineClasses(redefs);
-            // HotSwap invalidates breakpoints in the redefined class; re-arm them from the specs. Only the debug
-            // attribute changed, so code indices are unchanged and the requests re-install at the same locations.
             reinstallBreakpoints(className, types);
             return true;
         }
@@ -620,7 +596,6 @@ public final class DebugSession
         }
     }
 
-    /** Drops the now-obsolete breakpoint requests for {@code className} and re-installs them from the specs. */
     private void reinstallBreakpoints(String className, List<ReferenceType> types)
     {
         List<BreakpointRequest> stale = new ArrayList<>();
@@ -674,8 +649,6 @@ public final class DebugSession
             return null;
         }
     }
-
-    // ---- marshalling --------------------------------------------------------------------------------
 
     private static DebugLocation toLocation(Location loc)
     {
@@ -809,7 +782,6 @@ public final class DebugSession
         return v.toString();
     }
 
-    /** Renders a {@code char[]} as its quoted string content (capped), e.g. an in-flight password buffer. */
     private static String charArrayString(ArrayReference arr)
     {
         int len = arr.length();

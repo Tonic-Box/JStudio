@@ -142,12 +142,10 @@ public class ProjectService
             }
         }
 
-        // Create project and class pool
         ProjectModel project = new ProjectModel();
         project.setProjectName(name);
         project.setSourceFile(jarFile);
 
-        // Create class pool with JDK for recursive execution
         ClassPool pool = createClassPoolWithJdk();
         project.setClassPool(pool);
 
@@ -570,9 +568,6 @@ public class ProjectService
         {
             return null;
         }
-        // Skip JVM-internal noise (e.g. jdk/internal/reflect/GeneratedMethodAccessor* synthesized when a
-        // static is invoked reflectively through the agent, and hidden lambda/proxy bodies); only application
-        // classes belong in the tree.
         if (isBootstrapName(internalName) || isHiddenClass(internalName))
         {
             return null;
@@ -602,11 +597,6 @@ public class ProjectService
                 || internalName.startsWith("[");
     }
 
-    /**
-     * A JVM hidden class (lambda/proxy body), whose name carries a {@code /0x<address>} suffix. These cannot
-     * be fetched by name (the agent looks classes up by binary name, which a hidden class has no usable form
-     * of), so enumerating them only yields "class not loaded" noise; they are skipped everywhere.
-     */
     private static boolean isHiddenClass(String internalName)
     {
         return internalName.contains("/0x");
@@ -632,10 +622,6 @@ public class ProjectService
         return currentProject != null && currentProject.getClassCount() > 0;
     }
 
-    /**
-     * Create a class pool, optionally with JDK classes loaded.
-     * When JDK classes are loaded, recursive execution can step into JDK methods.
-     */
     private ClassPool createClassPoolWithJdk()
     {
         if (!Settings.getInstance().isLoadJdkClassesEnabled())

@@ -237,7 +237,6 @@ public class AnalysisApiImpl implements AnalysisApi
             return walk(className, methodName, descriptor, depth, maxNodes, false);
         }
 
-        /** Depth-bounded BFS over caller/callee edges from a focus method, capped at {@code maxNodes} results. */
         private List<CallNode> walk(String className, String methodName, String descriptor, int depth, int maxNodes, boolean callers)
         {
             if (callGraph == null)
@@ -373,7 +372,6 @@ public class AnalysisApiImpl implements AnalysisApi
             }
             catch (Exception e)
             {
-                // Pattern search failed, return empty
             }
             return matches;
         }
@@ -403,7 +401,6 @@ public class AnalysisApiImpl implements AnalysisApi
             }
             catch (Exception e)
             {
-                // Pattern search failed, return empty
             }
             return matches;
         }
@@ -664,13 +661,11 @@ public class AnalysisApiImpl implements AnalysisApi
                         }
                         catch (Exception e)
                         {
-                            // Skip invalid entries
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    // Skip classes with errors
                 }
             }
             return strings;
@@ -874,7 +869,6 @@ public class AnalysisApiImpl implements AnalysisApi
         return cls != null ? cls.getClassName() : className.replace('.', '/');
     }
 
-    /** Decompiled source for a class, reusing/populating the per-class decompilation cache (incl. method spans). */
     private String decompiledSource(ClassEntryModel cls)
     {
         String cached = cls.getDecompilationCache();

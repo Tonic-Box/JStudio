@@ -24,7 +24,6 @@ public class ClassEntryModel
     private final Map<String, MethodEntryModel> methods = new HashMap<>();
     private final Map<String, FieldEntryModel> fields = new HashMap<>();
 
-    // UI state
     @Setter
     private boolean expanded;
     @Setter
@@ -34,13 +33,11 @@ public class ClassEntryModel
     @Setter
     private boolean analyzed;
 
-    // Cached display data
     private String simpleName;
     private String packageName;
     private String displayName;
     private String iconKey;
 
-    // Decompilation cache
     private String decompilationCache;
     private long decompilationTimestamp;
     private Map<String, NavigableMap<Integer, Integer>> sourceLineMaps;
@@ -98,7 +95,6 @@ public class ClassEntryModel
 
     private void buildMemberModels()
     {
-        // Build method models
         for (MethodEntry method : classFile.getMethods())
         {
             String key = method.getName() + method.getDesc();
@@ -106,7 +102,6 @@ public class ClassEntryModel
             methods.put(key, model);
         }
 
-        // Build field models
         for (FieldEntry field : classFile.getFields())
         {
             String key = field.getName() + field.getDesc();
@@ -114,8 +109,6 @@ public class ClassEntryModel
             fields.put(key, model);
         }
     }
-
-    // ClassFile delegated methods
 
     public String getClassName()
     {
@@ -129,7 +122,6 @@ public class ClassEntryModel
 
     public List<String> getInterfaceNames()
     {
-        // Resolve interface indices to names from constant pool
         List<String> names = new ArrayList<>();
         for (Integer ifaceIndex : classFile.getInterfaces())
         {
@@ -180,8 +172,6 @@ public class ClassEntryModel
     {
         return AccessFlags.isFinal(classFile.getAccess());
     }
-
-    // Member access
 
     public MethodEntryModel getMethod(String name, String descriptor)
     {

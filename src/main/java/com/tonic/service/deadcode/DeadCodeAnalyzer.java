@@ -171,7 +171,6 @@ public final class DeadCodeAnalyzer
         report.getDeadFields().add(DeadItem.ofField(owner, name, desc, !writers.isEmpty(), writers));
     }
 
-    /** A class is live if it has a reachable method, is referenced as a type by reachable code, or is a (user) supertype of a live class. */
     private Set<String> computeLiveClasses(CallGraph callGraph, XrefDatabase xref, Set<MethodReference> reachable)
     {
         Set<String> live = new HashSet<>();
@@ -203,7 +202,6 @@ public final class DeadCodeAnalyzer
                 }
             }
         }
-        // A live class needs its (user) supertypes kept too, or the hierarchy breaks.
         Deque<String> worklist = new ArrayDeque<>(live);
         ClassHierarchy hierarchy = callGraph.getHierarchy();
         while (!worklist.isEmpty())
@@ -225,9 +223,6 @@ public final class DeadCodeAnalyzer
         return live;
     }
 
-    // ---- external-override rule ---------------------------------------------------------------------
-
-    /** True if {@code name+desc} on {@code owner} overrides a method declared by a non-user (JDK/library) supertype. */
     private boolean overridesExternal(String owner, String name, String desc)
     {
         if (name.equals("<init>") || name.equals("<clinit>"))
@@ -238,12 +233,6 @@ public final class DeadCodeAnalyzer
         return info.unresolved || info.signatures.contains(name + ' ' + desc);
     }
 
-    /**
-     * Collects the name+desc of every method declared by an external (non-user) supertype of {@code owner}.
-     * User supertypes are walked via their bytecode (to reach the external boundary higher up); external
-     * supertypes are resolved by reflection, which reliably covers the JDK and anything on the classpath
-     * regardless of whether the project's pool loaded JDK classes.
-     */
     private ExternalInfo computeExternalSignatures(String owner)
     {
         Set<String> signatures = new HashSet<>();
@@ -295,7 +284,6 @@ public final class DeadCodeAnalyzer
         }
     }
 
-    /** Adds every method (any access, full hierarchy) of an external class to {@code signatures} via reflection. */
     private boolean collectReflective(String internalName, Set<String> signatures)
     {
         try
@@ -363,7 +351,6 @@ public final class DeadCodeAnalyzer
         return new MethodReference(ref.getSourceClass(), ref.getSourceMethod(), ref.getSourceMethodDesc());
     }
 
-    /** Compile-time constants (static final primitive/String) inline at use sites, so they look unreferenced; keep them. */
     private static boolean isInlinableConstant(FieldEntry f)
     {
         int access = f.getAccess();

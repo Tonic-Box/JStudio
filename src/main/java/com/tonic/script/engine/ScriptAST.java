@@ -15,7 +15,6 @@ public abstract class ScriptAST
      */
     public interface Visitor<T>
     {
-        // Expressions
         T visitLiteral(LiteralExpr expr);
 
         T visitIdentifier(IdentifierExpr expr);
@@ -34,7 +33,6 @@ public abstract class ScriptAST
 
         T visitTernary(TernaryExpr expr);
 
-        // Statements
         T visitExpressionStmt(ExpressionStmt stmt);
 
         T visitVarDecl(VarDeclStmt stmt);
@@ -45,7 +43,6 @@ public abstract class ScriptAST
 
         T visitBlock(BlockStmt stmt);
 
-        // Loop statements
         T visitWhile(WhileStmt stmt);
 
         T visitFor(ForStmt stmt);
@@ -56,26 +53,21 @@ public abstract class ScriptAST
 
         T visitContinue(ContinueStmt stmt);
 
-        // Exception statements
         T visitTry(TryStmt stmt);
 
         T visitThrow(ThrowStmt stmt);
 
-        // Update expression (++ and --)
         T visitUpdate(UpdateExpr expr);
 
-        // Compound assignment (+=, -=, etc.)
         T visitAssignment(AssignmentExpr expr);
     }
 
     public abstract <T> T accept(Visitor<T> visitor);
 
-    // ==================== Expressions ====================
-
     @Getter
     public static class LiteralExpr extends ScriptAST
     {
-        private final Object value; // String, Double, Boolean, null
+        private final Object value;
 
         public LiteralExpr(Object value)
         {
@@ -170,7 +162,7 @@ public abstract class ScriptAST
     {
         private final ScriptAST object;
         private final String member;
-        private final boolean optional; // ?. operator
+        private final boolean optional;
 
         public MemberAccessExpr(ScriptAST object, String member, boolean optional)
         {
@@ -190,7 +182,7 @@ public abstract class ScriptAST
     public static class ArrowFunctionExpr extends ScriptAST
     {
         private final List<String> parameters;
-        private final ScriptAST body; // Expression or BlockStmt
+        private final ScriptAST body;
 
         public ArrowFunctionExpr(List<String> parameters, ScriptAST body)
         {
@@ -245,8 +237,6 @@ public abstract class ScriptAST
         }
     }
 
-    // ==================== Statements ====================
-
     @Getter
     public static class ExpressionStmt extends ScriptAST
     {
@@ -269,7 +259,7 @@ public abstract class ScriptAST
     {
         private final String name;
         private final ScriptAST initializer;
-        private final boolean constant; // let vs const
+        private final boolean constant;
 
         public VarDeclStmt(String name, ScriptAST initializer, boolean constant)
         {
@@ -290,7 +280,7 @@ public abstract class ScriptAST
     {
         private final ScriptAST condition;
         private final ScriptAST thenBranch;
-        private final ScriptAST elseBranch; // nullable
+        private final ScriptAST elseBranch;
 
         public IfStmt(ScriptAST condition, ScriptAST thenBranch, ScriptAST elseBranch)
         {
@@ -309,7 +299,7 @@ public abstract class ScriptAST
     @Getter
     public static class ReturnStmt extends ScriptAST
     {
-        private final ScriptAST value; // nullable
+        private final ScriptAST value;
 
         public ReturnStmt(ScriptAST value)
         {
@@ -340,8 +330,6 @@ public abstract class ScriptAST
         }
     }
 
-    // ==================== Loop Statements ====================
-
     @Getter
     public static class WhileStmt extends ScriptAST
     {
@@ -364,9 +352,9 @@ public abstract class ScriptAST
     @Getter
     public static class ForStmt extends ScriptAST
     {
-        private final ScriptAST init;       // nullable (VarDeclStmt or ExpressionStmt)
-        private final ScriptAST condition;  // nullable
-        private final ScriptAST update;     // nullable
+        private final ScriptAST init;
+        private final ScriptAST condition;
+        private final ScriptAST update;
         private final ScriptAST body;
 
         public ForStmt(ScriptAST init, ScriptAST condition, ScriptAST update, ScriptAST body)
@@ -388,10 +376,10 @@ public abstract class ScriptAST
     public static class ForEachStmt extends ScriptAST
     {
         private final String varName;
-        private final boolean constant;    // const vs let
+        private final boolean constant;
         private final ScriptAST iterable;
         private final ScriptAST body;
-        private final boolean forIn;       // for-in (keys) vs for-of (values)
+        private final boolean forIn;
 
         public ForEachStmt(String varName, boolean constant, ScriptAST iterable, ScriptAST body, boolean forIn)
         {
@@ -429,15 +417,13 @@ public abstract class ScriptAST
         }
     }
 
-    // ==================== Exception Statements ====================
-
     @Getter
     public static class TryStmt extends ScriptAST
     {
         private final ScriptAST tryBlock;
-        private final String catchParam;     // nullable if no catch
-        private final ScriptAST catchBlock;  // nullable
-        private final ScriptAST finallyBlock; // nullable
+        private final String catchParam;
+        private final ScriptAST catchBlock;
+        private final ScriptAST finallyBlock;
 
         public TryStmt(ScriptAST tryBlock, String catchParam, ScriptAST catchBlock, ScriptAST finallyBlock)
         {
@@ -471,14 +457,12 @@ public abstract class ScriptAST
         }
     }
 
-    // ==================== Additional Expressions ====================
-
     @Getter
     public static class UpdateExpr extends ScriptAST
     {
         private final ScriptAST operand;
-        private final String operator;  // ++ or --
-        private final boolean prefix;   // ++x vs x++
+        private final String operator;
+        private final boolean prefix;
 
         public UpdateExpr(ScriptAST operand, String operator, boolean prefix)
         {
@@ -498,7 +482,7 @@ public abstract class ScriptAST
     public static class AssignmentExpr extends ScriptAST
     {
         private final ScriptAST target;
-        private final String operator;  // +=, -=, *=, /=
+        private final String operator;
         private final ScriptAST value;
 
         public AssignmentExpr(ScriptAST target, String operator, ScriptAST value)

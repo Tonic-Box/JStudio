@@ -106,7 +106,6 @@ public final class LiveBridge extends AbstractBridge
         }
     }
 
-    /** Pushes the current project's (possibly edited) bytes for {@code internalName} to the live JVM. */
     private ScriptValue redefineFromProject(ScriptValue clsVal)
     {
         try

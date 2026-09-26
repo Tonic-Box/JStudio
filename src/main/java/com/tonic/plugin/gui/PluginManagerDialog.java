@@ -217,7 +217,6 @@ public final class PluginManagerDialog extends ThemedJDialog
         }
     }
 
-    /** Renders a plugin row as "name vVersion  [STATE]", colored by state. */
     private static final class PluginCellRenderer extends DefaultListCellRenderer
     {
         @Override

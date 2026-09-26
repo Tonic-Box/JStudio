@@ -126,7 +126,6 @@ public class ScriptStore
             ConsoleLogService.getInstance().error("Failed to list scripts directory: " + e.getMessage());
         }
 
-        // Also load .js files
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.js"))
         {
             for (Path path : stream)
@@ -144,7 +143,6 @@ public class ScriptStore
         }
         catch (IOException e)
         {
-            // Ignore
         }
 
         return scripts;
@@ -195,9 +193,6 @@ public class ScriptStore
         }
     }
 
-    /**
-     * Escapes a string for JSON output.
-     */
     private static String escapeJson(String s)
     {
         if (s == null) return "null";
@@ -236,12 +231,8 @@ public class ScriptStore
         return sb.toString();
     }
 
-    /**
-     * Extracts a JSON string value by key.
-     */
     private static String extractJsonString(String json, String key, String defaultValue)
     {
-        // Pattern: "key": "value" (handling escaped quotes)
         Pattern pattern = Pattern.compile("\"" + key + "\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
         Matcher matcher = pattern.matcher(json);
         if (matcher.find())
@@ -251,9 +242,6 @@ public class ScriptStore
         return defaultValue;
     }
 
-    /**
-     * Unescapes a JSON string value.
-     */
     private static String unescapeJson(String s)
     {
         if (s == null) return null;
@@ -299,7 +287,6 @@ public class ScriptStore
                             }
                             catch (NumberFormatException e)
                             {
-                                // Fall through
                             }
                         }
                         break;

@@ -82,7 +82,6 @@ public final class JarPluginScanner
                     }
                     catch (ClassNotFoundException | NoClassDefFoundError e)
                     {
-                        // Skip classes that can't be resolved (optional deps, etc.).
                     }
                 }
             }

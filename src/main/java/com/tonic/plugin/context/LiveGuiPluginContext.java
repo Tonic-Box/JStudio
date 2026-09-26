@@ -49,7 +49,6 @@ public class LiveGuiPluginContext implements PluginContext
         this.results = new ResultCollector(pluginName);
     }
 
-    /** The live current project, or a shared empty sentinel when none is loaded (so the impls never see null). */
     private ProjectModel project()
     {
         ProjectModel current = ProjectService.getInstance().getCurrentProject();

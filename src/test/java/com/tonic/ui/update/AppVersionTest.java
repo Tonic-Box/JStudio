@@ -40,7 +40,6 @@ class AppVersionTest
     @Test
     void notPackagedWhenRunFromClasses()
     {
-        // The test runs from build/classes, not a jar, so there is no manifest version.
         assertNull(AppVersion.current());
         assertFalse(AppVersion.isPackaged());
     }

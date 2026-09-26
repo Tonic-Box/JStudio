@@ -9,17 +9,14 @@ import com.tonic.parser.MethodEntry;
 import com.tonic.ui.live.MethodBodyDiff;
 import com.tonic.util.AccessBuilder;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Covers the member add/remove behavior of {@link SourceCompiler#compile}: editing a class's
- * decompiled source and recompiling should add newly declared members and drop ones the source
- * no longer declares, while leaving constructors and compiler-generated members intact.
- */
+@DisplayName("recompiling edited source adds declared members, drops removed ones and never mutates the input class")
 class SourceCompilerTest
 {
 
@@ -53,15 +50,12 @@ class SourceCompilerTest
     @Test
     void editsToConstructorBodyArePersisted() throws Exception
     {
-        // Establish a class with a default constructor and a field, mirroring a decompiled target.
         ClassFile cf = ClassFactory.createClass(pool, "test/gen/CtorEdit", new AccessBuilder().setPublic().build());
         String withField = "package test.gen;\n\npublic class CtorEdit {\n"
                 + "    public int x;\n"
                 + "    public CtorEdit() { }\n}\n";
         ClassFile base = new SourceCompiler().compile(withField, cf, pool).getCompiledClass();
 
-        // Edit the constructor body, exactly as the editor does: diff the bodies, then recompile with
-        // the resulting changedMethods so only <init> is re-lowered.
         String baseline = ClassDecompiler.decompile(base);
         String edited = baseline.replace("public CtorEdit() {", "public CtorEdit() { this.x = 42;");
         assertNotEquals(baseline, edited, "edit must actually change the constructor body");
@@ -79,9 +73,6 @@ class SourceCompilerTest
     @Test
     void recompileLowersIntoCopyLeavingInputUntouched() throws Exception
     {
-        // Transactional recompile: compile() must lower into a working copy, never mutating the input
-        // ClassFile in place. A successful edit returns a distinct object and leaves the input byte-identical,
-        // which is what guarantees a FAILED recompile cannot corrupt the model.
         ClassFile cf = ClassFactory.createClass(pool, "test/gen/Tx", new AccessBuilder().setPublic().build());
         ClassFile base = new SourceCompiler().compile(withMembers(cf, "    static int ok() { return 1; }\n"), cf, pool).getCompiledClass();
 
@@ -155,9 +146,6 @@ class SourceCompilerTest
     @Test
     void lambdaCapturingMethodReceiverInNestedStatementRoundTrips() throws Exception
     {
-        // The capture is used only as a method-call receiver inside a var-decl initializer and an
-        // if-branch — statement forms the old ExprStmt-only capture walk skipped. Exercises full
-        // body traversal + qualified capture typing so the synthetic descriptor matches.
         String source = "package test.gen;\n"
                 + "import java.util.concurrent.atomic.AtomicInteger;\n"
                 + "public class LamCap {\n"

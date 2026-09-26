@@ -25,7 +25,6 @@ import java.util.function.Consumer;
 public class ASTBridge
 {
 
-    /** The unique marker returned by {@code ast.remove()}; the only value that deletes a node. */
     private static final Object REMOVE_SENTINEL = new Object();
 
     private final ScriptInterpreter interpreter;
@@ -49,12 +48,9 @@ public class ASTBridge
     {
         Map<String, ScriptValue> props = new HashMap<>();
 
-        // Removal sentinel: a handler must return ast.remove() to delete a node. Returning null / nothing /
-        // the original node keeps it (so forgetting to return never deletes).
         props.put("remove", ScriptValue.function(ScriptFunction.native0("remove", () -> ScriptValue.native_(REMOVE_SENTINEL))));
         props.put("keep", ScriptValue.function(ScriptFunction.native0("keep", () -> ScriptValue.NULL)));
 
-        // Handler registration methods
         props.put("onMethodCall", ScriptValue.function(ScriptFunction.native1("onMethodCall", this::registerMethodCallHandler)));
 
         props.put("onFieldAccess", ScriptValue.function(ScriptFunction.native1("onFieldAccess", this::registerFieldAccessHandler)));
@@ -67,13 +63,10 @@ public class ASTBridge
 
         props.put("onReturn", ScriptValue.function(ScriptFunction.native1("onReturn", this::registerReturnHandler)));
 
-        // Factory for creating new nodes
         props.put("factory", createFactoryObject());
 
-        // Validation framework
         props.put("validate", ScriptValue.function(ScriptFunction.native1("validate", this::validateNode)));
 
-        // Type utilities
         props.put("isNumeric", ScriptValue.function(ScriptFunction.native1("isNumeric", this::isNumeric)));
         props.put("isIntegral", ScriptValue.function(ScriptFunction.native1("isIntegral", this::isIntegral)));
         props.put("isPrimitive", ScriptValue.function(ScriptFunction.native1("isPrimitive", this::isPrimitive)));
@@ -92,7 +85,6 @@ public class ASTBridge
     {
         Map<String, ScriptValue> props = new HashMap<>();
 
-        // Literals using ASTFactory
         props.put("intLit", ScriptValue.function(ScriptFunction.native1("intLit", arg -> wrap(ASTFactory.intLit((int) arg.asNumber())))));
         props.put("longLit", ScriptValue.function(ScriptFunction.native1("longLit", arg -> wrap(ASTFactory.longLit((long) arg.asNumber())))));
         props.put("floatLit", ScriptValue.function(ScriptFunction.native1("floatLit", arg -> wrap(ASTFactory.floatLit((float) arg.asNumber())))));
@@ -101,7 +93,6 @@ public class ASTBridge
         props.put("stringLit", ScriptValue.function(ScriptFunction.native1("stringLit", arg -> wrap(ASTFactory.stringLit(arg.asString())))));
         props.put("nullLit", ScriptValue.function(ScriptFunction.native0("nullLit", () -> wrap(ASTFactory.nullLit()))));
 
-        // Variable references
         props.put("varRef", ScriptValue.function(ScriptFunction.native2("varRef", (name, type) ->
         {
             SourceType srcType = unwrapType(type);
@@ -110,7 +101,6 @@ public class ASTBridge
         props.put("intVar", ScriptValue.function(ScriptFunction.native1("intVar", name -> wrap(ASTFactory.intVar(name.asString())))));
         props.put("boolVar", ScriptValue.function(ScriptFunction.native1("boolVar", name -> wrap(ASTFactory.boolVar(name.asString())))));
 
-        // Binary operations using ASTFactory
         props.put("add", ScriptValue.function(ScriptFunction.native2("add", (l, r) -> wrap(ASTFactory.add(unwrapExpr(l), unwrapExpr(r))))));
         props.put("sub", ScriptValue.function(ScriptFunction.native2("sub", (l, r) -> wrap(ASTFactory.sub(unwrapExpr(l), unwrapExpr(r))))));
         props.put("mul", ScriptValue.function(ScriptFunction.native2("mul", (l, r) -> wrap(ASTFactory.mul(unwrapExpr(l), unwrapExpr(r))))));
@@ -126,7 +116,6 @@ public class ASTBridge
         props.put("or", ScriptValue.function(ScriptFunction.native2("or", (l, r) -> wrap(ASTFactory.or(unwrapExpr(l), unwrapExpr(r))))));
         props.put("assign", ScriptValue.function(ScriptFunction.native2("assign", (l, r) -> wrap(ASTFactory.assign(unwrapExpr(l), unwrapExpr(r))))));
 
-        // Unary operations
         props.put("not", ScriptValue.function(ScriptFunction.native1("not", arg -> wrap(ASTFactory.not(unwrapExpr(arg))))));
         props.put("neg", ScriptValue.function(ScriptFunction.native1("neg", arg -> wrap(ASTFactory.neg(unwrapExpr(arg))))));
         props.put("preIncr", ScriptValue.function(ScriptFunction.native1("preIncr", arg -> wrap(ASTFactory.preIncr(unwrapExpr(arg))))));
@@ -134,14 +123,12 @@ public class ASTBridge
         props.put("preDecr", ScriptValue.function(ScriptFunction.native1("preDecr", arg -> wrap(ASTFactory.preDecr(unwrapExpr(arg))))));
         props.put("postDecr", ScriptValue.function(ScriptFunction.native1("postDecr", arg -> wrap(ASTFactory.postDecr(unwrapExpr(arg))))));
 
-        // Other expressions
         props.put("ternary", ScriptValue.function(ScriptFunction.nativeN("ternary", args ->
         {
             if (args.size() < 3) return ScriptValue.NULL;
             return wrap(ASTFactory.ternary(unwrapExpr(args.get(0)), unwrapExpr(args.get(1)), unwrapExpr(args.get(2))));
         })));
 
-        // Method calls
         props.put("methodCall", ScriptValue.function(ScriptFunction.nativeN("methodCall", args ->
         {
             if (args.size() < 2) return ScriptValue.NULL;
@@ -172,7 +159,6 @@ public class ASTBridge
             return wrap(ASTFactory.staticCall(owner, name, ReferenceSourceType.OBJECT, argsArray));
         })));
 
-        // Field access
         props.put("fieldAccess", ScriptValue.function(ScriptFunction.native2("fieldAccess", (receiver, fieldName) ->
         {
             Expression recv = unwrapExpr(receiver);
@@ -180,7 +166,6 @@ public class ASTBridge
         })));
         props.put("staticField", ScriptValue.function(ScriptFunction.native2("staticField", (owner, name) -> wrap(ASTFactory.staticField(owner.asString(), name.asString(), ReferenceSourceType.OBJECT)))));
 
-        // Statements
         props.put("block", ScriptValue.function(ScriptFunction.nativeN("block", args ->
         {
             List<Statement> stmts = new ArrayList<>();
@@ -205,7 +190,6 @@ public class ASTBridge
         props.put("continueStmt", ScriptValue.function(ScriptFunction.native0("continueStmt", () -> wrap(ASTFactory.continueStmt()))));
         props.put("exprStmt", ScriptValue.function(ScriptFunction.native1("exprStmt", expr -> wrap(ASTFactory.exprStmt(unwrapExpr(expr))))));
 
-        // Legacy aliases for backward compatibility
         props.put("intLiteral", props.get("intLit"));
         props.put("stringLiteral", props.get("stringLit"));
         props.put("boolLiteral", props.get("boolLit"));
@@ -334,8 +318,6 @@ public class ASTBridge
         return createLiteral(val);
     }
 
-    // ==================== Handler Registration ====================
-
     private ScriptValue registerMethodCallHandler(ScriptValue callback)
     {
         if (!callback.isFunction())
@@ -395,8 +377,6 @@ public class ASTBridge
         handlers.add(new HandlerRegistration(HandlerType.RETURN_STMT, callback.asFunction()));
         return ScriptValue.NULL;
     }
-
-    // ==================== Apply to AST Editor ====================
 
     /**
      * Applies all registered handlers to the AST via the given editor.
@@ -508,7 +488,6 @@ public class ASTBridge
                 }
             }
         }
-        // null / nothing returned / the original node / anything else = keep (no accidental removals).
         return Replacement.keep();
     }
 
@@ -535,13 +514,10 @@ public class ASTBridge
         return Replacement.keep();
     }
 
-    /** True only when a handler returned the explicit {@code ast.remove()} sentinel. */
     private static boolean isRemoveSentinel(ScriptValue result)
     {
         return result != null && result.isNative() && result.unwrap() == REMOVE_SENTINEL;
     }
-
-    // ==================== Validation Framework ====================
 
     private ScriptValue validateNode(ScriptValue nodeVal)
     {
@@ -594,8 +570,6 @@ public class ASTBridge
         }
         return null;
     }
-
-    // ==================== Type Utilities ====================
 
     private ScriptValue isNumeric(ScriptValue typeVal)
     {
@@ -654,8 +628,6 @@ public class ASTBridge
         SourceType type = unwrapType(typeVal);
         return ScriptValue.string(TypeUtils.getSimpleName(type));
     }
-
-    // ==================== Internal Classes ====================
 
     private enum HandlerType
     {

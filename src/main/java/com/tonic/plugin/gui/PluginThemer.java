@@ -27,13 +27,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 
-/**
- * Recursively applies JStudio theme colors to a plugin-contributed component tree and keeps them in sync when the
- * user switches themes, so plugin authors get native-looking panels without doing anything. Standard Swing
- * components are colored by type; buttons keep their look-and-feel styling (only foreground is set). Installed by
- * {@link UiApiImpl} for every contributed tool window / view / bottom tab and uninstalled when the contribution is
- * removed.
- */
 final class PluginThemer implements ThemeChangeListener
 {
 
@@ -44,7 +37,6 @@ final class PluginThemer implements ThemeChangeListener
         this.root = root;
     }
 
-    /** Themes {@code root} now and re-themes it on every theme change until {@link #uninstall()}. */
     static PluginThemer install(Component root)
     {
         PluginThemer themer = new PluginThemer(root);
@@ -61,8 +53,6 @@ final class PluginThemer implements ThemeChangeListener
     @Override
     public void onThemeChanged(Theme newTheme)
     {
-        // A theme switch runs updateComponentTreeUI (resetting colors to L&F defaults) before listeners fire,
-        // so re-apply our explicit colors afterwards.
         SwingUtilities.invokeLater(this::apply);
     }
 
@@ -99,13 +89,10 @@ final class PluginThemer implements ThemeChangeListener
         }
         else if (component instanceof JCheckBox || component instanceof JRadioButton)
         {
-            // Toggles read better with no filled box, matching the parent background.
             component.setForeground(text);
         }
         else if (component instanceof AbstractButton)
         {
-            // Fill push/toggle buttons with the raised "surface" color so they match the theme and stand out
-            // from the panel (the L&F still draws the rounded shape and hover).
             component.setBackground(JStudioTheme.getBgSurface());
             component.setForeground(text);
         }

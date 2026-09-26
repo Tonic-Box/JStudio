@@ -45,8 +45,6 @@ public class ScriptParser
         return statements;
     }
 
-    // ==================== Statements ====================
-
     private ScriptAST parseStatement()
     {
         if (check(ScriptToken.Type.LET) || check(ScriptToken.Type.CONST))
@@ -100,7 +98,7 @@ public class ScriptParser
     private ScriptAST parseVarDecl()
     {
         boolean isConst = check(ScriptToken.Type.CONST);
-        advance(); // consume let/const
+        advance();
 
         ScriptToken name = consume(ScriptToken.Type.IDENTIFIER, "Expected variable name");
 
@@ -116,7 +114,7 @@ public class ScriptParser
 
     private ScriptAST parseIf()
     {
-        advance(); // consume 'if'
+        advance();
         consume(ScriptToken.Type.LPAREN, "Expected '(' after 'if'");
         ScriptAST condition = parseExpression();
         consume(ScriptToken.Type.RPAREN, "Expected ')' after if condition");
@@ -134,7 +132,7 @@ public class ScriptParser
 
     private ScriptAST parseReturn()
     {
-        advance(); // consume 'return'
+        advance();
 
         ScriptAST value = null;
         if (!check(ScriptToken.Type.SEMICOLON) && !check(ScriptToken.Type.RBRACE) && !isAtEnd())
@@ -148,7 +146,7 @@ public class ScriptParser
 
     private ScriptAST parseBlock()
     {
-        advance(); // consume '{'
+        advance();
         List<ScriptAST> statements = new ArrayList<>();
 
         while (!check(ScriptToken.Type.RBRACE) && !isAtEnd())
@@ -166,7 +164,7 @@ public class ScriptParser
 
     private ScriptAST parseWhile()
     {
-        advance(); // consume 'while'
+        advance();
         consume(ScriptToken.Type.LPAREN, "Expected '(' after 'while'");
         ScriptAST condition = parseExpression();
         consume(ScriptToken.Type.RPAREN, "Expected ')' after while condition");
@@ -176,7 +174,7 @@ public class ScriptParser
 
     private ScriptAST parseDoWhile()
     {
-        advance(); // consume 'do'
+        advance();
         ScriptAST body = parseStatement();
         consume(ScriptToken.Type.WHILE, "Expected 'while' after do body");
         consume(ScriptToken.Type.LPAREN, "Expected '(' after 'while'");
@@ -188,7 +186,7 @@ public class ScriptParser
 
     private ScriptAST parseFor()
     {
-        advance(); // consume 'for'
+        advance();
         consume(ScriptToken.Type.LPAREN, "Expected '(' after 'for'");
 
         if (check(ScriptToken.Type.LET) || check(ScriptToken.Type.CONST))
@@ -258,21 +256,21 @@ public class ScriptParser
 
     private ScriptAST parseBreak()
     {
-        advance(); // consume 'break'
+        advance();
         consumeSemicolon();
         return new ScriptAST.BreakStmt();
     }
 
     private ScriptAST parseContinue()
     {
-        advance(); // consume 'continue'
+        advance();
         consumeSemicolon();
         return new ScriptAST.ContinueStmt();
     }
 
     private ScriptAST parseTry()
     {
-        advance(); // consume 'try'
+        advance();
         ScriptAST tryBlock = parseBlock();
 
         String catchParam = null;
@@ -302,7 +300,7 @@ public class ScriptParser
 
     private ScriptAST parseThrow()
     {
-        advance(); // consume 'throw'
+        advance();
         ScriptAST expression = parseExpression();
         consumeSemicolon();
         return new ScriptAST.ThrowStmt(expression);
@@ -314,8 +312,6 @@ public class ScriptParser
         consumeSemicolon();
         return new ScriptAST.ExpressionStmt(expr);
     }
-
-    // ==================== Expressions ====================
 
     private ScriptAST parseExpression()
     {
@@ -493,8 +489,8 @@ public class ScriptParser
             }
             else if (check(ScriptToken.Type.QUESTION) && checkNext())
             {
-                advance(); // consume '?'
-                advance(); // consume '.'
+                advance();
+                advance();
                 ScriptToken name = consume(ScriptToken.Type.IDENTIFIER, "Expected property name after '?.'");
                 expr = new ScriptAST.MemberAccessExpr(expr, name.getValue(), true);
             }
@@ -537,7 +533,6 @@ public class ScriptParser
 
     private ScriptAST parsePrimary()
     {
-        // Literals
         if (match(ScriptToken.Type.NUMBER))
         {
             return new ScriptAST.LiteralExpr(Double.parseDouble(previous().getValue()));
@@ -559,13 +554,11 @@ public class ScriptParser
             return new ScriptAST.LiteralExpr(null);
         }
 
-        // Arrow function with parentheses: (x, y) => expr
         if (check(ScriptToken.Type.LPAREN) && isArrowFunction())
         {
             return parseArrowFunction();
         }
 
-        // Grouped expression
         if (match(ScriptToken.Type.LPAREN))
         {
             ScriptAST expr = parseExpression();
@@ -573,15 +566,13 @@ public class ScriptParser
             return expr;
         }
 
-        // Identifier (could be arrow function param)
         if (match(ScriptToken.Type.IDENTIFIER))
         {
             String name = previous().getValue();
 
-            // Single-param arrow function: x => expr
             if (check(ScriptToken.Type.ARROW))
             {
-                advance(); // consume '=>'
+                advance();
                 List<String> params = new ArrayList<>();
                 params.add(name);
                 ScriptAST body = parseArrowBody();
@@ -596,13 +587,11 @@ public class ScriptParser
 
     private boolean isArrowFunction()
     {
-        // Look ahead to see if this is an arrow function
         int saved = current;
         try
         {
             if (!match(ScriptToken.Type.LPAREN)) return false;
 
-            // Skip parameters
             int depth = 1;
             while (depth > 0 && !isAtEnd())
             {
@@ -652,8 +641,6 @@ public class ScriptParser
             return parseExpression();
         }
     }
-
-    // ==================== Helpers ====================
 
     private boolean match(ScriptToken.Type... types)
     {
@@ -709,7 +696,6 @@ public class ScriptParser
 
     private void consumeSemicolon()
     {
-        // Semicolons are optional in many contexts
         match(ScriptToken.Type.SEMICOLON);
     }
 

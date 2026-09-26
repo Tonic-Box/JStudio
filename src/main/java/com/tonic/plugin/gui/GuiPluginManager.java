@@ -33,7 +33,6 @@ public final class GuiPluginManager
     private static final GuiPluginManager INSTANCE = new GuiPluginManager();
 
     private MainFrame frame;
-    /** All discovered plugins (EDT-confined). */
     private final List<LoadedPlugin> loaded = new ArrayList<>();
 
     private GuiPluginManager()
@@ -239,7 +238,6 @@ public final class GuiPluginManager
         }
         if (scanned.plugins == null || scanned.plugins.isEmpty())
         {
-            // A jar with no @JStudioPlugin (e.g. a stray library): nothing to host, release its loader.
             if (scanned.loader != null)
             {
                 JarPluginScanner.closeQuietly(scanned.loader);
@@ -274,7 +272,6 @@ public final class GuiPluginManager
         }
     }
 
-    /** Builds init + start for a UI plugin, isolating any failure as an ERROR state. */
     private void activate(LoadedPlugin lp)
     {
         lp.contributions.clear();
@@ -297,7 +294,6 @@ public final class GuiPluginManager
         }
     }
 
-    /** Removes contributions (reverse order) then disposes the plugin. Every step is isolated. */
     private void teardown(LoadedPlugin lp)
     {
         List<Registration> regs = lp.contributions;
@@ -329,7 +325,6 @@ public final class GuiPluginManager
         return PluginInfo.builder().name(jar.getName()).version("").build();
     }
 
-    /** A scanned jar: its loader + instantiated plugins, or the failure that stopped it. */
     private static final class ScannedJar
     {
         final File jar;

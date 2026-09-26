@@ -3,6 +3,7 @@ package com.tonic.ui.editor.source;
 import com.tonic.analysis.source.decompile.ClassDecompiler;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
@@ -12,13 +13,7 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-/**
- * Reproduces the reported decompile->recompile corruption WITHOUT the GUI: loads the demo jar, decompiles
- * AuthenticationCoordinator with YABR, recompiles the WHOLE-class source through JStudio's {@link SourceCompiler}
- * (the exact path the editor's recompile button uses), then decompiles the result. Dumps source1/source2 and the
- * recompiled .class so the intermediate bytecode can be inspected (separating recompiler corruption from
- * decompiler misrender). Diagnostic only - prints, does not assert.
- */
+@DisplayName("decompile and whole-class recompile of AuthenticationCoordinator from the demo jar, without the GUI")
 class AuthRoundTripReproTest
 {
 
@@ -53,7 +48,6 @@ class AuthRoundTripReproTest
         String source1 = ClassDecompiler.decompile(cf);
         Files.writeString(OUT.resolve("source1.java"), source1);
 
-        // Determinism probe: decompile the ORIGINAL bytecode a second time, fresh from bytes.
         ClassFile cfAgain = pool.loadClass(originalBytes());
         String source1b = ClassDecompiler.decompile(cfAgain);
         System.out.println("[repro] decompile deterministic (same bytes twice): " + source1.equals(source1b));

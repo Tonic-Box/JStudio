@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 public class IRBridge
 {
 
-    /** The unique marker returned by {@code ir.remove()}; the only value that deletes an instruction. */
     private static final Object REMOVE_SENTINEL = new Object();
 
     private final ScriptInterpreter interpreter;
@@ -40,11 +39,8 @@ public class IRBridge
     {
         Map<String, ScriptValue> props = new HashMap<>();
 
-        // Removal sentinel: a handler must return ir.remove() to delete an instruction. Returning null / nothing /
-        // the original keeps it (so forgetting to return never deletes).
         props.put("remove", ScriptValue.function(ScriptFunction.native0("remove", () -> ScriptValue.native_(REMOVE_SENTINEL))));
 
-        // Handler registration methods
         props.put("onBinaryOp", ScriptValue.function(ScriptFunction.native1("onBinaryOp", this::registerBinaryOpHandler)));
 
         props.put("onUnaryOp", ScriptValue.function(ScriptFunction.native1("onUnaryOp", this::registerUnaryOpHandler)));
@@ -65,7 +61,6 @@ public class IRBridge
 
         props.put("forEachInstruction", ScriptValue.function(ScriptFunction.native1("forEachInstruction", this::registerInstructionHandler)));
 
-        // Factory methods
         props.put("constant", ScriptValue.function(ScriptFunction.native2("constant", this::createConstant)));
 
         props.put("intConstant", ScriptValue.function(ScriptFunction.native1("intConstant", arg ->
@@ -110,8 +105,6 @@ public class IRBridge
                 return ScriptValue.native_(new IntConstant((int) value.asNumber()));
         }
     }
-
-    // ==================== Handler Registration ====================
 
     private ScriptValue registerBinaryOpHandler(ScriptValue callback)
     {
@@ -213,8 +206,6 @@ public class IRBridge
         return ScriptValue.NULL;
     }
 
-    // ==================== Apply to IRMethod ====================
-
     /**
      * Runs all registered handlers on the given method.
      * Returns the number of modifications made.
@@ -223,7 +214,6 @@ public class IRBridge
     {
         int modCount = 0;
 
-        // Process each handler
         for (HandlerRegistration reg : handlers)
         {
             switch (reg.type)
@@ -332,7 +322,6 @@ public class IRBridge
     {
         if (isRemoveSentinel(result))
         {
-            // Only ir.remove() deletes; null / nothing / the original keeps it.
             block.removeInstruction(original);
             return 1;
         }
@@ -341,7 +330,6 @@ public class IRBridge
         {
             Object obj = result.unwrap();
 
-            // If it's a Constant, create a ConstantInstruction
             if (obj instanceof Constant && original.getResult() != null)
             {
                 ConstantInstruction newInstr = new ConstantInstruction(original.getResult(), (Constant) obj);
@@ -355,7 +343,6 @@ public class IRBridge
                 }
             }
 
-            // If it's an IRInstruction, replace
             if (obj instanceof IRInstruction && obj != original)
             {
                 IRInstruction replacement = (IRInstruction) obj;
@@ -373,13 +360,10 @@ public class IRBridge
         return 0;
     }
 
-    /** True only when a handler returned the explicit {@code ir.remove()} sentinel. */
     private static boolean isRemoveSentinel(ScriptValue result)
     {
         return result != null && result.isNative() && result.unwrap() == REMOVE_SENTINEL;
     }
-
-    // ==================== Internal Classes ====================
 
     private enum HandlerType
     {

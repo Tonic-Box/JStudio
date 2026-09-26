@@ -50,7 +50,6 @@ public class SamplePlugin implements UiPlugin
     @Override
     public void start(JStudioHost host)
     {
-        // 1. A right-dock tool window with a live label and a couple of buttons.
         JPanel panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -77,14 +76,11 @@ public class SamplePlugin implements UiPlugin
 
         host.ui().addToolWindow("Sample", panel);
 
-        // 2. A menu item (creates a "Sample" top-level menu) and a toolbar button.
         host.ui().addMenuItem("Sample", "Say Hello", () -> JOptionPane.showMessageDialog(host.frame(), "Hello from the Sample Plugin!"));
         host.ui().addToolbarButton(null, "Sample Plugin: open center view", () -> openCenterView(host));
 
-        // 3. A navigator right-click action available when a class is selected.
         host.ui().addNavigatorAction(context -> context.selectedClass().map(cls -> Collections.singletonList(new NavigatorAction("Sample: log class name", () -> host.log().info("Selected class: " + cls.getClassName())))).orElse(Collections.emptyList()));
 
-        // 4. React to navigation (auto-unregistered on unload).
         host.onEvent(ClassSelectedEvent.class, event ->
         {
             if (event.getClassEntry() != null)
@@ -93,10 +89,8 @@ public class SamplePlugin implements UiPlugin
             }
         });
 
-        // 5. Direct singleton access works too (no host API needed).
         host.log().info("Sample Plugin started. Current project: " + (ProjectService.getInstance().getCurrentProject() != null ? "loaded" : "none"));
 
-        // 6. Hand the host a cleanup the registrations can't express.
         host.track(() -> host.log().info("Sample Plugin cleanup ran."));
     }
 

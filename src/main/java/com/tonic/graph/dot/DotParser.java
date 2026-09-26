@@ -30,8 +30,6 @@ public final class DotParser
         return new Parser(tokens).parse();
     }
 
-    // ---- tokens -----------------------------------------------------------
-
     private enum Kind
     {ID, ARROW_DIRECTED, ARROW_UNDIRECTED, LBRACE, RBRACE, LBRACKET, RBRACKET, EQ, COMMA, SEMI, COLON, EOF}
 
@@ -46,8 +44,6 @@ public final class DotParser
             this.text = text;
         }
     }
-
-    // ---- lexer ------------------------------------------------------------
 
     private static final class Lexer
     {
@@ -149,7 +145,7 @@ public final class DotParser
                 {
                     i++;
                     continue;
-                }     // skip an unrecognized char
+                }
                 out.add(new Tok(Kind.ID, id));
             }
             return out;
@@ -176,7 +172,7 @@ public final class DotParser
         private String quoted()
         {
             StringBuilder sb = new StringBuilder();
-            i++; // opening quote
+            i++;
             while (i < s.length())
             {
                 char c = s.charAt(i++);
@@ -189,7 +185,7 @@ public final class DotParser
                         case 'l':
                         case 'r':
                             sb.append('\n');
-                            break;   // DOT line-break escapes
+                            break;
                         case 't':
                             sb.append('\t');
                             break;
@@ -205,7 +201,6 @@ public final class DotParser
             return sb.toString();
         }
 
-        /** Reads an HTML-like {@code <...>} string, stripping tags to plain text (markup is not rendered). */
         private String htmlString()
         {
             StringBuilder sb = new StringBuilder();
@@ -224,7 +219,7 @@ public final class DotParser
                     if (depth <= 0) break;
                     continue;
                 }
-                if (depth == 1) sb.append(c);   // top-level text only
+                if (depth == 1) sb.append(c);
             }
             return sb.toString().replaceAll("<[^>]*>", "").trim();
         }
@@ -247,8 +242,6 @@ public final class DotParser
             return s.substring(start, i);
         }
     }
-
-    // ---- parser -----------------------------------------------------------
 
     private static final class Parser
     {
@@ -284,7 +277,7 @@ public final class DotParser
             }
             else throw new DotParseException("expected 'graph' or 'digraph'");
 
-            if (peek().kind == Kind.ID) pos++;   // optional graph name
+            if (peek().kind == Kind.ID) pos++;
             expect(Kind.LBRACE, "{");
             parseStatements();
             return new DotGraph(directed, rankdir, new ArrayList<>(nodes.values()), edges);
@@ -310,7 +303,7 @@ public final class DotParser
                     pos++;
                     parseStatements();
                     continue;
-                }   // anonymous block
+                }
                 if (t.kind != Kind.ID)
                 {
                     pos++;
@@ -321,7 +314,7 @@ public final class DotParser
                 if (id.equalsIgnoreCase("subgraph"))
                 {
                     pos++;
-                    if (peek().kind == Kind.ID) pos++;   // optional subgraph name
+                    if (peek().kind == Kind.ID) pos++;
                     if (peek().kind == Kind.LBRACE)
                     {
                         pos++;
@@ -383,7 +376,7 @@ public final class DotParser
                 return;
             }
             if (next.kind == Kind.EQ)
-            {     // statement-level graph attribute: id = value
+            {
                 pos++;
                 String value = peek().kind == Kind.ID ? toks.get(pos++).text : "";
                 applyGraphAttr(first, value);
@@ -393,7 +386,6 @@ public final class DotParser
             applyNodeAttrs(node, parseAttrs());
         }
 
-        /** A node id, skipping an optional {@code :port[:compass]} suffix (ports are not modeled). */
         private String consumeNodeId()
         {
             Tok t = peek();
@@ -487,7 +479,6 @@ public final class DotParser
                 }
                 catch (IllegalArgumentException ignored)
                 {
-                    // leave default
                 }
             }
         }

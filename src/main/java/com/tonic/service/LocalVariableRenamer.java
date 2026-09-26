@@ -133,7 +133,6 @@ public final class LocalVariableRenamer
         return false;
     }
 
-    /** Whether {@code e} is exactly the clicked occurrence's entry: same slot, name, and scope. */
     private static boolean isTargetEntry(LocalVariableTableEntry e, Target target, ClassFile cf)
     {
         return e.getIndex() == target.slot
@@ -193,9 +192,6 @@ public final class LocalVariableRenamer
         }
     }
 
-    // ---- helpers ------------------------------------------------------------------------------------
-
-    /** The LVT entry whose name matches {@code word} and whose scope covers {@code offset}, else any with that name. */
     private static LocalVariableTableEntry bestEntry(LocalVariableTableAttribute lvt, ClassFile cf, String word, int offset)
     {
         LocalVariableTableEntry any = null;
@@ -226,7 +222,6 @@ public final class LocalVariableRenamer
         return null;
     }
 
-    /** The method named by {@code "name(desc)"} on the project model's current class file. */
     private static MethodEntry methodEntry(ClassEntryModel classEntry, String methodKey)
     {
         int paren = methodKey.indexOf('(');
@@ -238,7 +233,6 @@ public final class LocalVariableRenamer
         return me != null ? me.getMethodEntry() : null;
     }
 
-    /** The method named by {@code "name(desc)"} on a freshly parsed class file. */
     private static MethodEntry methodEntry(ClassFile cf, String methodKey)
     {
         int paren = methodKey.indexOf('(');
@@ -258,7 +252,6 @@ public final class LocalVariableRenamer
         return null;
     }
 
-    /** The method key + a representative bytecode offset for a 1-based source line, via the decompile line maps. */
     private static LineLoc lineLoc(ClassEntryModel classEntry, int line)
     {
         Map<String, NavigableMap<Integer, Integer>> maps = classEntry.getSourceLineMaps();

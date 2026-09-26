@@ -6,7 +6,6 @@ import com.tonic.util.DescriptorParser;
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Getter
 public class FieldEntryModel
 {
@@ -14,13 +13,11 @@ public class FieldEntryModel
     private final FieldEntry fieldEntry;
     private final ClassEntryModel owner;
 
-    // UI state
     @Setter
     private boolean selected;
     @Setter
     private String userNotes;
 
-    // Display data
     private String displayType;
     private String iconKey;
 
@@ -36,8 +33,6 @@ public class FieldEntryModel
         this.displayType = DescriptorParser.formatFieldDescriptor(fieldEntry.getDesc());
         this.iconKey = "field";
     }
-
-    // FieldEntry delegated methods
 
     public String getName()
     {

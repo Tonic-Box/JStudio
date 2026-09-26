@@ -200,11 +200,6 @@ public final class ScriptRunner
             int count = astBridge.applyTo(editor);
             if (count == 0) return 0;
 
-            // Cement the edited AST back to bytecode: lower AST -> IR -> bytecode into the method.
-            // YABR's decompiler cannot round-trip every method losslessly (complex control flow, lambdas, ...),
-            // so we VERIFY: lower, then re-decompile and confirm the method's call set is exactly what we intended.
-            // If calls were lost/changed beyond the edit, restore the original bytecode (the IR lift->lower round
-            // trip is faithful) and skip the method rather than cement a corrupt one.
             List<String> intended = callSignatures(methodBody, method, classEntry.getClassName());
             IRMethod pristine = new SSA(classEntry.getClassFile().getConstPool()).lift(method);
 
@@ -248,7 +243,6 @@ public final class ScriptRunner
 
             int count = irBridge.applyTo(irMethod);
 
-            // Cement the edited IR back to bytecode into the method.
             if (count > 0)
             {
                 ssa.lower(irMethod, method);
@@ -322,7 +316,6 @@ public final class ScriptRunner
         }
     }
 
-    /** The sorted multiset of {@code owner#name} method-call signatures in a recovered body (round-trip check). */
     private static List<String> callSignatures(BlockStmt body, MethodEntry method, String className)
     {
         List<String> sigs = new ArrayList<>();
@@ -337,11 +330,6 @@ public final class ScriptRunner
         return sigs;
     }
 
-    /**
-     * Defines fresh, inert {@code ast}/{@code ir}/{@code annotations} bindings so the whole script executes in any
-     * pass without hitting an undefined bridge ("Cannot call non-function"). Each pass keeps its own real bridge
-     * for the handlers it actually applies; these stand in for the others (their handlers are simply never applied).
-     */
     private static void defineInertBridges(ScriptInterpreter interp, boolean ast, boolean ir, boolean annotations)
     {
         if (ast)
@@ -358,10 +346,6 @@ public final class ScriptRunner
         }
     }
 
-    /**
-     * After a class was modified: recompute its stack-map frames, then invalidate JStudio's caches (decompiled
-     * source + per-method IR) so every view regenerates from the new bytecode.
-     */
     private static void commitClass(ClassEntryModel classEntry, Consumer<String> out)
     {
         try

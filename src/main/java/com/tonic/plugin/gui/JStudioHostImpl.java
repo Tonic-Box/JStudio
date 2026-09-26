@@ -16,11 +16,6 @@ import javax.swing.JFrame;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * The {@link JStudioHost} handed to one plugin. Backed by the main window and the plugin's own
- * LiveGuiPluginContext; every event subscription and tracked cleanup is appended to the plugin's
- * contribution list so the manager can undo them on unload.
- */
 final class JStudioHostImpl implements JStudioHost
 {
 

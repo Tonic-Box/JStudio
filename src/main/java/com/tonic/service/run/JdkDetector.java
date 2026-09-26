@@ -87,7 +87,6 @@ public final class JdkDetector
         return home.getName() + (feature > 0 ? "  (java " + feature + ")" : "");
     }
 
-    /** macOS JDK bundles keep the home under {@code Contents/Home}. */
     private static File normalizeHome(File dir)
     {
         File macHome = new File(dir, "Contents/Home");
@@ -125,7 +124,6 @@ public final class JdkDetector
         return 0;
     }
 
-    /** Maps a version string ("1.8.0_352", "11.0.19", "17.0.5") to its feature version (8, 11, 17). */
     static int featureFromVersion(String version)
     {
         if (version == null)

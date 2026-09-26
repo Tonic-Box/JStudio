@@ -1,11 +1,12 @@
 package com.tonic.ui.dialog;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Covers the shared Java-identifier validation used by all three rename dialogs. */
+@DisplayName("Java identifier validation shared by the rename dialogs")
 class AbstractRenameDialogTest
 {
 

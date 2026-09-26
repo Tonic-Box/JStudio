@@ -11,10 +11,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Summarizes a captured {@code .jfr} recording into compact text for the AI: top hot methods (CPU execution
- * samples), top allocation types, and lock/exception counts. Uses the JDK's {@code jdk.jfr.consumer} reader.
- */
 final class JfrSummary
 {
 

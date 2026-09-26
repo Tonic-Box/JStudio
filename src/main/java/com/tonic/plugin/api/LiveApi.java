@@ -30,8 +30,6 @@ public interface LiveApi
     /** A short description of the attachment (pid + agent info), or "not attached". */
     String attachInfo();
 
-    // ---- observe (read-only) ----------------------------------------------
-
     Metrics metrics();
 
     /** Thread stacks (up to {@code maxDepth} frames each). */
@@ -55,8 +53,6 @@ public interface LiveApi
     /** Inspects one instance's fields by its object id (from {@link #instances}), using the cached snapshot. */
     InstanceInfo instance(String id);
 
-    // ---- execute / mutate -------------------------------------------------
-
     /** Compiles and runs Java in the attached JVM (the Scratch Pad); {@code contextClass} is the load context. */
     EvalResult eval(String code, String contextClass);
 
@@ -68,8 +64,6 @@ public interface LiveApi
 
     /** Hot-applies JStudio's current bytecode for {@code className} to the live JVM. */
     void redefineClass(String className);
-
-    // ---- DTOs -------------------------------------------------------------
 
     @Getter
     final class Metrics

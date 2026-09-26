@@ -51,8 +51,6 @@ class SourceLineMapsTest
     @Test
     void pcSpanForSourceLineExtendsBackToPreviousAnchor()
     {
-        // line 11 is anchored at 5 and 8; the previous anchor (line 10) is at 0, so line 11 owns the
-        // sub-expression instructions from offset 1 up to its last anchor at 8.
         NavigableMap<Integer, Integer> m = map(0, 10, 5, 11, 8, 11, 12, 13);
         assertArrayEquals(new int[]{1, 8}, SourceLineMaps.pcSpanForSourceLine(m, 11));
     }
@@ -60,8 +58,6 @@ class SourceLineMapsTest
     @Test
     void pcSpanForSourceLineCoversInstructionsBeforeTheAnchor()
     {
-        // A `return f(x)` line whose only anchor is the trailing ireturn at 8; its argument-eval and
-        // invoke instructions (after the previous anchor at 2) must be included, not just offset 8.
         NavigableMap<Integer, Integer> m = map(0, 10, 2, 10, 8, 11);
         assertArrayEquals(new int[]{3, 8}, SourceLineMaps.pcSpanForSourceLine(m, 11));
     }

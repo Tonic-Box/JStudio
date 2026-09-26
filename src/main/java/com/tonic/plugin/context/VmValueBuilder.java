@@ -15,12 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Builds VM-engine-ready argument values from {@link ArgSpec}s, on the interpreter's heap. Each value is a boxed
- * primitive, an {@code ObjectInstance}/{@code ArrayInstance} reference, or null - all of which
- * {@code VMExecutionService}'s arg conversion accepts. Arrays and objects are recursive (elements / constructor
- * args / field values are themselves built).
- */
 final class VmValueBuilder
 {
 
@@ -44,7 +38,6 @@ final class VmValueBuilder
         return out;
     }
 
-    /** Builds one value: boxed primitive | ObjectInstance | ArrayInstance | null. */
     static Object build(VmInstance vm, ArgSpec spec)
     {
         if (spec == null)
@@ -140,10 +133,6 @@ final class VmValueBuilder
         }
     }
 
-    /**
-     * Narrows a built primitive-array element to {@link Number}, throwing a descriptive
-     * {@link IllegalArgumentException} for a malformed spec instead of a raw {@link ClassCastException}.
-     */
     private static Number asNumber(Object value)
     {
         if (value instanceof Number)

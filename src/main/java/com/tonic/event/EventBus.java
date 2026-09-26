@@ -69,7 +69,6 @@ public class EventBus
             {
                 return;
             }
-            // Copy to avoid concurrent modification
             list = new ArrayList<>(list);
         }
 

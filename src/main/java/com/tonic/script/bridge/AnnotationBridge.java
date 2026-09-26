@@ -25,7 +25,6 @@ import java.util.function.Consumer;
 public class AnnotationBridge
 {
 
-    /** The unique marker returned by {@code annotations.remove()}; the only value that deletes an annotation. */
     private static final Object REMOVE_SENTINEL = new Object();
 
     private final ScriptInterpreter interpreter;
@@ -48,8 +47,6 @@ public class AnnotationBridge
     {
         Map<String, ScriptValue> props = new HashMap<>();
 
-        // Removal sentinel: a handler must return annotations.remove() to delete an annotation. Returning null /
-        // nothing / the annotation keeps it (so forgetting to return never deletes).
         props.put("remove", ScriptValue.function(ScriptFunction.native0("remove", () -> ScriptValue.native_(REMOVE_SENTINEL))));
 
         props.put("onClassAnnotation", ScriptValue.function(ScriptFunction.native1("onClassAnnotation", this::registerClassAnnotationHandler)));
@@ -96,13 +93,11 @@ public class AnnotationBridge
         int modCount = 0;
         ClassFile classFile = classEntry.getClassFile();
 
-        // Process class annotations
         if (!classAnnotationHandlers.isEmpty())
         {
             modCount += processClassAnnotations(classFile);
         }
 
-        // Process method annotations
         if (!methodAnnotationHandlers.isEmpty())
         {
             for (MethodEntry method : classFile.getMethods())
@@ -111,7 +106,6 @@ public class AnnotationBridge
             }
         }
 
-        // Process field annotations
         if (!fieldAnnotationHandlers.isEmpty())
         {
             for (FieldEntry field : classFile.getFields())
@@ -142,7 +136,6 @@ public class AnnotationBridge
 
     private List<Attribute> getClassAttributes(ClassFile classFile)
     {
-        // Use reflection to access classAttributes since there's no getter
         try
         {
             Field field = ClassFile.class.getDeclaredField("classAttributes");
@@ -224,7 +217,6 @@ public class AnnotationBridge
             if (item instanceof Utf8Item)
             {
                 String type = ((Utf8Item) item).getValue();
-                // Convert Ljavax/inject/Named; to Named
                 if (type.startsWith("L") && type.endsWith(";"))
                 {
                     type = type.substring(1, type.length() - 1);
@@ -235,7 +227,6 @@ public class AnnotationBridge
         }
         catch (Exception e)
         {
-            // Ignore
         }
         return "Unknown";
     }
@@ -244,7 +235,6 @@ public class AnnotationBridge
     {
         Map<String, ScriptValue> props = new HashMap<>();
 
-        // Get the raw type descriptor
         String typeDescriptor = "";
         try
         {
@@ -256,11 +246,9 @@ public class AnnotationBridge
         }
         catch (Exception e)
         {
-            // Ignore
         }
         props.put("type", ScriptValue.string(typeDescriptor));
 
-        // Extract simple name
         String simpleName = typeDescriptor;
         if (typeDescriptor.startsWith("L") && typeDescriptor.endsWith(";"))
         {
@@ -274,7 +262,6 @@ public class AnnotationBridge
         props.put("simpleName", ScriptValue.string(simpleName));
         props.put("target", ScriptValue.string(targetName));
 
-        // Add element-value pairs
         Map<String, ScriptValue> valuesMap = new HashMap<>();
         List<ElementValuePair> pairs = anno.getElementValuePairs();
         if (pairs != null)
@@ -301,7 +288,7 @@ public class AnnotationBridge
 
         switch (tag)
         {
-            case 's': // String
+            case 's':
                 if (value instanceof Integer)
                 {
                     try
@@ -314,31 +301,30 @@ public class AnnotationBridge
                     }
                     catch (Exception e)
                     {
-                        // Ignore
                     }
                 }
                 return ScriptValue.string(String.valueOf(value));
 
-            case 'I': // int
-            case 'J': // long
-            case 'F': // float
-            case 'D': // double
-            case 'B': // byte
-            case 'S': // short
+            case 'I':
+            case 'J':
+            case 'F':
+            case 'D':
+            case 'B':
+            case 'S':
                 if (value instanceof Number)
                 {
                     return ScriptValue.number(((Number) value).doubleValue());
                 }
                 return ScriptValue.number(0);
 
-            case 'Z': // boolean
+            case 'Z':
                 if (value instanceof Boolean)
                 {
                     return ScriptValue.bool((Boolean) value);
                 }
                 return ScriptValue.bool(false);
 
-            case 'C': // char
+            case 'C':
                 return ScriptValue.string(String.valueOf((char) ((Integer) value).intValue()));
 
             default:

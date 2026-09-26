@@ -1,11 +1,12 @@
 package com.tonic.ui.editor.source;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-/** Covers the pure regex declaration parsing extracted from the source view's navigation. */
+@DisplayName("declaration parsing used by source navigation")
 class SourceDeclarationParserTest
 {
 

@@ -1,10 +1,11 @@
 package com.tonic.ui.core.util;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/** Covers the shared JVM-descriptor formatting extracted from the navigator/debugger panels. */
+@DisplayName("JVM descriptor formatting shared by the navigator and debugger panels")
 class JvmDescriptorFormatterTest
 {
 

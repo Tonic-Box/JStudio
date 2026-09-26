@@ -5,6 +5,7 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.live.MethodBodyDiff;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
@@ -15,10 +16,7 @@ import java.util.jar.JarFile;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Verifies the core fix for the reported bug: editing ONE method must not perturb the others. With method-scoped
- * recompile, only the edited method is re-lowered; every sibling keeps its original bytecode byte-for-byte.
- */
+@DisplayName("editing one method leaves every other method's bytecode byte-for-byte unchanged")
 class MethodScopedRecompileTest
 {
 
@@ -52,7 +50,6 @@ class MethodScopedRecompileTest
         byte[] siblingBefore = methodCode(cf, "performAuthenticationFlow");
         assertNotNull(siblingBefore, "sibling method must exist before recompile");
 
-        // Edit ONLY validateCredentials (a string literal unique to it); performAuthenticationFlow is untouched.
         String edited = source.replace("Invalid credentials", "Bad credentials");
         assertNotEquals(edited, source, "the edit must actually change the source");
 

@@ -20,18 +20,11 @@ import javax.swing.JOptionPane;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Implements the plugin UI contribution surface against the live {@link MainFrame}. Every mutator records its
- * undo {@link Registration} into the plugin's contribution list (shared with its {@link LoadedPlugin}) so the
- * manager removes it on unload. All methods run on the EDT (the manager activates plugins on the EDT). Plugin
- * callbacks are invoked guarded, so a failing action shows a dialog rather than escaping as an uncaught exception.
- */
 final class UiApiImpl implements UiApi
 {
 
     private final MainFrame frame;
     private final List<Registration> contributions;
-    /** Top-level menus this plugin created (so they can be removed when they become empty again). */
     private final List<JMenu> createdMenus = new ArrayList<>();
 
     UiApiImpl(MainFrame frame, List<Registration> contributions)

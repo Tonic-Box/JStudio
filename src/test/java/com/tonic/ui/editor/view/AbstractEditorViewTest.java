@@ -1,6 +1,7 @@
 package com.tonic.ui.editor.view;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -10,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Covers the no-op/fallback defaults and the load scaffolding in {@link AbstractEditorView}. */
+@DisplayName("AbstractEditorView defaults and load scaffolding")
 class AbstractEditorViewTest
 {
 
@@ -20,7 +21,6 @@ class AbstractEditorViewTest
         System.setProperty("java.awt.headless", "true");
     }
 
-    /** Minimal concrete view that records the calls the base routes to it. */
     private static class TestView extends AbstractEditorView
     {
         final AtomicInteger refreshes = new AtomicInteger();
@@ -63,7 +63,6 @@ class AbstractEditorViewTest
         TestView v = new TestView();
         assertEquals("", v.getText());
         assertNull(v.getSelectedText());
-        // none of these should throw
         v.copySelection();
         v.showFindDialog();
         v.scrollToText("x");

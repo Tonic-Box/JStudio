@@ -11,14 +11,12 @@ public class ScriptToken
 
     public enum Type
     {
-        // Literals
         IDENTIFIER,
         STRING,
         NUMBER,
         BOOLEAN,
         NULL,
 
-        // Keywords
         LET,
         CONST,
         IF,
@@ -28,7 +26,6 @@ public class ScriptToken
         TRUE,
         FALSE,
 
-        // Loop keywords
         FOR,
         WHILE,
         DO,
@@ -37,50 +34,46 @@ public class ScriptToken
         IN,
         OF,
 
-        // Exception keywords
         TRY,
         CATCH,
         FINALLY,
         THROW,
 
-        // Operators
-        PLUS,           // +
-        MINUS,          // -
-        STAR,           // *
-        SLASH,          // /
-        PERCENT,        // %
-        EQUALS,         // =
-        EQUALS_EQUALS,  // ==
-        NOT_EQUALS,     // !=
-        LESS,           // <
-        LESS_EQUALS,    // <=
-        GREATER,        // >
-        GREATER_EQUALS, // >=
-        AND,            // &&
-        OR,             // ||
-        NOT,            // !
-        DOT,            // .
-        QUESTION,       // ?
-        COLON,          // :
-        PLUS_PLUS,      // ++
-        MINUS_MINUS,    // --
-        PLUS_EQUALS,    // +=
-        MINUS_EQUALS,   // -=
-        STAR_EQUALS,    // *=
-        SLASH_EQUALS,   // /=
+        PLUS,
+        MINUS,
+        STAR,
+        SLASH,
+        PERCENT,
+        EQUALS,
+        EQUALS_EQUALS,
+        NOT_EQUALS,
+        LESS,
+        LESS_EQUALS,
+        GREATER,
+        GREATER_EQUALS,
+        AND,
+        OR,
+        NOT,
+        DOT,
+        QUESTION,
+        COLON,
+        PLUS_PLUS,
+        MINUS_MINUS,
+        PLUS_EQUALS,
+        MINUS_EQUALS,
+        STAR_EQUALS,
+        SLASH_EQUALS,
 
-        // Punctuation
-        LPAREN,         // (
-        RPAREN,         // )
-        LBRACE,         // {
-        RBRACE,         // }
-        LBRACKET,       // [
-        RBRACKET,       // ]
-        COMMA,          // ,
-        SEMICOLON,      // ;
-        ARROW,          // =>
+        LPAREN,
+        RPAREN,
+        LBRACE,
+        RBRACE,
+        LBRACKET,
+        RBRACKET,
+        COMMA,
+        SEMICOLON,
+        ARROW,
 
-        // Special
         EOF,
         ERROR
     }

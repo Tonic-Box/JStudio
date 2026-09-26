@@ -6,16 +6,14 @@ import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.ui.live.MethodBodyDiff;
 import com.tonic.util.AccessBuilder;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Adding a method call (e.g. {@code System.out.println(...)}) to a constructor must round-trip through the
- * recompiler in both the changed-methods path and the whole-class fallback - neither may drop the body.
- */
+@DisplayName("a call added to a constructor survives both the changed-methods and whole-class recompile paths")
 class CtorPrintlnReproTest
 {
 

@@ -142,7 +142,6 @@ public final class LocalHistoryService
             }
             catch (Exception ignored)
             {
-                // unreadable class - omit
             }
         }
         return map;
@@ -413,7 +412,6 @@ public final class LocalHistoryService
         }
     }
 
-    /** Reads blobs from the in-memory pending set first, falling back to the on-disk store (one zip open). */
     private Map<String, byte[]> readBlobs(Set<String> hashes) throws IOException
     {
         Map<String, byte[]> result = new HashMap<>();

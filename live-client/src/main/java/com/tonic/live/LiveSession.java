@@ -166,8 +166,6 @@ public final class LiveSession implements Closeable
         return client.setStatic(className, field, setNull, value);
     }
 
-    // ---- value scanner: an agent-resident scan session holding live (object,field) handles -------
-
     /** First scan: walk app roots, retaining matching field locations as the new candidate set. */
     public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches, int limit) throws IOException
     {

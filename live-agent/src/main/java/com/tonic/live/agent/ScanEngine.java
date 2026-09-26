@@ -19,40 +19,28 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * The agent-resident value scanner: walks the reachable object graph from application static roots and retains live
- * {@code (object, field)} handles whose value matches, so later scans just re-read those exact handles (stable
- * "addresses" across scans - no heap dumps, no identity-matching). Handles are weak so the scan never pins the heap.
- *
- * <p>Two sets: {@code active} (the volatile candidate set narrowed by next-scans) and {@code pinned} (the watch /
- * freeze list, which survives narrowing). Frozen locations are re-written on a timer.
- */
 final class ScanEngine
 {
 
-    /** Hard ceilings so a runaway walk can never wedge the target. */
     private static final long DEFAULT_TIME_BUDGET_MS = 6000;
 
     private final AtomicLong ids = new AtomicLong(1);
     private final Map<Long, Location> active = new LinkedHashMap<>();
     private final Map<Long, Location> pinned = new LinkedHashMap<>();
-    /** Live-instance handles for the instances view: id -> weak ref to the object (so reads/writes hit the live object). */
     private final Map<Long, WeakReference<Object>> instanceHandles = new LinkedHashMap<>();
-    private final Map<Long, Object[]> frozen = new LinkedHashMap<>();   // id -> [Location, boxed value to re-apply]
+    private final Map<Long, Object[]> frozen = new LinkedHashMap<>();
     private ScheduledExecutorService freezeTimer;
     private boolean truncated;
-    /** When set, only matches whose declaring class is a user (non-JDK) class are retained. */
     private boolean userClassesOnly;
 
-    /** One retained value location: a weak handle to the owner plus how to read/write the slot. */
     private static final class Location
     {
         final long id;
         final WeakReference<Object> owner;
-        final Field field;          // null for an array element
-        final int index;            // array index when field == null
-        final int valueType;        // LiveProtocol.SCAN_*
-        final String declaringClass; // internal name of the field's declaring class (for the static launchpad)
+        final Field field;
+        final int index;
+        final int valueType;
+        final String declaringClass;
         final String fieldName;
         final String fieldDesc;
         final String displayPath;
@@ -72,7 +60,6 @@ final class ScanEngine
             this.last = last;
         }
 
-        /** Current value, or null if the owner was collected or the read failed. */
         Object read()
         {
             Object o = owner.get();
@@ -96,13 +83,6 @@ final class ScanEngine
         }
     }
 
-    // ---- scans ------------------------------------------------------------------------------------
-
-    /**
-     * First scan: walk roots, retain matching locations as the new active set. {@code useDropbox} additionally
-     * enqueues the JDI-parked objects in {@link DropBox#BOX} as roots; {@code rootsOnly} uses ONLY those
-     * (skipping the agent's statics/threads/AWT roots) - the JDI class-scoped scan path.
-     */
     synchronized void firstScan(Instrumentation inst, int valueType, int scanKind, String value, String value2, String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches, boolean useDropbox, boolean rootsOnly)
     {
         clear();
@@ -197,10 +177,6 @@ final class ScanEngine
         }
     }
 
-    /**
-     * Enqueues the agent's own roots - app static fields (recording matches found directly in statics), every
-     * live thread, and every AWT/Swing window. This is the reach the JDI stack-root harvest augments, not replaces.
-     */
     private void enqueueAgentRoots(Instrumentation inst, Deque<Object> queue, Map<Object, Boolean> visited, String pkgFilter, int valueType, int scanKind, Class<?> wanted, Object target, Object target2, int maxMatches)
     {
         for (Class<?> c : inst.getAllLoadedClasses())
@@ -300,7 +276,6 @@ final class ScanEngine
         }
     }
 
-    /** Next scan: re-read the active set and keep only locations matching the comparator vs their last value. */
     synchronized void nextScan(int comparator, String value, String value2)
     {
         Object target = value == null || value.isEmpty() ? null : parseFor(value);
@@ -324,8 +299,6 @@ final class ScanEngine
         }
         truncated = false;
     }
-
-    // ---- mutate / pin / freeze --------------------------------------------------------------------
 
     synchronized String write(long id, boolean isNull, String value)
     {
@@ -365,13 +338,8 @@ final class ScanEngine
         return format(loc.last);
     }
 
-    // ---- live instances (the instances view) --------------------------------------------------------
-
-    /** Walks the reachable heap collecting live instances of {@code className}; returns [handleId, label] pairs. */
     synchronized List<Object[]> collectInstances(Instrumentation inst, String className, int maxInstances, int maxVisited)
     {
-        // Keep prior handles valid (a re-walk or another instances view must not orphan a still-shown list);
-        // they are weak refs, so only soft-cap the map to bound growth across a long session.
         if (instanceHandles.size() > 1_000_000)
         {
             instanceHandles.clear();
@@ -464,11 +432,6 @@ final class ScanEngine
         return out;
     }
 
-    /**
-     * Registers the JDI-parked objects in {@link DropBox#BOX} as instance handles (filtered to {@code className})
-     * and returns {@code [handleId, label]} rows - the same shape as {@link #collectInstances}, so the field
-     * read/write path is reused unchanged. Clears the dropbox so its strong reference only pins the set briefly.
-     */
     synchronized List<Object[]> consumeInstances(String className)
     {
         List<Object[]> out = new ArrayList<>();
@@ -499,11 +462,6 @@ final class ScanEngine
         return out;
     }
 
-    /**
-     * Reads the live instance fields of a handle: returns [name, typeDescriptor, display, refHandleId, editable]
-     * per field. A reference field gets a fresh handle so the UI can navigate into it; primitives/Strings are
-     * editable unless final.
-     */
     synchronized List<Object[]> instanceFields(long id)
     {
         List<Object[]> out = new ArrayList<>();
@@ -545,7 +503,6 @@ final class ScanEngine
         return out;
     }
 
-    /** Sets a live instance field by handle, parsing the string against the field's declared type. */
     synchronized String setInstanceField(long id, String fieldName, boolean isNull, String value)
     {
         Object o = resolveInstance(id);
@@ -731,8 +688,6 @@ final class ScanEngine
         }
     }
 
-    // ---- serialization (a "page" of locations) ----------------------------------------------------
-
     synchronized byte[] page(int messageType, boolean pinnedOnly, int offset, int limit) throws java.io.IOException
     {
         Map<Long, Location> src = pinnedOnly ? pinned : active;
@@ -763,8 +718,6 @@ final class ScanEngine
         }
         return f.toBytes();
     }
-
-    // ---- predicates / comparisons -----------------------------------------------------------------
 
     private boolean predicate(int scanKind, int valueType, Object v, Object target, Object target2)
     {
@@ -849,8 +802,6 @@ final class ScanEngine
         return Double.NaN;
     }
 
-    // ---- helpers ----------------------------------------------------------------------------------
-
     private void record(int valueType, Object owner, Field field, int index, String declaringClass, String fieldName, String fieldDesc, String displayPath, Object value, int maxMatches)
     {
         if (userClassesOnly && !isUserClassName(declaringClass))
@@ -881,7 +832,6 @@ final class ScanEngine
         Class<?> c = o.getClass();
         if (c.getName().startsWith("java.lang.") && !(c.isArray()))
         {
-            // Boxed primitives / String have no useful child refs and are interned/shared; don't traverse them.
             if (c == String.class || Number.class.isAssignableFrom(c) || c == Boolean.class || c == Character.class)
             {
                 visited.put(o, Boolean.TRUE);
@@ -892,7 +842,6 @@ final class ScanEngine
         queue.add(o);
     }
 
-    /** All AWT/Swing windows (frames + dialogs) as live roots, via reflection so a headless/AWT-less target is fine. */
     private static Object[] awtRoots()
     {
         try
@@ -907,7 +856,6 @@ final class ScanEngine
         }
     }
 
-    /** True for an application (non-JDK) class, given its internal name. Array slots ("[...") are not user-owned. */
     private static boolean isUserClassName(String internalName)
     {
         if (internalName == null || internalName.isEmpty() || internalName.startsWith("["))
@@ -978,16 +926,11 @@ final class ScanEngine
                 || c == float.class || c == double.class;
     }
 
-    /**
-     * Reference-typed scans (String) match on the value's RUNTIME type, not the declared field/array type, so a
-     * String held in an {@code Object}/{@code CharSequence} field or an {@code Object[]} (List/Map backing) is found.
-     */
     private static boolean refMatches(int valueType, Object v)
     {
         return valueType == LiveProtocol.SCAN_STRING && v instanceof String;
     }
 
-    /** The concrete SCAN_* code a number-mode match should be recorded under (so writes/format use the real type). */
     private static int recType(int valueType, Class<?> declared)
     {
         if (valueType != LiveProtocol.SCAN_NUMBER)
@@ -1137,7 +1080,6 @@ final class ScanEngine
         }
     }
 
-    /** Big-endian response builder, first byte = message type (mirrors {@code JavaAgent.Buf}). */
     private static final class Frame
     {
         private final java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();

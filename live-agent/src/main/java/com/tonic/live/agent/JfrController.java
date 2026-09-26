@@ -15,21 +15,11 @@ import jdk.jfr.EventType;
 import jdk.jfr.FlightRecorder;
 import jdk.jfr.Recording;
 
-/**
- * Drives Java Flight Recorder in the target JVM for the JStudio Live "Recorder" tool. Owns a single active
- * {@link Recording} at a time (the same "one capture" model as the heap dump). Recordings dump to the target's
- * temp dir; since attach is local (127.0.0.1) JStudio reads the {@code .jfr} path directly.
- *
- * <p>JFR ({@code jdk.jfr}) is present on standard OpenJDK 11+. {@link #isAvailable()} probes for it so the
- * agent can advertise {@link LiveProtocol#CAP_JFR} and the UI can hide the tool when it is missing. All methods
- * here run on the agent's single dispatch thread, so the lone {@code active} reference needs no extra locking.
- */
 final class JfrController
 {
 
     private static final AtomicInteger DUMP_COUNTER = new AtomicInteger();
 
-    /** Category bit -> candidate JFR event names; only those present on this JVM are applied (version-robust). */
     private static final String[] CPU_EVENTS = {"jdk.ExecutionSample", "jdk.NativeMethodSample"};
     private static final String[] ALLOC_EVENTS =
             {
@@ -40,7 +30,6 @@ final class JfrController
 
     private Recording active;
 
-    /** Whether JFR is usable on this runtime (so the agent can advertise {@link LiveProtocol#CAP_JFR}). */
     static boolean isAvailable()
     {
         try
@@ -54,7 +43,6 @@ final class JfrController
         }
     }
 
-    /** Starts a recording from a base profile ({@code "default"}/{@code "profile"}) plus category toggles. */
     void start(String profile, int categoryMask, int maxSizeMb) throws IOException
     {
         if (active != null)
@@ -87,7 +75,6 @@ final class JfrController
         active = recording;
     }
 
-    /** Dumps the in-progress recording's buffer to a fresh file without stopping it. */
     String snapshot() throws IOException
     {
         if (active == null)
@@ -97,7 +84,6 @@ final class JfrController
         return dump(active);
     }
 
-    /** Stops the active recording, dumps it, closes it, and returns the file path. */
     String stop() throws IOException
     {
         if (active == null)
@@ -112,7 +98,6 @@ final class JfrController
         }
     }
 
-    /** Stops and discards any active recording without dumping (used on disconnect, so nothing is orphaned). */
     void discard()
     {
         Recording recording = active;

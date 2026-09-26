@@ -60,7 +60,6 @@ public class PluginLoader
                 }
                 catch (Exception e)
                 {
-                    // Skip invalid files
                 }
             }
         }
@@ -79,8 +78,6 @@ public class PluginLoader
 
     private Plugin loadJarPlugin(File jarFile)
     {
-        // The loader must outlive this method (the plugin loads its classes lazily through it), so ownership is
-        // handed to the returned JarPlugin, which closes it on dispose. On any non-success path we close it here.
         JarPluginScanner.ScanResult result = JarPluginScanner.scan(jarFile, getClass().getClassLoader());
         if (result.plugins.isEmpty())
         {
@@ -206,7 +203,6 @@ public class PluginLoader
         }
     }
 
-    /** Wraps a JAR-loaded plugin, owning its {@link URLClassLoader} so it is closed when the plugin is disposed. */
     private static class JarPlugin implements Plugin
     {
         private final Plugin delegate;

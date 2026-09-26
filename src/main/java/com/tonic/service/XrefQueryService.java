@@ -73,10 +73,6 @@ public final class XrefQueryService
             {
                 continue;
             }
-            // A class query indexes every ref whose target class matches, including reads/writes/calls
-            // of the class's own members (e.g. an internal `this.field = ...`). Those are member usages,
-            // not type usages, so a class search keeps only references to the class as a type
-            // (new/cast/instanceof/type positions, which carry no target member).
             if (classQuery && xref.getTargetMember() != null)
             {
                 continue;

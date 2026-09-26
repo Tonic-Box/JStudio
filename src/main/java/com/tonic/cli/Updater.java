@@ -44,7 +44,6 @@ public final class Updater
         }
         catch (Exception ignored)
         {
-            // best-effort backup; the target is not modified until the copy below succeeds
         }
 
         boolean swapped = false;
@@ -81,7 +80,6 @@ public final class Updater
         }
         catch (Exception ignored)
         {
-            // nothing more we can do from the updater process
         }
     }
 
@@ -100,7 +98,6 @@ public final class Updater
         }
         catch (Exception ignored)
         {
-            // leftover temp/backup is harmless
         }
     }
 

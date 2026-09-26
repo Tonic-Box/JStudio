@@ -51,19 +51,15 @@ public final class LiveAgentClient implements Closeable
     private final DataInputStream in;
     private final DataOutputStream out;
     private final Thread reader;
-    /** Unbounded so the reader never blocks handing off a response; requests are serialized (one in flight). */
     private final BlockingQueue<byte[]> responses = new LinkedBlockingQueue<>();
     private final CopyOnWriteArrayList<Consumer<LiveEvent>> listeners = new CopyOnWriteArrayList<>();
-    /** Events run here, never on the reader thread, so a slow/blocking listener can't wedge the protocol stream. */
     private final ExecutorService eventDispatch = Executors.newSingleThreadExecutor(r ->
     {
         Thread t = new Thread(r, "live-agent-events");
         t.setDaemon(true);
         return t;
     });
-    /** Pushed into {@link #responses} on disconnect/close so an in-flight request fails instead of hanging forever. */
     private static final byte[] POISON = new byte[0];
-    /** Last-resort backstop against a wedged-but-connected agent; a real disconnect unblocks immediately. */
     private static final long REQUEST_TIMEOUT_MS = 300_000;
     private volatile boolean closed;
 
@@ -139,8 +135,6 @@ public final class LiveAgentClient implements Closeable
             }
         }
     }
-
-    // ---- commands ---------------------------------------------------------------------------------
 
     public AgentInfo hello() throws IOException
     {
@@ -266,8 +260,6 @@ public final class LiveAgentClient implements Closeable
         skipType(r, LiveProtocol.MSG_SET_STATIC);
         return readString(r);
     }
-
-    // ---- value scanner ----------------------------------------------------------------------------
 
     public ScanPage scanFirst(int valueType, int scanKind, String value, String value2, String pkgFilter, boolean userClassesOnly, int maxVisited, int maxMatches, int limit, boolean useDropbox, boolean rootsOnly) throws IOException
     {
@@ -550,8 +542,6 @@ public final class LiveAgentClient implements Closeable
         return edges;
     }
 
-    // ---- framing / reader -------------------------------------------------------------------------
-
     private void readLoop()
     {
         try
@@ -566,7 +556,6 @@ public final class LiveAgentClient implements Closeable
                 byte[] frame = new byte[len];
                 in.readFully(frame);
                 int type = len > 0 ? (frame[0] & 0xFF) : -1;
-                // Async events occupy [0x40, 0x7F); MSG_ERROR (0x7F) is a response to the in-flight request.
                 if (type >= 0x40 && type != LiveProtocol.MSG_ERROR)
                 {
                     final byte[] f = frame;
@@ -574,21 +563,18 @@ public final class LiveAgentClient implements Closeable
                 }
                 else
                 {
-                    responses.add(frame);   // unbounded: never blocks the reader
+                    responses.add(frame);
                 }
             }
         }
         catch (EOFException eof)
         {
-            // peer closed
         }
         catch (IOException e)
         {
-            // connection error
         }
         finally
         {
-            // Wake any request blocked waiting for a response it will now never get.
             responses.offer(POISON);
             if (!closed)
             {
@@ -597,7 +583,6 @@ public final class LiveAgentClient implements Closeable
         }
     }
 
-    /** Runs an event task on the dedicated dispatch thread; a no-op once dispatch has been shut down. */
     private void dispatchAsync(Runnable task)
     {
         try
@@ -638,7 +623,7 @@ public final class LiveAgentClient implements Closeable
         {
             throw new IOException("live agent connection is closed");
         }
-        responses.clear();   // drop any straggler from a prior timed-out request
+        responses.clear();
         out.writeInt(payload.length);
         out.write(payload);
         out.flush();
@@ -653,12 +638,12 @@ public final class LiveAgentClient implements Closeable
             throw new IOException("interrupted waiting for response", e);
         }
         if (resp == null)
-        {        // backstop timeout: agent wedged - tear the connection down
+        {
             closeQuietly();
             throw new IOException("live agent did not respond");
         }
         if (resp.length == 0)
-        {    // POISON: the connection dropped while we were waiting
+        {
             throw new IOException("live agent disconnected");
         }
         DataInputStream r = new DataInputStream(new ByteArrayInputStream(resp));
@@ -712,7 +697,7 @@ public final class LiveAgentClient implements Closeable
     public void close() throws IOException
     {
         closed = true;
-        responses.offer(POISON);     // wake any in-flight request
+        responses.offer(POISON);
         eventDispatch.shutdownNow();
         reader.interrupt();
         socket.close();

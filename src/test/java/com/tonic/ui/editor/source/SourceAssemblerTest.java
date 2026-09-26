@@ -14,18 +14,7 @@ import static org.mockito.Mockito.when;
 class SourceAssemblerTest
 {
 
-    // Lines: 1 package | 2 class{ | 3-5 foo | 6 blank | 7-9 bar | 10 }
-    private static final String SOURCE = String.join("\n",
-            "package x;",           // 1
-            "public class C {",     // 2
-            "  void foo() {",       // 3
-            "    a();",             // 4
-            "  }",                  // 5
-            "",                     // 6
-            "  int bar() {",        // 7
-            "    return b;",        // 8
-            "  }",                  // 9
-            "}");                   // 10
+    private static final String SOURCE = String.join("\n", "package x;", "public class C {", "  void foo() {", "    a();", "  }", "", "  int bar() {", "    return b;", "  }", "}");
 
     private static DecompileResult.MethodSpan span(int start, int end)
     {
@@ -58,10 +47,9 @@ class SourceAssemblerTest
         assertTrue(out.contains("doThing();"), out);
         assertTrue(out.contains("return cachedSize;"), out);
         assertTrue(out.contains("package x;"));
-        assertFalse(out.contains("a();"));           // foo body replaced
-        assertFalse(out.contains("return b;"));      // bar body replaced
-        assertTrue(out.endsWith("}"));               // footer preserved
-        // blank line between methods preserved (gap line 6)
+        assertFalse(out.contains("a();"));
+        assertFalse(out.contains("return b;"));
+        assertTrue(out.endsWith("}"));
         assertTrue(out.contains("  }\n\n  int bar()"), out);
     }
 
@@ -71,12 +59,11 @@ class SourceAssemblerTest
         ClassEntryModel cls = classWithSpans();
         Map<String, String> bodies = new HashMap<>();
         bodies.put("foo()V", "  void foo() {\n    doThing();\n  }");
-        // bar not provided -> original kept
 
         String out = SourceAssembler.assemble(cls, SOURCE, "package x;\npublic class C {", bodies);
 
         assertTrue(out.contains("doThing();"));
-        assertTrue(out.contains("return b;"), out);  // bar kept verbatim
+        assertTrue(out.contains("return b;"), out);
     }
 
     @Test

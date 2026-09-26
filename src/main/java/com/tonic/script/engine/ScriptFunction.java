@@ -38,17 +38,14 @@ public abstract class ScriptFunction
         @Override
         public ScriptValue call(ScriptInterpreter interpreter, List<ScriptValue> args)
         {
-            // Create new scope with closure as parent
             ScriptContext scope = new ScriptContext(closure);
 
-            // Bind arguments to parameters
             for (int i = 0; i < parameters.size(); i++)
             {
                 ScriptValue arg = i < args.size() ? args.get(i) : ScriptValue.NULL;
                 scope.define(parameters.get(i), arg);
             }
 
-            // Execute body
             return interpreter.executeInContext(body, scope);
         }
     }

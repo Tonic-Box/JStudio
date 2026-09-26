@@ -99,7 +99,6 @@ public class ScriptPrintlnDiagnosticTest
         assertEquals(totalBefore, countCalls(cf, m, false), "method left unchanged (all calls intact)");
     }
 
-    /** Mirrors ScriptRunner.runASTMode incl. the verify-and-restore guard; returns modifications cemented. */
     private static int applyGuarded(ClassPool pool, ClassFile cf, MethodEntry m)
     {
         ScriptInterpreter interp = new ScriptInterpreter();

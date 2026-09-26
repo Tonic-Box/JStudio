@@ -144,12 +144,10 @@ public class ScriptLexer
             case '/':
                 if (match('/'))
                 {
-                    // Single-line comment
                     while (peek() != '\n' && !isAtEnd()) advance();
                 }
                 else if (match('*'))
                 {
-                    // Multi-line comment
                     blockComment();
                 }
                 else if (match('='))
@@ -211,7 +209,6 @@ public class ScriptLexer
                 }
                 break;
 
-            // Whitespace
             case ' ':
             case '\r':
             case '\t':
@@ -222,7 +219,6 @@ public class ScriptLexer
                 column = 1;
                 break;
 
-            // Strings
             case '"':
                 string('"');
                 break;
@@ -330,7 +326,7 @@ public class ScriptLexer
             return;
         }
 
-        advance(); // Closing quote
+        advance();
         tokens.add(new ScriptToken(ScriptToken.Type.STRING, sb.toString(), startLine, startCol));
     }
 
@@ -338,14 +334,12 @@ public class ScriptLexer
     {
         while (isDigit(peek())) advance();
 
-        // Decimal
         if (peek() == '.' && isDigit(peekNext()))
         {
-            advance(); // Consume '.'
+            advance();
             while (isDigit(peek())) advance();
         }
 
-        // Exponent
         if (peek() == 'e' || peek() == 'E')
         {
             advance();

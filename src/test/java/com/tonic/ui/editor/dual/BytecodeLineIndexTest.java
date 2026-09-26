@@ -9,12 +9,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class BytecodeLineIndexTest
 {
 
-    /**
-     * Mirrors the {@code BytecodeView}/{@code BytecodeFormatter} layout: structural comments and the
-     * method header sit at column 0, while disassembly lines (instructions and every verbose comment)
-     * carry the formatter's two-space indent. Exercises line numbers, frames, signature, exception
-     * table, an inline local-variable comment, and a tableswitch with continuation lines.
-     */
     private static final String SAMPLE =
             "// Class: com/example/Foo\n" +
                     "// Super: java/lang/Object\n" +

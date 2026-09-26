@@ -3,6 +3,7 @@ package com.tonic.ui.editor.source;
 import com.tonic.analysis.source.decompile.ClassDecompiler;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -11,11 +12,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * End-to-end smoke over the demo jar: decompile -> {@link SourceCompiler#compile} -> re-decompile for the
- * classes that previously failed recompile (verifier two-slot false positives, under-counted max_stack, and
- * the {@code <clinit>} array-initializer round trip). Guarded on the demo build output being present.
- */
+@DisplayName("demo jar classes that once failed recompile now decompile, recompile and decompile again cleanly")
 class DemoRecompileSmokeTest
 {
 
@@ -80,9 +77,6 @@ class DemoRecompileSmokeTest
     @Test
     void verifyErrorReportsMemberLineNotLineOne()
     {
-        // Fix 5: when a recompile error does occur, it should carry the offending member's source line.
-        // We exercise the mapping indirectly: a clean recompile produces no errors, so assert the smoke
-        // path stays clean (the line-mapping unit behavior is covered by the member map construction).
         Path root = Path.of(DIR);
         org.junit.jupiter.api.Assumptions.assumeTrue(Files.isDirectory(root), "demo build output not present");
         ClassPool pool = ClassPool.getDefault();

@@ -115,7 +115,6 @@ public class StringBridge extends AbstractBridge
             }
             catch (Exception e)
             {
-                // Skip invalid entries
             }
         }
     }

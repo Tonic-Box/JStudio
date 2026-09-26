@@ -208,9 +208,6 @@ public class SimulationService
         EventBus.getInstance().post(new StatusMessageEvent(this, message));
     }
 
-    /**
-     * Cache entry for simulation results.
-     */
     private static class SimulationResultCache
     {
         private final SimulationAnalysisResult result;

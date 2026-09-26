@@ -104,11 +104,6 @@ public final class SyntheticLvtInjector
         return null;
     }
 
-    /**
-     * Widens {@code entries}: for each slot whose entries all share one type descriptor, a single method-wide
-     * entry spanning {@code [0, codeLen)}; type-mixed slots keep their original (scope-accurate) entries. Slots
-     * are emitted in first-seen order.
-     */
     private static List<LocalVariableTableEntry> widen(List<LocalVariableTableEntry> entries, ConstPool constPool, int codeLen)
     {
         Map<Integer, List<LocalVariableTableEntry>> bySlot = new LinkedHashMap<>();
@@ -141,7 +136,6 @@ public final class SyntheticLvtInjector
         return out;
     }
 
-    /** True when {@code widened} differs from {@code current} (so the class is worth redefining). */
     private static boolean differs(List<LocalVariableTableEntry> current, List<LocalVariableTableEntry> widened)
     {
         if (current.size() != widened.size())

@@ -65,7 +65,6 @@ public class ScriptContext
      */
     public void set(String name, ScriptValue value)
     {
-        // Find the scope where this variable is defined
         ScriptContext scope = findScope(name);
 
         if (scope != null)
@@ -78,15 +77,11 @@ public class ScriptContext
         }
         else
         {
-            // Define in current scope if not found
             variables.put(name, value);
             constants.put(name, false);
         }
     }
 
-    /**
-     * Finds the scope where a variable is defined.
-     */
     private ScriptContext findScope(String name)
     {
         if (variables.containsKey(name))

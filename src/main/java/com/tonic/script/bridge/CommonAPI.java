@@ -57,7 +57,6 @@ public class CommonAPI
         props.put("methodName", ScriptValue.string(methodName != null ? methodName : ""));
         props.put("methodDescriptor", ScriptValue.string(methodDescriptor != null ? methodDescriptor : ""));
 
-        // Simple name without package
         String simpleName = className != null ? className : "";
         int lastSlash = simpleName.lastIndexOf('/');
         if (lastSlash >= 0)
@@ -71,7 +70,6 @@ public class CommonAPI
         }
         props.put("simpleClassName", ScriptValue.string(simpleName));
 
-        // Package name
         String packageName = "";
         if (className != null)
         {
@@ -94,10 +92,8 @@ public class CommonAPI
     {
         ScriptContext global = interpreter.getGlobalContext();
 
-        // Context object
         global.defineConstant("context", createContextObject());
 
-        // Enhanced logging with callbacks
         if (logCallback != null)
         {
             interpreter.setLogCallback(logCallback);
@@ -111,7 +107,6 @@ public class CommonAPI
             interpreter.setErrorCallback(errorCallback);
         }
 
-        // Additional utility functions
         global.defineConstant("print", ScriptValue.function(ScriptFunction.nativeN("print", args ->
         {
             StringBuilder sb = new StringBuilder();
@@ -131,7 +126,6 @@ public class CommonAPI
             return ScriptValue.NULL;
         })));
 
-        // Type checking utilities
         global.defineConstant("isString", ScriptValue.function(ScriptFunction.native1("isString", arg -> ScriptValue.bool(arg.isString()))));
 
         global.defineConstant("isNumber", ScriptValue.function(ScriptFunction.native1("isNumber", arg -> ScriptValue.bool(arg.isNumber()))));
@@ -146,13 +140,10 @@ public class CommonAPI
 
         global.defineConstant("isArray", ScriptValue.function(ScriptFunction.native1("isArray", arg -> ScriptValue.bool(arg.isArray()))));
 
-        // Array utilities
         global.defineConstant("Array", createArrayObject());
 
-        // Object utilities
         global.defineConstant("Object", createObjectUtilities());
 
-        // Math utilities
         global.defineConstant("Math", createMathObject());
     }
 

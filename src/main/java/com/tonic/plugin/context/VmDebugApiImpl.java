@@ -114,7 +114,6 @@ public class VmDebugApiImpl implements VmDebugApi
         }
     }
 
-    /** Disposes the oldest session(s) when the live-session cap is reached (backstop against leaked handles). */
     private void evictIfFull()
     {
         while (sessions.size() >= MAX_SESSIONS)

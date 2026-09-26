@@ -108,7 +108,6 @@ public class ConsoleLogService
             }
             catch (Exception e)
             {
-                // Ignore listener errors to avoid cascading failures
             }
         }
     }

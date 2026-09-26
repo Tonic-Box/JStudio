@@ -34,11 +34,8 @@ public final class LoadedPlugin
     final File jar;
     @Getter
     final PluginInfo info;
-    /** Shared with sibling plugins from the same jar; null for scan-failure entries. */
     final URLClassLoader loader;
-    /** The plugin instance; null for scan-failure entries. */
     final Plugin plugin;
-    /** Removers for everything this plugin contributed during its active period. */
     final List<Registration> contributions = new ArrayList<>();
     JStudioHostImpl host;
     @Getter

@@ -288,7 +288,6 @@ public class JsonSerializer
                 }
                 catch (NumberFormatException e)
                 {
-                    // skip invalid slots
                 }
             }
             db.getBookmarks().restoreQuickSlots(slotMap);

@@ -39,8 +39,8 @@ public final class Snapshot
     private final long timestampMs;
     private final String label;
     private final Trigger trigger;
-    private final Map<String, String> classes;   // internal class name -> blob hash
-    private final Map<String, String> resources;  // resource path -> blob hash
+    private final Map<String, String> classes;
+    private final Map<String, String> resources;
 
     public Snapshot(String id, long timestampMs, String label, Trigger trigger, Map<String, String> classes, Map<String, String> resources)
     {

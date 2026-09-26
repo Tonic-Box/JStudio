@@ -33,11 +33,9 @@ public class IRNodeWrapper
     {
         Map<String, ScriptValue> props = new HashMap<>();
 
-        // Common properties
         props.put("type", ScriptValue.string(node.getClass().getSimpleName()));
         props.put("_native", ScriptValue.native_(this));
 
-        // Type-specific properties
         if (node instanceof BinaryOpInstruction)
         {
             BinaryOpInstruction binary = (BinaryOpInstruction) node;

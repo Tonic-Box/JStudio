@@ -22,7 +22,7 @@ public class ScriptValue
         FUNCTION,
         OBJECT,
         ARRAY,
-        NATIVE   // Java object wrapper
+        NATIVE
     }
 
     private final Type type;
@@ -33,8 +33,6 @@ public class ScriptValue
         this.type = type;
         this.value = value;
     }
-
-    // ==================== Factory Methods ====================
 
     public static final ScriptValue NULL = new ScriptValue(Type.NULL, null);
     public static final ScriptValue TRUE = new ScriptValue(Type.BOOLEAN, true);
@@ -89,8 +87,6 @@ public class ScriptValue
         return new ScriptValue(Type.NATIVE, obj);
     }
 
-    // ==================== Type Checks ====================
-
     public boolean isNull()
     {
         return type == Type.NULL;
@@ -131,15 +127,13 @@ public class ScriptValue
         return type == Type.NATIVE;
     }
 
-    // ==================== Conversions ====================
-
     public boolean asBoolean()
     {
         if (type == Type.BOOLEAN) return (Boolean) value;
         if (type == Type.NULL) return false;
         if (type == Type.NUMBER) return ((Double) value) != 0;
         if (type == Type.STRING) return !((String) value).isEmpty();
-        return true; // Objects, functions, arrays are truthy
+        return true;
     }
 
     public double asNumber()
@@ -213,8 +207,6 @@ public class ScriptValue
         return value;
     }
 
-    // ==================== Property Access ====================
-
     public ScriptValue getProperty(String name)
     {
         if (type == Type.OBJECT)
@@ -232,7 +224,6 @@ public class ScriptValue
             List<?> arr = (List<?>) value;
             if ("length".equals(name)) return number(arr.size());
         }
-        // Could use reflection here for native object property access
         return NULL;
     }
 
@@ -244,16 +235,12 @@ public class ScriptValue
         }
     }
 
-    // ==================== Operators ====================
-
     public static ScriptValue add(ScriptValue left, ScriptValue right)
     {
-        // String concatenation
         if (left.isString() || right.isString())
         {
             return string(left.asString() + right.asString());
         }
-        // Numeric addition
         return number(left.asNumber() + right.asNumber());
     }
 

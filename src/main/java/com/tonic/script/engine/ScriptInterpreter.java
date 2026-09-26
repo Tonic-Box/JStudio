@@ -33,7 +33,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
     private Consumer<String> warnCallback;
     private Consumer<String> errorCallback;
 
-    // Used for control flow
     private ScriptValue returnValue = null;
     private boolean returning = false;
     private boolean breaking = false;
@@ -49,7 +48,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
 
     private void registerBuiltins()
     {
-        // Logging functions
         globalContext.defineConstant("log", ScriptValue.function(ScriptFunction.nativeN("log", args ->
         {
             StringBuilder sb = new StringBuilder();
@@ -74,10 +72,8 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
             return ScriptValue.NULL;
         })));
 
-        // String functions
         globalContext.defineConstant("String", createStringObject());
 
-        // Utility functions
         globalContext.defineConstant("typeof", ScriptValue.function(ScriptFunction.native1("typeof", arg -> ScriptValue.string(arg.getType().name().toLowerCase()))));
 
         globalContext.defineConstant("parseInt", ScriptValue.function(ScriptFunction.native1("parseInt", arg ->
@@ -118,8 +114,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
         return ScriptValue.object(props);
     }
 
-    // ==================== Execution ====================
-
     public ScriptValue execute(List<ScriptAST> statements)
     {
         ScriptValue result = ScriptValue.NULL;
@@ -149,7 +143,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
             }
             else
             {
-                // Expression body - return its value
                 return evaluate(node);
             }
         }
@@ -164,8 +157,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
         if (returning || breaking || continuing) return ScriptValue.NULL;
         return node.accept(this);
     }
-
-    // ==================== Visitors ====================
 
     @Override
     public ScriptValue visitLiteral(ScriptAST.LiteralExpr expr)
@@ -184,7 +175,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
     {
         String op = expr.getOperator();
 
-        // Short-circuit evaluation for && and ||
         if ("&&".equals(op))
         {
             ScriptValue left = evaluate(expr.getLeft());
@@ -199,7 +189,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
             return evaluate(expr.getRight());
         }
 
-        // Assignment
         if ("=".equals(op))
         {
             ScriptValue value = evaluate(expr.getRight());
@@ -292,19 +281,16 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
     {
         ScriptValue obj = evaluate(expr.getObject());
 
-        // Optional chaining
         if (expr.isOptional() && obj.isNull())
         {
             return ScriptValue.NULL;
         }
 
-        // Check for method calls on native string
         if (obj.isString())
         {
             return getStringMethod(obj, expr.getMember());
         }
 
-        // Check for method calls on arrays
         if (obj.isArray())
         {
             return getArrayMethod(obj, expr.getMember());
@@ -850,8 +836,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
         }
     }
 
-    // ==================== Loop Visitors ====================
-
     @Override
     public ScriptValue visitWhile(ScriptAST.WhileStmt stmt)
     {
@@ -1095,8 +1079,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
         return ScriptValue.NULL;
     }
 
-    // ==================== Exception Visitors ====================
-
     @Override
     public ScriptValue visitTry(ScriptAST.TryStmt stmt)
     {
@@ -1143,8 +1125,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
         throw new ScriptException(value.asString());
     }
 
-    // ==================== Update Expression Visitor ====================
-
     @Override
     public ScriptValue visitUpdate(ScriptAST.UpdateExpr expr)
     {
@@ -1189,8 +1169,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
 
         throw new RuntimeException("Invalid operand for " + op);
     }
-
-    // ==================== Compound Assignment Visitor ====================
 
     @Override
     public ScriptValue visitAssignment(ScriptAST.AssignmentExpr expr)
@@ -1253,8 +1231,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
         }
     }
 
-    // ==================== Script Exception ====================
-
     public static class ScriptException extends RuntimeException
     {
         public ScriptException(String message)
@@ -1262,8 +1238,6 @@ public class ScriptInterpreter implements ScriptAST.Visitor<ScriptValue>
             super(message);
         }
     }
-
-    // ==================== Logging ====================
 
     public void setLogCallback(Consumer<String> callback)
     {

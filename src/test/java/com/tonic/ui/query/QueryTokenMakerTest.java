@@ -1,6 +1,7 @@
 package com.tonic.ui.query;
 
 import org.fife.ui.rsyntaxtextarea.Token;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.swing.text.Segment;
@@ -9,10 +10,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * Verifies the Query DSL token maker classifies the closed grammar (keywords, operators, literals)
- * while leaving open-vocabulary accessor atoms as plain identifiers.
- */
+@DisplayName("Query DSL highlighting: keywords, operators and literals classified, accessor atoms left as identifiers")
 class QueryTokenMakerTest
 {
 
@@ -56,8 +54,8 @@ class QueryTokenMakerTest
         assertEquals(Token.SEPARATOR, t.get("{"));
         assertEquals(Token.SEPARATOR, t.get("}"));
         assertEquals(Token.FUNCTION, t.get("matches"));
-        assertEquals(Token.RESERVED_WORD_2, t.get("new"));   // opcode mnemonic -> its own color
-        assertEquals(Token.IDENTIFIER, t.get("opcode"));     // the accessor atom, not an opcode
+        assertEquals(Token.RESERVED_WORD_2, t.get("new"));
+        assertEquals(Token.IDENTIFIER, t.get("opcode"));
         Map<String, Integer> seq = tokenize("SEQ [ dup ]");
         assertEquals(Token.RESERVED_WORD, seq.get("SEQ"));
         assertEquals(Token.RESERVED_WORD_2, seq.get("dup"));

@@ -92,13 +92,6 @@ public final class JavaAgent
         log("started on 127.0.0.1:" + port);
     }
 
-    /**
-     * Opens every boot-layer module's packages to this agent's module so the heap scanner can read fields
-     * of JDK objects (Swing/AWT component trees, collection internals, etc.) via reflection. Without this,
-     * {@code setAccessible(true)} throws {@code InaccessibleObjectException} on Java 17+ for closed modules,
-     * the object-graph walk dies at the first JDK object, and app values held inside JDK containers are
-     * never visited (e.g. a button/list string reachable only through a Swing window's component tree).
-     */
     private static void openAllModules(Instrumentation inst)
     {
         try
@@ -148,8 +141,6 @@ public final class JavaAgent
         return -1;
     }
 
-    // ---- server ------------------------------------------------------------------------------------
-
     private static void serve(int port)
     {
         try (ServerSocket server = new ServerSocket(port, 4, InetAddress.getByName("127.0.0.1")))
@@ -165,7 +156,6 @@ public final class JavaAgent
                 }
                 catch (IOException ignored)
                 {
-                    // peer closed
                 }
                 finally
                 {
@@ -282,7 +272,7 @@ public final class JavaAgent
     {
         Buf b = new Buf();
         b.u8(LiveProtocol.MSG_HELLO);
-        b.u32(0); // version marker (unused)
+        b.u32(0);
         int caps = LiveProtocol.CAP_REDEFINE | LiveProtocol.CAP_RETRANSFORM | LiveProtocol.CAP_BYTECODES;
         if (JfrController.isAvailable())
         {
@@ -314,7 +304,6 @@ public final class JavaAgent
         b.u64(nonHeap.getCommitted());
         b.u64(nonHeap.getMax());
 
-        // getProcessCpuLoad/getSystemCpuLoad are on the HotSpot/OpenJDK extension bean; -1 when unavailable.
         double processCpu = -1;
         double systemCpu = -1;
         if (os instanceof com.sun.management.OperatingSystemMXBean)
@@ -475,7 +464,6 @@ public final class JavaAgent
         return resp(LiveProtocol.MSG_REDEFINE_CLASS, 1);
     }
 
-    /** Describes a throwable usefully even when its message is null (common for JVM redefine errors). */
     private static String describe(Throwable t)
     {
         StringBuilder sb = new StringBuilder(t.getClass().getName());
@@ -551,8 +539,6 @@ public final class JavaAgent
         }
     }
 
-    // ---- transformer (get-bytes capture + runtime class-load streaming) ----------------------------
-
     private static final class CaptureTransformer implements ClassFileTransformer
     {
         @Override
@@ -588,8 +574,6 @@ public final class JavaAgent
             return null;
         }
     }
-
-    // ---- live statics / method invoke ---------------------------------------------------------------
 
     private static byte[] handleGetStatics(String internalName) throws IOException
     {
@@ -941,8 +925,6 @@ public final class JavaAgent
         return "L" + c.getName().replace('.', '/') + ";";
     }
 
-    // ---- value scanner ----------------------------------------------------------------------------
-
     private static final ScanEngine SCAN = new ScanEngine();
 
     private static byte[] handleScanFirst(DataInputStream in) throws IOException
@@ -1107,21 +1089,12 @@ public final class JavaAgent
         return resp(LiveProtocol.MSG_SCAN_CLEAR, 1);
     }
 
-    // ---- helpers -----------------------------------------------------------------------------------
-
-    /** The agent's own classes (loaded into the target by attaching) - never report them to JStudio. */
     private static boolean isAgentClass(String internalName)
     {
         return internalName.startsWith("com/tonic/live/agent/")
                 || internalName.startsWith("com/tonic/live/protocol/");
     }
 
-    /**
-     * Defines a freshly-compiled snippet class in the target and invokes its {@code static Object run()}. The
-     * class is defined in a throwaway loader whose parent is the chosen context class's loader, so it links
-     * against exactly what that class sees, and is discarded after the call (no class accumulation, and each
-     * run gets its own namespace - re-running the same name never collides).
-     */
     private static byte[] handleEval(DataInputStream in) throws IOException
     {
         int classCount = in.readInt();
@@ -1135,10 +1108,6 @@ public final class JavaAgent
         }
         String mainBinaryName = readString(in);
         String contextClassInternal = readString(in);
-        // Define all of the snippet's classes (the wrapper plus any anonymous/local classes) into one
-        // throwaway loader so cross-references between them resolve, then invoke the wrapper's run(). The
-        // loader is closed once run() has returned (its result already stringified) - already-defined classes
-        // remain usable, this just releases the loader's resource handles.
         try (ScratchLoader loader = new ScratchLoader(resolveContextLoader(contextClassInternal)))
         {
             Class<?> main = null;
@@ -1163,8 +1132,6 @@ public final class JavaAgent
             return strResp(LiveProtocol.MSG_EVAL, "eval setup failed: " + t);
         }
     }
-
-    // ---- JFR recorder -------------------------------------------------------------------------------
 
     private static byte[] handleJfrStart(DataInputStream in) throws IOException
     {
@@ -1206,7 +1173,6 @@ public final class JavaAgent
         }
     }
 
-    /** The classloader of the chosen context class (so the snippet sees what it sees); system loader otherwise. */
     private static ClassLoader resolveContextLoader(String contextClassInternal)
     {
         if (contextClassInternal != null && !contextClassInternal.isEmpty())
@@ -1220,7 +1186,6 @@ public final class JavaAgent
         return ClassLoader.getSystemClassLoader();
     }
 
-    /** Invokes {@code run()}, teeing stdout/stderr into a buffer, and returns the output plus result or trace. */
     private static String invokeCapturing(Method run)
     {
         ByteArrayOutputStream captured = new ByteArrayOutputStream();
@@ -1250,11 +1215,6 @@ public final class JavaAgent
         }
     }
 
-    /**
-     * A throwaway classloader for one eval: defines the snippet class with full visibility into the context
-     * loader (its parent). As an agent-loaded subclass it can call the protected {@code defineClass} directly,
-     * so no JDK-internal reflection / {@code --add-opens} is needed.
-     */
     private static final class ScratchLoader extends URLClassLoader
     {
         ScratchLoader(ClassLoader parent)
@@ -1340,7 +1300,6 @@ public final class JavaAgent
         System.err.println("[jstudio-live-java] " + message);
     }
 
-    /** Minimal big-endian payload builder mirroring the native agent's Writer. */
     private static final class Buf
     {
         private final ByteArrayOutputStream bo = new ByteArrayOutputStream();

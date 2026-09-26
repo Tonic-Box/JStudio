@@ -13,9 +13,9 @@ public class Script
 
     public enum Mode
     {
-        AST,    // Target decompiled source AST
-        IR,     // Target SSA IR bytecode
-        BOTH    // Run on both (AST first, then IR)
+        AST,
+        IR,
+        BOTH
     }
 
     private String name;

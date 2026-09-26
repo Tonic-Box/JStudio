@@ -69,7 +69,6 @@ public final class DeadCodeRemover
     {
         Set<String> touched = new LinkedHashSet<>();
 
-        // 1. Patch write-only fields' writers before the fields are removed.
         for (DeadItem item : items)
         {
             if (item.getKind() == DeadItem.Kind.FIELD && item.isWriteOnly())
@@ -85,7 +84,6 @@ public final class DeadCodeRemover
             }
         }
 
-        // 2. Remove dead methods and fields.
         int methods = 0;
         int fields = 0;
         for (DeadItem item : items)
@@ -107,7 +105,6 @@ public final class DeadCodeRemover
             }
         }
 
-        // 3. Remove whole dead classes (rebuilds the pool + fires ProjectUpdatedEvent itself).
         int classes = 0;
         Set<String> removed = new LinkedHashSet<>();
         for (DeadItem item : items)
@@ -119,7 +116,6 @@ public final class DeadCodeRemover
             }
         }
 
-        // 4. Invalidate decompilation caches for mutated (still-present) classes.
         touched.removeAll(removed);
         for (String owner : touched)
         {
@@ -132,7 +128,6 @@ public final class DeadCodeRemover
         return new Result(classes, methods, fields, touched, removed);
     }
 
-    /** Rewrites every store of {@code (fOwner,fName,fDesc)} in {@code writer} into pop(s); returns whether it changed. */
     private static boolean patchWriter(ClassFile cf, MethodReference writer, String fOwner, String fName, String fDesc)
     {
         MethodEntry method = findMethod(cf, writer.getName(), writer.getDescriptor());

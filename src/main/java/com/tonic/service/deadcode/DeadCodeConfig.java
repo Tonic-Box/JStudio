@@ -46,13 +46,11 @@ public final class DeadCodeConfig
         return publicAsEntryPoints;
     }
 
-    /** Internal-form class names excluded from analysis and removal. */
     Set<String> skipClasses()
     {
         return skipClassesInternal;
     }
 
-    /** Whether the keep-list forces the given member live (an entry-point root that is never removed). */
     boolean keeps(String ownerInternal, String name, String desc)
     {
         String ownerDotted = ownerInternal.replace('/', '.');
