@@ -3,6 +3,7 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven { url = uri("https://www.jitpack.io") }
 }
@@ -10,7 +11,8 @@ repositories {
 dependencies {
     // The app (and YABR) are provided by JStudio's class loader at runtime; never bundle them.
     compileOnly(rootProject)
-    compileOnly("com.github.Tonic-Box:YABR:main-SNAPSHOT")
+    compileOnly("com.tonic:YABR:1.0.1")
+    //compileOnly("com.github.Tonic-Box:YABR:main-SNAPSHOT")
 }
 
 java {
