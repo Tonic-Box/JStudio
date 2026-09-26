@@ -1,143 +1,211 @@
 package com.tonic.ui.editor;
 
 import com.tonic.ui.editor.resource.ResourceEditorTab;
+import com.tonic.ui.layout.StackId;
+import com.tonic.ui.layout.Stacks;
+import com.tonic.ui.layout.ViewHost;
+import com.tonic.ui.layout.ViewId;
 import com.tonic.ui.theme.JStudioTheme;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.JTabbedPane;
 import java.awt.Component;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * Owns the per-tab right-click menu (Close / Close Others / Close All / Close to the Left|Right) and the close-set
- * algorithms behind it, plus the header mouse listener that selects on left-click and pops the menu on right-click.
- * Single-tab closes are dispatched back to the host via the injected closers; {@link #closeAllTabs()} clears the
- * pane and the registry directly.
- */
-final class TabContextMenu {
+final class TabContextMenu
+{
 
-    private final JTabbedPane tabbedPane;
     private final TabRegistry registry;
     private final Consumer<EditorTab> closeClass;
     private final Consumer<ResourceEditorTab> closeResource;
     private final Consumer<String> closeCustom;
 
-    TabContextMenu(JTabbedPane tabbedPane, TabRegistry registry, Consumer<EditorTab> closeClass,
-                   Consumer<ResourceEditorTab> closeResource, Consumer<String> closeCustom) {
-        this.tabbedPane = tabbedPane;
+    private ViewHost host;
+
+    private StackId about = Stacks.DOCUMENTS;
+
+    TabContextMenu(TabRegistry registry, Consumer<EditorTab> closeClass, Consumer<ResourceEditorTab> closeResource, Consumer<String> closeCustom)
+    {
         this.registry = registry;
         this.closeClass = closeClass;
         this.closeResource = closeResource;
         this.closeCustom = closeCustom;
     }
 
-    /** A header mouse listener: left-click selects the tab; right-click shows its close context menu (bound to {@code tabBody}). */
-    MouseAdapter headerListener(JComponent header, Component tabBody) {
-        return new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    showTabContextMenu(tabBody, e);
-                } else {
-                    int index = tabbedPane.indexOfTabComponent(header);
-                    if (index != -1) {
-                        tabbedPane.setSelectedIndex(index);
-                    }
-                }
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    showTabContextMenu(tabBody, e);
-                }
-            }
-        };
+    void setHost(ViewHost value)
+    {
+        this.host = value;
     }
 
-    private void showTabContextMenu(Component tabBody, MouseEvent e) {
-        JPopupMenu menu = new JPopupMenu();
+    void showFor(ViewId view, MouseEvent event)
+    {
+        if (host == null)
+        {
+            return;
+        }
+        final Component body = host.bodyOf(view).orElse(null);
+        if (body == null || registry.classify(body) == TabRegistry.Kind.NONE)
+        {
+            return;
+        }
+        about = host.stackOf(view).orElse(Stacks.DOCUMENTS);
+        showMenu(body, event);
+    }
+
+    private void showMenu(Component body, MouseEvent event)
+    {
+        final JPopupMenu menu = new JPopupMenu();
         menu.setBackground(JStudioTheme.getBgSecondary());
         menu.setBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()));
 
-        // Count the closable tabs (every kind except Welcome) on each side of the clicked tab.
-        int tabIndex = registry.findComponentIndex(tabBody);
-        int closableLeft = 0;
-        int closableRight = 0;
-        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
-            Component comp = tabbedPane.getComponentAt(i);
-            if (registry.isWelcome(comp) || i == tabIndex) {
-                continue;
-            }
-            if (i < tabIndex) {
-                closableLeft++;
-            } else {
-                closableRight++;
-            }
-        }
+        final int closableLeft = closableBeside(body, true);
+        final int closableRight = closableBeside(body, false);
 
-        // Close
-        JMenuItem closeItem = createMenuItem("Close", () -> closeTabComponent(tabBody));
-        menu.add(closeItem);
+        menu.add(item("Close", () -> closeTabComponent(body)));
 
-        // Close Others
-        JMenuItem closeOthersItem = createMenuItem("Close Others", () -> closeOtherTabs(tabBody));
-        closeOthersItem.setEnabled(closableLeft + closableRight > 0);
-        menu.add(closeOthersItem);
+        final JMenuItem others = item("Close Others", () -> closeOtherTabs(body));
+        others.setEnabled(closableLeft + closableRight > 0);
+        menu.add(others);
 
-        // Close All
-        JMenuItem closeAllItem = createMenuItem("Close All", this::closeAllTabs);
-        menu.add(closeAllItem);
-
+        menu.add(item("Close All", this::closeAllTabs));
         menu.addSeparator();
 
-        // Close Tabs to the Left
-        JMenuItem closeLeftItem = createMenuItem("Close Tabs to the Left", () -> closeTabsToLeft(tabBody));
-        closeLeftItem.setEnabled(closableLeft > 0);
-        menu.add(closeLeftItem);
+        final JMenuItem toLeft = item("Close Tabs to the Left", () -> closeTabsToLeft(body));
+        toLeft.setEnabled(closableLeft > 0);
+        menu.add(toLeft);
 
-        // Close Tabs to the Right
-        JMenuItem closeRightItem = createMenuItem("Close Tabs to the Right", () -> closeTabsToRight(tabBody));
-        closeRightItem.setEnabled(closableRight > 0);
-        menu.add(closeRightItem);
+        final JMenuItem toRight = item("Close Tabs to the Right", () -> closeTabsToRight(body));
+        toRight.setEnabled(closableRight > 0);
+        menu.add(toRight);
 
-        menu.show(e.getComponent(), e.getX(), e.getY());
+        menu.show(event.getComponent(), event.getX(), event.getY());
     }
 
-    private JMenuItem createMenuItem(String text, Runnable action) {
-        JMenuItem item = new JMenuItem(text);
-        item.setBackground(JStudioTheme.getBgSecondary());
-        item.setForeground(JStudioTheme.getTextPrimary());
-        item.addActionListener(e -> action.run());
-        return item;
+    private JMenuItem item(String text, Runnable action)
+    {
+        final JMenuItem made = new JMenuItem(text);
+        made.setBackground(JStudioTheme.getBgSecondary());
+        made.setForeground(JStudioTheme.getTextPrimary());
+        made.addActionListener(ignored -> action.run());
+        return made;
     }
 
-    /** Close all tabs (except the Welcome tab). */
-    void closeAllTabs() {
-        // Remove all tabs except the Welcome tab (index 0)
-        while (tabbedPane.getTabCount() > 1) {
-            tabbedPane.removeTabAt(1);
+    void closeAllTabs()
+    {
+        for (Component body : registry.bodies())
+        {
+            closeTabComponent(body);
         }
-        List<Runnable> hooks = registry.clearAll();
-        tabbedPane.setSelectedIndex(0); // Switch to Welcome tab
-        for (Runnable hook : hooks) {
-            hook.run();
+        showWelcome();
+    }
+
+    void closeOtherTabs(Component keepTab)
+    {
+        for (Component body : besides(keepTab, null))
+        {
+            closeTabComponent(body);
+        }
+        select(keepTab);
+    }
+
+    void closeTabsToLeft(Component referenceTab)
+    {
+        for (Component body : besides(referenceTab, Boolean.TRUE))
+        {
+            closeTabComponent(body);
+        }
+        select(referenceTab);
+    }
+
+    void closeTabsToRight(Component referenceTab)
+    {
+        for (Component body : besides(referenceTab, Boolean.FALSE))
+        {
+            closeTabComponent(body);
+        }
+        select(referenceTab);
+    }
+
+    private List<Component> besides(Component anchor, Boolean toTheLeft)
+    {
+        if (host == null)
+        {
+            return Collections.emptyList();
+        }
+        final StackId stack = viewOf(anchor).flatMap(host::stackOf).orElse(about);
+        final List<ViewId> open = host.viewsIn(stack);
+        final int at = indexOf(open, anchor);
+        if (at < 0)
+        {
+            return Collections.emptyList();
+        }
+        final List<Component> out = new ArrayList<>();
+        for (int index = 0; index < open.size(); index++)
+        {
+            if (index == at)
+            {
+                continue;
+            }
+            if (toTheLeft != null && toTheLeft != (index < at))
+            {
+                continue;
+            }
+            host.bodyOf(open.get(index))
+                    .filter(body -> !registry.isWelcome(body))
+                    .ifPresent(out::add);
+        }
+        return out;
+    }
+
+    private int closableBeside(Component anchor, boolean toTheLeft)
+    {
+        return besides(anchor, toTheLeft).size();
+    }
+
+    private int indexOf(List<ViewId> open, Component body)
+    {
+        for (int index = 0; index < open.size(); index++)
+        {
+            if (host.bodyOf(open.get(index)).orElse(null) == body)
+            {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private java.util.Optional<ViewId> viewOf(Component body)
+    {
+        if (host == null || !(body instanceof JComponent))
+        {
+            return java.util.Optional.empty();
+        }
+        return host.viewOf((JComponent) body);
+    }
+
+    private void select(Component body)
+    {
+        viewOf(body).ifPresent(host::select);
+    }
+
+    private void showWelcome()
+    {
+        if (host != null)
+        {
+            host.select(com.tonic.ui.layout.Views.WELCOME);
         }
     }
 
-    /**
-     * Closes whatever kind of tab {@code content} is the body of - class editor, resource editor, or custom view
-     * (running its close hook) - dispatching to the matching close path. The Welcome tab is never closed.
-     */
-    private void closeTabComponent(Component content) {
-        switch (registry.classify(content)) {
+    private void closeTabComponent(Component content)
+    {
+        switch (registry.classify(content))
+        {
             case CLASS:
                 closeClass.accept((EditorTab) content);
                 break;
@@ -150,66 +218,5 @@ final class TabContextMenu {
             default:
                 break;
         }
-    }
-
-    /**
-     * Close every closable tab except the specified one (all tab kinds, not just class editors; the Welcome tab is
-     * always kept).
-     */
-    void closeOtherTabs(Component keepTab) {
-        // Collect by component reference first so removals don't shift the indices we still need to visit.
-        List<Component> toClose = new ArrayList<>();
-        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
-            Component comp = tabbedPane.getComponentAt(i);
-            if (!registry.isWelcome(comp) && comp != keepTab) {
-                toClose.add(comp);
-            }
-        }
-        for (Component comp : toClose) {
-            closeTabComponent(comp);
-        }
-        tabbedPane.setSelectedComponent(keepTab);
-    }
-
-    /**
-     * Close every closable tab to the left of the specified tab (all tab kinds; the Welcome tab is always kept).
-     */
-    void closeTabsToLeft(Component referenceTab) {
-        int refIndex = registry.findComponentIndex(referenceTab);
-        if (refIndex <= 0) {
-            return;
-        }
-        List<Component> toClose = new ArrayList<>();
-        for (int i = 0; i < refIndex; i++) {
-            Component comp = tabbedPane.getComponentAt(i);
-            if (!registry.isWelcome(comp)) {
-                toClose.add(comp);
-            }
-        }
-        for (Component comp : toClose) {
-            closeTabComponent(comp);
-        }
-        tabbedPane.setSelectedComponent(referenceTab);
-    }
-
-    /**
-     * Close every closable tab to the right of the specified tab (all tab kinds; the Welcome tab is always kept).
-     */
-    void closeTabsToRight(Component referenceTab) {
-        int refIndex = registry.findComponentIndex(referenceTab);
-        if (refIndex < 0 || refIndex >= tabbedPane.getTabCount() - 1) {
-            return;
-        }
-        List<Component> toClose = new ArrayList<>();
-        for (int i = refIndex + 1; i < tabbedPane.getTabCount(); i++) {
-            Component comp = tabbedPane.getComponentAt(i);
-            if (!registry.isWelcome(comp)) {
-                toClose.add(comp);
-            }
-        }
-        for (Component comp : toClose) {
-            closeTabComponent(comp);
-        }
-        tabbedPane.setSelectedComponent(referenceTab);
     }
 }

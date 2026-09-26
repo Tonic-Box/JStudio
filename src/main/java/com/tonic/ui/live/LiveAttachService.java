@@ -11,41 +11,48 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
-/**
- * Orchestrates a live JVM session for the UI: resolves the bundled pure-Java agent jar, attaches it to a
- * target, builds a fresh project from its loaded classes, and supports on-demand refresh and detach. Holds
- * the single active {@link LiveSession}. The Java agent works on any OS/arch with no native build.
- */
+/** The single live JVM session: attaches the bundled Java agent, loads the target's classes as a project, and refreshes or detaches it. */
 @Getter
-public final class LiveAttachService {
+public final class LiveAttachService
+{
 
     private static final LiveAttachService INSTANCE = new LiveAttachService();
 
     private LiveSession session;
     /**
      * -- GETTER --
-     * Whether the active session is one auto-attached to a process launched by the Run feature.
+     * @return whether the active session was auto-attached to a process launched by Run
      */
     @Getter
     private boolean runSession;
 
-    private LiveAttachService() {
+    private LiveAttachService()
+    {
     }
 
-    public static LiveAttachService getInstance() {
+    /** @return the single instance */
+    public static LiveAttachService getInstance()
+    {
         return INSTANCE;
     }
 
-    public boolean isAttached() {
+    /**
+     * Tells whether a session is attached.
+     *
+     * @return true while a session is held
+     */
+    public boolean isAttached()
+    {
         return session != null;
     }
 
     /**
-     * Adopts an already-connected session for a JVM launched by the Run feature: holds it and lights up the
-     * live features, but does NOT pull/replace the project (the running app is the current project). Call on
-     * the EDT - it posts {@link LiveSessionEvent}, which toggles Swing docks.
+     * Holds a session already connected to a process launched by Run and turns the live features on, keeping the current project; call on the EDT.
+     *
+     * @param adopted the connected session
      */
-    public void adoptRunSession(LiveSession adopted) {
+    public void adoptRunSession(LiveSession adopted)
+    {
         detach();
         this.session = adopted;
         this.runSession = true;
@@ -53,13 +60,16 @@ public final class LiveAttachService {
     }
 
     /**
-     * Extracts the bundled Java agent ({@code agent/live-agent.bin}) from the classpath to a temp file (the
-     * attach API needs a real path) and returns it. Reuses an already-extracted copy of the same size.
-     * Falls back to the dev-tree jar. Returns null if not found.
+     * Extracts the bundled agent jar to a temporary file, reusing an earlier copy of the same size, or falls back to the development build.
+     *
+     * @return the agent jar, or null where none is found
      */
-    public File resolveAgentJar() {
-        try (InputStream in = LiveAttachService.class.getResourceAsStream("/agent/live-agent.bin")) {
-            if (in == null) {
+    public File resolveAgentJar()
+    {
+        try (InputStream in = LiveAttachService.class.getResourceAsStream("/agent/live-agent.bin"))
+        {
+            if (in == null)
+            {
                 File dev = new File("live-agent/build/libs/live-agent.jar").getAbsoluteFile();
                 return dev.isFile() ? dev : null;
             }
@@ -67,52 +77,77 @@ public final class LiveAttachService {
             File dir = new File(System.getProperty("java.io.tmpdir"), "jstudio-live");
             dir.mkdirs();
             File out = new File(dir, "live-agent.jar");
-            if (!out.isFile() || out.length() != data.length) {
+            if (!out.isFile() || out.length() != data.length)
+            {
                 Files.write(out.toPath(), data);
             }
             return out.isFile() ? out : null;
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             return null;
         }
     }
 
     /**
-     * Attaches the Java agent to {@code pid} and builds a fresh project from its loaded classes. The opened
-     * session is owned by this service (held in {@code session}, closed by {@link #detach()}); access it via
-     * {@link #getSession()}.
+     * Attaches the agent to a JVM and loads its classes as a new project, replacing any earlier session.
+     *
+     * @param pid the target process id
+     * @param includeJdk whether to load JDK classes too
+     * @param progress told how loading goes
+     * @throws IllegalStateException if the agent jar cannot be found
+     * @throws Exception if attaching or loading fails
      */
-    public void attach(String pid, boolean includeJdk,
-                       ProjectService.ProgressCallback progress) throws Exception {
+    public void attach(String pid, boolean includeJdk, ProjectService.ProgressCallback progress) throws Exception
+    {
         detach();
         File agent = resolveAgentJar();
-        if (agent == null) {
-            throw new IllegalStateException(
-                    "Live agent jar not found. Rebuild JStudio so the agent is bundled (agent/live-agent.bin).");
+        if (agent == null)
+        {
+            throw new IllegalStateException("Live agent jar not found. Rebuild JStudio so the agent is bundled (agent/live-agent.bin).");
         }
         LiveSession s = LiveSession.attach(pid, agent.getAbsolutePath());
-        try {
+        try
+        {
             ProjectService.getInstance().loadLiveProject(s, includeJdk, progress);
             this.session = s;
             EventBus.getInstance().post(new LiveSessionEvent(this, true));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             s.close();
             throw e;
         }
     }
 
-    /** Re-enumerates the target and pulls any classes loaded since attach/last refresh. */
-    public int refresh(boolean includeJdk, ProjectService.ProgressCallback progress) throws Exception {
-        if (session == null) {
+    /**
+     * Loads the classes the target has loaded since the last attach or refresh.
+     *
+     * @param includeJdk whether to load JDK classes too
+     * @param progress told how loading goes
+     * @return the number of classes added, or 0 where no session is attached
+     * @throws Exception if loading fails
+     */
+    public int refresh(boolean includeJdk, ProjectService.ProgressCallback progress) throws Exception
+    {
+        if (session == null)
+        {
             return 0;
         }
         return ProjectService.getInstance().refreshLiveProject(session, includeJdk, progress);
     }
 
-    public void detach() {
-        if (session != null) {
-            try {
+    /** Closes the session and turns the live features off; safe to call when nothing is attached. */
+    public void detach()
+    {
+        if (session != null)
+        {
+            try
+            {
                 session.close();
-            } catch (Exception ignored) {
+            }
+            catch (Exception ignored)
+            {
             }
             session = null;
             runSession = false;

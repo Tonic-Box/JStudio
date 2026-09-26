@@ -43,7 +43,12 @@ import com.tonic.renamer.exception.RenameException;
 import com.tonic.ui.dialog.DeobfuscateNamesDialog;
 import com.tonic.ui.dialog.DialogManager;
 import com.tonic.ui.file.FileOperationsController;
+import com.tonic.ui.layout.Arrangement;
+import com.tonic.ui.layout.LayoutBook;
 import com.tonic.ui.layout.LayoutController;
+import com.tonic.ui.layout.Presets;
+import com.tonic.ui.layout.RearrangeOverlay;
+import com.tonic.ui.layout.Stacks;
 import com.tonic.ui.dialog.RenameClassDialog;
 import com.tonic.ui.dialog.RenameFieldDialog;
 import com.tonic.ui.dialog.RenameMethodDialog;
@@ -105,12 +110,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Main application window for JStudio.
- */
-public class MainFrame extends JFrame {
+/** The main application window. */
+public class MainFrame extends JFrame
+{
 
-    // UI Components
     @Getter
     private NavigatorPanel navigatorPanel;
     @Getter
@@ -124,9 +127,7 @@ public class MainFrame extends JFrame {
     @Getter
     private ToolbarBuilder toolbarBuilder;
 
-    // Tool dialogs (lazily created, cached) are owned by the DialogManager collaborator.
     private DialogManager dialogManager;
-    // File/project I/O is owned by the FileOperationsController collaborator.
     private FileOperationsController fileOps;
     private final UpdateManager updateManager;
     private QueryExplorerPanel queryExplorerPanel;
@@ -134,29 +135,28 @@ public class MainFrame extends JFrame {
     private ToolWindowPane rightToolWindow;
     private ToolWindowMover toolWindowMover;
 
-    // Bottom panel with tabbed results
     @Getter
     private BottomPanel sidePanel;
 
-    // Split panes + collapse/divider math are owned by the LayoutController collaborator.
     private LayoutController layoutController;
+    private BottomToolbar bottomToolbar;
+    private RearrangeOverlay rearrange;
 
-    // Navigation history
     private final NavigationHistory navigationHistory = new NavigationHistory();
 
-    // Current state
     private ViewMode currentViewMode = ViewMode.SOURCE;
     @Getter
     private boolean omitAnnotations = false;
 
-    // Editor settings
     private int currentFontSize = 13;
     private static final int MIN_FONT_SIZE = 8;
     private static final int MAX_FONT_SIZE = 32;
     private static final int DEFAULT_FONT_SIZE = 13;
     private boolean wordWrapEnabled = false;
 
-    public MainFrame() {
+    /** Creates the main window, restores its layout and settings, and loads plugins once it is built. */
+    public MainFrame()
+    {
         super(JStudio.APP_NAME + " " + JStudio.APP_VERSION);
         initializeFrame();
         initializeComponents();
@@ -166,180 +166,203 @@ public class MainFrame extends JFrame {
         updateManager = new UpdateManager(this);
         SwingUtilities.invokeLater(updateManager::checkOnStartup);
 
-        // Load GUI plugins once the window is fully constructed.
         SwingUtilities.invokeLater(() -> GuiPluginManager.getInstance().bootstrap(this));
     }
 
-    /**
-     * Manually checks for a newer release (Help menu), reporting the result either way.
-     */
-    public void checkForUpdates() {
+    /** Checks for a newer release now, reporting the result either way. */
+    public void checkForUpdates()
+    {
         updateManager.checkNow();
     }
 
-    private void initializeFrame() {
+    private void initializeFrame()
+    {
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setMinimumSize(new Dimension(800, 600));
 
-        // Set window icon
-        try {
+        try
+        {
             URL iconUrl = getClass().getResource("/com/tonic/ui/icon.png");
-            if (iconUrl != null) {
+            if (iconUrl != null)
+            {
                 setIconImage(ImageIO.read(iconUrl));
             }
-        } catch (Exception e) {
-            // Ignore - use default icon
+        }
+        catch (Exception ignored)
+        {
         }
 
-        // Restore window bounds from settings
         Settings settings = Settings.getInstance();
         int x = settings.getWindowX();
         int y = settings.getWindowY();
         int width = settings.getWindowWidth();
         int height = settings.getWindowHeight();
 
-        if (x >= 0 && y >= 0) {
+        if (x >= 0 && y >= 0)
+        {
             setLocation(x, y);
-        } else {
+        }
+        else
+        {
             setLocationRelativeTo(null);
         }
         setSize(width, height);
 
-        if (settings.isWindowMaximized()) {
+        if (settings.isWindowMaximized())
+        {
             setExtendedState(JFrame.MAXIMIZED_BOTH);
         }
 
-        // Restore editor settings
         currentFontSize = settings.getFontSize();
         wordWrapEnabled = settings.isWordWrapEnabled();
 
-        // Handle window close
-        addWindowListener(new WindowAdapter() {
+        addWindowListener(new WindowAdapter()
+        {
             @Override
-            public void windowClosing(WindowEvent e) {
+            public void windowClosing(WindowEvent e)
+            {
                 exitApplication();
             }
         });
 
-        // Setup drag-and-drop support
-        new DropTarget(this, DnDConstants.ACTION_COPY_OR_MOVE, new DropTargetAdapter() {
+        new DropTarget(this, DnDConstants.ACTION_COPY_OR_MOVE, new DropTargetAdapter()
+        {
             @Override
-            public void drop(DropTargetDropEvent dtde) {
+            public void drop(DropTargetDropEvent dtde)
+            {
                 fileOps.handleFileDrop(dtde);
             }
         });
     }
 
-    private void initializeComponents() {
-        // Create panels
+    private void initializeComponents()
+    {
         navigatorPanel = new NavigatorPanel(this);
         editorPanel = new EditorPanel(this);
         propertiesPanel = new PropertiesPanel();
         consolePanel = new ConsolePanel();
         statusBar = new StatusBar();
 
-        // Right-edge tool windows: Inspector (default) over a vertical tab stripe, plus Query Explorer
         queryExplorerPanel = new QueryExplorerPanel(this);
         rightToolWindow = new ToolWindowPane();
-        rightToolWindow.addTool("Inspector", propertiesPanel);
-        rightToolWindow.addTool("Query", queryExplorerPanel);
-        toolWindowMover = new ToolWindowMover(rightToolWindow, editorPanel, this);
+        sidePanel = new BottomPanel();
+        bottomToolbar = new BottomToolbar();
+
+        layoutController = new LayoutController(navigatorPanel, bottomToolbar);
+        editorPanel.setHost(layoutController);
+        sidePanel.setHost(layoutController);
+        rightToolWindow.setHost(layoutController);
+        toolWindowMover = new ToolWindowMover(layoutController);
         rightToolWindow.setMoveListener(toolWindowMover::move);
 
-        // The live "Threads" tool is only present while attached to a running JVM.
-        EventBus.getInstance().register(LiveSessionEvent.class, e -> {
-            if (e.isAttached()) {
-                if (liveThreadsPanel == null) {
+        rightToolWindow.addTool("Inspector", propertiesPanel);
+        rightToolWindow.addTool("Query", queryExplorerPanel);
+
+        EventBus.getInstance().register(LiveSessionEvent.class, e ->
+        {
+            if (e.isAttached())
+            {
+                if (liveThreadsPanel == null)
+                {
                     liveThreadsPanel = new LiveThreadsPanel(this);
                 }
                 rightToolWindow.addTool("Threads", liveThreadsPanel);
-                if (liveProfilerPanel == null) {
+                if (liveProfilerPanel == null)
+                {
                     liveProfilerPanel = new LiveProfilerPanel();
                 }
                 rightToolWindow.addTool("Profiler", liveProfilerPanel);
-                if (liveValueScannerPanel == null) {
+                if (liveValueScannerPanel == null)
+                {
                     liveValueScannerPanel = new LiveValueScannerPanel(this);
                 }
                 rightToolWindow.addTool("Value Scanner", liveValueScannerPanel);
                 LiveSession session = LiveAttachService.getInstance().getSession();
-                if (session != null && session.supportsJfr()) {
-                    if (liveRecorderPanel == null) {
+                if (session != null && session.supportsJfr())
+                {
+                    if (liveRecorderPanel == null)
+                    {
                         liveRecorderPanel = new LiveRecorderPanel(this);
                     }
                     rightToolWindow.addTool("Recorder", liveRecorderPanel);
                 }
-            } else {
-                // A live tool may have been moved to a tab/window; tear that float down (the session is gone) before
-                // the dock removal, which is then a clean no-op.
-                for (String tool : new String[]{"Threads", "Profiler", "Recorder", "Value Scanner"}) {
-                    toolWindowMover.closeFloat(tool);
+            }
+            else
+            {
+                for (String tool : new String[]{"Threads", "Profiler", "Recorder", "Value Scanner"})
+                {
                     rightToolWindow.removeTool(tool);
                 }
             }
         });
 
-        // The JDI "Debugger" tool is present only while a debug session is connected.
-        EventBus.getInstance().register(DebugSessionEvent.class, e -> {
-            if (e.isConnected()) {
-                if (debuggerPanel == null) {
+        EventBus.getInstance().register(DebugSessionEvent.class, e ->
+        {
+            if (e.isConnected())
+            {
+                if (debuggerPanel == null)
+                {
                     debuggerPanel = new DebuggerPanel(this);
                 }
                 rightToolWindow.addTool("Debugger", debuggerPanel);
-            } else {
-                toolWindowMover.closeFloat("Debugger");
+            }
+            else
+            {
                 rightToolWindow.removeTool("Debugger");
             }
-            // Re-arm breakpoint gutters on already-open tabs (they were opened before the session existed).
             editorPanel.refreshBreakpointGutters();
         });
 
-        // On a breakpoint hit: navigate to the current line and focus the Debugger tool.
-        EventBus.getInstance().register(DebugPausedEvent.class, e -> {
+        EventBus.getInstance().register(DebugPausedEvent.class, e ->
+        {
             navigateToDebugLocation(e.getLocation());
             rightToolWindow.select("Debugger");
         });
 
-        // "Scan for this value" from the live heap/statics views: focus the scanner tool and seed its scan bar.
-        EventBus.getInstance().register(ScanSeedEvent.class, e -> {
-            if (liveValueScannerPanel == null) {
+        EventBus.getInstance().register(ScanSeedEvent.class, e ->
+        {
+            if (liveValueScannerPanel == null)
+            {
                 return;
             }
             rightToolWindow.select("Value Scanner");
             liveValueScannerPanel.seed(e.getValueType(), e.getValue(), e.getPackageFilter());
         });
 
-        // Bottom panel with tabbed results (Find Usages, Console, Bookmarks, Comments)
-        sidePanel = new BottomPanel();
         sidePanel.setEditorPanel(editorPanel);
         sidePanel.setConsolePanel(consolePanel);
         sidePanel.setOnAllTabsClosed(() -> layoutController.collapseBottom());
         sidePanel.setOnTabOpened(() -> layoutController.expandBottom());
-        sidePanel.setCollapseHost(new BottomPanel.CollapseHost() {
+        sidePanel.setCollapseHost(new BottomPanel.CollapseHost()
+        {
             @Override
-            public boolean isCollapsed() {
+            public boolean isCollapsed()
+            {
                 return layoutController.isBottomCollapsed();
             }
 
             @Override
-            public void collapse() {
+            public void collapse()
+            {
                 layoutController.collapseBottom();
             }
 
             @Override
-            public void expand() {
+            public void expand()
+            {
                 layoutController.expandBottom();
             }
         });
 
-        // Bottom toolbar (always visible, outside split pane)
-        BottomToolbar bottomToolbar = new BottomToolbar();
         bottomToolbar.setOnConsoleClicked(() -> sidePanel.toggleConsoleTab());
-        bottomToolbar.setOnBookmarksClicked(() -> {
+        bottomToolbar.setOnBookmarksClicked(() ->
+        {
             ProjectModel project = ProjectService.getInstance().getCurrentProject();
             sidePanel.setProject(project);
             sidePanel.toggleBookmarksTab();
         });
-        bottomToolbar.setOnCommentsClicked(() -> {
+        bottomToolbar.setOnCommentsClicked(() ->
+        {
             ProjectModel project = ProjectService.getInstance().getCurrentProject();
             sidePanel.setProject(project);
             sidePanel.toggleCommentsTab();
@@ -348,37 +371,40 @@ public class MainFrame extends JFrame {
 
         dialogManager = new DialogManager(this, editorPanel);
         fileOps = new FileOperationsController(this);
-        layoutController = new LayoutController(editorPanel, sidePanel, navigatorPanel, rightToolWindow, bottomToolbar);
     }
 
-    private void initializeLayout() {
+    private void initializeLayout()
+    {
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.setBackground(JStudioTheme.getBgPrimary());
 
-        // Menu bar
         MenuBarBuilder menuBarBuilder = new MenuBarBuilder(this);
         setJMenuBar(menuBarBuilder.build());
 
-        // Toolbar
         toolbarBuilder = new ToolbarBuilder(this);
         contentPane.add(toolbarBuilder.build(), BorderLayout.NORTH);
 
-        // Main content area with split panes (navigator | (editor-over-bottom-dock | right tool window))
+        layoutController.show(Presets.asLaunched(LayoutBook.load(LayoutBook.defaultPath())));
         contentPane.add(layoutController.buildCenter(), BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
 
         setContentPane(contentPane);
     }
 
-    private void initializeEventHandlers() {
-        // Handle class selection from navigator
-        EventBus.getInstance().register(ClassSelectedEvent.class, event -> {
+    private void initializeEventHandlers()
+    {
+        EventBus.getInstance().register(ClassSelectedEvent.class, event ->
+        {
             ClassEntryModel classEntry = event.getClassEntry();
-            if (classEntry != null) {
+            if (classEntry != null)
+            {
                 openClassInEditor(classEntry);
-                if (event.hasScrollTarget()) {
-                    SwingUtilities.invokeLater(() -> {
-                        if (event.getHighlightLine() > 0) {
+                if (event.hasScrollTarget())
+                {
+                    SwingUtilities.invokeLater(() ->
+                    {
+                        if (event.getHighlightLine() > 0)
+                        {
                             editorPanel.goToLineAndHighlight(event.getHighlightLine());
                         }
                     });
@@ -386,16 +412,17 @@ public class MainFrame extends JFrame {
             }
         });
 
-        // Handle method selection from navigator - scroll to method after class is opened
-        EventBus.getInstance().register(MethodSelectedEvent.class, event -> {
+        EventBus.getInstance().register(MethodSelectedEvent.class, event ->
+        {
             MethodEntryModel method = event.getMethodEntry();
-            if (method != null) {
+            if (method != null)
+            {
                 SwingUtilities.invokeLater(() -> editorPanel.scrollToMethod(method));
             }
         });
 
-        // Handle project loaded
-        EventBus.getInstance().register(ProjectLoadedEvent.class, event -> {
+        EventBus.getInstance().register(ProjectLoadedEvent.class, event ->
+        {
             ProjectModel project = event.getProject();
             editorPanel.closeAllTabs();
             sidePanel.closeAllTabs();
@@ -403,109 +430,137 @@ public class MainFrame extends JFrame {
             editorPanel.setProjectModel(project);
             editorPanel.refreshWelcomeTab();
             ProjectDatabaseService.getInstance().initializeForProject(project);
-            if (LocalHistoryService.getInstance().attach(project)) {
+            if (LocalHistoryService.getInstance().attach(project))
+            {
                 Snapshot saved = LocalHistoryService.getInstance().newest();
-                if (saved != null && LocalHistoryService.getInstance().restore(saved)) {
+                if (saved != null && LocalHistoryService.getInstance().restore(saved))
+                {
                     refreshAfterProjectChange();
                 }
             }
             fileOps.updateTitleBar();
         });
 
-        // AI assistant wrote a script: refresh the Script Editor's list and open to it.
-        EventBus.getInstance().register(ScriptWrittenEvent.class, event ->
-            SwingUtilities.invokeLater(() -> {
-                showScriptEditor();
-                ScriptEditorDialog dialog = dialogManager.getScriptEditorDialog();
-                if (dialog != null) {
-                    dialog.getEditorPanel().selectScriptByName(event.getScriptName());
-                }
-            }));
+        EventBus.getInstance().register(ScriptWrittenEvent.class, event -> SwingUtilities.invokeLater(() ->
+        {
+            showScriptEditor();
+            ScriptEditorDialog dialog = dialogManager.getScriptEditorDialog();
+            if (dialog != null)
+            {
+                dialog.getEditorPanel().selectScriptByName(event.getScriptName());
+            }
+        }));
 
-        // AI assistant ran a script: stream its console output into the bottom Script Console tab.
-        EventBus.getInstance().register(ScriptConsoleEvent.class, event ->
-            SwingUtilities.invokeLater(() -> sidePanel.openScriptConsole().handle(event)));
+        EventBus.getInstance().register(ScriptConsoleEvent.class, event -> SwingUtilities.invokeLater(() -> sidePanel.openScriptConsole().handle(event)));
 
-        // AI assistant renamed a class/method/field: refresh the navigator + open editors to the new names.
-        EventBus.getInstance().register(ProjectRenamedEvent.class, event ->
-            SwingUtilities.invokeLater(() -> {
-                if (event.getKind() == ProjectRenamedEvent.Kind.CLASS) {
-                    refreshAfterRename(event.getOldClass(), event.getNewClass());
-                } else {
-                    refreshAfterProjectChange();
-                }
-            }));
+        EventBus.getInstance().register(ProjectRenamedEvent.class, event -> SwingUtilities.invokeLater(() ->
+        {
+            if (event.getKind() == ProjectRenamedEvent.Kind.CLASS)
+            {
+                refreshAfterRename(event.getOldClass(), event.getNewClass());
+            }
+            else
+            {
+                refreshAfterProjectChange();
+            }
+        }));
 
-        // Handle project updated (classes appended)
-        EventBus.getInstance().register(ProjectUpdatedEvent.class, event -> {
+        EventBus.getInstance().register(ProjectUpdatedEvent.class, event ->
+        {
             ProjectModel project = event.getProject();
-            if (project != null) {
+            if (project != null)
+            {
                 navigatorPanel.loadProject(project);
                 editorPanel.setProjectModel(project);
                 editorPanel.refreshWelcomeTab();
             }
         });
 
-        // Handle resource selection from navigator
-        EventBus.getInstance().register(ResourceSelectedEvent.class, event -> {
-            if (event.getResource() != null) {
+        EventBus.getInstance().register(ResourceSelectedEvent.class, event ->
+        {
+            if (event.getResource() != null)
+            {
                 editorPanel.openResource(event.getResource());
             }
         });
 
-        // Handle Find Usages requests
-        EventBus.getInstance().register(FindUsagesEvent.class, event -> {
+        EventBus.getInstance().register(FindUsagesEvent.class, event ->
+        {
             ProjectModel project = ProjectService.getInstance().getCurrentProject();
-            if (project != null) {
+            if (project != null)
+            {
                 sidePanel.setProject(project);
                 sidePanel.openFindUsagesTab(event);
             }
         });
     }
 
-    // === File Operations ===
-
-    public void showOpenDialog() {
+    /** Asks for a file and opens it as the project. */
+    public void showOpenDialog()
+    {
         fileOps.showOpenDialog();
     }
 
-    public void openFile(String path) {
+    /**
+     * Opens a file as the project.
+     *
+     * @param path the file's path
+     */
+    public void openFile(String path)
+    {
         fileOps.openFile(path);
     }
 
-    public void exportCurrentClass() {
+    /** Exports the front class to a file. */
+    public void exportCurrentClass()
+    {
         fileOps.exportCurrentClass();
     }
 
-    public void exportClass(ClassEntryModel classEntry) {
+    /**
+     * Exports a class to a file.
+     *
+     * @param classEntry the class
+     */
+    public void exportClass(ClassEntryModel classEntry)
+    {
         fileOps.exportClass(classEntry);
     }
 
-    public void exportAllClasses() {
+    /** Exports every class to a directory. */
+    public void exportAllClasses()
+    {
         fileOps.exportAllClasses();
     }
 
-    public void exportAsJar() {
+    /** Exports every class and resource as a JAR. */
+    public void exportAsJar()
+    {
         fileOps.exportAsJar();
     }
 
     /**
-     * Launches the given class's {@code main} in a separate JVM (so its System.exit/crash can't affect JStudio),
-     * streaming output into the Run panel. Unavailable while attached to a live JVM.
+     * Runs a class's main method in a separate JVM with output in the Run tab, attaching the live agent and the debugger where possible; unavailable while attached to a live JVM.
+     *
+     * @param classEntry the class to run
      */
-    public void runMainClass(ClassEntryModel classEntry) {
-        if (LiveAttachService.getInstance().isAttached()) {
+    public void runMainClass(ClassEntryModel classEntry)
+    {
+        if (LiveAttachService.getInstance().isAttached())
+        {
             showWarning("Run is unavailable while attached to a live JVM.");
             return;
         }
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || classEntry == null || !classEntry.hasMainMethod()) {
+        if (project == null || classEntry == null || !classEntry.hasMainMethod())
+        {
             return;
         }
         File defaultDir = project.getSourceFile() != null ? project.getSourceFile().getParentFile() : null;
         RunConfigDialog.RunConfig config =
                 RunConfigDialog.show(this, classEntry.getSimpleName(), defaultDir);
-        if (config == null) {
+        if (config == null)
+        {
             return;
         }
         String internalName = classEntry.getClassName();
@@ -515,241 +570,323 @@ public class MainFrame extends JFrame {
         launch.run();
     }
 
-    /**
-     * Launches the run, loading the JStudio agent (premain) and auto-attaching a live session to the child JVM
-     * so the live features apply to the running app. Degrades gracefully if the agent jar is unavailable.
-     */
-    private void launchWithLiveDebug(ProjectModel project, String internalName,
-                                     RunConfigDialog.RunConfig config,
-                                     RunConsolePanel panel) {
+    private void launchWithLiveDebug(ProjectModel project, String internalName, RunConfigDialog.RunConfig config, RunConsolePanel panel)
+    {
         List<String> vmOptions = new ArrayList<>(config.vmOptions);
         int port = -1;
         int jdwpPort = -1;
         File agentJar = LiveAttachService.getInstance().resolveAgentJar();
-        if (agentJar == null) {
+        if (agentJar == null)
+        {
             consolePanel.log("Live debugging unavailable (agent jar not found); running without it.");
-        } else if (config.javaFeature > 0 && config.javaFeature < 11) {
+        }
+        else if (config.javaFeature > 0 && config.javaFeature < 11)
+        {
             consolePanel.log("Live debugging needs Java 11+ on the selected JDK; running without it.");
-        } else {
-            try (ServerSocket probe = new ServerSocket(0)) {
+        }
+        else
+        {
+            try (ServerSocket probe = new ServerSocket(0))
+            {
                 port = probe.getLocalPort();
-            } catch (IOException ignored) {
             }
-            if (port > 0) {
+            catch (IOException ignored)
+            {
+            }
+            if (port > 0)
+            {
                 vmOptions.add(0, "-javaagent:" + agentJar.getAbsolutePath() + "=port=" + port);
             }
-            try (ServerSocket probe = new ServerSocket(0)) {
+            try (ServerSocket probe = new ServerSocket(0))
+            {
                 jdwpPort = probe.getLocalPort();
-            } catch (IOException ignored) {
             }
-            if (jdwpPort > 0) {
-                // Suspend at VMStart only when breakpoints are pre-set, so they can catch app startup; the
-                // debugger installs them on connect and resumes. No breakpoints -> run immediately.
+            catch (IOException ignored)
+            {
+            }
+            if (jdwpPort > 0)
+            {
                 String suspend = BreakpointService.getInstance().all().isEmpty() ? "n" : "y";
-                vmOptions.add(0, "-agentlib:jdwp=transport=dt_socket,server=y,suspend=" + suspend
-                        + ",address=127.0.0.1:" + jdwpPort);
+                vmOptions.add(0, "-agentlib:jdwp=transport=dt_socket,server=y,suspend=" + suspend + ",address=127.0.0.1:" + jdwpPort);
             }
         }
 
-        Process process = RunService.run(
-                project, internalName, config.programArgs, vmOptions, config.workingDir, config.javaHome, panel);
+        Process process = RunService.run(project, internalName, config.programArgs, vmOptions, config.workingDir, config.javaHome, panel);
         panel.setProcess(process);
-        if (process != null) {
+        if (process != null)
+        {
             RunStateService.getInstance().setProcess(process);
             process.onExit().thenAccept(p -> RunStateService.getInstance().clearIf(process));
         }
-        if (process == null) {
+        if (process == null)
+        {
             return;
         }
 
         String pid = String.valueOf(process.pid());
-        if (port > 0) {
+        if (port > 0)
+        {
             int agentPort = port;
-            SwingWorkers.run(
-                    () -> LiveSession.connect(pid, agentPort),
-                    session -> {
-                        LiveAttachService.getInstance().adoptRunSession(session);
-                        // Default runtime class-load capture ON for a Run auto-attach (the running app is the project).
-                        setLiveCaptureEnabled(true);
-                    },
-                    err -> consolePanel.log("Live debugging not attached: " + err.getMessage()));
+            SwingWorkers.run(() -> LiveSession.connect(pid, agentPort), session ->
+            {
+                LiveAttachService.getInstance().adoptRunSession(session);
+                setLiveCaptureEnabled(true);
+            }, err -> consolePanel.log("Live debugging not attached: " + err.getMessage()));
         }
-        if (jdwpPort > 0) {
+        if (jdwpPort > 0)
+        {
             int debugPort = jdwpPort;
-            SwingWorkers.run(
-                    () -> {
-                        DebugManager.getInstance().connectWithRetry("127.0.0.1", debugPort);
-                        return Boolean.TRUE;
-                    },
-                    ok -> consolePanel.log("Debugger attached (JDI)."),
-                    err -> consolePanel.log("Debugger not attached: " + err.getMessage()));
+            SwingWorkers.run(() ->
+            {
+                DebugManager.getInstance().connectWithRetry("127.0.0.1", debugPort);
+                return Boolean.TRUE;
+            }, ok -> consolePanel.log("Debugger attached (JDI)."), err -> consolePanel.log("Debugger not attached: " + err.getMessage()));
         }
         process.onExit().thenAccept(p -> SwingUtilities.invokeLater(this::onRunProcessExited));
     }
 
-    /** When a launched run process exits, drop its auto-attached live session (if it is still the active one). */
-    private void onRunProcessExited() {
+    private void onRunProcessExited()
+    {
         DebugManager.getInstance().disconnect();
         LiveAttachService svc = LiveAttachService.getInstance();
-        if (svc.isRunSession()) {
+        if (svc.isRunSession())
+        {
             detachLive();
         }
     }
 
-    public void closeProject() {
+    /** Closes the project, asking first where it has unsaved changes. */
+    public void closeProject()
+    {
         fileOps.closeProject();
     }
 
-    public void openProjectFile() {
+    /** Asks for a saved project file and opens it. */
+    public void openProjectFile()
+    {
         fileOps.openProjectFile();
     }
 
-    public void saveProject() {
+    /** Saves the project database. */
+    public void saveProject()
+    {
         fileOps.saveProject();
     }
 
-    public void saveProjectAs() {
+    /** Saves the project database to a file the user chooses. */
+    public void saveProjectAs()
+    {
         fileOps.saveProjectAs();
     }
 
-    public void exitApplication() {
-        if (!fileOps.confirmCloseIfDirty()) {
+    /** Saves settings and the layout, shuts plugins down and exits, unless the user cancels over unsaved changes. */
+    public void exitApplication()
+    {
+        if (!fileOps.confirmCloseIfDirty())
+        {
             return;
         }
 
-        // Save settings before exit
         saveSettings();
 
         GuiPluginManager.getInstance().shutdown();
         statusBar.dispose();
         toolbarBuilder.dispose();
         queryExplorerPanel.shutdown();
-        if (toolWindowMover != null) {
-            toolWindowMover.disposeAll();
+        if (layoutController != null)
+        {
+            layoutController.closeTornOut();
         }
         dispose();
         System.exit(0);
     }
 
-    private void saveSettings() {
+    private void saveSettings()
+    {
         Settings settings = Settings.getInstance();
 
-        // Save window bounds
         boolean maximized = (getExtendedState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH;
         settings.setWindowMaximized(maximized);
 
-        if (!maximized) {
+        if (!maximized)
+        {
             settings.saveWindowBounds(getX(), getY(), getWidth(), getHeight(), false);
         }
 
-        // Save divider positions (console is no longer a separate split; preserve its stored height)
-        layoutController.saveDividers(settings);
+        layoutController.saveLayout();
 
-        // Save editor settings
         settings.setFontSize(currentFontSize);
         settings.setWordWrapEnabled(wordWrapEnabled);
 
-        // Save last project
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null && project.getSourceFile() != null) {
+        if (project != null && project.getSourceFile() != null)
+        {
             settings.setLastProject(project.getSourceFile().getAbsolutePath());
         }
     }
 
-    // === Editor Operations ===
-
-    public void openClassInEditor(ClassEntryModel classEntry) {
+    /**
+     * Opens a class in the current view mode and records it in the navigation history.
+     *
+     * @param classEntry the class
+     */
+    public void openClassInEditor(ClassEntryModel classEntry)
+    {
         editorPanel.openClass(classEntry, currentViewMode);
         navigationHistory.push(classEntry);
         statusBar.setPosition(classEntry.getClassName());
     }
 
-    public void navigateBack() {
+    /** Opens the previous class in the navigation history. */
+    public void navigateBack()
+    {
         ClassEntryModel entry = navigationHistory.back();
-        if (entry != null) {
+        if (entry != null)
+        {
             editorPanel.openClass(entry, currentViewMode);
         }
     }
 
-    public void navigateForward() {
+    /** Opens the next class in the navigation history. */
+    public void navigateForward()
+    {
         ClassEntryModel entry = navigationHistory.forward();
-        if (entry != null) {
+        if (entry != null)
+        {
             editorPanel.openClass(entry, currentViewMode);
         }
     }
 
-    /** Resets the back/forward navigation history (used by the file controller when the workspace changes). */
-    public void clearNavigationHistory() {
+    /** Clears the back and forward navigation history. */
+    public void clearNavigationHistory()
+    {
         navigationHistory.clear();
     }
 
-    /** Disposes the cached analysis dialog (used by the file controller when the project is replaced/closed). */
-    public void disposeAnalysisDialog() {
+    /** Disposes the cached analysis dialog. */
+    public void disposeAnalysisDialog()
+    {
         dialogManager.disposeAnalysisDialog();
     }
 
-    // === View Operations ===
-
-    public void switchToView(ViewMode mode) {
+    /**
+     * Switches every class tab, the status bar and the toolbar to a view mode.
+     *
+     * @param mode the view mode
+     */
+    public void switchToView(ViewMode mode)
+    {
         currentViewMode = mode;
         editorPanel.setViewMode(mode);
         statusBar.setMode(mode.getDisplayName());
         toolbarBuilder.setViewMode(mode);
     }
 
-    public void switchToSourceView() {
+    /** Switches to source view. */
+    public void switchToSourceView()
+    {
         switchToView(ViewMode.SOURCE);
     }
 
-    public void switchToBytecodeView() {
+    /** Switches to bytecode view. */
+    public void switchToBytecodeView()
+    {
         switchToView(ViewMode.BYTECODE);
     }
 
-    public void switchToIRView() {
+    /** Switches to IR view. */
+    public void switchToIRView()
+    {
         switchToView(ViewMode.IR);
     }
 
-    public void switchToHexView() {
+    /** Switches to hex view. */
+    public void switchToHexView()
+    {
         switchToView(ViewMode.HEX);
     }
 
-    public void setOmitAnnotations(boolean omit) {
+    /**
+     * Sets whether decompiled output omits annotations.
+     *
+     * @param omit true to omit annotations
+     */
+    public void setOmitAnnotations(boolean omit)
+    {
         this.omitAnnotations = omit;
         editorPanel.setOmitAnnotations(omit);
     }
 
-    public void toggleNavigatorPanel() {
+    /** Shows the navigator, or flips it between put away and open. */
+    public void toggleNavigatorPanel()
+    {
         layoutController.toggleNavigatorPanel();
     }
 
-    public void togglePropertiesPanel() {
-        layoutController.togglePropertiesPanel();
+    /** Shows the tool windows, or flips them between put away and open. */
+    public void togglePropertiesPanel()
+    {
+        layoutController.toggle(Stacks.TOOLS);
     }
 
-    /** Opens or closes the Console tab in the bottom panel (View menu / keyboard shortcut). */
-    public void toggleConsolePanel() {
-        sidePanel.toggleConsoleTab();
-    }
-
-    public void refreshCurrentView() {
-        editorPanel.refreshCurrentTab();
-    }
-
-    public void refreshAfterRename(String oldClassName, String newClassName) {
-        editorPanel.closeTabForClass(oldClassName);
-        refreshAfterProjectChange();
-        statusBar.setMessage("Renamed: " + oldClassName.replace('/', '.') +
-                " -> " + newClassName.replace('/', '.'));
+    /** Turns rearrange mode on or off, creating its overlay the first time. */
+    public void toggleRearranging()
+    {
+        if (rearrange == null)
+        {
+            rearrange = new RearrangeOverlay(getRootPane(), layoutController);
+        }
+        if (rearrange.isRearranging())
+        {
+            rearrange.end();
+        }
+        else
+        {
+            rearrange.begin();
+        }
     }
 
     /**
-     * Full UI refresh after the project's bytecode was mutated (rename, script transform, ...): drops every class's
-     * decompilation cache and reloads all open editor tabs from current bytecode, so no view keeps showing stale
-     * source, then rebuilds the navigator. Use this for any change that can affect references across classes.
+     * Draws an arrangement in place of the current one.
+     *
+     * @param arrangement the arrangement to draw
      */
-    public void refreshAfterProjectChange() {
+    public void applyLayout(Arrangement arrangement)
+    {
+        layoutController.show(arrangement);
+    }
+
+    /** Opens or reveals the Console tab. */
+    public void toggleConsolePanel()
+    {
+        sidePanel.toggleConsoleTab();
+    }
+
+    /** Refreshes the front class tab. */
+    public void refreshCurrentView()
+    {
+        editorPanel.refreshCurrentTab();
+    }
+
+    /**
+     * Closes a renamed class's old tab and refreshes after the project change.
+     *
+     * @param oldClassName the class's internal name before the rename
+     * @param newClassName the class's internal name after the rename
+     */
+    public void refreshAfterRename(String oldClassName, String newClassName)
+    {
+        editorPanel.closeTabForClass(oldClassName);
+        refreshAfterProjectChange();
+        statusBar.setMessage("Renamed: " + oldClassName.replace('/', '.') + " -> " + newClassName.replace('/', '.'));
+    }
+
+    /** Drops every class's decompilation cache, reloads all open class tabs and rebuilds the navigator, after a change that can affect references across classes. */
+    public void refreshAfterProjectChange()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
+        if (project != null)
+        {
             project.invalidateAllDecompilationCaches();
         }
         editorPanel.reloadAllTabs();
@@ -758,27 +895,43 @@ public class MainFrame extends JFrame {
         editorPanel.refreshWelcomeTab();
     }
 
-    /**
-     * User-invoked Refresh (toolbar / menu / Ctrl+F5): the FULL refresh - drop every class's decompilation cache and
-     * force-re-decompile all open tabs from current bytecode, identical to what happens after the AI rename tools (or
-     * any project mutation). Use this instead of {@link #refreshCurrentView()} when stale decompiled output needs to
-     * be regenerated.
-     */
-    public void fullRefresh() {
+    /** Performs the user-invoked full refresh: every class is decompiled again from its current bytecode. */
+    public void fullRefresh()
+    {
         refreshAfterProjectChange();
         statusBar.setMessage("Refreshed - re-decompiled all classes from current bytecode");
     }
 
-    public void closeEditorForClass(String className) {
+    /**
+     * Closes a class's tab where it is open.
+     *
+     * @param className the class's internal name
+     */
+    public void closeEditorForClass(String className)
+    {
         editorPanel.closeTabForClass(className);
     }
 
-    public void closeEditorForResource(String path) {
+    /**
+     * Closes a resource's tab where it is open.
+     *
+     * @param path the resource's path
+     */
+    public void closeEditorForResource(String path)
+    {
         editorPanel.closeTabForResource(path);
     }
 
-    public void refreshAfterBulkRename(Set<String> oldClassNames, int totalRenamed) {
-        for (String oldName : oldClassNames) {
+    /**
+     * Closes the old tabs of renamed classes and refreshes the navigator after a bulk rename.
+     *
+     * @param oldClassNames the internal names of the renamed classes before renaming
+     * @param totalRenamed how many items were renamed, for the status bar
+     */
+    public void refreshAfterBulkRename(Set<String> oldClassNames, int totalRenamed)
+    {
+        for (String oldName : oldClassNames)
+        {
             editorPanel.closeTabForClass(oldName);
         }
 
@@ -789,79 +942,113 @@ public class MainFrame extends JFrame {
         statusBar.setMessage("Deobfuscation complete: " + totalRenamed + " items renamed");
     }
 
-    public void setNavigatorLoading(boolean loading) {
+    /**
+     * Shows or hides the navigator's loading state.
+     *
+     * @param loading true while loading
+     */
+    public void setNavigatorLoading(boolean loading)
+    {
         navigatorPanel.setLoading(loading);
     }
 
-    // === Font Size Operations ===
-
-    public void increaseFontSize() {
-        if (currentFontSize < MAX_FONT_SIZE) {
+    /** Increases the editor font size by two points, up to the maximum. */
+    public void increaseFontSize()
+    {
+        if (currentFontSize < MAX_FONT_SIZE)
+        {
             currentFontSize += 2;
             editorPanel.setFontSize(currentFontSize);
             statusBar.setMessage("Font size: " + currentFontSize);
         }
     }
 
-    public void decreaseFontSize() {
-        if (currentFontSize > MIN_FONT_SIZE) {
+    /** Decreases the editor font size by two points, down to the minimum. */
+    public void decreaseFontSize()
+    {
+        if (currentFontSize > MIN_FONT_SIZE)
+        {
             currentFontSize -= 2;
             editorPanel.setFontSize(currentFontSize);
             statusBar.setMessage("Font size: " + currentFontSize);
         }
     }
 
-    public void resetFontSize() {
+    /** Resets the editor font size to the default. */
+    public void resetFontSize()
+    {
         currentFontSize = DEFAULT_FONT_SIZE;
         editorPanel.setFontSize(currentFontSize);
         statusBar.setMessage("Font size reset to " + currentFontSize);
     }
 
-    public void toggleWordWrap(boolean enabled) {
+    /**
+     * Turns word wrap on or off in the editor.
+     *
+     * @param enabled true to wrap
+     */
+    public void toggleWordWrap(boolean enabled)
+    {
         wordWrapEnabled = enabled;
         editorPanel.setWordWrap(enabled);
         statusBar.setMessage("Word wrap " + (enabled ? "enabled" : "disabled"));
     }
 
-    public void toggleUsageLens(boolean enabled) {
+    /**
+     * Turns usage-count lenses on or off and remembers the choice.
+     *
+     * @param enabled true to show the lenses
+     */
+    public void toggleUsageLens(boolean enabled)
+    {
         Settings.getInstance().setUsageLensEnabled(enabled);
         editorPanel.setUsageLensEnabled(enabled);
         statusBar.setMessage("Usage counts " + (enabled ? "enabled" : "disabled"));
     }
 
-    // === Edit Operations ===
-
-    public void copySelection() {
+    /** Copies the selection in the front class tab. */
+    public void copySelection()
+    {
         editorPanel.copySelection();
     }
 
-    public void showFindDialog() {
+    /** Shows the find dialog for the front class tab. */
+    public void showFindDialog()
+    {
         editorPanel.showFindDialog();
     }
 
-    public void showFindInProjectDialog() {
+    /** Shows the find-in-project dialog. */
+    public void showFindInProjectDialog()
+    {
         dialogManager.showFindInProjectDialog();
     }
 
-    public void showGoToClassDialog() {
+    /** Focuses the navigator's search field. */
+    public void showGoToClassDialog()
+    {
         navigatorPanel.focusSearchField();
     }
 
-    public void showGoToLineDialog() {
+    /** Asks for a line number and moves the front class tab to it. */
+    public void showGoToLineDialog()
+    {
         editorPanel.showGoToLineDialog();
     }
 
-    // === Bookmarks & Comments ===
-
-    public void addBookmarkAtCurrentLocation() {
+    /** Asks for a name and bookmarks the front class. */
+    public void addBookmarkAtCurrentLocation()
+    {
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass == null) {
+        if (currentClass == null)
+        {
             showWarning("No class selected. Open a class first to add a bookmark.");
             return;
         }
 
         String name = JOptionPane.showInputDialog(this, "Bookmark name:", "Add Bookmark", JOptionPane.PLAIN_MESSAGE);
-        if (name == null || name.trim().isEmpty()) {
+        if (name == null || name.trim().isEmpty())
+        {
             return;
         }
 
@@ -870,9 +1057,12 @@ public class MainFrame extends JFrame {
         consolePanel.log("Added bookmark: " + name.trim() + " -> " + currentClass.getSimpleName());
     }
 
-    public void addCommentAtCurrentLocation() {
+    /** Asks for text and adds a class comment to the front class. */
+    public void addCommentAtCurrentLocation()
+    {
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass == null) {
+        if (currentClass == null)
+        {
             showWarning("No class selected. Open a class first to add a comment.");
             return;
         }
@@ -882,11 +1072,10 @@ public class MainFrame extends JFrame {
         textArea.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(textArea);
 
-        int result = JOptionPane.showConfirmDialog(this, scrollPane,
-                "Add Comment for " + currentClass.getSimpleName(),
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(this, scrollPane, "Add Comment for " + currentClass.getSimpleName(), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        if (result == JOptionPane.OK_OPTION && !textArea.getText().trim().isEmpty()) {
+        if (result == JOptionPane.OK_OPTION && !textArea.getText().trim().isEmpty())
+        {
             Comment comment = new Comment(currentClass.getClassName(), -1, textArea.getText().trim());
             comment.setType(Comment.Type.CLASS);
             ProjectDatabaseService.getInstance().addComment(comment);
@@ -894,86 +1083,112 @@ public class MainFrame extends JFrame {
         }
     }
 
-    /** Opens (or toggles) the Local History bottom tab. */
-    public void showLocalHistoryPanel() {
+    /** Opens or reveals the Local History tab. */
+    public void showLocalHistoryPanel()
+    {
         sidePanel.toggleLocalHistoryTab();
     }
 
-    /** Creates a manual history checkpoint of the current project state. */
-    public void createHistoryCheckpoint() {
-        Snapshot created = LocalHistoryService.getInstance().snapshot(Snapshot.Trigger.MANUAL.getDefaultLabel(),
-                Snapshot.Trigger.MANUAL);
-        if (created == null && LocalHistoryService.getInstance().isEnabled()) {
+    /** Snapshots the current project into local history as a manual checkpoint. */
+    public void createHistoryCheckpoint()
+    {
+        Snapshot created = LocalHistoryService.getInstance().snapshot(Snapshot.Trigger.MANUAL.getDefaultLabel(), Snapshot.Trigger.MANUAL);
+        if (created == null && LocalHistoryService.getInstance().isEnabled())
+        {
             statusBar.setMessage("No changes since the last snapshot");
-        } else if (created != null) {
+        }
+        else if (created != null)
+        {
             statusBar.setMessage("Checkpoint created");
         }
     }
 
-    public void showBookmarksPanel() {
+    /** Opens or reveals the Bookmarks tab for the current project. */
+    public void showBookmarksPanel()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
+        if (project != null)
+        {
             sidePanel.setProject(project);
             sidePanel.toggleBookmarksTab();
         }
     }
 
-    public void showCommentsPanel() {
+    /** Opens or reveals the Comments tab for the current project. */
+    public void showCommentsPanel()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null) {
+        if (project != null)
+        {
             sidePanel.setProject(project);
             sidePanel.toggleCommentsTab();
         }
     }
 
-    // === Analysis Operations ===
-
-    public void runAnalysis() {
+    /** Opens the analysis dialog and runs its analysis. */
+    public void runAnalysis()
+    {
         dialogManager.runAnalysis();
     }
 
-    public void showSimilarityAnalysis() {
+    /** Opens the similarity analysis. */
+    public void showSimilarityAnalysis()
+    {
         dialogManager.showSimilarityAnalysis();
     }
 
-    public void showSearchAnalysis() {
+    /** Opens the search analysis. */
+    public void showSearchAnalysis()
+    {
         dialogManager.showSearchAnalysis();
     }
 
-    public void showStringsAnalysis() {
+    /** Opens the strings analysis. */
+    public void showStringsAnalysis()
+    {
         dialogManager.showStringsAnalysis();
     }
 
-    // === Transform Operations ===
-
-    /** Opens (reusing one instance) the Remove Dead Code analysis dialog. */
-    public void showRemoveDeadCodeDialog() {
+    /** Opens the Remove Dead Code dialog, reusing one instance. */
+    public void showRemoveDeadCodeDialog()
+    {
         dialogManager.showRemoveDeadCodeDialog();
     }
 
-    /** After dead-code removal: close tabs of removed classes and reload the navigator/editor. */
-    public void refreshAfterDeadCodeRemoval(Collection<String> removedClassesInternal) {
+    /**
+     * Closes the tabs of classes dead-code removal deleted and reloads the navigator and editor.
+     *
+     * @param removedClassesInternal the internal names of the removed classes
+     */
+    public void refreshAfterDeadCodeRemoval(Collection<String> removedClassesInternal)
+    {
         dialogManager.refreshAfterDeadCodeRemoval(removedClassesInternal);
     }
 
-    public void showTransformDialog() {
+    /** Opens the transform dialog. */
+    public void showTransformDialog()
+    {
         dialogManager.showTransformDialog();
     }
 
-    /**
-     * Shows the script editor dialog.
-     */
-    public void showScriptEditor() {
+    /** Shows the script editor dialog. */
+    public void showScriptEditor()
+    {
         dialogManager.showScriptEditor();
     }
 
-    public void showDeobfuscationPanel() {
+    /** Opens the deobfuscation panel. */
+    public void showDeobfuscationPanel()
+    {
         dialogManager.showDeobfuscationPanel();
     }
 
-    public void showDeobfuscateNamesDialog() {
+    /** Opens the Deobfuscate Names dialog for the loaded project. */
+    public void showDeobfuscateNamesDialog()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             showWarning("No project loaded. Load a project first.");
             return;
         }
@@ -982,14 +1197,22 @@ public class MainFrame extends JFrame {
         dialog.setVisible(true);
     }
 
-    public void showRenameClassDialog(ClassEntryModel classEntry) {
-        if (classEntry == null) {
+    /**
+     * Asks for a new class name and renames the class across the project.
+     *
+     * @param classEntry the class to rename
+     */
+    public void showRenameClassDialog(ClassEntryModel classEntry)
+    {
+        if (classEntry == null)
+        {
             showWarning("No class selected.");
             return;
         }
 
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassPool() == null) {
+        if (project == null || project.getClassPool() == null)
+        {
             showWarning("No project loaded.");
             return;
         }
@@ -998,28 +1221,33 @@ public class MainFrame extends JFrame {
         RenameClassDialog dialog = new RenameClassDialog(this, oldName);
         dialog.setVisible(true);
 
-        if (!dialog.isConfirmed()) {
+        if (!dialog.isConfirmed())
+        {
             return;
         }
 
         String newName = dialog.getNewClassName();
-        if (newName.equals(oldName)) {
+        if (newName.equals(oldName))
+        {
             return;
         }
 
         setNavigatorLoading(true);
         ClassPool classPool = project.getClassPool();
 
-        SwingUtilities.invokeLater(() -> {
-            try {
-                LocalHistoryService.getInstance().snapshot("Rename class " + classEntry.getSimpleName(),
-                        Snapshot.Trigger.RENAME);
+        SwingUtilities.invokeLater(() ->
+        {
+            try
+            {
+                LocalHistoryService.getInstance().snapshot("Rename class " + classEntry.getSimpleName(), Snapshot.Trigger.RENAME);
                 Renamer renamer = new Renamer(classPool);
                 renamer.mapClass(oldName, newName).apply();
                 project.notifyClassRenamed(oldName, newName);
                 refreshAfterRename(oldName, newName);
                 consolePanel.log("Renamed class: " + oldName.replace('/', '.') + " -> " + newName.replace('/', '.'));
-            } catch (RenameException e) {
+            }
+            catch (RenameException e)
+            {
                 setNavigatorLoading(false);
                 showError("Rename failed: " + e.getMessage());
                 consolePanel.logError("Rename failed: " + e.getMessage());
@@ -1027,14 +1255,23 @@ public class MainFrame extends JFrame {
         });
     }
 
-    public void showRenameMethodDialog(ClassEntryModel classEntry, MethodEntryModel method) {
-        if (classEntry == null || method == null) {
+    /**
+     * Asks for a new method name and renames the method across the project.
+     *
+     * @param classEntry the declaring class
+     * @param method the method to rename
+     */
+    public void showRenameMethodDialog(ClassEntryModel classEntry, MethodEntryModel method)
+    {
+        if (classEntry == null || method == null)
+        {
             showWarning("No method selected.");
             return;
         }
 
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassPool() == null) {
+        if (project == null || project.getClassPool() == null)
+        {
             showWarning("No project loaded.");
             return;
         }
@@ -1046,27 +1283,33 @@ public class MainFrame extends JFrame {
         RenameMethodDialog dialog = new RenameMethodDialog(this, oldName, desc);
         dialog.setVisible(true);
 
-        if (!dialog.isConfirmed()) {
+        if (!dialog.isConfirmed())
+        {
             return;
         }
 
         String newName = dialog.getNewMethodName();
-        if (newName.equals(oldName)) {
+        if (newName.equals(oldName))
+        {
             return;
         }
 
         setNavigatorLoading(true);
         ClassPool classPool = project.getClassPool();
 
-        SwingUtilities.invokeLater(() -> {
-            try {
+        SwingUtilities.invokeLater(() ->
+        {
+            try
+            {
                 LocalHistoryService.getInstance().snapshot("Rename method " + oldName, Snapshot.Trigger.RENAME);
                 Renamer renamer = new Renamer(classPool);
                 renamer.mapMethod(className, oldName, desc, newName).apply();
                 refreshAfterProjectChange();
                 consolePanel.log("Renamed method: " + oldName + " -> " + newName + " in " + classEntry.getSimpleName());
                 statusBar.setMessage("Renamed method: " + oldName + " -> " + newName);
-            } catch (RenameException e) {
+            }
+            catch (RenameException e)
+            {
                 setNavigatorLoading(false);
                 showError("Rename failed: " + e.getMessage());
                 consolePanel.logError("Rename failed: " + e.getMessage());
@@ -1074,14 +1317,23 @@ public class MainFrame extends JFrame {
         });
     }
 
-    public void showRenameFieldDialog(ClassEntryModel classEntry, FieldEntryModel field) {
-        if (classEntry == null || field == null) {
+    /**
+     * Asks for a new field name and renames the field across the project.
+     *
+     * @param classEntry the declaring class
+     * @param field the field to rename
+     */
+    public void showRenameFieldDialog(ClassEntryModel classEntry, FieldEntryModel field)
+    {
+        if (classEntry == null || field == null)
+        {
             showWarning("No field selected.");
             return;
         }
 
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null || project.getClassPool() == null) {
+        if (project == null || project.getClassPool() == null)
+        {
             showWarning("No project loaded.");
             return;
         }
@@ -1093,27 +1345,33 @@ public class MainFrame extends JFrame {
         RenameFieldDialog dialog = new RenameFieldDialog(this, oldName, desc);
         dialog.setVisible(true);
 
-        if (!dialog.isConfirmed()) {
+        if (!dialog.isConfirmed())
+        {
             return;
         }
 
         String newName = dialog.getNewFieldName();
-        if (newName.equals(oldName)) {
+        if (newName.equals(oldName))
+        {
             return;
         }
 
         setNavigatorLoading(true);
         ClassPool classPool = project.getClassPool();
 
-        SwingUtilities.invokeLater(() -> {
-            try {
+        SwingUtilities.invokeLater(() ->
+        {
+            try
+            {
                 LocalHistoryService.getInstance().snapshot("Rename field " + oldName, Snapshot.Trigger.RENAME);
                 Renamer renamer = new Renamer(classPool);
                 renamer.mapField(className, oldName, desc, newName).apply();
                 refreshAfterProjectChange();
                 consolePanel.log("Renamed field: " + oldName + " -> " + newName + " in " + classEntry.getSimpleName());
                 statusBar.setMessage("Renamed field: " + oldName + " -> " + newName);
-            } catch (RenameException e) {
+            }
+            catch (RenameException e)
+            {
                 setNavigatorLoading(false);
                 showError("Rename failed: " + e.getMessage());
                 consolePanel.logError("Rename failed: " + e.getMessage());
@@ -1121,39 +1379,50 @@ public class MainFrame extends JFrame {
         });
     }
 
-    public void applyTransform(String transformName) {
+    /**
+     * Applies a named transform to the project.
+     *
+     * @param transformName the transform's name
+     */
+    public void applyTransform(String transformName)
+    {
         dialogManager.applyTransform(transformName);
     }
 
-    public void recomputeStackFrames() {
+    /** Rebuilds the front class's class file in the background and refreshes its tab. */
+    public void recomputeStackFrames()
+    {
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass == null) {
+        if (currentClass == null)
+        {
             showWarning("No class selected.");
             return;
         }
 
-        // Note: Stack frame computation is typically done automatically by the SSA transform system
-        // This method provides a manual trigger to rebuild the class file
         statusBar.showProgress("Rebuilding class...");
 
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+        SwingWorker<Void, Void> worker = new SwingWorker<>()
+        {
             @Override
-            protected Void doInBackground() throws Exception {
+            protected Void doInBackground() throws Exception
+            {
                 ClassFile cf = currentClass.getClassFile();
-                // Rebuild the class file (this recalculates any internal structures)
                 cf.write();
                 return null;
             }
 
             @Override
-            protected void done() {
+            protected void done()
+            {
                 statusBar.hideProgress();
-                try {
+                try
+                {
                     get();
                     consolePanel.log("Rebuilt class " + currentClass.getClassName());
-                    // Refresh the current view
                     editorPanel.refreshCurrentTab();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     showError("Rebuild failed: " + e.getMessage());
                 }
             }
@@ -1162,133 +1431,160 @@ public class MainFrame extends JFrame {
         worker.execute();
     }
 
-    // === Help Operations ===
-
-    public void showKeyboardShortcuts() {
-        editorPanel.openCustomView("keyboard-shortcuts", "Keyboard Shortcuts",
-                Icons.getIcon("info"), new KeyboardShortcutsView());
+    /** Opens the keyboard shortcuts reference as a document tab. */
+    public void showKeyboardShortcuts()
+    {
+        editorPanel.openCustomView("keyboard-shortcuts", "Keyboard Shortcuts", Icons.getIcon("info"), new KeyboardShortcutsView());
     }
 
-    public void showAboutDialog() {
+    /** Shows the About dialog. */
+    public void showAboutDialog()
+    {
         String message = JStudio.APP_NAME + " " + JStudio.APP_VERSION + "\n\n" +
                 "A professional Java reverse engineering and analysis suite.";
 
-        JOptionPane.showMessageDialog(this, message, "About " + JStudio.APP_NAME,
-                JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, "About " + JStudio.APP_NAME, JOptionPane.INFORMATION_MESSAGE);
     }
 
-    public void showPreferencesDialog() {
+    /** Opens the preferences dialog. */
+    public void showPreferencesDialog()
+    {
         dialogManager.showPreferencesDialog();
     }
 
-    /** Re-reads the font size from settings and applies it to the editor (Preferences "Apply" callback). */
-    public void applyFontSizeFromSettings() {
+    /** Applies the font size from settings to the editor. */
+    public void applyFontSizeFromSettings()
+    {
         currentFontSize = Settings.getInstance().getFontSize();
         editorPanel.setFontSize(currentFontSize);
     }
 
-    // === Utility Methods ===
-
-    public void showInfo(String message) {
-        JOptionPane.showMessageDialog(this, message, "Information",
-                JOptionPane.INFORMATION_MESSAGE);
+    /**
+     * Shows an information message.
+     *
+     * @param message the text
+     */
+    public void showInfo(String message)
+    {
+        JOptionPane.showMessageDialog(this, message, "Information", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    public void showWarning(String message) {
-        JOptionPane.showMessageDialog(this, message, "Warning",
-                JOptionPane.WARNING_MESSAGE);
+    /**
+     * Shows a warning message.
+     *
+     * @param message the text
+     */
+    public void showWarning(String message)
+    {
+        JOptionPane.showMessageDialog(this, message, "Warning", JOptionPane.WARNING_MESSAGE);
     }
 
-    public void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "Error",
-                JOptionPane.ERROR_MESSAGE);
+    /**
+     * Shows an error message.
+     *
+     * @param message the text
+     */
+    public void showError(String message)
+    {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
-    // === Getters ===
-
-    /** The analysis tool panel, or {@code null} if the analysis dialog has not been opened yet. */
-    public AnalysisPanel getAnalysisPanel() {
+    /**
+     * Finds the analysis panel.
+     *
+     * @return the panel, or null where the analysis dialog has not been opened
+     */
+    public AnalysisPanel getAnalysisPanel()
+    {
         return dialogManager.getAnalysisPanel();
     }
 
-    /**
-     * Run simulation analysis on the current method or class.
-     */
-    public void runCodeAnalysis() {
+    /** Runs simulation analysis on the current method or class. */
+    public void runCodeAnalysis()
+    {
         dialogManager.runCodeAnalysis();
     }
 
-    // === VM Operations ===
-
-    /**
-     * Opens the "Attach to Live JVM" dialog. Attaching loads the Java agent into the chosen
-     * process and replaces the current project with one built from that JVM's loaded classes.
-     */
-    public void showLiveAttachDialog() {
+    /** Opens the Attach to Live JVM dialog, where attaching replaces the project with the target's loaded classes. */
+    public void showLiveAttachDialog()
+    {
         new LiveAttachDialog(this).setVisible(true);
     }
 
     /**
-     * Opens the class for a JDI debug location and scrolls/highlights its source line, reusing the same
-     * offset-to-source navigation that Find Usages uses. Called on a breakpoint hit and on a call-stack click.
+     * Opens the class of a debug location and highlights its source line; a location outside the project is ignored.
+     *
+     * @param loc the location, or null
      */
-    public void navigateToDebugLocation(DebugLocation loc) {
-        if (loc == null) {
+    public void navigateToDebugLocation(DebugLocation loc)
+    {
+        if (loc == null)
+        {
             return;
         }
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             return;
         }
         ClassEntryModel ce = project.getClass(loc.getClassName().replace('.', '/'));
-        if (ce == null) {
+        if (ce == null)
+        {
             ce = project.findClassByName(loc.getClassName());
         }
-        if (ce == null) {
+        if (ce == null)
+        {
             return;
         }
         ClassEntryModel target = ce;
-        SwingUtilities.invokeLater(() -> editorPanel.navigateToSourceOffset(
-                target, loc.getMethodName(), loc.getMethodDescriptor(), (int) loc.getCodeIndex(), null));
+        SwingUtilities.invokeLater(() -> editorPanel.navigateToSourceOffset(target, loc.getMethodName(), loc.getMethodDescriptor(), (int) loc.getCodeIndex(), null));
     }
 
-    /**
-     * External opt-in for the JDI debugger: late-loads the JDWP agent into the currently attached JVM and
-     * connects the debugger. Degrades gracefully (a console message) if the target blocks agent loading.
-     */
-    public void enableDebuggerOnAttached() {
-        if (DebugManager.getInstance().isConnected()) {
+    /** Loads the JDWP agent into the attached JVM and connects the debugger, reporting failure in the console. */
+    public void enableDebuggerOnAttached()
+    {
+        if (DebugManager.getInstance().isConnected())
+        {
             return;
         }
         LiveSession s = LiveAttachService.getInstance().getSession();
-        if (s == null) {
+        if (s == null)
+        {
             showWarning("Attach to a live JVM first (Attach -> Attach to Live JVM).");
             return;
         }
         String pid = s.getPid();
         int dp = -1;
-        try (ServerSocket probe = new ServerSocket(0)) {
+        try (ServerSocket probe = new ServerSocket(0))
+        {
             dp = probe.getLocalPort();
-        } catch (IOException ignored) {
         }
-        if (dp <= 0) {
+        catch (IOException ignored)
+        {
+        }
+        if (dp <= 0)
+        {
             showWarning("Could not allocate a debug port.");
             return;
         }
         int debugPort = dp;
         consolePanel.log("Enabling debugger (JDI) on pid " + pid + "...");
-        SwingWorkers.run(
-                () -> {
-                    DebugManager.getInstance().connectExternal(pid, debugPort);
-                    return Boolean.TRUE;
-                },
-                ok -> consolePanel.log("Debugger attached (JDI) to pid " + pid + "."),
-                err -> consolePanel.log("Debugger unavailable on this JVM: " + err.getMessage()));
+        SwingWorkers.run(() ->
+        {
+            DebugManager.getInstance().connectExternal(pid, debugPort);
+            return Boolean.TRUE;
+        }, ok -> consolePanel.log("Debugger attached (JDI) to pid " + pid + "."), err -> consolePanel.log("Debugger unavailable on this JVM: " + err.getMessage()));
     }
 
-    /** Opens (reusing one window) the JFR analysis view for a captured {@code .jfr} recording. */
-    public void showJfrAnalysis(File jfr) {
-        if (jfrAnalysisWindow == null) {
+    /**
+     * Opens a Flight Recorder recording in the JFR analysis window, reusing one window.
+     *
+     * @param jfr the recording
+     */
+    public void showJfrAnalysis(File jfr)
+    {
+        if (jfrAnalysisWindow == null)
+        {
             jfrAnalysisWindow = new JfrAnalysisWindow(this);
         }
         jfrAnalysisWindow.load(jfr);
@@ -1296,38 +1592,42 @@ public class MainFrame extends JFrame {
         jfrAnalysisWindow.toFront();
     }
 
-    /**
-     * Opens the live Java scratch pad: compile-and-run arbitrary Java inside the attached JVM. Requires an
-     * active attach session and a loaded project (the target's pulled classes). Holds one non-modal dialog.
-     */
-    public void showLiveScratchPad() {
+    /** Opens the scratch pad that compiles and runs Java inside the attached JVM, reusing one dialog. */
+    public void showLiveScratchPad()
+    {
         LiveAttachService svc = LiveAttachService.getInstance();
-        if (!svc.isAttached()) {
+        if (!svc.isAttached())
+        {
             showWarning("Attach to a live JVM first (Attach -> Attach to Live JVM).");
             return;
         }
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             showWarning("No project loaded.");
             return;
         }
-        if (liveScratchPadDialog == null) {
+        if (liveScratchPadDialog == null)
+        {
             liveScratchPadDialog = new LiveScratchPadDialog(this);
         }
         liveScratchPadDialog.setProject(project);
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass != null && project.isUserClass(currentClass.getClassName())) {
+        if (currentClass != null && project.isUserClass(currentClass.getClassName()))
+        {
             liveScratchPadDialog.setContextClass(currentClass.getClassName());
         }
         liveScratchPadDialog.setVisible(true);
         liveScratchPadDialog.toFront();
     }
 
-    /** Detaches from the live JVM (closes the session); the pulled classes remain for offline browsing. */
-    public void detachLive() {
+    /** Disconnects the debugger and detaches from the live JVM, keeping the pulled classes for offline browsing. */
+    public void detachLive()
+    {
         DebugManager.getInstance().disconnect();
         LiveAttachService svc = LiveAttachService.getInstance();
-        if (!svc.isAttached()) {
+        if (!svc.isAttached())
+        {
             return;
         }
         svc.detach();
@@ -1345,59 +1645,82 @@ public class MainFrame extends JFrame {
     private LiveValueScannerPanel liveValueScannerPanel;
     private DebuggerPanel debuggerPanel;
 
-    /** The live Value Scanner tool (present only while attached); null when not attached. */
-    public LiveValueScannerPanel getValueScannerPanel() {
+    /** @return the Value Scanner tool, or null where no live session has been attached */
+    public LiveValueScannerPanel getValueScannerPanel()
+    {
         return liveValueScannerPanel;
     }
 
     /**
-     * Arms or disarms runtime class-load capture on the active live session. Captured classes (packers,
-     * defineHiddenClass, ASM glue) stream into the project as they load. No-op without an attach session.
+     * Arms or disarms capture of classes as the attached JVM loads them; without a session it only warns.
+     *
+     * @param enabled true to arm capture
      */
-    public void setLiveCaptureEnabled(boolean enabled) {
+    public void setLiveCaptureEnabled(boolean enabled)
+    {
         LiveAttachService svc = LiveAttachService.getInstance();
-        if (!svc.isAttached()) {
-            if (enabled) {
+        if (!svc.isAttached())
+        {
+            if (enabled)
+            {
                 showWarning("Attach to a live JVM first (VM -> Attach to Live JVM).");
             }
             return;
         }
         LiveSession session = svc.getSession();
-        if (liveCaptureService != null && liveCaptureSession != session) {
+        if (liveCaptureService != null && liveCaptureSession != session)
+        {
             liveCaptureService.dispose();
             liveCaptureService = null;
         }
-        try {
-            if (enabled) {
-                if (liveCaptureService == null) {
+        try
+        {
+            if (enabled)
+            {
+                if (liveCaptureService == null)
+                {
                     liveCaptureService = new LiveCaptureService(session);
                     liveCaptureSession = session;
                 }
                 liveCaptureService.arm();
-            } else if (liveCaptureService != null) {
+            }
+            else if (liveCaptureService != null)
+            {
                 liveCaptureService.disarm();
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             showWarning("Live capture toggle failed: " + e.getMessage());
         }
     }
 
-    /** Whether runtime class-load capture is currently armed on the active session. */
-    public boolean isLiveCaptureEnabled() {
+    /**
+     * Tells whether class-load capture is armed.
+     *
+     * @return true while capture is armed
+     */
+    public boolean isLiveCaptureEnabled()
+    {
         return liveCaptureService != null && liveCaptureService.isArmed();
     }
 
     /**
-     * Opens the decompiled source for a thread-stack frame: resolves the declaring class in the current
-     * project and navigates to the method. Navigation is method-level (a stack frame carries no descriptor).
+     * Opens a stack frame's method in source view, matching the method by name alone.
+     *
+     * @param internalName the declaring class's internal name
+     * @param methodName the method's name
      */
-    public void openLiveFrame(String internalName, String methodName) {
+    public void openLiveFrame(String internalName, String methodName)
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             return;
         }
         ClassEntryModel entry = project.getClass(internalName);
-        if (entry == null) {
+        if (entry == null)
+        {
             consolePanel.log("Class not in project (not pulled from the target): " + internalName);
             return;
         }
@@ -1405,60 +1728,73 @@ public class MainFrame extends JFrame {
     }
 
     /** Snapshots the attached JVM's wait-for graph and reports any deadlock cycles. */
-    public void findLiveDeadlocks() {
+    public void findLiveDeadlocks()
+    {
         LiveAttachService svc = LiveAttachService.getInstance();
-        if (!svc.isAttached()) {
+        if (!svc.isAttached())
+        {
             showWarning("Attach to a live JVM first (VM -> Attach to Live JVM).");
             return;
         }
         LiveSession session = svc.getSession();
-        new SwingWorker<String, Void>() {
+        new SwingWorker<String, Void>()
+        {
             @Override
-            protected String doInBackground() {
-                try {
+            protected String doInBackground()
+            {
+                try
+                {
                     List<ContentionEdge> edges = session.getContention();
                     List<List<ContentionEdge>> cycles =
                             Deadlocks.find(edges);
-                    if (cycles.isEmpty()) {
+                    if (cycles.isEmpty())
+                    {
                         return "No deadlocks. " + edges.size() + " thread(s) currently blocked on a monitor.";
                     }
                     StringBuilder sb = new StringBuilder(cycles.size() + " deadlock(s) detected:\n");
                     int n = 1;
-                    for (List<ContentionEdge> cycle : cycles) {
+                    for (List<ContentionEdge> cycle : cycles)
+                    {
                         sb.append("\nDeadlock ").append(n++).append(":\n");
-                        for (ContentionEdge e : cycle) {
+                        for (ContentionEdge e : cycle)
+                        {
                             sb.append("  ").append(e).append('\n');
                         }
                     }
                     return sb.toString();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     return "Deadlock scan failed: " + e.getMessage();
                 }
             }
 
             @Override
-            protected void done() {
-                try {
+            protected void done()
+            {
+                try
+                {
                     showInfo(get());
-                } catch (Exception ignored) {
+                }
+                catch (Exception ignored)
+                {
                 }
             }
         }.execute();
     }
 
-    /**
-     * Pushes the currently-open class's bytecode to the attached JVM via live redefinition ("patch &
-     * continue"). Method-body-only changes apply immediately; structural changes (add/remove fields or
-     * methods, hierarchy) are rejected by the JVM and surfaced as an error.
-     */
-    public void patchLiveClass() {
+    /** Redefines the front class in the attached JVM from its current bytecode; the JVM rejects structural changes. */
+    public void patchLiveClass()
+    {
         LiveAttachService svc = LiveAttachService.getInstance();
-        if (!svc.isAttached()) {
+        if (!svc.isAttached())
+        {
             showWarning("Attach to a live JVM first (VM -> Attach to Live JVM).");
             return;
         }
         ClassEntryModel currentClass = editorPanel.getCurrentClass();
-        if (currentClass == null) {
+        if (currentClass == null)
+        {
             showWarning("No class selected to patch.");
             return;
         }
@@ -1466,41 +1802,49 @@ public class MainFrame extends JFrame {
         final ClassFile edited = currentClass.getClassFile();
         final LiveSession session = svc.getSession();
         consolePanel.log("Patching live class " + internalName + "...");
-        SwingWorkers.run(
-                () -> {
-                    byte[] bytes = LivePatch.buildRedefineBytes(session, internalName, edited);
-                    session.redefineClass(internalName, bytes);
-                    return null;
-                },
-                ignored -> consolePanel.log("Live patch applied to " + internalName + "."),
-                err -> {
-                    consolePanel.log("Live patch failed: " + err.getMessage());
-                    showWarning("Live patch failed: " + err.getMessage()
-                            + "\n(Only method-body changes are supported; structural changes are rejected.)");
-                });
+        SwingWorkers.run(() ->
+        {
+            byte[] bytes = LivePatch.buildRedefineBytes(session, internalName, edited);
+            session.redefineClass(internalName, bytes);
+            return null;
+        }, ignored -> consolePanel.log("Live patch applied to " + internalName + "."), err ->
+        {
+            consolePanel.log("Live patch failed: " + err.getMessage());
+            showWarning("Live patch failed: " + err.getMessage() + "\n(Only method-body changes are supported; structural changes are rejected.)");
+        });
     }
 
-    public void showVMConsole() {
+    /** Opens the VM console. */
+    public void showVMConsole()
+    {
         dialogManager.showVMConsole();
     }
 
-    public void showBytecodeDebugger() {
+    /** Opens the bytecode debugger. */
+    public void showBytecodeDebugger()
+    {
         dialogManager.showBytecodeDebugger();
     }
 
-    public void showExecuteMethodDialog() {
+    /** Opens the Execute Method dialog for the method at the caret, or for choosing one. */
+    public void showExecuteMethodDialog()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             showWarning("No project loaded. Load a project before executing methods.");
             return;
         }
 
         MethodEntryModel currentMethod = editorPanel.getCurrentMethod();
         ExecuteMethodDialog dialog;
-        if (currentMethod != null) {
+        if (currentMethod != null)
+        {
             dialog = new ExecuteMethodDialog(this, currentMethod);
             consolePanel.log("Execute Method: Opened for " + currentMethod.getMethodEntry().getName());
-        } else {
+        }
+        else
+        {
             dialog = new ExecuteMethodDialog(this);
             consolePanel.log("Execute Method: Opened - select a method to execute");
         }
@@ -1508,9 +1852,16 @@ public class MainFrame extends JFrame {
         statusBar.setMessage("Execute Method dialog opened");
     }
 
-    public void openExecuteMethodDialog(MethodEntryModel method) {
+    /**
+     * Opens the Execute Method dialog for a method.
+     *
+     * @param method the method to execute
+     */
+    public void openExecuteMethodDialog(MethodEntryModel method)
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             showWarning("No project loaded. Load a project before executing methods.");
             return;
         }
@@ -1521,64 +1872,84 @@ public class MainFrame extends JFrame {
         statusBar.setMessage("Execute Method dialog opened");
     }
 
-    public void initializeVM() {
+    /** Initializes the bytecode VM over the loaded project. */
+    public void initializeVM()
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project == null) {
+        if (project == null)
+        {
             showWarning("No project loaded. Load a project before initializing the VM.");
             return;
         }
 
-        try {
+        try
+        {
             VMExecutionService.getInstance().initialize();
             consolePanel.log("VM initialized successfully with " + project.getClassCount() + " classes");
             statusBar.setMessage("VM initialized");
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             showError("Failed to initialize VM: " + e.getMessage());
             consolePanel.logError("VM initialization failed: " + e.getMessage());
         }
     }
 
-    public void resetVM() {
-        if (!VMExecutionService.getInstance().isInitialized()) {
+    /** Resets the bytecode VM. */
+    public void resetVM()
+    {
+        if (!VMExecutionService.getInstance().isInitialized())
+        {
             showInfo("VM is not initialized.");
             return;
         }
 
-        try {
+        try
+        {
             VMExecutionService.getInstance().reset();
             consolePanel.log("VM reset successfully");
             statusBar.setMessage("VM reset");
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             showError("Failed to reset VM: " + e.getMessage());
             consolePanel.logError("VM reset failed: " + e.getMessage());
         }
     }
 
-    public void showVMStatus() {
+    /** Shows the bytecode VM's status. */
+    public void showVMStatus()
+    {
         VMExecutionService vmService = VMExecutionService.getInstance();
         String status = vmService.getVMStatus();
         JOptionPane.showMessageDialog(this, status, "VM Status", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    public void showHeapForensics() {
+    /** Opens the heap forensics view. */
+    public void showHeapForensics()
+    {
         dialogManager.showHeapForensics();
     }
 
     /**
-     * Navigate to a specific class.
-     * @param className the internal class name (e.g., "com/example/MyClass")
-     * @return true if navigation succeeded
+     * Opens a class by internal or binary name.
+     *
+     * @param className the class's name, with slashes or dots
+     * @return true where the class was found
      */
-    public boolean navigateToClass(String className) {
+    public boolean navigateToClass(String className)
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project == null) return false;
 
         String normalizedName = className.replace('.', '/');
         ClassEntryModel classEntry = project.getClass(normalizedName);
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             classEntry = project.findClassByName(className);
         }
-        if (classEntry != null) {
+        if (classEntry != null)
+        {
             openClassInEditor(classEntry);
             return true;
         }
@@ -1586,49 +1957,53 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * Navigate to a specific method in a class.
-     * @param className the internal class name
-     * @param methodName the method name
-     * @param methodDesc the method descriptor (can be null)
-     * @return true if navigation succeeded
+     * Opens a class and scrolls to a method.
+     *
+     * @param className the class's name, with slashes or dots
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor, or null to match by name
+     * @return true where the method was found
      */
-    public boolean navigateToMethod(String className, String methodName, String methodDesc) {
+    public boolean navigateToMethod(String className, String methodName, String methodDesc)
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project == null) return false;
 
         String normalizedName = className.replace('.', '/');
         ClassEntryModel classEntry = project.getClass(normalizedName);
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             classEntry = project.findClassByName(className);
         }
-        if (classEntry != null) {
+        if (classEntry != null)
+        {
             return editorPanel.navigateToMethod(classEntry, methodName, methodDesc, currentViewMode);
         }
         return false;
     }
 
     /**
-     * Navigate to a specific bytecode offset within a method.
-     * Opens bytecode view and highlights the instruction at the given PC.
-     * @param className the internal class name
-     * @param methodName the method name
-     * @param methodDesc the method descriptor
+     * Switches to bytecode view, opens a class and highlights an instruction.
+     *
+     * @param className the class's name, with slashes or dots
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
      * @param pc the bytecode offset
-     * @return true if navigation succeeded
+     * @return true where the instruction was found
      */
-    public boolean navigateToPC(String className, String methodName, String methodDesc, int pc) {
+    public boolean navigateToPC(String className, String methodName, String methodDesc, int pc)
+    {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
         if (project == null) return false;
 
         String normalizedName = className.replace('.', '/');
         ClassEntryModel classEntry = project.getClass(normalizedName);
-        if (classEntry == null) {
+        if (classEntry == null)
+        {
             classEntry = project.findClassByName(className);
         }
-        if (classEntry != null) {
-            // Switch the view (and toolbar/status) to bytecode FIRST, so the highlight applied by
-            // navigateToPC is the last operation - otherwise a follow-up setViewMode refresh would
-            // rebuild the view and clear the just-selected instruction line.
+        if (classEntry != null)
+        {
             switchToBytecodeView();
             return editorPanel.navigateToPC(classEntry, methodName, methodDesc, pc);
         }
@@ -1636,20 +2011,29 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * Navigate using a QueryTarget from query results.
+     * Navigates to a class, method or instruction from a query result.
+     *
+     * @param target the result's target
+     * @return true where the target was found
      */
-    public boolean navigateToTarget(QueryTarget target) {
-        if (target instanceof QueryTarget.ClassTarget) {
+    public boolean navigateToTarget(QueryTarget target)
+    {
+        if (target instanceof QueryTarget.ClassTarget)
+        {
             QueryTarget.ClassTarget ct =
-                (QueryTarget.ClassTarget) target;
+                    (QueryTarget.ClassTarget) target;
             return navigateToClass(ct.className());
-        } else if (target instanceof QueryTarget.MethodTarget) {
+        }
+        else if (target instanceof QueryTarget.MethodTarget)
+        {
             QueryTarget.MethodTarget mt =
-                (QueryTarget.MethodTarget) target;
+                    (QueryTarget.MethodTarget) target;
             return navigateToMethod(mt.className(), mt.methodName(), mt.descriptor());
-        } else if (target instanceof QueryTarget.PCTarget) {
+        }
+        else if (target instanceof QueryTarget.PCTarget)
+        {
             QueryTarget.PCTarget pt =
-                (QueryTarget.PCTarget) target;
+                    (QueryTarget.PCTarget) target;
             return navigateToPC(pt.className(), pt.methodName(), pt.descriptor(), pt.pc());
         }
         return false;

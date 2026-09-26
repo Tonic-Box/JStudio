@@ -3,6 +3,7 @@ package com.tonic.ui;
 import com.tonic.plugin.gui.GuiPluginManager;
 import com.tonic.plugin.gui.PluginManagerDialog;
 import com.tonic.ui.debug.DebugManager;
+import com.tonic.ui.layout.Presets;
 import com.tonic.ui.live.LiveAttachService;
 import com.tonic.ui.theme.Icons;
 import com.tonic.ui.theme.JStudioTheme;
@@ -26,10 +27,9 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.List;
 
-/**
- * Builds the main menu bar for JStudio.
- */
-public class MenuBarBuilder {
+/** The builder of the main window's menu bar. */
+public class MenuBarBuilder
+{
 
     private static final int MENU_SHORTCUT_MASK = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
 
@@ -37,11 +37,23 @@ public class MenuBarBuilder {
     private JMenu recentFilesMenu;
     private JCheckBoxMenuItem wordWrapItem;
 
-    public MenuBarBuilder(MainFrame mainFrame) {
+    /**
+     * Creates a builder for a window's menu bar.
+     *
+     * @param mainFrame the window the menus act on
+     */
+    public MenuBarBuilder(MainFrame mainFrame)
+    {
         this.mainFrame = mainFrame;
     }
 
-    public JMenuBar build() {
+    /**
+     * Builds the menu bar.
+     *
+     * @return the menu bar
+     */
+    public JMenuBar build()
+    {
         JMenuBar menuBar = new JMenuBar();
         menuBar.setBackground(JStudioTheme.getBgPrimary());
 
@@ -55,23 +67,20 @@ public class MenuBarBuilder {
         menuBar.add(buildPluginsMenu());
         menuBar.add(buildHelpMenu());
 
-        // Listen for recent files changes
         RecentFilesManager.getInstance().addListener(this::updateRecentFilesMenu);
 
         return menuBar;
     }
 
-    private JMenu buildFileMenu() {
+    private JMenu buildFileMenu()
+    {
         JMenu menu = new JMenu("File");
         menu.setMnemonic(KeyEvent.VK_F);
 
-        menu.add(createMenuItem("Open JAR/Class...", KeyEvent.VK_O, MENU_SHORTCUT_MASK,
-                Icons.getIcon("open"), e -> mainFrame.showOpenDialog()));
+        menu.add(createMenuItem("Open JAR/Class...", KeyEvent.VK_O, MENU_SHORTCUT_MASK, Icons.getIcon("open"), e -> mainFrame.showOpenDialog()));
 
-        menu.add(createMenuItem("Open Project...", 0, 0,
-                null, e -> mainFrame.openProjectFile()));
+        menu.add(createMenuItem("Open Project...", 0, 0, null, e -> mainFrame.openProjectFile()));
 
-        // Recent Files submenu
         recentFilesMenu = new JMenu("Open Recent");
         recentFilesMenu.setMnemonic(KeyEvent.VK_R);
         updateRecentFilesMenu(RecentFilesManager.getInstance().getRecentFiles());
@@ -79,56 +88,53 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Save Project", KeyEvent.VK_S, MENU_SHORTCUT_MASK,
-                Icons.getIcon("save"), e -> mainFrame.saveProject()));
+        menu.add(createMenuItem("Save Project", KeyEvent.VK_S, MENU_SHORTCUT_MASK, Icons.getIcon("save"), e -> mainFrame.saveProject()));
 
-        menu.add(createMenuItem("Save Project As...", KeyEvent.VK_S, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                null, e -> mainFrame.saveProjectAs()));
+        menu.add(createMenuItem("Save Project As...", KeyEvent.VK_S, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, null, e -> mainFrame.saveProjectAs()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Export Class...", KeyEvent.VK_E, MENU_SHORTCUT_MASK | InputEvent.ALT_DOWN_MASK,
-                null, e -> mainFrame.exportCurrentClass()));
+        menu.add(createMenuItem("Export Class...", KeyEvent.VK_E, MENU_SHORTCUT_MASK | InputEvent.ALT_DOWN_MASK, null, e -> mainFrame.exportCurrentClass()));
 
-        menu.add(createMenuItem("Export All Classes...", 0, 0,
-                null, e -> mainFrame.exportAllClasses()));
+        menu.add(createMenuItem("Export All Classes...", 0, 0, null, e -> mainFrame.exportAllClasses()));
 
-        menu.add(createMenuItem("Export as JAR...", KeyEvent.VK_J, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                Icons.getIcon("package"), e -> mainFrame.exportAsJar()));
+        menu.add(createMenuItem("Export as JAR...", KeyEvent.VK_J, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, Icons.getIcon("package"), e -> mainFrame.exportAsJar()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Close Project", KeyEvent.VK_W, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                Icons.getIcon("close"), e -> mainFrame.closeProject()));
+        menu.add(createMenuItem("Close Project", KeyEvent.VK_W, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, Icons.getIcon("close"), e -> mainFrame.closeProject()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Exit", KeyEvent.VK_Q, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.exitApplication()));
+        menu.add(createMenuItem("Exit", KeyEvent.VK_Q, MENU_SHORTCUT_MASK, null, e -> mainFrame.exitApplication()));
 
         return menu;
     }
 
-    private void updateRecentFilesMenu(List<File> recentFiles) {
+    private void updateRecentFilesMenu(List<File> recentFiles)
+    {
         if (recentFilesMenu == null) return;
 
         recentFilesMenu.removeAll();
 
-        if (recentFiles.isEmpty()) {
+        if (recentFiles.isEmpty())
+        {
             JMenuItem emptyItem = new JMenuItem("(No recent files)");
             emptyItem.setEnabled(false);
             recentFilesMenu.add(emptyItem);
-        } else {
+        }
+        else
+        {
             int index = 1;
-            for (File file : recentFiles) {
+            for (File file : recentFiles)
+            {
                 String label = index + ". " + file.getName();
                 JMenuItem item = new JMenuItem(label);
                 item.setToolTipText(file.getAbsolutePath());
 
-                // Add accelerator for first item (Ctrl+Shift+O)
-                if (index == 1) {
-                    item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O,
-                            MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK));
+                if (index == 1)
+                {
+                    item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK));
                 }
 
                 final File fileToOpen = file;
@@ -145,62 +151,52 @@ public class MenuBarBuilder {
         }
     }
 
-    private JMenu buildEditMenu() {
+    private JMenu buildEditMenu()
+    {
         JMenu menu = new JMenu("Edit");
         menu.setMnemonic(KeyEvent.VK_E);
 
-        menu.add(createMenuItem("Copy", KeyEvent.VK_C, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.copySelection()));
+        menu.add(createMenuItem("Copy", KeyEvent.VK_C, MENU_SHORTCUT_MASK, null, e -> mainFrame.copySelection()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Find in Project...", KeyEvent.VK_F, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                null, e -> mainFrame.showFindInProjectDialog()));
+        menu.add(createMenuItem("Find in Project...", KeyEvent.VK_F, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, null, e -> mainFrame.showFindInProjectDialog()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Add Bookmark...", KeyEvent.VK_B, MENU_SHORTCUT_MASK,
-                Icons.getIcon("bookmark"), e -> mainFrame.addBookmarkAtCurrentLocation()));
+        menu.add(createMenuItem("Add Bookmark...", KeyEvent.VK_B, MENU_SHORTCUT_MASK, Icons.getIcon("bookmark"), e -> mainFrame.addBookmarkAtCurrentLocation()));
 
-        menu.add(createMenuItem("Add Comment...", KeyEvent.VK_SEMICOLON, MENU_SHORTCUT_MASK,
-                Icons.getIcon("comment"), e -> mainFrame.addCommentAtCurrentLocation()));
+        menu.add(createMenuItem("Add Comment...", KeyEvent.VK_SEMICOLON, MENU_SHORTCUT_MASK, Icons.getIcon("comment"), e -> mainFrame.addCommentAtCurrentLocation()));
 
-        menu.add(createMenuItem("View Bookmarks", KeyEvent.VK_B, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                null, e -> mainFrame.showBookmarksPanel()));
+        menu.add(createMenuItem("View Bookmarks", KeyEvent.VK_B, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, null, e -> mainFrame.showBookmarksPanel()));
 
-        menu.add(createMenuItem("View Comments", 0, 0,
-                null, e -> mainFrame.showCommentsPanel()));
+        menu.add(createMenuItem("View Comments", 0, 0, null, e -> mainFrame.showCommentsPanel()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Preferences...", KeyEvent.VK_COMMA, MENU_SHORTCUT_MASK,
-                Icons.getIcon("settings"), e -> mainFrame.showPreferencesDialog()));
+        menu.add(createMenuItem("Preferences...", KeyEvent.VK_COMMA, MENU_SHORTCUT_MASK, Icons.getIcon("settings"), e -> mainFrame.showPreferencesDialog()));
 
         return menu;
     }
 
-    private JMenu buildViewMenu() {
+    private JMenu buildViewMenu()
+    {
         JMenu menu = new JMenu("View");
         menu.setMnemonic(KeyEvent.VK_V);
 
-        menu.add(createMenuItem("Source View", KeyEvent.VK_F5, 0,
-                Icons.getIcon("source"), e -> mainFrame.switchToSourceView()));
+        menu.add(createMenuItem("Source View", KeyEvent.VK_F5, 0, Icons.getIcon("source"), e -> mainFrame.switchToSourceView()));
 
-        menu.add(createMenuItem("Bytecode View", KeyEvent.VK_F6, 0,
-                Icons.getIcon("bytecode"), e -> mainFrame.switchToBytecodeView()));
+        menu.add(createMenuItem("Bytecode View", KeyEvent.VK_F6, 0, Icons.getIcon("bytecode"), e -> mainFrame.switchToBytecodeView()));
 
-        menu.add(createMenuItem("IR View", KeyEvent.VK_F7, 0,
-                Icons.getIcon("ir"), e -> mainFrame.switchToIRView()));
+        menu.add(createMenuItem("IR View", KeyEvent.VK_F7, 0, Icons.getIcon("ir"), e -> mainFrame.switchToIRView()));
 
         menu.addSeparator();
 
-        // Word wrap toggle
         wordWrapItem = new JCheckBoxMenuItem("Word Wrap");
         wordWrapItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.ALT_DOWN_MASK));
         wordWrapItem.addActionListener(e -> mainFrame.toggleWordWrap(wordWrapItem.isSelected()));
         menu.add(wordWrapItem);
 
-        // Usage-count lens toggle
         JCheckBoxMenuItem usageLensItem = new JCheckBoxMenuItem("Usage Counts");
         usageLensItem.setSelected(Settings.getInstance().isUsageLensEnabled());
         usageLensItem.addActionListener(e -> mainFrame.toggleUsageLens(usageLensItem.isSelected()));
@@ -208,85 +204,73 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Navigator Panel", KeyEvent.VK_1, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.toggleNavigatorPanel()));
+        menu.add(createMenuItem("Navigator Panel", KeyEvent.VK_1, MENU_SHORTCUT_MASK, null, e -> mainFrame.toggleNavigatorPanel()));
 
-        menu.add(createMenuItem("Properties Panel", KeyEvent.VK_2, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.togglePropertiesPanel()));
+        menu.add(createMenuItem("Tool Windows", KeyEvent.VK_2, MENU_SHORTCUT_MASK, null, e -> mainFrame.togglePropertiesPanel()));
 
-        menu.add(createMenuItem("Console Panel", KeyEvent.VK_3, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.toggleConsolePanel()));
+        menu.add(createMenuItem("Console Panel", KeyEvent.VK_3, MENU_SHORTCUT_MASK, null, e -> mainFrame.toggleConsolePanel()));
 
         menu.addSeparator();
 
-        // Font size controls
-        menu.add(createMenuItem("Increase Font Size", KeyEvent.VK_EQUALS, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.increaseFontSize()));
-        menu.add(createMenuItem("Decrease Font Size", KeyEvent.VK_MINUS, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.decreaseFontSize()));
-        menu.add(createMenuItem("Reset Font Size", KeyEvent.VK_0, MENU_SHORTCUT_MASK,
-                null, e -> mainFrame.resetFontSize()));
+        menu.add(createMenuItem("Rearrange Layout", KeyEvent.VK_L, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, null, e -> mainFrame.toggleRearranging()));
+
+        menu.add(createMenuItem("Reset Layout", 0, 0, null, e -> mainFrame.applyLayout(Presets.shipped())));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Refresh", KeyEvent.VK_F5, MENU_SHORTCUT_MASK,
-                Icons.getIcon("refresh"), e -> mainFrame.fullRefresh()));
+        menu.add(createMenuItem("Increase Font Size", KeyEvent.VK_EQUALS, MENU_SHORTCUT_MASK, null, e -> mainFrame.increaseFontSize()));
+        menu.add(createMenuItem("Decrease Font Size", KeyEvent.VK_MINUS, MENU_SHORTCUT_MASK, null, e -> mainFrame.decreaseFontSize()));
+        menu.add(createMenuItem("Reset Font Size", KeyEvent.VK_0, MENU_SHORTCUT_MASK, null, e -> mainFrame.resetFontSize()));
+
+        menu.addSeparator();
+
+        menu.add(createMenuItem("Refresh", KeyEvent.VK_F5, MENU_SHORTCUT_MASK, Icons.getIcon("refresh"), e -> mainFrame.fullRefresh()));
 
         return menu;
     }
 
-    private JMenu buildAnalysisMenu() {
+    private JMenu buildAnalysisMenu()
+    {
         JMenu menu = new JMenu("Analysis");
         menu.setMnemonic(KeyEvent.VK_A);
 
-        menu.add(createMenuItem("Run Analysis", KeyEvent.VK_F9, 0,
-                Icons.getIcon("analyze"), e -> mainFrame.runAnalysis()));
+        menu.add(createMenuItem("Run Analysis", KeyEvent.VK_F9, 0, Icons.getIcon("analyze"), e -> mainFrame.runAnalysis()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Similarity", 0, 0,
-                Icons.getIcon("analyze"), e -> mainFrame.showSimilarityAnalysis()));
+        menu.add(createMenuItem("Similarity", 0, 0, Icons.getIcon("analyze"), e -> mainFrame.showSimilarityAnalysis()));
 
-        menu.add(createMenuItem("Search", 0, 0,
-                Icons.getIcon("search"), e -> mainFrame.showSearchAnalysis()));
+        menu.add(createMenuItem("Search", 0, 0, Icons.getIcon("search"), e -> mainFrame.showSearchAnalysis()));
 
-        menu.add(createMenuItem("Strings", 0, 0,
-                Icons.getIcon("analyze"), e -> mainFrame.showStringsAnalysis()));
+        menu.add(createMenuItem("Strings", 0, 0, Icons.getIcon("analyze"), e -> mainFrame.showStringsAnalysis()));
 
-        menu.add(createMenuItem("Code Analysis", KeyEvent.VK_F10, 0,
-                Icons.getIcon("analyze"), e -> mainFrame.runCodeAnalysis()));
+        menu.add(createMenuItem("Code Analysis", KeyEvent.VK_F10, 0, Icons.getIcon("analyze"), e -> mainFrame.runCodeAnalysis()));
 
         return menu;
     }
 
-    private JMenu buildTransformMenu() {
+    private JMenu buildTransformMenu()
+    {
         JMenu menu = new JMenu("Transform");
         menu.setMnemonic(KeyEvent.VK_T);
 
-        menu.add(createMenuItem("Apply Transforms...", KeyEvent.VK_T, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                Icons.getIcon("transform"), e -> mainFrame.showTransformDialog()));
+        menu.add(createMenuItem("Apply Transforms...", KeyEvent.VK_T, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, Icons.getIcon("transform"), e -> mainFrame.showTransformDialog()));
 
-        menu.add(createMenuItem("Script Editor...", KeyEvent.VK_S, MENU_SHORTCUT_MASK | InputEvent.ALT_DOWN_MASK,
-                Icons.getIcon("source"), e -> mainFrame.showScriptEditor()));
+        menu.add(createMenuItem("Script Editor...", KeyEvent.VK_S, MENU_SHORTCUT_MASK | InputEvent.ALT_DOWN_MASK, Icons.getIcon("source"), e -> mainFrame.showScriptEditor()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("String Deobfuscation...", KeyEvent.VK_D, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                null, e -> mainFrame.showDeobfuscationPanel()));
+        menu.add(createMenuItem("String Deobfuscation...", KeyEvent.VK_D, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, null, e -> mainFrame.showDeobfuscationPanel()));
 
-        menu.add(createMenuItem("Deobfuscate Names...", 0, 0,
-                null, e -> mainFrame.showDeobfuscateNamesDialog()));
+        menu.add(createMenuItem("Deobfuscate Names...", 0, 0, null, e -> mainFrame.showDeobfuscateNamesDialog()));
 
-        menu.add(createMenuItem("Remove Dead Members...", 0, 0,
-                null, e -> mainFrame.showRemoveDeadCodeDialog()));
+        menu.add(createMenuItem("Remove Dead Members...", 0, 0, null, e -> mainFrame.showRemoveDeadCodeDialog()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Local History", 0, 0,
-                Icons.getIcon("undo"), e -> mainFrame.showLocalHistoryPanel()));
+        menu.add(createMenuItem("Local History", 0, 0, Icons.getIcon("undo"), e -> mainFrame.showLocalHistoryPanel()));
 
-        menu.add(createMenuItem("Create Checkpoint", 0, 0,
-                null, e -> mainFrame.createHistoryCheckpoint()));
+        menu.add(createMenuItem("Create Checkpoint", 0, 0, null, e -> mainFrame.createHistoryCheckpoint()));
 
         menu.addSeparator();
 
@@ -299,72 +283,55 @@ public class MenuBarBuilder {
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Recompute Stack Frames", 0, 0,
-                null, e -> mainFrame.recomputeStackFrames()));
+        menu.add(createMenuItem("Recompute Stack Frames", 0, 0, null, e -> mainFrame.recomputeStackFrames()));
 
         return menu;
     }
 
-    private JMenu buildVMMenu() {
+    private JMenu buildVMMenu()
+    {
         JMenu menu = new JMenu("VM");
         menu.setMnemonic(KeyEvent.VK_M);
 
-        menu.add(createMenuItem("VM Console...", KeyEvent.VK_C, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                Icons.getIcon("console"), e -> mainFrame.showVMConsole()));
+        menu.add(createMenuItem("VM Console...", KeyEvent.VK_C, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, Icons.getIcon("console"), e -> mainFrame.showVMConsole()));
 
-        menu.add(createMenuItem("Bytecode Debugger...", KeyEvent.VK_F11, 0,
-                Icons.getIcon("debug"), e -> mainFrame.showBytecodeDebugger()));
+        menu.add(createMenuItem("Bytecode Debugger...", KeyEvent.VK_F11, 0, Icons.getIcon("debug"), e -> mainFrame.showBytecodeDebugger()));
 
-        menu.add(createMenuItem("Execute Method...", KeyEvent.VK_E, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                Icons.getIcon("run"), e -> mainFrame.showExecuteMethodDialog()));
+        menu.add(createMenuItem("Execute Method...", KeyEvent.VK_E, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, Icons.getIcon("run"), e -> mainFrame.showExecuteMethodDialog()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Heap Forensics...", KeyEvent.VK_H, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK,
-                Icons.getIcon("heap"), e -> mainFrame.showHeapForensics()));
+        menu.add(createMenuItem("Heap Forensics...", KeyEvent.VK_H, MENU_SHORTCUT_MASK | InputEvent.SHIFT_DOWN_MASK, Icons.getIcon("heap"), e -> mainFrame.showHeapForensics()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Initialize VM", 0, 0,
-                null, e -> mainFrame.initializeVM()));
+        menu.add(createMenuItem("Initialize VM", 0, 0, null, e -> mainFrame.initializeVM()));
 
-        menu.add(createMenuItem("Reset VM", 0, 0,
-                null, e -> mainFrame.resetVM()));
+        menu.add(createMenuItem("Reset VM", 0, 0, null, e -> mainFrame.resetVM()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("VM Status", 0, 0,
-                Icons.getIcon("info"), e -> mainFrame.showVMStatus()));
+        menu.add(createMenuItem("VM Status", 0, 0, Icons.getIcon("info"), e -> mainFrame.showVMStatus()));
 
         return menu;
     }
 
-    /**
-     * Live-JVM menu (pure-Java {@code java.lang.instrument} agent). Attach to a running JVM to browse its
-     * classes, live-patch method bodies, capture runtime-generated classes, and detect deadlocks. The
-     * feature items appear only while attached (recomputed each time the menu opens).
-     */
-    private JMenu buildAttachMenu() {
+    private JMenu buildAttachMenu()
+    {
         JMenu menu = new JMenu("Attach");
         menu.setMnemonic(KeyEvent.VK_A);
 
-        JMenuItem attach = createMenuItem("Attach to Live JVM...", 0, 0,
-                Icons.getIcon("live_attach"), e -> mainFrame.showLiveAttachDialog());
-        JMenuItem detach = createMenuItem("Detach", 0, 0,
-                Icons.getIcon("live_detach"), e -> mainFrame.detachLive());
+        JMenuItem attach = createMenuItem("Attach to Live JVM...", 0, 0, Icons.getIcon("live_attach"), e -> mainFrame.showLiveAttachDialog());
+        JMenuItem detach = createMenuItem("Detach", 0, 0, Icons.getIcon("live_detach"), e -> mainFrame.detachLive());
         JPopupMenu.Separator sep = new JPopupMenu.Separator();
 
-        JMenuItem deadlocks = createMenuItem("Find Deadlocks", 0, 0,
-                Icons.getIcon("live_deadlock"), e -> mainFrame.findLiveDeadlocks());
-        JMenuItem patch = createMenuItem("Patch Live Class", 0, 0,
-                Icons.getIcon("live_patch"), e -> mainFrame.patchLiveClass());
-        JMenuItem scratchPad = createMenuItem("Java Scratch Pad...", 0, 0,
-                Icons.getIcon("source"), e -> mainFrame.showLiveScratchPad());
+        JMenuItem deadlocks = createMenuItem("Find Deadlocks", 0, 0, Icons.getIcon("live_deadlock"), e -> mainFrame.findLiveDeadlocks());
+        JMenuItem patch = createMenuItem("Patch Live Class", 0, 0, Icons.getIcon("live_patch"), e -> mainFrame.patchLiveClass());
+        JMenuItem scratchPad = createMenuItem("Java Scratch Pad...", 0, 0, Icons.getIcon("source"), e -> mainFrame.showLiveScratchPad());
         JCheckBoxMenuItem capture = new JCheckBoxMenuItem("Capture Runtime Classes");
         capture.setToolTipText("Stream classes defined at runtime (packers, defineHiddenClass, ASM) into the project");
         capture.addActionListener(e -> mainFrame.setLiveCaptureEnabled(capture.isSelected()));
-        JMenuItem enableDebugger = createMenuItem("Enable Debugger (JDI)", 0, 0,
-                null, e -> mainFrame.enableDebuggerOnAttached());
+        JMenuItem enableDebugger = createMenuItem("Enable Debugger (JDI)", 0, 0, null, e -> mainFrame.enableDebuggerOnAttached());
         enableDebugger.setToolTipText("Late-load JDWP into the attached JVM so breakpoints/stepping work (external opt-in)");
         JCheckBoxMenuItem suspendAll = new JCheckBoxMenuItem("Suspend All Threads on Breakpoint");
         suspendAll.setToolTipText("On a breakpoint hit, suspend the whole target VM (off = only the thread that hit)");
@@ -380,9 +347,11 @@ public class MenuBarBuilder {
         menu.add(enableDebugger);
         menu.add(suspendAll);
 
-        menu.addMenuListener(new MenuListener() {
+        menu.addMenuListener(new MenuListener()
+        {
             @Override
-            public void menuSelected(MenuEvent e) {
+            public void menuSelected(MenuEvent e)
+            {
                 boolean connected = LiveAttachService.getInstance().isAttached();
                 detach.setVisible(connected);
                 sep.setVisible(connected);
@@ -398,74 +367,77 @@ public class MenuBarBuilder {
             }
 
             @Override
-            public void menuDeselected(MenuEvent e) {
+            public void menuDeselected(MenuEvent e)
+            {
             }
 
             @Override
-            public void menuCanceled(MenuEvent e) {
+            public void menuCanceled(MenuEvent e)
+            {
             }
         });
         return menu;
     }
 
-    /**
-     * Plugins menu: open the manager, reveal the plugins folder, or reload all plugins from disk. Plugin-contributed
-     * items live in whatever menus the plugins choose (added at runtime), not here.
-     */
-    private JMenu buildPluginsMenu() {
+    private JMenu buildPluginsMenu()
+    {
         JMenu menu = new JMenu("Plugins");
 
-        menu.add(createMenuItem("Manage Plugins...", 0, 0,
-                null, e -> new PluginManagerDialog(mainFrame).setVisible(true)));
+        menu.add(createMenuItem("Manage Plugins...", 0, 0, null, e -> new PluginManagerDialog(mainFrame).setVisible(true)));
 
-        menu.add(createMenuItem("Open Plugins Folder", 0, 0,
-                null, e -> openPluginsFolder()));
+        menu.add(createMenuItem("Open Plugins Folder", 0, 0, null, e -> openPluginsFolder()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("Reload All Plugins", 0, 0,
-                null, e -> GuiPluginManager.getInstance().reloadAll()));
+        menu.add(createMenuItem("Reload All Plugins", 0, 0, null, e -> GuiPluginManager.getInstance().reloadAll()));
 
         return menu;
     }
 
-    private void openPluginsFolder() {
-        try {
+    private void openPluginsFolder()
+    {
+        try
+        {
             Desktop.getDesktop().open(GuiPluginManager.getInstance().pluginsDir());
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
         }
     }
 
-    private JMenu buildHelpMenu() {
+    private JMenu buildHelpMenu()
+    {
         JMenu menu = new JMenu("Help");
         menu.setMnemonic(KeyEvent.VK_H);
 
-        menu.add(createMenuItem("Keyboard Shortcuts", KeyEvent.VK_F1, 0,
-                null, e -> mainFrame.showKeyboardShortcuts()));
+        menu.add(createMenuItem("Keyboard Shortcuts", KeyEvent.VK_F1, 0, null, e -> mainFrame.showKeyboardShortcuts()));
 
-        menu.add(createMenuItem("Check for Updates", 0, 0,
-                null, e -> mainFrame.checkForUpdates()));
+        menu.add(createMenuItem("Check for Updates", 0, 0, null, e -> mainFrame.checkForUpdates()));
 
         menu.addSeparator();
 
-        menu.add(createMenuItem("About JStudio", 0, 0,
-                Icons.getIcon("info"), e -> mainFrame.showAboutDialog()));
+        menu.add(createMenuItem("About JStudio", 0, 0, Icons.getIcon("info"), e -> mainFrame.showAboutDialog()));
 
         return menu;
     }
 
-    private JMenuItem createMenuItem(String text, int keyCode, int modifiers,
-                                     Icon icon, ActionListener action) {
+    private JMenuItem createMenuItem(String text, int keyCode, int modifiers, Icon icon, ActionListener action)
+    {
         JMenuItem item = new JMenuItem(text);
-        if (icon != null) {
+        if (icon != null)
+        {
             item.setIcon(icon);
         }
-        if (keyCode != 0) {
+        if (keyCode != 0)
+        {
             item.setAccelerator(KeyStroke.getKeyStroke(keyCode, modifiers));
         }
-        if (action != null) {
+        if (action != null)
+        {
             item.addActionListener(action);
-        } else {
+        }
+        else
+        {
             item.setEnabled(false);
         }
         return item;

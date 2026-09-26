@@ -1,509 +1,652 @@
 package com.tonic.ui.editor;
 
 import com.tonic.ui.MainFrame;
-import com.tonic.ui.core.component.ThemedJPanel;
 import com.tonic.ui.editor.resource.ResourceEditorTab;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.FieldEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.model.ResourceEntryModel;
+import com.tonic.ui.layout.Stacks;
+import com.tonic.ui.layout.TabLook;
+import com.tonic.ui.layout.ViewHost;
+import com.tonic.ui.layout.ViewId;
+import com.tonic.ui.layout.ViewSpec;
+import com.tonic.ui.layout.Views;
 import com.tonic.ui.theme.Icons;
-import com.tonic.ui.theme.JStudioTheme;
+import com.tonic.ui.theme.RunnableOverlayIcon;
 
 import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
-import javax.swing.JTabbedPane;
-import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.event.MouseEvent;
 
-/**
- * Tabbed editor panel for viewing classes.
- */
-public class EditorPanel extends ThemedJPanel {
-    private final JTabbedPane tabbedPane;
+/** The owner of the document tabs: classes, resources and plugin views, and which tab shows what. */
+public class EditorPanel
+{
+
     private final TabRegistry registry;
     private ProjectModel projectModel;
     private final WelcomeTab welcomeTab;
-    private final TabHeaderFactory headerFactory;
     private final TabContextMenu contextMenu;
 
+    private ViewHost host;
     private boolean omitAnnotations = false;
 
-    public EditorPanel(MainFrame mainFrame) {
-        super(BackgroundStyle.TERTIARY, new BorderLayout());
-
-        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        registry = new TabRegistry(tabbedPane);
-        contextMenu = new TabContextMenu(tabbedPane, registry, this::closeTab, this::closeResourceTab,
-                this::closeCustomView);
-        TabDragController dragController = new TabDragController(tabbedPane);
-        headerFactory = new TabHeaderFactory(tabbedPane, dragController, contextMenu::headerListener);
-        tabbedPane.setBackground(JStudioTheme.getBgSecondary());
-        tabbedPane.setForeground(JStudioTheme.getTextPrimary());
-        tabbedPane.setBorder(null);
-
+    /**
+     * Creates the editor with its Welcome tab.
+     *
+     * @param mainFrame the window the Welcome tab acts on
+     */
+    public EditorPanel(MainFrame mainFrame)
+    {
+        registry = new TabRegistry();
+        contextMenu = new TabContextMenu(registry, this::closeTab, this::closeResourceTab, this::closeCustomView);
         welcomeTab = new WelcomeTab(mainFrame);
         registry.setWelcomeTab(welcomeTab);
-        tabbedPane.addTab("Welcome", Icons.getIcon("home"), welcomeTab);
-        tabbedPane.setTabComponentAt(0, headerFactory.createWelcomeTabComponent());
-
-        add(tabbedPane, BorderLayout.CENTER);
-    }
-
-    @Override
-    protected void applyChildThemes() {
-        tabbedPane.setBackground(JStudioTheme.getBgSecondary());
-        tabbedPane.setForeground(JStudioTheme.getTextPrimary());
     }
 
     /**
-     * Open a class in a new or existing tab.
+     * Attaches the layout and opens the pinned Welcome tab.
+     *
+     * @param value the layout the tabs live in
      */
-    public void openClass(ClassEntryModel classEntry, ViewMode viewMode) {
+    public void setHost(ViewHost value)
+    {
+        this.host = value;
+        contextMenu.setHost(value);
+        value.addListener(new ViewHost.Listener()
+        {
+            @Override
+            public void menuRequested(ViewId view, MouseEvent event)
+            {
+                contextMenu.showFor(view, event);
+            }
+        });
+        value.open(new ViewSpec(Views.WELCOME, TabLook.of("Welcome", Icons.getIcon("home")).pinned(), ViewSpec.Kind.DOCUMENT, Stacks.DOCUMENTS, welcomeTab, () ->
+        {
+        }));
+    }
+
+    private static Icon classIcon(ClassEntryModel classEntry)
+    {
+        final Icon icon = Icons.getIcon(classEntry.getIconKey());
+        return classEntry.hasMainMethod() ? new RunnableOverlayIcon(icon) : icon;
+    }
+
+    /**
+     * Opens a class in its tab, or brings its tab forward and switches it to the view mode.
+     *
+     * @param classEntry the class
+     * @param viewMode how to show it
+     */
+    public void openClass(ClassEntryModel classEntry, ViewMode viewMode)
+    {
         String key = classEntry.getClassName();
 
-        // Check if already open
         EditorTab existingTab = registry.getClassTab(key);
-        if (existingTab != null) {
-            // Switch to existing tab
-            int index = registry.findTabIndex(existingTab);
-            if (index >= 0) {
-                tabbedPane.setSelectedIndex(index);
-                existingTab.setViewMode(viewMode);
-            }
+        if (existingTab != null)
+        {
+            host.select(ViewId.forClass(key));
+            existingTab.setViewMode(viewMode);
             return;
         }
 
-        // Create new tab
         EditorTab tab = new EditorTab(classEntry);
         tab.setViewMode(viewMode);
         tab.setOmitAnnotations(omitAnnotations);
-        if (projectModel != null) {
+        if (projectModel != null)
+        {
             tab.setProjectModel(projectModel);
         }
         registry.putClassTab(key, tab);
 
-        // Add tab with close button
-        tabbedPane.addTab(tab.getTitle(), TabHeaderFactory.classIcon(classEntry), tab, tab.getTooltip());
-        int index = tabbedPane.getTabCount() - 1;
-        tabbedPane.setTabComponentAt(index, headerFactory.createTabComponent(tab, () -> closeTab(tab)));
-        tabbedPane.setSelectedIndex(index);
+        host.open(ViewSpec.document(ViewId.forClass(key), TabLook.of(tab.getTitle(), classIcon(classEntry)).withTooltip(tab.getTooltip()), tab).closedBy(() -> closeTab(tab)));
     }
 
-    public void openResource(ResourceEntryModel resource) {
+    /**
+     * Opens a resource in its tab, or brings its tab forward.
+     *
+     * @param resource the resource
+     */
+    public void openResource(ResourceEntryModel resource)
+    {
         String key = resource.getPath();
 
         ResourceEditorTab existingTab = registry.getResourceTab(key);
-        if (existingTab != null) {
-            int index = registry.findResourceTabIndex(existingTab);
-            if (index >= 0) {
-                tabbedPane.setSelectedIndex(index);
-            }
+        if (existingTab != null)
+        {
+            host.select(ViewId.forResource(key));
             return;
         }
 
         ResourceEditorTab tab = new ResourceEditorTab(resource);
         registry.putResourceTab(key, tab);
 
-        tabbedPane.addTab(tab.getTitle(), Icons.getIcon(resource.getIconKey()), tab, tab.getTooltip());
-        int index = tabbedPane.getTabCount() - 1;
-        tabbedPane.setTabComponentAt(index, headerFactory.createResourceTabComponent(tab, () -> closeResourceTab(tab)));
-        tabbedPane.setSelectedIndex(index);
+        host.open(ViewSpec.document(ViewId.forResource(key), TabLook.of(tab.getTitle(), Icons.getIcon(resource.getIconKey())).withTooltip(tab.getTooltip()), tab).closedBy(() -> closeResourceTab(tab)));
     }
 
-    public void closeResourceTab(ResourceEditorTab tab) {
-        int index = registry.findResourceTabIndex(tab);
-        if (index >= 0) {
-            tabbedPane.removeTabAt(index);
-            registry.removeResourceTab(tab.getResource().getPath());
-
-            if (registry.noClassOrResourceTabs()) {
-                tabbedPane.setSelectedIndex(0);
-            }
+    /**
+     * Closes a resource tab, showing Welcome when no class or resource tab is left.
+     *
+     * @param tab the tab
+     */
+    public void closeResourceTab(ResourceEditorTab tab)
+    {
+        final String path = tab.getResource().getPath();
+        if (registry.getResourceTab(path) == null)
+        {
+            return;
+        }
+        registry.removeResourceTab(path);
+        close(ViewId.forResource(path));
+        if (registry.noClassOrResourceTabs())
+        {
+            showWelcomeTab();
         }
     }
 
     /**
-     * Opens a plugin-contributed center tab (not tied to a class/resource). Opening an already-open {@code id}
-     * re-focuses its tab. The {@code icon} may be null.
+     * Opens a plugin's document tab, or brings it forward where it is already open.
+     *
+     * @param id the plugin's id for the view
+     * @param title the tab's title
+     * @param icon the tab's icon, or null
+     * @param view the panel
      */
-    public void openCustomView(String id, String title, Icon icon, JComponent view) {
+    public void openCustomView(String id, String title, Icon icon, JComponent view)
+    {
         openCustomView(id, title, icon, view, null);
     }
 
     /**
-     * As {@link #openCustomView(String, String, Icon, JComponent)}, but {@code onClose} (nullable) runs when the view
-     * is closed - by the tab's close button, {@link #closeCustomView(String)}, or {@link #closeAllTabs()}.
+     * Opens a plugin's document tab with an action to run when it closes, or brings it forward where it is already open.
+     *
+     * @param id the plugin's id for the view
+     * @param title the tab's title
+     * @param icon the tab's icon, or null
+     * @param view the panel
+     * @param onClose run when the tab closes by any route, or null
      */
-    public void openCustomView(String id, String title, Icon icon, JComponent view, Runnable onClose) {
+    public void openCustomView(String id, String title, Icon icon, JComponent view, Runnable onClose)
+    {
         JComponent existing = registry.getCustomView(id);
-        if (existing != null) {
-            int index = registry.findComponentIndex(existing);
-            if (index >= 0) {
-                tabbedPane.setSelectedIndex(index);
-            }
+        if (existing != null)
+        {
+            host.select(ViewId.custom(id));
             return;
         }
 
         registry.putCustomView(id, view, onClose);
-        tabbedPane.addTab(title, icon, view, title);
-        int index = tabbedPane.getTabCount() - 1;
-        tabbedPane.setTabComponentAt(index, headerFactory.createCustomTabComponent(title, icon, view, () -> closeCustomView(id)));
-        tabbedPane.setSelectedIndex(index);
+        host.open(ViewSpec.document(ViewId.custom(id), TabLook.of(title, icon).withTooltip(title), view).closedBy(() -> closeCustomView(id)));
     }
 
-    /** Closes a plugin-contributed center tab (running its close hook, if any). No-op if {@code id} is not open. */
-    public void closeCustomView(String id) {
+    /**
+     * Closes a plugin's document tab and runs its close action; an id that is not open is ignored.
+     *
+     * @param id the plugin's id for the view
+     */
+    public void closeCustomView(String id)
+    {
         JComponent view = registry.getCustomView(id);
-        if (view == null) {
+        if (view == null)
+        {
             return;
         }
         Runnable onClose = registry.removeCustomView(id);
-        int index = registry.findComponentIndex(view);
-        if (index >= 0) {
-            tabbedPane.removeTabAt(index);
-            if (registry.isEmpty()) {
-                tabbedPane.setSelectedIndex(0);
-            }
+        close(ViewId.custom(id));
+        if (registry.isEmpty())
+        {
+            showWelcomeTab();
         }
-        if (onClose != null) {
+        if (onClose != null)
+        {
             onClose.run();
         }
     }
 
     /**
-     * Close a tab.
+     * Closes a class tab, showing Welcome when no class tab is left.
+     *
+     * @param tab the tab
      */
-    public void closeTab(EditorTab tab) {
-        int index = registry.findTabIndex(tab);
-        if (index >= 0) {
-            tabbedPane.removeTabAt(index);
-            registry.removeClassTab(tab.getClassEntry().getClassName());
-
-            // Switch to Welcome tab if no other tabs
-            if (registry.noClassTabs()) {
-                tabbedPane.setSelectedIndex(0); // Welcome tab is always at index 0
-            }
+    public void closeTab(EditorTab tab)
+    {
+        final String className = tab.getClassEntry().getClassName();
+        if (registry.getClassTab(className) == null)
+        {
+            return;
+        }
+        registry.removeClassTab(className);
+        close(ViewId.forClass(className));
+        if (registry.noClassTabs())
+        {
+            showWelcomeTab();
         }
     }
 
-    public void closeTabForClass(String className) {
+    private void close(ViewId view)
+    {
+        if (host != null && host.isOpen(view))
+        {
+            host.close(view);
+        }
+    }
+
+    /**
+     * Closes the tab of a class where it is open.
+     *
+     * @param className the class's name
+     */
+    public void closeTabForClass(String className)
+    {
         EditorTab tab = registry.getClassTab(className);
-        if (tab != null) {
+        if (tab != null)
+        {
             closeTab(tab);
         }
     }
 
-    public void closeTabForResource(String path) {
+    /**
+     * Closes the tab of a resource where it is open.
+     *
+     * @param path the resource's path
+     */
+    public void closeTabForResource(String path)
+    {
         ResourceEditorTab tab = registry.getResourceTab(path);
-        if (tab != null) {
+        if (tab != null)
+        {
             closeResourceTab(tab);
         }
     }
 
-    /**
-     * Close all tabs (except Welcome tab).
-     */
-    public void closeAllTabs() {
+    /** Closes every document tab except Welcome, wherever each has been dragged. */
+    public void closeAllTabs()
+    {
         contextMenu.closeAllTabs();
     }
 
     /**
-     * Close every closable tab except the specified one (all tab kinds, not just class editors; the Welcome tab is
-     * always kept).
+     * Closes every closable tab beside one, in the pane it is in.
+     *
+     * @param keepTab the tab body to keep
      */
-    public void closeOtherTabs(Component keepTab) {
+    public void closeOtherTabs(Component keepTab)
+    {
         contextMenu.closeOtherTabs(keepTab);
     }
 
     /**
-     * Close every closable tab to the left of the specified tab (all tab kinds; the Welcome tab is always kept).
+     * Closes every closable tab to the left of one, in the pane it is in.
+     *
+     * @param referenceTab the tab body to count from
      */
-    public void closeTabsToLeft(Component referenceTab) {
+    public void closeTabsToLeft(Component referenceTab)
+    {
         contextMenu.closeTabsToLeft(referenceTab);
     }
 
     /**
-     * Close every closable tab to the right of the specified tab (all tab kinds; the Welcome tab is always kept).
+     * Closes every closable tab to the right of one, in the pane it is in.
+     *
+     * @param referenceTab the tab body to count from
      */
-    public void closeTabsToRight(Component referenceTab) {
+    public void closeTabsToRight(Component referenceTab)
+    {
         contextMenu.closeTabsToRight(referenceTab);
     }
 
     /**
-     * Get the currently selected tab.
+     * Finds the class tab in front of the documents stack.
+     *
+     * @return the tab, or null where the front tab is not a class or nothing is open
      */
-    public EditorTab getCurrentTab() {
-        Component selected = tabbedPane.getSelectedComponent();
-        if (selected instanceof EditorTab) {
-            return (EditorTab) selected;
+    public EditorTab getCurrentTab()
+    {
+        if (host == null)
+        {
+            return null;
         }
-        return null;
+        final Component selected = host.frontOf(Stacks.DOCUMENTS)
+                .flatMap(host::bodyOf)
+                .orElse(null);
+        return selected instanceof EditorTab ? (EditorTab) selected : null;
     }
 
     /**
-     * Get the class of the currently selected tab.
+     * Finds the class in the front class tab.
+     *
+     * @return the class, or null where no class tab is in front
      */
-    public ClassEntryModel getCurrentClass() {
+    public ClassEntryModel getCurrentClass()
+    {
         EditorTab tab = getCurrentTab();
         return tab != null ? tab.getClassEntry() : null;
     }
 
     /**
-     * Set view mode for all open tabs.
+     * Switches every open class tab to a view mode.
+     *
+     * @param mode the view mode
      */
-    public void setViewMode(ViewMode mode) {
-        for (EditorTab tab : registry.classTabs()) {
+    public void setViewMode(ViewMode mode)
+    {
+        for (EditorTab tab : registry.classTabs())
+        {
             tab.setViewMode(mode);
         }
     }
 
     /**
-     * Get the current view mode.
+     * Finds the view mode of the front class tab.
+     *
+     * @return its view mode, or SOURCE where no class tab is in front
      */
-    public ViewMode getViewMode() {
+    public ViewMode getViewMode()
+    {
         EditorTab current = getCurrentTab();
-        if (current != null) {
+        if (current != null)
+        {
             return current.getViewMode();
         }
         return ViewMode.SOURCE;
     }
 
     /**
-     * Set whether to omit annotations from decompiled output display.
+     * Sets whether decompiled output omits annotations, in open tabs and tabs opened later.
+     *
+     * @param omit true to omit annotations
      */
-    public void setOmitAnnotations(boolean omit) {
+    public void setOmitAnnotations(boolean omit)
+    {
         this.omitAnnotations = omit;
-        for (EditorTab tab : registry.classTabs()) {
+        for (EditorTab tab : registry.classTabs())
+        {
             tab.setOmitAnnotations(omit);
         }
     }
 
     /**
-     * Enable or disable usage-count lenses in all open tabs.
+     * Turns usage-count lenses on or off in every open class tab.
+     *
+     * @param enabled true to show the lenses
      */
-    public void setUsageLensEnabled(boolean enabled) {
-        for (EditorTab tab : registry.classTabs()) {
+    public void setUsageLensEnabled(boolean enabled)
+    {
+        for (EditorTab tab : registry.classTabs())
+        {
             tab.setUsageLensEnabled(enabled);
         }
     }
 
-    /**
-     * Refresh the current tab.
-     */
-    public void refreshCurrentTab() {
+    /** Refreshes the front class tab. */
+    public void refreshCurrentTab()
+    {
         EditorTab tab = getCurrentTab();
-        if (tab != null) {
+        if (tab != null)
+        {
             tab.refresh();
         }
     }
 
-    /** Reloads every open class tab from current bytecode, dropping stale decompilation - after a project mutation. */
-    public void reloadAllTabs() {
-        for (EditorTab tab : registry.classTabs()) {
+    /** Reloads every open class tab from the current bytecode, dropping stale decompilation. */
+    public void reloadAllTabs()
+    {
+        for (EditorTab tab : registry.classTabs())
+        {
             tab.reload();
         }
     }
 
-    /** Re-renders breakpoint gutters on every open class tab (e.g. when the debug session connects/disconnects). */
-    public void refreshBreakpointGutters() {
-        for (EditorTab tab : registry.classTabs()) {
+    /** Redraws the breakpoint gutters of every open class tab. */
+    public void refreshBreakpointGutters()
+    {
+        for (EditorTab tab : registry.classTabs())
+        {
             tab.refreshBreakpointGutters();
         }
     }
 
-    /**
-     * Copy selection from current tab.
-     */
-    public void copySelection() {
+    /** Copies the selection in the front class tab. */
+    public void copySelection()
+    {
         EditorTab tab = getCurrentTab();
-        if (tab != null) {
+        if (tab != null)
+        {
             tab.copySelection();
         }
     }
 
-    /**
-     * Show find dialog in current tab.
-     */
-    public void showFindDialog() {
+    /** Shows the find dialog for the front class tab. */
+    public void showFindDialog()
+    {
         EditorTab tab = getCurrentTab();
-        if (tab != null) {
+        if (tab != null)
+        {
             tab.showFindDialog();
         }
     }
 
-    /**
-     * Show go to line dialog.
-     */
-    public void showGoToLineDialog() {
+    /** Asks for a line number and moves the front class tab to it; input that is not a number is ignored. */
+    public void showGoToLineDialog()
+    {
         EditorTab tab = getCurrentTab();
         if (tab == null) return;
 
-        String input = JOptionPane.showInputDialog(this, "Go to line:", "Go to Line",
-                JOptionPane.PLAIN_MESSAGE);
-        if (input != null && !input.isEmpty()) {
-            try {
+        String input = JOptionPane.showInputDialog(tab, "Go to line:", "Go to Line", JOptionPane.PLAIN_MESSAGE);
+        if (input != null && !input.isEmpty())
+        {
+            try
+            {
                 int line = Integer.parseInt(input.trim());
                 tab.goToLine(line);
-            } catch (NumberFormatException e) {
-                // Ignore invalid input
+            }
+            catch (NumberFormatException ignored)
+            {
             }
         }
     }
 
     /**
-     * Get the currently selected method (if any).
+     * Finds the method at the caret of the front class tab.
+     *
+     * @return the method, or null where there is none
      */
-    public MethodEntryModel getCurrentMethod() {
+    public MethodEntryModel getCurrentMethod()
+    {
         EditorTab tab = getCurrentTab();
         return tab != null ? tab.getCurrentMethod() : null;
     }
 
     /**
-     * Get the selected text from the current editor.
+     * Reads the selection in the front class tab.
+     *
+     * @return the selected text, or null where no class tab is in front
      */
-    public String getSelectedText() {
+    public String getSelectedText()
+    {
         EditorTab tab = getCurrentTab();
         return tab != null ? tab.getSelectedText() : null;
     }
 
     /**
-     * Scroll to the specified method in the current tab.
+     * Scrolls the front class tab to a method.
+     *
+     * @param method the method
      */
-    public void scrollToMethod(MethodEntryModel method) {
+    public void scrollToMethod(MethodEntryModel method)
+    {
         EditorTab tab = getCurrentTab();
-        if (tab != null) {
+        if (tab != null)
+        {
             tab.scrollToMethod(method);
         }
     }
 
     /**
-     * Scroll to the specified field in the current tab.
+     * Scrolls the front class tab to a field.
+     *
+     * @param field the field
      */
-    public void scrollToField(FieldEntryModel field) {
+    public void scrollToField(FieldEntryModel field)
+    {
         EditorTab tab = getCurrentTab();
-        if (tab != null) {
+        if (tab != null)
+        {
             tab.scrollToField(field);
         }
     }
 
     /**
-     * Go to a specific line and highlight it.
+     * Moves the front class tab to a line and highlights it; lines below 1 are ignored.
+     *
+     * @param line the line number, from 1
      */
-    public void goToLineAndHighlight(int line) {
+    public void goToLineAndHighlight(int line)
+    {
         EditorTab tab = getCurrentTab();
-        if (tab != null && line > 0) {
+        if (tab != null && line > 0)
+        {
             tab.highlightLine(line);
         }
     }
 
     /**
-     * Set the font size for all open tabs.
+     * Sets the font size of every open class tab.
+     *
+     * @param size the font size in points
      */
-    public void setFontSize(int size) {
-        for (EditorTab tab : registry.classTabs()) {
+    public void setFontSize(int size)
+    {
+        for (EditorTab tab : registry.classTabs())
+        {
             tab.setFontSize(size);
         }
     }
 
     /**
-     * Set word wrap for all open tabs.
+     * Turns word wrap on or off in every open class tab.
+     *
+     * @param enabled true to wrap
      */
-    public void setWordWrap(boolean enabled) {
-        for (EditorTab tab : registry.classTabs()) {
+    public void setWordWrap(boolean enabled)
+    {
+        for (EditorTab tab : registry.classTabs())
+        {
             tab.setWordWrap(enabled);
         }
     }
 
     /**
-     * Set the project model for navigation features.
+     * Sets the project that open tabs and the Welcome tab navigate within.
+     *
+     * @param projectModel the project
      */
-    public void setProjectModel(ProjectModel projectModel) {
+    public void setProjectModel(ProjectModel projectModel)
+    {
         this.projectModel = projectModel;
-        for (EditorTab tab : registry.classTabs()) {
+        for (EditorTab tab : registry.classTabs())
+        {
             tab.setProjectModel(projectModel);
         }
-        // Update welcome tab with project info
-        if (welcomeTab != null) {
+        if (welcomeTab != null)
+        {
             welcomeTab.setProjectModel(projectModel);
         }
     }
 
-    /**
-     * Refresh the welcome tab (call after loading new classes).
-     */
-    public void refreshWelcomeTab() {
-        if (welcomeTab != null) {
+    /** Refreshes the Welcome tab after classes are loaded. */
+    public void refreshWelcomeTab()
+    {
+        if (welcomeTab != null)
+        {
             welcomeTab.refresh();
         }
     }
 
-    /**
-     * Switch to the welcome tab.
-     */
-    public void showWelcomeTab() {
-        tabbedPane.setSelectedIndex(0);
+    /** Brings the Welcome tab forward. */
+    public void showWelcomeTab()
+    {
+        if (host != null)
+        {
+            host.select(Views.WELCOME);
+        }
     }
 
     /**
-     * Navigate to a specific PC within a method in a class.
-     * Opens the class if not already open, switches to bytecode view, and highlights the PC.
+     * Opens a class in bytecode view and highlights an instruction.
+     *
      * @param classEntry the class containing the method
-     * @param methodName the method name
-     * @param methodDesc the method descriptor
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
      * @param pc the bytecode offset
-     * @return true if navigation succeeded
+     * @return true where the instruction was found
      */
-    public boolean navigateToPC(ClassEntryModel classEntry, String methodName, String methodDesc, int pc) {
+    public boolean navigateToPC(ClassEntryModel classEntry, String methodName, String methodDesc, int pc)
+    {
         openClass(classEntry, ViewMode.BYTECODE);
 
         EditorTab tab = registry.getClassTab(classEntry.getClassName());
-        if (tab != null) {
+        if (tab != null)
+        {
             return tab.navigateToPC(methodName, methodDesc, pc);
         }
         return false;
     }
 
     /**
-     * Navigate the source view to the statement at a bytecode offset, selecting the given token
-     * (e.g. the referenced method or field name) on the resolved line.
+     * Opens a class in source view at the statement for a bytecode offset, selecting a token on that line.
+     *
+     * @param classEntry the class containing the method
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor
+     * @param pc the bytecode offset
+     * @param selectToken the text to select on the line, such as a referenced member's name
+     * @return true where the statement was found
      */
-    public boolean navigateToSourceOffset(ClassEntryModel classEntry, String methodName,
-                                          String methodDesc, int pc, String selectToken) {
+    public boolean navigateToSourceOffset(ClassEntryModel classEntry, String methodName, String methodDesc, int pc, String selectToken)
+    {
         openClass(classEntry, ViewMode.SOURCE);
 
         EditorTab tab = registry.getClassTab(classEntry.getClassName());
-        if (tab != null) {
+        if (tab != null)
+        {
             return tab.navigateToSourceOffset(methodName, methodDesc, pc, selectToken);
         }
         return false;
     }
 
     /**
-     * Navigate to a specific method in a class.
-     * Opens the class if not already open and scrolls to the method.
+     * Opens a class and scrolls to a method.
+     *
      * @param classEntry the class containing the method
-     * @param methodName the method name
-     * @param methodDesc the method descriptor (can be null)
-     * @param viewMode the view mode to use
-     * @return true if navigation succeeded
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor, or null to match by name
+     * @param viewMode how to show the class
+     * @return true where the method was found
      */
-    public boolean navigateToMethod(ClassEntryModel classEntry, String methodName, String methodDesc, ViewMode viewMode) {
+    public boolean navigateToMethod(ClassEntryModel classEntry, String methodName, String methodDesc, ViewMode viewMode)
+    {
         openClass(classEntry, viewMode);
 
         EditorTab tab = registry.getClassTab(classEntry.getClassName());
-        if (tab != null) {
+        if (tab != null)
+        {
             return tab.navigateToMethod(methodName, methodDesc);
         }
         return false;
     }
 
     /**
-     * Get an open tab by class name.
+     * Finds the open tab of a class.
+     *
+     * @param className the class's name
+     * @return its tab, or null where it is not open
      */
-    public EditorTab getTab(String className) {
+    public EditorTab getTab(String className)
+    {
         return registry.getClassTab(className);
     }
 }
