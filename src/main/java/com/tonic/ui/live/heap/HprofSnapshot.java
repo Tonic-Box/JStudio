@@ -29,7 +29,6 @@ import java.util.Map;
 public final class HprofSnapshot implements Closeable
 {
 
-    // HPROF basic type tags.
     private static final int T_OBJECT = 2, T_BOOLEAN = 4, T_CHAR = 5, T_FLOAT = 6, T_DOUBLE = 7,
             T_BYTE = 8, T_SHORT = 9, T_INT = 10, T_LONG = 11;
 
@@ -38,15 +37,14 @@ public final class HprofSnapshot implements Closeable
     private final int idSize;
 
     private final Map<Long, String> strings = new HashMap<>();
-    private final Map<Long, Long> classNameStringId = new HashMap<>();   // classObjId -> nameStringId
-    private final Map<Long, ClassDef> classDefs = new HashMap<>();       // classObjId -> layout
-    private final Map<Long, long[]> instanceIndex = new HashMap<>();     // objId -> {classObjId, offset, len}
+    private final Map<Long, Long> classNameStringId = new HashMap<>();
+    private final Map<Long, ClassDef> classDefs = new HashMap<>();
+    private final Map<Long, long[]> instanceIndex = new HashMap<>();
     private final Map<Long, List<Long>> instancesByClass = new HashMap<>();
-    private final Map<Long, long[]> primArrayIndex = new HashMap<>();    // objId -> {offset, count, elemType}
-    private final Map<String, Long> nameToClassObjId = new HashMap<>();  // slashed internal name -> classObjId
-    private final Map<Long, String> classNameByObjId = new HashMap<>();  // classObjId -> slashed internal name
+    private final Map<Long, long[]> primArrayIndex = new HashMap<>();
+    private final Map<String, Long> nameToClassObjId = new HashMap<>();
+    private final Map<Long, String> classNameByObjId = new HashMap<>();
 
-    /** Field layout of a class: its own instance fields (in declared order) and its superclass. */
     private static final class ClassDef
     {
         long superId;
@@ -60,7 +58,7 @@ public final class HprofSnapshot implements Closeable
         public final String name;
         public final String type;
         public final String display;
-        public final long refId; // referenced object id (0 = not a reference / null)
+        public final long refId;
 
         FieldValue(String name, String type, String display, long refId)
         {
@@ -96,8 +94,6 @@ public final class HprofSnapshot implements Closeable
         resolveClassNames();
         this.raf = new RandomAccessFile(hprof, "r");
     }
-
-    // ---- public API -------------------------------------------------------------------------------
 
     /** Instance object ids of {@code internalName} (exact class, slashed form). */
     public List<Long> instancesOf(String internalName)
@@ -183,8 +179,6 @@ public final class HprofSnapshot implements Closeable
         file.delete();
     }
 
-    // ---- field decoding ---------------------------------------------------------------------------
-
     private FieldValue readField(String name, int type, Cursor c)
     {
         switch (type)
@@ -219,7 +213,6 @@ public final class HprofSnapshot implements Closeable
         }
     }
 
-    /** Decode a java.lang.String's text from its char[]/byte[] value array. Null on failure. */
     private String stringText(long objId)
     {
         try
@@ -289,7 +282,6 @@ public final class HprofSnapshot implements Closeable
                 }
                 return new String(chars);
             }
-            // byte[] (JDK9+): coder 0 = LATIN1, 1 = UTF16
             if (coder == 1)
             {
                 return new String(data, StandardCharsets.UTF_16LE);
@@ -310,21 +302,18 @@ public final class HprofSnapshot implements Closeable
         return b;
     }
 
-    // ---- parsing ----------------------------------------------------------------------------------
-
     private int readHeader(Reader r) throws IOException
     {
         int b;
         while ((b = r.u1()) != 0)
         {
-            // version string up to NUL
             if (b < 0)
             {
                 throw new EOFException();
             }
         }
         int size = (int) r.u4();
-        r.skip(8); // timestamp
+        r.skip(8);
         return size;
     }
 
@@ -341,18 +330,18 @@ public final class HprofSnapshot implements Closeable
             {
                 return;
             }
-            r.u4(); // time
+            r.u4();
             long len = r.u4();
             switch (tag)
             {
                 case 0x01:
-                { // STRING_IN_UTF8
+                {
                     long id = r.id(idSize);
                     strings.put(id, r.utf8((int) (len - idSize)));
                     break;
                 }
                 case 0x02:
-                { // LOAD_CLASS
+                {
                     r.u4();
                     long classObjId = r.id(idSize);
                     r.u4();
@@ -360,8 +349,8 @@ public final class HprofSnapshot implements Closeable
                     classNameStringId.put(classObjId, nameId);
                     break;
                 }
-                case 0x0C: // HEAP_DUMP
-                case 0x1C: // HEAP_DUMP_SEGMENT
+                case 0x0C:
+                case 0x1C:
                     indexHeapSegment(r, len);
                     break;
                 default:
@@ -380,9 +369,9 @@ public final class HprofSnapshot implements Closeable
             switch (sub)
             {
                 case 0x21:
-                { // INSTANCE_DUMP
+                {
                     long objId = r.id(idSize);
-                    r.u4(); // stack serial
+                    r.u4();
                     long classObjId = r.id(idSize);
                     int numBytes = (int) r.u4();
                     long offset = r.pos;
@@ -392,7 +381,7 @@ public final class HprofSnapshot implements Closeable
                     break;
                 }
                 case 0x23:
-                { // PRIMITIVE_ARRAY_DUMP
+                {
                     long objId = r.id(idSize);
                     r.u4();
                     int count = (int) r.u4();
@@ -403,38 +392,38 @@ public final class HprofSnapshot implements Closeable
                     break;
                 }
                 case 0x22:
-                { // OBJECT_ARRAY_DUMP
+                {
                     r.id(idSize);
                     r.u4();
                     int count = (int) r.u4();
-                    r.id(idSize); // array class
+                    r.id(idSize);
                     r.skip((long) count * idSize);
                     break;
                 }
-                case 0x20: // CLASS_DUMP
+                case 0x20:
                     readClassDump(r);
                     break;
-                case 0xFF: // ROOT_UNKNOWN: objId
+                case 0xFF:
                     r.id(idSize);
                     break;
-                case 0x01: // ROOT_JNI_GLOBAL: objId, jniGlobalRefId
+                case 0x01:
                     r.id(idSize);
                     r.id(idSize);
                     break;
-                case 0x02: // ROOT_JNI_LOCAL: objId, threadSerial, frameNum
-                case 0x03: // ROOT_JAVA_FRAME: objId, threadSerial, frameNum
-                case 0x08: // ROOT_THREAD_OBJECT: objId, threadSerial, stackTraceSerial
+                case 0x02:
+                case 0x03:
+                case 0x08:
                     r.id(idSize);
                     r.u4();
                     r.u4();
                     break;
-                case 0x04: // ROOT_NATIVE_STACK: objId, threadSerial
-                case 0x06: // ROOT_THREAD_BLOCK: objId, threadSerial
+                case 0x04:
+                case 0x06:
                     r.id(idSize);
                     r.u4();
                     break;
-                case 0x05: // ROOT_STICKY_CLASS: objId
-                case 0x07: // ROOT_MONITOR_USED: objId
+                case 0x05:
+                case 0x07:
                     r.id(idSize);
                     break;
                 default:
@@ -446,25 +435,25 @@ public final class HprofSnapshot implements Closeable
     private void readClassDump(Reader r) throws IOException
     {
         long classObjId = r.id(idSize);
-        r.u4(); // stack serial
+        r.u4();
         long superId = r.id(idSize);
-        r.id(idSize); // class loader
-        r.id(idSize); // signers
-        r.id(idSize); // protection domain
-        r.id(idSize); // reserved
-        r.id(idSize); // reserved
-        r.u4(); // instance size
+        r.id(idSize);
+        r.id(idSize);
+        r.id(idSize);
+        r.id(idSize);
+        r.id(idSize);
+        r.u4();
         int cpCount = r.u2();
         for (int i = 0; i < cpCount; i++)
         {
-            r.u2(); // cp index
+            r.u2();
             int type = r.u1();
             r.skip(typeSize(type, idSize));
         }
         int staticCount = r.u2();
         for (int i = 0; i < staticCount; i++)
         {
-            r.id(idSize); // name string id
+            r.id(idSize);
             int type = r.u1();
             r.skip(typeSize(type, idSize));
         }
@@ -503,8 +492,6 @@ public final class HprofSnapshot implements Closeable
         long[] idx = instanceIndex.get(objId);
         return idx == null ? "?" : classNameByObjId.getOrDefault(idx[0], "?");
     }
-
-    // ---- helpers ----------------------------------------------------------------------------------
 
     private static int typeSize(int type, int idSize)
     {
@@ -567,7 +554,6 @@ public final class HprofSnapshot implements Closeable
         return s.length() <= 64 ? s : s.substring(0, 64) + "...";
     }
 
-    /** Position-tracking big-endian reader over the streaming parse. */
     private static final class Reader
     {
         private final DataInputStream in;
@@ -643,7 +629,6 @@ public final class HprofSnapshot implements Closeable
         }
     }
 
-    /** Big-endian cursor over a decoded field-value blob. */
     private static final class Cursor
     {
         private final byte[] b;

@@ -7,11 +7,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * Owns the debugger's breakpoint PC set and the toggle logic that registers/unregisters breakpoints against the
- * {@link VMDebugSession} for the currently displayed method. After each change it fires a refresh callback so the
- * bytecode table and source gutter can redraw their breakpoint dots.
- */
 final class BreakpointController
 {
 
@@ -29,7 +24,6 @@ final class BreakpointController
         this.onChanged = onChanged;
     }
 
-    /** The live set of breakpoint PCs; consumed (read-only) by the table renderer and source view. */
     Set<Integer> getBreakpoints()
     {
         return breakpoints;
@@ -40,10 +34,6 @@ final class BreakpointController
         breakpoints.clear();
     }
 
-    /**
-     * Toggles a breakpoint at a PC of the DISPLAYED method (which differs from the entry method while stepping
-     * through callees in recursive mode) and fires the refresh callback to sync the table and source gutter dots.
-     */
     void toggleBreakpointAtPc(int pc)
     {
         MethodEntry method = displayedMethod.get();

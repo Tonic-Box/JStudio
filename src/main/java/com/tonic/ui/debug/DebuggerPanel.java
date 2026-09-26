@@ -184,7 +184,6 @@ public final class DebuggerPanel extends JPanel
         resumeButton.setEnabled(paused);
     }
 
-    /** Best-effort readable type from a JVM descriptor (e.g. {@code Ljava/lang/String;} -> {@code String}). */
     private static String prettyType(String desc)
     {
         if (desc == null || desc.isEmpty())

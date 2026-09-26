@@ -59,8 +59,6 @@ public class VMExecutionService
     @Getter
     private int maxInstructions = 10_000_000;
 
-    // Cached defensive snapshot of the project's user-class bytes, reused across isolated VM instances until the
-    // project's bytecode changes.
     private long cachedSnapshotVersion = -1;
     private Map<String, byte[]> cachedFrozenClasses;
 
@@ -612,7 +610,6 @@ public class VMExecutionService
                 }
                 catch (Exception ignored)
                 {
-                    // unserializable class - omit from the snapshot
                 }
             }
             cachedFrozenClasses = frozen;

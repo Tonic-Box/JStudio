@@ -31,16 +31,9 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-/**
- * Owns the source editor's symbol navigation: Ctrl+Click go-to-definition, identifier/declaration resolution
- * (across the current class then the project), scroll-to-declaration, and the rename / find-usages actions for the
- * declaration under the caret. Collaborators (text area, class entry, the line highlighter, the project model and
- * the "omit annotations" flag) are injected; cross-cutting events use the host component as their source.
- */
 final class SourceNavigator
 {
 
-    /** The kind of declaration recognised on a line, with its menu display name. */
     enum DeclarationType
     {
         CLASS("Class"),
@@ -55,7 +48,6 @@ final class SourceNavigator
         }
     }
 
-    /** A resolved declaration (kind, name, and - for methods - descriptor) at a source line. */
     static class DeclarationInfo
     {
         final DeclarationType type;
@@ -154,10 +146,6 @@ final class SourceNavigator
         }
     }
 
-    /**
-     * Navigate to the definition of a given identifier.
-     * Searches: current class methods -> current class fields -> project classes -> project methods.
-     */
     void navigateToIdentifier(String identifier)
     {
         ProjectModel project = projectModel.get();
@@ -217,10 +205,6 @@ final class SourceNavigator
         }
     }
 
-    /**
-     * Scroll to a method definition in the source view and highlight the line. Looks for actual method
-     * declarations, not call sites. Uses the descriptor to match the correct overload.
-     */
     void scrollToMethodDefinition(String methodName, String methodDesc)
     {
         if (!omitAnnotations.getAsBoolean() && methodDesc != null && classEntry.getMethodSpans() != null)
@@ -320,7 +304,6 @@ final class SourceNavigator
         highlighter.highlightAndScrollToLine(matchingLines.get(0));
     }
 
-    /** Scroll to a field definition in the source view and highlight the line. */
     void scrollToFieldDefinition(String fieldName)
     {
         if (!omitAnnotations.getAsBoolean() && classEntry.getFieldSpans() != null)
@@ -367,7 +350,6 @@ final class SourceNavigator
         }
     }
 
-    /** Get the word at the current caret position. */
     String getWordAtCaret()
     {
         try
@@ -458,16 +440,10 @@ final class SourceNavigator
         }
         catch (BadLocationException e)
         {
-            // ignore
         }
         return null;
     }
 
-    /**
-     * Resolves the declaration on a 1-based line from the decompiler's member spans (a line belongs to the member
-     * whose span contains it; class/method/field spans are disjoint). Returns null when spans are unavailable or
-     * annotations are filtered - both shift or remove line data - so callers fall back to the regex extractors.
-     */
     private DeclarationInfo declarationFromSpans(int lineNumber)
     {
         if (omitAnnotations.getAsBoolean())
@@ -506,7 +482,6 @@ final class SourceNavigator
         return null;
     }
 
-    /** The field span for a field by its (class-unique) name, or null. */
     private DecompileResult.MemberSpan fieldSpanByName(String fieldName)
     {
         Map<String, DecompileResult.MemberSpan> fieldSpans = classEntry.getFieldSpans();

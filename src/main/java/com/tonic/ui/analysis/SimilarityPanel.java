@@ -4,6 +4,11 @@ import com.tonic.analysis.similarity.MethodSimilarityAnalyzer;
 import com.tonic.analysis.similarity.MethodSignature;
 import com.tonic.analysis.similarity.SimilarityMetric;
 import com.tonic.analysis.similarity.SimilarityResult;
+import com.tonic.event.EventBus;
+import com.tonic.event.events.ClassSelectedEvent;
+import com.tonic.event.events.MethodSelectedEvent;
+import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.editor.bytecode.BytecodeFormatter;
@@ -55,7 +60,6 @@ public class SimilarityPanel extends ThemedJPanel
         super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
 
-        // Build UI
         add(createControlPanel(), BorderLayout.NORTH);
         add(createMainContent(), BorderLayout.CENTER);
         add(createStatusBar(), BorderLayout.SOUTH);
@@ -69,7 +73,6 @@ public class SimilarityPanel extends ThemedJPanel
         panel.setBackground(JStudioTheme.getBgSecondary());
         panel.setBorder(BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL, UIConstants.SPACING_SMALL));
 
-        // Build index button
         JButton buildButton = new JButton("Build Index");
         buildButton.setBackground(JStudioTheme.getBgTertiary());
         buildButton.setForeground(JStudioTheme.getTextPrimary());
@@ -78,7 +81,6 @@ public class SimilarityPanel extends ThemedJPanel
 
         panel.add(Box.createHorizontalStrut(16));
 
-        // Metric selection
         panel.add(createLabel("Metric:"));
         metricCombo = new JComboBox<>(SimilarityMetric.values());
         metricCombo.setSelectedItem(SimilarityMetric.COMBINED);
@@ -101,7 +103,6 @@ public class SimilarityPanel extends ThemedJPanel
 
         panel.add(Box.createHorizontalStrut(16));
 
-        // Threshold slider
         panel.add(createLabel("Min Score:"));
         thresholdSlider = new JSlider(50, 100, 80);
         thresholdSlider.setBackground(JStudioTheme.getBgSecondary());
@@ -113,7 +114,6 @@ public class SimilarityPanel extends ThemedJPanel
 
         panel.add(Box.createHorizontalStrut(16));
 
-        // Analysis buttons
         analyzeButton = new JButton("Find Similar");
         analyzeButton.setBackground(JStudioTheme.getBgTertiary());
         analyzeButton.setForeground(JStudioTheme.getTextPrimary());
@@ -137,7 +137,6 @@ public class SimilarityPanel extends ThemedJPanel
 
         panel.add(Box.createHorizontalStrut(16));
 
-        // Export button
         exportButton = new JButton("Export CSV");
         exportButton.setBackground(JStudioTheme.getBgTertiary());
         exportButton.setForeground(JStudioTheme.getTextPrimary());
@@ -150,7 +149,6 @@ public class SimilarityPanel extends ThemedJPanel
 
     private JSplitPane createMainContent()
     {
-        // Results table
         tableModel = new SimilarityTableModel();
         resultsTable = new JTable(tableModel);
         resultsTable.setBackground(JStudioTheme.getBgTertiary());
@@ -162,13 +160,11 @@ public class SimilarityPanel extends ThemedJPanel
         resultsTable.getTableHeader().setBackground(JStudioTheme.getBgSecondary());
         resultsTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
 
-        // Set column widths
-        resultsTable.getColumnModel().getColumn(0).setPreferredWidth(60);  // Score
-        resultsTable.getColumnModel().getColumn(1).setPreferredWidth(250); // Method 1
-        resultsTable.getColumnModel().getColumn(2).setPreferredWidth(250); // Method 2
-        resultsTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Metric
+        resultsTable.getColumnModel().getColumn(0).setPreferredWidth(60);
+        resultsTable.getColumnModel().getColumn(1).setPreferredWidth(250);
+        resultsTable.getColumnModel().getColumn(2).setPreferredWidth(250);
+        resultsTable.getColumnModel().getColumn(3).setPreferredWidth(100);
 
-        // Score column renderer with color coding
         resultsTable.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer()
         {
             @Override
@@ -199,7 +195,6 @@ public class SimilarityPanel extends ThemedJPanel
             }
         });
 
-        // Selection listener for comparison
         resultsTable.getSelectionModel().addListSelectionListener(e ->
         {
             if (!e.getValueIsAdjusting())
@@ -212,7 +207,6 @@ public class SimilarityPanel extends ThemedJPanel
             }
         });
 
-        // Double-click to navigate
         resultsTable.addMouseListener(new MouseAdapter()
         {
             @Override
@@ -223,7 +217,7 @@ public class SimilarityPanel extends ThemedJPanel
                     int row = resultsTable.getSelectedRow();
                     if (row >= 0)
                     {
-                        // Could navigate to method - placeholder for now
+                        openMethod(tableModel.getResult(resultsTable.convertRowIndexToModel(row)).getMethod1());
                     }
                 }
             }
@@ -233,10 +227,8 @@ public class SimilarityPanel extends ThemedJPanel
         tableScroll.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Similar Methods", 0, 0, null, JStudioTheme.getTextSecondary()));
         tableScroll.setPreferredSize(new Dimension(700, 200));
 
-        // Comparison panel
         JPanel comparisonPanel = createComparisonPanel();
 
-        // Split pane
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScroll, comparisonPanel);
         splitPane.setDividerLocation(200);
         splitPane.setResizeWeight(0.4);
@@ -251,11 +243,9 @@ public class SimilarityPanel extends ThemedJPanel
         panel.setBackground(JStudioTheme.getBgSecondary());
         panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), "Side-by-Side Comparison", 0, 0, null, JStudioTheme.getTextSecondary()));
 
-        // Code comparison split
         JPanel codePanel = new JPanel(new GridLayout(1, 2, 4, 0));
         codePanel.setBackground(JStudioTheme.getBgSecondary());
 
-        // Left side
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setBackground(JStudioTheme.getBgSecondary());
         leftLabel = new JLabel("Method 1");
@@ -273,7 +263,6 @@ public class SimilarityPanel extends ThemedJPanel
         leftPanel.add(leftScroll, BorderLayout.CENTER);
         codePanel.add(leftPanel);
 
-        // Right side
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBackground(JStudioTheme.getBgSecondary());
         rightLabel = new JLabel("Method 2");
@@ -293,7 +282,6 @@ public class SimilarityPanel extends ThemedJPanel
 
         panel.add(codePanel, BorderLayout.CENTER);
 
-        // Details area at bottom
         detailsArea = new JTextArea(3, 40);
         detailsArea.setEditable(false);
         detailsArea.setBackground(JStudioTheme.getBgTertiary());
@@ -334,8 +322,6 @@ public class SimilarityPanel extends ThemedJPanel
     {
         return new Color(base.getRed() / 5, base.getGreen() / 3, base.getBlue() / 5);
     }
-
-    // ==================== Actions ====================
 
     private void buildIndex()
     {
@@ -525,18 +511,15 @@ public class SimilarityPanel extends ThemedJPanel
         leftLabel.setText(sig1.getDisplayName() + sig1.getDescriptor());
         rightLabel.setText(sig2.getDisplayName() + sig2.getDescriptor());
 
-        // Get bytecode disassembly for both methods
         String code1 = getMethodBytecode(sig1);
         String code2 = getMethodBytecode(sig2);
 
         leftCode.setText(code1);
         rightCode.setText(code2);
 
-        // Reset scroll positions
         leftCode.setCaretPosition(0);
         rightCode.setCaretPosition(0);
 
-        // Show detailed scores
         StringBuilder details = new StringBuilder();
         details.append("Overall Score: ").append(result.getScorePercent()).append("% (")
                 .append(result.getSummary()).append(")\n");
@@ -561,9 +544,23 @@ public class SimilarityPanel extends ThemedJPanel
         detailsArea.setText(details.toString());
     }
 
+    private void openMethod(MethodSignature signature)
+    {
+        ClassEntryModel owner = project.getClass(signature.getClassName());
+        if (owner == null)
+        {
+            return;
+        }
+        EventBus.getInstance().post(new ClassSelectedEvent(this, owner));
+        MethodEntryModel method = owner.getMethod(signature.getMethodName(), signature.getDescriptor());
+        if (method != null)
+        {
+            EventBus.getInstance().post(new MethodSelectedEvent(this, method));
+        }
+    }
+
     private String getMethodBytecode(MethodSignature sig)
     {
-        // Find the method in the class pool
         if (project.getClassPool() == null)
         {
             return "// Class pool not available";
@@ -582,7 +579,6 @@ public class SimilarityPanel extends ThemedJPanel
                     if (method.getName().equals(sig.getMethodName()) &&
                             method.getDesc().equals(sig.getDescriptor()))
                     {
-                        // Get bytecode disassembly
                         if (method.getCodeAttribute() != null)
                         {
                             BytecodeFormatter formatter = new BytecodeFormatter(method);
@@ -616,10 +612,8 @@ public class SimilarityPanel extends ThemedJPanel
             File file = chooser.getSelectedFile();
             try (PrintWriter writer = new PrintWriter(new FileWriter(file)))
             {
-                // Header
                 writer.println("Score,Method1,Method2,Metric,ExactBytecode,OpcodeSequence,Structural");
 
-                // Data
                 for (int i = 0; i < tableModel.getRowCount(); i++)
                 {
                     SimilarityResult result = tableModel.getResult(i);
@@ -654,8 +648,6 @@ public class SimilarityPanel extends ThemedJPanel
             updateStatus("Index contains " + analyzer.getMethodCount() + " methods.");
         }
     }
-
-    // ==================== Table Model ====================
 
     private static class SimilarityTableModel extends AbstractTableModel
     {

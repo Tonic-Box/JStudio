@@ -59,10 +59,9 @@ public class FileListPanel extends ThemedJPanel
     private FileChooserMode mode = FileChooserMode.OPEN_FILE;
     private File currentDirectory;
 
-    // Type-ahead search
     private final StringBuilder typeAheadBuffer = new StringBuilder();
     private long lastKeyTime = 0;
-    private static final long TYPE_AHEAD_TIMEOUT = 1000; // 1 second
+    private static final long TYPE_AHEAD_TIMEOUT = 1000;
 
     public FileListPanel()
     {
@@ -95,20 +94,16 @@ public class FileListPanel extends ThemedJPanel
         table.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL));
         table.setFillsViewportHeight(true);
 
-        // Selection mode
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        // Custom renderer
         FileListRenderer renderer = new FileListRenderer(model);
         for (int i = 0; i < table.getColumnCount(); i++)
         {
             table.getColumnModel().getColumn(i).setCellRenderer(renderer);
         }
 
-        // Column widths
         setupColumnWidths();
 
-        // Header styling
         JTableHeader header = table.getTableHeader();
         header.setBackground(JStudioTheme.getBgSecondary());
         header.setForeground(JStudioTheme.getTextPrimary());
@@ -116,7 +111,6 @@ public class FileListPanel extends ThemedJPanel
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
         header.setReorderingAllowed(false);
 
-        // Click header to sort
         header.addMouseListener(new MouseAdapter()
         {
             @Override
@@ -130,7 +124,6 @@ public class FileListPanel extends ThemedJPanel
             }
         });
 
-        // Double-click to open
         table.addMouseListener(new MouseAdapter()
         {
             @Override
@@ -172,7 +165,6 @@ public class FileListPanel extends ThemedJPanel
             }
         });
 
-        // Keyboard navigation
         table.addKeyListener(new KeyAdapter()
         {
             @Override
@@ -188,7 +180,6 @@ public class FileListPanel extends ThemedJPanel
             }
         });
 
-        // Selection listener
         table.getSelectionModel().addListSelectionListener(e ->
         {
             if (!e.getValueIsAdjusting() && listener != null)
@@ -291,7 +282,6 @@ public class FileListPanel extends ThemedJPanel
 
         if (file.isDirectory())
         {
-            // Navigate into directory
             if (listener != null)
             {
                 listener.onDirectoryEntered(file);
@@ -299,7 +289,6 @@ public class FileListPanel extends ThemedJPanel
         }
         else
         {
-            // File selected (double-click = confirm)
             if (listener != null)
             {
                 listener.onFileDoubleClicked(file);
@@ -321,7 +310,6 @@ public class FileListPanel extends ThemedJPanel
                 break;
 
             case KeyEvent.VK_BACK_SPACE:
-                // Go up to parent
                 if (currentDirectory != null && listener != null)
                 {
                     File parent = currentDirectory.getParentFile();
@@ -353,7 +341,6 @@ public class FileListPanel extends ThemedJPanel
                 break;
 
             case KeyEvent.VK_DELETE:
-                // Only in save mode with confirmation
                 if (mode == FileChooserMode.SAVE_FILE)
                 {
                     deleteSelectedFiles();
@@ -367,7 +354,6 @@ public class FileListPanel extends ThemedJPanel
     {
         char c = e.getKeyChar();
 
-        // Ignore control characters
         if (Character.isISOControl(c))
         {
             return;
@@ -383,7 +369,6 @@ public class FileListPanel extends ThemedJPanel
         typeAheadBuffer.append(c);
         String prefix = typeAheadBuffer.toString();
 
-        // Find matching file
         int row = model.findByPrefix(prefix);
         if (row >= 0)
         {
@@ -415,7 +400,6 @@ public class FileListPanel extends ThemedJPanel
 
         if (newFolder.mkdir())
         {
-            // Refresh and select new folder
             FileSystemWorker.invalidateCache(currentDirectory);
             if (listener != null)
             {
@@ -451,7 +435,6 @@ public class FileListPanel extends ThemedJPanel
                     JOptionPane.showMessageDialog(this, "Failed to delete: " + file.getName(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
-            // Refresh
             FileSystemWorker.invalidateCache(currentDirectory);
             if (listener != null && currentDirectory != null)
             {
@@ -475,10 +458,8 @@ public class FileListPanel extends ThemedJPanel
     {
         this.mode = mode;
 
-        // Adjust selection mode based on mode
         if (mode == FileChooserMode.SELECT_DIRECTORY)
         {
-            // Only show directories - handled by filter
             table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         }
         else if (mode == FileChooserMode.SAVE_FILE)
@@ -500,10 +481,8 @@ public class FileListPanel extends ThemedJPanel
         model.setCurrentDirectory(directory);
         model.setFiles(files);
 
-        // Clear selection
         table.clearSelection();
 
-        // Scroll to top
         if (table.getRowCount() > 0)
         {
             table.scrollRectToVisible(table.getCellRect(0, 0, true));

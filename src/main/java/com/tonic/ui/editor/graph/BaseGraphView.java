@@ -540,7 +540,6 @@ public abstract class BaseGraphView extends AbstractEditorView
         }
         catch (BadLocationException e)
         {
-            // Ignore
         }
     }
 
@@ -656,7 +655,6 @@ public abstract class BaseGraphView extends AbstractEditorView
         }
         catch (BadLocationException e)
         {
-            // Ignore
         }
     }
 
@@ -721,7 +719,6 @@ public abstract class BaseGraphView extends AbstractEditorView
         }
         catch (Exception e)
         {
-            // Line out of range
         }
     }
 

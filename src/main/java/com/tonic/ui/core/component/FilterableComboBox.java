@@ -201,7 +201,6 @@ public class FilterableComboBox<T> extends JComboBox<T>
         }
     }
 
-    /** Returns the {@code allItems} element equal to {@code candidate} (preserving its {@code T} type), or null. */
     private T findItem(Object candidate)
     {
         if (candidate == null)

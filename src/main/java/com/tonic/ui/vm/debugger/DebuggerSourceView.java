@@ -199,10 +199,6 @@ public class DebuggerSourceView extends JPanel
         }
     }
 
-    /**
-     * Inverts the line map (display line back to the statement's start offset) and toggles a
-     * breakpoint there. Only lines carrying a mapped statement are valid targets.
-     */
     private void toggleBreakpointAtDisplayLine(int oneBasedDisplayLine)
     {
         if (breakpointToggler == null)
@@ -284,8 +280,6 @@ public class DebuggerSourceView extends JPanel
         {
             int offset = textArea.getLineStartOffset(Math.max(0, zeroBasedLine));
             textArea.setCaretPosition(offset);
-            // Before the text area has been laid out (e.g. the debugger window isn't visible yet)
-            // modelToView2D returns null; defer the scroll to the EDT once geometry exists.
             Rectangle2D view = textArea.modelToView2D(offset);
             if (view == null)
             {
@@ -306,11 +300,6 @@ public class DebuggerSourceView extends JPanel
         return lineMaps != null && loadedMethodKey != null ? lineMaps.get(loadedMethodKey) : null;
     }
 
-    /**
-     * Ensures the method's sliced source (and line maps) are displayed, decompiling the owner class
-     * asynchronously on first need; the result is shared with the editor via the model's
-     * decompilation cache. {@code onReady} runs once text and maps are in place.
-     */
     private void ensureMethodLoaded(MethodEntry method, Runnable onReady)
     {
         String ownerName = method.getOwnerName();
@@ -396,11 +385,6 @@ public class DebuggerSourceView extends JPanel
         decompileWorker.execute();
     }
 
-    /**
-     * Displays the method's slice of the class source (whole class when no span is available) and
-     * records the line offset that rebases between document and display coordinates. The gutter
-     * keeps whole-document numbering so lines match the editor's source view.
-     */
     private void applySource(String ownerName, String methodKey, String source, Map<String, NavigableMap<Integer, Integer>> maps, Map<String, DecompileResult.MethodSpan> spans)
     {
         clearExecutionHighlight();

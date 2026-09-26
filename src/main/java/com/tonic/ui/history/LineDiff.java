@@ -62,7 +62,6 @@ public final class LineDiff
             rows.add(new Row(Type.EQUAL, left.get(k), right.get(k)));
         }
         rows.addAll(diffMiddle(left.subList(start, endL), right.subList(start, endR)));
-        // The common suffix is left[endL..n) paired with right[endR..m) - same length, but different start indices.
         int suffix = n - endL;
         for (int k = 0; k < suffix; k++)
         {
@@ -131,7 +130,6 @@ public final class LineDiff
         return rows;
     }
 
-    /** Emits pending deletes/inserts, pairing overlap as CHANGE rows and the remainder as DELETE/INSERT rows. */
     private static void flush(List<Row> rows, List<String> dels, List<String> inss)
     {
         int paired = Math.min(dels.size(), inss.size());

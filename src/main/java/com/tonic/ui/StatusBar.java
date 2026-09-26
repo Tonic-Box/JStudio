@@ -165,7 +165,6 @@ public class StatusBar extends ThemedJPanel
                 break;
         }
 
-        // Auto-clear after 5 seconds
         clearMessageTimer.restart();
     }
 
@@ -222,7 +221,6 @@ public class StatusBar extends ThemedJPanel
         long max = rt.maxMemory() / (1024 * 1024);
         memoryLabel.setText(used + " / " + max + " MB");
 
-        // Change color based on usage
         double usage = (double) used / max;
         if (usage > 0.85)
         {

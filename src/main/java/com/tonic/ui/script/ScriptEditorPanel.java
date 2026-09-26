@@ -28,7 +28,6 @@ import java.io.File;
 public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListener
 {
 
-    // UI Components
     private RSyntaxTextArea codeEditor;
     private RTextScrollPane editorScrollPane;
     private JTextArea consoleOutput;
@@ -40,7 +39,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
     private JList<Script> scriptList;
     private DefaultListModel<Script> scriptListModel;
 
-    // State
     private Script currentScript;
     private Runnable onTransformComplete;
 
@@ -49,15 +47,12 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         super(BackgroundStyle.TERTIARY, new BorderLayout());
         this.currentScript = new Script("Untitled", Script.Mode.AST, "");
 
-        // Create main content
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         mainSplit.setDividerLocation(200);
         mainSplit.setBorder(null);
 
-        // Left: Script library
         mainSplit.setLeftComponent(createLibraryPanel());
 
-        // Right: Editor and console
         JSplitPane editorSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         editorSplit.setDividerLocation(400);
         editorSplit.setBorder(null);
@@ -141,7 +136,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         toolbar.setBackground(JStudioTheme.getBgSecondary());
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
 
-        // Top row: selectors
         JPanel selectorsRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         selectorsRow.setBackground(JStudioTheme.getBgSecondary());
 
@@ -174,7 +168,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         styleComboBox(methodComboBox);
         selectorsRow.add(methodComboBox);
 
-        // Bottom row: action buttons
         JPanel buttonsRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         buttonsRow.setBackground(JStudioTheme.getBgSecondary());
 
@@ -192,7 +185,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         JButton helpButton = createToolbarButton("Help", Icons.getIcon("info"), e -> showDocumentation());
         buttonsRow.add(helpButton);
 
-        // Combine rows
         JPanel rows = new JPanel(new GridLayout(2, 1));
         rows.setBackground(JStudioTheme.getBgSecondary());
         rows.add(selectorsRow);
@@ -238,7 +230,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         listScroll.setBorder(null);
         panel.add(listScroll, BorderLayout.CENTER);
 
-        // New script button
         JButton newButton = new JButton("+ New Script");
         newButton.setBackground(JStudioTheme.getBgTertiary());
         newButton.setForeground(JStudioTheme.getTextPrimary());
@@ -264,7 +255,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         codeEditor.setCurrentLineHighlightColor(JStudioTheme.getBgSecondary());
         codeEditor.setSelectionColor(JStudioTheme.getSelection());
 
-        // Set default content
         codeEditor.setText(getDefaultScriptContent());
 
         editorScrollPane = new RTextScrollPane(codeEditor);
@@ -302,7 +292,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         scrollPane.setBorder(null);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Clear button
         JButton clearButton = new JButton("Clear");
         clearButton.setBackground(JStudioTheme.getBgSecondary());
         clearButton.setForeground(JStudioTheme.getTextSecondary());
@@ -340,8 +329,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
                 "    // return null;\n" +
                 "});\n";
     }
-
-    // ==================== Script Execution ====================
 
     private void runScript()
     {
@@ -396,7 +383,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
                     statusLabel.setText("Completed: " + count + " modifications");
                     appendToConsole("\nTransform completed with " + count + " modifications.\n");
 
-                    // Notify that transforms are complete
                     if (onTransformComplete != null)
                     {
                         onTransformComplete.run();
@@ -413,11 +399,8 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         worker.execute();
     }
 
-    // ==================== Script Management ====================
-
     private void loadBuiltInScripts()
     {
-        // Add built-in example scripts
         Script example1 = new Script("Remove Debug Prints", Script.Mode.AST, "// @mode: ast\n// @name: Remove Debug Prints\n\n" + "ast.onMethodCall((call) => {\n" + "    if (call.owner == \"java/io/PrintStream\"\n" + "        && (call.name == \"println\" || call.name == \"print\")) {\n" + "        log(\"Removing: \" + call.name);\n" + "        return ast.remove();\n" + "    }\n" + "    // return nothing / the call to keep it\n" + "});\n");
         example1.setBuiltIn(true);
 
@@ -435,7 +418,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         scriptListModel.addElement(example3);
         scriptListModel.addElement(example4);
 
-        // Load user scripts
         ScriptStore.loadUserScripts().forEach(scriptListModel::addElement);
     }
 
@@ -529,8 +511,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         }
     }
 
-    // ==================== UI Helpers ====================
-
     private void showDocumentation()
     {
         Window owner = SwingUtilities.getWindowAncestor(this);
@@ -577,8 +557,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
         }
     }
 
-    // ==================== Public API ====================
-
     public void setProjectModel(ProjectModel model)
     {
         classComboBox.removeAllItems();
@@ -603,8 +581,6 @@ public class ScriptEditorPanel extends ThemedJPanel implements ThemeChangeListen
     {
         this.onTransformComplete = callback;
     }
-
-    // ==================== Renderers ====================
 
     private static class ScriptListRenderer extends DefaultListCellRenderer
     {

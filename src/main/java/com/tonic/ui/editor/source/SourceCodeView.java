@@ -10,6 +10,7 @@ import com.tonic.ui.editor.view.EditorView;
 import com.tonic.ui.MainFrame;
 import com.tonic.model.Bookmark;
 import com.tonic.model.ClassEntryModel;
+import com.tonic.model.MethodEntryModel;
 import com.tonic.ui.debug.Breakpoint;
 import com.tonic.ui.debug.BreakpointGutterController;
 import com.tonic.model.ProjectModel;
@@ -61,10 +62,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
 {
 
     private final ClassEntryModel classEntry;
-    /**
-     * -- GETTER --
-     *  Get the text area for direct access (e.g., for Ctrl+Click).
-     */
     @Getter
     private static final int HINT_SCROLL_PADDING = 16;
 
@@ -75,7 +72,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
 
     private boolean loaded = false;
     private boolean omitAnnotations = false;
-    /** Original-to-filtered line map for the current displayed text when annotations are hidden; null otherwise. */
     private int[] annotationLineMap = null;
     private final SourceLineHighlighter lineHighlighter;
     private final CommentGutterController commentGutter;
@@ -96,7 +92,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     @Getter
     private boolean dirty = false;
     private boolean ignoreDocumentChanges = false;
-    /** Invoked after a successful recompile so the owning tab can refresh its other views. */
     private Runnable onRecompiled;
 
     public SourceCodeView(ClassEntryModel classEntry)
@@ -205,17 +200,12 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
 
         setupDocumentListener();
 
-        // Apply theme (must be after scrollPane is created)
         applyTheme();
 
-        // Setup Ctrl+Click for Go to Definition
         setupLineActivation();
 
-        // Setup right-click context menu
         setupContextMenu();
 
-
-        // Listen for comment changes to update gutter icons
         commentGutter.attach();
 
         ThemeManager.getInstance().addThemeChangeListener(this);
@@ -306,14 +296,10 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
             return;
         }
 
-        // Snapshot the pre-edit bytecode BEFORE compiling - the compiler mutates the live ClassFile in place, so
-        // capturing later would record the already-changed bytes.
         com.tonic.service.history.LocalHistoryService.getInstance()
                 .snapshot("Recompile " + classEntry.getSimpleName(), com.tonic.model.Snapshot.Trigger.RECOMPILE);
 
         String source = textArea.getText();
-        // The source as it was before this edit - captured now because a successful recompile overwrites
-        // originalSource below; the live patch diffs against it to graft only the methods that changed.
         final String baselineSource = originalSource;
         compileToolbar.showCompiling();
 
@@ -323,8 +309,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
             protected CompilationResult doInBackground()
             {
                 ClassPool pool = projectModel != null ? projectModel.getClassPool() : null;
-                // Re-lower only the methods whose body actually changed; an empty/undeterminable diff falls back to
-                // recompiling everything, so an edit is never silently dropped.
                 Set<String> changed = MethodBodyDiff.changedMethods(baselineSource, source, pool, classEntry.getClassName());
                 return compilerParser.compile(source, pool, changed.isEmpty() ? null : changed);
             }
@@ -384,13 +368,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         worker.execute();
     }
 
-    /**
-     * Pushes the just-recompiled class to the attached JVM. Only the method bodies that changed since
-     * {@code baselineSource} are grafted onto the running class (see {@link com.tonic.ui.live.LivePatch}), so
-     * untouched methods and synthetic members keep the running class's exact bytes and the redefine is accepted
-     * even when a decompile/recompile round-trip would have perturbed synthetics. After a successful patch the
-     * in-memory model is synced to the running class. Runs the fetch/graft/redefine off the EDT.
-     */
     private void livePatch(String baselineSource, String editedSource)
     {
         LiveAttachService svc = LiveAttachService.getInstance();
@@ -420,11 +397,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         }, err -> compileToolbar.showPatchFailed(err.getMessage()));
     }
 
-    /**
-     * Replaces the in-memory class model with exactly what is now running in the JVM after a patch, so the
-     * bytecode view and the next recompile baseline stay identical to the live class. A refresh failure must
-     * not fail an already-applied patch, so it is swallowed.
-     */
     private void syncModelToRunningClass(byte[] runningBytes)
     {
         try
@@ -433,7 +405,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         }
         catch (Exception ignored)
         {
-            // The patch already succeeded; keeping the stale model is acceptable.
         }
     }
 
@@ -469,12 +440,8 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         SwingUtilities.invokeLater(this::applyTheme);
     }
 
-    /**
-     * Setup Ctrl+Click navigation to definitions.
-     */
     private void setupLineActivation()
     {
-        // Handle double-click line activation (dual view cross-pane linking)
         textArea.addMouseListener(new MouseAdapter()
         {
             @Override
@@ -497,7 +464,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
                 }
                 catch (Exception ex)
                 {
-                    // Ignore
                 }
             }
         });
@@ -553,11 +519,9 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         }
         catch (BadLocationException ex)
         {
-            // Use default line 1
         }
         final int line = lineNumber;
 
-        // Add/Remove Breakpoint (only while the debugger is connected and the line is an executable location)
         Breakpoint breakpoint = breakpointGutter.breakpointAt(line);
         if (breakpoint != null)
         {
@@ -567,7 +531,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
             menu.addSeparator();
         }
 
-        // Copy
         JMenuItem copyItem = createMenuItem("Copy", Icons.getIcon("copy"));
         copyItem.addActionListener(ev -> copySelection());
         copyItem.setEnabled(textArea.getSelectedText() != null && !textArea.getSelectedText().isEmpty());
@@ -575,7 +538,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
 
         menu.addSeparator();
 
-        // Go to Definition
         JMenuItem gotoItem = createMenuItem("Go to Definition", null);
         String selectedText = textArea.getSelectedText();
         String wordAtCaret = navigator.getWordAtCaret();
@@ -590,7 +552,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         gotoItem.setEnabled(targetIdentifier != null && !targetIdentifier.isEmpty());
         menu.add(gotoItem);
 
-        // Rename and Find Usages (only for declarations on the current line)
         SourceNavigator.DeclarationInfo decl = navigator.getDeclarationAtLine(line);
         if (decl != null)
         {
@@ -603,7 +564,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
             menu.add(findUsagesItem);
         }
 
-        // Rename local variable (when the click lands on a method-scoped local or parameter)
         String localWord = identifierAt(clickOffset);
         LocalVariableRenamer.Target localTarget =
                 localWord != null ? LocalVariableRenamer.locate(classEntry, line, localWord) : null;
@@ -616,12 +576,10 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
 
         menu.addSeparator();
 
-        // Add Comment at Line
         JMenuItem commentItem = createMenuItem("Add Comment at Line " + line + "...", Icons.getIcon("comment"));
         commentItem.addActionListener(ev -> commentGutter.addCommentAtLine(line));
         menu.add(commentItem);
 
-        // View Comments at Line
         int commentsAtLine = commentGutter.countCommentsAtLine(line);
         if (commentsAtLine > 0)
         {
@@ -632,14 +590,12 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
 
         menu.addSeparator();
 
-        // Run Code Analysis
         JMenuItem codeAnalysisItem = createMenuItem("Run Code Analysis", Icons.getIcon("analyze"));
         codeAnalysisItem.addActionListener(ev -> runCodeAnalysis());
         menu.add(codeAnalysisItem);
 
         menu.addSeparator();
 
-        // Add Bookmark
         JMenuItem bookmarkItem = createMenuItem("Add Bookmark for This Class...", Icons.getIcon("bookmark"));
         bookmarkItem.addActionListener(ev -> addBookmark());
         menu.add(bookmarkItem);
@@ -659,7 +615,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         return item;
     }
 
-    /** The Java identifier spanning {@code offset} in the document, or null if {@code offset} isn't on one. */
     private String identifierAt(int offset)
     {
         try
@@ -687,10 +642,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         }
     }
 
-    /**
-     * Prompts for a new name and renames the local by editing the method's LocalVariableTable, then re-decompiles
-     * (the decompiler renders the LVT name) while restoring the exact caret + scroll position.
-     */
     private void renameLocal(LocalVariableRenamer.Target target)
     {
         RenameLocalDialog dialog = new RenameLocalDialog(SwingUtilities.getWindowAncestor(this), target.oldName);
@@ -740,7 +691,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         }
     }
 
-    /** Restores the caret to {@code (line, col)} (clamped) and the scroll viewport after a re-decompile. */
     private void restoreCaretAndScroll(int line, int col, Point viewPos)
     {
         try
@@ -812,9 +762,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         }
     }
 
-    /**
-     * Navigate to the definition of the identifier under the cursor.
-     */
     private void highlightAndScrollToLine(int lineNumber)
     {
         lineHighlighter.highlightAndScrollToLine(lineNumber);
@@ -850,6 +797,28 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
     /**
      * Scroll to and highlight a method declaration line.
      */
+    /**
+     * Finds the method whose source contains the caret.
+     *
+     * @return the method, or null where the caret is outside every method
+     */
+    public MethodEntryModel methodAtCaret()
+    {
+        SourceNavigator.DeclarationInfo declaration = navigator.getDeclarationAtLine(textArea.getCaretLineNumber() + 1);
+        if (declaration == null || declaration.type != SourceNavigator.DeclarationType.METHOD)
+        {
+            return null;
+        }
+        for (MethodEntryModel method : classEntry.getMethods())
+        {
+            if (method.getName().equals(declaration.name) && (declaration.descriptor == null || declaration.descriptor.equals(method.getDescriptor())))
+            {
+                return method;
+            }
+        }
+        return null;
+    }
+
     public void scrollToMethodDeclaration(String methodName, String methodDesc)
     {
         if (!loaded)
@@ -1039,9 +1008,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         {
             line = primary;
         }
-        // Defer the scroll/select: when the class was just opened (cached source applied synchronously), the
-        // text component isn't laid out yet, so an immediate scroll lands nowhere - the old "navigate twice"
-        // bug. invokeLater runs it after the pending layout pass; it's harmless when already realized.
         final int target = line;
         SwingUtilities.invokeLater(() ->
         {
@@ -1106,11 +1072,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         }
     }
 
-    /**
-     * Applies the annotation filter to {@code source} when annotations are hidden, recording the
-     * original-to-filtered line map used by the usage lens; when shown, returns the source unchanged and clears
-     * the map (identity).
-     */
     private String applyAnnotationFilter(String source)
     {
         if (!omitAnnotations)
@@ -1157,7 +1118,6 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         }
         catch (Exception e)
         {
-            // Line out of range
         }
     }
 

@@ -217,7 +217,6 @@ public final class UpdateManager
         }
         catch (Exception ignored)
         {
-            // best effort
         }
     }
 

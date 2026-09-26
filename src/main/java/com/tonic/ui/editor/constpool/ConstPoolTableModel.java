@@ -297,7 +297,6 @@ public class ConstPoolTableModel extends AbstractTableModel
         }
         catch (Exception e)
         {
-            // ignore
         }
         return formatValue(item, cp);
     }
@@ -355,7 +354,6 @@ public class ConstPoolTableModel extends AbstractTableModel
         }
         catch (Exception e)
         {
-            // ignore
         }
         return "#" + natIdx;
     }
@@ -399,7 +397,6 @@ public class ConstPoolTableModel extends AbstractTableModel
         }
         catch (Exception e)
         {
-            // ignore
         }
         return "#" + index;
     }

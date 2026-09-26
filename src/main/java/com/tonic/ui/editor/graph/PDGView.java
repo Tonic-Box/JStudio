@@ -55,7 +55,6 @@ public class PDGView extends BaseGraphView
             }
             catch (Exception e)
             {
-                // Skip methods that fail to analyze
             }
         }
     }

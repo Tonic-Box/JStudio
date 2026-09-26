@@ -83,7 +83,6 @@ public class EditorTab extends JPanel
     private volatile LiveInstancesView liveInstancesView;
     private volatile LiveStaticsView liveStaticsView;
 
-    /** All instantiated views keyed by mode, for polymorphic dispatch (kept in sync with the typed fields). */
     private final Map<ViewMode, EditorView> views = new EnumMap<>(ViewMode.class);
 
     private int fontSize = 12;
@@ -433,18 +432,13 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Get the currently selected method (if determinable from caret position).
-     * This is a best-effort implementation.
+     * Finds the method at the caret of the source view.
+     *
+     * @return the method, or null where the caret is outside a method or another view is showing
      */
     public MethodEntryModel getCurrentMethod()
     {
-        // For now, return the first method if we have any
-        // A more sophisticated implementation would track caret position
-        if (classEntry.getMethods() != null && !classEntry.getMethods().isEmpty())
-        {
-            return classEntry.getMethods().get(0);
-        }
-        return null;
+        return currentMode == ViewMode.SOURCE ? sourceView.methodAtCaret() : null;
     }
 
     public String getSelectedText()
@@ -493,7 +487,6 @@ public class EditorTab extends JPanel
                 bytecodeView.scrollToField(fieldName);
                 break;
             default:
-                // Other views just scroll to text
                 break;
         }
     }

@@ -49,15 +49,12 @@ public class TransformPanel extends ThemedJPanel
     private JTextArea afterArea;
     private JLabel statusLabel;
 
-    // Target selection UI
     private JLabel classLabel;
     private JComboBox<MethodEntryModel> methodComboBox;
 
-    // Selected targets
     private ClassEntryModel selectedClass;
     private MethodEntryModel selectedMethod;
 
-    // Callback for notifying when transforms are applied
     private TransformCallback transformCallback;
 
     public TransformPanel(ProjectModel project)
@@ -66,23 +63,18 @@ public class TransformPanel extends ThemedJPanel
         this.project = project;
         this.transformCheckBoxes = new ArrayList<>();
 
-        // Top panel: target selection (class and method)
         JPanel targetPanel = createTargetPanel();
         add(targetPanel, BorderLayout.NORTH);
 
-        // Left panel: transform list
         JPanel transformListPanel = createTransformListPanel();
 
-        // Right panel: before/after preview
         JSplitPane previewSplit = createPreviewPanel();
 
-        // Main split
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, transformListPanel, previewSplit);
         mainSplit.setDividerLocation(250);
         mainSplit.setBorder(null);
         add(mainSplit, BorderLayout.CENTER);
 
-        // Bottom: status and apply buttons
         JPanel bottomPanel = createBottomPanel();
         add(bottomPanel, BorderLayout.SOUTH);
     }
@@ -186,7 +178,6 @@ public class TransformPanel extends ThemedJPanel
         JPanel checkboxPanel = new JPanel(new GridLayout(0, 1, 2, 2));
         checkboxPanel.setBackground(JStudioTheme.getBgSecondary());
 
-        // Add all transforms with descriptions
         addTransform(checkboxPanel, "Constant Folding", "Evaluate constant expressions at compile time", true);
         addTransform(checkboxPanel, "Copy Propagation", "Replace copies with their source values", true);
         addTransform(checkboxPanel, "Dead Code Elimination", "Remove unreachable and unused code", true);
@@ -215,7 +206,6 @@ public class TransformPanel extends ThemedJPanel
         scrollPane.getVerticalScrollBar().setUnitIncrement(15);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Buttons for select all/none
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         buttonPanel.setBackground(JStudioTheme.getBgSecondary());
@@ -256,7 +246,6 @@ public class TransformPanel extends ThemedJPanel
 
     private JSplitPane createPreviewPanel()
     {
-        // Before panel
         JPanel beforePanel = new JPanel(new BorderLayout());
         beforePanel.setBackground(JStudioTheme.getBgTertiary());
 
@@ -274,7 +263,6 @@ public class TransformPanel extends ThemedJPanel
         beforeScroll.setBorder(null);
         beforePanel.add(beforeScroll, BorderLayout.CENTER);
 
-        // After panel
         JPanel afterPanel = new JPanel(new BorderLayout());
         afterPanel.setBackground(JStudioTheme.getBgTertiary());
 
@@ -323,7 +311,6 @@ public class TransformPanel extends ThemedJPanel
         this.selectedClass = classEntry;
         this.selectedMethod = null;
 
-        // Update class label
         if (classEntry != null)
         {
             classLabel.setText(classEntry.getSimpleName());
@@ -333,19 +320,16 @@ public class TransformPanel extends ThemedJPanel
             classLabel.setText("(none selected)");
         }
 
-        // Populate method dropdown
         methodComboBox.removeAllItems();
         if (classEntry != null)
         {
             for (MethodEntryModel method : classEntry.getMethods())
             {
-                // Only add methods with code (skip abstract/native)
                 if (method.getMethodEntry().getCodeAttribute() != null)
                 {
                     methodComboBox.addItem(method);
                 }
             }
-            // Select first method if available
             if (methodComboBox.getItemCount() > 0)
             {
                 methodComboBox.setSelectedIndex(0);
@@ -353,7 +337,6 @@ public class TransformPanel extends ThemedJPanel
             }
         }
 
-        // Clear preview
         beforeArea.setText("");
         afterArea.setText("");
         updateStatusLabel();
@@ -367,7 +350,6 @@ public class TransformPanel extends ThemedJPanel
         this.selectedMethod = method;
         if (method != null)
         {
-            // Try to select this method in the combo box
             for (int i = 0; i < methodComboBox.getItemCount(); i++)
             {
                 if (methodComboBox.getItemAt(i) == method)
@@ -390,9 +372,6 @@ public class TransformPanel extends ThemedJPanel
         this.transformCallback = callback;
     }
 
-    /**
-     * Notify callback that transforms were applied.
-     */
     private void notifyTransformComplete()
     {
         if (transformCallback != null)
@@ -444,11 +423,9 @@ public class TransformPanel extends ThemedJPanel
             {
                 SSA ssa = createConfiguredSSA(method);
 
-                // Before: just lift
                 IRMethod before = new SSA(method.getClassFile().getConstPool()).lift(method);
                 String beforeText = IRPrinter.format(before);
 
-                // After: lift and transform
                 IRMethod after = ssa.lift(method);
                 ssa.runTransforms(after);
                 String afterText = IRPrinter.format(after);
@@ -514,14 +491,12 @@ public class TransformPanel extends ThemedJPanel
                 try
                 {
                     get();
-                    // Clear caches
                     selectedMethod.setIrCache(null);
                     if (selectedClass != null)
                     {
                         selectedClass.setDecompilationCache(null);
                     }
                     statusLabel.setText("Transforms applied to " + method.getName());
-                    // Notify callback to refresh the view
                     notifyTransformComplete();
                 }
                 catch (Exception e)
@@ -582,7 +557,6 @@ public class TransformPanel extends ThemedJPanel
                     int count = get();
                     selectedClass.setDecompilationCache(null);
                     statusLabel.setText("Transforms applied to " + count + " methods in " + selectedClass.getSimpleName());
-                    // Notify callback to refresh the view
                     notifyTransformComplete();
                 }
                 catch (Exception e)
@@ -754,12 +728,8 @@ public class TransformPanel extends ThemedJPanel
      */
     public void refresh()
     {
-        // Nothing specific to refresh
     }
 
-    /**
-     * Inner class for transform checkbox with tooltip.
-     */
     private static class TransformCheckBox extends JCheckBox
     {
         private final String transformName;
@@ -779,9 +749,6 @@ public class TransformPanel extends ThemedJPanel
         }
     }
 
-    /**
-     * Custom renderer for method combo box.
-     */
     private static class MethodComboRenderer extends DefaultListCellRenderer
     {
         @Override

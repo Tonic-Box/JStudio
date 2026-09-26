@@ -124,7 +124,6 @@ public final class LocalHistoryPanel extends ThemedJPanel
             @Override
             public void treeWillCollapse(TreeExpansionEvent event)
             {
-                // no-op
             }
         });
 
@@ -201,7 +200,6 @@ public final class LocalHistoryPanel extends ThemedJPanel
                 && LOADING.equals(((DefaultMutableTreeNode) node.getChildAt(0)).getUserObject());
     }
 
-    /** Lazily fills a snapshot node with the classes whose bytes differ from the CURRENT project - its diffable links. */
     private void populateSnapshot(DefaultMutableTreeNode node, Snapshot snapshot)
     {
         node.removeAllChildren();
@@ -338,8 +336,6 @@ public final class LocalHistoryPanel extends ThemedJPanel
             @Override
             protected String[] doInBackground()
             {
-                // Decompile both sides fresh (never the cache - after a recompile the cache holds the user's
-                // hand-edited source, which would diff noisily against the snapshot's decompiler output).
                 String oldSource = oldBytes != null ? decompile(oldBytes) : "// (class not present in this snapshot)";
                 String newSource = current == null
                         ? "// (class not present in the current project)"
@@ -465,7 +461,6 @@ public final class LocalHistoryPanel extends ThemedJPanel
         return new SimpleDateFormat("MMM d, HH:mm:ss").format(new Date(snapshot.getTimestampMs()));
     }
 
-    /** Tree node payload for a snapshot row. */
     private static final class SnapRow
     {
         final Snapshot snapshot;
@@ -476,7 +471,6 @@ public final class LocalHistoryPanel extends ThemedJPanel
         }
     }
 
-    /** Tree node payload for a changed-class (link) row. */
     private static final class ClassRow
     {
         final Snapshot snapshot;

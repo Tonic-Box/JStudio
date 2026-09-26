@@ -197,7 +197,6 @@ public class StringsPanel extends ThemedJPanel
                         try
                         {
                             Item<?> item = items.get(i);
-                            // Look for CONSTANT_String entries
                             if (item instanceof StringRefItem)
                             {
                                 StringRefItem stringRef = (StringRefItem) item;
@@ -215,7 +214,6 @@ public class StringsPanel extends ThemedJPanel
                         }
                         catch (Exception e)
                         {
-                            // Skip invalid entries
                         }
                     }
                 }
@@ -275,14 +273,12 @@ public class StringsPanel extends ThemedJPanel
      */
     public void refresh()
     {
-        // Auto-extract on first show if empty
         if (allStrings.isEmpty() && project.getClassPool() != null)
         {
             extractStrings();
         }
     }
 
-    // Data model
     private static class StringEntry
     {
         final String value;
@@ -297,7 +293,6 @@ public class StringsPanel extends ThemedJPanel
         }
     }
 
-    // Table model
     private static class StringsTableModel extends AbstractTableModel
     {
         private final String[] COLUMNS = {"String", "Class"};

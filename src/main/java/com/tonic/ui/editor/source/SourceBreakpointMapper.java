@@ -9,11 +9,6 @@ import com.tonic.ui.debug.BreakpointMapper;
 import java.util.Map;
 import java.util.NavigableMap;
 
-/**
- * Maps the decompiled source view's lines to breakpoints via the decompiler's per-method offset-to-line maps:
- * a clicked line resolves to the lowest bytecode offset emitted onto it, and a breakpoint resolves back to the
- * line its offset maps to.
- */
 final class SourceBreakpointMapper implements BreakpointMapper
 {
 
@@ -30,11 +25,6 @@ final class SourceBreakpointMapper implements BreakpointMapper
         return classEntry.getClassName().replace('/', '.');
     }
 
-    /**
-     * The per-method offset-to-line maps for this class, regenerating them from current bytecode if they were
-     * dropped (e.g. a cache invalidation) while a tab keeps showing its source - so breakpoints resolve without
-     * forcing a reopen. The bytecode is unchanged, so the regenerated maps match the displayed source.
-     */
     private Map<String, NavigableMap<Integer, Integer>> lineMaps()
     {
         Map<String, NavigableMap<Integer, Integer>> maps = classEntry.getSourceLineMaps();

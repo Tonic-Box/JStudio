@@ -36,18 +36,15 @@ public final class DebugManager implements DebugListener
 
     private static final DebugManager INSTANCE = new DebugManager();
 
-    /** The agent-resident hand-off slot JDI parks object sets into (see com.tonic.live.agent.DropBox). */
     private static final String DROPBOX_CLASS = "com.tonic.live.agent.DropBox";
     private static final String DROPBOX_FIELD = "BOX";
 
-    /** Name prefix of the agent's socket thread, kept running during a freeze so it can work the frozen heap. */
     private static final String AGENT_THREAD_PREFIX = "jstudio-live-java-agent";
 
     private volatile DebugSession session;
     @Getter
     private volatile DebugLocation pausedLocation;
 
-    /** Classes a synthetic LocalVariableTable injection has already been attempted for this session (once each). */
     private final Set<String> injectedLvtClasses = ConcurrentHashMap.newKeySet();
 
     private DebugManager()
@@ -69,8 +66,6 @@ public final class DebugManager implements DebugListener
         DebugSession s = session;
         return s != null && s.isPaused();
     }
-
-    // ---- connection ---------------------------------------------------------------------------------
 
     /** Connects JDI to a target already serving JDWP at {@code host:port} (a JStudio-launched JVM). */
     public synchronized void connect(String host, int port) throws IOException
@@ -130,8 +125,6 @@ public final class DebugManager implements DebugListener
         }
     }
 
-    // ---- suspend policy -----------------------------------------------------------------------------
-
     public boolean isSuspendAll()
     {
         return Settings.getInstance().isDebuggerSuspendAll();
@@ -146,8 +139,6 @@ public final class DebugManager implements DebugListener
             s.setSuspendAll(suspendAll);
         }
     }
-
-    // ---- breakpoints / control ----------------------------------------------------------------------
 
     public void addBreakpoint(String className, String methodName, String methodDesc, long pc)
     {
@@ -229,8 +220,6 @@ public final class DebugManager implements DebugListener
         return s != null ? s.arrayElements(refHandle, max) : Collections.emptyList();
     }
 
-    // ---- DebugListener (event thread) -> EventBus on the EDT -----------------------------------------
-
     @Override
     public void onPaused(DebugLocation location, List<DebugFrame> frames)
     {
@@ -257,12 +246,6 @@ public final class DebugManager implements DebugListener
         maybeInjectSyntheticLvt(session, className);
     }
 
-    /**
-     * Injects a synthetic LocalVariableTable into a stripped class so the live debugger reports named locals
-     * matching the decompilation. Best-effort and once per class per session: skips when the VM can't HotSwap,
-     * the class isn't loaded, the project lacks it, or it already carries an LVT (every method), and never
-     * disturbs the unchanged bytecode (only the debug attribute is added).
-     */
     private void maybeInjectSyntheticLvt(DebugSession s, String className)
     {
         if (s == null || !s.canRedefineClasses() || !s.isClassLoaded(className))

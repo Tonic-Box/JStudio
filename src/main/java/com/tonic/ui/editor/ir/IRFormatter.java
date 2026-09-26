@@ -51,19 +51,14 @@ public class IRFormatter
         }
     }
 
-    /**
-     * Format an IRMethod for display with block structure.
-     */
     private String formatIRMethod(IRMethod irMethod)
     {
         StringBuilder sb = new StringBuilder();
 
-        // Method header
         sb.append("// Method: ").append(irMethod.getName()).append(irMethod.getDescriptor()).append("\n");
         sb.append("// Blocks: ").append(irMethod.getBlocks().size()).append("\n");
         sb.append("\n");
 
-        // Each block
         for (IRBlock block : irMethod.getBlocksInOrder())
         {
             sb.append(formatBlock(block));
@@ -73,17 +68,12 @@ public class IRFormatter
         return sb.toString();
     }
 
-    /**
-     * Format a single block with predecessors/successors and instructions.
-     */
     private String formatBlock(IRBlock block)
     {
         StringBuilder sb = new StringBuilder();
 
-        // Block header
         sb.append("BLOCK ").append(block.getName()).append(":\n");
 
-        // Predecessors
         if (!block.getPredecessors().isEmpty())
         {
             sb.append("  // pred: ");
@@ -97,7 +87,6 @@ public class IRFormatter
             sb.append("\n");
         }
 
-        // Successors
         if (!block.getSuccessors().isEmpty())
         {
             sb.append("  // succ: ");
@@ -111,13 +100,11 @@ public class IRFormatter
             sb.append("\n");
         }
 
-        // Phi instructions
         for (PhiInstruction phi : block.getPhiInstructions())
         {
             sb.append("  PHI: ").append(IRPrinter.format(phi)).append("\n");
         }
 
-        // Regular instructions
         for (IRInstruction instr : block.getInstructions())
         {
             sb.append("  ").append(IRPrinter.format(instr)).append("\n");

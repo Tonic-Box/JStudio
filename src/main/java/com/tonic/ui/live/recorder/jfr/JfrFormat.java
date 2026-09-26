@@ -2,7 +2,6 @@ package com.tonic.ui.live.recorder.jfr;
 
 import java.time.Duration;
 
-/** Shared, human-friendly formatting for JFR figures (bytes, counts, durations) used across the analysis UI. */
 final class JfrFormat
 {
 

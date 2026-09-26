@@ -112,7 +112,6 @@ public final class SourceAssembler
         return min;
     }
 
-    /** Lines {@code [from, to]} (1-based inclusive) joined by newline; empty when the range is empty. */
     private static String join(String[] lines, int from, int to)
     {
         int start = Math.max(from, 1);

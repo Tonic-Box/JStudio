@@ -20,16 +20,9 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
-/**
- * The debugger's control toolbar: start/step/run/stop buttons (with keyboard shortcuts), the animation-speed
- * selector, the recursive-execution checkbox, the trace record/export/clear controls, and the VM reinit button.
- * All actions are delegated through injected callbacks; {@link #updateButtonStates()} derives enabled state from
- * the supplied {@link VMDebugSession} and method-loaded predicate.
- */
 final class DebuggerToolbar extends JPanel
 {
 
-    /** Animation delays (ms) corresponding to the speed selector entries. */
     private static final int[] DELAYS = {5, 10, 20, 50, 100, 300};
 
     private final VMDebugSession session;
@@ -118,13 +111,11 @@ final class DebuggerToolbar extends JPanel
         add(reinitBtn);
     }
 
-    /** Whether the user has the record toggle pressed. */
     boolean isRecordSelected()
     {
         return recordBtn.isSelected();
     }
 
-    /** Sets the record button's active (red) or idle appearance. */
     void setRecordingActive(boolean active)
     {
         if (active)
@@ -138,7 +129,6 @@ final class DebuggerToolbar extends JPanel
         recordBtn.setForeground(JStudioTheme.getTextPrimary());
     }
 
-    /** Enables/disables the export and clear trace buttons together. */
     void setTraceActionsEnabled(boolean enabled)
     {
         exportTraceBtn.setEnabled(enabled);

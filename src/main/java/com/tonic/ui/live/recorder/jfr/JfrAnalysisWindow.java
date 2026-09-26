@@ -106,8 +106,6 @@ public final class JfrAnalysisWindow extends JFrame
         }
     }
 
-    // ---- overview dashboard -------------------------------------------------------------------------
-
     private Component overviewTab(JfrRecording r)
     {
         ThemedJPanel overview = new ThemedJPanel(BackgroundStyle.PRIMARY, new BorderLayout());
@@ -194,9 +192,6 @@ public final class JfrAnalysisWindow extends JFrame
         return label;
     }
 
-    // ---- flame + table tab --------------------------------------------------------------------------
-
-    /** A category tab: a zoom-breadcrumb/summary strip, a flame graph, and a ranked table below. */
     private Component flameTab(FlameGraphPanel flame, String summary, Component table)
     {
         JButton reset = new JButton("Reset zoom");
@@ -239,15 +234,12 @@ public final class JfrAnalysisWindow extends JFrame
         return strip;
     }
 
-    // ---- tables -------------------------------------------------------------------------------------
-
     private Component hotMethodsTable(List<JfrRecording.MethodStat> methods)
     {
         HotMethodsTableModel model = new HotMethodsTableModel(methods);
         return table(model, model, new BarTableCellRenderer.Kind[]{BarTableCellRenderer.Kind.TEXT, BarTableCellRenderer.Kind.COUNT, BarTableCellRenderer.Kind.COUNT});
     }
 
-    /** Themed, sortable, data-bar table; if {@code nav} is non-null, double-clicking a row navigates to source. */
     private Component table(AbstractTableModel model, FrameRowSource nav, BarTableCellRenderer.Kind[] kinds)
     {
         ThemedJTable table = new ThemedJTable(model);
@@ -278,13 +270,10 @@ public final class JfrAnalysisWindow extends JFrame
         }
     }
 
-    /** A table whose model rows can yield a navigable frame. */
     private interface FrameRowSource
     {
         FrameKey frameAt(int modelRow);
     }
-
-    // ---- table models -------------------------------------------------------------------------------
 
     private static final class HotMethodsTableModel extends AbstractTableModel implements FrameRowSource
     {

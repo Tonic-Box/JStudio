@@ -18,7 +18,6 @@ public abstract class AbstractTextView extends AbstractEditorView
     protected RTextScrollPane scrollPane;
     protected SearchPanel searchPanel;
 
-    /** Creates the read-only code text area, its line-numbered scroll pane, and a find panel. */
     protected void initTextArea(String syntaxStyle)
     {
         textArea = new RSyntaxTextArea();
@@ -36,10 +35,6 @@ public abstract class AbstractTextView extends AbstractEditorView
         searchPanel = new SearchPanel(textArea, scrollPane);
     }
 
-    /**
-     * Applies the shared code-area + gutter colors. Subclasses call this from {@code applyChildThemes()} and then
-     * apply their own syntax-scheme token styling.
-     */
     protected void applyTextTheme()
     {
         setBackground(JStudioTheme.getBgTertiary());
@@ -85,7 +80,6 @@ public abstract class AbstractTextView extends AbstractEditorView
         }
         catch (Exception e)
         {
-            // Line out of range
         }
     }
 

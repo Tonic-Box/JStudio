@@ -43,21 +43,17 @@ public class PropertiesPanel extends ThemedJPanel
         tabbedPane.setForeground(JStudioTheme.getTextPrimary());
         tabbedPane.setBorder(null);
 
-        // Class properties
         classPanel = createPropertiesGrid();
         tabbedPane.addTab("Class", classPanel);
 
-        // Method properties
         methodPanel = createPropertiesGrid();
         tabbedPane.addTab("Method", methodPanel);
 
-        // Field properties
         fieldPanel = createPropertiesGrid();
         tabbedPane.addTab("Field", fieldPanel);
 
         add(tabbedPane, BorderLayout.CENTER);
 
-        // Details area at bottom
         detailsArea = new JTextArea(5, 30);
         detailsArea.setEditable(false);
         detailsArea.setBackground(JStudioTheme.getBgTertiary());
@@ -157,7 +153,6 @@ public class PropertiesPanel extends ThemedJPanel
         addProperty(classPanel, row++, "Fields", String.valueOf(classEntry.getFields().size()));
         addProperty(classPanel, row++, "Const Pool", String.valueOf(classEntry.getClassFile().getConstPool().getItems().size()));
 
-        // Add filler
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = row;
@@ -170,7 +165,6 @@ public class PropertiesPanel extends ThemedJPanel
         classPanel.revalidate();
         classPanel.repaint();
 
-        // Update details
         String sb = "Full name: " + classEntry.getClassName().replace('/', '.') + "\n" +
                 "Internal name: " + classEntry.getClassName() + "\n";
         detailsArea.setText(sb);
@@ -216,7 +210,6 @@ public class PropertiesPanel extends ThemedJPanel
             addProperty(methodPanel, row++, "Instructions", String.valueOf(metrics.getInstructionCount()));
         }
 
-        // Add filler
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = row;
@@ -229,7 +222,6 @@ public class PropertiesPanel extends ThemedJPanel
         methodPanel.revalidate();
         methodPanel.repaint();
 
-        // Update details
         String sb = "Signature: " + entry.getName() + entry.getDesc() + "\n" +
                 "Return: " + parseReturnType(entry.getDesc()) + "\n" +
                 "Parameters: " + parseParameters(entry.getDesc()) + "\n";
@@ -253,7 +245,6 @@ public class PropertiesPanel extends ThemedJPanel
         addProperty(fieldPanel, row++, "Type", parseFieldType(entry.getDesc()));
         addProperty(fieldPanel, row++, "Access", formatAccessFlags(entry.getAccess(), AccessContext.FIELD));
 
-        // Add filler
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = row;
@@ -266,7 +257,6 @@ public class PropertiesPanel extends ThemedJPanel
         fieldPanel.revalidate();
         fieldPanel.repaint();
 
-        // Update details
         detailsArea.setText("Full signature: " + entry.getName() + " : " + entry.getDesc() + "\n");
     }
 

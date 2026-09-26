@@ -65,15 +65,11 @@ public class QueryExplorerPanel extends JPanel
         this.mainFrame = mainFrame;
         initComponents();
         applyTheme();
-        // Don't let the panel's internal preferred sizes pin the tool-window column width; the
-        // scroll panes absorb any shortfall, so the split stays freely resizable.
         setMinimumSize(new Dimension(0, 0));
         ThemeManager.getInstance().addThemeChangeListener(t -> SwingUtilities.invokeLater(this::applyTheme));
-        // Loading a new project replaces the class pool, so prior results no longer apply — clear them.
         EventBus.getInstance().register(ProjectLoadedEvent.class, e -> clearResults());
     }
 
-    /** Clears stale query results when a new project replaces the current one. */
     private void clearResults()
     {
         tableModel.clear();
@@ -81,10 +77,6 @@ public class QueryExplorerPanel extends JPanel
         statusLabel.setForeground(JStudioTheme.getTextSecondary());
     }
 
-    /**
-     * (Re)builds the query service when the active project's class pool changes, so a long-lived
-     * panel always queries the current project rather than the one present when it was created.
-     */
     private boolean ensureService(ProjectModel project)
     {
         if (project == null)
@@ -564,7 +556,6 @@ public class QueryExplorerPanel extends JPanel
         }
     }
 
-    /** The display name for a match: a method/PC signature or class name, derived from its target. */
     private static String displayName(QueryMatch match)
     {
         QueryTarget target = match.getTarget();
@@ -725,7 +716,6 @@ public class QueryExplorerPanel extends JPanel
         return sb.toString();
     }
 
-    /** Tokenizes a query with {@link QueryTokenMaker} and renders it as color-spanned HTML. */
     private static String highlightQuery(String query)
     {
         Segment segment = new Segment(query.toCharArray(), 0, query.length());
@@ -920,7 +910,6 @@ public class QueryExplorerPanel extends JPanel
             }
         }
 
-        /** Builds the display label UI-side (the engine no longer carries a presentation label). */
         private static String rowLabel(QueryMatch match, boolean child)
         {
             if (child)

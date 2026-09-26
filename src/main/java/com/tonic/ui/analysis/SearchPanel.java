@@ -57,7 +57,6 @@ public class SearchPanel extends ThemedJPanel
         gbc.insets = new Insets(2, 4, 2, 4);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Search type
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 0;
@@ -72,7 +71,6 @@ public class SearchPanel extends ThemedJPanel
         searchTypeCombo.setForeground(JStudioTheme.getTextPrimary());
         controlPanel.add(searchTypeCombo, gbc);
 
-        // Pattern field
         gbc.gridx = 2;
         gbc.weightx = 0;
         JLabel patternLabel = new JLabel("Pattern:");
@@ -88,7 +86,6 @@ public class SearchPanel extends ThemedJPanel
         searchField.addActionListener(e -> search());
         controlPanel.add(searchField, gbc);
 
-        // Search button
         gbc.gridx = 4;
         gbc.weightx = 0;
         JButton searchButton = new JButton("Search");
@@ -99,7 +96,6 @@ public class SearchPanel extends ThemedJPanel
 
         add(controlPanel, BorderLayout.NORTH);
 
-        // Results list
         resultsModel = new DefaultListModel<>();
         resultsList = new JList<>(resultsModel);
         resultsList.setBackground(JStudioTheme.getBgTertiary());
@@ -107,7 +103,6 @@ public class SearchPanel extends ThemedJPanel
         resultsList.setSelectionBackground(JStudioTheme.getSelection());
         resultsList.setFont(JStudioTheme.getCodeFont(UIConstants.FONT_SIZE_CODE));
 
-        // Double-click to navigate to result
         resultsList.addMouseListener(new MouseAdapter()
         {
             @Override
@@ -124,7 +119,6 @@ public class SearchPanel extends ThemedJPanel
         scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, JStudioTheme.getBorder()));
         add(scrollPane, BorderLayout.CENTER);
 
-        // Status bar
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         statusPanel.setBackground(JStudioTheme.getBgSecondary());
         statusLabel = new JLabel("Enter a search pattern and click Search.");
@@ -286,7 +280,6 @@ public class SearchPanel extends ThemedJPanel
      */
     public void refresh()
     {
-        // Nothing to refresh
     }
 
     /**
@@ -302,9 +295,6 @@ public class SearchPanel extends ThemedJPanel
         return null;
     }
 
-    /**
-     * Navigate to the selected search result.
-     */
     private void navigateToSelectedResult()
     {
         SearchResult result = getSelectedResult();

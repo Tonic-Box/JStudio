@@ -44,7 +44,6 @@ import java.util.Objects;
 public final class LiveRecorderPanel extends ThemedJPanel
 {
 
-    /** A base JFR configuration: display label + the {@code jdk.jfr} configuration name. */
     private enum Profile
     {
         PROFILE("Profile (detailed)", "profile"),
@@ -232,7 +231,6 @@ public final class LiveRecorderPanel extends ThemedJPanel
         runCapture(session == null ? null : session::snapshotRecording, false, "Snapshotting...");
     }
 
-    /** Shared stop/snapshot flow: call the agent, add the resulting file to the list, and (for stop) go idle. */
     private void runCapture(CaptureCall call, boolean stops, String busyText)
     {
         if (call == null)
@@ -329,7 +327,6 @@ public final class LiveRecorderPanel extends ThemedJPanel
         return mask;
     }
 
-    /** Disables every action button while a request is in flight (the connection is serial). */
     private void setBusy(String text)
     {
         statusLabel.setText(text);
@@ -384,7 +381,6 @@ public final class LiveRecorderPanel extends ThemedJPanel
         return String.format("%.1f MB", kb / 1024.0);
     }
 
-    /** A captured {@code .jfr} file on the local (target == JStudio host) filesystem. */
     private static final class CapturedRecording
     {
         private final File file;
@@ -405,7 +401,6 @@ public final class LiveRecorderPanel extends ThemedJPanel
         }
     }
 
-    /** A stop/snapshot agent call that returns the captured file path. */
     @FunctionalInterface
     private interface CaptureCall
     {

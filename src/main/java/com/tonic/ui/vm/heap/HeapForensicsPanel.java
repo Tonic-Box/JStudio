@@ -90,12 +90,12 @@ public class HeapForensicsPanel extends ThemedJPanel implements HeapForensicsTra
         detailSplit.setBackground(JStudioTheme.getBgPrimary());
 
         JSplitPane rightSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, wrapWithTitle(classSummaryPanel, "Class Summary"), detailSplit);
-        rightSplit.setDividerLocation(470); //TODO
+        rightSplit.setDividerLocation(470);
         rightSplit.setResizeWeight(0.25);
         rightSplit.setBackground(JStudioTheme.getBgPrimary());
 
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, methodSelector, rightSplit);
-        mainSplit.setDividerLocation(255); //todo
+        mainSplit.setDividerLocation(255);
         mainSplit.setResizeWeight(0.25);
         mainSplit.setBackground(JStudioTheme.getBgPrimary());
 

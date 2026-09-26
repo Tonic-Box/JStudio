@@ -39,7 +39,6 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
     private static final int ROW_HEIGHT = 20;
     private static final int GAP = 1;
     private static final int ARC = 6;
-    /** Frames narrower than this are not drawn (unreadable/unclickable slivers); zoom in to reveal them. */
     private static final int MIN_WIDTH = 3;
 
     private final CallTreeNode trueRoot;
@@ -203,7 +202,6 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
         setPreferredSize(new Dimension(600, rows * ROW_HEIGHT));
     }
 
-    /** Max depth of frames wide enough to be drawn at {@code width} (matches the culling in {@link #layout}). */
     private static int visibleDepth(CallTreeNode node, double width)
     {
         long total = node.getTotalWeight();
@@ -308,7 +306,6 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
         return text.substring(0, end) + "…";
     }
 
-    /** A stable color per frame: hue by package (so a package reads as one family), brightness varied by method. */
     private static Color barColor(CallTreeNode node)
     {
         if (node.getFrame() == null)
@@ -404,7 +401,6 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
         return value instanceof Integer ? Math.max(200, (Integer) value) : 250;
     }
 
-    /** A laid-out bar; kept per paint for hit-testing. */
     private static final class Box
     {
         private final int x;

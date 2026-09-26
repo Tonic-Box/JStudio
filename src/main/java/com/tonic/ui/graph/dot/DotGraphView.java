@@ -150,7 +150,6 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener
         return getParent() != null ? getParent().getWidth() : 0;
     }
 
-    /** Height the scaled image occupies at {@code width} (downscale only, capped). */
     private int scaledHeight(int width)
     {
         double scale = Math.min(1.0, (double) width / image.getWidth());
@@ -222,7 +221,6 @@ public final class DotGraphView extends JPanel implements ThemeChangeListener
         repaint();
     }
 
-    /** A code-block-styled panel showing the raw DOT when it can't be rendered, so nothing is lost. */
     private static JComponent fallback(String dot)
     {
         JPanel panel = new JPanel(new BorderLayout());

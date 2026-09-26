@@ -33,7 +33,6 @@ public abstract class AbstractEditorView extends ThemedJPanel implements EditorV
         super(BackgroundStyle.TERTIARY, layout);
     }
 
-    /** Cancels any in-flight load worker and hides the loading spinner. */
     protected final void cancelCurrentWorker()
     {
         if (currentWorker != null && !currentWorker.isDone())
@@ -43,7 +42,6 @@ public abstract class AbstractEditorView extends ThemedJPanel implements EditorV
         }
     }
 
-    /** Wraps {@code content} and the loading overlay in a centered {@link OverlayLayout} panel. */
     protected final JPanel overlayWrap(JComponent content)
     {
         JPanel wrapper = new JPanel();
@@ -57,7 +55,6 @@ public abstract class AbstractEditorView extends ThemedJPanel implements EditorV
         return wrapper;
     }
 
-    /** Copies {@code text} to the system clipboard when non-empty. */
     protected final void copyToClipboard(String text)
     {
         if (text != null && !text.isEmpty())
@@ -65,8 +62,6 @@ public abstract class AbstractEditorView extends ThemedJPanel implements EditorV
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text), null);
         }
     }
-
-    // ---- EditorView defaults (views override only what they support) ----
 
     @Override
     public void refresh()

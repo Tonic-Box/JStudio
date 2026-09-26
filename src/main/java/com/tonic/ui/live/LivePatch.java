@@ -48,10 +48,6 @@ public final class LivePatch
     {
         ClassFile running = new ClassFile(new ByteArrayInputStream(session.fetchClassBytes(internalName)));
 
-        // Only the changed methods are spliced in, and only when they resolve in BOTH classes by exact
-        // signature. The result therefore always has the running class's member set, so no member-set check is
-        // needed - and crucially must not be done against the recompiled class, whose member set can carry
-        // spurious "new" methods when the decompiler/recompiler mis-resolves a method's descriptor.
         for (String key : changedMethods)
         {
             MethodEntry source = findMethod(edited, key);

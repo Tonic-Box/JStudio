@@ -75,12 +75,6 @@ public class JStudio
         });
     }
 
-    /**
-     * Diagnostic for the recurring silent close. Probes append to {@code ~/.jstudio/close-diagnostics.log}: a
-     * {@code checkExit} SecurityManager (any {@code System.exit}/{@code halt}), a default uncaught-exception handler,
-     * a shutdown-hook thread dump, and a STARTUP marker recording pid + the ACTIVE Java2D pipeline (so we can confirm
-     * {@code sun.java2d.d3d=false} actually took effect in this build vs a stale one).
-     */
     private static void installCloseDiagnostics()
     {
         try
@@ -131,7 +125,6 @@ public class JStudio
         appendDiag("STARTUP pid=" + ProcessHandle.current().pid() + " d3d=" + System.getProperty("sun.java2d.d3d") + " noddraw=" + System.getProperty("sun.java2d.noddraw") + " gc=" + pipeline, "");
     }
 
-    /** Wraps EDT event dispatch to log (and re-throw) any uncaught exception, capturing a silent EDT death. */
     private static void installEdtExceptionLogger()
     {
         try

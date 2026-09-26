@@ -133,7 +133,6 @@ public class BytecodeView extends AbstractTextView
                 }
                 catch (Exception ex)
                 {
-                    // Ignore
                 }
             }
 
@@ -151,7 +150,6 @@ public class BytecodeView extends AbstractTextView
         });
     }
 
-    /** Right-click on an instruction line offers Add/Remove Breakpoint while the debugger is connected. */
     private void maybeShowBreakpointMenu(MouseEvent e)
     {
         if (!e.isPopupTrigger())
@@ -349,7 +347,6 @@ public class BytecodeView extends AbstractTextView
         }
         catch (Exception e)
         {
-            // Line out of range
         }
     }
 
@@ -417,7 +414,6 @@ public class BytecodeView extends AbstractTextView
             }
             catch (Exception e)
             {
-                // Ignore
             }
             return true;
         }
@@ -449,7 +445,6 @@ public class BytecodeView extends AbstractTextView
             }
             catch (Exception e)
             {
-                // Ignore
             }
             textArea.setCaretPosition(index);
             textArea.requestFocus();
@@ -479,7 +474,6 @@ public class BytecodeView extends AbstractTextView
             }
             catch (Exception e)
             {
-                // Ignore
             }
             textArea.setCaretPosition(index);
             textArea.requestFocus();
@@ -499,7 +493,6 @@ public class BytecodeView extends AbstractTextView
             }
             catch (Exception e)
             {
-                // Ignore
             }
         }
         highlightedLines.clear();
@@ -518,7 +511,6 @@ public class BytecodeView extends AbstractTextView
             }
             catch (Exception e)
             {
-                // Ignore
             }
         }
     }
@@ -534,7 +526,6 @@ public class BytecodeView extends AbstractTextView
             }
             catch (Exception e)
             {
-                // Ignore
             }
         }
     }
@@ -622,7 +613,6 @@ public class BytecodeView extends AbstractTextView
         }
         catch (Exception e)
         {
-            // Line out of range
         }
     }
 

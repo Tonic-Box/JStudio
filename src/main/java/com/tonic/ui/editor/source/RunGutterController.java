@@ -26,11 +26,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 
-/**
- * Owns the editor's "Run main()" gutter badge: it tracks the run/stop icon and its line, wires the click/cursor
- * handler onto the gutter, and (via {@link #attach()}/{@link #detach()}) subscribes to run-state and live-session
- * events so the badge reflects the current state. The actual launch is delegated to a supplied {@code runMain}.
- */
 final class RunGutterController
 {
 
@@ -53,9 +48,6 @@ final class RunGutterController
         this.classEntry = classEntry;
         this.omitAnnotations = omitAnnotations;
 
-        // Make the Run gutter icon clickable + show a hand cursor over it. The icon lives on the gutter's
-        // IconRowHeader child, so the listener must be on the children (AWT dispatches to the deepest
-        // component, not the parent gutter); convertPoint maps the click into the text area (corrects scroll).
         this.runGutterMouse = new MouseAdapter()
         {
             @Override
@@ -90,7 +82,6 @@ final class RunGutterController
         wireGutterMouse();
     }
 
-    /** Subscribes to run/live events and shows the initial badge; call from the host view's {@code addNotify}. */
     void attach()
     {
         EventBus.getInstance().register(RunStateEvent.class, runStateHandler);
@@ -98,14 +89,12 @@ final class RunGutterController
         updateIcons();
     }
 
-    /** Unsubscribes from run/live events; call from the host view's {@code removeNotify}. */
     void detach()
     {
         EventBus.getInstance().unregister(RunStateEvent.class, runStateHandler);
         EventBus.getInstance().unregister(LiveSessionEvent.class, liveSessionHandler);
     }
 
-    /** Refreshes the gutter run/stop badge when run or live-attach state changes (marshals to the EDT). */
     private void refresh()
     {
         SwingUtilities.invokeLater(this::updateIcons);
@@ -122,8 +111,6 @@ final class RunGutterController
         runIcons.clear();
         runLines.clear();
 
-        // While a run is active it auto-attaches a live (run) session, so allow the badge through when running;
-        // only a manual (non-run) attachment hides it. A running badge becomes a stop/terminate affordance.
         boolean running = RunStateService.getInstance().isRunning();
         if (omitAnnotations.getAsBoolean() || classEntry == null || classEntry.getMethodSpans() == null
                 || !classEntry.hasMainMethod()
@@ -147,7 +134,6 @@ final class RunGutterController
         }
     }
 
-    /** Attaches the run click/cursor adapter to the gutter and any child components not yet wired (idempotent). */
     private void wireGutterMouse()
     {
         Gutter gutter = scrollPane.getGutter();
@@ -166,7 +152,6 @@ final class RunGutterController
         }
     }
 
-    /** Resolves the run-method source line under a gutter mouse event, or -1 if the cursor isn't on a run icon. */
     private int lineAtRunIcon(MouseEvent e)
     {
         if (runLines.isEmpty())

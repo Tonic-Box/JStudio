@@ -17,12 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 
-/**
- * Resolves where in the decompiled source each of a paused frame's runtime variables should be annotated:
- * locals at their declaration line (the method's LocalVariableTable start-PC mapped through the offset-to-line
- * map), and {@code this}/arguments (or anything without an in-scope LVT entry) at the method's signature line.
- * The LVT is read from the target bytecode, so placement needs no JDI.
- */
 final class RuntimeHintPlacement
 {
 
@@ -30,7 +24,6 @@ final class RuntimeHintPlacement
     {
     }
 
-    /** Maps each name in {@code varNames} to a 1-based source line, omitting any that can't be placed. */
     static Map<String, Integer> place(ClassEntryModel classEntry, String methodKey, int pc, List<String> varNames)
     {
         Map<String, Integer> out = new HashMap<>();
@@ -83,7 +76,6 @@ final class RuntimeHintPlacement
         return span != null ? span.getStartLine() : -1;
     }
 
-    /** The LVT entry for {@code name} whose scope contains {@code pc}, else any entry with that name, else null. */
     private static LvtEntry bestScope(List<LvtEntry> lvt, String name, int pc)
     {
         LvtEntry any = null;

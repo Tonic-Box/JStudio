@@ -284,7 +284,6 @@ public class AttributesView extends AbstractEditorView
         }
         catch (Exception e)
         {
-            // ignore
         }
         return "#" + index;
     }

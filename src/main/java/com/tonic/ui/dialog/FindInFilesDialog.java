@@ -46,7 +46,6 @@ public class FindInFilesDialog extends JDialog
         setLayout(new BorderLayout());
         getContentPane().setBackground(JStudioTheme.getBgSecondary());
 
-        // Search panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
         searchPanel.setBackground(JStudioTheme.getBgSecondary());
 
@@ -67,7 +66,6 @@ public class FindInFilesDialog extends JDialog
         searchButton.addActionListener(e -> performSearch());
         searchPanel.add(searchButton);
 
-        // Options panel
         JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         optionsPanel.setBackground(JStudioTheme.getBgSecondary());
 
@@ -86,14 +84,12 @@ public class FindInFilesDialog extends JDialog
         regexBox.setForeground(JStudioTheme.getTextPrimary());
         optionsPanel.add(regexBox);
 
-        // Top panel combining search and options
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(JStudioTheme.getBgSecondary());
         topPanel.add(searchPanel, BorderLayout.NORTH);
         topPanel.add(optionsPanel, BorderLayout.CENTER);
         add(topPanel, BorderLayout.NORTH);
 
-        // Results table
         tableModel = new ResultsTableModel();
         resultsTable = new JTable(tableModel);
         TableRowSorter<ResultsTableModel> sorter = new TableRowSorter<>(tableModel);
@@ -108,17 +104,14 @@ public class FindInFilesDialog extends JDialog
         resultsTable.setRowHeight(20);
         resultsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Column widths
-        resultsTable.getColumnModel().getColumn(0).setPreferredWidth(200); // Class
-        resultsTable.getColumnModel().getColumn(1).setPreferredWidth(50);  // Line
-        resultsTable.getColumnModel().getColumn(2).setPreferredWidth(400); // Match
+        resultsTable.getColumnModel().getColumn(0).setPreferredWidth(200);
+        resultsTable.getColumnModel().getColumn(1).setPreferredWidth(50);
+        resultsTable.getColumnModel().getColumn(2).setPreferredWidth(400);
 
-        // Header styling
         resultsTable.getTableHeader().setBackground(JStudioTheme.getBgSecondary());
         resultsTable.getTableHeader().setForeground(JStudioTheme.getTextPrimary());
         resultsTable.getTableHeader().setFont(JStudioTheme.getUIFont(11));
 
-        // Double-click to navigate
         resultsTable.addMouseListener(new MouseAdapter()
         {
             @Override
@@ -136,7 +129,6 @@ public class FindInFilesDialog extends JDialog
         scrollPane.getViewport().setBackground(JStudioTheme.getBgTertiary());
         add(scrollPane, BorderLayout.CENTER);
 
-        // Bottom panel
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setBackground(JStudioTheme.getBgSecondary());
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
@@ -153,15 +145,11 @@ public class FindInFilesDialog extends JDialog
 
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // Dialog settings
         setSize(700, 500);
         setLocationRelativeTo(owner);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 
-    /**
-     * Perform the search.
-     */
     private void performSearch()
     {
         String searchText = searchField.getText();
@@ -177,7 +165,6 @@ public class FindInFilesDialog extends JDialog
             return;
         }
 
-        // Cancel any running search
         if (currentWorker != null && !currentWorker.isDone())
         {
             currentWorker.cancel(true);
@@ -188,7 +175,6 @@ public class FindInFilesDialog extends JDialog
         allMatches.clear();
         tableModel.setMatches(allMatches);
 
-        // Build pattern
         Pattern pattern;
         try
         {
@@ -224,7 +210,6 @@ public class FindInFilesDialog extends JDialog
                             classEntry.setDecompilationCache(source);
                         }
 
-                        // Search for matches
                         String[] lines = source.split("\n");
                         for (int lineNum = 0; lineNum < lines.length; lineNum++)
                         {
@@ -240,7 +225,6 @@ public class FindInFilesDialog extends JDialog
                     }
                     catch (Exception e)
                     {
-                        // Skip classes that fail to decompile
                     }
 
                     processed++;
@@ -290,7 +274,6 @@ public class FindInFilesDialog extends JDialog
 
         if (!regexBox.isSelected())
         {
-            // Escape regex special characters
             patternText = Pattern.quote(patternText);
         }
 
@@ -312,8 +295,7 @@ public class FindInFilesDialog extends JDialog
         SearchMatch match = tableModel.getMatchAt(modelRow);
         if (match != null && match.classEntry != null)
         {
-            EventBus.getInstance().post(new ClassSelectedEvent(this, match.classEntry));
-            // Could also navigate to specific line if we had that capability
+            EventBus.getInstance().post(new ClassSelectedEvent(this, match.classEntry, null, match.lineNumber));
         }
     }
 
@@ -336,7 +318,6 @@ public class FindInFilesDialog extends JDialog
         showDialog();
     }
 
-    // Data classes
     private static class SearchMatch
     {
         final ClassEntryModel classEntry;
@@ -351,7 +332,6 @@ public class FindInFilesDialog extends JDialog
         }
     }
 
-    // Table model
     private static class ResultsTableModel extends AbstractTableModel
     {
         private final String[] COLUMNS = {"Class", "Line", "Match"};

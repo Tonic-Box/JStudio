@@ -140,7 +140,6 @@ public class ConsolePanel extends ThemedJPanel
             }
             catch (BadLocationException e)
             {
-                // Ignore
             }
         });
     }
@@ -197,7 +196,6 @@ public class ConsolePanel extends ThemedJPanel
         }
         catch (BadLocationException e)
         {
-            // Ignore
         }
     }
 
@@ -230,7 +228,6 @@ public class ConsolePanel extends ThemedJPanel
             }
             catch (BadLocationException e)
             {
-                // Ignore
             }
         }
     }

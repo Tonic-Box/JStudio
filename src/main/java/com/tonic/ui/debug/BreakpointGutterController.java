@@ -60,7 +60,6 @@ public final class BreakpointGutterController
         }
     };
 
-    /** Shown on the breakpoint that is currently hit (paused): a yellow pause badge - click it to resume. */
     private static final Icon PAUSE_ICON = new Icon()
     {
         @Override
@@ -123,8 +122,6 @@ public final class BreakpointGutterController
                 {
                     return;
                 }
-                // Clicking the paused line resumes - even if its breakpoint was removed mid-pause, so the
-                // resume affordance never disappears while suspended. Any other line toggles a breakpoint.
                 if (line == pausedLineInView())
                 {
                     DebugManager.getInstance().resume();
@@ -202,8 +199,6 @@ public final class BreakpointGutterController
             {
             }
         }
-        // The paused line always carries the pause/resume badge - on top of (or without) a breakpoint - so
-        // removing the breakpoint mid-pause leaves the resume affordance intact.
         if (pausedLine > 0)
         {
             try
@@ -216,7 +211,6 @@ public final class BreakpointGutterController
         }
     }
 
-    /** The 1-based line in THIS view where the target is currently paused, or -1 if it isn't paused here. */
     private int pausedLineInView()
     {
         DebugLocation loc = DebugManager.getInstance().getPausedLocation();
@@ -232,11 +226,6 @@ public final class BreakpointGutterController
         SwingUtilities.invokeLater(this::updateIcons);
     }
 
-    /**
-     * Wires the click handler onto the gutter's icon strip only (not the line-number or fold areas). Removes
-     * before adding so it stays EXACTLY one listener even after a re-decompile re-creates/re-adds the gutter
-     * components - otherwise a click would toggle twice (set then unset) and the breakpoint would never take.
-     */
     private void wireGutter()
     {
         Gutter gutter = scrollPane.getGutter();

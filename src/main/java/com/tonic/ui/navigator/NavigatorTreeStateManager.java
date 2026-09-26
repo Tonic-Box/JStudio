@@ -6,11 +6,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Owns the navigator tree's expansion/selection bookkeeping: capturing which nodes are open (plus the selection)
- * before a rebuild and restoring them afterwards by matching rebuild-stable name-path keys, as well as the
- * collapse/expand-all and expand-to-level operations driven by the toolbar.
- */
 final class NavigatorTreeStateManager
 {
 
@@ -26,11 +21,6 @@ final class NavigatorTreeStateManager
         this.treeModel = treeModel;
     }
 
-    /**
-     * Records the currently-expanded nodes and the selection so they can be re-applied after the tree is rebuilt
-     * (which discards them). State is matched by each node's name-path, so it survives the new node objects;
-     * best-effort: a renamed node's key changes, so only that node loses its state.
-     */
     void capture()
     {
         capturedExpandedKeys = captureExpandedKeys();
@@ -38,7 +28,6 @@ final class NavigatorTreeStateManager
         capturedSelectedKey = selectionPath != null ? pathKey(selectionPath) : null;
     }
 
-    /** Re-expands the nodes that were open and re-selects the previously selected node from the last {@link #capture()}. */
     void restore()
     {
         if (capturedExpandedKeys == null)
@@ -50,7 +39,6 @@ final class NavigatorTreeStateManager
         capturedSelectedKey = null;
     }
 
-    /** Name-path keys of every currently-expanded node, so expansion can be restored after a tree rebuild. */
     private Set<String> captureExpandedKeys()
     {
         Set<String> keys = new HashSet<>();
@@ -70,7 +58,6 @@ final class NavigatorTreeStateManager
         return keys;
     }
 
-    /** Re-expands the nodes that were open and re-selects the previously selected node, by matching name-paths. */
     private void restoreTreeState(Set<String> expandedKeys, String selectedKey)
     {
         Object root = treeModel.getRoot();
@@ -88,7 +75,6 @@ final class NavigatorTreeStateManager
             tree.setSelectionPath(path);
             tree.scrollPathToVisible(path);
         }
-        // A collapsed node had no expanded descendants, so prune the walk there (keeps it bounded to the open subtree).
         if (!isRoot && !expandedKeys.contains(key))
         {
             return;
@@ -104,7 +90,6 @@ final class NavigatorTreeStateManager
         }
     }
 
-    /** A rebuild-stable key for a tree path: its nodes' display texts joined (newline-separated, absent from names). */
     static String pathKey(TreePath path)
     {
         StringBuilder sb = new StringBuilder();

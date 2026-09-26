@@ -53,18 +53,15 @@ public class FileChooserPanel extends ThemedJPanel
     @Getter
     private File currentDirectory;
 
-    // Components
     private final PathBar pathBar;
     private final QuickAccessPanel quickAccessPanel;
     private final FileListPanel fileListPanel;
     private final FileFilterComboBox filterComboBox;
 
-    // Bottom panel
     private final JTextField fileNameField;
     private final JButton actionButton;
     private final JButton cancelButton;
 
-    // State
     private boolean isLoading = false;
     private ExtensionFileFilter currentFilter;
 
@@ -73,13 +70,11 @@ public class FileChooserPanel extends ThemedJPanel
         super(BackgroundStyle.PRIMARY, new BorderLayout());
         setPreferredSize(new Dimension(800, 500));
 
-        // Create components
         pathBar = new PathBar(this::navigateTo);
         quickAccessPanel = new QuickAccessPanel(this::navigateTo);
         fileListPanel = new FileListPanel();
         filterComboBox = new FileFilterComboBox();
 
-        // Setup file list listener
         fileListPanel.setFileListListener(new FileListPanel.FileListListener()
         {
             @Override
@@ -101,14 +96,12 @@ public class FileChooserPanel extends ThemedJPanel
             }
         });
 
-        // Setup filter listener
         filterComboBox.setFilterChangeListener(filter ->
         {
             currentFilter = filter;
             refreshFileList();
         });
 
-        // Create bottom panel
         fileNameField = new JTextField();
         actionButton = createStyledButton("Open");
         cancelButton = createStyledButton("Cancel");
@@ -119,10 +112,8 @@ public class FileChooserPanel extends ThemedJPanel
 
     private void setupLayout()
     {
-        // Path bar at top
         add(pathBar, BorderLayout.NORTH);
 
-        // Split pane for quick access and file list
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(quickAccessPanel);
         splitPane.setRightComponent(fileListPanel);
@@ -133,7 +124,6 @@ public class FileChooserPanel extends ThemedJPanel
 
         add(splitPane, BorderLayout.CENTER);
 
-        // Bottom panel with file name and buttons
         JPanel bottomPanel = createBottomPanel();
         add(bottomPanel, BorderLayout.SOUTH);
     }
@@ -144,7 +134,6 @@ public class FileChooserPanel extends ThemedJPanel
         panel.setBackground(JStudioTheme.getBgSecondary());
         panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(12, 12, 12, 12)));
 
-        // File name row
         JPanel nameRow = new JPanel(new BorderLayout(8, 0));
         nameRow.setOpaque(false);
 
@@ -159,7 +148,6 @@ public class FileChooserPanel extends ThemedJPanel
         fileNameField.setCaretColor(JStudioTheme.getTextPrimary());
         fileNameField.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(4, 8, 4, 8)));
 
-        // Listen for changes to validate
         fileNameField.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override
@@ -181,7 +169,6 @@ public class FileChooserPanel extends ThemedJPanel
             }
         });
 
-        // Enter in file name field triggers action
         fileNameField.addKeyListener(new KeyAdapter()
         {
             @Override
@@ -200,7 +187,6 @@ public class FileChooserPanel extends ThemedJPanel
 
         panel.add(nameRow, BorderLayout.CENTER);
 
-        // Button row
         JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         buttonRow.setOpaque(false);
 
@@ -259,7 +245,6 @@ public class FileChooserPanel extends ThemedJPanel
 
     private void setupKeyboardShortcuts()
     {
-        // Ctrl+L to focus path bar
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK), "focusPathBar");
         getActionMap().put("focusPathBar", new AbstractAction()
         {
@@ -270,7 +255,6 @@ public class FileChooserPanel extends ThemedJPanel
             }
         });
 
-        // Escape to cancel
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel");
         getActionMap().put("cancel", new AbstractAction()
         {
@@ -281,7 +265,6 @@ public class FileChooserPanel extends ThemedJPanel
             }
         });
 
-        // Ctrl+N for new folder (save mode)
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK), "newFolder");
         getActionMap().put("newFolder", new AbstractAction()
         {
@@ -315,7 +298,6 @@ public class FileChooserPanel extends ThemedJPanel
         currentDirectory = directory;
         pathBar.setCurrentDirectory(directory);
 
-        // Load files asynchronously
         FileSystemWorker.listDirectory(directory, currentFilter, new FileSystemWorker.DirectoryListingListener()
         {
             @Override
@@ -323,15 +305,12 @@ public class FileChooserPanel extends ThemedJPanel
             {
                 SwingUtilities.invokeLater(() ->
                 {
-                    // Apply mode filter (extension filter already applied by worker)
                     List<File> filtered = filterFilesByMode(files);
                     fileListPanel.setFiles(filtered, directory);
                     isLoading = false;
 
-                    // Track as recent directory
                     QuickAccessManager.getInstance().addRecent(directory);
 
-                    // Focus file list
                     fileListPanel.focusTable();
                 });
             }
@@ -342,19 +321,15 @@ public class FileChooserPanel extends ThemedJPanel
                 SwingUtilities.invokeLater(() ->
                 {
                     isLoading = false;
-                    // Show error somehow - for now just clear list
                     fileListPanel.setFiles(new ArrayList<>(), directory);
+                    JOptionPane.showMessageDialog(FileChooserPanel.this, "Cannot list " + dir.getAbsolutePath() + ": " + e.getMessage(), "Cannot Open Folder", JOptionPane.ERROR_MESSAGE);
                 });
             }
         });
     }
 
-    /**
-     * Filter files based on mode (extension filter already applied by worker).
-     */
     private List<File> filterFilesByMode(List<File> files)
     {
-        // In SELECT_DIRECTORY mode, show only directories
         if (mode == FileChooserMode.SELECT_DIRECTORY)
         {
             List<File> result = new ArrayList<>();
@@ -368,7 +343,6 @@ public class FileChooserPanel extends ThemedJPanel
             return result;
         }
 
-        // For other modes, show all files (extension filter already applied)
         return files;
     }
 
@@ -384,9 +358,6 @@ public class FileChooserPanel extends ThemedJPanel
         }
     }
 
-    /**
-     * Handle double-click on a file.
-     */
     private void handleFileDoubleClicked(File file)
     {
         if (file.isDirectory())
@@ -395,15 +366,11 @@ public class FileChooserPanel extends ThemedJPanel
         }
         else
         {
-            // File double-clicked - select and confirm
             fileNameField.setText(file.getName());
             handleActionButton();
         }
     }
 
-    /**
-     * Handle selection change in file list.
-     */
     private void handleSelectionChanged(List<File> selectedFiles)
     {
         if (selectedFiles.isEmpty())
@@ -413,7 +380,6 @@ public class FileChooserPanel extends ThemedJPanel
 
         if (mode == FileChooserMode.SELECT_DIRECTORY)
         {
-            // Only directories matter
             for (File file : selectedFiles)
             {
                 if (file.isDirectory())
@@ -433,7 +399,6 @@ public class FileChooserPanel extends ThemedJPanel
         }
         else
         {
-            // Multiple files - show count or list
             StringBuilder sb = new StringBuilder();
             int count = 0;
             for (File file : selectedFiles)
@@ -455,28 +420,20 @@ public class FileChooserPanel extends ThemedJPanel
         }
     }
 
-    /**
-     * Validate the file name field.
-     */
     private void validateFileName()
     {
         String text = fileNameField.getText().trim();
 
         if (mode == FileChooserMode.SAVE_FILE)
         {
-            // For save, just need a non-empty name
             actionButton.setEnabled(!text.isEmpty());
         }
         else
         {
-            // For open/directory, check if valid selection
             actionButton.setEnabled(!text.isEmpty());
         }
     }
 
-    /**
-     * Handle action button (Open/Save/Select).
-     */
     private void handleActionButton()
     {
         String text = fileNameField.getText().trim();
@@ -485,7 +442,6 @@ public class FileChooserPanel extends ThemedJPanel
             return;
         }
 
-        // Check if text is an absolute path
         File asAbsolute = new File(text);
         if (asAbsolute.isAbsolute())
         {
@@ -495,7 +451,6 @@ public class FileChooserPanel extends ThemedJPanel
                 {
                     if (mode == FileChooserMode.SELECT_DIRECTORY)
                     {
-                        // Select this directory
                         if (listener != null)
                         {
                             List<File> selected = new ArrayList<>();
@@ -505,7 +460,6 @@ public class FileChooserPanel extends ThemedJPanel
                     }
                     else
                     {
-                        // Navigate to this directory
                         navigateTo(asAbsolute);
                         fileNameField.setText("");
                     }
@@ -513,7 +467,6 @@ public class FileChooserPanel extends ThemedJPanel
                 }
                 else
                 {
-                    // It's a file - select it directly
                     if (listener != null)
                     {
                         List<File> selected = new ArrayList<>();
@@ -525,10 +478,8 @@ public class FileChooserPanel extends ThemedJPanel
             }
             else
             {
-                // Absolute path doesn't exist
                 if (mode == FileChooserMode.SAVE_FILE)
                 {
-                    // For save mode, allow non-existent path
                     if (listener != null)
                     {
                         List<File> selected = new ArrayList<>();
@@ -537,7 +488,6 @@ public class FileChooserPanel extends ThemedJPanel
                     }
                     return;
                 }
-                // For open mode, path doesn't exist - fall through to normal handling
             }
         }
 
@@ -545,13 +495,11 @@ public class FileChooserPanel extends ThemedJPanel
 
         if (mode == FileChooserMode.SAVE_FILE)
         {
-            // Save mode - use file name field
             File file = new File(currentDirectory, text);
             selectedFiles.add(file);
         }
         else if (text.contains(";"))
         {
-            // Multiple files selected
             String[] parts = text.split(";");
             for (String part : parts)
             {
@@ -572,13 +520,11 @@ public class FileChooserPanel extends ThemedJPanel
         }
         else
         {
-            // Single file
             File file = new File(currentDirectory, text);
             if (file.exists())
             {
                 if (file.isDirectory() && mode != FileChooserMode.SELECT_DIRECTORY)
                 {
-                    // Navigate into directory
                     navigateTo(file);
                     return;
                 }
@@ -586,7 +532,6 @@ public class FileChooserPanel extends ThemedJPanel
             }
             else if (mode == FileChooserMode.SELECT_DIRECTORY)
             {
-                // For directory mode, the current directory is the selection
                 selectedFiles.add(currentDirectory);
             }
         }
@@ -597,9 +542,6 @@ public class FileChooserPanel extends ThemedJPanel
         }
     }
 
-    /**
-     * Handle cancel button.
-     */
     private void handleCancelButton()
     {
         if (listener != null)
@@ -608,9 +550,6 @@ public class FileChooserPanel extends ThemedJPanel
         }
     }
 
-    /**
-     * Create a new folder in the current directory.
-     */
     private void createNewFolder()
     {
         String name = JOptionPane.showInputDialog(this, "Folder name:", "New Folder", JOptionPane.PLAIN_MESSAGE);
@@ -629,7 +568,6 @@ public class FileChooserPanel extends ThemedJPanel
         if (newFolder.mkdir())
         {
             refreshFileList();
-            // Select the new folder
             fileListPanel.selectFile(name.trim());
         }
         else
@@ -646,7 +584,6 @@ public class FileChooserPanel extends ThemedJPanel
         this.mode = mode;
         fileListPanel.setMode(mode);
 
-        // Update action button text
         switch (mode)
         {
             case OPEN_FILE:
@@ -660,7 +597,6 @@ public class FileChooserPanel extends ThemedJPanel
                 break;
         }
 
-        // Refresh to apply filters
         refreshFileList();
     }
 
@@ -737,7 +673,6 @@ public class FileChooserPanel extends ThemedJPanel
 
         if (text.contains(";"))
         {
-            // Multiple selection - return first
             String first = text.split(";")[0].trim();
             if (first.startsWith("\"") && first.endsWith("\""))
             {

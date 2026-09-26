@@ -52,8 +52,6 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         return sanitized;
     }
 
-    // === Concrete Node Types ===
-
     /**
      * Root node representing the project.
      */
@@ -101,7 +99,6 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         {
             super(packageName);
             this.packageName = packageName;
-            // Show last segment of package name
             int lastDot = packageName.lastIndexOf('.');
             this.displayName = lastDot >= 0 ? packageName.substring(lastDot + 1) : packageName;
         }

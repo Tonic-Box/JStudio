@@ -30,7 +30,7 @@ public class BreadcrumbBar extends JPanel
         setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         setBackground(JStudioTheme.getBgSecondary());
         setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(4, 8, 4, 8)));
-        setVisible(false); // Hidden until a class is loaded
+        setVisible(false);
     }
 
     /**
@@ -101,7 +101,6 @@ public class BreadcrumbBar extends JPanel
         String className = currentClass.getClassName();
         String[] parts = className.replace('/', '.').split("\\.");
 
-        // Build package path
         StringBuilder packagePath = new StringBuilder();
         for (int i = 0; i < parts.length - 1; i++)
         {
@@ -111,7 +110,6 @@ public class BreadcrumbBar extends JPanel
             }
             packagePath.append(parts[i]);
 
-            // Add package segment
             String pkg = parts[i];
             final String fullPackage = packagePath.toString();
             BreadcrumbItem item = new BreadcrumbItem(pkg, false, () ->
@@ -125,7 +123,6 @@ public class BreadcrumbBar extends JPanel
             addSeparator();
         }
 
-        // Add class name
         String simpleClassName = parts[parts.length - 1];
         BreadcrumbItem classItem = new BreadcrumbItem(simpleClassName, currentMethod == null, () ->
         {
@@ -136,7 +133,6 @@ public class BreadcrumbBar extends JPanel
         });
         addItem(classItem);
 
-        // Add method if present
         if (currentMethod != null)
         {
             addSeparator();
@@ -176,9 +172,6 @@ public class BreadcrumbBar extends JPanel
                 .replace(">", "&gt;");
     }
 
-    /**
-     * A single breadcrumb segment.
-     */
     private static class BreadcrumbItem extends JLabel
     {
 

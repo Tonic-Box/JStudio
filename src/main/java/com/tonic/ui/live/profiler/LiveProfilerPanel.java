@@ -98,8 +98,6 @@ public final class LiveProfilerPanel extends ThemedJPanel
 
     private void poll()
     {
-        // Poll regardless of whether the side tab is currently visible, so sampling starts as soon as the panel is
-        // added on attach (the timer stops on removeNotify/detach). Metrics are global JVM stats, not view-specific.
         if (inFlight)
         {
             return;

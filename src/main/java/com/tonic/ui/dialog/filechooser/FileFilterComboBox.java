@@ -43,7 +43,6 @@ public class FileFilterComboBox extends JComboBox<ExtensionFileFilter>
 
         setRenderer(new FilterRenderer());
 
-        // Always include "All Files" option
         model.addElement(ExtensionFileFilter.allFiles());
 
         addActionListener(e ->
@@ -71,7 +70,6 @@ public class FileFilterComboBox extends JComboBox<ExtensionFileFilter>
     {
         model.removeAllElements();
 
-        // Add custom filters first
         if (filters != null)
         {
             for (ExtensionFileFilter filter : filters)
@@ -83,10 +81,8 @@ public class FileFilterComboBox extends JComboBox<ExtensionFileFilter>
             }
         }
 
-        // Always add "All Files" at the end
         model.addElement(ExtensionFileFilter.allFiles());
 
-        // Select first filter
         if (model.getSize() > 0)
         {
             setSelectedIndex(0);
@@ -114,9 +110,6 @@ public class FileFilterComboBox extends JComboBox<ExtensionFileFilter>
         return result;
     }
 
-    /**
-     * Custom renderer for filter items.
-     */
     private static class FilterRenderer extends JLabel implements ListCellRenderer<ExtensionFileFilter>
     {
 

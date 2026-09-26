@@ -20,7 +20,6 @@ public final class JdiReachService
 
     private static final JdiReachService INSTANCE = new JdiReachService();
 
-    /** Upper bound on objects JDI parks per scan (stack roots, or a scoped class's instances). */
     private static final int JDI_OBJECT_CAP = 200_000;
 
     private JdiReachService()

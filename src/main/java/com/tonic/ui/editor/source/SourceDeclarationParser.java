@@ -3,11 +3,6 @@ package com.tonic.ui.editor.source;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Pure, regex-based recognition of declarations in decompiled Java source: the class/method/field name declared on
- * a line, the parameter list of a method line, and the identifier at a text offset. No editor or model state - just
- * String in, String out - so it is freely unit-testable and shared by the source view's navigation.
- */
 final class SourceDeclarationParser
 {
 
@@ -21,7 +16,6 @@ final class SourceDeclarationParser
 
     private static final Pattern FIELD_DECL_PATTERN = Pattern.compile("^\\s*(?:public|private|protected|static|final|volatile|transient|\\s)*" + "\\w+(?:<[^>]*>)?(?:\\[])*\\s+" + "(\\w+)\\s*[;=]");
 
-    /** The identifier (Java identifier chars plus {@code '.'}) surrounding {@code offset} in {@code text}, or null. */
     static String extractIdentifierAt(String text, int offset)
     {
         if (offset < 0 || offset >= text.length())
@@ -53,7 +47,6 @@ final class SourceDeclarationParser
         return Character.isJavaIdentifierPart(c) || c == '.';
     }
 
-    /** The class/interface/enum name declared on {@code line}, or null. */
     static String extractClassDeclaration(String line)
     {
         Matcher m = CLASS_DECL_PATTERN.matcher(line);
@@ -64,7 +57,6 @@ final class SourceDeclarationParser
         return null;
     }
 
-    /** The method name declared on {@code line} (filtering control-flow keywords and assignments), or null. */
     static String extractMethodDeclaration(String line)
     {
         String trimmed = line.trim();
@@ -94,7 +86,6 @@ final class SourceDeclarationParser
         return null;
     }
 
-    /** The field name declared on {@code line}, or null. */
     static String extractFieldDeclaration(String line)
     {
         String trimmed = line.trim();
@@ -113,7 +104,6 @@ final class SourceDeclarationParser
         return null;
     }
 
-    /** The raw parameter text between the first {@code '('} and last {@code ')'} of {@code line}, or {@code ""}. */
     static String extractMethodParams(String line)
     {
         int parenStart = line.indexOf('(');

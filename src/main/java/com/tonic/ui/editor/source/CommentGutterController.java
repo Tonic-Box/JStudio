@@ -20,11 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Owns the editor's line-comment gutter: the per-line comment icons, the add/view dialogs, and the project-database
- * listener that refreshes the icons when comments change. {@link #attach()} subscribes and {@link #detach()}
- * unsubscribes, so a closed editor leaves no listener behind in the long-lived service.
- */
 final class CommentGutterController
 {
 
@@ -183,7 +178,6 @@ final class CommentGutterController
             }
             catch (BadLocationException e)
             {
-                // Line doesn't exist, skip
             }
         }
     }

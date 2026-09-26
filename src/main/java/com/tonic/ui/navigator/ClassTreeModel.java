@@ -64,9 +64,6 @@ public class ClassTreeModel extends DefaultTreeModel
         rebuildTree();
     }
 
-    /**
-     * Rebuild the tree structure from the project.
-     */
     private void rebuildTree()
     {
         if (project == null)
@@ -76,26 +73,20 @@ public class ClassTreeModel extends DefaultTreeModel
             return;
         }
 
-        // Get filtered classes
         List<ClassEntryModel> classes = getFilteredClasses();
 
-        // Create root node
         NavigatorNode.ProjectNode root = new NavigatorNode.ProjectNode(project.getProjectName(), classes.size());
 
-        // Build package hierarchy
         Map<String, NavigatorNode.PackageNode> packageNodes = new HashMap<>();
 
         for (ClassEntryModel classEntry : classes)
         {
             String packageName = classEntry.getPackageName();
 
-            // Get or create package nodes
             NavigatorNode.PackageNode packageNode = getOrCreatePackageNode(root, packageNodes, packageName);
 
-            // Create class node
             NavigatorNode.ClassNode classNode = new NavigatorNode.ClassNode(classEntry);
 
-            // Add members if enabled
             if (showMembers)
             {
                 addMembersToClass(classNode, classEntry);
@@ -426,7 +417,6 @@ public class ClassTreeModel extends DefaultTreeModel
             return node;
         }
 
-        // Create package node hierarchy
         String[] parts = packageName.split("\\.");
         StringBuilder fullName = new StringBuilder();
         NavigatorNode parent = root;
@@ -444,7 +434,6 @@ public class ClassTreeModel extends DefaultTreeModel
                 current = new NavigatorNode.PackageNode(currentFullName);
                 packageNodes.put(currentFullName, current);
 
-                // Insert in sorted order
                 insertSorted(parent, current);
             }
 
@@ -465,7 +454,6 @@ public class ClassTreeModel extends DefaultTreeModel
                 String existingText = ((NavigatorNode) existing).getDisplayText();
                 String newText = child.getDisplayText();
 
-                // Packages before classes
                 boolean existingIsPackage = existing instanceof NavigatorNode.PackageNode;
                 boolean newIsPackage = child instanceof NavigatorNode.PackageNode;
 

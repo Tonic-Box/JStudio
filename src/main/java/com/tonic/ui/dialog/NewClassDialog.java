@@ -17,7 +17,6 @@ import java.util.List;
 public class NewClassDialog extends ThemedJDialog
 {
 
-    /** Placeholder shown for the root package; treated as an empty (default) package. */
     private static final String DEFAULT_PACKAGE_LABEL = "(default package)";
 
     private final JTextField packageField;
@@ -483,10 +482,6 @@ public class NewClassDialog extends ThemedJDialog
         return true;
     }
 
-    /**
-     * The trimmed package text, with the {@link #DEFAULT_PACKAGE_LABEL} placeholder normalized to
-     * empty so creating a class in the root package is accepted rather than rejected as invalid.
-     */
     private String normalizedPackage()
     {
         String pkg = packageField.getText().trim();
@@ -552,7 +547,6 @@ public class NewClassDialog extends ThemedJDialog
         return result;
     }
 
-    /** Selectable class-file (bytecode) versions, mapping a label to its class-file major version. */
     private enum BytecodeVersion
     {
         JAVA_8("Java 8 (52)", 52),

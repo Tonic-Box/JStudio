@@ -30,13 +30,11 @@ public class AnalysisPanel extends ThemedJPanel
         tabbedPane.setForeground(JStudioTheme.getTextPrimary());
         tabbedPane.setBorder(null);
 
-        // Create panels
         searchPanel = new SearchPanel(project);
         stringsPanel = new StringsPanel(project);
         similarityPanel = new SimilarityPanel(project);
         simulationPanel = new SimulationPanel(project);
 
-        // Add tabs
         tabbedPane.addTab("Similarity", similarityPanel);
         tabbedPane.addTab("Search", searchPanel);
         tabbedPane.addTab("Strings", stringsPanel);

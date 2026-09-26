@@ -41,11 +41,9 @@ public class PathBar extends JPanel
 
     private final NavigationListener listener;
 
-    // Navigation history
     private final List<File> history = new ArrayList<>();
     private int historyIndex = -1;
 
-    // Components
     private final JButton backButton;
     private final JButton forwardButton;
     private final JButton upButton;
@@ -71,7 +69,6 @@ public class PathBar extends JPanel
         setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         setPreferredSize(new Dimension(0, 36));
 
-        // Navigation buttons
         JPanel navButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
         navButtons.setOpaque(false);
 
@@ -89,12 +86,10 @@ public class PathBar extends JPanel
 
         add(navButtons, BorderLayout.WEST);
 
-        // Path container (switches between breadcrumb and text field)
         pathCardLayout = new CardLayout();
         pathContainer = new JPanel(pathCardLayout);
         pathContainer.setOpaque(false);
 
-        // Breadcrumb panel
         breadcrumbPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         breadcrumbPanel.setOpaque(false);
         breadcrumbPanel.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
@@ -103,12 +98,10 @@ public class PathBar extends JPanel
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                // Click on empty area enters edit mode
                 enterEditMode();
             }
         });
 
-        // Path text field (edit mode)
         pathTextField = new JTextField();
         pathTextField.setFont(JStudioTheme.getUIFont(12));
         pathTextField.setBackground(JStudioTheme.getBgTertiary());
@@ -194,10 +187,8 @@ public class PathBar extends JPanel
 
         this.currentDirectory = directory;
 
-        // Add to history
         if (historyIndex < 0 || !directory.equals(history.get(historyIndex)))
         {
-            // Remove forward history
             while (history.size() > historyIndex + 1)
             {
                 history.remove(history.size() - 1);
@@ -210,9 +201,6 @@ public class PathBar extends JPanel
         updateNavigationButtons();
     }
 
-    /**
-     * Update the breadcrumb display.
-     */
     private void updateBreadcrumbs()
     {
         breadcrumbPanel.removeAll();
@@ -224,7 +212,6 @@ public class PathBar extends JPanel
             return;
         }
 
-        // Build path segments
         List<File> segments = new ArrayList<>();
         File current = currentDirectory;
         while (current != null)
@@ -233,7 +220,6 @@ public class PathBar extends JPanel
             current = current.getParentFile();
         }
 
-        // Create breadcrumb buttons
         for (int i = 0; i < segments.size(); i++)
         {
             File segment = segments.get(i);
@@ -325,9 +311,6 @@ public class PathBar extends JPanel
         pathTextField.selectAll();
     }
 
-    /**
-     * Exit edit mode without applying changes.
-     */
     private void exitEditMode()
     {
         if (!inEditMode)
@@ -339,9 +322,6 @@ public class PathBar extends JPanel
         pathCardLayout.show(pathContainer, "breadcrumb");
     }
 
-    /**
-     * Apply the edited path and navigate.
-     */
     private void applyEditedPath()
     {
         String path = pathTextField.getText().trim();
@@ -362,7 +342,6 @@ public class PathBar extends JPanel
         }
         else if (dir.exists() && dir.isFile())
         {
-            // If user typed a file, navigate to its parent
             File parent = dir.getParentFile();
             if (parent != null && listener != null)
             {
@@ -371,7 +350,6 @@ public class PathBar extends JPanel
         }
         else
         {
-            // Invalid path - flash red briefly
             Color original = pathTextField.getBackground();
             Color errorBg = new Color(JStudioTheme.getError().getRed() / 3, JStudioTheme.getError().getGreen() / 6, JStudioTheme.getError().getBlue() / 6);
             pathTextField.setBackground(errorBg);
@@ -382,9 +360,6 @@ public class PathBar extends JPanel
         }
     }
 
-    /**
-     * Update navigation button enabled states.
-     */
     private void updateNavigationButtons()
     {
         backButton.setEnabled(historyIndex > 0);

@@ -31,7 +31,6 @@ public class BytecodeFormatter
         this.method = method;
     }
 
-    /** Code-size (bytes) at or below which a method's disassembly is treated as trivial (getter/setter/tiny). */
     private static final int TRIVIAL_CODE_BYTES = 16;
 
     /**

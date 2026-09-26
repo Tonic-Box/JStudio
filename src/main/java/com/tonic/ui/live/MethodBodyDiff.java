@@ -70,7 +70,6 @@ public final class MethodBodyDiff
         return changed;
     }
 
-    /** Maps each concrete method of the source's primary type to a canonical rendering of its body. */
     private static Map<String, String> methodBodies(String source, ClassPool classPool, String ownerClass)
     {
         Map<String, String> bodies = new HashMap<>();
@@ -113,10 +112,6 @@ public final class MethodBodyDiff
         return bodies;
     }
 
-    /**
-     * The method's {@code name + descriptor} key, with reference types resolved through {@code resolver} (so it
-     * matches the compiled class's signature). Falls back to the unresolved descriptor when no pool is given.
-     */
     private static String signature(MethodDecl method, TypeResolver resolver)
     {
         StringBuilder descriptor = new StringBuilder("(");
@@ -128,7 +123,6 @@ public final class MethodBodyDiff
         return method.getName() + descriptor;
     }
 
-    /** The constructor's {@code <init>} key: its parameters (resolved like {@link #signature}) and void return. */
     private static String constructorSignature(ConstructorDecl constructor, TypeResolver resolver)
     {
         StringBuilder descriptor = new StringBuilder("(");

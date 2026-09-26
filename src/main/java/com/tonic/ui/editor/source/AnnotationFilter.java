@@ -12,12 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Strips annotation declarations out of decompiled source for the "omit annotations" view. Pure: it derives the
- * annotation simple-name set from the class file's {@code RuntimeVisibleAnnotations} and removes matching annotation
- * lines (including multi-line forms with nested parens) from the text, leaving only code. Only whole lines are
- * removed, so {@link #filterWithMap} can also return an exact original-to-filtered line map.
- */
 final class AnnotationFilter
 {
 
@@ -25,7 +19,6 @@ final class AnnotationFilter
     {
     }
 
-    /** The filtered source plus a map from each original 0-based line to its 0-based filtered line (-1 if removed). */
     static final class Filtered
     {
         final String text;
@@ -43,11 +36,6 @@ final class AnnotationFilter
         return filterWithMap(classFile, source).text;
     }
 
-    /**
-     * Strips annotation declaration lines and returns the filtered text alongside a line map, so callers (e.g. the
-     * usage lens) can translate line numbers from the original source to the filtered view. Since only whole lines
-     * are removed, the map is exact.
-     */
     static Filtered filterWithMap(ClassFile classFile, String source)
     {
         String[] lines = source.split("\n", -1);
@@ -97,7 +85,6 @@ final class AnnotationFilter
         return new Filtered(result.toString(), lineMap);
     }
 
-    /** Collect all annotation simple names from the class file (class, methods, fields). */
     private static Set<String> collectAnnotationNames(ClassFile classFile)
     {
         Set<String> names = new HashSet<>();
@@ -160,12 +147,10 @@ final class AnnotationFilter
         }
         catch (Exception e)
         {
-            // Ignore
         }
         return null;
     }
 
-    /** True when {@code trimmed} begins an annotation whose simple name matches any collected annotation. */
     private static boolean isAnnotationStartAny(String trimmed, Set<String> annotationNames)
     {
         if (!trimmed.startsWith("@"))

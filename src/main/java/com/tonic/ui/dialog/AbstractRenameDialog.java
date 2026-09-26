@@ -119,10 +119,8 @@ public abstract class AbstractRenameDialog extends ThemedJDialog
         }
     }
 
-    /** The entity word used in validation messages, e.g. {@code "field"} or {@code "method"}. */
     protected abstract String entityWord();
 
-    /** Validates the entered name (empty / valid Java identifier), showing an error dialog on failure. */
     protected boolean validateName()
     {
         String name = getNewName();

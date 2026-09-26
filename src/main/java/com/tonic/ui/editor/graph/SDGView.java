@@ -63,7 +63,6 @@ public class SDGView extends BaseGraphView
             }
             catch (Exception e)
             {
-                // Skip methods that fail to lift
             }
         }
 

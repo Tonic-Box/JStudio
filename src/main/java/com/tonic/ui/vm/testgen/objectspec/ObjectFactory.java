@@ -428,7 +428,6 @@ public class ObjectFactory
             return result;
         }
 
-        // Ensure no empty value lists - add null as default
         for (List<Object> list : valueLists)
         {
             if (list.isEmpty())

@@ -345,7 +345,6 @@ public final class RemoveDeadCodeDialog extends JDialog
         return set;
     }
 
-    /** Renders each node as a checkbox + label, reflecting the {@link #checked} state. */
     private final class CheckboxRenderer extends JPanel implements TreeCellRenderer
     {
         private final JCheckBox box = new JCheckBox();

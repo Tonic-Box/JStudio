@@ -178,7 +178,6 @@ public class CallGraphRenderer
 
     private String buildInlineEdgeStyle(CallGraph callGraph, MethodReference caller, MethodReference callee)
     {
-        // Use bright red for debugging - very visible
         String strokeColor = "#FF0000";
 
         CallGraphNode callerNode = callGraph.getNode(caller);
@@ -191,19 +190,19 @@ public class CallGraphRenderer
                     switch (site.getInvokeType())
                     {
                         case VIRTUAL:
-                            strokeColor = "#00FF00"; // bright green
+                            strokeColor = "#00FF00";
                             break;
                         case STATIC:
-                            strokeColor = "#00FFFF"; // cyan
+                            strokeColor = "#00FFFF";
                             break;
                         case SPECIAL:
-                            strokeColor = "#FFFF00"; // yellow
+                            strokeColor = "#FFFF00";
                             break;
                         case INTERFACE:
-                            strokeColor = "#FF00FF"; // magenta
+                            strokeColor = "#FF00FF";
                             break;
                         case DYNAMIC:
-                            strokeColor = "#FF8800"; // orange
+                            strokeColor = "#FF8800";
                             break;
                     }
                     break;
@@ -212,7 +211,7 @@ public class CallGraphRenderer
         }
 
         return mxConstants.STYLE_STROKECOLOR + "=" + strokeColor + ";" +
-                mxConstants.STYLE_STROKEWIDTH + "=3;" + // thicker for visibility
+                mxConstants.STYLE_STROKEWIDTH + "=3;" +
                 mxConstants.STYLE_ENDARROW + "=" + mxConstants.ARROW_CLASSIC + ";" +
                 mxConstants.STYLE_ROUNDED + "=1;" +
                 mxConstants.STYLE_EDGE + "=" + mxConstants.EDGESTYLE_ORTHOGONAL + ";";

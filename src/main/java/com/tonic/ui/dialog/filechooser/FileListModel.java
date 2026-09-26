@@ -196,9 +196,6 @@ public class FileListModel extends AbstractTableModel
         fireTableDataChanged();
     }
 
-    /**
-     * Sort entries by current column.
-     */
     private void sortEntries()
     {
         Comparator<FileEntry> comparator;
@@ -220,7 +217,6 @@ public class FileListModel extends AbstractTableModel
                 break;
         }
 
-        // Directories always first
         Comparator<FileEntry> fullComparator = Comparator
                 .comparing((FileEntry e) -> !e.isDirectory())
                 .thenComparing(sortAscending ? comparator : comparator.reversed());

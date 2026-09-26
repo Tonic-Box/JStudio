@@ -28,11 +28,6 @@ public class FileChooserDialog extends JDialog
     private final FileChooserPanel panel;
     private FileChooserResult result = FileChooserResult.cancelled();
 
-    /**
-     * -- GETTER --
-     *  Get the last used directory.
-     */
-    // Remember last used directory
     @Getter
     private static File lastDirectory = new File(System.getProperty("user.home"));
 
@@ -55,7 +50,6 @@ public class FileChooserDialog extends JDialog
                 if (!files.isEmpty())
                 {
                     result = FileChooserResult.approved(files);
-                    // Remember directory
                     File first = files.get(0);
                     File dir = first.isDirectory() ? first : first.getParentFile();
 
@@ -89,8 +83,6 @@ public class FileChooserDialog extends JDialog
         setVisible(true);
         return result;
     }
-
-    // ======================== Static Factory Methods ========================
 
     /**
      * Show an open file dialog.
@@ -180,8 +172,6 @@ public class FileChooserDialog extends JDialog
         }
     }
 
-    // ======================== Builder Pattern ========================
-
     /**
      * Create a builder for advanced configuration.
      */
@@ -204,7 +194,6 @@ public class FileChooserDialog extends JDialog
 
         private Builder()
         {
-            // Add default filters
         }
 
         /**
@@ -291,17 +280,14 @@ public class FileChooserDialog extends JDialog
             Window owner = getWindow(parent);
             FileChooserDialog dialog = new FileChooserDialog(owner, title);
 
-            // Configure panel
             FileChooserPanel panel = dialog.getPanel();
             panel.setMode(mode);
 
-            // Set filters
             if (!filters.isEmpty())
             {
                 panel.setFileFilters(filters.toArray(new ExtensionFileFilter[0]));
             }
 
-            // Set initial directory
             File startDir;
             if (useLastDirectory)
             {
@@ -322,7 +308,6 @@ public class FileChooserDialog extends JDialog
                 panel.setCurrentDirectory(new File(System.getProperty("user.home")));
             }
 
-            // Set initial file name
             if (initialFileName != null && !initialFileName.isEmpty())
             {
                 panel.setSelectedFileName(initialFileName);
@@ -331,9 +316,6 @@ public class FileChooserDialog extends JDialog
             return dialog;
         }
 
-        /**
-         * Get the parent window.
-         */
         private Window getWindow(Component component)
         {
             if (component == null)

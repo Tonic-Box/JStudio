@@ -61,7 +61,6 @@ public class NavigatorPanel extends ThemedJPanel
     private final JPanel contentWrapper;
     private final NavigatorTreeStateManager treeState;
     private final NavigatorContextMenuFactory contextMenuFactory;
-    /** Plugin-contributed context-menu providers, consulted each time the tree's popup opens. */
     private final List<NavigatorActionProvider> actionProviders = new CopyOnWriteArrayList<>();
 
     public NavigatorPanel(MainFrame mainFrame)
@@ -332,7 +331,6 @@ public class NavigatorPanel extends ThemedJPanel
 
         Object node = path.getLastPathComponent();
 
-        // Handle folder nodes (expand/collapse on double-click)
         if (node instanceof NavigatorNode.ProjectNode ||
                 node instanceof NavigatorNode.PackageNode ||
                 node instanceof NavigatorNode.CategoryNode ||
@@ -350,7 +348,6 @@ public class NavigatorPanel extends ThemedJPanel
             return;
         }
 
-        // Handle class, method, and field nodes
         if (node instanceof NavigatorNode.ClassNode)
         {
             ClassEntryModel classEntry = ((NavigatorNode.ClassNode) node).getClassEntry();

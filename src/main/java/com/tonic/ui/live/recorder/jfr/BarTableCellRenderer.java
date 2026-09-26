@@ -13,12 +13,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 
-/**
- * A table cell renderer that formats numbers (counts / bytes / millis) right-aligned and draws a subtle
- * proportional bar behind the value (longest value in the column = full width), with alternating row tint -
- * turning a plain table into a profiler-style ranked view. Text columns ({@link Kind#TEXT}) are left-aligned
- * with the same tint and no bar.
- */
 final class BarTableCellRenderer extends DefaultTableCellRenderer
 {
 
@@ -42,7 +36,6 @@ final class BarTableCellRenderer extends DefaultTableCellRenderer
         setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
     }
 
-    /** Installs this renderer on every column of {@code table}, computing each numeric column's max for bars. */
     static void install(JTable table, Kind[] kinds)
     {
         TableModel model = table.getModel();

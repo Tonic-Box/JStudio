@@ -92,10 +92,6 @@ public class SourceCompiler
             return CompilationResult.failure(errors, source, elapsed(startTime));
         }
 
-        // Transactional recompile: lower into a working copy of the class so a failed compile (a lowering
-        // error or a gate-verify failure) never mutates the model's ClassFile. The copy is swapped into the
-        // pool under the class's name so self/new-member type resolution sees the in-progress version; on
-        // success the copy stays (and the caller commits it), on failure the original is restored.
         Map<String, Integer> memberLines = buildMemberLineMap(cu, originalClass, classPool);
         ClassFile working = workingCopy(originalClass);
         boolean swappedIn = swapInPool(classPool, originalClass, working);
@@ -138,11 +134,6 @@ public class SourceCompiler
         }
     }
 
-    /**
-     * A standalone byte-for-byte copy of {@code original} to lower into, so the original (the model's live
-     * ClassFile) is untouched unless the recompile succeeds. Falls back to the original itself only if the
-     * copy cannot be made (a write failure), preserving prior behavior in that rare case.
-     */
     private ClassFile workingCopy(ClassFile original)
     {
         try
@@ -155,7 +146,6 @@ public class SourceCompiler
         }
     }
 
-    /** Replaces {@code original} with {@code working} in the pool so in-progress resolution sees the copy. */
     private boolean swapInPool(ClassPool pool, ClassFile original, ClassFile working)
     {
         if (pool == null || working == original)
@@ -167,7 +157,6 @@ public class SourceCompiler
         return true;
     }
 
-    /** Restores {@code original} in the pool (failed recompile): drop the working copy, put the original back. */
     private void restoreInPool(ClassPool pool, ClassFile working, ClassFile original)
     {
         pool.remove(working.getClassName());
@@ -245,8 +234,6 @@ public class SourceCompiler
             String descriptor = buildDescriptor(methodDecl, typeResolver);
 
             MethodEntry targetMethod = findMethod(original, methodName, descriptor);
-            // Method-scoped recompile: an existing method whose body did not change keeps its original bytecode,
-            // so editing one method never re-lowers (and risks perturbing) the others.
             if (changedMethods != null && targetMethod != null
                     && !changedMethods.contains(methodName + descriptor))
             {
@@ -272,9 +259,6 @@ public class SourceCompiler
                 continue;
             }
 
-            // Per-method resilience: a method that cannot be lowered keeps its original bytecode (or,
-            // for a newly added method, is reported) instead of aborting the whole-class recompile,
-            // which would discard edits to every other, lowerable method.
             try
             {
                 IRMethod irMethod = lowerer.lower(methodDecl, ownerClass);
@@ -309,14 +293,6 @@ public class SourceCompiler
         return original;
     }
 
-    /**
-     * Re-lowers constructors into their {@code <init>} entries from the edited source. In changed-methods mode
-     * only constructors that actually changed are re-lowered; in the whole-class fallback
-     * ({@code changedMethods == null}) every constructor is re-lowered so a constructor-body edit is never
-     * silently dropped when the body diff falls back to recompiling everything. A constructor whose lowering
-     * fails keeps its original bytecode (the {@code catch} below). The ASTLowerer maps the
-     * {@code ConstructorDecl} body to {@code <init>}, synthesizing the implicit {@code super(...)} call.
-     */
     private void lowerConstructors(ClassDecl classDecl, ClassFile original, ASTLowerer lowerer, SSA ssa, TypeResolver typeResolver, String ownerClass, Set<String> changedMethods, List<CompilationError> warnings)
     {
         for (ConstructorDecl ctorDecl : classDecl.getConstructors())
@@ -351,7 +327,6 @@ public class SourceCompiler
         }
     }
 
-    /** A constructor's JVM descriptor: its parameters (resolved via {@code resolver}) and void return. */
     private String ctorDescriptor(ConstructorDecl ctorDecl, TypeResolver resolver)
     {
         StringBuilder sb = new StringBuilder("(");
@@ -362,7 +337,6 @@ public class SourceCompiler
         return sb.append(")V").toString();
     }
 
-    /** Wraps a ConstructorDecl as an {@code <init>} MethodDecl so the method lowering path can lower it. */
     private MethodDecl toInitMethodDecl(ConstructorDecl ctorDecl)
     {
         MethodDecl methodDecl = new MethodDecl("<init>", VoidSourceType.INSTANCE).withModifiers(ctorDecl.getModifiers());
@@ -373,16 +347,8 @@ public class SourceCompiler
         return methodDecl.withBody(ctorDecl.getBody());
     }
 
-    /** Access flags for generated synthetic methods: private static synthetic. */
     private static final int SYNTHETIC_METHOD_ACCESS = 0x0002 | 0x0008 | 0x1000;
 
-    /**
-     * Materializes synthetic methods (lambda bodies, array constructors) produced while lowering.
-     * A synthetic the original class already provides (matching name and descriptor) is left
-     * untouched, so round-tripped classes keep their working synthetic bodies; only genuinely new
-     * synthetics — from freshly written or edited code — are generated. Generation is best-effort:
-     * failures are reported as warnings rather than aborting the recompile.
-     */
     private void emitPendingSynthetics(ASTLowerer lowerer, SSA ssa, ClassFile original, String ownerClass, List<CompilationError> warnings)
     {
         int guard = 0;
@@ -434,12 +400,6 @@ public class SourceCompiler
         }
     }
 
-    /**
-     * Removes user-authored methods that the edited source no longer declares. Constructors,
-     * static initializers and compiler-generated members (synthetic flag, or {@code lambda$} /
-     * {@code access$} / {@code $deserializeLambda$} names) are never removed, since the decompiled
-     * source represents them implicitly and removing them would break their call sites.
-     */
     private void removeDeletedMethods(ClassDecl classDecl, ClassFile original, TypeResolver typeResolver)
     {
         Set<String> sourceMethods = new HashSet<>();
@@ -485,11 +445,6 @@ public class SourceCompiler
                 || name.equals("$deserializeLambda$");
     }
 
-    /**
-     * Creates ClassFile entries for fields present in the edited source but absent from the
-     * original class, so that newly declared fields exist (with their JVM default value) and
-     * any references to them resolve. Existing fields are left untouched.
-     */
     private void syncNewFields(ClassDecl classDecl, ClassFile original, List<CompilationError> warnings)
     {
         for (FieldDecl field : classDecl.getFields())
@@ -510,20 +465,11 @@ public class SourceCompiler
         }
     }
 
-    /**
-     * Regenerates {@code <clinit>} from the source's static field initializers and static
-     * initializer blocks, finding or creating the method entry and lowering into it. Field
-     * initializers run first, then static initializer blocks in declaration order. Does nothing
-     * when the source declares no static initialization.
-     */
     private void synthesizeStaticInitializer(ClassDecl classDecl, ClassFile original, ASTLowerer lowerer, SSA ssa, String ownerClass, List<CompilationError> warnings)
     {
         List<Statement> initStatements = new ArrayList<>();
         for (FieldDecl field : classDecl.getFields())
         {
-            // A static field that the original class represents with a ConstantValue attribute (a compile-time
-            // constant) is initialized by the class loader from the attribute - synthesizing a <clinit> putstatic for
-            // it would fabricate a spurious static block on every round-trip, so skip it.
             if (field.isStatic() && field.hasInitializer() && !hasConstantValue(original, field.getName()))
             {
                 VarRefExpr ref = new VarRefExpr(field.getName(), field.getType());
@@ -560,11 +506,6 @@ public class SourceCompiler
         }
     }
 
-    /**
-     * Verifies the recompiled class and returns one compilation error per failing method, filtered to the methods we
-     * re-lowered ({@code changedMethods}) so a pre-existing quirk in an untouched method never blocks an edit. An
-     * empty list means the recompile passed verification and is safe to apply.
-     */
     private List<CompilationError> gateVerify(ClassFile compiled, ClassPool classPool, Set<String> changedMethods, Map<String, Integer> memberLines)
     {
         List<CompilationError> errors = new ArrayList<>();
@@ -590,15 +531,10 @@ public class SourceCompiler
         }
         catch (Exception e)
         {
-            // A failure inside the verifier itself must not block an otherwise-valid recompile.
         }
         return errors;
     }
 
-    /**
-     * Maps each source member's {@code name + descriptor} key (matching {@code VerificationError.getMethodName})
-     * to its source declaration line, so a verify failure points at the offending member rather than line 1.
-     */
     private Map<String, Integer> buildMemberLineMap(CompilationUnit cu, ClassFile original, ClassPool classPool)
     {
         Map<String, Integer> map = new HashMap<>();
@@ -626,16 +562,11 @@ public class SourceCompiler
         return map;
     }
 
-    /** The source line of {@code location}, or 1 when unknown. */
     private int lineOf(SourceLocation location)
     {
         return location != null && location.hasLineNumber() ? location.lineNumber() : 1;
     }
 
-    /**
-     * Whether the original class's field {@code name} carries a {@code ConstantValue} attribute - i.e. a compile-time
-     * constant the class loader initializes directly, needing no {@code <clinit>} assignment.
-     */
     private boolean hasConstantValue(ClassFile classFile, String name)
     {
         for (FieldEntry field : classFile.getFields())
@@ -667,9 +598,6 @@ public class SourceCompiler
         return false;
     }
 
-    /**
-     * Translates source-level modifiers into JVM access flags for created members.
-     */
     private int accessFromModifiers(Set<Modifier> modifiers)
     {
         int flags = 0;
@@ -708,12 +636,6 @@ public class SourceCompiler
         return null;
     }
 
-    /**
-     * Builds a method's JVM descriptor, resolving reference types through {@code resolver} so imports are
-     * applied ({@code Frame} -> {@code Ljava/awt/Frame;}) and nested classes use {@code $} - without which the
-     * descriptor would not match the original method and the method would be wrongly treated as added/removed.
-     * Falls back to the unresolved descriptor when no resolver (i.e. no class pool) is available.
-     */
     private String buildDescriptor(MethodDecl methodDecl, TypeResolver resolver)
     {
         StringBuilder sb = new StringBuilder("(");
@@ -731,7 +653,6 @@ public class SourceCompiler
         return resolver != null ? resolver.descriptorOf(type) : type.toIRType().getDescriptor();
     }
 
-    /** A type resolver for descriptor building, or null when there is no class pool to resolve against. */
     private TypeResolver descriptorResolver(ClassPool classPool, String ownerClass, ClassDecl classDecl, CompilationUnit cu)
     {
         if (classPool == null)

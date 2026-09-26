@@ -14,16 +14,9 @@ import java.awt.RenderingHints;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A compact live time-series chart card: a title, a caller-set value readout, and one or more colored series
- * backed by fixed-capacity ring buffers. The first series is drawn as a filled area, the rest as lines. The
- * Y axis auto-scales to the window's max unless a fixed maximum is given (e.g. 100 for a percentage).
- * Push samples each tick and {@link #repaint()}.
- */
 final class MetricChart extends JComponent
 {
 
-    /** Samples retained per series (~3 minutes at one sample/second). */
     static final int CAPACITY = 180;
 
     private final String title;
@@ -165,7 +158,6 @@ final class MetricChart extends JComponent
         return new Color(c.getRed(), c.getGreen(), c.getBlue(), 60);
     }
 
-    /** One series: a fixed-capacity ring of samples in arrival order. */
     private static final class Series
     {
         final Color color;

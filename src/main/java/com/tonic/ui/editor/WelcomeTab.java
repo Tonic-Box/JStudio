@@ -63,28 +63,22 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
         setLayout(new BorderLayout());
         setBackground(JStudioTheme.getBgTertiary());
 
-        // Create scrollable content
         contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBackground(JStudioTheme.getBgTertiary());
         contentPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
 
-        // Header section
         contentPanel.add(createHeaderSection());
         contentPanel.add(Box.createVerticalStrut(30));
 
-        // Stats section
         contentPanel.add(createStatsSection());
         contentPanel.add(Box.createVerticalStrut(30));
 
-        // Main methods section
         contentPanel.add(createMainMethodsSection());
         contentPanel.add(Box.createVerticalStrut(30));
 
-        // Quick actions section
         contentPanel.add(createQuickActionsSection());
 
-        // Add glue to push content to top
         contentPanel.add(Box.createVerticalGlue());
 
         scrollPane = new JScrollPane(contentPanel);
@@ -208,7 +202,6 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
         panel.setBackground(JStudioTheme.getBgTertiary());
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Logo/Title
         JLabel titleLabel = new JLabel("JStudio");
         titleLabel.setFont(JStudioTheme.getUIFont(28).deriveFont(Font.BOLD));
         titleLabel.setForeground(JStudioTheme.getAccent());
@@ -217,7 +210,6 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
 
         panel.add(Box.createVerticalStrut(8));
 
-        // Subtitle
         JLabel subtitleLabel = new JLabel("Java Reverse Engineering Suite");
         subtitleLabel.setFont(JStudioTheme.getUIFont(14));
         subtitleLabel.setForeground(JStudioTheme.getTextSecondary());
@@ -397,7 +389,6 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
         panel.setBackground(JStudioTheme.getBgTertiary());
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Section header
         JLabel headerLabel = new JLabel("Entry Points (main methods)");
         headerLabel.setFont(JStudioTheme.getUIFont(14).deriveFont(Font.BOLD));
         headerLabel.setForeground(JStudioTheme.getTextPrimary());
@@ -406,7 +397,6 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
 
         panel.add(Box.createVerticalStrut(12));
 
-        // Container for main method links
         mainMethodsPanel = new JPanel();
         mainMethodsPanel.setLayout(new BoxLayout(mainMethodsPanel, BoxLayout.Y_AXIS));
         mainMethodsPanel.setBackground(JStudioTheme.getBgTertiary());
@@ -429,7 +419,6 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
         panel.setBackground(JStudioTheme.getBgTertiary());
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Section header
         JLabel headerLabel = new JLabel("Quick Actions");
         headerLabel.setFont(JStudioTheme.getUIFont(14).deriveFont(Font.BOLD));
         headerLabel.setForeground(JStudioTheme.getTextPrimary());
@@ -438,7 +427,6 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
 
         panel.add(Box.createVerticalStrut(12));
 
-        // Action buttons
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         buttonsPanel.setBackground(JStudioTheme.getBgTertiary());
         buttonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -613,11 +601,10 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
             for (MethodEntryModel methodModel : classEntry.getMethods())
             {
                 MethodEntry method = methodModel.getMethodEntry();
-                // Check for public static void main(String[])
                 if ("main".equals(method.getName())
                         && "([Ljava/lang/String;)V".equals(method.getDesc())
                         && (method.getAccess() & 0x0009) == 0x0009)
-                { // public static
+                {
                     result.add(new MainMethodInfo(classEntry, methodModel));
                 }
             }
@@ -656,7 +643,6 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
         panel.setBackground(JStudioTheme.getBgTertiary());
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Run button (left of the entry) - launches the class's main() in a separate JVM
         JButton runButton = new JButton(Icons.getIcon("run", 14));
         runButton.setToolTipText("Run main() in a separate JVM");
         runButton.setBorderPainted(false);
@@ -682,7 +668,6 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
         runButton.addActionListener(e -> mainFrame.runMainClass(info.classEntry));
         panel.add(runButton);
 
-        // Clickable class name
         String safeClassName = sanitize(info.classEntry.getClassName());
         JLabel classLink = new JLabel(safeClassName);
         classLink.setForeground(JStudioTheme.getAccent());
@@ -711,7 +696,6 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
         });
         panel.add(classLink);
 
-        // main() indicator
         JLabel mainLabel = new JLabel(".main(String[])");
         mainLabel.setForeground(JStudioTheme.getTextSecondary());
         mainLabel.setFont(JStudioTheme.getCodeFont(12));
@@ -729,9 +713,6 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
                 .replace(">", "&gt;");
     }
 
-    /**
-     * Helper class to hold main method info.
-     */
     private static class MainMethodInfo
     {
         final ClassEntryModel classEntry;

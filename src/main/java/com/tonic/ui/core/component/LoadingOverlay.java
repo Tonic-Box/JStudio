@@ -129,10 +129,6 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener
         g2.dispose();
     }
 
-    /**
-     * Truncates {@code s} from the LEFT so it fits within {@code maxWidth} pixels, keeping the tail (the newest
-     * text for a live status line) with a leading ellipsis. Returns {@code s} unchanged when it already fits.
-     */
     private static String fitLeft(FontMetrics fm, String s, int maxWidth)
     {
         if (fm.stringWidth(s) <= maxWidth)

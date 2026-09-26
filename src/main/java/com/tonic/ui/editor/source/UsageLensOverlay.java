@@ -121,7 +121,6 @@ public final class UsageLensOverlay
         entry.hitBox = new Rectangle((int) Math.round(x), (int) Math.round(anchorRect.getY()), width, (int) Math.round(anchorRect.getHeight()));
     }
 
-    /** The x of the declaration line's first non-whitespace character, for indent alignment. */
     private double indentX(RSyntaxTextArea textArea, int declarationLine, double fallback) throws Exception
     {
         int start = textArea.getLineStartOffset(declarationLine);

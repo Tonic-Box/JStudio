@@ -337,8 +337,6 @@ public final class LiveValueScannerPanel extends ThemedJPanel
         return panel;
     }
 
-    // ---- lifecycle ----------------------------------------------------------------------------------
-
     @Override
     public void addNotify()
     {
@@ -369,8 +367,6 @@ public final class LiveValueScannerPanel extends ThemedJPanel
         pkgFilterField.setText(pkgFilter != null ? pkgFilter : "");
         updateScanKindState();
     }
-
-    // ---- scanning -----------------------------------------------------------------------------------
 
     private void firstScan()
     {
@@ -487,8 +483,6 @@ public final class LiveValueScannerPanel extends ThemedJPanel
         statusLabel.setText(text.toString());
     }
 
-    // ---- live refresh -------------------------------------------------------------------------------
-
     private void refreshValues()
     {
         if (scanInFlight || refreshInFlight)
@@ -554,8 +548,6 @@ public final class LiveValueScannerPanel extends ThemedJPanel
         }
     }
 
-    // ---- watch / freeze -----------------------------------------------------------------------------
-
     private void setWatchValue()
     {
         ScanLocation loc = selectedWatch();
@@ -614,8 +606,6 @@ public final class LiveValueScannerPanel extends ThemedJPanel
             return null;
         }, ignored -> statusLabel.setText("Added " + loc.getDisplayPath() + " to watch"), err -> statusLabel.setText("Pin failed: " + err.getMessage()));
     }
-
-    // ---- launchpad ----------------------------------------------------------------------------------
 
     private void maybePopup(MouseEvent e)
     {
@@ -727,8 +717,6 @@ public final class LiveValueScannerPanel extends ThemedJPanel
         return project != null ? project.getClass(loc.getDeclaringClass()) : null;
     }
 
-    // ---- helpers ------------------------------------------------------------------------------------
-
     private ScanLocation selectedResult()
     {
         int row = resultTable.getSelectedRow();
@@ -757,7 +745,6 @@ public final class LiveValueScannerPanel extends ThemedJPanel
         comparatorCombo.setEnabled(scanned && !scanInFlight);
     }
 
-    /** Carries both refresh reads off the EDT so the success callback can apply them together. */
     private static final class RefreshData
     {
         final ScanPage active;

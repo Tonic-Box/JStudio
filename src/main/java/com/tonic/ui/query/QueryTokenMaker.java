@@ -27,7 +27,6 @@ public class QueryTokenMaker extends AbstractTokenMaker
 
     private static final Set<String> CONSTANTS = Set.of("true", "false", "null");
 
-    /** Every JVM opcode mnemonic, sourced from YABR's {@link Opcode} enum so it never drifts. */
     private static final Set<String> OPCODES = opcodeMnemonics();
 
     private static final String REGEX_FLAGS = "imsxuUdcl";

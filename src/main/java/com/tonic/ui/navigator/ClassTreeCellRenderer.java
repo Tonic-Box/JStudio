@@ -21,7 +21,6 @@ public class ClassTreeCellRenderer extends DefaultTreeCellRenderer
         this.normalFont = JStudioTheme.getUIFont(12);
         this.italicFont = normalFont.deriveFont(Font.ITALIC);
 
-        // Set colors
         setTextSelectionColor(JStudioTheme.getTextPrimary());
         setTextNonSelectionColor(JStudioTheme.getTextPrimary());
         setBackgroundSelectionColor(JStudioTheme.getSelection());
@@ -38,16 +37,12 @@ public class ClassTreeCellRenderer extends DefaultTreeCellRenderer
         {
             NavigatorNode node = (NavigatorNode) value;
 
-            // Set display text
             setText(node.getDisplayText());
 
-            // Set icon
             setIcon(node.getIcon());
 
-            // Set tooltip
             setToolTipText(node.getTooltip());
 
-            // Set font (italic for abstract classes/methods)
             if (node instanceof NavigatorNode.ClassNode)
             {
                 NavigatorNode.ClassNode classNode = (NavigatorNode.ClassNode) node;
@@ -77,7 +72,6 @@ public class ClassTreeCellRenderer extends DefaultTreeCellRenderer
                 setFont(normalFont);
             }
 
-            // Adjust colors
             if (selected)
             {
                 setBackground(JStudioTheme.getSelection());

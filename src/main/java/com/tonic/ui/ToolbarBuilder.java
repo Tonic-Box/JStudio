@@ -68,7 +68,6 @@ public class ToolbarBuilder implements ThemeChangeListener
         themeViewModeCombo();
     }
 
-    /** Themes the view dropdown explicitly so it isn't the L&F default on first show (and follows theme switches). */
     private void themeViewModeCombo()
     {
         if (viewModeCombo != null)
@@ -85,17 +84,14 @@ public class ToolbarBuilder implements ThemeChangeListener
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, JStudioTheme.getBorder()));
         toolbar.setBackground(JStudioTheme.getBgPrimary());
 
-        // File operations
         toolbar.add(createButton(Icons.getIcon("open"), "Open JAR/Class (Ctrl+O)", e -> mainFrame.showOpenDialog()));
         toolbar.add(createButton(Icons.getIcon("save"), "Export Class (Ctrl+Shift+E)", e -> mainFrame.exportCurrentClass()));
         toolbar.addSeparator();
 
-        // Navigation
         toolbar.add(createButton(Icons.getIcon("back"), "Navigate Back (Alt+Left)", e -> mainFrame.navigateBack()));
         toolbar.add(createButton(Icons.getIcon("forward"), "Navigate Forward (Alt+Right)", e -> mainFrame.navigateForward()));
         toolbar.addSeparator();
 
-        // View mode dropdown
         viewModeCombo = new ViewModeComboBox();
         viewModeCombo.setToolTipText("View mode - how the selected class is shown (Decompiled, Bytecode, Hex, ...)");
         themeViewModeCombo();
@@ -127,12 +123,10 @@ public class ToolbarBuilder implements ThemeChangeListener
 
         toolbar.addSeparator();
 
-        // Bookmarks & Comments
         toolbar.add(createButton(Icons.getIcon("bookmark"), "Add Bookmark (Ctrl+B)", e -> mainFrame.addBookmarkAtCurrentLocation()));
         toolbar.add(createButton(Icons.getIcon("comment"), "Add Comment (Ctrl+;)", e -> mainFrame.addCommentAtCurrentLocation()));
         toolbar.addSeparator();
 
-        // Analysis
         toolbar.add(createButton(Icons.getIcon("analyze"), "Run Analysis (F9)", e -> mainFrame.runAnalysis()));
         toolbar.add(createButton(Icons.getIcon("transform"), "Apply Transforms (Ctrl+Shift+T)", e -> mainFrame.showTransformDialog()));
         toolbar.add(createButton(Icons.getIcon("debug"), "Bytecode Debugger (F11)", e -> mainFrame.showBytecodeDebugger()));
@@ -141,7 +135,6 @@ public class ToolbarBuilder implements ThemeChangeListener
         toolbar.add(scratchPadButton);
         toolbar.addSeparator();
 
-        // Refresh - full: invalidate all decompilation caches + re-decompile every open tab (same as after AI rename)
         toolbar.add(createButton(Icons.getIcon("refresh"), "Refresh - re-decompile all & clear caches (Ctrl+F5)", e -> mainFrame.fullRefresh()));
 
         return toolbar;

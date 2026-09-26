@@ -143,11 +143,6 @@ public final class SnippetCompiler
         }
     }
 
-    /**
-     * javac options: no annotation processing, and {@code --release N} when the target JVM is older than the
-     * running JDK (so the snippet's bytecode version is one the target can define). When the target is the same
-     * or newer, the default produces a version the target already accepts, so no down-targeting is needed.
-     */
     private List<String> compilerOptions()
     {
         List<String> options = new ArrayList<>();
@@ -161,7 +156,6 @@ public final class SnippetCompiler
         return options;
     }
 
-    /** Splits leading {@code import} lines from the body, auto-imports referenced classes, and assembles the source. */
     private Wrapped wrap(String snippet, String simpleName)
     {
         String[] lines = snippet.split("\n", -1);
@@ -207,12 +201,6 @@ public final class SnippetCompiler
         return new Wrapped(w.toString(), preambleLines);
     }
 
-    /**
-     * Derives {@code import} statements for project classes referenced by simple name in {@code body}: a token
-     * matching exactly one named-package class (not already imported by the user) is imported. Default-package
-     * classes need no import (the wrapper shares the default package); ambiguous simple names are left alone.
-     * Unused imports that result from false-positive token matches are harmless (javac does not error on them).
-     */
     private List<String> autoImports(String body, List<String> userImports)
     {
         Map<String, List<String>> simpleToBinaries = simpleNameIndex();
@@ -250,7 +238,6 @@ public final class SnippetCompiler
         return result;
     }
 
-    /** Index of simple class name -> matching binary names, across all project classes. */
     private Map<String, List<String>> simpleNameIndex()
     {
         Map<String, List<String>> index = new HashMap<>();
@@ -292,7 +279,6 @@ public final class SnippetCompiler
         }
     }
 
-    /** Serves application classes from {@link Classpath} on the compiler classpath; captures compiled output. */
     private static final class PoolFileManager extends ForwardingJavaFileManager<StandardJavaFileManager>
     {
         private final Classpath classpath;
@@ -337,7 +323,6 @@ public final class SnippetCompiler
         }
     }
 
-    /** A classpath class file backed by lazily-fetched bytes. */
     private static final class InputClass extends SimpleJavaFileObject
     {
         private final String binaryName;
@@ -362,7 +347,6 @@ public final class SnippetCompiler
         }
     }
 
-    /** Captures one compiled class's bytes into the shared output map. */
     private static final class OutputClass extends SimpleJavaFileObject
     {
         private final String className;

@@ -547,11 +547,6 @@ public class Icons
         }
     }
 
-    /**
-     * An ascending bar chart - the "analysis / metrics" metaphor. Deliberately distinct from
-     * {@link PlayIcon} (the run/play triangle) so "Run Analysis" is not confused with running a main method,
-     * and from the node-based {@link GraphIcon}. Rendered in the accent colour rather than play's green.
-     */
     private static class AnalyzeIcon extends BaseIcon
     {
         AnalyzeIcon(int size)
@@ -1349,7 +1344,6 @@ public class Icons
         }
     }
 
-    /** A plug being inserted - attach to a live JVM. */
     private static class LiveAttachIcon extends BaseIcon
     {
         LiveAttachIcon(int size)
@@ -1369,7 +1363,6 @@ public class Icons
         }
     }
 
-    /** A plug pulled away (gap) - detach. */
     private static class LiveDetachIcon extends BaseIcon
     {
         LiveDetachIcon(int size)
@@ -1390,7 +1383,6 @@ public class Icons
         }
     }
 
-    /** A wait-for cycle with an arrowhead - find deadlocks. */
     private static class LiveDeadlockIcon extends BaseIcon
     {
         LiveDeadlockIcon(int size)
@@ -1409,7 +1401,6 @@ public class Icons
         }
     }
 
-    /** A bandage - live patch. */
     private static class LivePatchIcon extends BaseIcon
     {
         LivePatchIcon(int size)

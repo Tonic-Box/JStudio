@@ -78,8 +78,6 @@ public final class DialogManager
         }
     }
 
-    // === Analysis Operations ===
-
     public void runAnalysis()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -100,10 +98,6 @@ public final class DialogManager
         showAnalysisDialog();
     }
 
-    /**
-     * Show the analysis dialog (creates it if needed).
-     * Recreates the panel if the project has changed.
-     */
     private void showAnalysisDialog()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -201,8 +195,6 @@ public final class DialogManager
             }
         }
     }
-
-    // === Transform Operations ===
 
     /** Opens (reusing one instance) the Remove Dead Code analysis dialog. */
     public void showRemoveDeadCodeDialog()
@@ -336,8 +328,6 @@ public final class DialogManager
         showTransformDialog();
     }
 
-    // === Find ===
-
     public void showFindInProjectDialog()
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
@@ -363,8 +353,6 @@ public final class DialogManager
         }
     }
 
-    // === Preferences ===
-
     public void showPreferencesDialog()
     {
         if (preferencesDialog == null)
@@ -374,8 +362,6 @@ public final class DialogManager
         }
         preferencesDialog.setVisible(true);
     }
-
-    // === VM ===
 
     public void showVMConsole()
     {

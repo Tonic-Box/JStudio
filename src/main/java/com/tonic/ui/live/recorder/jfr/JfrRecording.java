@@ -108,9 +108,6 @@ public final class JfrRecording
         return exceptionCount > 0;
     }
 
-    // ---- parsing ------------------------------------------------------------------------------------
-
-    /** Mutable accumulator used during the single parse pass. */
     private static final class Builder
     {
         private long totalEvents;
@@ -218,7 +215,6 @@ public final class JfrRecording
             return first != null && last != null ? Duration.between(first, last) : Duration.ZERO;
         }
 
-        /** Adds an event's stack (outermost-first) to {@code root}, weighting every node on the path. */
         private static void addStack(CallTreeNode root, RecordedStackTrace stack, long weight)
         {
             root.addTotal(weight);
@@ -241,7 +237,6 @@ public final class JfrRecording
             node.addSelf(weight);
         }
 
-        /** Adds {@code weight} as self to the innermost frame's method and as total to every distinct method. */
         private void accumulateMethods(RecordedStackTrace stack, long weight)
         {
             if (stack == null)
@@ -338,8 +333,6 @@ public final class JfrRecording
             return list;
         }
     }
-
-    // ---- stat rows ----------------------------------------------------------------------------------
 
     /** A method's self vs total weight (CPU samples). Carries a {@link FrameKey} for source navigation. */
     @Getter

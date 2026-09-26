@@ -16,11 +16,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Modal viewer for all of a paused frame's runtime values, each {@code name = value} on its own line in a
- * selectable, scrollable text area. Opened by clicking any inline hint; the full (untruncated) value is shown
- * here even though the inline annotation is truncated, so long strings remain readable and copyable.
- */
 final class RuntimeValuesDialog
 {
 

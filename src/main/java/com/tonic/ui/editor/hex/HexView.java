@@ -24,7 +24,6 @@ public class HexView extends AbstractEditorView
 
     private static final int BYTES_PER_LINE = 16;
 
-    // Style names
     private static final String STYLE_OFFSET = "offset";
     private static final String STYLE_HEX = "hex";
     private static final String STYLE_ASCII = "ascii";
@@ -81,23 +80,18 @@ public class HexView extends AbstractEditorView
     {
         StyledDocument doc = textPane.getStyledDocument();
 
-        // Offset style (address column)
         Style offsetStyle = doc.addStyle(STYLE_OFFSET, null);
         StyleConstants.setForeground(offsetStyle, JStudioTheme.getSuccess());
 
-        // Hex bytes style
         Style hexStyle = doc.addStyle(STYLE_HEX, null);
         StyleConstants.setForeground(hexStyle, JStudioTheme.getTextPrimary());
 
-        // ASCII style
         Style asciiStyle = doc.addStyle(STYLE_ASCII, null);
         StyleConstants.setForeground(asciiStyle, JStudioTheme.getAccent());
 
-        // Separator style
         Style separatorStyle = doc.addStyle(STYLE_SEPARATOR, null);
         StyleConstants.setForeground(separatorStyle, JStudioTheme.getTextSecondary());
 
-        // Highlight style for special bytes (magic number, etc.)
         Style highlightStyle = doc.addStyle(STYLE_HIGHLIGHT, null);
         StyleConstants.setForeground(highlightStyle, JStudioTheme.getWarning());
     }
@@ -162,7 +156,6 @@ public class HexView extends AbstractEditorView
                     }
                     catch (BadLocationException ex)
                     {
-                        // Ignore
                     }
                 }
             }
@@ -179,11 +172,9 @@ public class HexView extends AbstractEditorView
         {
             for (int offset = 0; offset < bytes.length; offset += BYTES_PER_LINE)
             {
-                // Offset column
                 String offsetStr = String.format("%08X  ", offset);
                 doc.insertString(doc.getLength(), offsetStr, doc.getStyle(STYLE_OFFSET));
 
-                // Hex bytes
                 StringBuilder hexPart = new StringBuilder();
                 StringBuilder asciiPart = new StringBuilder();
 
@@ -195,7 +186,6 @@ public class HexView extends AbstractEditorView
                         int b = bytes[byteOffset] & 0xFF;
                         hexPart.append(String.format("%02X ", b));
 
-                        // ASCII representation
                         if (b >= 32 && b < 127)
                         {
                             asciiPart.append((char) b);
@@ -211,34 +201,27 @@ public class HexView extends AbstractEditorView
                         asciiPart.append(' ');
                     }
 
-                    // Add extra space after 8 bytes for readability
                     if (i == 7)
                     {
                         hexPart.append(' ');
                     }
                 }
 
-                // Choose style based on position (highlight magic number at start)
                 String style = (offset < 4) ? STYLE_HIGHLIGHT : STYLE_HEX;
                 doc.insertString(doc.getLength(), hexPart.toString(), doc.getStyle(style));
 
-                // Separator
                 doc.insertString(doc.getLength(), " ", doc.getStyle(STYLE_SEPARATOR));
 
-                // ASCII column
                 doc.insertString(doc.getLength(), asciiPart.toString(), doc.getStyle(STYLE_ASCII));
 
-                // Newline
                 doc.insertString(doc.getLength(), "\n", null);
             }
 
-            // Scroll to top
             textPane.setCaretPosition(0);
 
         }
         catch (BadLocationException e)
         {
-            // Ignore
         }
     }
 
@@ -279,7 +262,6 @@ public class HexView extends AbstractEditorView
         }
         catch (Exception e)
         {
-            // Line out of range
         }
     }
 

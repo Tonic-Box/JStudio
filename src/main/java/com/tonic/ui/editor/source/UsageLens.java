@@ -109,11 +109,6 @@ public final class UsageLens
         return entries;
     }
 
-    /**
-     * Translates a 0-based original declaration line to its 0-based line in the displayed source. Identity when
-     * {@code lineMap} is null. If the exact line was removed (e.g. the span points at an annotation line), falls
-     * back to the next kept line; returns -1 if none remains.
-     */
     private static int mapLine(int originalLine, int[] lineMap)
     {
         if (originalLine < 0)

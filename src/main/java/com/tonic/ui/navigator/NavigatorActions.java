@@ -29,12 +29,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.function.Consumer;
 
-/**
- * Holds the navigator's mutating user actions (create/rename/delete of classes and resources, plus the fuzz-test
- * launch), driven from the tree's context menu. Dialogs parent to a supplied component, and project changes are
- * announced over the {@link EventBus}; the host panel is told to (re)select a class or toggle its loading overlay
- * via injected callbacks.
- */
 final class NavigatorActions
 {
 
@@ -70,8 +64,6 @@ final class NavigatorActions
         {
             ClassFile classFile = ClassCreationService.getInstance().createClass(params);
 
-            // With no project open, creating a class spins up a new project to hold it. Done only
-            // after the dialog is confirmed so cancelling leaves the "No Project" state untouched.
             boolean newProject = existingProject == null;
             ProjectModel project = newProject
                     ? ProjectService.getInstance().createProject("Untitled")

@@ -458,7 +458,6 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener
         }
         catch (BadLocationException e)
         {
-            // ignore
         }
 
         appendStyledCode(doc, selectedTheme, previewFont);
@@ -507,7 +506,6 @@ public class PreferencesDialog extends JDialog implements ThemeChangeListener
         }
         catch (BadLocationException e)
         {
-            // ignore
         }
     }
 

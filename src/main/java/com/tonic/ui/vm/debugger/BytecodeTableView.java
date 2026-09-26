@@ -24,11 +24,6 @@ import java.util.Set;
 import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
-/**
- * The debugger's bytecode disassembly view: the {@link JTable} plus its model and category-colouring renderer, the
- * scroll pane with its titled border, and the execution-highlight / breakpoint-dot bookkeeping. Owns the displayed
- * instruction rows and the PC-to-row map. Context-menu actions are delegated through injected callbacks.
- */
 final class BytecodeTableView
 {
 
@@ -83,7 +78,6 @@ final class BytecodeTableView
         return scrollPane;
     }
 
-    /** Applies the titled border to the scroll pane reflecting the displayed method (or "Bytecode" when null). */
     void setTitle(MethodEntry method)
     {
         String title;
@@ -99,7 +93,6 @@ final class BytecodeTableView
         scrollPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(JStudioTheme.getBorder()), title, TitledBorder.LEFT, TitledBorder.TOP, null, JStudioTheme.getTextPrimary()));
     }
 
-    /** Replaces the displayed rows and PC map from a fresh disassembly result. */
     void setInstructions(List<InstructionEntry> newInstructions, Map<Integer, Integer> newPcToRow)
     {
         instructions.clear();
@@ -109,7 +102,6 @@ final class BytecodeTableView
         model.setInstructions(instructions);
     }
 
-    /** Clears all rows and the PC map, leaving an empty table. */
     void clearInstructions()
     {
         instructions.clear();
@@ -117,7 +109,6 @@ final class BytecodeTableView
         model.setInstructions(instructions);
     }
 
-    /** Returns the mnemonic (and operands) for the instruction at the given PC, or "PC=n" if unknown. */
     String getInstructionAtPC(int pc)
     {
         Integer row = pcToRowMap.get(pc);
@@ -170,7 +161,6 @@ final class BytecodeTableView
         model.fireTableDataChanged();
     }
 
-    /** Clears the table execution highlight and repaints; the source-view half is handled by the caller. */
     void clearHighlight()
     {
         for (InstructionEntry entry : instructions)
@@ -180,7 +170,6 @@ final class BytecodeTableView
         model.fireTableDataChanged();
     }
 
-    /** Repaints the table, e.g. after a breakpoint set/cleared elsewhere. */
     void refresh()
     {
         model.fireTableDataChanged();

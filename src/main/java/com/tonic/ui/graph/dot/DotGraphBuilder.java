@@ -180,7 +180,6 @@ public final class DotGraphBuilder
         return NODE_HEIGHT + (lines - 1) * LINE_HEIGHT;
     }
 
-    /** Resolves a DOT color (hex or a common name) to a hex string, or the theme fallback. */
     private static String color(String dotColor, Color fallback)
     {
         if (dotColor == null || dotColor.trim().isEmpty())

@@ -27,7 +27,6 @@ public class FileListRenderer extends DefaultTableCellRenderer
     {
         super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-        // Background colors
         if (isSelected)
         {
             setBackground(JStudioTheme.getSelection());
@@ -35,7 +34,6 @@ public class FileListRenderer extends DefaultTableCellRenderer
         }
         else
         {
-            // Alternating row colors
             if (row % 2 == 0)
             {
                 setBackground(JStudioTheme.getBgTertiary());
@@ -47,11 +45,9 @@ public class FileListRenderer extends DefaultTableCellRenderer
             setForeground(JStudioTheme.getTextPrimary());
         }
 
-        // Reset icon
         setIcon(null);
         setHorizontalAlignment(JLabel.LEFT);
 
-        // Format based on column
         int modelColumn = table.convertColumnIndexToModel(column);
         FileListModel.FileEntry entry = model.getEntryAt(table.convertRowIndexToModel(row));
 
@@ -97,7 +93,6 @@ public class FileListRenderer extends DefaultTableCellRenderer
                 }
         }
 
-        // Add some padding
         setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
 
         return this;

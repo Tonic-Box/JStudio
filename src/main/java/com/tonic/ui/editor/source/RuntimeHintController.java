@@ -21,15 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Paints live runtime values inline over the decompiled source when the debugger pauses on a frame whose class
- * matches this view. Mirrors {@link UsageLensController}: listens to debug events, computes values+placement off
- * the EDT, and repaints. Clicking any hint opens a {@link RuntimeValuesDialog} listing every value in full.
- */
 final class RuntimeHintController
 {
 
-    /** Longest inline value before it's ellipsized; the full value stays available in the values dialog. */
     private static final int INLINE_VALUE_MAX = 12;
 
     private final RSyntaxTextArea textArea;
@@ -75,13 +69,11 @@ final class RuntimeHintController
         overlay.paint(g, textArea);
     }
 
-    /** Pixel width needed to fully reveal the rightmost hint, so the editor can widen for horizontal scrolling. */
     int requiredWidth()
     {
         return overlay.requiredWidth(textArea);
     }
 
-    /** HTML preview (first 10 elements) when hovering a non-char array hint, else null. Cached per handle. */
     String tooltipAt(java.awt.Point p)
     {
         RuntimeHint.HintEntry hit = overlay.hitTest(p);
@@ -114,7 +106,6 @@ final class RuntimeHintController
         return s == null ? "" : s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
-    /** Truncates a value for the inline annotation; the full value stays available in the values dialog. */
     private static String truncate(String s)
     {
         if (s == null)

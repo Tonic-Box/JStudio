@@ -93,3 +93,19 @@ file records the reasons behind the implementation, which the code no longer car
 - Synthetic local variable tables are widened: a slot whose entries share one type becomes a single method-wide
   entry, while mixed-type slots keep their scope-accurate entries. A class is redefined only when the widened table
   actually differs.
+
+## JStudio side
+
+- Live patching grafts only the changed methods onto the running class, and only those that resolve by exact
+  signature in both classes. The result therefore always has the running class's member set, so no member-set
+  check is needed, and it must not be done against the recompiled class, whose member set can carry spurious new
+  methods when the decompiler or recompiler mis-resolves a descriptor.
+- Scratch pad snippets are compiled for the highest class-file version among the target's pulled classes, which
+  is at most the target JVM's version, so the target can always define them even when it is older than the JDK
+  running JStudio. `--release` is passed only when the target is older. Project classes referenced by a unique
+  simple name are imported automatically; default-package classes share the wrapper's package and need none.
+- The JDI hand-off parks at most 200,000 objects per scan.
+- The debugger injects a synthetic local variable table into a stripped class so paused frames report named locals
+  matching the decompilation. It is best-effort and attempted once per class per session: skipped when the VM
+  cannot HotSwap, the class is not loaded, the project lacks it, or it already has one.
+- The agent's socket thread is kept running during a freeze so it can work against the frozen heap.

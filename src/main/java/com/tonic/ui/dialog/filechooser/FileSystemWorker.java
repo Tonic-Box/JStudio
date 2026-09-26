@@ -20,9 +20,8 @@ public class FileSystemWorker
 
     private static final FileSystemView fsv = FileSystemView.getFileSystemView();
 
-    // Cache recent directory listings for speed
     private static final Map<String, CachedListing> cache = new ConcurrentHashMap<>();
-    private static final long CACHE_EXPIRY_MS = 5000; // 5 seconds
+    private static final long CACHE_EXPIRY_MS = 5000;
 
     /**
      * Listener for directory listing results.
@@ -39,18 +38,15 @@ public class FileSystemWorker
      */
     public static void listDirectory(File directory, ExtensionFileFilter filter, DirectoryListingListener listener)
     {
-        // Check cache first
         String cacheKey = directory.getAbsolutePath();
         CachedListing cached = cache.get(cacheKey);
         if (cached != null && !cached.isExpired())
         {
-            // Filter cached results
             List<File> filtered = filterFiles(cached.files, filter);
             listener.onListingComplete(directory, filtered);
             return;
         }
 
-        // Load asynchronously
         SwingWorker<List<File>, Void> worker = new SwingWorker<>()
         {
             @Override
@@ -66,10 +62,8 @@ public class FileSystemWorker
                 {
                     List<File> allFiles = get();
 
-                    // Update cache
                     cache.put(cacheKey, new CachedListing(allFiles));
 
-                    // Filter and return
                     List<File> filtered = filterFiles(allFiles, filter);
                     listener.onListingComplete(directory, filtered);
                 }
@@ -83,9 +77,6 @@ public class FileSystemWorker
         worker.execute();
     }
 
-    /**
-     * List files synchronously (for use in worker thread).
-     */
     private static List<File> listFilesSync(File directory)
     {
         List<File> result = new ArrayList<>();
@@ -100,16 +91,12 @@ public class FileSystemWorker
         {
             result.addAll(Arrays.asList(files));
 
-            // Sort: directories first, then by name (case-insensitive)
             result.sort(Comparator.comparing((File f) -> !f.isDirectory()).thenComparing(f -> f.getName().toLowerCase()));
         }
 
         return result;
     }
 
-    /**
-     * Filter files by extension.
-     */
     private static List<File> filterFiles(List<File> files, ExtensionFileFilter filter)
     {
         if (filter == null || filter.isAllFiles())
@@ -143,14 +130,12 @@ public class FileSystemWorker
     {
         Map<String, File> folders = new HashMap<>();
 
-        // Home directory
         String userHome = System.getProperty("user.home");
         if (userHome != null)
         {
             File home = new File(userHome);
             folders.put("Home", home);
 
-            // Common subdirectories
             File desktop = new File(home, "Desktop");
             if (desktop.exists())
             {
@@ -214,7 +199,7 @@ public class FileSystemWorker
         File parent = file.getParentFile();
         if (parent == null && fsv.isFileSystemRoot(file))
         {
-            return null; // At root level
+            return null;
         }
         return parent;
     }
@@ -251,9 +236,6 @@ public class FileSystemWorker
         cache.clear();
     }
 
-    /**
-     * Cached directory listing with expiry.
-     */
     private static class CachedListing
     {
         final List<File> files;

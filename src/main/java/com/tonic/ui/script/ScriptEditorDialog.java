@@ -33,17 +33,14 @@ public class ScriptEditorDialog extends JDialog
         setSize(1200, 800);
         setLocationRelativeTo(parent);
 
-        // Apply dark theme to dialog
         getContentPane().setBackground(JStudioTheme.getBgTertiary());
 
-        // Handle close
         setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
         addWindowListener(new WindowAdapter()
         {
             @Override
             public void windowClosing(WindowEvent e)
             {
-                // Just hide, don't dispose - keeps state
             }
         });
     }

@@ -126,7 +126,6 @@ public class HexResourceView extends AbstractEditorView
         }
         catch (BadLocationException e)
         {
-            // Ignore
         }
     }
 

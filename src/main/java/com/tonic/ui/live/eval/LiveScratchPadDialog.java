@@ -174,11 +174,6 @@ public final class LiveScratchPadDialog extends JDialog
         }
     }
 
-    /**
-     * The Java release to compile snippets for: derived from the highest class-file version among the target's
-     * pulled classes (which is at most the target JVM's runtime version), so a compiled snippet can always be
-     * defined by the attached JVM even when it is older than the JDK running JStudio.
-     */
     private static int targetRelease(ProjectModel project)
     {
         int maxMajor = 0;
@@ -260,7 +255,6 @@ public final class LiveScratchPadDialog extends JDialog
         console.setCaretPosition(console.getDocument().getLength());
     }
 
-    /** Renders class items in readable dotted form while keeping internal names as the item values. */
     private static final class BinaryNameRenderer extends DefaultListCellRenderer
     {
         @Override

@@ -93,7 +93,6 @@ public class StatisticsCalculator
                     }
                     catch (Exception e)
                     {
-                        // Fallback to basic complexity
                     }
 
                     countOpcodes(method, opcodeDistribution);
@@ -151,7 +150,6 @@ public class StatisticsCalculator
         }
         catch (Exception e)
         {
-            // Ignore errors in opcode counting
         }
     }
 

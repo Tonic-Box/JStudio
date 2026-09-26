@@ -216,7 +216,6 @@ public final class RunConfigDialog extends ThemedJDialog
         dispose();
     }
 
-    /** Splits a command-line string into tokens, honoring double quotes (so paths with spaces stay intact). */
     static List<String> tokenize(String text)
     {
         List<String> tokens = new ArrayList<>();

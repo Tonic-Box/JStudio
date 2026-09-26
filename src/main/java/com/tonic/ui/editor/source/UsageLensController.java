@@ -24,12 +24,6 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-/**
- * Owns the editor's usage-count "lens" overlay: it recomputes per-member usage counts on a background worker (using
- * the same xref database Find Usages uses), supplies the painting for the host view's {@code paintComponent}, and
- * opens Find Usages when a lens is clicked. Recompute is skipped/cleared when lenses are off, annotations are
- * filtered (line numbers shift), the source is dirty, or no project/span data is available.
- */
 final class UsageLensController
 {
 
@@ -52,19 +46,16 @@ final class UsageLensController
         installMouseHandling();
     }
 
-    /** Paints the lens entries onto the editor's text area; call from the host view's {@code paintComponent}. */
     void paint(Graphics2D g)
     {
         lensOverlay.paint(g, textArea);
     }
 
-    /** Clears the overlay entries (does not repaint). */
     void clear()
     {
         lensOverlay.clear();
     }
 
-    /** Enables or disables the usage-count lenses, recomputing or clearing them immediately. */
     void setEnabled(boolean enabled)
     {
         this.enabled = enabled;
@@ -145,13 +136,11 @@ final class UsageLensController
                 }
                 catch (Exception e)
                 {
-                    // Leave existing lenses untouched
                 }
             }
         }.execute();
     }
 
-    /** Opens Find Usages for the member a lens belongs to - the same event the navigator posts. */
     private void postFindUsages(UsageLens.LensEntry lens)
     {
         String className = classEntry.getClassName();

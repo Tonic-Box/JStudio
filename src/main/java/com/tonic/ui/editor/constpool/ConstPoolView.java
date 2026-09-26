@@ -250,7 +250,6 @@ public class ConstPoolView extends AbstractEditorView
                 }
                 catch (Exception e)
                 {
-                    // Ignore
                 }
             }
         };

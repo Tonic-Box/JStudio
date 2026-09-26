@@ -45,7 +45,6 @@ public final class RunnableOverlayIcon implements Icon
         int bx = x + w - badge;
         int by = y + h - badge;
 
-        // Background disc for contrast against the base icon, then the green triangle.
         g2.setColor(JStudioTheme.getBgPrimary());
         g2.fillOval(bx - 1, by - 1, badge + 2, badge + 2);
         g2.setColor(JStudioTheme.getSuccess());

@@ -42,7 +42,6 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider
                     "volatile", "while", "true", "false", "null", "var"
             };
 
-    /** receiver before the last dot, then the partial member being typed. */
     private static final Pattern RECEIVER = Pattern.compile("([\\w$.]+)\\.(\\w*)$");
 
     private final ProjectModel project;
@@ -95,7 +94,6 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider
         return super.getCompletionsImpl(comp);
     }
 
-    /** Members of {@code receiver}: project class (statics or a local var's instance members) or JDK type, or null. */
     private List<Completion> memberCompletions(String receiver, String before, String partial)
     {
         ClassEntryModel projectType = resolveType(receiver);
@@ -111,7 +109,6 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider
         return jdkMembers(receiver, before, partial);
     }
 
-    /** Public members of a project class (walking superclasses), statics-only when the receiver is the type. */
     private List<Completion> projectMembers(ClassEntryModel type, boolean staticsOnly, String partial)
     {
         List<Completion> out = new ArrayList<>();
@@ -154,11 +151,6 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider
         return out;
     }
 
-    /**
-     * Reflective member completion for a JDK receiver chain (e.g. {@code System}, {@code System.out},
-     * {@code str}). Walks the dotted chain - a leading type or local var, then field hops - to a final type,
-     * then lists its public static (type receiver) or instance (everything else) members. Null if unresolved.
-     */
     private List<Completion> jdkMembers(String receiver, String before, String partial)
     {
         String[] segments = receiver.split("\\.");
@@ -197,7 +189,6 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider
         return reflectMembers(type, staticContext, partial);
     }
 
-    /** Resolves a receiver written as a fully-qualified class name (longest loadable prefix), then its members. */
     private List<Completion> resolveFqnPrefix(String[] segments, String partial)
     {
         StringBuilder fqn = new StringBuilder();
@@ -262,7 +253,6 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider
         return out;
     }
 
-    /** Type of a public field {@code name} on {@code owner} (or a no-arg method's return type), or null. */
     private static Class<?> fieldType(Class<?> owner, String name)
     {
         try
@@ -283,7 +273,6 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider
         return null;
     }
 
-    /** Loads a JDK class by simple name (via the index) or fully-qualified name, without initializing it. */
     private Class<?> loadClass(String name)
     {
         if (name == null || name.isEmpty())
@@ -320,7 +309,6 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider
         return sb.toString();
     }
 
-    /** Resolves a simple or dotted type name to a project class, or null. */
     private ClassEntryModel resolveType(String name)
     {
         if (name == null || name.isEmpty())
@@ -335,7 +323,6 @@ public final class ScratchCompletionProvider extends DefaultCompletionProvider
         return internal != null ? project.getClass(internal) : null;
     }
 
-    /** Finds the declared type of local variable {@code varName} via a light backward scan, or null. */
     private static String localVarType(String before, String varName)
     {
         Matcher decl = Pattern.compile("(?:^|[\\s({;])([A-Za-z_][\\w$.]*)\\s+" + Pattern.quote(varName) + "\\b")

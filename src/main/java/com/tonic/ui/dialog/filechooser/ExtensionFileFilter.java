@@ -47,13 +47,11 @@ public class ExtensionFileFilter
             return false;
         }
 
-        // Always accept directories
         if (file.isDirectory())
         {
             return true;
         }
 
-        // Accept all files if wildcard
         if (extensions.contains("*"))
         {
             return true;
@@ -125,8 +123,6 @@ public class ExtensionFileFilter
     {
         return getDescription();
     }
-
-    // Pre-defined filters for common use cases
 
     /**
      * Filter for Java archive and class files.

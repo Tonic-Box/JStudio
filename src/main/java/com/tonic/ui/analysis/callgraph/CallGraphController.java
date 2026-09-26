@@ -129,7 +129,6 @@ public class CallGraphController
                 }
                 catch (Exception e)
                 {
-                    //statusCallback.accept("Failed to build call graph: " + e.getMessage());
                 }
             }
         };

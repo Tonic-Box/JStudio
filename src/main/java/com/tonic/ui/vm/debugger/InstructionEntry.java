@@ -1,9 +1,5 @@
 package com.tonic.ui.vm.debugger;
 
-/**
- * One disassembled instruction row: its display index, byte offset, mnemonic, formatted operands, source line,
- * colouring category, and whether it is the currently executing instruction.
- */
 class InstructionEntry
 {
     final int index;

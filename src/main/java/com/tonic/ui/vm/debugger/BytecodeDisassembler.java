@@ -15,14 +15,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Pure, stateless disassembler: turns a {@link MethodEntry}'s {@link CodeAttribute} into a list of
- * {@link InstructionEntry} rows plus a PC-to-row index map. Holds no UI state so it can be unit-tested in isolation.
- */
 final class BytecodeDisassembler
 {
 
-    /** Disassembly output: the ordered instruction rows and the PC -> row-index lookup map. */
     static final class Result
     {
         final List<InstructionEntry> instructions;
@@ -35,10 +30,6 @@ final class BytecodeDisassembler
         }
     }
 
-    /**
-     * Disassembles a method's code into rows and a PC index map. Returns empty collections when the method has no
-     * code or empty bytecode.
-     */
     Result disassemble(MethodEntry method)
     {
         List<InstructionEntry> instructions = new ArrayList<>();

@@ -55,12 +55,9 @@ public class SearchPanel extends ThemedJPanel
 
     private static final int DEBOUNCE_SEARCH_MS = 200;
     private static final int DEBOUNCE_SCROLL_MS = 50;
-    /** Hard cap on markAll() entries to keep createPosition() cost O(MAX²) at worst. */
     private static final int MAX_VIEWPORT_MARKS = 1000;
 
-    /** Pale background used for all matches in the visible viewport. */
     private static final Color MATCH_COLOR = new Color(255, 235, 80, 55);
-    /** Vivid orange — clearly distinct hue and fully opaque vs the pale yellow above. */
     private static final Color CURRENT_MATCH_COLOR = new Color(255, 120, 0);
 
     private final RSyntaxTextArea textArea;
@@ -80,7 +77,7 @@ public class SearchPanel extends ThemedJPanel
     private Timer scrollDebounceTimer;
 
     private int currentMatchIndex = -1;
-    private Object currentMatchTag;           // Highlighter tag for the bright current-match highlight
+    private Object currentMatchTag;
 
     public SearchPanel(RSyntaxTextArea textArea, RTextScrollPane scrollPane)
     {
@@ -92,10 +89,8 @@ public class SearchPanel extends ThemedJPanel
         setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, JStudioTheme.getBorder()), BorderFactory.createEmptyBorder(UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL, UIConstants.SPACING_MEDIUM)));
         setVisible(false);
 
-        // All mass-match highlights use the pale colour; focused match uses CURRENT_MATCH_COLOR
         textArea.setMarkAllHighlightColor(MATCH_COLOR);
 
-        // Invalidate text snapshot whenever document content changes (e.g. new class loaded)
         textArea.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override
@@ -117,19 +112,16 @@ public class SearchPanel extends ThemedJPanel
             }
         });
 
-        // Refresh visible highlights when the user scrolls (debounced)
         if (scrollPane != null)
         {
             scrollPane.getVerticalScrollBar().addAdjustmentListener(e -> scheduleHighlightUpdate());
         }
 
-        // ── Find label ────────────────────────────────────────────────────────
         JLabel findLabel = new JLabel("Find:");
         findLabel.setForeground(JStudioTheme.getTextPrimary());
         add(findLabel);
         add(Box.createHorizontalStrut(8));
 
-        // ── Search field ──────────────────────────────────────────────────────
         searchField = new JTextField(20);
         searchField.setMaximumSize(new Dimension(250, 28));
         searchField.setPreferredSize(new Dimension(200, 28));
@@ -176,7 +168,6 @@ public class SearchPanel extends ThemedJPanel
         add(searchField);
         add(Box.createHorizontalStrut(8));
 
-        // ── Prev / Next buttons ───────────────────────────────────────────────
         JButton prevBtn = makeButton(Icons.getIcon("arrow_up", 12), "Previous (Shift+Enter)");
         prevBtn.addActionListener(e -> findPrevious());
         add(prevBtn);
@@ -187,13 +178,11 @@ public class SearchPanel extends ThemedJPanel
 
         add(Box.createHorizontalStrut(8));
 
-        // ── Match count ───────────────────────────────────────────────────────
         matchCountLabel = new JLabel("");
         matchCountLabel.setForeground(JStudioTheme.getTextSecondary());
         add(matchCountLabel);
         add(Box.createHorizontalStrut(16));
 
-        // ── Option checkboxes ─────────────────────────────────────────────────
         caseSensitiveBox = makeCheckBox("Aa", "Case Sensitive");
         caseSensitiveBox.addActionListener(e -> triggerSearch());
         add(caseSensitiveBox);
@@ -208,13 +197,10 @@ public class SearchPanel extends ThemedJPanel
 
         add(Box.createHorizontalGlue());
 
-        // ── Close button ──────────────────────────────────────────────────────
         JButton closeBtn = makeButton(Icons.getIcon("close", 12), "Close (Esc)");
         closeBtn.addActionListener(e -> hidePanel());
         add(closeBtn);
     }
-
-    // ── Public API ────────────────────────────────────────────────────────────
 
     public void showPanel()
     {
@@ -246,8 +232,6 @@ public class SearchPanel extends ThemedJPanel
         matchCountLabel.setText("");
     }
 
-    // ── Search scheduling ─────────────────────────────────────────────────────
-
     private void scheduleSearch()
     {
         if (debounceTimer != null) debounceTimer.stop();
@@ -272,7 +256,6 @@ public class SearchPanel extends ThemedJPanel
             return;
         }
 
-        // Snapshot state on the EDT before handing off to the worker
         if (cachedText == null) cachedText = textArea.getText();
         final String snapshot = cachedText;
         final boolean caseSensitive = caseSensitiveBox.isSelected();
@@ -318,13 +301,6 @@ public class SearchPanel extends ThemedJPanel
         searchWorker.execute();
     }
 
-    // ── Highlight management ──────────────────────────────────────────────────
-
-    /**
-     * Builds a DocumentRange list for the visible viewport ± 2-screen buffer and
-     * passes it to textArea.markAll(). Bounded to ~200 ranges regardless of total
-     * match count, so createPosition() cost stays O(200²) ≈ 1 ms.
-     */
     private void updateHighlights()
     {
         if (matches.isEmpty())
@@ -354,7 +330,6 @@ public class SearchPanel extends ThemedJPanel
             }
         }
 
-        // Buffer = 2 screen heights worth of document characters
         int buf = Math.max(500, (visEnd - visStart) * 2);
         int lo = firstIndexAtOrAfter(Math.max(0, visStart - buf));
         int hiEnd = visEnd + buf;
@@ -363,8 +338,8 @@ public class SearchPanel extends ThemedJPanel
         for (int i = lo; i < matches.size(); i++)
         {
             if (matches.get(i)[0] > hiEnd) break;
-            if (toMark.size() >= MAX_VIEWPORT_MARKS) break; // keeps createPosition cost O(MAX²)
-            if (i == currentMatchIndex) continue; // bright highlight handled separately
+            if (toMark.size() >= MAX_VIEWPORT_MARKS) break;
+            if (i == currentMatchIndex) continue;
             toMark.add(new DocumentRange(matches.get(i)[0], matches.get(i)[1]));
         }
         textArea.markAll(toMark);
@@ -378,8 +353,6 @@ public class SearchPanel extends ThemedJPanel
         scrollDebounceTimer.setRepeats(false);
         scrollDebounceTimer.start();
     }
-
-    // ── Navigation ────────────────────────────────────────────────────────────
 
     private void findNext()
     {
@@ -410,8 +383,8 @@ public class SearchPanel extends ThemedJPanel
         {
         }
 
-        updateHighlights();   // re-draws pale highlights, skipping currentMatchIndex
-        updateMatchLabel();   // refresh "x / N" counter
+        updateHighlights();
+        updateMatchLabel();
     }
 
     private void clearCurrentMatchHighlight()
@@ -423,7 +396,6 @@ public class SearchPanel extends ThemedJPanel
         }
     }
 
-    /** First index where match[0] >= offset; wraps to 0 if past end. */
     private int firstIndexAtOrAfter(int offset)
     {
         int lo = 0, hi = matches.size();
@@ -436,7 +408,6 @@ public class SearchPanel extends ThemedJPanel
         return lo < matches.size() ? lo : 0;
     }
 
-    /** Last index where match[0] < offset; wraps to last. */
     private int lastIndexBefore(int offset)
     {
         int lo = 0, hi = matches.size();
@@ -449,8 +420,6 @@ public class SearchPanel extends ThemedJPanel
         int idx = lo - 1;
         return idx >= 0 ? idx : matches.size() - 1;
     }
-
-    // ── Off-EDT text scanning ─────────────────────────────────────────────────
 
     private List<int[]> scan(String text, String query, boolean caseSensitive, boolean wholeWord, boolean useRegex)
     {
@@ -495,8 +464,6 @@ public class SearchPanel extends ThemedJPanel
         if (start > 0 && Character.isLetterOrDigit(text.charAt(start - 1))) return false;
         return end >= text.length() || !Character.isLetterOrDigit(text.charAt(end));
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void cancelWorker()
     {

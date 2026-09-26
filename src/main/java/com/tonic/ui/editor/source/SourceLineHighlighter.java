@@ -7,10 +7,6 @@ import javax.swing.text.BadLocationException;
 import java.awt.Color;
 import java.awt.Rectangle;
 
-/**
- * Owns the editor's single current-line highlight and the token-selection logic: highlighting/scrolling to a line,
- * and locating + selecting a specific token on a line (preferring a real reference over a match inside a literal).
- */
 final class SourceLineHighlighter
 {
 
@@ -22,16 +18,11 @@ final class SourceLineHighlighter
         this.textArea = textArea;
     }
 
-    /** Highlight a specific line (0-based) with the default line-highlight color. */
     void highlightLine(int lineNumber)
     {
         highlightAndScrollToLine(lineNumber);
     }
 
-    /**
-     * Highlight a 0-based line with the dual view's link color, so the linked line stands out from the faint
-     * current-line highlight on the adjacent caret line.
-     */
     void highlightLinkedLine(int lineNumber)
     {
         highlightAndScrollToLine(lineNumber, JStudioTheme.getLinkHighlight());
@@ -64,11 +55,9 @@ final class SourceLineHighlighter
         }
         catch (BadLocationException e)
         {
-            // ignore
         }
     }
 
-    /** Clear the current line highlight. */
     void clearHighlight()
     {
         if (currentLineHighlight != null)
@@ -78,10 +67,6 @@ final class SourceLineHighlighter
         }
     }
 
-    /**
-     * Picks, from the two candidate lines and the span between them, the first 1-based line whose text contains the
-     * token (call form {@code token(} preferred), or -1 when none does.
-     */
     int pickLineContaining(String token, int primary, int secondary)
     {
         if (token == null || token.isEmpty())
@@ -150,15 +135,9 @@ final class SourceLineHighlighter
         }
         catch (BadLocationException e)
         {
-            // Leave the line highlight as the navigation result
         }
     }
 
-    /**
-     * The index of the token occurrence to select on a line, preferring a real code reference over an incidental
-     * match inside a string/char literal. A member access ({@code .token}) or call ({@code token(}) wins; otherwise
-     * the first non-literal whole-word match; finally the first raw match so a token only in a literal still selects.
-     */
     private static int bestTokenIndex(String text, String token)
     {
         int firstWord = -1;
@@ -187,7 +166,6 @@ final class SourceLineHighlighter
         return firstWord >= 0 ? firstWord : text.indexOf(token);
     }
 
-    /** Whether index {@code i} in the line falls inside a double- or single-quoted literal. */
     private static boolean isInsideLiteral(String text, int i)
     {
         boolean inString = false;

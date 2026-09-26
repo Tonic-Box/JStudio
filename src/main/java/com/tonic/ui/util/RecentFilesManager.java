@@ -58,13 +58,10 @@ public class RecentFilesManager
             return;
         }
 
-        // Remove if already exists (to move it to top)
         recentFiles.removeIf(f -> f.getAbsolutePath().equals(file.getAbsolutePath()));
 
-        // Add to beginning
         recentFiles.add(0, file);
 
-        // Trim to max size
         while (recentFiles.size() > MAX_RECENT_FILES)
         {
             recentFiles.remove(recentFiles.size() - 1);
@@ -79,7 +76,6 @@ public class RecentFilesManager
      */
     public List<File> getRecentFiles()
     {
-        // Return a copy, removing any that no longer exist
         List<File> result = new ArrayList<>();
         for (File file : recentFiles)
         {
@@ -155,14 +151,12 @@ public class RecentFilesManager
 
     private void saveToPreferences()
     {
-        // Clear old entries
         int oldCount = prefs.getInt(PREFS_KEY_COUNT, 0);
         for (int i = 0; i < oldCount; i++)
         {
             prefs.remove(PREFS_KEY_PREFIX + i);
         }
 
-        // Save new entries
         prefs.putInt(PREFS_KEY_COUNT, recentFiles.size());
         for (int i = 0; i < recentFiles.size(); i++)
         {

@@ -181,7 +181,6 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
         }
     }
 
-    /** The simple (innermost) name of an internal or qualified class name, for token selection. */
     private static String simpleName(String className)
     {
         if (className == null)
@@ -227,7 +226,6 @@ public class FindUsagesResultsPanel extends ThemedJPanel implements ThemeChangeL
                         int pc = xref.getBytecodeOffset();
                         String methodName = xref.getSourceMethod();
                         String methodDesc = xref.getSourceMethodDesc();
-                        // Class-level refs have no target member; select the class's simple name instead.
                         String targetMember = xref.getTargetMember();
                         String token = targetMember != null ? targetMember : simpleName(xref.getTargetClass());
 

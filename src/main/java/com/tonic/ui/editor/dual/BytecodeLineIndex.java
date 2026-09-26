@@ -99,10 +99,6 @@ public final class BytecodeLineIndex
         return index;
     }
 
-    /**
-     * The token holding {@code name+desc} when {@code line} is a {@code BytecodeView} method header
-     * (column-0 {@code //}, last token contains {@code '('}), otherwise null.
-     */
     private static String methodHeaderToken(String line)
     {
         if (!line.startsWith("//"))

@@ -13,7 +13,6 @@ public class SyntaxColors
     {
     }
 
-    // Java source highlighting
     public static Color getJavaKeyword()
     {
         return ThemeManager.getInstance().getCurrentTheme().getJavaKeyword();
@@ -79,7 +78,6 @@ public class SyntaxColors
         return ThemeManager.getInstance().getCurrentTheme().getJavaParameter();
     }
 
-    // Bytecode highlighting
     public static Color getBcLoad()
     {
         return ThemeManager.getInstance().getCurrentTheme().getBcLoad();
@@ -140,7 +138,6 @@ public class SyntaxColors
         return ThemeManager.getInstance().getCurrentTheme().getBcOffset();
     }
 
-    // SSA IR highlighting
     public static Color getIrPhi()
     {
         return ThemeManager.getInstance().getCurrentTheme().getIrPhi();

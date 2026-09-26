@@ -212,7 +212,6 @@ public final class LiveInstancesView extends AbstractEditorView
         return detail;
     }
 
-    /** Right-click "Scan for this value" on a primitive/String field value: seeds the live Value Scanner. */
     private void maybeScanPopup(MouseEvent e)
     {
         if (!e.isPopupTrigger())
@@ -243,7 +242,6 @@ public final class LiveInstancesView extends AbstractEditorView
         menu.show(fieldTable, e.getX(), e.getY());
     }
 
-    /** Maps an instance field (by JVM type descriptor) to a scanner {@code SCAN_*} type, or -1 if not scannable. */
     private static int scanTypeOf(LiveField f)
     {
         switch (f.getTypeDesc())
@@ -282,7 +280,6 @@ public final class LiveInstancesView extends AbstractEditorView
         }
     }
 
-    /** Walks the live heap for instances of this class (live handles, so fields can be read and written). */
     private void loadInstances()
     {
         LiveSession session = LiveAttachService.getInstance().getSession();
@@ -350,7 +347,6 @@ public final class LiveInstancesView extends AbstractEditorView
         }, err -> detailHeader.setText(header + " - read failed: " + err.getMessage()));
     }
 
-    /** Writes an edited primitive/String field to the live object, then refreshes the cell with the read-back value. */
     private void commitFieldEdit(int row, LiveField field, String newValue)
     {
         LiveSession session = LiveAttachService.getInstance().getSession();
@@ -361,7 +357,6 @@ public final class LiveInstancesView extends AbstractEditorView
         SwingWorkers.run(() -> session.setInstanceField(currentHandleId, field.getName(), false, newValue), newDisplay -> fieldModel.setLiveField(row, new LiveField(field.getName(), field.getTypeDesc(), newDisplay, field.getRefHandleId(), field.isEditable())), err -> countLabel.setText("Set failed: " + err.getMessage()));
     }
 
-    /** Friendly type from a JVM descriptor: {@code I -> int}, {@code Ljava/lang/String; -> String}, {@code [I -> int[]}. */
     private static String prettyType(String desc)
     {
         if (desc == null || desc.isEmpty())
@@ -397,7 +392,6 @@ public final class LiveInstancesView extends AbstractEditorView
         }
     }
 
-    /** The reference {@code LiveField} under point {@code p} if it is a navigable ref in the Value column, else null. */
     private LiveField refAt(Point p)
     {
         int row = fieldTable.rowAtPoint(p);
@@ -421,7 +415,6 @@ public final class LiveInstancesView extends AbstractEditorView
         }
     }
 
-    /** Table model whose Value column (2) holds {@link LiveField}s; non-final primitive/String cells edit in place. */
     private final class FieldTableModel extends DefaultTableModel
     {
         FieldTableModel()
@@ -455,14 +448,12 @@ public final class LiveInstancesView extends AbstractEditorView
             super.setValueAt(aValue, row, column);
         }
 
-        /** Programmatic update that bypasses the edit intercept (used after a successful write). */
         void setLiveField(int row, LiveField f)
         {
             super.setValueAt(f, row, 2);
         }
     }
 
-    /** Value-column editor: a true/false combo for booleans, a text field otherwise; seeds from the field's display. */
     private static final class ValueEditor extends DefaultCellEditor
     {
         ValueEditor(JComboBox<String> combo)
@@ -483,7 +474,6 @@ public final class LiveInstancesView extends AbstractEditorView
         }
     }
 
-    /** Renders a live instance by its agent-supplied label (Class@hex, or the text for a String). */
     private static final class InstanceCellRenderer extends DefaultListCellRenderer
     {
         @Override
@@ -507,7 +497,6 @@ public final class LiveInstancesView extends AbstractEditorView
         }
     }
 
-    /** Colours field values: references accent, strings/chars green, null muted, primitives plain. */
     private static final class ValueCellRenderer extends DefaultTableCellRenderer
     {
         @Override

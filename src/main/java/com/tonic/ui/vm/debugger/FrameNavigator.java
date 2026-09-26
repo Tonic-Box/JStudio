@@ -8,11 +8,6 @@ import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
-/**
- * Resolves debugger navigation across methods: looking up {@link MethodEntry} instances in the current project's
- * class pool by name and descriptor, and driving the bytecode view to the right method/instruction when the user
- * selects a call-stack frame or the VM steps into a different method.
- */
 final class FrameNavigator
 {
 
@@ -31,7 +26,6 @@ final class FrameNavigator
         this.highlightInstruction = highlightInstruction;
     }
 
-    /** Finds a method in the current project's class pool by name and descriptor, or null if not present. */
     MethodEntry findMethod(String className, String methodName, String desc)
     {
         ClassFile classFile = ProjectService.getInstance().getCurrentProject()
@@ -49,10 +43,6 @@ final class FrameNavigator
         return null;
     }
 
-    /**
-     * Highlights the selected frame: if it is the current method, just moves the highlight; otherwise re-resolves
-     * the frame's method, loads its bytecode, and highlights the frame's instruction.
-     */
     void navigateToFrame(FrameEntry frame)
     {
         MethodEntry current = currentMethod.get();
@@ -74,10 +64,6 @@ final class FrameNavigator
         }
     }
 
-    /**
-     * When the VM has stepped into a method other than the displayed one, re-resolves and loads that method's
-     * bytecode. Returns true when a method change was handled.
-     */
     boolean onMethodMaybeChanged(String className, String methodName, String desc)
     {
         MethodEntry displayed = displayedMethod.get();

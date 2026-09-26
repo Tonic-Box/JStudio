@@ -1,10 +1,5 @@
 package com.tonic.ui.editor.source;
 
-/**
- * Pure matching between a JVM method descriptor and a source-level method signature line: parameter counts, per-type
- * compatibility (simple-name aware, generics/array tolerant) and return type. Used by the source view's navigation
- * to pick the correct overload's declaration line. String in, boolean/int/String out - freely unit-testable.
- */
 final class MethodSignatureMatcher
 {
 
@@ -12,7 +7,6 @@ final class MethodSignatureMatcher
     {
     }
 
-    /** The number of comma-separated parameters in a source parameter list (generics-aware), or 0 when empty. */
     static int countParams(String sourceParams)
     {
         if (sourceParams == null || sourceParams.isEmpty())
@@ -31,7 +25,6 @@ final class MethodSignatureMatcher
         return count + 1;
     }
 
-    /** The number of parameters encoded in a JVM method descriptor. */
     static int countDescriptorParams(String desc)
     {
         int count = 0;
@@ -54,7 +47,6 @@ final class MethodSignatureMatcher
         return count;
     }
 
-    /** Whether the source parameter list is type-compatible with the descriptor's parameters. */
     static boolean paramsMatch(String sourceParams, String desc)
     {
         String[] sourceTypes = sourceParams.split(",");
@@ -159,7 +151,6 @@ final class MethodSignatureMatcher
         return simpleSource.equals(descType);
     }
 
-    /** The simple return type name encoded after the descriptor's {@code ')'}, or null. */
     static String extractReturnTypeFromDesc(String desc)
     {
         if (desc == null) return null;
@@ -168,7 +159,6 @@ final class MethodSignatureMatcher
         return extractDescType(desc, parenClose + 1);
     }
 
-    /** The declared return type token preceding the method name on a source signature line, or null. */
     static String extractReturnTypeFromSource(String line)
     {
         String trimmed = line.trim();
@@ -188,7 +178,6 @@ final class MethodSignatureMatcher
         return returnType;
     }
 
-    /** Whether the source return type matches the descriptor return type (null on either side is permissive). */
     static boolean returnTypeMatches(String sourceReturnType, String descReturnType)
     {
         if (sourceReturnType == null || descReturnType == null) return true;

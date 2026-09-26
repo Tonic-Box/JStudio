@@ -14,11 +14,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
-/**
- * Owns the debugger's execution-trace recording: the on/off toggle, per-step capture, and export/clear of the
- * recorded {@link ExecutionTrace}. UI side effects (status messages, enabling the export/clear actions, the record
- * button's appearance) are delegated through injected callbacks so this stays free of toolbar wiring.
- */
 final class TraceRecorder
 {
 
@@ -50,7 +45,6 @@ final class TraceRecorder
         return recording;
     }
 
-    /** Toggles recording on/off for the supplied method (may be null when no method is loaded yet). */
     void toggleRecording(boolean selected, MethodEntry currentMethod)
     {
         recording = selected;
@@ -85,7 +79,6 @@ final class TraceRecorder
         }
     }
 
-    /** Starts a trace at session start when recording was enabled before a method was available. */
     void onSessionStarted(MethodEntry currentMethod)
     {
         if (recording && currentTrace == null && currentMethod != null)
@@ -96,7 +89,6 @@ final class TraceRecorder
         }
     }
 
-    /** Finalizes the trace on a session stop, marking it complete and enabling export. */
     void onSessionStopped(String reason)
     {
         if (recording && currentTrace != null)
@@ -109,7 +101,6 @@ final class TraceRecorder
         }
     }
 
-    /** Finalizes the trace when the user manually stops debugging. */
     void onManualStop()
     {
         if (recording && currentTrace != null)

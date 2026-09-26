@@ -158,7 +158,6 @@ public final class LiveStaticsView extends AbstractEditorView
         return panel;
     }
 
-    /** Right-click "Scan for this value" on a primitive/String field: seeds the live Value Scanner. */
     private void maybeScanPopup(MouseEvent e)
     {
         if (!e.isPopupTrigger())
@@ -184,7 +183,6 @@ public final class LiveStaticsView extends AbstractEditorView
         menu.show(fieldTable, e.getX(), e.getY());
     }
 
-    /** Maps a field descriptor to a scanner {@code SCAN_*} value type, or -1 for non-scannable types. */
     private static int scanTypeOf(String desc)
     {
         if (desc == null || desc.isEmpty())
@@ -400,9 +398,6 @@ public final class LiveStaticsView extends AbstractEditorView
         });
     }
 
-    // ---- helpers ------------------------------------------------------------------------------------
-
-    /** True for non-primitive readable type names (used to pre-fill "null" in the invoke dialog). */
     private static boolean isReferenceType(String readableType)
     {
         switch (readableType)
@@ -421,7 +416,6 @@ public final class LiveStaticsView extends AbstractEditorView
         }
     }
 
-    /** Carries the two lists fetched off the EDT so {@link #populate} can apply them together. */
     private static final class StaticsData
     {
         final List<StaticField> fields;

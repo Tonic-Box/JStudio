@@ -102,7 +102,6 @@ public final class HistoryDiffView extends ThemedJPanel
         }
         catch (BadLocationException | RuntimeException ignored)
         {
-            // line out of range (trailing) - skip
         }
     }
 

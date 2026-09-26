@@ -28,12 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Builds the navigator tree's right-click popup. {@link #buildFor(Object)} returns a styled menu populated with the
- * per-node-type built-in items plus any plugin-contributed entries (consulting the shared provider list each time).
- * Mutating actions are delegated to {@link NavigatorActions}; navigation/run/rename items are issued over the
- * {@link EventBus} or routed to {@link MainFrame}, with the supplied event source preserved on posted events.
- */
 final class NavigatorContextMenuFactory
 {
 
@@ -50,7 +44,6 @@ final class NavigatorContextMenuFactory
         this.actionProviders = actionProviders;
     }
 
-    /** Builds the styled popup for the given right-clicked tree node, including any plugin-contributed entries. */
     JPopupMenu buildFor(Object node)
     {
         JPopupMenu menu = new JPopupMenu();
@@ -94,7 +87,6 @@ final class NavigatorContextMenuFactory
         return menu;
     }
 
-    /** Appends plugin-contributed entries (if any) for the right-clicked node, after the built-in items. */
     private void appendPluginActions(JPopupMenu menu, Object node)
     {
         if (actionProviders.isEmpty())
@@ -115,7 +107,6 @@ final class NavigatorContextMenuFactory
             }
             catch (Exception ex)
             {
-                // A misbehaving provider must not break the native context menu.
             }
         }
         if (actions.isEmpty())
@@ -277,8 +268,6 @@ final class NavigatorContextMenuFactory
 
     private void buildProjectMenu(JPopupMenu menu)
     {
-        // Works whether or not a project is loaded: with no project, creating a class spins up a
-        // new (Untitled) project in the root package and opens the class in it.
         addMenuItem(menu, "Add New Class...", () -> actions.showNewClassDialog(""));
     }
 
