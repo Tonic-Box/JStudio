@@ -2,9 +2,11 @@ package com.tonic.simulation.export;
 
 import com.tonic.simulation.model.SimulationFinding;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 /** Exports simulation findings as JSON or HTML reports. */
@@ -20,7 +22,7 @@ public class FindingsExporter
      */
     public static void exportToJson(List<SimulationFinding> findings, String filePath) throws IOException
     {
-        try (FileWriter writer = new FileWriter(filePath))
+        try (Writer writer = Files.newBufferedWriter(Path.of(filePath), StandardCharsets.UTF_8))
         {
             writeJson(findings, writer);
         }
@@ -106,7 +108,7 @@ public class FindingsExporter
      */
     public static void exportToHtml(List<SimulationFinding> findings, String filePath) throws IOException
     {
-        try (FileWriter writer = new FileWriter(filePath))
+        try (Writer writer = Files.newBufferedWriter(Path.of(filePath), StandardCharsets.UTF_8))
         {
             writeHtml(findings, writer);
         }
@@ -116,6 +118,7 @@ public class FindingsExporter
     {
         writer.write("<!DOCTYPE html>\n");
         writer.write("<html>\n<head>\n");
+        writer.write("<meta charset=\"UTF-8\">\n");
         writer.write("<title>Simulation Analysis Report</title>\n");
         writer.write("<style>\n");
         writer.write("body { font-family: sans-serif; margin: 20px; background: #1e1e1e; color: #d4d4d4; }\n");

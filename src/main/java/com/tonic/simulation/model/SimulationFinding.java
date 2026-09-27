@@ -1,5 +1,6 @@
 package com.tonic.simulation.model;
 
+import com.tonic.analysis.ssa.ir.IRInstruction;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +36,25 @@ public abstract class SimulationFinding
     protected final FindingType type;
     protected final Severity severity;
     protected final int bytecodeOffset;
+
+    /**
+     * Finds the bytecode offset of an IR instruction.
+     *
+     * @param instruction the instruction, or null
+     * @return the offset the lifter stamped on it, else the offset of its block, else -1
+     */
+    public static int offsetOf(IRInstruction instruction)
+    {
+        if (instruction == null)
+        {
+            return -1;
+        }
+        if (instruction.getBytecodeOffset() >= 0)
+        {
+            return instruction.getBytecodeOffset();
+        }
+        return instruction.getBlock() != null ? instruction.getBlock().getBytecodeOffset() : -1;
+    }
 
     /**
      * Formats the method the finding is in.

@@ -3,53 +3,57 @@ package com.tonic.simulation.listener;
 import com.tonic.analysis.simulation.core.SimulationState;
 import com.tonic.analysis.simulation.listener.AbstractListener;
 import com.tonic.analysis.ssa.cfg.IRMethod;
+import com.tonic.analysis.ssa.ir.IRInstruction;
 import com.tonic.analysis.ssa.ir.InvokeInstruction;
+import com.tonic.analysis.ssa.ir.LoadLocalInstruction;
+import com.tonic.analysis.ssa.ir.StoreLocalInstruction;
 import com.tonic.analysis.ssa.value.SSAValue;
+import com.tonic.analysis.ssa.value.Value;
 import com.tonic.simulation.model.TaintFlow;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
-/** A simulation listener that reports calls to known sinks (SQL, command, file, network, crypto) reached by tainted values, treating parameters as tainted by default. */
+/** A simulation listener that tracks tainted SSA values, seeded from method parameters and from calls to known input sources, and reports calls to known sinks (SQL, command, file, network, crypto) that receive one. */
 public class TaintTrackingListener extends AbstractListener
 {
 
     private final List<TaintFlowResult> taintFlows = new ArrayList<>();
-    private final Set<Integer> taintedLocals = new HashSet<>();
-    private final List<String> currentFlowPath = new ArrayList<>();
+    private final Map<Value, String> taintedValues = new HashMap<>();
+    private final Map<Integer, String> taintedSlots = new HashMap<>();
+    private final List<String> sourcesSeen = new ArrayList<>();
     private boolean parametersAreTainted = true;
-    private int parameterCount = 0;
 
     @Override
     public void onSimulationStart(IRMethod method)
     {
         super.onSimulationStart(method);
         taintFlows.clear();
-        taintedLocals.clear();
-        currentFlowPath.clear();
+        taintedValues.clear();
+        taintedSlots.clear();
+        sourcesSeen.clear();
 
-        if (parametersAreTainted && method != null)
+        if (parametersAreTainted && method != null && method.getParameters() != null)
         {
-            parameterCount = countParameters(method);
-            for (int i = 0; i < parameterCount; i++)
+            int slot = method.isStatic() ? 0 : 1;
+            int index = 0;
+            for (SSAValue param : method.getParameters())
             {
-                taintedLocals.add(i);
+                String origin = "Method parameter " + index + " (user-controlled input)";
+                taintedValues.put(param, origin);
+                taintedSlots.put(slot, origin);
+                slot += param.getType() != null && param.getType().isTwoSlot() ? 2 : 1;
+                index++;
             }
         }
     }
 
-    private int countParameters(IRMethod method)
-    {
-        if (method.getParameters() == null) return 0;
-        return method.getParameters().size();
-    }
-
     /**
-     * Sets whether method parameters are tainted at the start of the next simulation.
+     * Sets whether method parameters are tainted at the start of the next simulation; sources taint their results either way.
      *
      * @param tainted true to treat parameters as untrusted input
      */
@@ -65,62 +69,74 @@ public class TaintTrackingListener extends AbstractListener
         String name = instr.getName();
         String desc = instr.getDescriptor();
 
-        boolean hasTaintedArgs = checkTaintedArgs(instr, state);
-        if (!hasTaintedArgs)
-        {
-            return;
-        }
-
+        String origin = taintOf(instr.getOperands());
         TaintSinkInfo sink = detectSink(owner, name, desc);
-        if (sink != null)
+        if (origin != null && sink != null)
         {
-            String sourceDesc = "Method parameter (user-controlled input)";
             String sinkDesc = formatMethodRef(owner, name, desc);
-            List<String> path = new ArrayList<>(currentFlowPath);
+            List<String> path = new ArrayList<>(sourcesSeen);
             path.add("-> " + sinkDesc);
-
-            taintFlows.add(new TaintFlowResult(instr, sourceDesc, sinkDesc, path, sink.category));
+            taintFlows.add(new TaintFlowResult(instr, origin, sinkDesc, path, sink.category));
         }
 
         if (isTaintSource(owner, name))
         {
-            currentFlowPath.add(formatMethodRef(owner, name, desc) + " (source)");
+            String source = formatMethodRef(owner, name, desc) + " (source)";
+            sourcesSeen.add(source);
             if (instr.getResult() != null)
             {
-                markTainted(instr.getResult());
+                taintedValues.put(instr.getResult(), source);
             }
         }
     }
 
-    private boolean checkTaintedArgs(InvokeInstruction instr, SimulationState state)
+    @Override
+    public void onAfterInstruction(IRInstruction instr, SimulationState before, SimulationState after)
     {
-        if (taintedLocals.isEmpty())
+        if (instr instanceof StoreLocalInstruction)
         {
-            return false;
-        }
-
-        var args = instr.getMethodArguments();
-        for (var arg : args)
-        {
-            if (arg instanceof SSAValue)
+            StoreLocalInstruction store = (StoreLocalInstruction) instr;
+            String origin = taintedValues.get(store.getValue());
+            if (origin != null)
             {
-                SSAValue ssa = (SSAValue) arg;
-                if (taintedLocals.contains(ssa.getId()))
-                {
-                    return true;
-                }
+                taintedSlots.put(store.getLocalIndex(), origin);
+            }
+            else
+            {
+                taintedSlots.remove(store.getLocalIndex());
+            }
+            return;
+        }
+        String origin = instr instanceof LoadLocalInstruction ? taintedSlots.get(((LoadLocalInstruction) instr).getLocalIndex()) : taintOf(instr.getOperands());
+        if (origin == null)
+        {
+            return;
+        }
+        if (instr.getResult() != null)
+        {
+            taintedValues.putIfAbsent(instr.getResult(), origin);
+        }
+        if (instr instanceof InvokeInstruction)
+        {
+            Value receiver = ((InvokeInstruction) instr).getReceiver();
+            if (receiver != null)
+            {
+                taintedValues.putIfAbsent(receiver, origin);
             }
         }
-
-        return !taintedLocals.isEmpty() && parameterCount > 0;
     }
 
-    private void markTainted(SSAValue value)
+    private String taintOf(List<Value> operands)
     {
-        if (value != null)
+        for (Value operand : operands)
         {
-            taintedLocals.add(value.getId());
+            String origin = operand != null ? taintedValues.get(operand) : null;
+            if (origin != null)
+            {
+                return origin;
+            }
         }
+        return null;
     }
 
     private boolean isTaintSource(String owner, String name)
@@ -243,7 +259,7 @@ public class TaintTrackingListener extends AbstractListener
         }
     }
 
-    /** One tainted value reaching a sink: the sink call, its category, and the path of sources before it. */
+    /** One tainted value reaching a sink: the sink call, where the value came from, its category, and the source calls seen before it. */
     @Getter
     public static class TaintFlowResult
     {
@@ -257,9 +273,9 @@ public class TaintTrackingListener extends AbstractListener
          * Creates a taint flow result.
          *
          * @param sinkInstruction the sink call
-         * @param sourceDescription where the tainted value came from
+         * @param sourceDescription where the tainted value reaching the sink came from
          * @param sinkDescription the sink as SimpleOwner.name()
-         * @param flowPath the sources seen before the sink, ending with the sink
+         * @param flowPath the source calls seen before the sink, ending with the sink
          * @param category the kind of vulnerability the sink represents
          */
         public TaintFlowResult(InvokeInstruction sinkInstruction, String sourceDescription, String sinkDescription, List<String> flowPath, TaintFlow.TaintCategory category)

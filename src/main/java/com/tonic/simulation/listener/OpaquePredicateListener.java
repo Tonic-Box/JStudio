@@ -3,23 +3,22 @@ package com.tonic.simulation.listener;
 import com.tonic.analysis.simulation.core.SimulationResult;
 import com.tonic.analysis.simulation.core.SimulationState;
 import com.tonic.analysis.simulation.listener.AbstractListener;
-import com.tonic.analysis.simulation.state.SimValue;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.analysis.ssa.ir.BranchInstruction;
-import com.tonic.analysis.ssa.ir.CompareOp;
+import com.tonic.simulation.model.SimulationFinding;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** A simulation listener that flags opaque predicates: branches whose condition evaluated the same way on every execution. */
+/** A simulation listener that flags opaque predicates: branches whose condition constant operands decide the same way on every visit. */
 public class OpaquePredicateListener extends AbstractListener
 {
 
-    private final Map<Integer, BranchAnalysis> branchAnalyses = new HashMap<>();
+    private final Map<BranchInstruction, BranchAnalysis> branchAnalyses = new IdentityHashMap<>();
     private final List<BranchAnalysis> confirmedOpaquePredicates = new ArrayList<>();
 
     @Override
@@ -31,24 +30,13 @@ public class OpaquePredicateListener extends AbstractListener
     }
 
     @Override
-    public void onBranch(BranchInstruction instr, boolean taken, SimulationState state)
+    public void onBranch(BranchInstruction instr, Boolean outcome, SimulationState state)
     {
         if (instr == null || instr.getCondition() == null)
         {
             return;
         }
-
-        int instrId = System.identityHashCode(instr);
-        BranchAnalysis analysis = branchAnalyses.get(instrId);
-
-        if (analysis == null)
-        {
-            analysis = new BranchAnalysis(instr);
-            branchAnalyses.put(instrId, analysis);
-        }
-
-        boolean conditionResult = evaluateCondition(instr, state);
-        analysis.recordExecution(conditionResult);
+        branchAnalyses.computeIfAbsent(instr, BranchAnalysis::new).recordExecution(outcome);
     }
 
     @Override
@@ -105,78 +93,6 @@ public class OpaquePredicateListener extends AbstractListener
         return !confirmedOpaquePredicates.isEmpty();
     }
 
-    private boolean evaluateCondition(BranchInstruction instr, SimulationState state)
-    {
-        if (state == null || state.stackDepth() == 0)
-        {
-            return true;
-        }
-
-        SimValue topValue = state.peek(0);
-        if (topValue == null)
-        {
-            return true;
-        }
-
-        if (topValue.isConstant())
-        {
-            Object constant = topValue.getConstantValue();
-            if (constant instanceof Number)
-            {
-                int value = ((Number) constant).intValue();
-                return evaluateComparisonResult(instr.getCondition(), value);
-            }
-            else if (constant instanceof Boolean)
-            {
-                return (Boolean) constant;
-            }
-        }
-
-        return true;
-    }
-
-    private boolean evaluateComparisonResult(CompareOp op, int value)
-    {
-        if (op == null)
-        {
-            return true;
-        }
-
-        switch (op)
-        {
-            case EQ:
-            case IFEQ:
-            case ACMPEQ:
-            case IFNULL:
-                return value == 0;
-
-            case NE:
-            case IFNE:
-            case ACMPNE:
-            case IFNONNULL:
-                return value != 0;
-
-            case LT:
-            case IFLT:
-                return value < 0;
-
-            case GE:
-            case IFGE:
-                return value >= 0;
-
-            case GT:
-            case IFGT:
-                return value > 0;
-
-            case LE:
-            case IFLE:
-                return value <= 0;
-
-            default:
-                return true;
-        }
-    }
-
     /** The recorded outcomes of one branch instruction across a simulation. */
     @Getter
     public static class BranchAnalysis
@@ -184,6 +100,7 @@ public class OpaquePredicateListener extends AbstractListener
         private final BranchInstruction instruction;
         private int trueCount = 0;
         private int falseCount = 0;
+        private int unknownCount = 0;
         private int executionCount = 0;
 
         /**
@@ -197,14 +114,18 @@ public class OpaquePredicateListener extends AbstractListener
         }
 
         /**
-         * Records one execution of the branch.
+         * Records one visit of the branch.
          *
-         * @param conditionResult whether the condition evaluated true
+         * @param outcome true or false when constant operands decided the condition, null when it depended on runtime values
          */
-        public void recordExecution(boolean conditionResult)
+        public void recordExecution(Boolean outcome)
         {
             executionCount++;
-            if (conditionResult)
+            if (outcome == null)
+            {
+                unknownCount++;
+            }
+            else if (outcome)
             {
                 trueCount++;
             }
@@ -215,37 +136,33 @@ public class OpaquePredicateListener extends AbstractListener
         }
 
         /**
-         * Reports whether the branch executed and always went the same way.
+         * Reports whether every visit proved the condition and all went the same way.
          *
-         * @return true if executed at least once with only true or only false outcomes
+         * @return true if visited at least once, never undecided, and only true or only false
          */
         public boolean isOpaque()
         {
-            if (executionCount == 0)
-            {
-                return false;
-            }
-            return trueCount == 0 || falseCount == 0;
+            return isAlwaysTrue() || isAlwaysFalse();
         }
 
         /**
-         * Reports whether the branch executed and was never false.
+         * Reports whether every visit proved the condition true.
          *
-         * @return true if executed at least once with no false outcome
+         * @return true if visited at least once with only proven-true outcomes
          */
         public boolean isAlwaysTrue()
         {
-            return executionCount > 0 && falseCount == 0;
+            return executionCount > 0 && trueCount == executionCount;
         }
 
         /**
-         * Reports whether the branch executed and was never true.
+         * Reports whether every visit proved the condition false.
          *
-         * @return true if executed at least once with no true outcome
+         * @return true if visited at least once with only proven-false outcomes
          */
         public boolean isAlwaysFalse()
         {
-            return executionCount > 0 && trueCount == 0;
+            return executionCount > 0 && falseCount == executionCount;
         }
 
         /**
@@ -263,17 +180,13 @@ public class OpaquePredicateListener extends AbstractListener
         }
 
         /**
-         * Returns the branch instruction's IR id, used as its offset.
+         * Returns the branch instruction's bytecode offset.
          *
-         * @return the instruction id, or -1 if there is no instruction
+         * @return the offset the lifter stamped on the instruction, else its block's, else -1
          */
         public int getBytecodeOffset()
         {
-            if (instruction != null)
-            {
-                return instruction.getId();
-            }
-            return -1;
+            return SimulationFinding.offsetOf(instruction);
         }
 
         @Override
@@ -284,6 +197,7 @@ public class OpaquePredicateListener extends AbstractListener
                     ", executions=" + executionCount +
                     ", true=" + trueCount +
                     ", false=" + falseCount +
+                    ", undecided=" + unknownCount +
                     ", opaque=" + isOpaque() +
                     "]";
         }

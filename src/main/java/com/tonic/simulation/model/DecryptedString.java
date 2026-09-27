@@ -26,7 +26,7 @@ public class DecryptedString extends SimulationFinding
      */
     public DecryptedString(String className, String methodName, String methodDesc, InvokeInstruction invokeInstr, String decryptedValue, String encryptedInput, String decryptionMethod)
     {
-        super(className, methodName, methodDesc, FindingType.DECRYPTED_STRING, Severity.INFO, invokeInstr != null && invokeInstr.getBlock() != null ? invokeInstr.getBlock().getBytecodeOffset() : -1);
+        super(className, methodName, methodDesc, FindingType.DECRYPTED_STRING, Severity.INFO, offsetOf(invokeInstr));
         this.decryptedValue = decryptedValue;
         this.encryptedInput = encryptedInput;
         this.decryptionMethod = decryptionMethod;

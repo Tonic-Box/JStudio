@@ -42,7 +42,7 @@ public class TaintFlow extends SimulationFinding
      */
     public TaintFlow(String className, String methodName, String methodDesc, IRInstruction sinkInstr, String sourceDescription, String sinkDescription, List<String> flowPath, TaintCategory category)
     {
-        super(className, methodName, methodDesc, FindingType.TAINTED_VALUE, getSeverityForCategory(category), sinkInstr != null && sinkInstr.getBlock() != null ? sinkInstr.getBlock().getBytecodeOffset() : -1);
+        super(className, methodName, methodDesc, FindingType.TAINTED_VALUE, getSeverityForCategory(category), offsetOf(sinkInstr));
         this.sourceDescription = sourceDescription;
         this.sinkDescription = sinkDescription;
         this.flowPath = flowPath != null
