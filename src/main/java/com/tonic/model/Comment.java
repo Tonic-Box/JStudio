@@ -65,13 +65,13 @@ public class Comment
     }
 
     /**
-     * Builds the location key: the class, then #member and :line when set.
+     * Builds the location key: the class, empty when unset, then #member and :line when set.
      *
      * @return the location key
      */
     public String getLocationKey()
     {
-        StringBuilder key = new StringBuilder(className);
+        StringBuilder key = new StringBuilder(className != null ? className : "");
         if (memberName != null && !memberName.isEmpty())
         {
             key.append("#").append(memberName);
@@ -86,6 +86,7 @@ public class Comment
     @Override
     public String toString()
     {
-        return getLocationKey() + " - " + (text.length() > 50 ? text.substring(0, 47) + "..." : text);
+        String shown = text != null ? text : "";
+        return getLocationKey() + " - " + (shown.length() > 50 ? shown.substring(0, 47) + "..." : shown);
     }
 }

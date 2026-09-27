@@ -55,13 +55,13 @@ public class Bookmark
     }
 
     /**
-     * Builds the location key: the class, then #member and :line when set.
+     * Builds the location key: the class, empty when unset, then #member and :line when set.
      *
      * @return the location key
      */
     public String getLocationKey()
     {
-        StringBuilder key = new StringBuilder(className);
+        StringBuilder key = new StringBuilder(className != null ? className : "");
         if (memberName != null && !memberName.isEmpty())
         {
             key.append("#").append(memberName);
@@ -76,7 +76,7 @@ public class Bookmark
     /**
      * The name shown in lists.
      *
-     * @return the user's label, or else the simple class name with #member when a member is set
+     * @return the user's label, or else the simple class name, empty when unset, with #member when a member is set
      */
     public String getDisplayName()
     {
@@ -84,12 +84,7 @@ public class Bookmark
         {
             return name;
         }
-        String simple = className;
-        int lastSlash = className.lastIndexOf('/');
-        if (lastSlash >= 0)
-        {
-            simple = className.substring(lastSlash + 1);
-        }
+        String simple = className != null ? className.substring(className.lastIndexOf('/') + 1) : "";
         if (memberName != null && !memberName.isEmpty())
         {
             return simple + "#" + memberName;
