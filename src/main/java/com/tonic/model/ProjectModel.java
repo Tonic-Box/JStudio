@@ -209,17 +209,17 @@ public class ProjectModel
     }
 
     /**
-     * Lists the classes whose dotted package name starts with a prefix.
+     * Lists the classes in exactly one package, not its subpackages.
      *
-     * @param packagePrefix the dotted package prefix
+     * @param packageName the dotted package name, empty for the default package
      * @return a new list of the matching entries
      */
-    public List<ClassEntryModel> getClassesInPackage(String packagePrefix)
+    public List<ClassEntryModel> getClassesInPackage(String packageName)
     {
         List<ClassEntryModel> result = new ArrayList<>();
         for (ClassEntryModel entry : classEntries.values())
         {
-            if (entry.getPackageName().startsWith(packagePrefix))
+            if (entry.getPackageName().equals(packageName))
             {
                 result.add(entry);
             }
@@ -365,31 +365,41 @@ public class ProjectModel
     }
 
     /**
-     * Finds a class by internal name, dotted name, or name suffix, in that order.
+     * Finds a class by internal name, then dotted name, then trailing name segments such as the simple name.
      *
      * @param name the internal, dotted or simple class name
-     * @return the first matching entry, or null if the name is null or nothing matches
+     * @return the exact match, else the alphabetically first class whose name ends with the given segments, or null if the name is null or nothing matches
      */
     public ClassEntryModel findClassByName(String name)
     {
-        if (name == null) return null;
+        if (name == null || name.isEmpty())
+        {
+            return null;
+        }
 
         ClassEntryModel entry = classEntries.get(name);
-        if (entry != null) return entry;
+        if (entry != null)
+        {
+            return entry;
+        }
 
         String internalName = name.replace('.', '/');
         entry = classEntries.get(internalName);
-        if (entry != null) return entry;
-
-        for (Map.Entry<String, ClassEntryModel> e : classEntries.entrySet())
+        if (entry != null)
         {
-            if (e.getKey().endsWith("/" + name) || e.getKey().endsWith(name))
-            {
-                return e.getValue();
-            }
+            return entry;
         }
 
-        return null;
+        String suffix = "/" + internalName;
+        String best = null;
+        for (String key : classEntries.keySet())
+        {
+            if (key.endsWith(suffix) && (best == null || key.compareTo(best) < 0))
+            {
+                best = key;
+            }
+        }
+        return best != null ? classEntries.get(best) : null;
     }
 
     /**

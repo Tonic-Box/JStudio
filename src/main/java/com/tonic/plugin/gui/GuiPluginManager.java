@@ -290,7 +290,7 @@ public final class GuiPluginManager
     private void activate(LoadedPlugin lp)
     {
         lp.contributions.clear();
-        LiveGuiPluginContext context = new LiveGuiPluginContext(lp.info.getName());
+        LiveGuiPluginContext context = new LiveGuiPluginContext(lp.info.getName(), lp.info.getId());
         context.setExportDir(new File(new File(pluginsDir(), lp.info.getId()), "export"));
         JStudioHostImpl host = new JStudioHostImpl(frame, lp.info, context, lp.contributions);
         lp.host = host;

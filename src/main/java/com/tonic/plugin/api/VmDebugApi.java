@@ -313,7 +313,7 @@ public interface VmDebugApi
         }
 
         /**
-         * Specifies an object allocated without a constructor and filled by setting fields directly; only fields declared on the class itself are found.
+         * Specifies an object allocated without a constructor and filled by setting fields directly; a field declared on a superclass is found and stored under the class that declares it.
          *
          * @param className the class's internal name
          * @param fields the field values by field name

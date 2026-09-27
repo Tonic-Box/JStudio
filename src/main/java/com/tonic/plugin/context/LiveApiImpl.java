@@ -178,7 +178,9 @@ public class LiveApiImpl implements LiveApi
                     ? LiveHeapService.get().snapshot(s) : LiveHeapService.get().ensureSnapshot(s);
             List<Long> ids = snap.instancesOf(className.replace('.', '/'));
             List<InstanceRef> page = new ArrayList<>();
-            for (int i = Math.max(0, offset); i < Math.min(ids.size(), offset + limit); i++)
+            int start = Math.min(Math.max(0, offset), ids.size());
+            int end = (int) Math.min(ids.size(), (long) start + Math.max(0, limit));
+            for (int i = start; i < end; i++)
             {
                 long id = ids.get(i);
                 page.add(new InstanceRef(hex(id), snap.labelFor(id)));

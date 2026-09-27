@@ -51,9 +51,16 @@ public class VmDebugApiImpl implements VmDebugApi
             instance.dispose();
             throw new IllegalArgumentException("Method not found: " + className + "." + methodName + descriptor);
         }
-        Object[] built = VmValueBuilder.build(instance, args);
         VMDebugSession debug = new VMDebugSession(instance);
-        debug.start(method, recursive, built);
+        try
+        {
+            debug.start(method, recursive, VmValueBuilder.build(instance, args));
+        }
+        catch (RuntimeException e)
+        {
+            instance.dispose();
+            throw e;
+        }
 
         evictIfFull();
         String handle = UUID.randomUUID().toString();

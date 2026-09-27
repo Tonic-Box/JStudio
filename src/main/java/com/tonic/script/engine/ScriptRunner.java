@@ -131,7 +131,7 @@ public final class ScriptRunner
 
         CommonAPI commonAPI = new CommonAPI();
         commonAPI.setContext(classEntry.getClassName(), method.getName(), method.getDesc());
-        commonAPI.setCallbacks(msg -> out.accept(msg + "\n"), msg -> out.accept("WARN: " + msg + "\n"), msg -> out.accept("ERROR: " + msg + "\n"));
+        commonAPI.setCallbacks(msg -> out.accept(msg + "\n"), msg -> out.accept(msg + "\n"), msg -> out.accept(msg + "\n"));
         commonAPI.registerIn(interpreter);
 
         if (project != null)
@@ -267,7 +267,7 @@ public final class ScriptRunner
 
             CommonAPI commonAPI = new CommonAPI();
             commonAPI.setContext(classEntry.getClassName(), "", "");
-            commonAPI.setCallbacks(msg -> out.accept(msg + "\n"), msg -> out.accept("WARN: " + msg + "\n"), msg -> out.accept("ERROR: " + msg + "\n"));
+            commonAPI.setCallbacks(msg -> out.accept(msg + "\n"), msg -> out.accept(msg + "\n"), msg -> out.accept(msg + "\n"));
             commonAPI.registerIn(interpreter);
 
             if (project != null)

@@ -1,15 +1,26 @@
 package com.tonic.plugin.context;
 
+import com.tonic.analysis.CodeWriter;
 import com.tonic.parser.ClassFile;
+import com.tonic.parser.ConstPool;
 import com.tonic.parser.MethodEntry;
+import com.tonic.parser.attribute.Attribute;
 import com.tonic.parser.attribute.CodeAttribute;
+import com.tonic.parser.attribute.ConstantValueAttribute;
+import com.tonic.parser.constpool.DoubleItem;
+import com.tonic.parser.constpool.FloatItem;
+import com.tonic.parser.constpool.IntegerItem;
+import com.tonic.parser.constpool.Item;
+import com.tonic.parser.constpool.LongItem;
+import com.tonic.parser.constpool.StringRefItem;
+import com.tonic.parser.constpool.Utf8Item;
+import com.tonic.util.DescriptorParser;
 import com.tonic.plugin.api.ProjectApi;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.FieldEntryModel;
 import com.tonic.model.MethodEntryModel;
 import com.tonic.model.ProjectModel;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -118,7 +129,7 @@ public class ProjectApiImpl implements ProjectApi
     @Override
     public List<ClassInfo> getClassesInPackage(String packageName)
     {
-        return projectModel.getClassesInPackage(packageName.replace('.', '/')).stream()
+        return projectModel.getClassesInPackage(packageName.replace('/', '.')).stream()
                 .map(ClassInfoImpl::new)
                 .collect(Collectors.toList());
     }
@@ -140,7 +151,7 @@ public class ProjectApiImpl implements ProjectApi
         return count;
     }
 
-    private static class ClassInfoImpl implements ClassInfo
+    static final class ClassInfoImpl implements ClassInfo
     {
         private final ClassEntryModel entry;
 
@@ -306,7 +317,7 @@ public class ProjectApiImpl implements ProjectApi
         @Override
         public List<String> getParameterTypes()
         {
-            return parseParameterTypes(entry.getDescriptor());
+            return DescriptorParser.parameterDescriptors(entry.getDescriptor());
         }
 
         @Override
@@ -320,48 +331,15 @@ public class ProjectApiImpl implements ProjectApi
         @Override
         public int getInstructionCount()
         {
-            MethodEntry me = entry.getMethodEntry();
-            CodeAttribute code = me.getCodeAttribute();
-            return code != null ? code.getCode().length : 0;
+            MethodEntry method = entry.getMethodEntry();
+            return method.getCodeAttribute() != null ? new CodeWriter(method).getInstructionCount() : 0;
         }
 
         @Override
         public byte[] getBytecode()
         {
-            MethodEntry me = entry.getMethodEntry();
-            CodeAttribute code = me.getCodeAttribute();
-            return code != null ? code.getCode() : new byte[0];
-        }
-
-        private List<String> parseParameterTypes(String descriptor)
-        {
-            List<String> types = new ArrayList<>();
-            int i = descriptor.indexOf('(') + 1;
-            int end = descriptor.indexOf(')');
-            while (i < end)
-            {
-                char c = descriptor.charAt(i);
-                StringBuilder type = new StringBuilder();
-                while (c == '[')
-                {
-                    type.append('[');
-                    i++;
-                    c = descriptor.charAt(i);
-                }
-                if (c == 'L')
-                {
-                    int semi = descriptor.indexOf(';', i);
-                    type.append(descriptor, i, semi + 1);
-                    i = semi + 1;
-                }
-                else
-                {
-                    type.append(c);
-                    i++;
-                }
-                types.add(type.toString());
-            }
-            return types;
+            CodeAttribute code = entry.getMethodEntry().getCodeAttribute();
+            return code != null ? code.getCode().clone() : new byte[0];
         }
     }
 
@@ -413,7 +391,25 @@ public class ProjectApiImpl implements ProjectApi
         @Override
         public Object getConstantValue()
         {
+            ConstPool constPool = entry.getFieldEntry().getClassFile().getConstPool();
+            for (Attribute attribute : entry.getFieldEntry().getAttributes())
+            {
+                if (attribute instanceof ConstantValueAttribute)
+                {
+                    return constantOf(constPool, constPool.getItem(((ConstantValueAttribute) attribute).getConstantValueIndex()));
+                }
+            }
             return null;
+        }
+
+        private static Object constantOf(ConstPool constPool, Item<?> item)
+        {
+            if (item instanceof StringRefItem)
+            {
+                Item<?> utf8 = constPool.getItem(((StringRefItem) item).getValue());
+                return utf8 instanceof Utf8Item ? ((Utf8Item) utf8).getValue() : null;
+            }
+            return item instanceof IntegerItem || item instanceof LongItem || item instanceof FloatItem || item instanceof DoubleItem ? item.getValue() : null;
         }
     }
 }

@@ -51,13 +51,16 @@ final class UiApiImpl implements UiApi
     public Registration openCenterView(String id, String title, Icon icon, JComponent view)
     {
         EditorPanel editor = frame.getEditorPanel();
-        PluginThemer themer = PluginThemer.install(view);
-        editor.openCustomView(id, title, icon, view);
-        return record(() ->
+        if (!editor.hasCustomView(id))
         {
-            editor.closeCustomView(id);
-            themer.uninstall();
-        });
+            PluginThemer themer = PluginThemer.install(view);
+            editor.openCustomView(id, title, icon, view, themer::uninstall);
+        }
+        else
+        {
+            editor.openCustomView(id, title, icon, view);
+        }
+        return record(() -> editor.closeCustomView(id));
     }
 
     @Override
@@ -77,6 +80,10 @@ final class UiApiImpl implements UiApi
     public Registration addMenuItem(String menuName, String itemText, Runnable action)
     {
         JMenuBar bar = frame.getJMenuBar();
+        if (bar == null)
+        {
+            throw new IllegalStateException("The main window has no menu bar");
+        }
         JMenu menu = findMenu(bar, menuName);
         if (menu == null)
         {

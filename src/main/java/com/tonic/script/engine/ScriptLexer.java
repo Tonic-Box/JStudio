@@ -59,12 +59,17 @@ public class ScriptLexer
     }
 
     /**
-     * Scans the whole source into tokens.
+     * Scans the whole source into tokens, starting over from the beginning on every call.
      *
-     * @return the tokens, ending with an EOF token
+     * @return a new list of the tokens, ending with an EOF token
      */
     public List<ScriptToken> tokenize()
     {
+        tokens.clear();
+        start = 0;
+        current = 0;
+        line = 1;
+        column = 1;
         while (!isAtEnd())
         {
             start = current;
@@ -72,7 +77,7 @@ public class ScriptLexer
         }
 
         tokens.add(new ScriptToken(ScriptToken.Type.EOF, "", line, column));
-        return tokens;
+        return new ArrayList<>(tokens);
     }
 
     private void scanToken()

@@ -82,27 +82,27 @@ public interface AnalysisApi
         void build();
 
         /**
-         * Rebuilds the call graph of the whole project; the class is ignored.
+         * Rebuilds the call graph; the graph always covers the whole project, so this is the same as build.
          *
-         * @param className ignored
+         * @param className the class the caller is interested in; the graph is built for every class
          */
         void buildForClass(String className);
 
         /**
-         * Returns the methods that call a method.
+         * Returns the methods that call any overload of a method.
          *
          * @param className the method's class, internal or dotted
          * @param methodName the method's name
-         * @return a new list with one entry per distinct caller and line -1, empty when the method is not in the graph
+         * @return a new list with one entry per distinct caller and line -1, empty when no overload is in the graph
          */
         List<CallSite> getCallersOf(String className, String methodName);
 
         /**
-         * Returns the methods a method calls.
+         * Returns the methods any overload of a method calls.
          *
          * @param className the method's class, internal or dotted
          * @param methodName the method's name
-         * @return a new list with one entry per distinct callee and line -1, empty when the method is not in the graph
+         * @return a new list with one entry per distinct callee and line -1, empty when no overload is in the graph
          */
         List<CallSite> getCalleesOf(String className, String methodName);
 
@@ -118,27 +118,27 @@ public interface AnalysisApi
         List<String> getCallChain(String fromClass, String fromMethod, String toClass, String toMethod);
 
         /**
-         * Returns every method transitively reachable from a method.
+         * Returns every method transitively reachable from any overload of a method.
          *
          * @param className the method's class, internal or dotted
          * @param methodName the method's name
-         * @return a new set of "owner.name" strings with internal owner names, empty when the method is not in the graph
+         * @return a new set of "owner.name" strings with internal owner names, empty when no overload is in the graph
          */
         Set<String> getReachableMethods(String className, String methodName);
 
         /**
-         * Reports whether one method can transitively call another.
+         * Reports whether any overload of one method can transitively call any overload of another.
          *
          * @param fromClass the starting method's class, internal or dotted
          * @param fromMethod the starting method's name
          * @param toClass the target method's class, internal or dotted
          * @param toMethod the target method's name
-         * @return true when a call path exists; false when either method is not in the graph
+         * @return true when a call path exists; false when either method has no overload in the graph
          */
         boolean canReach(String fromClass, String fromMethod, String toClass, String toMethod);
 
         /**
-         * Counts a method's distinct callers, not its call sites.
+         * Counts the distinct callers of any overload of a method, not its call sites.
          *
          * @param className the method's class, internal or dotted
          * @param methodName the method's name
@@ -310,7 +310,7 @@ public interface AnalysisApi
     {
 
         /**
-         * Runs a registered matcher over every class; the ClassInfo it receives has empty method and field lists.
+         * Runs a registered matcher over every class, giving it the same ClassInfo the project API returns.
          *
          * @param patternType the name the matcher was registered under
          * @return the matches from all classes, or an empty list when no matcher has the name
@@ -318,20 +318,22 @@ public interface AnalysisApi
         List<PatternMatch> findPattern(String patternType);
 
         /**
-         * Finds calls to methods whose "owner.name" matches the patterns, stopping at 100 results.
+         * Finds calls to methods whose owner and name match the patterns, stopping at 100 results.
          *
-         * @param ownerPattern the owner's name, where * matches anything and the rest is a regular expression
-         * @param namePattern the method's name, where * matches anything and the rest is a regular expression
-         * @return a new list with line -1, empty when the search fails
+         * @param ownerPattern the owner's internal name, where * matches anything and the rest is a regular expression matched against the whole name
+         * @param namePattern the method's name, where * matches anything and the rest is a regular expression matched against the whole name
+         * @return a new list with line -1, empty when the project has no class pool
+         * @throws java.util.regex.PatternSyntaxException if a pattern is not a valid regular expression
          */
         List<PatternMatch> findMethodCalls(String ownerPattern, String namePattern);
 
         /**
-         * Finds fields by name, stopping at 100 results; despite the name it matches field declarations and ignores the owner.
+         * Finds reads and writes of fields whose owner and name match the patterns, stopping at 100 results.
          *
-         * @param ownerPattern ignored
-         * @param namePattern the field's name, where * matches anything and the rest is a regular expression
-         * @return a new list with line -1, empty when the search fails
+         * @param ownerPattern the field owner's internal name, as named by the access instruction, where * matches anything and the rest is a regular expression matched against the whole name
+         * @param namePattern the field's name, where * matches anything and the rest is a regular expression matched against the whole name
+         * @return a new list with line -1, empty when the project has no class pool
+         * @throws java.util.regex.PatternSyntaxException if a pattern is not a valid regular expression
          */
         List<PatternMatch> findFieldAccess(String ownerPattern, String namePattern);
 
@@ -374,24 +376,24 @@ public interface AnalysisApi
         Optional<String> resolveType(String className, String descriptor);
 
         /**
-         * Reports whether a type extends or implements another, walking superclasses within the project; interfaces are checked one level deep per class.
+         * Reports whether a type extends or implements another, walking superclasses and superinterfaces through the project.
          *
          * @param type the candidate subtype
-         * @param supertype the candidate supertype's exact internal name
+         * @param supertype the candidate supertype, internal or dotted
          * @return true when type equals supertype or inherits from it
          */
         boolean isSubtypeOf(String type, String supertype);
 
         /**
-         * Lists the project's classes that directly extend or implement a type.
+         * Lists the project's classes that extend or implement a type, directly or through other project classes.
          *
          * @param type the type, internal or dotted
-         * @return a new list of internal names, direct subtypes only
+         * @return a new list of internal names, nearest first
          */
         List<String> getSubtypes(String type);
 
         /**
-         * Lists a type's superclasses, walked through the project, followed by its direct interfaces.
+         * Lists a type's superclasses and superinterfaces, walked breadth-first through the project, nearest first.
          *
          * @param type the type, looked up as ProjectApi.getClass does
          * @return a new list of internal names, empty when the type is not in the project

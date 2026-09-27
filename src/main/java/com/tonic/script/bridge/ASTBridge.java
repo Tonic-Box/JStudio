@@ -404,7 +404,7 @@ public class ASTBridge
                 case METHOD_CALL:
                     editor.onMethodCall((ctx, call) ->
                     {
-                        ScriptValue wrapped = new ASTNodeWrapper(call).toScriptValue();
+                        ScriptValue wrapped = new ASTNodeWrapper(interpreter, call).toScriptValue();
                         ScriptValue result = callHandler(reg.function, wrapped);
                         return processResult(result, call, modCount);
                     });
@@ -413,7 +413,7 @@ public class ASTBridge
                 case FIELD_ACCESS:
                     editor.onFieldAccess((ctx, field) ->
                     {
-                        ScriptValue wrapped = new ASTNodeWrapper(field).toScriptValue();
+                        ScriptValue wrapped = new ASTNodeWrapper(interpreter, field).toScriptValue();
                         ScriptValue result = callHandler(reg.function, wrapped);
                         return processResult(result, field, modCount);
                     });
@@ -422,7 +422,7 @@ public class ASTBridge
                 case BINARY_EXPR:
                     editor.onBinaryExpr((ctx, expr) ->
                     {
-                        ScriptValue wrapped = new ASTNodeWrapper(expr).toScriptValue();
+                        ScriptValue wrapped = new ASTNodeWrapper(interpreter, expr).toScriptValue();
                         ScriptValue result = callHandler(reg.function, wrapped);
                         return processResult(result, expr, modCount);
                     });
@@ -431,7 +431,7 @@ public class ASTBridge
                 case UNARY_EXPR:
                     editor.onUnaryExpr((ctx, expr) ->
                     {
-                        ScriptValue wrapped = new ASTNodeWrapper(expr).toScriptValue();
+                        ScriptValue wrapped = new ASTNodeWrapper(interpreter, expr).toScriptValue();
                         ScriptValue result = callHandler(reg.function, wrapped);
                         return processResult(result, expr, modCount);
                     });
@@ -440,7 +440,7 @@ public class ASTBridge
                 case IF_STMT:
                     editor.onIf((ctx, stmt) ->
                     {
-                        ScriptValue wrapped = new ASTNodeWrapper(stmt).toScriptValue();
+                        ScriptValue wrapped = new ASTNodeWrapper(interpreter, stmt).toScriptValue();
                         ScriptValue result = callHandler(reg.function, wrapped);
                         return processStmtResult(result, stmt, modCount);
                     });
@@ -449,7 +449,7 @@ public class ASTBridge
                 case RETURN_STMT:
                     editor.onReturn((ctx, stmt) ->
                     {
-                        ScriptValue wrapped = new ASTNodeWrapper(stmt).toScriptValue();
+                        ScriptValue wrapped = new ASTNodeWrapper(interpreter, stmt).toScriptValue();
                         ScriptValue result = callHandler(reg.function, wrapped);
                         return processStmtResult(result, stmt, modCount);
                     });

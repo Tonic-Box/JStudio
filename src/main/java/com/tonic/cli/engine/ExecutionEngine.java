@@ -27,7 +27,7 @@ public class ExecutionEngine
     }
 
     /**
-     * Loads the target and plugin, runs the plugin (or only initializes it on a dry run), exports classes when an export directory is set, and reports the outcome.
+     * Loads the target and plugin, runs the plugin (or only initializes it on a dry run), exports classes when an export directory is set, and reports the outcome; a loaded plugin is always disposed.
      *
      * @param config what to load, run and export
      * @return a success result with counts and findings, or a failure result carrying the error message; never throws
@@ -35,6 +35,7 @@ public class ExecutionEngine
     public ExecutionResult execute(ExecutionConfig config)
     {
         long startTime = System.currentTimeMillis();
+        Plugin plugin = null;
 
         try
         {
@@ -44,14 +45,15 @@ public class ExecutionEngine
                 return ExecutionResult.failure("Failed to load target: " + config.getTarget());
             }
 
-            Plugin plugin = loadPlugin(config);
+            plugin = loadPlugin(config);
             if (plugin == null)
             {
                 return ExecutionResult.failure("Failed to load plugin: " + config.getPlugin());
             }
 
             String pluginName = plugin.getInfo() != null ? plugin.getInfo().getName() : "plugin";
-            PluginContextImpl context = new PluginContextImpl(project, pluginName);
+            String pluginId = plugin.getInfo() != null ? plugin.getInfo().getId() : "plugin";
+            PluginContextImpl context = new PluginContextImpl(project, pluginName, pluginId);
             context.setExportDir(config.getExportDir());
             plugin.init(context);
 
@@ -67,8 +69,6 @@ public class ExecutionEngine
                 exportClasses(project, config.getExportDir());
             }
 
-            plugin.dispose();
-
             long duration = System.currentTimeMillis() - startTime;
             List<Finding> findings = context.getResults().getFindings();
 
@@ -77,6 +77,20 @@ public class ExecutionEngine
         catch (Exception e)
         {
             return ExecutionResult.failure(e.getMessage());
+        }
+        finally
+        {
+            if (plugin != null)
+            {
+                try
+                {
+                    plugin.dispose();
+                }
+                catch (RuntimeException e)
+                {
+                    System.err.println("Plugin dispose failed: " + e.getMessage());
+                }
+            }
         }
     }
 
@@ -88,22 +102,28 @@ public class ExecutionEngine
             ProjectService service = ProjectService.getInstance();
             String name = target.getName().toLowerCase();
 
+            ProjectModel project;
             if (target.isDirectory())
             {
-                return service.loadDirectory(target, null);
+                project = service.readDirectory(target, null);
             }
             else if (name.endsWith(".jar") || name.endsWith(".zip"))
             {
-                return service.loadJar(target, null);
+                project = service.readJar(target, null);
             }
             else if (name.endsWith(".class"))
             {
-                return service.loadClassFile(target);
+                project = service.readClassFile(target);
             }
             else
             {
                 return null;
             }
+            if (config.isPublishProject())
+            {
+                service.makeCurrent(project, "Loaded " + target.getName());
+            }
+            return project;
         }
         catch (Exception e)
         {

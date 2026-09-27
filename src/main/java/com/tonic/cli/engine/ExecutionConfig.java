@@ -24,4 +24,7 @@ public class ExecutionConfig
     private final boolean quiet;
     private final boolean dryRun;
     private final File exportDir;
+    /** Whether the loaded target becomes the application's current project, which the VM debugging API needs; false keeps parallel runs from sharing it. */
+    @Builder.Default
+    private final boolean publishProject = true;
 }

@@ -31,9 +31,10 @@ public class PluginContextImpl implements PluginContext
      * Creates a context over a project with empty configuration.
      *
      * @param projectModel the project the plugin works on
-     * @param pluginName the name that prefixes log lines and labels findings
+     * @param pluginName the name that prefixes log lines
+     * @param pluginId the id stamped on the plugin's findings
      */
-    public PluginContextImpl(ProjectModel projectModel, String pluginName)
+    public PluginContextImpl(ProjectModel projectModel, String pluginName, String pluginId)
     {
         this.logger = new ConsolePluginLogger(pluginName);
         this.config = new MapPluginConfig();
@@ -43,21 +44,8 @@ public class PluginContextImpl implements PluginContext
         this.vmDebugApi = new VmDebugApiImpl();
         this.liveApi = new LiveApiImpl();
         this.scriptApi = new ScriptApiImpl();
-        this.refactorApi = new RefactorApiImpl();
-        this.results = new ResultCollector(pluginName);
-    }
-
-    /**
-     * Creates a context over a project with the given configuration.
-     *
-     * @param projectModel the project the plugin works on
-     * @param pluginName the name that prefixes log lines and labels findings
-     * @param configProperties the configuration values, copied
-     */
-    public PluginContextImpl(ProjectModel projectModel, String pluginName, Map<String, String> configProperties)
-    {
-        this(projectModel, pluginName);
-        this.config.putAll(configProperties);
+        this.refactorApi = new RefactorApiImpl(() -> projectModel);
+        this.results = new ResultCollector(pluginId);
     }
 
     @Override

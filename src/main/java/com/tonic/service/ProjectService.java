@@ -74,14 +74,32 @@ public class ProjectService
      */
     public ProjectModel loadJar(File jarFile, ProgressCallback progress) throws IOException
     {
+        EventBus.getInstance().post(new StatusMessageEvent(this, "Loading " + jarFile.getName() + "..."));
+        ProjectModel project = readJar(jarFile, progress);
+        String message = "Loaded " + project.getUserClasses().size() + " classes";
+        if (!project.getAllResources().isEmpty())
+        {
+            message += ", " + project.getAllResources().size() + " resources";
+        }
+        return makeCurrent(project, message + " from " + jarFile.getName());
+    }
+
+    /**
+     * Reads a jar into a new project without making it the current project or posting events, logging entries that fail to load.
+     *
+     * @param jarFile the jar
+     * @param progress receives a call per entry, or null
+     * @return the new project
+     * @throws IOException if the file does not exist or the jar cannot be opened
+     */
+    public ProjectModel readJar(File jarFile, ProgressCallback progress) throws IOException
+    {
         if (!jarFile.exists())
         {
             throw new IOException("File not found: " + jarFile.getAbsolutePath());
         }
 
         String name = jarFile.getName();
-        EventBus.getInstance().post(new StatusMessageEvent(this, "Loading " + name + "..."));
-
         List<ClassFile> classes = new ArrayList<>();
 
         List<ResourceEntryModel> resources = new ArrayList<>();
@@ -165,18 +183,6 @@ public class ProjectService
         {
             project.addResource(resource);
         }
-
-        this.currentProject = project;
-
-        String message = "Loaded " + classes.size() + " classes";
-        if (!resources.isEmpty())
-        {
-            message += ", " + resources.size() + " resources";
-        }
-        message += " from " + name;
-        EventBus.getInstance().post(new StatusMessageEvent(this, message));
-        EventBus.getInstance().post(new ProjectLoadedEvent(this, project));
-
         return project;
     }
 
@@ -188,6 +194,19 @@ public class ProjectService
      * @throws IOException if the file does not exist or cannot be read or parsed
      */
     public ProjectModel loadClassFile(File classFile) throws IOException
+    {
+        ProjectModel project = readClassFile(classFile);
+        return makeCurrent(project, "Loaded " + project.getUserClasses().get(0).getClassName());
+    }
+
+    /**
+     * Reads a single class file into a new project without making it the current project or posting events.
+     *
+     * @param classFile the class file
+     * @return the new project
+     * @throws IOException if the file does not exist or cannot be read or parsed
+     */
+    public ProjectModel readClassFile(File classFile) throws IOException
     {
         if (!classFile.exists())
         {
@@ -204,12 +223,6 @@ public class ProjectService
         ClassPool pool = createClassPoolWithJdk();
         project.setClassPool(pool);
         project.addClass(cf);
-
-        this.currentProject = project;
-
-        EventBus.getInstance().post(new StatusMessageEvent(this, "Loaded " + cf.getClassName()));
-        EventBus.getInstance().post(new ProjectLoadedEvent(this, project));
-
         return project;
     }
 
@@ -223,12 +236,25 @@ public class ProjectService
      */
     public ProjectModel loadDirectory(File directory, ProgressCallback progress) throws IOException
     {
+        EventBus.getInstance().post(new StatusMessageEvent(this, "Loading " + directory.getName() + "..."));
+        ProjectModel project = readDirectory(directory, progress);
+        return makeCurrent(project, "Loaded " + project.getUserClasses().size() + " classes from " + directory.getName());
+    }
+
+    /**
+     * Reads every class file under a directory into a new project without making it the current project or posting events, logging files that fail to load.
+     *
+     * @param directory the root directory
+     * @param progress receives a call per class file, or null
+     * @return the new project
+     * @throws IOException if the path is not an existing directory or cannot be walked
+     */
+    public ProjectModel readDirectory(File directory, ProgressCallback progress) throws IOException
+    {
         if (!directory.exists() || !directory.isDirectory())
         {
             throw new IOException("Not a valid directory: " + directory.getAbsolutePath());
         }
-
-        EventBus.getInstance().post(new StatusMessageEvent(this, "Loading " + directory.getName() + "..."));
 
         List<Path> classPaths = new ArrayList<>();
         try (Stream<Path> paths = Files.walk(directory.toPath()))
@@ -272,12 +298,21 @@ public class ProjectService
         {
             project.addClass(cf);
         }
+        return project;
+    }
 
+    /**
+     * Makes a project the current one and announces it with a status message and a project-loaded event.
+     *
+     * @param project the project, typically from one of the read methods
+     * @param message the status message to post
+     * @return the project
+     */
+    public ProjectModel makeCurrent(ProjectModel project, String message)
+    {
         this.currentProject = project;
-
-        EventBus.getInstance().post(new StatusMessageEvent(this, "Loaded " + classes.size() + " classes from " + directory.getName()));
+        EventBus.getInstance().post(new StatusMessageEvent(this, message));
         EventBus.getInstance().post(new ProjectLoadedEvent(this, project));
-
         return project;
     }
 

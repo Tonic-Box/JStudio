@@ -85,8 +85,8 @@ public interface LiveApi
      * Lists live instances of a class from a heap snapshot, one page at a time; taking a snapshot dumps the target's heap, which is slow, so call it off the EDT.
      *
      * @param className the class, internal or dotted
-     * @param offset the index of the first instance to return
-     * @param limit the most instances to return
+     * @param offset the index of the first instance to return; negative is treated as 0
+     * @param limit the most instances to return; negative is treated as 0
      * @param refresh true to take a fresh snapshot, false to reuse the cached one, taking one only when none exists
      * @return the total count and the requested page
      * @throws IllegalStateException if not attached

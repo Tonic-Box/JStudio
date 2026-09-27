@@ -52,7 +52,7 @@ public class YabrAccessImpl implements YabrAccess
     public Optional<Object> getClassFile(String name)
     {
         ClassEntryModel entry = projectModel.findClassByName(name);
-        return entry != null ? Optional.of(entry.getClassFile()) : Optional.empty();
+        return entry != null ? Optional.ofNullable(entry.getClassFile()) : Optional.empty();
     }
 
     @Override
@@ -64,12 +64,16 @@ public class YabrAccessImpl implements YabrAccess
         MethodEntryModel methodEntry = classEntry.getMethod(methodName, descriptor);
         if (methodEntry == null) return Optional.empty();
 
-        if (methodEntry.getCachedIR() != null)
+        if (methodEntry.getCachedIR() == null)
         {
-            return Optional.of(methodEntry.getCachedIR());
+            MethodEntry method = methodEntry.getMethodEntry();
+            if (method == null || method.getCodeAttribute() == null)
+            {
+                return Optional.empty();
+            }
+            methodEntry.setCachedIR(new SSA(classEntry.getClassFile().getConstPool()).lift(method));
         }
-
-        return Optional.empty();
+        return Optional.ofNullable(methodEntry.getCachedIR());
     }
 
     @Override
@@ -235,11 +239,7 @@ public class YabrAccessImpl implements YabrAccess
     @Override
     public void removeClass(String name)
     {
-        com.tonic.parser.ClassPool pool = projectModel.getClassPool();
-        if (pool != null)
-        {
-            pool.getClasses().removeIf(cf -> cf.getClassName().equals(name));
-        }
+        projectModel.removeClass(name);
     }
 
     private class ClassPoolImpl implements ClassPool

@@ -183,6 +183,17 @@ public class EditorPanel
     }
 
     /**
+     * Tells whether a plugin's document tab is open.
+     *
+     * @param id the plugin's id for the view
+     * @return true while a tab with that id is open
+     */
+    public boolean hasCustomView(String id)
+    {
+        return registry.getCustomView(id) != null;
+    }
+
+    /**
      * Closes a plugin's document tab and runs its close action; an id that is not open is ignored.
      *
      * @param id the plugin's id for the view

@@ -201,26 +201,44 @@ public class Finding
         }
 
         /**
-         * Replaces the metadata; later addMetadata calls write into this map.
+         * Replaces the metadata with a copy of the given entries; entries with null values are dropped.
          *
-         * @param metadata the entries, with no null keys or values, or null for none
+         * @param metadata the entries, or null for none
          * @return this builder
+         * @throws NullPointerException if a key is null
          */
         public Builder metadata(Map<String, Object> metadata)
         {
-            this.metadata = metadata;
+            this.metadata = null;
+            if (metadata != null)
+            {
+                for (Map.Entry<String, Object> entry : metadata.entrySet())
+                {
+                    addMetadata(entry.getKey(), entry.getValue());
+                }
+            }
             return this;
         }
 
         /**
-         * Adds one metadata entry.
+         * Adds one metadata entry, or removes the key when the value is null.
          *
-         * @param key the entry's key, not null
-         * @param value the entry's value, not null
+         * @param key the entry's key
+         * @param value the entry's value, or null to leave the key out
          * @return this builder
+         * @throws NullPointerException if the key is null
          */
         public Builder addMetadata(String key, Object value)
         {
+            Objects.requireNonNull(key, "metadata key");
+            if (value == null)
+            {
+                if (this.metadata != null)
+                {
+                    this.metadata.remove(key);
+                }
+                return this;
+            }
             if (this.metadata == null)
             {
                 this.metadata = new HashMap<>();

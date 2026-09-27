@@ -7,8 +7,10 @@ import com.tonic.model.ProjectModel;
 import com.tonic.service.ProjectService;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -35,10 +37,11 @@ public class REPLMode
      */
     public REPLMode() throws IOException
     {
-        Terminal terminal = TerminalBuilder.builder()
-                .system(true)
-                .build();
+        this(TerminalBuilder.builder().system(true).build());
+    }
 
+    REPLMode(Terminal terminal)
+    {
         reader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .history(new DefaultHistory())
@@ -70,7 +73,7 @@ public class REPLMode
     public void loadTarget(File file) throws Exception
     {
         project = loadProjectFromFile(file);
-        context = new PluginContextImpl(project, "repl");
+        context = new PluginContextImpl(project, "repl", "repl");
         updateBindings();
         System.out.println("Loaded: " + file.getName() + " (" + project.getClassCount() + " classes)");
     }
@@ -114,7 +117,7 @@ public class REPLMode
         }
     }
 
-    /** Reads and runs lines until quit or end of input; lines starting with a colon are commands, the rest are Groovy, and errors are printed without stopping the loop. */
+    /** Reads and runs lines until quit or end of input (Ctrl-D), then closes the terminal; Ctrl-C discards the current line, lines starting with a colon are commands, the rest are Groovy, and errors are printed without stopping the loop. */
     public void run()
     {
         running = true;
@@ -123,7 +126,19 @@ public class REPLMode
         {
             try
             {
-                String line = reader.readLine("jstudio> ");
+                String line;
+                try
+                {
+                    line = reader.readLine("jstudio> ");
+                }
+                catch (UserInterruptException e)
+                {
+                    continue;
+                }
+                catch (EndOfFileException e)
+                {
+                    break;
+                }
                 if (line == null)
                 {
                     break;
@@ -151,6 +166,14 @@ public class REPLMode
         }
 
         System.out.println("Goodbye!");
+        try
+        {
+            reader.getTerminal().close();
+        }
+        catch (IOException e)
+        {
+            System.err.println("Could not close the terminal: " + e.getMessage());
+        }
     }
 
     private void handleCommand(String line) throws Exception

@@ -42,8 +42,8 @@ public class CommonAPI
      * Sets the log, warn and error callbacks passed to the interpreter on registration.
      *
      * @param log receives log messages, or null to leave the interpreter's as is
-     * @param warn receives warnings, or null to leave the interpreter's as is
-     * @param error receives errors, or null to leave the interpreter's as is
+     * @param warn receives warnings, already prefixed with "WARN: ", or null to leave the interpreter's as is
+     * @param error receives errors, already prefixed with "ERROR: ", or null to leave the interpreter's as is
      */
     public void setCallbacks(Consumer<String> log, Consumer<String> warn, Consumer<String> error)
     {

@@ -17,13 +17,13 @@ public interface UiApi
     Registration addToolWindow(String name, JComponent component);
 
     /**
-     * Opens a document tab in the center editor area, or brings the tab forward when one with the id is already open, in which case view is not used.
+     * Opens a document tab in the center editor area, or brings the tab forward when one with the id is already open, in which case view is neither shown nor themed.
      *
      * @param id identifies the tab for de-duplication and removal
      * @param title the tab's title and tooltip
      * @param icon the tab's icon, or null
      * @param view the panel to show
-     * @return a handle that closes the tab with that id, safe to call more than once
+     * @return a handle that closes the tab with that id, whichever call opened it; safe to call more than once
      */
     Registration openCenterView(String id, String title, Icon icon, JComponent view);
 
@@ -43,6 +43,7 @@ public interface UiApi
      * @param itemText the item's text
      * @param action run on the EDT when the item is clicked
      * @return a handle that removes the item, and the menu too when this API created it and it is now empty; safe to call more than once
+     * @throws IllegalStateException if the main window has no menu bar
      */
     Registration addMenuItem(String menuName, String itemText, Runnable action);
 

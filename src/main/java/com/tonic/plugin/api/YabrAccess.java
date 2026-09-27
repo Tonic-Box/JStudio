@@ -23,12 +23,13 @@ public interface YabrAccess
     Optional<Object> getClassFile(String name);
 
     /**
-     * Returns a method's SSA IR if the app has already lifted and cached it; this never lifts on its own.
+     * Returns a method's SSA IR, lifting it and caching it on the method the first time.
      *
      * @param className the declaring class
      * @param methodName the method's name
      * @param descriptor the method's JVM descriptor
-     * @return the cached IRMethod, or empty when the class or method is not found or nothing is cached
+     * @return the IRMethod, or empty when the class or method is not found or the method has no code
+     * @throws RuntimeException if lifting the method fails
      */
     Optional<Object> liftToIR(String className, String methodName, String descriptor);
 
@@ -115,7 +116,7 @@ public interface YabrAccess
     void addClass(String name, byte[] bytecode);
 
     /**
-     * Removes a class from the YABR class pool; the project model's class list is not updated.
+     * Removes a class from the project, its class list and its class pool; does nothing when no class has that name.
      *
      * @param name the class's exact internal name
      */

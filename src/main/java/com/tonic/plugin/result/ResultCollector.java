@@ -28,7 +28,7 @@ public class ResultCollector
     /**
      * Creates a collector that stamps findings with a plugin identifier.
      *
-     * @param pluginId stamped on findings that have none; the contexts pass the plugin's name
+     * @param pluginId stamped on findings that have none; the contexts pass the plugin's id
      */
     public ResultCollector(String pluginId)
     {
@@ -268,10 +268,11 @@ public class ResultCollector
         return findings.stream().anyMatch(f -> f.getSeverity().isAtLeast(Severity.HIGH));
     }
 
-    /** Removes every finding; result data is kept. */
+    /** Removes every finding and every result value. */
     public void clear()
     {
         findings.clear();
+        data.clear();
     }
 
     /**
@@ -335,13 +336,16 @@ public class ResultCollector
     }
 
     /**
-     * Copies another collector's findings and data into this one, without restamping the findings or notifying listeners.
+     * Adds another collector's findings through add, so this collector's plugin id is stamped where missing and its listeners are notified, then copies its data.
      *
      * @param other the collector to copy from
      */
     public void merge(ResultCollector other)
     {
-        findings.addAll(other.findings);
+        for (Finding finding : new ArrayList<>(other.findings))
+        {
+            add(finding);
+        }
         data.putAll(other.data);
     }
 

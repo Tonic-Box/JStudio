@@ -84,7 +84,7 @@ public class BatchCommand implements Callable<Integer>
 
             for (File target : targets)
             {
-                futures.add(executor.submit(() -> processTarget(target)));
+                futures.add(executor.submit(() -> processTarget(target, false)));
             }
 
             for (Future<ExecutionResult> future : futures)
@@ -92,6 +92,7 @@ public class BatchCommand implements Callable<Integer>
                 try
                 {
                     ExecutionResult result = future.get();
+                    totalTime += result.getDurationMs();
                     if (result.isSuccess())
                     {
                         successCount++;
@@ -99,8 +100,12 @@ public class BatchCommand implements Callable<Integer>
                     else
                     {
                         failCount++;
+                        if (!continueOnError)
+                        {
+                            executor.shutdownNow();
+                            break;
+                        }
                     }
-                    totalTime += result.getDurationMs();
                 }
                 catch (Exception e)
                 {
@@ -121,7 +126,7 @@ public class BatchCommand implements Callable<Integer>
             {
                 try
                 {
-                    ExecutionResult result = processTarget(target);
+                    ExecutionResult result = processTarget(target, true);
                     if (result.isSuccess())
                     {
                         successCount++;
@@ -154,7 +159,7 @@ public class BatchCommand implements Callable<Integer>
         return failCount > 0 ? 1 : 0;
     }
 
-    private ExecutionResult processTarget(File target) throws Exception
+    private ExecutionResult processTarget(File target, boolean publishProject) throws Exception
     {
         if (!quiet)
         {
@@ -167,6 +172,7 @@ public class BatchCommand implements Callable<Integer>
                 .outputFormat(format)
                 .verbose(verbose)
                 .quiet(quiet)
+                .publishProject(publishProject)
                 .build();
 
         ExecutionEngine engine = new ExecutionEngine();

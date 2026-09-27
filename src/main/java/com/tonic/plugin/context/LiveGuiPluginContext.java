@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** The PluginContext for resident GUI plugins, whose project-bound APIs are built on each call from the currently open project, or from an empty project when none is open, so they never go stale or throw. */
+/** The PluginContext for resident GUI plugins, whose project-bound APIs follow the currently open project, or an empty project when none is open, so they never go stale or throw; the analysis API is kept per project so registered patterns and built graphs survive between calls. */
 public class LiveGuiPluginContext implements PluginContext
 {
 
@@ -30,17 +30,20 @@ public class LiveGuiPluginContext implements PluginContext
     private final Map<String, Object> environment = new ConcurrentHashMap<>();
     private File exportDir;
     private ProjectModel emptyProject;
+    private AnalysisApiImpl analysis;
+    private ProjectModel analysisProject;
 
     /**
      * Creates a context with its own logger, empty configuration and results.
      *
-     * @param pluginName the name that prefixes log lines and labels findings
+     * @param pluginName the name that prefixes log lines
+     * @param pluginId the id stamped on the plugin's findings
      */
-    public LiveGuiPluginContext(String pluginName)
+    public LiveGuiPluginContext(String pluginName, String pluginId)
     {
         this.logger = new ConsolePluginLogger(pluginName);
         this.config = new MapPluginConfig();
-        this.results = new ResultCollector(pluginName);
+        this.results = new ResultCollector(pluginId);
     }
 
     private ProjectModel project()
@@ -76,9 +79,15 @@ public class LiveGuiPluginContext implements PluginContext
     }
 
     @Override
-    public AnalysisApi getAnalysis()
+    public synchronized AnalysisApi getAnalysis()
     {
-        return new AnalysisApiImpl(project());
+        ProjectModel current = project();
+        if (analysis == null || analysisProject != current)
+        {
+            analysis = new AnalysisApiImpl(current);
+            analysisProject = current;
+        }
+        return analysis;
     }
 
     @Override
@@ -108,7 +117,7 @@ public class LiveGuiPluginContext implements PluginContext
     @Override
     public RefactorApi getRefactor()
     {
-        return new RefactorApiImpl();
+        return new RefactorApiImpl(ProjectService.getInstance()::getCurrentProject);
     }
 
     @Override

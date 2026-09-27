@@ -11,6 +11,7 @@ import groovy.lang.Script;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +48,7 @@ public class PluginLoader
     }
 
     /**
-     * Loads every plugin file directly in a directory, skipping files that fail to load.
+     * Loads every .jar, .groovy and .java file directly in a directory; other files are ignored, and a plugin file that fails to load is reported on standard error and skipped.
      *
      * @param dir the directory to scan
      * @return the only plugin found, a composite running all of them in order, or null when none loaded
@@ -61,19 +62,17 @@ public class PluginLoader
         {
             for (File file : files)
             {
+                if (!file.isFile() || !isPluginFile(file))
+                {
+                    continue;
+                }
                 try
                 {
-                    if (file.isFile())
-                    {
-                        Plugin plugin = load(file);
-                        if (plugin != null)
-                        {
-                            plugins.add(plugin);
-                        }
-                    }
+                    plugins.add(load(file));
                 }
-                catch (Exception e)
+                catch (RuntimeException e)
                 {
+                    System.err.println("Skipping plugin " + file.getName() + ": " + e.getMessage());
                 }
             }
         }
@@ -88,6 +87,12 @@ public class PluginLoader
         }
 
         return new CompositePlugin(plugins);
+    }
+
+    private static boolean isPluginFile(File file)
+    {
+        String name = file.getName().toLowerCase();
+        return name.endsWith(".jar") || name.endsWith(".groovy") || name.endsWith(".java");
     }
 
     private Plugin loadJarPlugin(File jarFile)
@@ -105,7 +110,7 @@ public class PluginLoader
     {
         try
         {
-            String scriptContent = new String(Files.readAllBytes(scriptFile.toPath()));
+            String scriptContent = Files.readString(scriptFile.toPath(), StandardCharsets.UTF_8);
 
             Binding binding = new Binding();
             GroovyShell shell = new GroovyShell(binding);
@@ -210,9 +215,24 @@ public class PluginLoader
         @Override
         public void dispose()
         {
+            RuntimeException first = null;
             for (Plugin plugin : plugins)
             {
-                plugin.dispose();
+                try
+                {
+                    plugin.dispose();
+                }
+                catch (RuntimeException e)
+                {
+                    if (first == null)
+                    {
+                        first = e;
+                    }
+                }
+            }
+            if (first != null)
+            {
+                throw first;
             }
         }
     }

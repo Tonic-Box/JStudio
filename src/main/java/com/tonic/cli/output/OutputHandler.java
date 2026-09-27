@@ -209,7 +209,7 @@ public abstract class OutputHandler
                     }
                     else
                     {
-                        out.print(",,,");
+                        out.print(",,");
                     }
                     out.println();
                 }

@@ -2,6 +2,8 @@ package com.tonic.script.engine;
 
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -38,12 +40,11 @@ public class ScriptValue
     public static final ScriptValue FALSE = new ScriptValue(Type.BOOLEAN, false);
 
     /**
-     * Converts a Java value to the matching script value: null, booleans, numbers, strings, functions, lists and maps, with anything else wrapped as native.
+     * Converts a Java value to the matching script value: null, booleans, numbers, strings, functions, and lists and maps with their elements converted the same way, with anything else wrapped as native.
      *
      * @param value the Java value, or null
-     * @return the script value; a script value is returned as is
+     * @return the script value; a script value is returned as is, lists and maps are copied
      */
-    @SuppressWarnings("unchecked")
     public static ScriptValue of(Object value)
     {
         if (value == null) return NULL;
@@ -52,8 +53,24 @@ public class ScriptValue
         if (value instanceof Number) return number(((Number) value).doubleValue());
         if (value instanceof String) return string((String) value);
         if (value instanceof ScriptFunction) return function((ScriptFunction) value);
-        if (value instanceof List) return array((List<?>) value);
-        if (value instanceof Map) return object((Map<String, ScriptValue>) value);
+        if (value instanceof List)
+        {
+            List<ScriptValue> items = new ArrayList<>();
+            for (Object item : (List<?>) value)
+            {
+                items.add(of(item));
+            }
+            return array(items);
+        }
+        if (value instanceof Map)
+        {
+            Map<String, ScriptValue> props = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet())
+            {
+                props.put(String.valueOf(entry.getKey()), of(entry.getValue()));
+            }
+            return object(props);
+        }
         return native_(value);
     }
 
@@ -115,10 +132,10 @@ public class ScriptValue
     /**
      * Creates an array value backed by the given list, not a copy.
      *
-     * @param items the elements, expected to be script values
+     * @param items the elements
      * @return the value
      */
-    public static ScriptValue array(List<?> items)
+    public static ScriptValue array(List<ScriptValue> items)
     {
         return new ScriptValue(Type.ARRAY, items);
     }

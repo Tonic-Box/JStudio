@@ -9,26 +9,38 @@ import com.tonic.model.ProjectModel;
 import com.tonic.plugin.api.RefactorApi;
 import com.tonic.renamer.Renamer;
 import com.tonic.renamer.exception.RenameException;
-import com.tonic.service.ProjectService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
-/** The RefactorApi over YABR's Renamer, resolving the current project from ProjectService on every call and invalidating the renamed class's decompile cache. */
+/** The RefactorApi over YABR's Renamer, working on the project its plugin context supplies and invalidating the renamed class's decompile cache. */
 public class RefactorApiImpl implements RefactorApi
 {
+
+    private final Supplier<ProjectModel> project;
+
+    /**
+     * Creates the API over the project a context supplies.
+     *
+     * @param project supplies the project to rename in, or null when none is open
+     */
+    public RefactorApiImpl(Supplier<ProjectModel> project)
+    {
+        this.project = project;
+    }
 
     @Override
     public RenameResult renameClass(String oldName, String newName)
     {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        ProjectModel project = this.project.get();
         if (project == null || project.getClassPool() == null)
         {
             return fail("No project is loaded.");
         }
-        if (isBlank(newName))
+        if (isBlank(oldName) || isBlank(newName))
         {
-            return fail("Provide a new class name.");
+            return fail("Provide the class name and the new class name.");
         }
         String oldInternal = normalize(oldName);
         String newInternal = normalize(newName);
@@ -65,14 +77,14 @@ public class RefactorApiImpl implements RefactorApi
     @Override
     public RenameResult renameMethod(String className, String name, String descriptor, String newName)
     {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        ProjectModel project = this.project.get();
         if (project == null || project.getClassPool() == null)
         {
             return fail("No project is loaded.");
         }
-        if (isBlank(name) || isBlank(newName))
+        if (isBlank(className) || isBlank(name) || isBlank(newName))
         {
-            return fail("Provide the method name and the new name.");
+            return fail("Provide the class, the method name and the new name.");
         }
         String internal = normalize(className);
         ClassEntryModel cls = project.getClass(internal);
@@ -121,14 +133,14 @@ public class RefactorApiImpl implements RefactorApi
     @Override
     public RenameResult renameField(String className, String name, String descriptor, String newName)
     {
-        ProjectModel project = ProjectService.getInstance().getCurrentProject();
+        ProjectModel project = this.project.get();
         if (project == null || project.getClassPool() == null)
         {
             return fail("No project is loaded.");
         }
-        if (isBlank(name) || isBlank(newName))
+        if (isBlank(className) || isBlank(name) || isBlank(newName))
         {
-            return fail("Provide the field name and the new name.");
+            return fail("Provide the class, the field name and the new name.");
         }
         String internal = normalize(className);
         ClassEntryModel cls = project.getClass(internal);

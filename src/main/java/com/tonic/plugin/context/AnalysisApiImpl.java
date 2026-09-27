@@ -11,6 +11,8 @@ import com.tonic.analysis.query.planner.QueryMatch;
 import com.tonic.analysis.query.planner.QueryTarget;
 import com.tonic.analysis.source.decompile.ClassDecompiler;
 import com.tonic.analysis.source.decompile.DecompileResult;
+import com.tonic.analysis.ssa.ir.FieldAccessInstruction;
+import com.tonic.analysis.ssa.ir.InvokeInstruction;
 import com.tonic.analysis.xref.Xref;
 import com.tonic.event.events.FindUsagesEvent;
 import com.tonic.parser.ClassFile;
@@ -20,7 +22,6 @@ import com.tonic.parser.constpool.Item;
 import com.tonic.parser.constpool.StringRefItem;
 import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.plugin.api.AnalysisApi;
-import com.tonic.plugin.api.ProjectApi;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.ProjectModel;
 import com.tonic.service.XrefQueryService;
@@ -147,13 +148,13 @@ public class AnalysisApiImpl implements AnalysisApi
             if (callGraph == null) build();
             if (callGraph == null) return Collections.emptyList();
 
-            List<CallSite> sites = new ArrayList<>();
             String normalizedName = className.replace('.', '/');
-
-            MethodReference target = findMethod(normalizedName, methodName);
-            if (target == null) return sites;
-
-            Set<MethodReference> callers = callGraph.getCallers(target);
+            Set<MethodReference> callers = new LinkedHashSet<>();
+            for (MethodReference target : findMethods(normalizedName, methodName))
+            {
+                callers.addAll(callGraph.getCallers(target));
+            }
+            List<CallSite> sites = new ArrayList<>();
             for (MethodReference caller : callers)
             {
                 sites.add(new CallSite(caller.getOwner(), caller.getName(), normalizedName, methodName, -1));
@@ -167,13 +168,13 @@ public class AnalysisApiImpl implements AnalysisApi
             if (callGraph == null) build();
             if (callGraph == null) return Collections.emptyList();
 
-            List<CallSite> sites = new ArrayList<>();
             String normalizedName = className.replace('.', '/');
-
-            MethodReference source = findMethod(normalizedName, methodName);
-            if (source == null) return sites;
-
-            Set<MethodReference> callees = callGraph.getCallees(source);
+            Set<MethodReference> callees = new LinkedHashSet<>();
+            for (MethodReference source : findMethods(normalizedName, methodName))
+            {
+                callees.addAll(callGraph.getCallees(source));
+            }
+            List<CallSite> sites = new ArrayList<>();
             for (MethodReference callee : callees)
             {
                 sites.add(new CallSite(normalizedName, methodName, callee.getOwner(), callee.getName(), -1));
@@ -195,14 +196,13 @@ public class AnalysisApiImpl implements AnalysisApi
             if (callGraph == null) build();
             if (callGraph == null) return Collections.emptySet();
 
+            List<MethodReference> sources = findMethods(className.replace('.', '/'), methodName);
             Set<String> reachable = new HashSet<>();
-            String normalizedName = className.replace('.', '/');
-
-            MethodReference source = findMethod(normalizedName, methodName);
-            if (source == null) return reachable;
-
-            Set<MethodReference> reachableRefs = callGraph.getReachableFrom(Collections.singleton(source));
-            for (MethodReference ref : reachableRefs)
+            if (sources.isEmpty())
+            {
+                return reachable;
+            }
+            for (MethodReference ref : callGraph.getReachableFrom(new LinkedHashSet<>(sources)))
             {
                 reachable.add(ref.getOwner() + "." + ref.getName());
             }
@@ -215,14 +215,18 @@ public class AnalysisApiImpl implements AnalysisApi
             if (callGraph == null) build();
             if (callGraph == null) return false;
 
-            String fromNormalized = fromClass.replace('.', '/');
-            String toNormalized = toClass.replace('.', '/');
-
-            MethodReference fromRef = findMethod(fromNormalized, fromMethod);
-            MethodReference toRef = findMethod(toNormalized, toMethod);
-
-            if (fromRef == null || toRef == null) return false;
-            return callGraph.canReach(fromRef, toRef);
+            List<MethodReference> targets = findMethods(toClass.replace('.', '/'), toMethod);
+            for (MethodReference from : findMethods(fromClass.replace('.', '/'), fromMethod))
+            {
+                for (MethodReference to : targets)
+                {
+                    if (callGraph.canReach(from, to))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         @Override
@@ -287,17 +291,18 @@ public class AnalysisApiImpl implements AnalysisApi
             return result;
         }
 
-        private MethodReference findMethod(String className, String methodName)
+        private List<MethodReference> findMethods(String className, String methodName)
         {
+            List<MethodReference> refs = new ArrayList<>();
             for (CallGraphNode node : callGraph.getPoolNodes())
             {
                 MethodReference ref = node.getReference();
                 if (ref.getOwner().equals(className) && ref.getName().equals(methodName))
                 {
-                    return ref;
+                    refs.add(ref);
                 }
             }
-            return null;
+            return refs;
         }
     }
 
@@ -348,7 +353,7 @@ public class AnalysisApiImpl implements AnalysisApi
             List<PatternMatch> matches = new ArrayList<>();
             for (ClassEntryModel entry : projectModel.getAllClasses())
             {
-                matches.addAll(matcher.match(new ClassInfoImpl(entry)));
+                matches.addAll(matcher.match(new ProjectApiImpl.ClassInfoImpl(entry)));
             }
             return matches;
         }
@@ -356,57 +361,37 @@ public class AnalysisApiImpl implements AnalysisApi
         @Override
         public List<PatternMatch> findMethodCalls(String ownerPattern, String namePattern)
         {
-            ClassPool pool = projectModel.getClassPool();
-            if (pool == null) return Collections.emptyList();
-
-            List<PatternMatch> matches = new ArrayList<>();
-            try
-            {
-                PatternSearch search = new PatternSearch(pool)
-                        .inAllClasses()
-                        .limit(100);
-
-                String pattern = ownerPattern.replace("*", ".*") + "." + namePattern.replace("*", ".*");
-                List<SearchResult> results = search.findMethodCalls(pattern);
-
-                for (SearchResult result : results)
-                {
-                    String className = result.getClassFile() != null ? result.getClassFile().getClassName() : "";
-                    String methodName = result.getMethod() != null ? result.getMethod().getName() : "";
-                    matches.add(new PatternMatch(className, methodName, -1, result.getDescription(), Collections.emptyMap()));
-                }
-            }
-            catch (Exception e)
-            {
-            }
-            return matches;
+            Pattern owner = wildcard(ownerPattern);
+            Pattern name = wildcard(namePattern);
+            return search((instr, method, source, classFile) -> instr instanceof InvokeInstruction && owner.matcher(((InvokeInstruction) instr).getOwner()).matches() && name.matcher(((InvokeInstruction) instr).getName()).matches());
         }
 
         @Override
         public List<PatternMatch> findFieldAccess(String ownerPattern, String namePattern)
         {
+            Pattern owner = wildcard(ownerPattern);
+            Pattern name = wildcard(namePattern);
+            return search((instr, method, source, classFile) -> instr instanceof FieldAccessInstruction && owner.matcher(((FieldAccessInstruction) instr).getOwner()).matches() && name.matcher(((FieldAccessInstruction) instr).getName()).matches());
+        }
+
+        private Pattern wildcard(String pattern)
+        {
+            return Pattern.compile(pattern.replace("*", ".*"));
+        }
+
+        private List<PatternMatch> search(com.tonic.analysis.pattern.PatternMatcher matcher)
+        {
             ClassPool pool = projectModel.getClassPool();
-            if (pool == null) return Collections.emptyList();
-
-            List<PatternMatch> matches = new ArrayList<>();
-            try
+            if (pool == null)
             {
-                PatternSearch search = new PatternSearch(pool)
-                        .inAllClasses()
-                        .limit(100);
-
-                String pattern = namePattern.replace("*", ".*");
-                List<SearchResult> results = search.findFieldsByName(pattern);
-
-                for (SearchResult result : results)
-                {
-                    String className = result.getClassFile() != null ? result.getClassFile().getClassName() : "";
-                    String methodName = result.getMethod() != null ? result.getMethod().getName() : "";
-                    matches.add(new PatternMatch(className, methodName, -1, result.getDescription(), Collections.emptyMap()));
-                }
+                return Collections.emptyList();
             }
-            catch (Exception e)
+            List<PatternMatch> matches = new ArrayList<>();
+            for (SearchResult result : new PatternSearch(pool).inAllClasses().limit(100).findPattern(matcher))
             {
+                String className = result.getClassFile() != null ? result.getClassFile().getClassName() : "";
+                String methodName = result.getMethod() != null ? result.getMethod().getName() : "";
+                matches.add(new PatternMatch(className, methodName, -1, result.getDescription(), Collections.emptyMap()));
             }
             return matches;
         }
@@ -438,101 +423,6 @@ public class AnalysisApiImpl implements AnalysisApi
         {
             customPatterns.put(name, matcher);
         }
-
-        private class ClassInfoImpl implements ProjectApi.ClassInfo
-        {
-            private final ClassEntryModel entry;
-
-            ClassInfoImpl(ClassEntryModel entry)
-            {
-                this.entry = entry;
-            }
-
-            @Override
-            public String getName()
-            {
-                return entry.getClassName();
-            }
-
-            @Override
-            public String getSimpleName()
-            {
-                return entry.getSimpleName();
-            }
-
-            @Override
-            public String getPackageName()
-            {
-                return entry.getPackageName();
-            }
-
-            @Override
-            public String getSuperclass()
-            {
-                return entry.getSuperClassName();
-            }
-
-            @Override
-            public List<String> getInterfaces()
-            {
-                return entry.getInterfaceNames();
-            }
-
-            @Override
-            public List<ProjectApi.MethodInfo> getMethods()
-            {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public List<ProjectApi.FieldInfo> getFields()
-            {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public int getAccessFlags()
-            {
-                return entry.getAccessFlags();
-            }
-
-            @Override
-            public boolean isInterface()
-            {
-                return entry.isInterface();
-            }
-
-            @Override
-            public boolean isAbstract()
-            {
-                return entry.isAbstract();
-            }
-
-            @Override
-            public boolean isEnum()
-            {
-                return entry.isEnum();
-            }
-
-            @Override
-            public boolean isAnnotation()
-            {
-                return entry.isAnnotation();
-            }
-
-            @Override
-            public byte[] getBytecode()
-            {
-                try
-                {
-                    return entry.getClassFile().write();
-                }
-                catch (Exception e)
-                {
-                    return new byte[0];
-                }
-            }
-        }
     }
 
     private class TypeApiImpl implements TypeApi
@@ -547,63 +437,74 @@ public class AnalysisApiImpl implements AnalysisApi
         @Override
         public boolean isSubtypeOf(String type, String supertype)
         {
-            if (type.equals(supertype)) return true;
-
-            ClassEntryModel entry = projectModel.findClassByName(type);
-            if (entry == null) return false;
-
-            String superClass = entry.getSuperClassName();
-            if (superClass != null && superClass.equals(supertype)) return true;
-
-            for (String iface : entry.getInterfaceNames())
-            {
-                if (iface.equals(supertype)) return true;
-            }
-
-            if (superClass != null && !superClass.equals("java/lang/Object"))
-            {
-                return isSubtypeOf(superClass, supertype);
-            }
-
-            return false;
+            String target = supertype.replace('.', '/');
+            return type.replace('.', '/').equals(target) || getSupertypes(type).contains(target);
         }
 
         @Override
         public List<String> getSubtypes(String type)
         {
-            List<String> subtypes = new ArrayList<>();
-            String normalizedType = type.replace('.', '/');
-
+            Map<String, List<String>> direct = new HashMap<>();
             for (ClassEntryModel entry : projectModel.getAllClasses())
             {
-                if (normalizedType.equals(entry.getSuperClassName()))
+                if (entry.getSuperClassName() != null)
                 {
-                    subtypes.add(entry.getClassName());
+                    direct.computeIfAbsent(entry.getSuperClassName(), k -> new ArrayList<>()).add(entry.getClassName());
                 }
-                if (entry.getInterfaceNames().contains(normalizedType))
+                for (String iface : entry.getInterfaceNames())
                 {
-                    subtypes.add(entry.getClassName());
+                    direct.computeIfAbsent(iface, k -> new ArrayList<>()).add(entry.getClassName());
                 }
             }
-            return subtypes;
+            Set<String> seen = new LinkedHashSet<>();
+            Deque<String> pending = new ArrayDeque<>();
+            pending.add(type.replace('.', '/'));
+            while (!pending.isEmpty())
+            {
+                for (String sub : direct.getOrDefault(pending.poll(), Collections.emptyList()))
+                {
+                    if (seen.add(sub))
+                    {
+                        pending.add(sub);
+                    }
+                }
+            }
+            return new ArrayList<>(seen);
         }
 
         @Override
         public List<String> getSupertypes(String type)
         {
-            List<String> supertypes = new ArrayList<>();
-            ClassEntryModel entry = projectModel.findClassByName(type);
-            if (entry == null) return supertypes;
-
-            String superClass = entry.getSuperClassName();
-            if (superClass != null)
+            Set<String> seen = new LinkedHashSet<>();
+            ClassEntryModel start = projectModel.findClassByName(type);
+            if (start == null)
             {
-                supertypes.add(superClass);
-                supertypes.addAll(getSupertypes(superClass));
+                return new ArrayList<>();
             }
-
-            supertypes.addAll(entry.getInterfaceNames());
-            return supertypes;
+            Deque<ClassEntryModel> pending = new ArrayDeque<>();
+            pending.add(start);
+            while (!pending.isEmpty())
+            {
+                ClassEntryModel entry = pending.poll();
+                List<String> direct = new ArrayList<>();
+                if (entry.getSuperClassName() != null)
+                {
+                    direct.add(entry.getSuperClassName());
+                }
+                direct.addAll(entry.getInterfaceNames());
+                for (String parent : direct)
+                {
+                    if (seen.add(parent))
+                    {
+                        ClassEntryModel parentEntry = projectModel.findClassByName(parent);
+                        if (parentEntry != null)
+                        {
+                            pending.add(parentEntry);
+                        }
+                    }
+                }
+            }
+            return new ArrayList<>(seen);
         }
 
         @Override

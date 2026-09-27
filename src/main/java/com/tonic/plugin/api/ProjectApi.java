@@ -86,9 +86,9 @@ public interface ProjectApi
     List<String> getPackages();
 
     /**
-     * Returns the classes whose package starts with the given prefix, so subpackages are included.
+     * Returns the classes in exactly one package, not its subpackages.
      *
-     * @param packageName the package prefix; it is converted to slash form while packages are dotted, so only a prefix without dots matches
+     * @param packageName the package name, dotted or with slashes, empty for the default package
      * @return a new list, empty when nothing matches
      */
     List<ClassInfo> getClassesInPackage(String packageName);
@@ -283,16 +283,16 @@ public interface ProjectApi
         String getReturnType();
 
         /**
-         * Returns the size of the method's code; despite the name this counts bytes, not instructions.
+         * Counts the method's bytecode instructions.
          *
-         * @return the code length in bytes, 0 for an abstract or native method
+         * @return the number of instructions, 0 for an abstract or native method
          */
         int getInstructionCount();
 
         /**
          * Returns the method's raw code bytes.
          *
-         * @return the live code array, not a copy, or an empty array for an abstract or native method
+         * @return a copy of the code array, or an empty array for an abstract or native method
          */
         byte[] getBytecode();
     }
@@ -343,9 +343,9 @@ public interface ProjectApi
         boolean isFinal();
 
         /**
-         * Returns the field's constant initializer; not implemented yet, so always null.
+         * Returns the field's constant initializer from its ConstantValue attribute.
          *
-         * @return null
+         * @return the Integer, Long, Float, Double or String constant, or null when the field has none
          */
         Object getConstantValue();
     }

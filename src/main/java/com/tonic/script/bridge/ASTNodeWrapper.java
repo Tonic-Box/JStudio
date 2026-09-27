@@ -51,16 +51,6 @@ public class ASTNodeWrapper
     }
 
     /**
-     * Wraps a node without an interpreter, so script callbacks passed to traversal functions cannot be run.
-     *
-     * @param node the AST node
-     */
-    public ASTNodeWrapper(Object node)
-    {
-        this(null, node);
-    }
-
-    /**
      * Wraps a node.
      *
      * @param interpreter the interpreter that runs callbacks passed to traversal functions

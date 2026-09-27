@@ -139,7 +139,7 @@ final class VmValueBuilder
         {
             return (Number) value;
         }
-        throw new IllegalArgumentException("Expected a numeric array element but got " + (value == null ? "null" : value.getClass().getName()));
+        throw new IllegalArgumentException("Expected a number but got " + (value == null ? "null" : value.getClass().getName()));
     }
 
     private static ObjectInstance buildObject(VmInstance vm, SimpleHeapManager heap, ArgSpec spec)
@@ -149,8 +149,8 @@ final class VmValueBuilder
         {
             for (Map.Entry<String, ArgSpec> entry : spec.getFields().entrySet())
             {
-                String descriptor = resolveFieldDescriptor(spec.getClassName(), entry.getKey());
-                object.setField(spec.getClassName(), entry.getKey(), descriptor, build(vm, entry.getValue()));
+                FieldEntryModel field = resolveField(spec.getClassName(), entry.getKey());
+                object.setField(field.getOwner().getClassName(), field.getName(), field.getDescriptor(), storable(build(vm, entry.getValue()), field.getDescriptor()));
             }
         }
         else if (spec.getConstructorDescriptor() != null)
@@ -166,24 +166,52 @@ final class VmValueBuilder
         return object;
     }
 
-    private static String resolveFieldDescriptor(String className, String fieldName)
+    private static FieldEntryModel resolveField(String className, String fieldName)
     {
         ProjectModel project = ProjectService.getInstance().getCurrentProject();
-        if (project != null)
+        ClassEntryModel entry = project != null ? project.findClassByName(className) : null;
+        while (entry != null)
         {
-            ClassEntryModel entry = project.findClassByName(className);
-            if (entry != null)
+            for (FieldEntryModel field : entry.getFields())
             {
-                for (FieldEntryModel field : entry.getFields())
+                if (field.getName().equals(fieldName) && !field.isStatic())
                 {
-                    if (field.getName().equals(fieldName))
-                    {
-                        return field.getDescriptor();
-                    }
+                    return field;
                 }
             }
+            String superName = entry.getSuperClassName();
+            entry = superName != null ? project.findClassByName(superName) : null;
         }
-        throw new IllegalArgumentException("Field not found: " + className + "." + fieldName);
+        throw new IllegalArgumentException("Instance field not found: " + className + "." + fieldName);
+    }
+
+    private static Object storable(Object value, String descriptor)
+    {
+        if (value == null || descriptor.length() != 1)
+        {
+            return value;
+        }
+        switch (descriptor.charAt(0))
+        {
+            case 'Z':
+                return asBoolean(value);
+            case 'C':
+                return asChar(value);
+            case 'B':
+                return asNumber(value).byteValue();
+            case 'S':
+                return asNumber(value).shortValue();
+            case 'I':
+                return asNumber(value).intValue();
+            case 'J':
+                return asNumber(value).longValue();
+            case 'F':
+                return asNumber(value).floatValue();
+            case 'D':
+                return asNumber(value).doubleValue();
+            default:
+                return value;
+        }
     }
 
     private static boolean asBoolean(Object value)
