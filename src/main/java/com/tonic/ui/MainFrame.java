@@ -1651,12 +1651,6 @@ public class MainFrame extends JFrame
     private LiveValueScannerPanel liveValueScannerPanel;
     private DebuggerPanel debuggerPanel;
 
-    /** @return the Value Scanner tool, or null where no live session has been attached */
-    public LiveValueScannerPanel getValueScannerPanel()
-    {
-        return liveValueScannerPanel;
-    }
-
     /**
      * Arms or disarms capture of classes as the attached JVM loads them; without a session it only warns.
      *

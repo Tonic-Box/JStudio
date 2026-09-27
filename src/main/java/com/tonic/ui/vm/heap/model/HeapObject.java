@@ -1,7 +1,5 @@
 package com.tonic.ui.vm.heap.model;
 
-import com.tonic.analysis.execution.heap.ArrayInstance;
-import com.tonic.analysis.execution.heap.ObjectInstance;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -118,32 +116,6 @@ public class HeapObject
             }
         }
         return refs;
-    }
-
-    /**
-     * Captures an object instance without its field values.
-     *
-     * @param instance the live object
-     * @param allocationTime the instruction count at which the object was allocated
-     * @param provenance where the object was allocated, or null if unknown
-     * @param mutations the writes recorded against the object, or null for none
-     * @return the captured object
-     */
-    public static HeapObject fromObjectInstance(ObjectInstance instance, long allocationTime, ProvenanceInfo provenance, List<MutationEvent> mutations)
-    {
-        Builder builder = builder()
-                .id(instance.getId())
-                .className(instance.getClassName())
-                .allocationTime(allocationTime)
-                .provenance(provenance)
-                .isArray(instance instanceof ArrayInstance);
-
-        if (mutations != null)
-        {
-            builder.mutations(mutations);
-        }
-
-        return builder.build();
     }
 
     @Override

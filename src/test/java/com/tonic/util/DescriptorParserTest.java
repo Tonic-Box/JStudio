@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.time.Duration;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class DescriptorParserTest
@@ -135,5 +138,21 @@ class DescriptorParserTest
         assertEquals("String", DescriptorParser.extractSimpleName("java/lang/String"));
         assertEquals("ArrayList", DescriptorParser.extractSimpleName("java/util/ArrayList"));
         assertEquals("MyClass", DescriptorParser.extractSimpleName("MyClass"));
+    }
+
+    @Test
+    void testSplitsDescriptors()
+    {
+        assertEquals(List.of("I", "[Ljava/lang/String;", "[[J", "La/B;"), DescriptorParser.parameterDescriptors("(I[Ljava/lang/String;[[JLa/B;)V"));
+        assertEquals("V", DescriptorParser.returnDescriptor("()V"));
+        assertEquals("[I", DescriptorParser.returnDescriptor("(I)[I"));
+    }
+
+    @Test
+    void testUnterminatedClassNameTerminates()
+    {
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> assertTrue(DescriptorParser.parseParameterTypes("(Lfoo").isEmpty()));
+        assertThrows(IllegalArgumentException.class, () -> DescriptorParser.parameterDescriptors("(Lfoo)V"));
+        assertEquals("Lfoo", DescriptorParser.formatFieldDescriptor("Lfoo"));
     }
 }

@@ -186,19 +186,6 @@ public class FileChooserDialog extends JDialog
     }
 
     /**
-     * Sets the in-memory last directory, using a file's parent if given a file; ignores null and missing paths.
-     *
-     * @param directory the directory or a file in it
-     */
-    public static void setLastDirectory(File directory)
-    {
-        if (directory != null && directory.exists())
-        {
-            lastDirectory = directory.isDirectory() ? directory : directory.getParentFile();
-        }
-    }
-
-    /**
      * Starts building a dialog.
      *
      * @return a new builder

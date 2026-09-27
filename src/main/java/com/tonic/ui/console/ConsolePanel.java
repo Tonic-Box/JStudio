@@ -212,26 +212,6 @@ public class ConsolePanel extends ThemedJPanel
         log(LogLevel.DEBUG, message);
     }
 
-    /**
-     * Appends an error line with the throwable's message, then its stack frames, abbreviated when there are more than five.
-     *
-     * @param message the text
-     * @param t the throwable to report
-     */
-    public void error(String message, Throwable t)
-    {
-        log(LogLevel.ERROR, message + ": " + t.getMessage());
-        for (StackTraceElement ste : t.getStackTrace())
-        {
-            log(LogLevel.ERROR, "  at " + ste.toString());
-            if (t.getStackTrace().length > 5)
-            {
-                log(LogLevel.ERROR, "  ... " + (t.getStackTrace().length - 5) + " more");
-                break;
-            }
-        }
-    }
-
     /** Removes all text. */
     public void clear()
     {
