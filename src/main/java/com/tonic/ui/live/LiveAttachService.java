@@ -3,6 +3,7 @@ package com.tonic.ui.live;
 import com.tonic.event.EventBus;
 import com.tonic.event.events.LiveSessionEvent;
 import com.tonic.live.LiveSession;
+import com.tonic.live.protocol.LiveEvent;
 import com.tonic.service.ProjectService;
 import lombok.Getter;
 
@@ -10,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import javax.swing.SwingUtilities;
 
 /** The single live JVM session: attaches the bundled Java agent, loads the target's classes as a project, and refreshes or detaches it. */
 @Getter
@@ -25,6 +27,7 @@ public final class LiveAttachService
      */
     @Getter
     private boolean runSession;
+    private Runnable onConnectionLost;
 
     private LiveAttachService()
     {
@@ -47,6 +50,16 @@ public final class LiveAttachService
     }
 
     /**
+     * Sets what runs on the EDT when the held session's connection drops, typically a full detach; it is not run for a session already detached or replaced.
+     *
+     * @param onConnectionLost the action, or null for none
+     */
+    public void setOnConnectionLost(Runnable onConnectionLost)
+    {
+        this.onConnectionLost = onConnectionLost;
+    }
+
+    /**
      * Holds a session already connected to a process launched by Run and turns the live features on, keeping the current project; call on the EDT.
      *
      * @param adopted the connected session
@@ -56,7 +69,25 @@ public final class LiveAttachService
         detach();
         this.session = adopted;
         this.runSession = true;
+        watch(adopted);
         EventBus.getInstance().post(new LiveSessionEvent(this, true));
+    }
+
+    private void watch(LiveSession watched)
+    {
+        watched.addEventListener(event ->
+        {
+            if (event.getKind() == LiveEvent.Kind.VM_DEATH)
+            {
+                SwingUtilities.invokeLater(() ->
+                {
+                    if (session == watched && onConnectionLost != null)
+                    {
+                        onConnectionLost.run();
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -111,6 +142,7 @@ public final class LiveAttachService
         {
             ProjectService.getInstance().loadLiveProject(s, includeJdk, progress);
             this.session = s;
+            watch(s);
             EventBus.getInstance().post(new LiveSessionEvent(this, true));
         }
         catch (Exception e)

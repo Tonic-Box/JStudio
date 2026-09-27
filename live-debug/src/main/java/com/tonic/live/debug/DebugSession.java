@@ -317,7 +317,7 @@ public final class DebugSession
     }
 
     /**
-     * Removes a breakpoint at a bytecode offset and deletes its installed requests.
+     * Removes a breakpoint at a bytecode offset and deletes its installed requests, plus the class-prepare hook once the class has no breakpoints left; requests whose location can no longer be read are deleted too.
      *
      * @param className the declaring class's binary name
      * @param methodName the method name
@@ -330,25 +330,43 @@ public final class DebugSession
         List<BreakpointRequest> drop = new ArrayList<>();
         for (BreakpointRequest req : installed)
         {
-            Location loc = req.location();
-            if (loc.declaringType().name().equals(className)
-                    && loc.method().name().equals(methodName)
-                    && loc.method().signature().equals(methodDesc)
-                    && loc.codeIndex() == pc)
+            if (isAt(req, className, methodName, methodDesc, pc))
             {
                 drop.add(req);
             }
         }
-        if (!drop.isEmpty())
+        List<EventRequest> delete = new ArrayList<>(drop);
+        installed.removeAll(drop);
+        if (breakpoints.stream().noneMatch(s -> s.className.equals(className)))
+        {
+            ClassPrepareRequest prepare = prepareRequests.remove(className);
+            if (prepare != null)
+            {
+                delete.add(prepare);
+            }
+        }
+        if (!delete.isEmpty())
         {
             try
             {
-                vm.eventRequestManager().deleteEventRequests(drop);
+                vm.eventRequestManager().deleteEventRequests(delete);
             }
             catch (VMDisconnectedException ignored)
             {
             }
-            installed.removeAll(drop);
+        }
+    }
+
+    private static boolean isAt(BreakpointRequest req, String className, String methodName, String methodDesc, long pc)
+    {
+        try
+        {
+            Location loc = req.location();
+            return loc.declaringType().name().equals(className) && loc.method().name().equals(methodName) && loc.method().signature().equals(methodDesc) && loc.codeIndex() == pc;
+        }
+        catch (RuntimeException unreadable)
+        {
+            return true;
         }
     }
 

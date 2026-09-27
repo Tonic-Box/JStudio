@@ -258,6 +258,7 @@ public class MainFrame extends JFrame
         rightToolWindow.addTool("Inspector", propertiesPanel);
         rightToolWindow.addTool("Query", queryExplorerPanel);
 
+        LiveAttachService.getInstance().setOnConnectionLost(() -> detachLive("Lost the connection to the live JVM; detached."));
         EventBus.getInstance().register(LiveSessionEvent.class, e ->
         {
             if (e.isAttached())
@@ -1624,6 +1625,11 @@ public class MainFrame extends JFrame
     /** Disconnects the debugger and detaches from the live JVM, keeping the pulled classes for offline browsing. */
     public void detachLive()
     {
+        detachLive("Detached from live JVM.");
+    }
+
+    private void detachLive(String message)
+    {
         DebugManager.getInstance().disconnect();
         LiveAttachService svc = LiveAttachService.getInstance();
         if (!svc.isAttached())
@@ -1632,7 +1638,7 @@ public class MainFrame extends JFrame
         }
         svc.detach();
         LiveHeapService.get().clear();
-        consolePanel.log("Detached from live JVM.");
+        consolePanel.log(message);
     }
 
     private LiveScratchPadDialog liveScratchPadDialog;

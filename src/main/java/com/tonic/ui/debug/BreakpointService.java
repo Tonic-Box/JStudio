@@ -110,16 +110,23 @@ public final class BreakpointService
         }
     }
 
-    /** Removes every breakpoint from the registry and posts a breakpoints-changed event if there were any; the live session is not touched. */
+    /** Removes every breakpoint from the registry and from the live session, and posts a breakpoints-changed event if there were any. */
     public void clear()
     {
+        List<Breakpoint> removed;
         synchronized (this)
         {
             if (breakpoints.isEmpty())
             {
                 return;
             }
+            removed = new ArrayList<>(breakpoints);
             breakpoints.clear();
+        }
+        DebugManager dm = DebugManager.getInstance();
+        for (Breakpoint bp : removed)
+        {
+            dm.removeBreakpoint(bp.className, bp.methodName, bp.methodDesc, bp.pc);
         }
         EventBus.getInstance().post(new BreakpointsChangedEvent(this));
     }

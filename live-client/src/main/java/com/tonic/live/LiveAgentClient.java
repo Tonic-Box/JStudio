@@ -478,7 +478,7 @@ public final class LiveAgentClient implements Closeable
         }));
         skipType(r, LiveProtocol.MSG_LIST_INSTANCES);
         int count = r.readInt();
-        List<LiveInstance> out = new ArrayList<>(count);
+        List<LiveInstance> out = new ArrayList<>(Math.max(0, count));
         for (int i = 0; i < count; i++)
         {
             long id = r.readLong();
@@ -499,7 +499,7 @@ public final class LiveAgentClient implements Closeable
         DataInputStream r = request(payload(LiveProtocol.MSG_INSTANCE_FIELDS, b -> b.writeLong(handleId)));
         skipType(r, LiveProtocol.MSG_INSTANCE_FIELDS);
         int count = r.readInt();
-        List<LiveField> out = new ArrayList<>(count);
+        List<LiveField> out = new ArrayList<>(Math.max(0, count));
         for (int i = 0; i < count; i++)
         {
             String name = readString(r);
@@ -790,8 +790,10 @@ public final class LiveAgentClient implements Closeable
         }
         finally
         {
+            boolean dropped = !closed;
+            closed = true;
             responses.offer(POISON);
-            if (!closed)
+            if (dropped)
             {
                 dispatchAsync(() -> emit(LiveEvent.vmDeath()));
             }
@@ -838,7 +840,15 @@ public final class LiveAgentClient implements Closeable
         {
             throw new IOException("live agent connection is closed");
         }
-        responses.clear();
+        byte[] stale;
+        while ((stale = responses.poll()) != null)
+        {
+            if (stale == POISON)
+            {
+                responses.offer(POISON);
+                throw new IOException("live agent disconnected");
+            }
+        }
         out.writeInt(payload.length);
         out.write(payload);
         out.flush();
@@ -857,8 +867,9 @@ public final class LiveAgentClient implements Closeable
             closeQuietly();
             throw new IOException("live agent did not respond");
         }
-        if (resp.length == 0)
+        if (resp == POISON)
         {
+            responses.offer(POISON);
             throw new IOException("live agent disconnected");
         }
         DataInputStream r = new DataInputStream(new ByteArrayInputStream(resp));
