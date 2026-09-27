@@ -70,13 +70,14 @@ public final class RunConsolePanel extends ThemedJPanel implements RunService.Ru
     }
 
     /**
-     * Sets what the Rerun button runs; it only runs while no process is live.
+     * Sets what the Rerun button runs, enabling the button while no process is live.
      *
      * @param action the relaunch with the same configuration, or null for none
      */
     public void setRerunAction(Runnable action)
     {
         this.rerunAction = action;
+        updateButtons();
     }
 
     /**

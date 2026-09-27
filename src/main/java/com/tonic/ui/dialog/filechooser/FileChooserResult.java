@@ -5,6 +5,7 @@ import lombok.Getter;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /** The outcome of a file chooser: whether it was approved and the chosen files. */
 @Getter
@@ -29,10 +30,11 @@ public class FileChooserResult
      *
      * @param file the chosen file
      * @return the result
+     * @throws NullPointerException if the file is null
      */
     public static FileChooserResult approved(File file)
     {
-        return new FileChooserResult(true, Collections.singletonList(file));
+        return new FileChooserResult(true, Collections.singletonList(Objects.requireNonNull(file, "file")));
     }
 
     /**

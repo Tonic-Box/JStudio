@@ -46,17 +46,20 @@ public class SimulationPanel extends ThemedJPanel
 
     private final List<FindingEntry> allFindings = new ArrayList<>();
     private final List<FindingEntry> filteredFindings = new ArrayList<>();
+    private final EditorSelection editorSelection;
     private String currentFilter = "All";
 
     /**
      * Builds the toolbar, findings table, details and status line.
      *
      * @param project the project to analyze
+     * @param editorSelection supplies the method, else the class, open in the editor for Analyze Current; either may be null
      */
-    public SimulationPanel(ProjectModel project)
+    public SimulationPanel(ProjectModel project, EditorSelection editorSelection)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
         this.project = project;
+        this.editorSelection = editorSelection;
 
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, UIConstants.SPACING_MEDIUM, UIConstants.SPACING_SMALL));
         toolbar.setBackground(JStudioTheme.getBgSecondary());
@@ -199,7 +202,37 @@ public class SimulationPanel extends ThemedJPanel
 
     private void analyzeCurrentSelection()
     {
-        statusLabel.setText("Analysis feature - select a method first");
+        MethodEntryModel method = editorSelection.currentMethod();
+        if (method != null)
+        {
+            analyzeMethod(method);
+            return;
+        }
+        ClassEntryModel cls = editorSelection.currentClass();
+        if (cls != null)
+        {
+            analyzeClass(cls);
+            return;
+        }
+        statusLabel.setText("Open a class or a method in the editor first.");
+    }
+
+    /** Reads what the editor has open. */
+    public interface EditorSelection
+    {
+        /**
+         * Reads the method the editor's caret is in.
+         *
+         * @return the method, or null
+         */
+        MethodEntryModel currentMethod();
+
+        /**
+         * Reads the class open in the front editor tab.
+         *
+         * @return the class, or null
+         */
+        ClassEntryModel currentClass();
     }
 
     /**

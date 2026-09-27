@@ -1,5 +1,6 @@
 package com.tonic.ui.update;
 
+import java.io.InterruptedIOException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -99,6 +100,10 @@ public final class UpdateInstaller
                 int n;
                 while ((n = in.read(buffer)) != -1)
                 {
+                    if (Thread.currentThread().isInterrupted())
+                    {
+                        throw new InterruptedIOException("Download cancelled");
+                    }
                     out.write(buffer, 0, n);
                     read += n;
                     if (progress != null)
@@ -111,6 +116,11 @@ public final class UpdateInstaller
         catch (IOException e)
         {
             throw e;
+        }
+        catch (InterruptedException e)
+        {
+            Thread.currentThread().interrupt();
+            throw new InterruptedIOException("Download cancelled");
         }
         catch (Exception e)
         {

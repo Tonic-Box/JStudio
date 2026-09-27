@@ -1,7 +1,7 @@
 package com.tonic.ui.dialog.filechooser;
 
 import java.io.File;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /** A file chooser filter that accepts directories and files whose extension is in a set, ignoring case; the extension * accepts every file. */
@@ -20,7 +20,7 @@ public class ExtensionFileFilter
     public ExtensionFileFilter(String description, String... extensions)
     {
         this.description = description;
-        this.extensions = new HashSet<>();
+        this.extensions = new LinkedHashSet<>();
         for (String ext : extensions)
         {
             this.extensions.add(ext.toLowerCase());

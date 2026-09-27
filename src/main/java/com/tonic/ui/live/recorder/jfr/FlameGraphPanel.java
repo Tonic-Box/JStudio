@@ -59,7 +59,6 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
         this.path.add(root);
         setFont(JStudioTheme.getUIFont(11));
         ToolTipManager.sharedInstance().registerComponent(this);
-        ThemeManager.getInstance().addThemeChangeListener(this);
         updatePreferredHeight();
 
         clickTimer = new Timer(doubleClickInterval(), e ->
@@ -400,6 +399,14 @@ public final class FlameGraphPanel extends JComponent implements ThemeChangeList
     public void onThemeChanged(Theme newTheme)
     {
         repaint();
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        onThemeChanged(ThemeManager.getInstance().getCurrentTheme());
     }
 
     @Override

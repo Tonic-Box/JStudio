@@ -998,7 +998,7 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
      * @param methodDesc the method descriptor
      * @param pc the bytecode offset
      * @param selectToken the text to select on the line
-     * @return false when no line map is available (annotations hidden, or no map for the method), so the caller can fall back to method-level navigation; true otherwise, including when deferred
+     * @return false when no line map is available (annotations hidden, or no map for the method), so the caller can fall back to method-level navigation; true when navigated or deferred, a deferred navigation falling back to the method declaration by itself
      */
     public boolean scrollToSourceOffset(String methodName, String methodDesc, int pc, String selectToken)
     {
@@ -1008,7 +1008,13 @@ public class SourceCodeView extends JPanel implements ThemeChangeListener, Edito
         }
         if (currentWorker != null && !currentWorker.isDone())
         {
-            pendingNavigation = () -> applyScrollToSourceOffset(methodName, methodDesc, pc, selectToken);
+            pendingNavigation = () ->
+            {
+                if (!applyScrollToSourceOffset(methodName, methodDesc, pc, selectToken))
+                {
+                    scrollToMethodDeclaration(methodName, methodDesc);
+                }
+            };
             return true;
         }
         return applyScrollToSourceOffset(methodName, methodDesc, pc, selectToken);

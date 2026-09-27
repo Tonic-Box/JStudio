@@ -1,23 +1,16 @@
 package com.tonic.service;
 
-import lombok.Getter;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
 
-/** The application log that fans each message out to console listeners and keeps the last 1000 entries. */
+/** The application log that fans each message out to the registered console listeners. */
 public class ConsoleLogService
 {
 
     private static ConsoleLogService instance;
 
     private final List<BiConsumer<LogLevel, String>> listeners = new CopyOnWriteArrayList<>();
-    private final List<LogEntry> logHistory = new ArrayList<>();
-
-    @SuppressWarnings("FieldCanBeLocal")
-    private final int maxHistory = 1000;
 
     private ConsoleLogService()
     {
@@ -48,15 +41,13 @@ public class ConsoleLogService
     }
 
     /**
-     * Records a message and passes it to every listener.
+     * Passes a message to every listener.
      *
      * @param level the severity
      * @param message the text
      */
     public void log(LogLevel level, String message)
     {
-        LogEntry entry = new LogEntry(level, message, System.currentTimeMillis());
-        addToHistory(entry);
         notifyListeners(level, message);
     }
 
@@ -121,26 +112,6 @@ public class ConsoleLogService
         log(LogLevel.DEBUG, message);
     }
 
-    private void addToHistory(LogEntry entry)
-    {
-        synchronized (logHistory)
-        {
-            logHistory.add(entry);
-            trimHistory();
-        }
-    }
-
-    private void trimHistory()
-    {
-        synchronized (logHistory)
-        {
-            while (logHistory.size() > maxHistory)
-            {
-                logHistory.remove(0);
-            }
-        }
-    }
-
     private void notifyListeners(LogLevel level, String message)
     {
         for (BiConsumer<LogLevel, String> listener : listeners)
@@ -153,29 +124,5 @@ public class ConsoleLogService
             {
             }
         }
-    }
-
-    /** One recorded log message. */
-    @Getter
-    public static class LogEntry
-    {
-        private final LogLevel level;
-        private final String message;
-        private final long timestamp;
-
-        /**
-         * Creates a log entry.
-         *
-         * @param level the severity
-         * @param message the text
-         * @param timestamp when it was logged, in epoch milliseconds
-         */
-        public LogEntry(LogLevel level, String message, long timestamp)
-        {
-            this.level = level;
-            this.message = message;
-            this.timestamp = timestamp;
-        }
-
     }
 }

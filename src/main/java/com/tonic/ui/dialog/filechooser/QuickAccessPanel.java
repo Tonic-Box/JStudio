@@ -120,8 +120,23 @@ public class QuickAccessPanel extends ThemedJPanel implements QuickAccessManager
         populateRecent();
         populateDrives();
         updateSectionVisibility();
+    }
 
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
         manager.addListener(this);
+        populatePinned();
+        populateRecent();
+        updateSectionVisibility();
+    }
+
+    @Override
+    public void removeNotify()
+    {
+        manager.removeListener(this);
+        super.removeNotify();
     }
 
     @Override

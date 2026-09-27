@@ -275,10 +275,10 @@ public class MenuBarBuilder
         menu.addSeparator();
 
         JMenu optimizeMenu = new JMenu("Optimize");
-        optimizeMenu.add(createMenuItem("Constant Folding", 0, 0, null, e -> mainFrame.applyTransform("ConstantFolding")));
-        optimizeMenu.add(createMenuItem("Copy Propagation", 0, 0, null, e -> mainFrame.applyTransform("CopyPropagation")));
-        optimizeMenu.add(createMenuItem("Dead Code Elimination", 0, 0, null, e -> mainFrame.applyTransform("DeadCodeElimination")));
-        optimizeMenu.add(createMenuItem("Strength Reduction", 0, 0, null, e -> mainFrame.applyTransform("StrengthReduction")));
+        optimizeMenu.add(createMenuItem("Constant Folding", 0, 0, null, e -> mainFrame.applyTransform("Constant Folding")));
+        optimizeMenu.add(createMenuItem("Copy Propagation", 0, 0, null, e -> mainFrame.applyTransform("Copy Propagation")));
+        optimizeMenu.add(createMenuItem("Dead Code Elimination", 0, 0, null, e -> mainFrame.applyTransform("Dead Code Elimination")));
+        optimizeMenu.add(createMenuItem("Strength Reduction", 0, 0, null, e -> mainFrame.applyTransform("Strength Reduction")));
         menu.add(optimizeMenu);
 
         menu.addSeparator();

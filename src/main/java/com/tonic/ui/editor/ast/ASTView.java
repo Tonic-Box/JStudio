@@ -254,6 +254,10 @@ public class ASTView extends AbstractTextView
     @Override
     public void refresh()
     {
+        if (loaded)
+        {
+            return;
+        }
         cancelCurrentWorker();
         loadingOverlay.showLoading("Decompiling to AST...");
         treeModel.clear();

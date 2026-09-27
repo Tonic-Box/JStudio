@@ -53,21 +53,18 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         return getDisplayText();
     }
 
-    protected static String sanitizeDisplayText(String text)
+    protected static String plainText(String text)
     {
-        if (text == null) return "";
-        String sanitized = text
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;");
-        sanitized = sanitized
-                .replace("https://", "https\u200B://")
-                .replace("http://", "http\u200B://")
-                .replace("ftp://", "ftp\u200B://")
-                .replace("file://", "file\u200B://");
-        return sanitized;
+        if (text == null)
+        {
+            return "";
+        }
+        return text.regionMatches(true, 0, "<html>", 0, 6) ? "\u200B" + text : text;
+    }
+
+    private static String escapeHtml(String text)
+    {
+        return (text == null ? "" : text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
     }
 
     /** The root node: the project name and its class count. */
@@ -141,7 +138,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getDisplayText()
         {
-            return sanitizeDisplayText(displayName);
+            return plainText(displayName);
         }
 
         @Override
@@ -153,7 +150,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getTooltip()
         {
-            return sanitizeDisplayText(packageName);
+            return plainText(packageName);
         }
     }
 
@@ -177,7 +174,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getDisplayText()
         {
-            return sanitizeDisplayText(classEntry.getSimpleName());
+            return plainText(classEntry.getSimpleName());
         }
 
         @Override
@@ -191,7 +188,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getTooltip()
         {
-            return sanitizeDisplayText(classEntry.getClassName());
+            return plainText(classEntry.getClassName());
         }
     }
 
@@ -215,7 +212,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getDisplayText()
         {
-            return sanitizeDisplayText(methodEntry.getDisplaySignature());
+            return plainText(methodEntry.getDisplaySignature());
         }
 
         @Override
@@ -227,15 +224,13 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getTooltip()
         {
-            StringBuilder tooltip = new StringBuilder();
-            tooltip.append(sanitizeDisplayText(methodEntry.getName() + methodEntry.getDescriptor()));
+            String signature = methodEntry.getName() + methodEntry.getDescriptor();
             ComplexityMetrics metrics = methodEntry.getComplexityMetrics();
             if (metrics != null)
             {
-                tooltip.append("<br><i>").append(metrics.getSummary()).append("</i>");
-                return "<html>" + tooltip + "</html>";
+                return "<html>" + escapeHtml(signature) + "<br><i>" + escapeHtml(metrics.getSummary()) + "</i></html>";
             }
-            return tooltip.toString();
+            return plainText(signature);
         }
     }
 
@@ -259,7 +254,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getDisplayText()
         {
-            return sanitizeDisplayText(fieldEntry.getName() + ": " + fieldEntry.getDisplayType());
+            return plainText(fieldEntry.getName() + ": " + fieldEntry.getDisplayType());
         }
 
         @Override
@@ -271,7 +266,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getTooltip()
         {
-            return sanitizeDisplayText(fieldEntry.getName() + " : " + fieldEntry.getDescriptor());
+            return plainText(fieldEntry.getName() + " : " + fieldEntry.getDescriptor());
         }
     }
 
@@ -372,7 +367,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getDisplayText()
         {
-            return sanitizeDisplayText(folderName);
+            return plainText(folderName);
         }
 
         @Override
@@ -384,7 +379,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getTooltip()
         {
-            return sanitizeDisplayText(folderPath);
+            return plainText(folderPath);
         }
     }
 
@@ -408,7 +403,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getDisplayText()
         {
-            return sanitizeDisplayText(resource.getName());
+            return plainText(resource.getName());
         }
 
         @Override
@@ -420,7 +415,7 @@ public abstract class NavigatorNode extends DefaultMutableTreeNode
         @Override
         public String getTooltip()
         {
-            return sanitizeDisplayText(resource.getPath() + " (" + resource.getFormattedSize() + ")");
+            return plainText(resource.getPath() + " (" + resource.getFormattedSize() + ")");
         }
     }
 }

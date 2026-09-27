@@ -228,6 +228,10 @@ public class ConstPoolView extends AbstractEditorView
     @Override
     public void refresh()
     {
+        if (loaded)
+        {
+            return;
+        }
         cancelCurrentWorker();
 
         loadingOverlay.showLoading("Loading constant pool...");
@@ -253,9 +257,11 @@ public class ConstPoolView extends AbstractEditorView
                     List<ConstPoolEntry> entries = get();
                     tableModel.setEntries(entries);
                     updateStatus();
+                    loaded = true;
                 }
                 catch (Exception e)
                 {
+                    statusLabel.setText("Failed to read the constant pool: " + e.getMessage());
                 }
             }
         };

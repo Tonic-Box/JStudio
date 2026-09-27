@@ -56,15 +56,6 @@ public class ViewModeComboBox extends JComboBox<Object>
 
         setRenderer(new ViewModeListCellRenderer());
         setSelectedItem(ViewMode.SOURCE);
-
-        addActionListener(e ->
-        {
-            Object selected = getSelectedItem();
-            if (selected instanceof String && ((String) selected).startsWith(HEADER_PREFIX))
-            {
-                setSelectedItem(ViewMode.SOURCE);
-            }
-        });
     }
 
     private static final String LIVE_HEADER = HEADER_PREFIX + "Live";

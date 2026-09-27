@@ -374,6 +374,25 @@ public class TransformPanel extends ThemedJPanel
     }
 
     /**
+     * Ticks one transform and clears every other.
+     *
+     * @param transformName the transform's display name, as listed in the panel
+     * @return false when the panel lists no transform with that name, leaving the ticks as they were
+     */
+    public boolean selectOnly(String transformName)
+    {
+        if (transformCheckBoxes.stream().noneMatch(cb -> cb.getTransformName().equals(transformName)))
+        {
+            return false;
+        }
+        for (TransformCheckBox cb : transformCheckBoxes)
+        {
+            cb.setSelected(cb.getTransformName().equals(transformName));
+        }
+        return true;
+    }
+
+    /**
      * Sets what runs after transforms are applied.
      *
      * @param callback the callback, or null for none

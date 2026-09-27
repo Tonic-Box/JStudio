@@ -63,6 +63,10 @@ public class AttributesView extends AbstractEditorView
     @Override
     public void refresh()
     {
+        if (loaded)
+        {
+            return;
+        }
         cancelCurrentWorker();
         loadingOverlay.showLoading("Loading attributes...");
 

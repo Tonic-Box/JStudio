@@ -1,11 +1,9 @@
 package com.tonic.ui.editor.cfg;
 
 import com.tonic.analysis.instruction.Instruction;
-import com.tonic.analysis.ssa.SSA;
 import com.tonic.analysis.ssa.cfg.IRBlock;
 import com.tonic.analysis.ssa.cfg.IRMethod;
 import com.tonic.analysis.ssa.ir.IRInstruction;
-import com.tonic.parser.ConstPool;
 import com.tonic.parser.MethodEntry;
 import com.tonic.ui.theme.SyntaxColors;
 import lombok.Getter;
@@ -24,34 +22,22 @@ public class CFGBlockVertex
     private final MethodEntry method;
     private final boolean showIR;
     private String cachedHtml;
-    private IRMethod irMethod;
+    private final IRMethod irMethod;
 
     /**
-     * Creates the vertex, lifting the method to IR when IR is shown; a failed lift leaves no IR.
+     * Creates the vertex.
      *
      * @param block the block
      * @param method the method the block belongs to
      * @param showIR true to label the vertex with IR, false for bytecode
-     * @param constPool the class constant pool, used for lifting
+     * @param irMethod the method lifted to IR once for every vertex, or null when it is not shown or failed to lift
      */
-    public CFGBlockVertex(CFGBlock block, MethodEntry method, boolean showIR, ConstPool constPool)
+    public CFGBlockVertex(CFGBlock block, MethodEntry method, boolean showIR, IRMethod irMethod)
     {
         this.block = block;
         this.method = method;
         this.showIR = showIR;
-
-        if (showIR && method.getCodeAttribute() != null)
-        {
-            try
-            {
-                SSA ssa = new SSA(constPool);
-                this.irMethod = ssa.lift(method);
-            }
-            catch (Exception e)
-            {
-                this.irMethod = null;
-            }
-        }
+        this.irMethod = irMethod;
     }
 
     @Override

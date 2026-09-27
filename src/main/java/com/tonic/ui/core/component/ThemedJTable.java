@@ -59,12 +59,10 @@ public class ThemedJTable extends JTable implements ThemeChangeListener
 
     private void initialize()
     {
-        applyTheme();
         setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         setShowGrid(false);
         setIntercellSpacing(new Dimension(0, 0));
         setFillsViewportHeight(true);
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
@@ -94,6 +92,14 @@ public class ThemedJTable extends JTable implements ThemeChangeListener
             header.setForeground(JStudioTheme.getTextSecondary());
             header.setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_CODE));
         }
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        onThemeChanged(ThemeManager.getInstance().getCurrentTheme());
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.tonic.ui.script;
 
 import com.tonic.ui.theme.Theme;
+import com.tonic.ui.theme.ThemeChangeListener;
 import com.tonic.ui.theme.ThemeManager;
 
 import javax.swing.*;
@@ -19,9 +20,14 @@ public class ScriptDocumentationDialog extends JDialog
     private JTree navigationTree;
     private JEditorPane contentPane;
     private JSplitPane splitPane;
+    private final ThemeChangeListener themeListener = theme ->
+    {
+        applyTheme();
+        refreshContent();
+    };
 
     /**
-     * Builds the dialog showing the overview.
+     * Builds the dialog showing the overview; it follows theme changes while displayable.
      *
      * @param owner the window it centers on
      */
@@ -30,12 +36,21 @@ public class ScriptDocumentationDialog extends JDialog
         super(owner, "Script Language Reference", ModalityType.MODELESS);
         initComponents();
         applyTheme();
+    }
 
-        ThemeManager.getInstance().addThemeChangeListener(theme ->
-        {
-            applyTheme();
-            refreshContent();
-        });
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(themeListener);
+        themeListener.onThemeChanged(ThemeManager.getInstance().getCurrentTheme());
+    }
+
+    @Override
+    public void removeNotify()
+    {
+        ThemeManager.getInstance().removeThemeChangeListener(themeListener);
+        super.removeNotify();
     }
 
     private void initComponents()

@@ -188,32 +188,25 @@ public class SourceCompiler
         ParseErrorListener.CollectingErrorListener listener = ParseErrorListener.collecting();
         JavaParser parser = JavaParser.withErrorListener(listener);
 
+        Exception failure = null;
         try
         {
             parser.parse(source);
         }
-        catch (ParseException e)
-        {
-            collectParseErrors(listener, source, errors);
-            if (errors.isEmpty())
-            {
-                errors.add(createErrorFromException(e, source));
-            }
-        }
         catch (Exception e)
         {
-            collectParseErrors(listener, source, errors);
-            if (errors.isEmpty())
-            {
-                errors.add(CompilationError.error(1, 1, 0, 1, "Parse error: " + e.getMessage()));
-            }
+            failure = e;
         }
 
-        if (listener.hasErrors())
+        collectParseErrors(listener, source, errors);
+        if (errors.isEmpty() && failure instanceof ParseException)
         {
-            collectParseErrors(listener, source, errors);
+            errors.add(createErrorFromException((ParseException) failure, source));
         }
-
+        else if (errors.isEmpty() && failure != null)
+        {
+            errors.add(CompilationError.error(1, 1, 0, 1, "Parse error: " + failure.getMessage()));
+        }
         return errors;
     }
 

@@ -26,8 +26,9 @@ public class AnalysisPanel extends ThemedJPanel
      * Builds the four tabs.
      *
      * @param project the project every tab analyzes
+     * @param editorSelection what the editor has open, for the Code Analysis tab's Analyze Current
      */
-    public AnalysisPanel(ProjectModel project)
+    public AnalysisPanel(ProjectModel project, SimulationPanel.EditorSelection editorSelection)
     {
         super(BackgroundStyle.SECONDARY, new BorderLayout());
 
@@ -39,7 +40,7 @@ public class AnalysisPanel extends ThemedJPanel
         searchPanel = new SearchPanel(project);
         stringsPanel = new StringsPanel(project);
         similarityPanel = new SimilarityPanel(project);
-        simulationPanel = new SimulationPanel(project);
+        simulationPanel = new SimulationPanel(project, editorSelection);
 
         tabbedPane.addTab("Similarity", similarityPanel);
         tabbedPane.addTab("Search", searchPanel);

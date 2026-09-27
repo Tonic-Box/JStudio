@@ -133,6 +133,10 @@ public class StatisticsView extends AbstractEditorView
     @Override
     public void refresh()
     {
+        if (loaded)
+        {
+            return;
+        }
         cancelCurrentWorker();
         loadingOverlay.showLoading("Calculating statistics...");
 

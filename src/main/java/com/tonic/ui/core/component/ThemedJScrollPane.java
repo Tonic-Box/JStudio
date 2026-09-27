@@ -58,8 +58,6 @@ public class ThemedJScrollPane extends JScrollPane implements ThemeChangeListene
 
     private void initialize()
     {
-        applyTheme();
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
@@ -74,6 +72,14 @@ public class ThemedJScrollPane extends JScrollPane implements ThemeChangeListene
         setBackground(JStudioTheme.getBgPrimary());
         getViewport().setBackground(JStudioTheme.getBgPrimary());
         setBorder(BorderFactory.createEmptyBorder());
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        onThemeChanged(ThemeManager.getInstance().getCurrentTheme());
     }
 
     @Override

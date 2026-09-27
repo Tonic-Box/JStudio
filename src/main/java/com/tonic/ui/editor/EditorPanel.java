@@ -392,13 +392,13 @@ public class EditorPanel
         }
     }
 
-    /** Refreshes the front class tab. */
+    /** Reloads the showing view of the front class tab. */
     public void refreshCurrentTab()
     {
         EditorTab tab = getCurrentTab();
         if (tab != null)
         {
-            tab.refresh();
+            tab.reloadCurrentView();
         }
     }
 

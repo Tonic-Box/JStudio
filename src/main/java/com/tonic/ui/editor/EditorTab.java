@@ -28,13 +28,10 @@ import lombok.Getter;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import javax.swing.SwingWorker;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.util.EnumMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -85,7 +82,6 @@ public class EditorTab extends JPanel
 
     private int fontSize = 12;
     private boolean wordWrap = false;
-    private final Set<ViewMode> loadingViews = new HashSet<>();
     private static final String LOADING_CARD = "LOADING";
 
     private ViewMode currentMode = ViewMode.SOURCE;
@@ -144,47 +140,13 @@ public class EditorTab extends JPanel
         return views.containsKey(mode);
     }
 
-    private <T extends JPanel> void loadViewInBackground(ViewMode mode, Supplier<T> viewFactory, Consumer<T> viewSetter)
+    private <T extends JPanel> void loadView(ViewMode mode, Supplier<T> viewFactory, Consumer<T> viewSetter)
     {
-        if (loadingViews.contains(mode))
-        {
-            return;
-        }
-        loadingViews.add(mode);
-
-        new SwingWorker<T, Void>()
-        {
-            @Override
-            protected T doInBackground()
-            {
-                return viewFactory.get();
-            }
-
-            @Override
-            protected void done()
-            {
-                try
-                {
-                    T view = get();
-                    applySettingsToView((EditorView) view);
-
-                    viewSetter.accept(view);
-                    cardPanel.add(view, mode.name());
-                    views.put(mode, (EditorView) view);
-                    loadingViews.remove(mode);
-
-                    if (currentMode == mode)
-                    {
-                        refreshView(mode);
-                        cardLayout.show(cardPanel, mode.name());
-                    }
-                }
-                catch (Exception e)
-                {
-                    loadingViews.remove(mode);
-                }
-            }
-        }.execute();
+        T view = viewFactory.get();
+        applySettingsToView((EditorView) view);
+        viewSetter.accept(view);
+        cardPanel.add(view, mode.name());
+        views.put(mode, (EditorView) view);
     }
 
     private void applySettingsToView(EditorView view)
@@ -198,51 +160,51 @@ public class EditorTab extends JPanel
         switch (mode)
         {
             case IR:
-                if (irView == null) loadViewInBackground(mode, () -> new IRView(classEntry), v -> irView = v);
+                if (irView == null) loadView(mode, () -> new IRView(classEntry), v -> irView = v);
                 break;
             case LLVM:
-                if (llvmView == null) loadViewInBackground(mode, () -> new LLVMView(classEntry), v -> llvmView = v);
+                if (llvmView == null) loadView(mode, () -> new LLVMView(classEntry), v -> llvmView = v);
                 break;
             case AST:
-                if (astView == null) loadViewInBackground(mode, () -> new ASTView(classEntry), v -> astView = v);
+                if (astView == null) loadView(mode, () -> new ASTView(classEntry), v -> astView = v);
                 break;
             case PDG:
-                if (pdgView == null) loadViewInBackground(mode, () -> new PDGView(classEntry), v -> pdgView = v);
+                if (pdgView == null) loadView(mode, () -> new PDGView(classEntry), v -> pdgView = v);
                 break;
             case SDG:
-                if (sdgView == null) loadViewInBackground(mode, () -> new SDGView(classEntry), v -> sdgView = v);
+                if (sdgView == null) loadView(mode, () -> new SDGView(classEntry), v -> sdgView = v);
                 break;
             case CPG:
-                if (cpgView == null) loadViewInBackground(mode, () -> new CPGView(classEntry), v -> cpgView = v);
+                if (cpgView == null) loadView(mode, () -> new CPGView(classEntry), v -> cpgView = v);
                 break;
             case CFG:
-                if (controlFlowView == null) loadViewInBackground(mode, () -> new ControlFlowView(classEntry), v -> controlFlowView = v);
+                if (controlFlowView == null) loadView(mode, () -> new ControlFlowView(classEntry), v -> controlFlowView = v);
                 break;
             case CALLGRAPH:
-                if (callGraphView == null) loadViewInBackground(mode, () -> new CallGraphView(classEntry), v ->
+                if (callGraphView == null) loadView(mode, () -> new CallGraphView(classEntry), v ->
                 {
                     callGraphView = v;
                     if (projectModel != null) v.setProjectModel(projectModel);
                 });
                 break;
             case ATTRIBUTES:
-                if (attributesView == null) loadViewInBackground(mode, () -> new AttributesView(classEntry), v -> attributesView = v);
+                if (attributesView == null) loadView(mode, () -> new AttributesView(classEntry), v -> attributesView = v);
                 break;
             case STATISTICS:
-                if (statisticsView == null) loadViewInBackground(mode, () -> new StatisticsView(classEntry), v -> statisticsView = v);
+                if (statisticsView == null) loadView(mode, () -> new StatisticsView(classEntry), v -> statisticsView = v);
                 break;
             case DUAL:
-                if (dualView == null) loadViewInBackground(mode, () -> new DualView(classEntry), v ->
+                if (dualView == null) loadView(mode, () -> new DualView(classEntry), v ->
                 {
                     dualView = v;
                     if (projectModel != null) v.setProjectModel(projectModel);
                 });
                 break;
             case LIVE_INSTANCES:
-                if (liveInstancesView == null) loadViewInBackground(mode, () -> new LiveInstancesView(classEntry), v -> liveInstancesView = v);
+                if (liveInstancesView == null) loadView(mode, () -> new LiveInstancesView(classEntry), v -> liveInstancesView = v);
                 break;
             case LIVE_STATICS:
-                if (liveStaticsView == null) loadViewInBackground(mode, () -> new LiveStaticsView(classEntry), v -> liveStaticsView = v);
+                if (liveStaticsView == null) loadView(mode, () -> new LiveStaticsView(classEntry), v -> liveStaticsView = v);
                 break;
             default:
                 break;
@@ -265,14 +227,14 @@ public class EditorTab extends JPanel
     }
 
     /**
-     * Switches to a view mode, showing a loading card while that view is built for the first time.
+     * Switches to a view mode, building the view on first use; each view loads its content in the background behind its own loading overlay.
      *
      * @param mode the mode to show
      */
     public void setViewMode(ViewMode mode)
     {
         this.currentMode = mode;
-
+        ensureViewLoaded(mode);
         if (isViewReady(mode))
         {
             refreshView(mode);
@@ -281,7 +243,6 @@ public class EditorTab extends JPanel
         else
         {
             cardLayout.show(cardPanel, LOADING_CARD);
-            ensureViewLoaded(mode);
         }
     }
 
@@ -309,12 +270,13 @@ public class EditorTab extends JPanel
         }
     }
 
-    /** Refreshes the showing view, if it has loaded. */
-    public void refresh()
+    /** Reloads the showing view's content from the class, if the view has been built. */
+    public void reloadCurrentView()
     {
-        if (isViewReady(currentMode))
+        EditorView view = views.get(currentMode);
+        if (view != null)
         {
-            refreshView(currentMode);
+            view.reload();
         }
     }
 
@@ -336,39 +298,22 @@ public class EditorTab extends JPanel
     {
         classEntry.invalidateDecompilationCache();
         breadcrumbBar.setClass(classEntry);
-        if (sourceView != null) sourceView.reload();
-        if (bytecodeView != null) bytecodeView.refresh();
-        if (constPoolView != null) constPoolView.refresh();
-        if (hexView != null) hexView.reload();
-        if (irView != null) irView.refresh();
-        if (llvmView != null) llvmView.refresh();
-        if (astView != null) astView.refresh();
-        if (pdgView != null) pdgView.refresh();
-        if (sdgView != null) sdgView.refresh();
-        if (cpgView != null) cpgView.refresh();
-        if (controlFlowView != null) controlFlowView.refresh();
-        if (callGraphView != null) callGraphView.refresh();
-        if (attributesView != null) attributesView.refresh();
-        if (statisticsView != null) statisticsView.refresh();
-        if (dualView != null) dualView.refresh();
+        for (EditorView view : views.values())
+        {
+            view.reload();
+        }
     }
 
     private void onClassRecompiled()
     {
         breadcrumbBar.setClass(classEntry);
-        if (bytecodeView != null) bytecodeView.refresh();
-        if (constPoolView != null) constPoolView.refresh();
-        if (hexView != null) hexView.refresh();
-        if (irView != null) irView.refresh();
-        if (astView != null) astView.refresh();
-        if (pdgView != null) pdgView.refresh();
-        if (sdgView != null) sdgView.refresh();
-        if (cpgView != null) cpgView.refresh();
-        if (controlFlowView != null) controlFlowView.refresh();
-        if (callGraphView != null) callGraphView.refresh();
-        if (attributesView != null) attributesView.refresh();
-        if (statisticsView != null) statisticsView.refresh();
-        if (dualView != null) dualView.refresh();
+        for (Map.Entry<ViewMode, EditorView> entry : views.entrySet())
+        {
+            if (entry.getKey() != ViewMode.SOURCE)
+            {
+                entry.getValue().reload();
+            }
+        }
     }
 
     /**

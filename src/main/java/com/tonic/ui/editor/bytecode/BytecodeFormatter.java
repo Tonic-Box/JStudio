@@ -84,7 +84,7 @@ public class BytecodeFormatter
      *
      * @param classEntry the class
      * @param terse true for the compact disassembly profile
-     * @param skipTrivial true to omit methods with no code or at most 16 bytes of code, noting how many were omitted
+     * @param skipTrivial true to omit methods with at most 16 bytes of code, noting how many were omitted; abstract and native methods are always listed by signature
      * @return each included method's name and descriptor followed by its disassembly
      */
     public static String formatClass(ClassEntryModel classEntry, boolean terse, boolean skipTrivial)
@@ -152,7 +152,7 @@ public class BytecodeFormatter
     private static boolean isTrivial(MethodEntry method)
     {
         CodeAttribute code = method.getCodeAttribute();
-        return code == null || code.getCode() == null || code.getCode().length <= TRIVIAL_CODE_BYTES;
+        return code != null && code.getCode() != null && code.getCode().length <= TRIVIAL_CODE_BYTES;
     }
 
     /**

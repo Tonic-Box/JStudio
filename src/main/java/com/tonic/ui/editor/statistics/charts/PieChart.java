@@ -37,7 +37,6 @@ public class PieChart extends JPanel implements ThemeChangeListener
         this.title = title;
         setOpaque(false);
         setPreferredSize(new Dimension(250, 220));
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     /**
@@ -188,6 +187,14 @@ public class PieChart extends JPanel implements ThemeChangeListener
             sb.append(c);
         }
         return sb + ellipsis;
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        onThemeChanged(ThemeManager.getInstance().getCurrentTheme());
     }
 
     @Override

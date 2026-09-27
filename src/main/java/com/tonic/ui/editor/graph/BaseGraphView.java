@@ -26,7 +26,8 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -614,17 +615,22 @@ public abstract class BaseGraphView extends AbstractEditorView
         }
     }
 
-    /** Asks for a file and writes the DOT source to it, reporting success or failure in a dialog. */
+    /** Asks for a file and writes the DOT source to it as UTF-8, reporting success or failure in a dialog; with no graph built yet it says so instead. */
     public void exportDOT()
     {
+        if (currentDOT == null || currentDOT.isEmpty())
+        {
+            JOptionPane.showMessageDialog(this, "There is no graph to export yet.", "Export DOT", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
         JFileChooser chooser = new JFileChooser();
         chooser.setSelectedFile(new File(classEntry.getSimpleName() + ".dot"));
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
         {
             File file = chooser.getSelectedFile();
-            try (FileWriter writer = new FileWriter(file))
+            try
             {
-                writer.write(currentDOT);
+                Files.writeString(file.toPath(), currentDOT, StandardCharsets.UTF_8);
                 JOptionPane.showMessageDialog(this, "Exported to: " + file.getAbsolutePath(), "Export Successful", JOptionPane.INFORMATION_MESSAGE);
             }
             catch (IOException e)

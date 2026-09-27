@@ -9,7 +9,7 @@ import lombok.Getter;
 import javax.swing.JPanel;
 import java.awt.LayoutManager;
 
-/** A panel whose background follows one of the theme's background colors; it applies the theme when first shown and on every theme change. */
+/** A panel whose background follows one of the theme's background colors; while displayable it listens for theme changes, and it reapplies the theme each time it is added, catching up on changes made while it was detached. */
 public class ThemedJPanel extends JPanel implements ThemeChangeListener
 {
 
@@ -24,7 +24,6 @@ public class ThemedJPanel extends JPanel implements ThemeChangeListener
 
     @Getter
     private BackgroundStyle backgroundStyle;
-    private boolean themeApplied = false;
 
     /** Creates a panel with the primary background and the default flow layout. */
     public ThemedJPanel()
@@ -53,7 +52,7 @@ public class ThemedJPanel extends JPanel implements ThemeChangeListener
     }
 
     /**
-     * Creates a panel and registers it for theme changes.
+     * Creates a panel; it starts following theme changes when it is added to a displayable container.
      *
      * @param style which theme background to use
      * @param layout the layout, or null for the default flow layout
@@ -62,18 +61,14 @@ public class ThemedJPanel extends JPanel implements ThemeChangeListener
     {
         super(layout);
         this.backgroundStyle = style;
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
     public void addNotify()
     {
         super.addNotify();
-        if (!themeApplied)
-        {
-            applyTheme();
-            themeApplied = true;
-        }
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        applyTheme();
     }
 
     /**

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /** The singleton holder of the registered themes and the current one; switching themes saves the choice, reapplies the look and feel and notifies listeners. */
 public class ThemeManager
@@ -22,7 +23,7 @@ public class ThemeManager
     private final Map<String, Theme> themes = new LinkedHashMap<>();
     @Getter
     private Theme currentTheme;
-    private final List<ThemeChangeListener> listeners = new ArrayList<>();
+    private final CopyOnWriteArrayList<ThemeChangeListener> listeners = new CopyOnWriteArrayList<>();
 
     private ThemeManager()
     {
@@ -205,13 +206,13 @@ public class ThemeManager
     }
 
     /**
-     * Adds a listener for theme switches.
+     * Registers a listener for theme changes; registering one that is already registered does nothing.
      *
      * @param listener the listener
      */
     public void addThemeChangeListener(ThemeChangeListener listener)
     {
-        listeners.add(listener);
+        listeners.addIfAbsent(listener);
     }
 
     /**

@@ -1,5 +1,8 @@
 package com.tonic.ui.editor.cfg;
 
+import com.tonic.parser.MethodEntry;
+import com.tonic.analysis.ssa.cfg.IRMethod;
+import com.tonic.analysis.ssa.SSA;
 import com.tonic.ui.core.component.FilterableComboBox;
 import com.tonic.ui.editor.graph.BaseGraphView;
 import com.tonic.event.EventBus;
@@ -126,6 +129,22 @@ public class ControlFlowView extends BaseGraphView
         rebuildGraphInternal();
     }
 
+    private IRMethod liftForLabels(MethodEntry method)
+    {
+        if (method.getCodeAttribute() == null)
+        {
+            return null;
+        }
+        try
+        {
+            return new SSA(classEntry.getClassFile().getConstPool()).lift(method);
+        }
+        catch (RuntimeException e)
+        {
+            return null;
+        }
+    }
+
     private void rebuildGraphInternal()
     {
         clearGraph();
@@ -140,10 +159,11 @@ public class ControlFlowView extends BaseGraphView
         {
             Map<CFGBlock, Object> cellMap = new HashMap<>();
             Object parent = graph.getDefaultParent();
+            IRMethod irMethod = showIR ? liftForLabels(currentMethod.getMethodEntry()) : null;
 
             for (CFGBlock block : currentBlocks)
             {
-                CFGBlockVertex vertex = new CFGBlockVertex(block, currentMethod.getMethodEntry(), showIR, classEntry.getClassFile().getConstPool());
+                CFGBlockVertex vertex = new CFGBlockVertex(block, currentMethod.getMethodEntry(), showIR, irMethod);
 
                 String style = getBlockStyle(block);
                 Object cell = graph.insertVertex(parent, null, vertex, 0, 0, 150, 60, style);

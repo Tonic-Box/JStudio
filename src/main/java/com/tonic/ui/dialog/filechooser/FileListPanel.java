@@ -47,11 +47,14 @@ public class FileListPanel extends ThemedJPanel
         void onSelectionChanged(List<File> selectedFiles);
 
         /**
-         * Called when a directory is opened, or the current one must be relisted after a folder is created or files are deleted.
+         * Called when a directory is opened, or the current one must be relisted after files are deleted.
          *
          * @param directory the directory to show
          */
         void onDirectoryEntered(File directory);
+
+        /** Called when the user asks for a new folder in the current directory. */
+        void onNewFolderRequested();
     }
 
     /** The table model. */
@@ -249,7 +252,13 @@ public class FileListPanel extends ThemedJPanel
 
         if (mode == FileChooserMode.SAVE_FILE)
         {
-            addMenuItem(contextMenu, "New Folder", this::createNewFolder);
+            addMenuItem(contextMenu, "New Folder", () ->
+            {
+                if (listener != null)
+                {
+                    listener.onNewFolderRequested();
+                }
+            });
 
             if (hasSelection)
             {
@@ -384,40 +393,6 @@ public class FileListPanel extends ThemedJPanel
             int viewRow = table.convertRowIndexToView(row);
             table.setRowSelectionInterval(viewRow, viewRow);
             table.scrollRectToVisible(table.getCellRect(viewRow, 0, true));
-        }
-    }
-
-    private void createNewFolder()
-    {
-        if (currentDirectory == null)
-        {
-            return;
-        }
-
-        String name = JOptionPane.showInputDialog(this, "Folder name:", "New Folder", JOptionPane.PLAIN_MESSAGE);
-        if (name == null || name.trim().isEmpty())
-        {
-            return;
-        }
-
-        File newFolder = new File(currentDirectory, name.trim());
-        if (newFolder.exists())
-        {
-            JOptionPane.showMessageDialog(this, "A folder with this name already exists.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        if (newFolder.mkdir())
-        {
-            FileSystemWorker.invalidateCache(currentDirectory);
-            if (listener != null)
-            {
-                listener.onDirectoryEntered(currentDirectory);
-            }
-        }
-        else
-        {
-            JOptionPane.showMessageDialog(this, "Failed to create folder.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

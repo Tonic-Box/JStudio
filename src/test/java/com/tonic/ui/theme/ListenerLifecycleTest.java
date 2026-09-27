@@ -55,12 +55,20 @@ class ListenerLifecycleTest
     }
 
     @Test
-    void themedPanelRegistersInCtorAndUnregistersOnRemoveNotify()
+    @DisplayName("a themed panel listens only while displayable, once however often it is added, and again after being re-added")
+    void themedPanelListensWhileDisplayable()
     {
         System.setProperty("java.awt.headless", "true");
         ThemeManager mgr = ThemeManager.getInstance();
         int before = mgr.getListenerCount();
         ThemedJPanel panel = new ThemedJPanel();
+        assertEquals(before, mgr.getListenerCount());
+        panel.addNotify();
+        panel.addNotify();
+        assertEquals(before + 1, mgr.getListenerCount());
+        panel.removeNotify();
+        assertEquals(before, mgr.getListenerCount());
+        panel.addNotify();
         assertEquals(before + 1, mgr.getListenerCount());
         panel.removeNotify();
         assertEquals(before, mgr.getListenerCount());

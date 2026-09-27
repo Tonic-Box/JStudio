@@ -344,7 +344,7 @@ public class BottomPanel
     {
         if (commentsPanel == null)
         {
-            commentsPanel = new CommentsPanel(project);
+            commentsPanel = new CommentsPanel(project, () -> editorPanel != null ? editorPanel.getCurrentClass() : null);
             addTab("Comments", commentsPanel);
         }
         toggleTab("Comments");

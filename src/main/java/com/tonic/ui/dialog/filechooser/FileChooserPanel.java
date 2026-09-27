@@ -64,7 +64,7 @@ public class FileChooserPanel extends ThemedJPanel
     private final JButton actionButton;
     private final JButton cancelButton;
 
-    private boolean isLoading = false;
+    private int navigation;
     private ExtensionFileFilter currentFilter;
 
     /** Creates the panel in open-file mode with no directory shown. */
@@ -96,6 +96,12 @@ public class FileChooserPanel extends ThemedJPanel
             public void onDirectoryEntered(File directory)
             {
                 navigateTo(directory);
+            }
+
+            @Override
+            public void onNewFolderRequested()
+            {
+                createNewFolder();
             }
         });
 
@@ -283,23 +289,23 @@ public class FileChooserPanel extends ThemedJPanel
     }
 
     /**
-     * Lists a directory in the background and shows it, recording it as a recent location; ignored while another listing is loading or if the directory does not exist.
+     * Lists a directory in the background and shows it, recording it as a recent location; a later navigation supersedes one still loading, and a directory that does not exist is ignored.
      *
      * @param directory the directory
      */
     public void navigateTo(File directory)
+    {
+        navigateTo(directory, null);
+    }
+
+    private void navigateTo(File directory, String selectName)
     {
         if (directory == null || !directory.exists() || !directory.isDirectory())
         {
             return;
         }
 
-        if (isLoading)
-        {
-            return;
-        }
-
-        isLoading = true;
+        int request = ++navigation;
         currentDirectory = directory;
         pathBar.setCurrentDirectory(directory);
 
@@ -310,12 +316,16 @@ public class FileChooserPanel extends ThemedJPanel
             {
                 SwingUtilities.invokeLater(() ->
                 {
-                    List<File> filtered = filterFilesByMode(files);
-                    fileListPanel.setFiles(filtered, directory);
-                    isLoading = false;
-
+                    if (request != navigation)
+                    {
+                        return;
+                    }
+                    fileListPanel.setFiles(filterFilesByMode(files), directory);
                     QuickAccessManager.getInstance().addRecent(directory);
-
+                    if (selectName != null)
+                    {
+                        fileListPanel.selectFile(selectName);
+                    }
                     fileListPanel.focusTable();
                 });
             }
@@ -325,7 +335,10 @@ public class FileChooserPanel extends ThemedJPanel
             {
                 SwingUtilities.invokeLater(() ->
                 {
-                    isLoading = false;
+                    if (request != navigation)
+                    {
+                        return;
+                    }
                     fileListPanel.setFiles(new ArrayList<>(), directory);
                     JOptionPane.showMessageDialog(FileChooserPanel.this, "Cannot list " + dir.getAbsolutePath() + ": " + e.getMessage(), "Cannot Open Folder", JOptionPane.ERROR_MESSAGE);
                 });
@@ -570,8 +583,8 @@ public class FileChooserPanel extends ThemedJPanel
 
         if (newFolder.mkdir())
         {
-            refreshFileList();
-            fileListPanel.selectFile(name.trim());
+            FileSystemWorker.invalidateCache(currentDirectory);
+            navigateTo(currentDirectory, newFolder.getName());
         }
         else
         {

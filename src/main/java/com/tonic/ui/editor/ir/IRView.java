@@ -92,6 +92,10 @@ public class IRView extends AbstractTextView
     @Override
     public void refresh()
     {
+        if (loaded)
+        {
+            return;
+        }
         cancelCurrentWorker();
         loadingOverlay.showLoading("Lifting to SSA IR...");
 

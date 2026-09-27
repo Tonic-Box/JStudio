@@ -70,8 +70,6 @@ public class ThemedJTextArea extends JTextArea implements ThemeChangeListener
 
     private void initialize()
     {
-        applyTheme();
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
@@ -96,6 +94,14 @@ public class ThemedJTextArea extends JTextArea implements ThemeChangeListener
         {
             setFont(JStudioTheme.getUIFont(UIConstants.FONT_SIZE_NORMAL));
         }
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        onThemeChanged(ThemeManager.getInstance().getCurrentTheme());
     }
 
     @Override

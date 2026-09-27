@@ -10,7 +10,7 @@ import java.awt.Dialog;
 import java.awt.Frame;
 import java.awt.Window;
 
-/** A dialog whose content pane follows the theme background; it stops listening for theme changes on dispose. */
+/** A dialog whose content pane follows the theme background while it is displayable, reapplying the theme each time it is shown again. */
 public class ThemedJDialog extends JDialog implements ThemeChangeListener
 {
 
@@ -167,8 +167,6 @@ public class ThemedJDialog extends JDialog implements ThemeChangeListener
 
     private void initialize()
     {
-        applyTheme();
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     @Override
@@ -184,9 +182,17 @@ public class ThemedJDialog extends JDialog implements ThemeChangeListener
     }
 
     @Override
-    public void dispose()
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        applyTheme();
+    }
+
+    @Override
+    public void removeNotify()
     {
         ThemeManager.getInstance().removeThemeChangeListener(this);
-        super.dispose();
+        super.removeNotify();
     }
 }

@@ -148,15 +148,8 @@ public class CallGraphDOTExporter
         String className = getSimpleClassName(ref.getOwner());
         String methodName = ref.getName();
 
-        if ("<init>".equals(methodName))
-        {
-            return escapeLabel(className + "\\n<init>");
-        }
-        else if ("<clinit>".equals(methodName))
-        {
-            return escapeLabel(className + "\\n<clinit>");
-        }
-        return escapeLabel(className + "\\n" + methodName + "()");
+        String member = "<init>".equals(methodName) || "<clinit>".equals(methodName) ? methodName : methodName + "()";
+        return escapeLabel(className) + "\\n" + escapeLabel(member);
     }
 
     private String getSimpleClassName(String fullName)

@@ -56,7 +56,6 @@ public class StatCard extends JPanel implements ThemeChangeListener
             }
         });
 
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     /**
@@ -144,6 +143,14 @@ public class StatCard extends JPanel implements ThemeChangeListener
         int g = Math.min(255, (int) (color.getGreen() * factor));
         int b = Math.min(255, (int) (color.getBlue() * factor));
         return new Color(r, g, b);
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        onThemeChanged(ThemeManager.getInstance().getCurrentTheme());
     }
 
     @Override

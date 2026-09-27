@@ -91,7 +91,14 @@ public class WelcomeTab extends JPanel implements ThemeChangeListener
 
         add(scrollPane, BorderLayout.CENTER);
 
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
         ThemeManager.getInstance().addThemeChangeListener(this);
+        onThemeChanged(ThemeManager.getInstance().getCurrentTheme());
     }
 
     @Override

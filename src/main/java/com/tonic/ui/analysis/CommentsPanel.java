@@ -36,12 +36,14 @@ import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Supplier;
 
 /** The comments list of the project database, newest first, with a preview of the selected comment. */
 public class CommentsPanel extends ThemedJPanel
 {
 
     private final ProjectModel project;
+    private final Supplier<ClassEntryModel> currentClass;
     private final JList<Comment> commentList;
     private final DefaultListModel<Comment> listModel;
     private final JTextArea previewArea;
@@ -51,10 +53,12 @@ public class CommentsPanel extends ThemedJPanel
      * Builds the toolbar, list, preview and status line.
      *
      * @param project the project whose classes comments resolve against; may be null
+     * @param currentClass supplies the class open in the editor, where Add Comment attaches, or null when none is open
      */
-    public CommentsPanel(ProjectModel project)
+    public CommentsPanel(ProjectModel project, Supplier<ClassEntryModel> currentClass)
     {
         super(BackgroundStyle.PRIMARY, new BorderLayout());
+        this.currentClass = currentClass;
         this.project = project;
 
         JToolBar toolbar = createToolbar();
@@ -236,7 +240,7 @@ public class CommentsPanel extends ThemedJPanel
         return project.getClass(className);
     }
 
-    /** Prompts for a class name and comment text, then stores a class-level comment; warns and stops if no classes are loaded or the class is not found. */
+    /** Prompts for comment text and stores a class-level comment on the class open in the editor, asking for a class name when none is open; warns and stops if no classes are loaded or the class is not found. */
     public void addCommentAtCurrentLocation()
     {
         if (project == null || project.getClassCount() == 0)
@@ -245,17 +249,20 @@ public class CommentsPanel extends ThemedJPanel
             return;
         }
 
-        String className = JOptionPane.showInputDialog(this, "Class name (internal format, e.g., com/example/Main):", "Add Comment", JOptionPane.PLAIN_MESSAGE);
-        if (className == null || className.trim().isEmpty())
-        {
-            return;
-        }
-
-        ClassEntryModel classEntry = findClass(className.trim());
+        ClassEntryModel classEntry = currentClass.get();
         if (classEntry == null)
         {
-            JOptionPane.showMessageDialog(this, "Class not found: " + className, "Add Comment", JOptionPane.WARNING_MESSAGE);
-            return;
+            String className = JOptionPane.showInputDialog(this, "Class name (internal format, e.g., com/example/Main):", "Add Comment", JOptionPane.PLAIN_MESSAGE);
+            if (className == null || className.trim().isEmpty())
+            {
+                return;
+            }
+            classEntry = findClass(className.trim());
+            if (classEntry == null)
+            {
+                JOptionPane.showMessageDialog(this, "Class not found: " + className, "Add Comment", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
         }
 
         JTextArea textArea = new JTextArea(5, 30);

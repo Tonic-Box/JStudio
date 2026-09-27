@@ -1,5 +1,6 @@
 package com.tonic.ui.dialog;
 
+import com.tonic.ui.analysis.SimulationPanel;
 import com.tonic.event.EventBus;
 import com.tonic.event.events.ProjectUpdatedEvent;
 import com.tonic.model.ClassEntryModel;
@@ -36,7 +37,9 @@ public final class DialogManager
     private ProjectModel analysisProjectRef;
     private JDialog transformDialog;
     private TransformPanel transformPanel;
+    private ProjectModel transformProject;
     private FindInFilesDialog findInFilesDialog;
+    private ProjectModel findInFilesProject;
     /** The script editor dialog, or null if it has not been opened yet. */
     @Getter
     private ScriptEditorDialog scriptEditorDialog;
@@ -113,7 +116,20 @@ public final class DialogManager
             {
                 analysisDialog.dispose();
             }
-            analysisPanel = new AnalysisPanel(project);
+            analysisPanel = new AnalysisPanel(project, new SimulationPanel.EditorSelection()
+            {
+                @Override
+                public MethodEntryModel currentMethod()
+                {
+                    return editorPanel.getCurrentMethod();
+                }
+
+                @Override
+                public ClassEntryModel currentClass()
+                {
+                    return editorPanel.getCurrentClass();
+                }
+            });
             analysisProjectRef = project;
             analysisDialog = new JDialog(mainFrame, "Analysis", false);
             analysisDialog.setSize(900, 600);
@@ -240,8 +256,14 @@ public final class DialogManager
             return;
         }
 
+        if (transformDialog != null && transformProject != project)
+        {
+            transformDialog.dispose();
+            transformDialog = null;
+        }
         if (transformDialog == null || transformPanel == null)
         {
+            transformProject = project;
             transformPanel = new TransformPanel(project);
             transformPanel.setTransformCallback(mainFrame::refreshCurrentView);
             transformDialog = new JDialog(mainFrame, "SSA Transforms", false);
@@ -318,9 +340,9 @@ public final class DialogManager
     }
 
     /**
-     * Logs the transform against the current class and opens the SSA transforms dialog; warns if no class is open.
+     * Opens the SSA transforms dialog on the current class with only one transform ticked, ready to preview and apply; warns if no class is open.
      *
-     * @param transformName the transform's name, used only in the log line
+     * @param transformName the transform's display name in the dialog
      */
     public void applyTransform(String transformName)
     {
@@ -331,9 +353,11 @@ public final class DialogManager
             return;
         }
 
-        mainFrame.getConsolePanel().log("Applying " + transformName + " to " + currentClass.getClassName() + "...");
-
         showTransformDialog();
+        if (transformPanel != null && !transformPanel.selectOnly(transformName))
+        {
+            mainFrame.getConsolePanel().log("The SSA Transforms dialog has no transform named " + transformName + ".");
+        }
     }
 
     /** Opens the find in files dialog, prefilled with the editor selection when it is shorter than 100 characters; warns if no project is loaded. */
@@ -346,8 +370,14 @@ public final class DialogManager
             return;
         }
 
+        if (findInFilesDialog != null && findInFilesProject != project)
+        {
+            findInFilesDialog.dispose();
+            findInFilesDialog = null;
+        }
         if (findInFilesDialog == null)
         {
+            findInFilesProject = project;
             findInFilesDialog = new FindInFilesDialog(mainFrame, project);
         }
 

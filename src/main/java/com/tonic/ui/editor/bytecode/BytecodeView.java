@@ -1,5 +1,9 @@
 package com.tonic.ui.editor.bytecode;
 
+import javax.swing.text.BadLocationException;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.function.BooleanSupplier;
 import com.tonic.parser.MethodEntry;
 import com.tonic.model.ClassEntryModel;
 import com.tonic.model.MethodEntryModel;
@@ -235,6 +239,10 @@ public class BytecodeView extends AbstractTextView
     @Override
     public void refresh()
     {
+        if (loaded)
+        {
+            return;
+        }
         cancelCurrentWorker();
         lineIndex = null;
         loadingOverlay.showLoading("Loading bytecode...");
@@ -363,152 +371,106 @@ public class BytecodeView extends AbstractTextView
     }
 
     /**
-     * Highlights and selects an instruction, deferring until an in-flight load finishes.
+     * Highlights and selects an instruction, deferring until the text has loaded.
      *
      * @param methodName the method's name
      * @param methodDesc the method's descriptor
      * @param pc the instruction's bytecode offset
-     * @return false when the method is not found; true when highlighted, deferred, or only the method was found
+     * @return false when the loaded text has no such method; true when highlighted, deferred, or only the method was found
      */
     public boolean highlightPC(String methodName, String methodDesc, int pc)
+    {
+        return whenLoaded(() -> applyHighlightPC(methodName, methodDesc, pc));
+    }
+
+    /**
+     * Highlights and moves the caret to a method's header line, deferring until the text has loaded.
+     *
+     * @param methodName the method's name
+     * @param methodDesc the method's descriptor, or null to take the first method with that name
+     * @return false when the loaded text has no such method; true when found or deferred
+     */
+    public boolean scrollToMethod(String methodName, String methodDesc)
+    {
+        return whenLoaded(() -> selectLine(methodHeader(textArea.getText(), methodName, methodDesc)));
+    }
+
+    /**
+     * Highlights and moves the caret to the first whole-word use of a field name, deferring until the text has loaded.
+     *
+     * @param fieldName the field's name
+     * @return false when the loaded text never mentions the name; true when found or deferred
+     */
+    public boolean scrollToField(String fieldName)
+    {
+        return whenLoaded(() ->
+        {
+            Matcher m = Pattern.compile("\\b" + Pattern.quote(fieldName) + "\\b").matcher(textArea.getText());
+            return selectLine(m.find() ? m.start() : -1);
+        });
+    }
+
+    private boolean whenLoaded(BooleanSupplier navigation)
     {
         if (!loaded)
         {
             refresh();
         }
-        if (currentWorker != null && !currentWorker.isDone())
+        if (!loaded || (currentWorker != null && !currentWorker.isDone()))
         {
-            pendingHighlight = () -> applyHighlightPC(methodName, methodDesc, pc);
+            pendingHighlight = navigation::getAsBoolean;
             return true;
         }
-        return applyHighlightPC(methodName, methodDesc, pc);
+        return navigation.getAsBoolean();
     }
 
     private boolean applyHighlightPC(String methodName, String methodDesc, int pc)
     {
         String text = textArea.getText();
-        String methodSignature = methodName + methodDesc;
-        int methodStart = text.indexOf(methodSignature);
-        if (methodStart < 0)
-        {
-            methodStart = text.indexOf(methodName);
-        }
+        int methodStart = methodHeader(text, methodName, methodDesc);
         if (methodStart < 0)
         {
             return false;
         }
-
-        String pcPattern = String.format("%d:", pc);
-        int pcIndex = text.indexOf(pcPattern, methodStart);
-
-        if (pcIndex < 0)
-        {
-            pcPattern = String.format(" %d:", pc);
-            pcIndex = text.indexOf(pcPattern, methodStart);
-        }
-
-        if (pcIndex >= 0)
-        {
-            textArea.setCaretPosition(pcIndex);
-            textArea.requestFocus();
-
-            try
-            {
-                int lineNum = textArea.getLineOfOffset(pcIndex);
-                clearHighlights();
-                addHighlight(lineNum);
-                lastClickedLine = lineNum;
-
-                int lineStart = textArea.getLineStartOffset(lineNum);
-                int lineEnd = textArea.getLineEndOffset(lineNum);
-                if (lineEnd > lineStart && text.charAt(lineEnd - 1) == '\n')
-                {
-                    lineEnd--;
-                }
-                textArea.select(lineStart, lineEnd);
-            }
-            catch (Exception e)
-            {
-            }
-            return true;
-        }
-
-        textArea.setCaretPosition(methodStart);
-        textArea.select(methodStart, methodStart + methodSignature.length());
-        textArea.requestFocus();
-        return true;
+        int methodEnd = text.indexOf("// " + METHOD_DIVIDER, methodStart);
+        Matcher m = Pattern.compile("(?m)^  " + String.format("%04d", pc) + ": ").matcher(text);
+        m.region(methodStart, methodEnd < 0 ? text.length() : methodEnd);
+        return selectLine(m.find() ? m.start() : methodStart);
     }
 
-    /**
-     * Highlights and moves the caret to a method's first textual occurrence, starting a load if none has completed.
-     *
-     * @param methodName the method's name
-     * @param methodDesc the method's descriptor, or null to match on the name alone
-     * @return whether the method was found in the current text
-     */
-    public boolean scrollToMethod(String methodName, String methodDesc)
+    private static int methodHeader(String text, String methodName, String methodDesc)
     {
-        if (!loaded)
-        {
-            refresh();
-        }
-
-        String text = textArea.getText();
-        String searchPattern = methodDesc != null ? methodName + methodDesc : methodName;
-        int index = text.indexOf(searchPattern);
-
-        if (index >= 0)
-        {
-            clearHighlights();
-            try
-            {
-                int lineNumber = textArea.getLineOfOffset(index);
-                addHighlight(lineNumber);
-            }
-            catch (Exception e)
-            {
-            }
-            textArea.setCaretPosition(index);
-            textArea.requestFocus();
-            return true;
-        }
-
-        return false;
+        String signature = Pattern.quote(methodName) + (methodDesc != null ? Pattern.quote(methodDesc) + "$" : "\\(");
+        Matcher m = Pattern.compile("(?m)^//[a-z ]* " + signature).matcher(text);
+        return m.find() ? m.start() : -1;
     }
 
-    /**
-     * Highlights and moves the caret to a field name's first textual occurrence, starting a load if none has completed.
-     *
-     * @param fieldName the field's name
-     * @return whether the name was found in the current text
-     */
-    public boolean scrollToField(String fieldName)
+    private boolean selectLine(int offset)
     {
-        if (!loaded)
+        if (offset < 0)
         {
-            refresh();
+            return false;
         }
-
-        String text = textArea.getText();
-        int index = text.indexOf(fieldName);
-
-        if (index >= 0)
+        try
         {
+            int lineNum = textArea.getLineOfOffset(offset);
+            int lineStart = textArea.getLineStartOffset(lineNum);
+            int lineEnd = textArea.getLineEndOffset(lineNum);
+            if (lineEnd > lineStart && textArea.getText(lineEnd - 1, 1).equals("\n"))
+            {
+                lineEnd--;
+            }
             clearHighlights();
-            try
-            {
-                int lineNumber = textArea.getLineOfOffset(index);
-                addHighlight(lineNumber);
-            }
-            catch (Exception e)
-            {
-            }
-            textArea.setCaretPosition(index);
+            addHighlight(lineNum);
+            lastClickedLine = lineNum;
+            textArea.select(lineStart, lineEnd);
             textArea.requestFocus();
             return true;
         }
-
-        return false;
+        catch (BadLocationException e)
+        {
+            return false;
+        }
     }
 
     /** Removes every line highlight. */

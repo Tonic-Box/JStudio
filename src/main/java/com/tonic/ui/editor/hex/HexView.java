@@ -210,8 +210,17 @@ public class HexView extends AbstractEditorView
                     }
                 }
 
-                String style = (offset < 4) ? STYLE_HIGHLIGHT : STYLE_HEX;
-                doc.insertString(doc.getLength(), hexPart.toString(), doc.getStyle(style));
+                String hex = hexPart.toString();
+                if (offset == 0)
+                {
+                    int magicEnd = Math.min(bytes.length, 4) * 3;
+                    doc.insertString(doc.getLength(), hex.substring(0, magicEnd), doc.getStyle(STYLE_HIGHLIGHT));
+                    doc.insertString(doc.getLength(), hex.substring(magicEnd), doc.getStyle(STYLE_HEX));
+                }
+                else
+                {
+                    doc.insertString(doc.getLength(), hex, doc.getStyle(STYLE_HEX));
+                }
 
                 doc.insertString(doc.getLength(), " ", doc.getStyle(STYLE_SEPARATOR));
 
@@ -275,17 +284,7 @@ public class HexView extends AbstractEditorView
     public void showFindDialog()
     {
         String input = JOptionPane.showInputDialog(this, "Find (hex bytes like 'CA FE'):", "Find", JOptionPane.PLAIN_MESSAGE);
-        if (input != null && !input.isEmpty())
-        {
-            String text = textPane.getText().toUpperCase();
-            String searchUpper = input.toUpperCase();
-            int pos = text.indexOf(searchUpper);
-            if (pos >= 0)
-            {
-                textPane.setCaretPosition(pos);
-                textPane.select(pos, pos + input.length());
-            }
-        }
+        scrollToText(input);
     }
 
     /**
@@ -307,15 +306,23 @@ public class HexView extends AbstractEditorView
     @Override
     public void scrollToText(String text)
     {
-        if (text == null || text.isEmpty()) return;
-
-        String content = textPane.getText().toUpperCase();
-        String searchUpper = text.toUpperCase();
-        int pos = content.indexOf(searchUpper);
-        if (pos >= 0)
+        if (text == null || text.isEmpty())
         {
-            textPane.setCaretPosition(pos);
-            textPane.select(pos, pos + text.length());
+            return;
+        }
+        try
+        {
+            Document doc = textPane.getDocument();
+            int pos = doc.getText(0, doc.getLength()).toUpperCase().indexOf(text.toUpperCase());
+            if (pos >= 0)
+            {
+                textPane.setCaretPosition(pos);
+                textPane.select(pos, pos + text.length());
+            }
+        }
+        catch (BadLocationException e)
+        {
+            throw new IllegalStateException(e);
         }
     }
 

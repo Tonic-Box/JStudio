@@ -32,12 +32,11 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener
     @Getter
     private boolean loading = false;
 
-    /** Creates the overlay hidden and registers it for theme changes. */
+    /** Creates the overlay hidden; it follows theme changes while displayable. */
     public LoadingOverlay()
     {
         setOpaque(false);
         setVisible(false);
-        ThemeManager.getInstance().addThemeChangeListener(this);
 
         animationTimer = new Timer(ANIMATION_DELAY, e ->
         {
@@ -164,6 +163,17 @@ public class LoadingOverlay extends JPanel implements ThemeChangeListener
     public void onThemeChanged(Theme newTheme)
     {
         repaint();
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        if (loading)
+        {
+            animationTimer.start();
+        }
     }
 
     @Override

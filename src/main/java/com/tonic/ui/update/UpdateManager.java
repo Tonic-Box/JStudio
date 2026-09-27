@@ -1,5 +1,6 @@
 package com.tonic.ui.update;
 
+import javax.swing.Timer;
 import com.tonic.util.Settings;
 
 import javax.swing.JFrame;
@@ -155,6 +156,10 @@ public final class UpdateManager
             protected void done()
             {
                 monitor.close();
+                if (isCancelled())
+                {
+                    return;
+                }
                 Path jar;
                 try
                 {
@@ -176,7 +181,20 @@ public final class UpdateManager
                 monitor.setProgress((Integer) event.getNewValue());
             }
         });
+        Timer cancelWatch = new Timer(200, null);
+        cancelWatch.addActionListener(e ->
+        {
+            if (worker.isDone())
+            {
+                cancelWatch.stop();
+            }
+            else if (monitor.isCanceled())
+            {
+                worker.cancel(true);
+            }
+        });
         worker.execute();
+        cancelWatch.start();
     }
 
     private void confirmRestart(UpdateInfo info, Path jar)

@@ -40,7 +40,6 @@ public class BarChart extends JPanel implements ThemeChangeListener
     {
         this.title = title;
         setOpaque(false);
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     /**
@@ -230,6 +229,14 @@ public class BarChart extends JPanel implements ThemeChangeListener
         int g = (int) (color.getGreen() * factor);
         int b = (int) (color.getBlue() * factor);
         return new Color(r, g, b);
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        onThemeChanged(ThemeManager.getInstance().getCurrentTheme());
     }
 
     @Override

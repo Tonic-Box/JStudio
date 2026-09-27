@@ -47,7 +47,6 @@ public class StatTable extends JPanel implements ThemeChangeListener
         add(scrollPane, BorderLayout.CENTER);
 
         setPreferredSize(new Dimension(500, 200));
-        ThemeManager.getInstance().addThemeChangeListener(this);
     }
 
     private JPanel createTitlePanel()
@@ -111,6 +110,14 @@ public class StatTable extends JPanel implements ThemeChangeListener
     public void setData(List<ClassStatistics.MethodDetailInfo> methods)
     {
         tableModel.setData(methods);
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        ThemeManager.getInstance().addThemeChangeListener(this);
+        onThemeChanged(ThemeManager.getInstance().getCurrentTheme());
     }
 
     @Override

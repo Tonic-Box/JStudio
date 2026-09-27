@@ -84,6 +84,10 @@ public class LLVMView extends AbstractTextView
     @Override
     public void refresh()
     {
+        if (loaded)
+        {
+            return;
+        }
         cancelCurrentWorker();
         loadingOverlay.showLoading("Lowering to LLVM IR...");
 

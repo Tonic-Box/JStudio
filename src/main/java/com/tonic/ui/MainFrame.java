@@ -863,7 +863,7 @@ public class MainFrame extends JFrame
         sidePanel.toggleConsoleTab();
     }
 
-    /** Refreshes the front class tab. */
+    /** Reloads the showing view of the front class tab. */
     public void refreshCurrentView()
     {
         editorPanel.refreshCurrentTab();
@@ -1381,9 +1381,9 @@ public class MainFrame extends JFrame
     }
 
     /**
-     * Applies a named transform to the project.
+     * Opens the SSA transforms dialog on the front class with one transform preselected.
      *
-     * @param transformName the transform's name
+     * @param transformName the transform's display name in the dialog
      */
     public void applyTransform(String transformName)
     {
