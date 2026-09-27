@@ -1,10 +1,11 @@
 package com.tonic.deobfuscation.model;
 
+import com.tonic.deobfuscation.CallSites;
 import com.tonic.parser.MethodEntry;
 import lombok.Getter;
 import lombok.Setter;
 
-/** The outcome of decrypting one constant-pool string: original and decrypted text, the decryptor used, timing, error, and whether it was patched in. */
+/** One row of string decryption: a suspicious constant-pool string, or a call to a decryptor with its recovered arguments, with the decrypted text, decryptor used, timing, error, and whether it was patched in. */
 @Getter
 public class DeobfuscationResult
 {
@@ -12,6 +13,7 @@ public class DeobfuscationResult
     private final String className;
     private final int constantPoolIndex;
     private final String originalValue;
+    private final CallSites.CallSite callSite;
     @Setter
     private String decryptedValue;
     @Setter
@@ -26,7 +28,7 @@ public class DeobfuscationResult
     private boolean applied;
 
     /**
-     * Creates a result that is neither successful nor applied.
+     * Creates a row for a suspicious constant-pool string, neither decrypted nor applied.
      *
      * @param className the internal name of the class holding the string
      * @param constantPoolIndex the string's constant-pool index
@@ -34,49 +36,38 @@ public class DeobfuscationResult
      */
     public DeobfuscationResult(String className, int constantPoolIndex, String originalValue)
     {
+        this(className, constantPoolIndex, originalValue, null);
+    }
+
+    private DeobfuscationResult(String className, int constantPoolIndex, String originalValue, CallSites.CallSite callSite)
+    {
         this.className = className;
         this.constantPoolIndex = constantPoolIndex;
         this.originalValue = originalValue;
-        this.success = false;
-        this.applied = false;
+        this.callSite = callSite;
     }
 
     /**
-     * Creates a successful result.
+     * Creates a row for one call to a decryptor, neither decrypted nor applied.
      *
-     * @param className the internal name of the class holding the string
-     * @param cpIndex the string's constant-pool index
-     * @param original the encrypted string
-     * @param decrypted the decrypted string
-     * @param decryptor the method that decrypted it
-     * @param timeMs how long decryption took, in milliseconds
-     * @return the result
+     * @param className the internal name of the class holding the call
+     * @param callSite the call and its recovered arguments
+     * @param constantPoolIndex the constant-pool index of the call's string argument when patching that string applies the result, or -1
+     * @return the row, showing the call's arguments as its original value
      */
-    public static DeobfuscationResult success(String className, int cpIndex, String original, String decrypted, MethodEntry decryptor, long timeMs)
+    public static DeobfuscationResult forCallSite(String className, CallSites.CallSite callSite, int constantPoolIndex)
     {
-        DeobfuscationResult result = new DeobfuscationResult(className, cpIndex, original);
-        result.decryptedValue = decrypted;
-        result.decryptorUsed = decryptor;
-        result.success = true;
-        result.executionTimeMs = timeMs;
-        return result;
+        return new DeobfuscationResult(className, constantPoolIndex, callSite.describeArguments(), callSite);
     }
 
     /**
-     * Creates a failed result.
+     * Tells whether applying the row can patch a constant-pool string.
      *
-     * @param className the internal name of the class holding the string
-     * @param cpIndex the string's constant-pool index
-     * @param original the encrypted string
-     * @param error why decryption failed
-     * @return the result
+     * @return true when the row decrypted a string held at a known constant-pool index
      */
-    public static DeobfuscationResult failure(String className, int cpIndex, String original, String error)
+    public boolean isApplicable()
     {
-        DeobfuscationResult result = new DeobfuscationResult(className, cpIndex, original);
-        result.success = false;
-        result.errorMessage = error;
-        return result;
+        return success && constantPoolIndex > 0;
     }
 
     /**
@@ -131,12 +122,16 @@ public class DeobfuscationResult
     }
 
     /**
-     * Formats where the string lives.
+     * Formats where the row's string or call is.
      *
-     * @return the simple class name, a colon and the constant-pool index
+     * @return for a call the simple class name, the calling method and the bytecode offset; otherwise the simple class name, a colon and the constant-pool index
      */
     public String getLocation()
     {
+        if (callSite != null)
+        {
+            return getSimpleClassName() + "." + callSite.getCaller().getName() + "@" + callSite.getOffset();
+        }
         return getSimpleClassName() + ":" + constantPoolIndex;
     }
 

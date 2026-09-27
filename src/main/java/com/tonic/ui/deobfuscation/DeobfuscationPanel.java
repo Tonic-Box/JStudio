@@ -1,9 +1,11 @@
 package com.tonic.ui.deobfuscation;
 
+import com.tonic.deobfuscation.CallSites;
 import com.tonic.deobfuscation.DeobfuscationService;
 
 import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
+import com.tonic.parser.MethodEntry;
 import com.tonic.deobfuscation.detection.DecryptorDetector;
 import com.tonic.deobfuscation.detection.EncryptedStringDetector;
 import com.tonic.deobfuscation.model.DecryptorCandidate;
@@ -21,8 +23,12 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 
 /** The string deobfuscation tool: scans a class for encrypted strings, finds decryptor methods, decrypts and patches the constant pool. */
 public class DeobfuscationPanel extends ThemedJPanel
@@ -364,81 +370,115 @@ public class DeobfuscationPanel extends ThemedJPanel
         int[] selectedRows = resultsTable.getSelectedRows();
         if (selectedRows.length == 0) return;
 
-        DecryptorCandidate decryptor = getSelectedDecryptor();
-        if (decryptor == null)
-        {
-            JOptionPane.showMessageDialog(this, "No decryptor available", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        decryptRows(selectedRows, decryptor);
+        decryptRows(selectedRows);
     }
 
     private void decryptAll()
     {
-        if (results.isEmpty()) return;
-
+        ClassFile selected = (ClassFile) classSelector.getSelectedItem();
         DecryptorCandidate decryptor = getSelectedDecryptor();
-        if (decryptor == null)
+        if (selected == null || decryptor == null)
         {
             JOptionPane.showMessageDialog(this, "No decryptor available", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        int[] allRows = new int[results.size()];
-        for (int i = 0; i < results.size(); i++)
-        {
-            allRows[i] = i;
-        }
-
-        decryptRows(allRows, decryptor);
+        runDecryption(() -> Map.of(-1, deobfuscationService.decryptCallSites(selected, decryptor)));
     }
 
-    private void decryptRows(int[] rows, DecryptorCandidate decryptor)
+    private void decryptRows(int[] rows)
+    {
+        ClassFile selected = (ClassFile) classSelector.getSelectedItem();
+        DecryptorCandidate decryptor = getSelectedDecryptor();
+        if (selected == null || decryptor == null)
+        {
+            JOptionPane.showMessageDialog(this, "No decryptor available", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        List<DeobfuscationResult> chosen = new ArrayList<>();
+        for (int row : rows)
+        {
+            chosen.add(results.get(row));
+        }
+        runDecryption(() ->
+        {
+            MethodEntry method = decryptor.getMethod();
+            List<CallSites.CallSite> sites = CallSites.find(selected, method.getOwnerName(), method.getName(), method.getDesc());
+            Map<Integer, List<DeobfuscationResult>> replacements = new LinkedHashMap<>();
+            for (int k = 0; k < rows.length; k++)
+            {
+                replacements.put(rows[k], decryptRow(selected, chosen.get(k), sites, decryptor));
+            }
+            return replacements;
+        });
+    }
+
+    private List<DeobfuscationResult> decryptRow(ClassFile classFile, DeobfuscationResult row, List<CallSites.CallSite> sites, DecryptorCandidate decryptor)
+    {
+        if (row.getCallSite() != null)
+        {
+            return List.of(deobfuscationService.decrypt(classFile, row.getCallSite(), decryptor));
+        }
+        List<DeobfuscationResult> decrypted = new ArrayList<>();
+        for (CallSites.CallSite site : sites)
+        {
+            if (site.isResolved() && Arrays.asList(site.getArguments()).contains(row.getOriginalValue()))
+            {
+                decrypted.add(deobfuscationService.decrypt(classFile, site, decryptor));
+            }
+        }
+        if (decrypted.isEmpty())
+        {
+            row.setErrorMessage("Not passed to " + decryptor.getSimpleSignature() + " in this class");
+            decrypted.add(row);
+        }
+        return decrypted;
+    }
+
+    private void runDecryption(Supplier<Map<Integer, List<DeobfuscationResult>>> work)
     {
         decryptSelectedButton.setEnabled(false);
         decryptAllButton.setEnabled(false);
         statusLabel.setText("Decrypting...");
 
-        SwingWorker<Void, Integer> worker = new SwingWorker<>()
+        SwingWorker<Map<Integer, List<DeobfuscationResult>>, Void> worker = new SwingWorker<>()
         {
             @Override
-            protected Void doInBackground()
+            protected Map<Integer, List<DeobfuscationResult>> doInBackground()
             {
                 deobfuscationService.initialize();
-
-                for (int row : rows)
-                {
-                    DeobfuscationResult result = results.get(row);
-                    if (result.isSuccess()) continue;
-
-                    DeobfuscationResult newResult = deobfuscationService.decryptString(result.getClassName(), result.getConstantPoolIndex(), result.getOriginalValue(), decryptor);
-
-                    result.setSuccess(newResult.isSuccess());
-                    result.setDecryptedValue(newResult.getDecryptedValue());
-                    result.setDecryptorUsed(newResult.getDecryptorUsed());
-                    result.setErrorMessage(newResult.getErrorMessage());
-                    result.setExecutionTimeMs(newResult.getExecutionTimeMs());
-
-                    publish(row);
-                }
-                return null;
-            }
-
-            @Override
-            protected void process(List<Integer> chunks)
-            {
-                for (int row : chunks)
-                {
-                    tableModel.fireTableRowsUpdated(row, row);
-                }
+                return work.get();
             }
 
             @Override
             protected void done()
             {
-                long successCount = results.stream().filter(DeobfuscationResult::isSuccess).count();
-                statusLabel.setText("Decrypted " + successCount + "/" + results.size() + " strings");
+                try
+                {
+                    Map<Integer, List<DeobfuscationResult>> replacements = get();
+                    List<DeobfuscationResult> updated = new ArrayList<>();
+                    if (replacements.containsKey(-1))
+                    {
+                        updated.addAll(replacements.get(-1));
+                    }
+                    else
+                    {
+                        for (int row = 0; row < results.size(); row++)
+                        {
+                            updated.addAll(replacements.getOrDefault(row, List.of(results.get(row))));
+                        }
+                    }
+                    results.clear();
+                    results.addAll(updated);
+                    tableModel.fireTableDataChanged();
+                    long successCount = results.stream().filter(DeobfuscationResult::isSuccess).count();
+                    statusLabel.setText("Decrypted " + successCount + "/" + results.size() + " rows");
+                }
+                catch (InterruptedException | ExecutionException e)
+                {
+                    statusLabel.setText("Decryption failed: " + e.getMessage());
+                }
                 updateButtonStates();
             }
         };
@@ -454,7 +494,7 @@ public class DeobfuscationPanel extends ThemedJPanel
         List<DeobfuscationResult> toApply = new ArrayList<>();
         for (DeobfuscationResult result : results)
         {
-            if (result.isSuccess() && !result.isApplied())
+            if (result.isApplicable() && !result.isApplied())
             {
                 toApply.add(result);
             }
@@ -462,7 +502,7 @@ public class DeobfuscationPanel extends ThemedJPanel
 
         if (toApply.isEmpty())
         {
-            JOptionPane.showMessageDialog(this, "No successful decryptions to apply", "Nothing to Apply", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "No decrypted string constants to apply; only calls whose single argument is a string constant can be patched", "Nothing to Apply", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -520,10 +560,10 @@ public class DeobfuscationPanel extends ThemedJPanel
     {
         boolean hasResults = !results.isEmpty();
         boolean hasSelection = resultsTable.getSelectedRowCount() > 0;
-        boolean hasSuccessful = results.stream().anyMatch(r -> r.isSuccess() && !r.isApplied());
+        boolean hasSuccessful = results.stream().anyMatch(r -> r.isApplicable() && !r.isApplied());
 
         decryptSelectedButton.setEnabled(hasSelection);
-        decryptAllButton.setEnabled(hasResults);
+        decryptAllButton.setEnabled(classSelector.getSelectedItem() != null);
         applyButton.setEnabled(hasSuccessful);
     }
 

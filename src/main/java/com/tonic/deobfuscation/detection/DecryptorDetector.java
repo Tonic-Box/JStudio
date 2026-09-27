@@ -1,8 +1,11 @@
 package com.tonic.deobfuscation.detection;
 
 import com.tonic.parser.ClassFile;
+import com.tonic.parser.ConstPool;
 import com.tonic.parser.MethodEntry;
 import com.tonic.parser.attribute.CodeAttribute;
+import com.tonic.parser.constpool.Item;
+import com.tonic.parser.constpool.MethodRefItem;
 import com.tonic.deobfuscation.model.DecryptorCandidate;
 import com.tonic.deobfuscation.model.DecryptorCandidate.DecryptorType;
 
@@ -110,7 +113,7 @@ public class DecryptorDetector
         CodeAttribute code = method.getCodeAttribute();
         if (code != null)
         {
-            BytecodeAnalysis analysis = analyzeBytecode(code);
+            BytecodeAnalysis analysis = analyzeBytecode(classFile.getConstPool(), code);
 
             if (analysis.hasXorOperations)
             {
@@ -166,7 +169,7 @@ public class DecryptorDetector
         return name.matches("^[a-z]$") || name.matches("^[a-z]{2}$");
     }
 
-    private BytecodeAnalysis analyzeBytecode(CodeAttribute code)
+    private BytecodeAnalysis analyzeBytecode(ConstPool constPool, CodeAttribute code)
     {
         BytecodeAnalysis analysis = new BytecodeAnalysis();
 
@@ -195,16 +198,16 @@ public class DecryptorDetector
                     analysis.hasArrayOperations = true;
                 }
 
-                if (opcode >= 0x99 && opcode <= 0xA7 && instrLen >= 3)
+                if (((opcode >= 0x99 && opcode <= 0xA7) || opcode == 0xC6 || opcode == 0xC7) && pc + 2 < bytecode.length && (short) (((bytecode[pc + 1] & 0xFF) << 8) | (bytecode[pc + 2] & 0xFF)) < 0)
                 {
-                    int branchOffset = ((bytecode[pc + 1] & 0xFF) << 8) | (bytecode[pc + 2] & 0xFF);
-                    if (pc + branchOffset < pc)
-                    {
-                        analysis.hasLoops = true;
-                    }
+                    analysis.hasLoops = true;
+                }
+                if (opcode == 0xC8 && pc + 4 < bytecode.length && readInt(bytecode, pc + 1) < 0)
+                {
+                    analysis.hasLoops = true;
                 }
 
-                if (opcode == 0xB7 || opcode == 0xB8)
+                if ((opcode == 0xB6 || opcode == 0xB7 || opcode == 0xB8) && pc + 2 < bytecode.length && createsString(constPool.getItem(((bytecode[pc + 1] & 0xFF) << 8) | (bytecode[pc + 2] & 0xFF))))
                 {
                     analysis.createsString = true;
                 }
@@ -223,6 +226,22 @@ public class DecryptorDetector
         }
 
         return analysis;
+    }
+
+    private static boolean createsString(Item<?> item)
+    {
+        if (!(item instanceof MethodRefItem))
+        {
+            return false;
+        }
+        MethodRefItem ref = (MethodRefItem) item;
+        String owner = ref.getClassName();
+        String name = ref.getName();
+        if ("java.lang.String".equals(owner))
+        {
+            return "<init>".equals(name) || "valueOf".equals(name) || "copyValueOf".equals(name) || "intern".equals(name);
+        }
+        return ("java.lang.StringBuilder".equals(owner) || "java.lang.StringBuffer".equals(owner)) && "toString".equals(name);
     }
 
     private int getInstructionLength(int opcode, byte[] bytecode, int pc)

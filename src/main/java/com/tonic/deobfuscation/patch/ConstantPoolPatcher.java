@@ -56,7 +56,7 @@ public class ConstantPoolPatcher
     }
 
     /**
-     * Patches every successful, not yet applied result that belongs to this class and marks it applied; failures are logged and skipped.
+     * Patches every applicable, not yet applied result that belongs to this class and marks it applied; rows without a constant-pool string are skipped and failures are logged.
      *
      * @param classFile the class to patch
      * @param results the decryption results, possibly for several classes
@@ -68,7 +68,7 @@ public class ConstantPoolPatcher
 
         for (DeobfuscationResult result : results)
         {
-            if (!result.isSuccess() || result.isApplied())
+            if (!result.isApplicable() || result.isApplied())
             {
                 continue;
             }

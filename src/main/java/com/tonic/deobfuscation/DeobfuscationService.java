@@ -4,19 +4,26 @@ import com.tonic.analysis.execution.core.BytecodeContext;
 import com.tonic.analysis.execution.core.BytecodeEngine;
 import com.tonic.analysis.execution.core.BytecodeResult;
 import com.tonic.analysis.execution.core.ExecutionMode;
-import com.tonic.analysis.execution.heap.ObjectInstance;
 import com.tonic.analysis.execution.heap.SimpleHeapManager;
 import com.tonic.analysis.execution.resolve.ClassResolver;
 import com.tonic.analysis.execution.state.ConcreteValue;
+import com.tonic.parser.ClassFile;
 import com.tonic.parser.ClassPool;
 import com.tonic.parser.MethodEntry;
+import com.tonic.parser.constpool.Item;
+import com.tonic.parser.constpool.StringRefItem;
+import com.tonic.parser.constpool.Utf8Item;
 import com.tonic.deobfuscation.model.DecryptorCandidate;
 import com.tonic.deobfuscation.model.DeobfuscationResult;
 import com.tonic.model.ProjectModel;
 import com.tonic.service.ProjectService;
+import com.tonic.ui.vm.VmValueConverter;
+import com.tonic.util.DescriptorParser;
 import lombok.Getter;
 
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /** The shared string-decryption service: runs suspected decryptor methods in the bytecode emulator over the current project, with a fresh heap per call. */
 public class DeobfuscationService
@@ -79,23 +86,24 @@ public class DeobfuscationService
     }
 
     /**
-     * Runs a decryptor with one string argument on a fresh heap, initializing the service first if needed.
+     * Runs a decryptor on a fresh heap with arguments converted to its parameter types, initializing the service first if needed.
      *
      * @param decryptor the static decryptor method
-     * @param encryptedValue the string to pass it
-     * @return the string it returned, or null when it returned null
-     * @throws IllegalStateException if the service is not initialized and no project is loaded
-     * @throws RuntimeException if execution fails or the return value is not a string
+     * @param args the arguments as host values; arrays may be Object arrays of their elements
+     * @return the string it returned, a byte or char array return decoded as text, or null when it returned null
+     * @throws IllegalStateException if the service is not initialized and no project is loaded, or the decryptor fails or returns something other than a string or byte or char array
+     * @throws IllegalArgumentException if an argument cannot be passed as its parameter type
      */
-    public String executeDecryptor(MethodEntry decryptor, String encryptedValue)
+    public String executeDecryptor(MethodEntry decryptor, Object... args)
     {
         if (!isInitialized())
         {
             initialize();
         }
-
         resetHeap();
 
+        VmValueConverter converter = new VmValueConverter(heapManager, classResolver, maxCallDepth, maxInstructions);
+        ConcreteValue[] vmArgs = converter.toConcreteAll(args, DescriptorParser.parameterDescriptors(decryptor.getDesc()));
         BytecodeContext ctx = new BytecodeContext.Builder()
                 .heapManager(heapManager)
                 .classResolver(classResolver)
@@ -103,133 +111,107 @@ public class DeobfuscationService
                 .maxInstructions(maxInstructions)
                 .maxCallDepth(maxCallDepth)
                 .build();
-
-        BytecodeEngine engine = new BytecodeEngine(ctx);
-
-        try
+        BytecodeResult result = new BytecodeEngine(ctx).execute(decryptor, vmArgs);
+        if (!result.isSuccess())
         {
-            ObjectInstance stringArg = heapManager.internString(encryptedValue);
-            ConcreteValue[] args = new ConcreteValue[]{ConcreteValue.reference(stringArg)};
-
-            BytecodeResult result = engine.execute(decryptor, args);
-
-            if (!result.isSuccess())
-            {
-                throw new RuntimeException("Execution failed: " + (result.getException() != null ? result.getException().toString() : "Unknown error"));
-            }
-
-            ConcreteValue returnVal = result.getReturnValue();
-            if (returnVal == null || returnVal.isNull())
-            {
-                return null;
-            }
-
-            ObjectInstance returnObj = returnVal.asReference();
-            return heapManager.extractString(returnObj);
-
+            throw new IllegalStateException("Decryptor failed: " + (result.getException() != null ? result.getException().toString() : result.getStatus().toString()));
         }
-        catch (Exception e)
+
+        String returnType = DescriptorParser.returnDescriptor(decryptor.getDesc());
+        Object returned = converter.toHost(result.getReturnValue(), returnType);
+        if (returned == null || returned instanceof String)
         {
-            throw new RuntimeException("Decryption failed: " + e.getMessage(), e);
+            return (String) returned;
         }
+        if (returned instanceof byte[])
+        {
+            return new String((byte[]) returned, StandardCharsets.UTF_8);
+        }
+        if (returned instanceof char[])
+        {
+            return new String((char[]) returned);
+        }
+        throw new IllegalStateException("Decryptor returned " + returned + ", not a string");
     }
 
     /**
-     * Runs a decryptor with one int argument on a fresh heap, initializing the service first if needed.
+     * Decrypts every call a class makes to a decryptor, running the decryptor with each call site's constant arguments.
      *
-     * @param decryptor the static decryptor method
-     * @param index the int to pass it
-     * @return the string it returned, or null when it returned null
-     * @throws IllegalStateException if the service is not initialized and no project is loaded
-     * @throws RuntimeException if execution fails or the return value is not a string
+     * @param classFile the class whose calls are decrypted
+     * @param decryptor the decryptor to look for and run
+     * @return one result per call site, a failure where the arguments are not constants or the run fails; never throws for a single site
      */
-    public String executeDecryptor(MethodEntry decryptor, int index)
+    public List<DeobfuscationResult> decryptCallSites(ClassFile classFile, DecryptorCandidate decryptor)
     {
-        if (!isInitialized())
+        MethodEntry method = decryptor.getMethod();
+        List<DeobfuscationResult> results = new ArrayList<>();
+        for (CallSites.CallSite site : CallSites.find(classFile, method.getOwnerName(), method.getName(), method.getDesc()))
         {
-            initialize();
+            results.add(decrypt(classFile, site, decryptor));
         }
-
-        resetHeap();
-
-        BytecodeContext ctx = new BytecodeContext.Builder()
-                .heapManager(heapManager)
-                .classResolver(classResolver)
-                .mode(ExecutionMode.RECURSIVE)
-                .maxInstructions(maxInstructions)
-                .maxCallDepth(maxCallDepth)
-                .build();
-
-        BytecodeEngine engine = new BytecodeEngine(ctx);
-
-        try
-        {
-            ConcreteValue[] args = new ConcreteValue[]{ConcreteValue.intValue(index)};
-
-            BytecodeResult result = engine.execute(decryptor, args);
-
-            if (!result.isSuccess())
-            {
-                throw new RuntimeException("Execution failed: " + (result.getException() != null ? result.getException().toString() : "Unknown error"));
-            }
-
-            ConcreteValue returnVal = result.getReturnValue();
-            if (returnVal == null || returnVal.isNull())
-            {
-                return null;
-            }
-
-            ObjectInstance returnObj = returnVal.asReference();
-            return heapManager.extractString(returnObj);
-
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Decryption failed: " + e.getMessage(), e);
-        }
+        return results;
     }
 
     /**
-     * Decrypts one constant-pool string with a candidate decryptor, passing the constant-pool index to int decryptors and the string to all others.
+     * Decrypts one call site by running the decryptor with its constant arguments.
      *
-     * @param className the internal name of the class holding the string
-     * @param cpIndex the string's constant-pool index
-     * @param encryptedValue the encrypted string
-     * @param decryptor the decryptor to run
-     * @return a success result with the decrypted text and timing, or a failure result with the error; never throws
+     * @param classFile the class holding the call
+     * @param site the call site
+     * @param decryptor the decryptor the site calls
+     * @return a success result with the decrypted text and timing, or a failure result with the reason; never throws
      */
-    public DeobfuscationResult decryptString(String className, int cpIndex, String encryptedValue, DecryptorCandidate decryptor)
+    public DeobfuscationResult decrypt(ClassFile classFile, CallSites.CallSite site, DecryptorCandidate decryptor)
     {
+        DeobfuscationResult result = DeobfuscationResult.forCallSite(classFile.getClassName(), site, stringArgumentIndex(classFile, site, decryptor));
+        if (!site.isResolved())
+        {
+            result.setErrorMessage("Arguments are not constants: " + site.getUnresolvedReason());
+            return result;
+        }
         long startTime = System.currentTimeMillis();
-
         try
         {
-            String decrypted;
-            if (Objects.requireNonNull(decryptor.getType()) == DecryptorCandidate.DecryptorType.INT_TO_STRING)
+            String decrypted = executeDecryptor(decryptor.getMethod(), site.getArguments());
+            if (decrypted == null)
             {
-                decrypted = executeDecryptor(decryptor.getMethod(), cpIndex);
+                result.setErrorMessage("Decryptor returned null");
+                return result;
             }
-            else
-            {
-                decrypted = executeDecryptor(decryptor.getMethod(), encryptedValue);
-            }
-
-            long elapsed = System.currentTimeMillis() - startTime;
-
-            if (decrypted != null)
-            {
-                return DeobfuscationResult.success(className, cpIndex, encryptedValue, decrypted, decryptor.getMethod(), elapsed);
-            }
-            else
-            {
-                return DeobfuscationResult.failure(className, cpIndex, encryptedValue, "Decryptor returned null");
-            }
-
+            result.setDecryptedValue(decrypted);
+            result.setDecryptorUsed(decryptor.getMethod());
+            result.setSuccess(true);
+            result.setExecutionTimeMs(System.currentTimeMillis() - startTime);
         }
-        catch (Exception e)
+        catch (RuntimeException e)
         {
-            return DeobfuscationResult.failure(className, cpIndex, encryptedValue, e.getMessage());
+            result.setErrorMessage(e.getMessage());
         }
+        return result;
     }
 
+    private static int stringArgumentIndex(ClassFile classFile, CallSites.CallSite site, DecryptorCandidate decryptor)
+    {
+        if (!site.isResolved() || !decryptor.getMethod().getDesc().startsWith("(Ljava/lang/String;)"))
+        {
+            return -1;
+        }
+        Object argument = site.getArguments()[0];
+        if (!(argument instanceof String))
+        {
+            return -1;
+        }
+        List<Item<?>> items = classFile.getConstPool().getItems();
+        for (int i = 0; i < items.size(); i++)
+        {
+            if (items.get(i) instanceof StringRefItem)
+            {
+                int utf8 = ((StringRefItem) items.get(i)).getValue();
+                if (utf8 > 0 && utf8 < items.size() && items.get(utf8) instanceof Utf8Item && argument.equals(((Utf8Item) items.get(utf8)).getValue()))
+                {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
 }
