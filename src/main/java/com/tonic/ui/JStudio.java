@@ -14,7 +14,7 @@ public class JStudio
 {
 
     public static final String APP_NAME = "JStudio";
-    public static final String APP_VERSION = "24.0.0";
+    public static final String APP_VERSION = "25.0.0";
 
     /**
      * Runs the headless CLI when --cli is present, otherwise opens the main window on the event thread; -dev disables the startup update check.
